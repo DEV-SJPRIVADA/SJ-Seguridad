@@ -1,0 +1,191 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="admin-users-header">
+            <div class="page-stack">
+                <div class="eyebrow-row">
+                    <span class="badge badge--info">Accesos de Usuarios</span>
+                    <span class="badge badge--muted">Panel central</span>
+                </div>
+                <div>
+                    <h2 class="page-title">Administracion de usuarios</h2>
+                    <p class="page-subtitle">Gestiona altas, bloqueos, visualizaciones y permisos operativos desde un tablero unificado.</p>
+                </div>
+            </div>
+
+            <div class="users-kpi-stack">
+                <div class="card kpi-card">
+                    <p class="kpi-card__label text-muted">Total usuarios</p>
+                    <p class="kpi-card__value">{{ $stats['total'] }}</p>
+                </div>
+                <div class="card card--success kpi-card">
+                    <p class="kpi-card__label kpi-card__label--success">Activos</p>
+                    <p class="kpi-card__value kpi-card__value--success">{{ $stats['active'] }}</p>
+                </div>
+                <div class="card card--danger kpi-card">
+                    <p class="kpi-card__label kpi-card__label--danger">Bloqueados</p>
+                    <p class="kpi-card__value kpi-card__value--danger">{{ $stats['inactive'] }}</p>
+                </div>
+            </div>
+        </div>
+    </x-slot>
+
+    <div class="page-section admin-users-page">
+        <div class="app-container page-stack admin-users-page__stack">
+            @if (session('status') === 'user-created')
+                <div class="notice notice--success">
+                    Usuario creado correctamente.
+                </div>
+            @endif
+            <div class="panel users-panel">
+                <div class="panel__body panel__body--soft">
+                    <div class="action-row">
+                        <div>
+                            <p class="eyebrow">Administracion de usuarios</p>
+                            <p class="panel-text">Selecciona un usuario a la izquierda o crea uno nuevo para asignar visualizaciones, gestion y estado operativo.</p>
+                        </div>
+
+                        <div class="form-actions__group">
+                            <form method="GET" action="{{ route('admin.users.index') }}" class="search-bar">
+                                <input
+                                    type="text"
+                                    name="q"
+                                    value="{{ $filters['q'] }}"
+                                    placeholder="Buscar por nombre o correo"
+                                    class="form-input"
+                                >
+                                <button type="submit" class="btn btn--secondary">
+                                    Buscar
+                                </button>
+                            </form>
+
+                            <a href="{{ route('admin.users.create') }}" class="btn btn--primary">
+                                Crear usuario
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="users-grid">
+                    <aside class="users-sidebar">
+                        <div class="panel__header">
+                            <p class="text-caption">Lista de usuarios</p>
+                            <p class="panel-text">{{ $users->total() }} registros encontrados</p>
+                        </div>
+
+                        <div class="users-list">
+                            @forelse ($users as $user)
+                                <a
+                                    href="{{ route('admin.users.index', array_filter(['q' => $filters['q'], 'selected' => $user->id, 'page' => $users->currentPage()])) }}"
+                                    class="users-list-item {{ $selectedUser?->id === $user->id ? 'users-list-item--active' : '' }}"
+                                >
+                                    <div class="users-list-item__top">
+                                        <div>
+                                            <p class="users-list-item__title">{{ $user->name }}</p>
+                                            <p class="users-list-item__meta">{{ $user->email }}</p>
+                                            <p class="users-list-item__meta">{{ $user->roles->pluck('name')->implode(', ') ?: 'Sin rol asignado' }}</p>
+                                        </div>
+
+                                        <span class="status-dot {{ $user->is_active ? 'status-dot--success' : 'status-dot--danger' }}"></span>
+                                    </div>
+
+                                    @if ($user->must_change_password)
+                                        <span class="status-pill status-pill--warning block-spaced">Cambio pendiente</span>
+                                    @endif
+                                </a>
+                            @empty
+                                <div class="panel__body text-small text-muted">
+                                    No hay usuarios para mostrar con el filtro actual.
+                                </div>
+                            @endforelse
+                        </div>
+                    </aside>
+
+                    <section class="users-content">
+                        @if ($selectedUser)
+                            <div class="users-content__header">
+                                <div class="panel__header">
+                                    <div class="action-row">
+                                        <div>
+                                            <p class="text-caption">Administracion de usuario</p>
+                                            <h3 class="page-title page-title--sm title-spaced">{{ $selectedUser->name }}</h3>
+                                            <p class="page-subtitle">{{ $selectedUser->email }}</p>
+                                        </div>
+
+                                        <div class="form-actions__group">
+                                            <span class="status-pill {{ $selectedUser->is_active ? 'status-pill--success' : 'status-pill--danger' }}">
+                                                {{ $selectedUser->is_active ? 'Activo' : 'Bloqueado' }}
+                                            </span>
+                                            <span class="status-pill status-pill--muted">
+                                                {{ $selectedUser->roles->pluck('name')->implode(', ') ?: 'Sin rol' }}
+                                            </span>
+                                            <a href="{{ route('admin.users.edit', $selectedUser) }}" class="btn btn--info">
+                                                Editar usuario
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="users-content__body">
+                                <div class="panel__body split-grid">
+                                    <div class="section-stack">
+                                        <div class="card card--muted">
+                                            <h4 class="panel-title">Ficha operativa</h4>
+                                            <div class="detail-grid block-spaced">
+                                                <div class="card">
+                                                    <p class="text-caption">Ultimo acceso</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->last_login_at?->format('Y-m-d H:i') ?? 'Sin acceso registrado' }}</p>
+                                                </div>
+                                                <div class="card">
+                                                    <p class="text-caption">Creado por</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->creator?->name ?? 'Seeder / sistema' }}</p>
+                                                </div>
+                                                <div class="card">
+                                                    <p class="text-caption">Cambio de contrasena</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->must_change_password ? 'Pendiente al siguiente ingreso' : 'No requerido' }}</p>
+                                                </div>
+                                                <div class="card">
+                                                    <p class="text-caption">Permisos directos</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->permissions->count() }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="section-stack">
+                                        <div class="card card--info">
+                                            <h4 class="panel-title">Permisos y visualizaciones</h4>
+                                            <p class="text-small text-small--info block-spaced">
+                                                La matriz de visualizaciones, gestion y tableros solo se muestra en la pantalla de edicion del usuario para mantener este panel principal mas limpio.
+                                            </p>
+                                            <div class="block-spaced">
+                                                <a href="{{ route('admin.users.edit', $selectedUser) }}" class="btn btn--info">
+                                                    Ir a editar permisos
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div class="card card--warning">
+                                            <h4 class="panel-title warning-text">Regla administrativa</h4>
+                                            <p class="text-small block-spaced warning-text">
+                                                El rol <span class="font-strong">administrador</span> debe conservar acceso total a todos los modulos y tableros que se construyan. Los ajustes finos por visualizacion y permiso directo se gestionan desde la edicion.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="panel__body text-small text-muted">
+                                No hay usuarios disponibles para administrar.
+                            </div>
+                        @endif
+                    </section>
+                </div>
+
+                <div class="panel__body panel__body--compact panel-divider-top">
+                    {{ $users->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
