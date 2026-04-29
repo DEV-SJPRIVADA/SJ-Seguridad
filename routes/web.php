@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RequisitionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,7 +18,9 @@ Route::get('/dashboard', function () {
                 ->map(fn (string $boardLabel, string $boardKey) => [
                     'key' => $boardKey,
                     'label' => $boardLabel,
-                    'can_view' => auth()->user()->can("view.board.{$key}.{$boardKey}"),
+                    'can_view' => $boardKey === 'dashboard'
+                        ? ($canView || auth()->user()->can("view.board.{$key}.{$boardKey}"))
+                        : auth()->user()->can("view.board.{$key}.{$boardKey}"),
                 ])
                 ->filter(fn (array $board) => $board['can_view'])
                 ->values();
@@ -34,11 +37,30 @@ Route::get('/dashboard', function () {
         ->values();
 
     $selectedModuleKey = request()->string('module')->toString();
+
+    if ($selectedModuleKey === '' && $areas->isNotEmpty()) {
+        $defaultModule = $areas->first();
+        $defaultBoard = $defaultModule['boards']->first()['key'] ?? null;
+
+        if ($defaultBoard === 'requisiciones') {
+            return redirect()->route('requisitions.dashboard', ['module' => $defaultModule['key']]);
+        }
+
+        return redirect()->route('dashboard', array_filter([
+            'module' => $defaultModule['key'],
+            'board' => $defaultBoard,
+        ]));
+    }
+
     $selectedModule = $areas->firstWhere('key', $selectedModuleKey);
     $selectedBoardKey = request()->string('board')->toString();
     $selectedBoard = $selectedModule
         ? $selectedModule['boards']->firstWhere('key', $selectedBoardKey)
         : null;
+
+    if ($selectedModule && $selectedBoardKey === 'requisiciones') {
+        return redirect()->route('requisitions.dashboard', ['module' => $selectedModule['key']]);
+    }
 
     return view('dashboard', [
         'areas' => $areas,
@@ -54,6 +76,19 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::middleware(['password.changed', 'permission:manage.users'])->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
+    });
+
+    Route::middleware(['password.changed'])->prefix('requisitions/{module}')->name('requisitions.')->group(function () {
+        Route::get('/dashboard', [RequisitionController::class, 'dashboard'])->name('dashboard');
+        Route::get('/solicitar', [RequisitionController::class, 'create'])->name('create');
+        Route::post('/solicitar', [RequisitionController::class, 'store'])->name('store');
+        Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');
+        Route::get('/gestion/{requisition}/editar', [RequisitionController::class, 'edit'])->name('edit');
+        Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');
+        Route::get('/parametros', [RequisitionController::class, 'parameters'])->name('parameters');
+        Route::post('/parametros/{type}', [RequisitionController::class, 'storeParameter'])->name('parameters.store');
+        Route::patch('/parametros/{type}/{parameterId}', [RequisitionController::class, 'updateParameter'])->name('parameters.update');
+        Route::delete('/parametros/{type}/{parameterId}', [RequisitionController::class, 'destroyParameter'])->name('parameters.destroy');
     });
 });
 

@@ -18,10 +18,12 @@
 - Dashboard protegido
 - Perfil de usuario
 - Gestion administrativa de usuarios
+- Area base persistida por usuario (`users.area_key`)
 - Roles y permisos basados en configuracion
 - Restriccion por usuario activo
 - Cambio obligatorio de contrasena temporal
 - Modulos base configurados: gestion humana, operaciones, programacion, juridico, comercial, calidad, remuneraciones, facturacion y compras
+- Modulo inicial de requisiciones de personal con subtableros de dashboard, solicitud, gestion y parametros
 
 ## Principios del proyecto
 
@@ -34,6 +36,8 @@
 ## Entidades base ya presentes
 
 - `users`
+- `personal_requisitions`
+- `personal_requisition_status_logs`
 - `roles`
 - `permissions`
 - tablas pivote de permisos del paquete `spatie/laravel-permission`

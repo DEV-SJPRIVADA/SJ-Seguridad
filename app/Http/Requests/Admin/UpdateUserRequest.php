@@ -25,6 +25,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'area_key' => ['nullable', 'string', Rule::in(array_keys(config('access.areas', [])))],
             'email' => [
                 'required',
                 'string',
@@ -32,7 +33,7 @@ class UpdateUserRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($this->route('user')),
             ],
-            'password' => ['nullable', 'confirmed', Password::defaults()],
+            'password' => ['nullable', Password::defaults()],
             'role' => ['required', 'string', Rule::exists('roles', 'name')],
             'is_active' => ['nullable', 'boolean'],
             'must_change_password' => ['nullable', 'boolean'],
@@ -43,9 +44,14 @@ class UpdateUserRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $password = $this->input('password');
+
         $this->merge([
+            'area_key' => blank($this->input('area_key')) ? null : $this->string('area_key')->toString(),
             'is_active' => $this->boolean('is_active'),
             'must_change_password' => $this->boolean('must_change_password'),
+            'password' => is_string($password) && trim($password) === '' ? null : $password,
+            'password_confirmation' => blank($this->input('password_confirmation')) ? null : $this->input('password_confirmation'),
         ]);
     }
 }

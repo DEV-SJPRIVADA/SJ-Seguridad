@@ -16,6 +16,8 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 
 - `view.dashboard`
 - `manage.users`
+- `manage.requisitions`
+- `manage.requisition.parameters`
 
 Estos permisos se administran visualmente dentro de la fila `Administracion de usuarios` en la matriz de permisos.
 
@@ -62,7 +64,7 @@ Esto produce permisos como:
 Sembrada en [`database/seeders/RoleAndPermissionSeeder.php`](c:/laragon/www/SJSEGURIDAD/database/seeders/RoleAndPermissionSeeder.php):
 
 - `super-admin`: todos los permisos
-- `administrador`: `view.dashboard` y `manage.users`
+- `administrador`: `view.dashboard`, `manage.users` y `manage.requisition.parameters`
 - `usuario`: `view.dashboard`
 
 Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el seeder si existen. Los permisos de areas que ya no esten definidos en `config/access.php` se eliminan para evitar accesos obsoletos.
@@ -74,6 +76,7 @@ Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el s
 - Los usuarios inactivos no pueden operar
 - Las contrasenas temporales deben obligar cambio al primer ingreso
 - Una vez el usuario actualiza correctamente su contrasena, `must_change_password` debe pasar a `false`
+- El tablero `Solicitar` de requisiciones exige que `users.area_key` coincida con el modulo solicitado
 
 ## Impacto de cambios
 

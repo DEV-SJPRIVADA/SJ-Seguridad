@@ -11,6 +11,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Creacion de usuarios
 - Edicion de usuarios
 - Asignacion de rol
+- Asignacion de area base (`users.area_key`)
 - Asignacion de permisos directos
 - Activacion o desactivacion
 - Forzar cambio de contrasena
@@ -66,7 +67,7 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 - El usuario puede crearse inactivo
 - El usuario puede quedar marcado para cambio obligatorio de contrasena
 - En creacion se captura una sola contrasena temporal; no se solicita confirmacion porque el usuario final debe cambiarla al ingresar
-- Si se define nueva contrasena en edicion, se desactiva `must_change_password`
+- En edicion, la contrasena es opcional y tampoco exige confirmacion; si se define una nueva, se desactiva `must_change_password`
 - El rol `super-admin` tiene acceso total a cualquier habilidad del sistema mediante regla global en `Gate::before`
 - El rol `administrador` gestiona usuarios, roles y permisos, pero sus permisos operativos por area deben asignarse explicitamente
 - La eliminacion de cuentas no se expone en perfil para usuarios normales; queda restringida al rol `super-admin`
@@ -83,3 +84,4 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 - Cambios en permisos o roles impactan este modulo de forma directa
 - Un cambio incorrecto en requests o middleware puede exponer gestion de usuarios
 - Si se agregan campos nuevos al usuario, este modulo debe documentarse y validarse de nuevo
+- El campo `area_key` impacta modulos dependientes del area propia del usuario, especialmente `Requisiciones`

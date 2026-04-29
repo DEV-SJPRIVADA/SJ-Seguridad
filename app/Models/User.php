@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -23,6 +24,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'area_key',
         'email',
         'password',
         'is_active',
@@ -61,5 +63,43 @@ class User extends Authenticatable
     public function creator(): BelongsTo
     {
         return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function areaLabel(): ?string
+    {
+        return config("access.areas.{$this->area_key}");
+    }
+
+    public function hasAssignedArea(): bool
+    {
+        return is_string($this->area_key) && $this->area_key !== '';
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function requisitionBoardTabsFor(string $moduleKey): Collection
+    {
+        $tabs = collect(['dashboard']);
+
+        // El tab Solicitar se muestra si:
+        // - El usuario tiene permiso de ver el tablero del modulo Y su area_key coincide (caso normal), O
+        // - El usuario puede gestionar usuarios o el area de gestion humana (acceso administrativo)
+        $canManageAll = $this->can('manage.users') || $this->can('manage.area.gestion_humana');
+        $canSolicitar = $this->can("view.board.{$moduleKey}.requisiciones") && $this->area_key === $moduleKey;
+
+        if ($canSolicitar || $canManageAll) {
+            $tabs->push('solicitar');
+        }
+
+        if ($this->can('manage.requisitions') || $this->can('manage.area.gestion_humana')) {
+            $tabs->push('gestion');
+        }
+
+        if ($this->can('manage.requisition.parameters') || $this->can('manage.users') || $this->can('manage.area.gestion_humana')) {
+            $tabs->push('parametros');
+        }
+
+        return $tabs->unique()->values();
     }
 }

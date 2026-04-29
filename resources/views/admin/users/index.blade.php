@@ -1,34 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="admin-users-header">
-            <div class="page-stack">
-                <div class="eyebrow-row">
-                    <span class="badge badge--info">Accesos de Usuarios</span>
-                    <span class="badge badge--muted">Panel central</span>
-                </div>
-                <div>
-                    <h2 class="page-title">Administracion de usuarios</h2>
-                    <p class="page-subtitle">Gestiona altas, bloqueos, visualizaciones y permisos operativos desde un tablero unificado.</p>
-                </div>
-            </div>
-
-            <div class="users-kpi-stack">
-                <div class="card kpi-card">
-                    <p class="kpi-card__label text-muted">Total usuarios</p>
-                    <p class="kpi-card__value">{{ $stats['total'] }}</p>
-                </div>
-                <div class="card card--success kpi-card">
-                    <p class="kpi-card__label kpi-card__label--success">Activos</p>
-                    <p class="kpi-card__value kpi-card__value--success">{{ $stats['active'] }}</p>
-                </div>
-                <div class="card card--danger kpi-card">
-                    <p class="kpi-card__label kpi-card__label--danger">Bloqueados</p>
-                    <p class="kpi-card__value kpi-card__value--danger">{{ $stats['inactive'] }}</p>
-                </div>
-            </div>
-        </div>
-    </x-slot>
-
     <div class="page-section admin-users-page">
         <div class="app-container page-stack admin-users-page__stack">
             @if (session('status') === 'user-created')
@@ -45,7 +15,30 @@
                         </div>
 
                         <div class="form-actions__group">
-                            <form method="GET" action="{{ route('admin.users.index') }}" class="search-bar">
+                            <div class="users-kpi-stack">
+                                <div class="card kpi-card">
+                                    <p class="kpi-card__label text-muted">Total usuarios</p>
+                                    <p class="kpi-card__value">{{ $stats['total'] }}</p>
+                                </div>
+                                <div class="card card--success kpi-card">
+                                    <p class="kpi-card__label kpi-card__label--success">Activos</p>
+                                    <p class="kpi-card__value kpi-card__value--success">{{ $stats['active'] }}</p>
+                                </div>
+                                <div class="card card--danger kpi-card">
+                                    <p class="kpi-card__label kpi-card__label--danger">Bloqueados</p>
+                                    <p class="kpi-card__value kpi-card__value--danger">{{ $stats['inactive'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="users-grid">
+                    <aside class="users-sidebar">
+                        <div class="panel__header">
+                            <p class="text-caption">Lista de usuarios</p>
+                            <p class="panel-text">{{ $users->total() }} registros encontrados</p>
+                            <form method="GET" action="{{ route('admin.users.index') }}" class="search-bar block-spaced-sm">
                                 <input
                                     type="text"
                                     name="q"
@@ -57,19 +50,6 @@
                                     Buscar
                                 </button>
                             </form>
-
-                            <a href="{{ route('admin.users.create') }}" class="btn btn--primary">
-                                Crear usuario
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="users-grid">
-                    <aside class="users-sidebar">
-                        <div class="panel__header">
-                            <p class="text-caption">Lista de usuarios</p>
-                            <p class="panel-text">{{ $users->total() }} registros encontrados</p>
                         </div>
 
                         <div class="users-list">

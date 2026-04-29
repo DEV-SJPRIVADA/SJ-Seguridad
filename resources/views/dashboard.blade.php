@@ -1,79 +1,73 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div>
-            <h2 class="page-title">{{ __('Panel de trabajo') }}</h2>
-            <p class="page-subtitle">Selecciona un modulo autorizado en el panel lateral izquierdo para cargar sus tableros y opciones de trabajo.</p>
-        </div>
-    </x-slot>
-
-    <div class="page-section page-section--spacious">
-        <div class="app-container">
-            <div class="panel">
-                <div class="panel__body dashboard-empty-state">
+    <div class="page-section">
+        <div class="app-container dashboard-shell">
+            <section class="panel dashboard-hero">
+                <div class="panel__body">
                     @if ($selectedModule)
-                        <p class="text-caption">Modulo seleccionado</p>
-                        <h3 class="page-title title-spaced">{{ $selectedModule['label'] }}</h3>
-                        <p class="page-subtitle block-spaced">
-                            Este modulo esta visible para tu usuario porque tiene permisos de modulo o tableros asignados.
-                        </p>
-                        @if ($selectedBoard)
-                            <div class="notice notice--success block-spaced">
-                                Tablero activo: {{ $selectedBoard['label'] }}
+                        <div class="dashboard-hero__header">
+                            <div>
+                                <p class="eyebrow">Panel de trabajo</p>
+                                <h2 class="page-title title-spaced">{{ $selectedModule['label'] }}</h2>
+                                <p class="page-subtitle">Modulo habilitado por permisos directos de area o tableros autorizados.</p>
                             </div>
-                        @elseif ($selectedModule['boards']->isNotEmpty())
-                            <p class="text-small text-muted block-spaced">
-                                Selecciona un tablero autorizado en las pestanas superiores para iniciar el trabajo.
-                            </p>
-                        @else
-                            <p class="text-small text-muted block-spaced">
-                                Este modulo no tiene tableros habilitados para tu usuario.
-                            </p>
-                        @endif
 
-                        <div class="dashboard-empty-state__grid block-spaced-lg">
+                            @if ($selectedBoard)
+                                <div class="dashboard-badge-card">
+                                    <span class="text-caption">Tablero activo</span>
+                                    <strong>{{ $selectedBoard['label'] }}</strong>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="dashboard-stat-grid block-spaced">
                             <article class="card card--muted">
-                                <h4 class="panel-title">Visualizacion</h4>
-                                <p class="text-small text-muted block-spaced">
-                                    @if ($selectedModule['can_view'] || $selectedModule['boards']->isNotEmpty())
-                                        Tu usuario puede consultar la informacion de este modulo.
-                                    @else
-                                        Tu usuario no tiene permiso de visualizacion para este modulo.
-                                    @endif
+                                <p class="text-caption">Visualizacion</p>
+                                <p class="panel-title title-spaced">
+                                    {{ ($selectedModule['can_view'] || $selectedModule['boards']->isNotEmpty()) ? 'Habilitada' : 'Sin acceso' }}
+                                </p>
+                                <p class="text-small text-muted block-spaced-sm">
+                                    {{ ($selectedModule['can_view'] || $selectedModule['boards']->isNotEmpty()) ? 'Tu usuario puede consultar informacion del modulo.' : 'No existe permiso de consulta para este modulo.' }}
                                 </p>
                             </article>
 
                             <article class="card card--muted">
-                                <h4 class="panel-title">Modificacion</h4>
-                                <p class="text-small text-muted block-spaced">
-                                    @if ($selectedModule['can_manage'])
-                                        Tu usuario puede modificar y operar funciones dentro de este modulo.
-                                    @else
-                                        Tu usuario solo tiene acceso de consulta dentro de este modulo.
-                                    @endif
+                                <p class="text-caption">Gestion</p>
+                                <p class="panel-title title-spaced">
+                                    {{ $selectedModule['can_manage'] ? 'Habilitada' : 'Solo consulta' }}
+                                </p>
+                                <p class="text-small text-muted block-spaced-sm">
+                                    {{ $selectedModule['can_manage'] ? 'Tu usuario puede operar funciones dentro del modulo.' : 'Las acciones operativas siguen restringidas.' }}
+                                </p>
+                            </article>
+
+                            <article class="card card--info">
+                                <p class="text-caption">Tableros visibles</p>
+                                <p class="panel-title title-spaced">{{ $selectedModule['boards']->count() }}</p>
+                                <p class="text-small text-small--info block-spaced-sm">
+                                    {{ $selectedModule['boards']->isNotEmpty() ? 'Puedes cambiar entre tableros desde la franja superior.' : 'No hay tableros habilitados para este modulo.' }}
                                 </p>
                             </article>
                         </div>
+
+                        @if ($selectedModule['boards']->isNotEmpty())
+                            <div class="card card--muted block-spaced dashboard-board-list">
+                                <p class="text-caption">Tableros autorizados</p>
+                                <div class="dashboard-board-list__items block-spaced-sm">
+                                    @foreach ($selectedModule['boards'] as $board)
+                                        <span class="status-pill {{ $selectedBoard && $selectedBoard['key'] === $board['key'] ? 'status-pill--info' : 'status-pill--muted' }}">
+                                            {{ $board['label'] }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     @else
-                        <p class="text-caption">SJ Seguridad</p>
-                        <h3 class="page-title title-spaced">Ningun modulo seleccionado</h3>
-                        <p class="page-subtitle block-spaced">
-                            El espacio de trabajo permanece vacio hasta que selecciones un modulo autorizado. Al ingresar a un modulo, el sistema mostrara sus tableros o menus horizontales segun tus permisos.
-                        </p>
-
-                        <div class="dashboard-empty-state__grid block-spaced-lg">
-                            <article class="card card--muted">
-                                <h4 class="panel-title">Como funciona</h4>
-                                <p class="text-small text-muted block-spaced">
-                                    El menu lateral izquierdo lista los modulos habilitados para tu usuario. Cada modulo puede exponer uno o varios tableros en la franja horizontal superior.
-                                </p>
-                            </article>
-
-                            <article class="card card--muted">
-                                <h4 class="panel-title">Acceso autorizado</h4>
-                                <p class="text-small text-muted block-spaced">
-                                    Los tableros y vistas solo aparecen cuando tu rol o permisos directos los habilitan. El `super-admin` puede activar y administrar toda la estructura.
-                                </p>
-                            </article>
+                        <div class="dashboard-hero__header">
+                            <div>
+                                <p class="eyebrow">Panel de trabajo</p>
+                                <h2 class="page-title title-spaced">Sin modulos visibles</h2>
+                                <p class="page-subtitle">Tu usuario no tiene modulos o tableros habilitados en este momento.</p>
+                            </div>
                         </div>
                     @endif
                 </div>

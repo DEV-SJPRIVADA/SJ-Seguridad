@@ -25,17 +25,23 @@
                 </div>
 
                 <div class="form-field">
+                    <x-input-label for="area_key" value="Area base del usuario" />
+                    <select id="area_key" name="area_key" class="form-select">
+                        <option value="">Sin area fija</option>
+                        @foreach ($areas as $areaKey => $areaLabel)
+                            <option value="{{ $areaKey }}" @selected(old('area_key', $user?->area_key) === $areaKey)>
+                                {{ $areaLabel }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('area_key')" />
+                </div>
+
+                <div class="form-field">
                     <x-input-label for="password" :value="$user ? 'Nueva contrasena (opcional)' : 'Contrasena temporal'" />
                     <x-text-input id="password" name="password" type="password" :required="! $user" />
                     <x-input-error :messages="$errors->get('password')" />
                 </div>
-
-                @if ($user)
-                    <div class="form-field">
-                        <x-input-label for="password_confirmation" value="Confirmar contrasena" />
-                        <x-text-input id="password_confirmation" name="password_confirmation" type="password" />
-                    </div>
-                @endif
 
                 <div class="form-field">
                     <x-input-label for="role" value="Perfil / rol base" />
@@ -86,56 +92,45 @@
             <p class="panel-text">Activa la visualizacion del modulo, su gestion y los tableros internos habilitados para cada usuario en formato tabular con filtros.</p>
         </div>
         <div class="panel__body">
-            <div class="permission-filter-bar" data-permission-filter-root>
-                <input type="search" class="form-input permission-filter-bar__search" placeholder="Buscar modulo, permiso o codigo" data-permission-search>
-                <select class="form-select permission-filter-bar__select" data-permission-module>
-                    <option value="">Todos los modulos</option>
-                    <option value="{{ $permissionGroups['administration_module']['key'] }}">{{ $permissionGroups['administration_module']['area'] }}</option>
-                    @foreach ($permissionGroups['area_permissions'] as $area)
-                        <option value="{{ $area['key'] }}">{{ $area['area'] }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn--secondary" data-permission-clear>Limpiar</button>
-            </div>
-
             <div class="data-table-wrap permission-table-wrap">
-                <table class="data-table permission-table">
+                <table class="data-table js-datatable-permissions">
                     <thead>
                         <tr>
+                            <th style="display:none;">Modulo ID</th>
                             <th>Modulo / permiso</th>
                             <th class="table-center permission-table__checkbox-col">Asignar</th>
                         </tr>
                     </thead>
 
-                    <tbody data-permission-section data-module-key="{{ $permissionGroups['administration_module']['key'] }}" data-module-label="{{ \Illuminate\Support\Str::lower($permissionGroups['administration_module']['area']) }}">
-                        <tr class="permission-table__module-row">
-                            <td colspan="2">00.- {{ \Illuminate\Support\Str::upper($permissionGroups['administration_module']['area']) }}</td>
-                        </tr>
+                    <tbody>
+                        {{-- Administración --}}
                         @foreach ($permissionGroups['administration_module']['rows'] as $row)
-                            <tr data-permission-row data-module-key="{{ $permissionGroups['administration_module']['key'] }}" data-search="{{ \Illuminate\Support\Str::lower($permissionGroups['administration_module']['area'].' '.$row['label'].' '.$row['name']) }}">
-                                <td class="permission-table__label">{{ $row['label'] }}</td>
+                            <tr>
+                                <td style="display:none;">00</td>
+                                <td class="permission-table__label">
+                                    <span class="text-caption text-muted">Administracion:</span> {{ $row['label'] }}
+                                </td>
                                 <td class="table-center">
                                     <input type="checkbox" name="permissions[]" value="{{ $row['name'] }}" class="form-check" @checked(in_array($row['name'], $selectedPermissions, true))>
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
 
-                    @foreach ($permissionGroups['area_permissions'] as $index => $area)
-                        <tbody data-permission-section data-module-key="{{ $area['key'] }}" data-module-label="{{ \Illuminate\Support\Str::lower($area['area']) }}">
-                            <tr class="permission-table__module-row">
-                                <td colspan="2">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}.- {{ \Illuminate\Support\Str::upper($area['area']) }}</td>
-                            </tr>
+                        {{-- Áreas --}}
+                        @foreach ($permissionGroups['area_permissions'] as $index => $area)
                             @foreach ($area['rows'] as $row)
-                                <tr data-permission-row data-module-key="{{ $area['key'] }}" data-search="{{ \Illuminate\Support\Str::lower($area['area'].' '.$row['label'].' '.$row['name']) }}">
-                                    <td class="permission-table__label">{{ $row['label'] }}</td>
+                                <tr>
+                                    <td style="display:none;">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</td>
+                                    <td class="permission-table__label">
+                                        <span class="text-caption text-muted">{{ $area['area'] }}:</span> {{ $row['label'] }}
+                                    </td>
                                     <td class="table-center">
                                         <input type="checkbox" name="permissions[]" value="{{ $row['name'] }}" class="form-check" @checked(in_array($row['name'], $selectedPermissions, true))>
                                     </td>
                                 </tr>
                             @endforeach
-                        </tbody>
-                    @endforeach
+                        @endforeach
+                    </tbody>
                 </table>
             </div>
         </div>

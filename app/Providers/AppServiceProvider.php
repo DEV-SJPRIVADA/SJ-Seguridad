@@ -114,6 +114,8 @@ class AppServiceProvider extends ServiceProvider
                     return null;
                 }
 
+                $canViewArea = $user->can("view.area.{$key}") || $user->can("manage.area.{$key}");
+
                 $boardItems = collect(config('access.boards', []))
                     ->map(function (string $boardLabel, string $boardKey) use ($key, $user, $routeName): ?array {
                         $permission = "view.board.{$key}.{$boardKey}";
@@ -122,14 +124,21 @@ class AppServiceProvider extends ServiceProvider
                             return null;
                         }
 
-                        $url = route('dashboard', ['module' => $key, 'board' => $boardKey]);
-                        $active = $routeName === 'dashboard'
-                            && request()->string('module')->toString() === $key
-                            && request()->string('board')->toString() === $boardKey;
+                        $url = $boardKey === 'requisiciones'
+                            ? route('requisitions.dashboard', ['module' => $key])
+                            : route('dashboard', ['module' => $key, 'board' => $boardKey]);
+
+                        $requestModule = str_starts_with((string) $routeName, 'requisitions.')
+                            ? (string) request()->route('module')
+                            : request()->string('module')->toString();
+                        $requestBoard = request()->string('board')->toString();
+                        $active = $boardKey === 'requisiciones'
+                            ? str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key
+                            : $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key;
 
                         return [
                             'label' => $boardLabel,
-                            'route' => 'dashboard',
+                            'route' => $boardKey === 'requisiciones' ? 'requisitions.dashboard' : 'dashboard',
                             'url' => $url,
                             'active' => $active,
                         ];
@@ -137,19 +146,36 @@ class AppServiceProvider extends ServiceProvider
                     ->filter()
                     ->values();
 
-                if (! $user->can("view.area.{$key}") && ! $user->can("manage.area.{$key}") && $boardItems->isEmpty()) {
+                if ($canViewArea && $boardItems->doesntContain('label', config('access.boards.dashboard'))) {
+                    $dashboardUrl = route('dashboard', ['module' => $key, 'board' => 'dashboard']);
+
+                    $boardItems->prepend([
+                        'label' => config('access.boards.dashboard'),
+                        'route' => 'dashboard',
+                        'url' => $dashboardUrl,
+                        'active' => $routeName === 'dashboard'
+                            && request()->string('module')->toString() === $key
+                            && request()->string('board')->toString() === 'dashboard',
+                    ]);
+                }
+
+                if (! $canViewArea && $boardItems->isEmpty()) {
                     return null;
                 }
 
                 $url = route('dashboard', ['module' => $key]);
-                $active = $routeName === 'dashboard' && request()->string('module')->toString() === $key;
+                $active = (
+                    $routeName === 'dashboard' && request()->string('module')->toString() === $key
+                ) || (
+                    str_starts_with((string) $routeName, 'requisitions.') && (string) request()->route('module') === $key
+                );
 
                 return [
                     'key' => $key,
                     'label' => $label,
                     'url' => $boardItems->first()['url'] ?? $url,
                     'items' => $boardItems,
-                    'active' => $active,
+                    'active' => $active || $boardItems->contains('active', true),
                 ];
             })
             ->filter()

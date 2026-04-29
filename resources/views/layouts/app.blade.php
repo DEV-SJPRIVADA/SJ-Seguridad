@@ -14,6 +14,129 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
+
+        <!-- jQuery y DataTables CDN -->
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                // Silenciar alertas de DataTables (mejor UX)
+                $.fn.dataTable.ext.errMode = 'throw';
+
+                $('.js-datatable').each(function() {
+                    if (!$.fn.DataTable.isDataTable(this)) {
+                        $(this).DataTable({
+                            language: {
+                                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                            },
+                            pageLength: 10,
+                            responsive: true,
+                            retrieve: true
+                        });
+                    }
+                });
+
+                $('.js-datatable-permissions').each(function() {
+                    if (!$.fn.DataTable.isDataTable(this)) {
+                        $(this).DataTable({
+                            language: {
+                                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                            },
+                            paging: true,
+                            pageLength: 25,
+                            scrollY: '450px',
+                            scrollCollapse: true,
+                            responsive: true,
+                            order: [[0, 'asc']],
+                            columnDefs: [
+                                { targets: [0], visible: false }
+                            ]
+                        });
+                    }
+                });
+            });
+        </script>
+        <style>
+            /* Layout Fijo */
+            .app-shell {
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                background: var(--color-bg, #f4f7fb);
+            }
+
+            .app-frame {
+                display: grid;
+                flex: 1;
+                grid-template-columns: 280px minmax(0, 1fr);
+                overflow: hidden;
+            }
+
+            .app-sidebar {
+                background: #e9eef5;
+                border-right: 1px solid var(--color-border, #dbe3ef);
+                padding: 1.5rem 1rem;
+                height: 100%;
+                overflow-y: auto;
+            }
+
+            .app-workspace {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                overflow: hidden;
+                min-width: 0;
+            }
+
+            .module-strip {
+                background: var(--color-surface, #ffffff);
+                border-bottom: 1px solid var(--color-border, #dbe3ef);
+                flex-shrink: 0;
+            }
+
+            .app-main {
+                flex: 1;
+                overflow-y: auto;
+                width: 100%;
+            }
+
+            /* DataTables Custom */
+            .dataTables_wrapper .dataTables_filter input {
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-sm);
+                padding: 0.4rem 0.8rem;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+            }
+            .dataTables_wrapper .dataTables_length select {
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-sm);
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                padding: 0.2rem 1.5rem 0.2rem 0.5rem;
+            }
+            table.dataTable thead th {
+                border-bottom: 1px solid var(--border-color);
+                background-color: var(--bg-secondary);
+                color: var(--text-muted);
+                font-weight: 500;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+            }
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background: var(--brand-primary) !important;
+                color: white !important;
+                border: 1px solid var(--brand-primary) !important;
+            }
+            .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
+                color: var(--text-muted) !important;
+                font-size: 0.875rem;
+                margin-top: 1rem;
+            }
+        </style>
     </head>
     <body>
         <div class="app-shell">
@@ -39,11 +162,6 @@
                         <div class="module-strip">
                             <div class="app-container">
                                 <div class="module-strip__inner">
-                                    <div>
-                                        <p class="text-caption">Modulo actual</p>
-                                        <p class="panel-title title-spaced">{{ $currentModule['label'] }}</p>
-                                    </div>
-
                                     <nav class="module-tabs">
                                         @foreach ($currentModuleTabs as $tab)
                                             <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
@@ -57,11 +175,7 @@
                     @endif
 
                     @isset($header)
-                        <header class="page-header">
-                            <div class="app-container page-header-inner">
-                                {{ $header }}
-                            </div>
-                        </header>
+                        {{ $header }}
                     @endisset
 
                     <main class="app-main">

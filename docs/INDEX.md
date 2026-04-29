@@ -15,6 +15,7 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
+- [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 
 ## Objetivo de esta documentacion
 

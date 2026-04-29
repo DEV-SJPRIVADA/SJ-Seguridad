@@ -69,6 +69,7 @@ class UserController extends Controller
     public function create(): View
     {
         return view('admin.users.create', [
+            'areas' => config('access.areas', []),
             'roles' => $this->roles(),
             'permissionGroups' => $this->permissionGroups(),
         ]);
@@ -79,6 +80,7 @@ class UserController extends Controller
         DB::transaction(function () use ($request): void {
             $user = User::create([
                 'name' => $request->string('name')->toString(),
+                'area_key' => $request->input('area_key'),
                 'email' => Str::lower($request->string('email')->toString()),
                 'password' => $request->string('password')->toString(),
                 'is_active' => $request->boolean('is_active', true),
@@ -97,6 +99,7 @@ class UserController extends Controller
     public function edit(User $user): View
     {
         return view('admin.users.edit', [
+            'areas' => config('access.areas', []),
             'permissionGroups' => $this->permissionGroups(),
             'roles' => $this->roles(),
             'selectedPermissions' => $user->permissions->pluck('name')->all(),
@@ -110,6 +113,7 @@ class UserController extends Controller
         DB::transaction(function () use ($request, $user): void {
             $attributes = [
                 'name' => $request->string('name')->toString(),
+                'area_key' => $request->input('area_key'),
                 'email' => Str::lower($request->string('email')->toString()),
                 'is_active' => $request->boolean('is_active'),
                 'must_change_password' => $request->boolean('must_change_password'),

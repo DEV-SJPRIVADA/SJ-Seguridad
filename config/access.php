@@ -4,6 +4,8 @@ return [
     'system_permissions' => [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
+        'manage.requisitions' => 'Gestionar requisiciones de personal',
+        'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
     ],
 
     'areas' => [
@@ -26,6 +28,13 @@ return [
     'boards' => [
         'dashboard' => 'Dashboard',
         'requisiciones' => 'Requisiciones',
+    ],
+
+    'requisition_tabs' => [
+        'dashboard' => 'Dashboard',
+        'solicitar' => 'Solicitar',
+        'gestion' => 'Gestion',
+        'parametros' => 'Parametros',
     ],
 
     'navigation' => [

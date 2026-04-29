@@ -1,9 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <p class="eyebrow">Accesos de Usuarios</p>
-            <h2 class="page-title title-spaced">Editar usuario</h2>
-            <p class="page-subtitle">{{ $user->name }} · {{ $user->email }}</p>
+        <div class="app-container">
+            <div class="panel">
+                <div class="panel__body panel__body--soft">
+                    <div class="action-row">
+                        <div>
+                            <p class="eyebrow">Accesos de Usuarios</p>
+                            <h2 class="page-title title-spaced">Editar usuario</h2>
+                            <p class="page-subtitle">{{ $user->name }} | {{ $user->email }}</p>
+                        </div>
+
+                        <div class="form-actions__group">
+                            <span class="status-pill {{ $user->is_active ? 'status-pill--success' : 'status-pill--danger' }}">
+                                {{ $user->is_active ? 'Activo' : 'Bloqueado' }}
+                            </span>
+                            <span class="status-pill status-pill--muted">
+                                {{ $selectedRole ?: 'Sin rol' }}
+                            </span>
+                            <a href="{{ route('admin.users.index') }}" class="btn btn--secondary">
+                                Volver al listado
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </x-slot>
 
