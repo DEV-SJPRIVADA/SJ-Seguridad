@@ -101,6 +101,15 @@ class RequisitionController extends Controller
                 'programming_type_id' => $request->integer('programming_type_id'),
                 'required_profile' => $request->string('required_profile')->toString(),
                 'required_uniform' => $request->input('required_uniform'),
+                'contract_type' => $request->input('contract_type'),
+                'contract_duration' => $request->input('contract_duration'),
+                'base_salary' => $request->input('base_salary'),
+                'transport_allowance' => $request->input('transport_allowance'),
+                'mobility_allowance' => $request->input('mobility_allowance'),
+                'statutory_bonus' => $request->input('statutory_bonus'),
+                'non_statutory_bonus' => $request->input('non_statutory_bonus'),
+                'other_allowances' => $request->input('other_allowances'),
+                'leasing_contract' => $request->input('leasing_contract'),
                 'cost_center' => $request->input('cost_center'),
                 'requester_observation' => $request->input('requester_observation'),
                 'status' => PersonalRequisition::STATUS_SOLICITADA,
@@ -126,7 +135,7 @@ class RequisitionController extends Controller
     public function manage(Request $request, string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement();
+        $this->authorizeManagement($module);
 
         $search = trim($request->string('q')->toString());
         $status = $request->string('status')->toString();
@@ -161,7 +170,7 @@ class RequisitionController extends Controller
     public function edit(string $module, PersonalRequisition $requisition): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement();
+        $this->authorizeManagement($module);
         $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
@@ -180,7 +189,7 @@ class RequisitionController extends Controller
     public function update(UpdatePersonalRequisitionRequest $request, string $module, PersonalRequisition $requisition): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement();
+        $this->authorizeManagement($module);
         $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
@@ -203,9 +212,21 @@ class RequisitionController extends Controller
                 'programming_type_id' => $request->integer('programming_type_id'),
                 'required_profile' => $request->string('required_profile')->toString(),
                 'required_uniform' => $request->input('required_uniform'),
+                'contract_type' => $request->input('contract_type'),
+                'contract_duration' => $request->input('contract_duration'),
+                'base_salary' => $request->input('base_salary'),
+                'transport_allowance' => $request->input('transport_allowance'),
+                'mobility_allowance' => $request->input('mobility_allowance'),
+                'statutory_bonus' => $request->input('statutory_bonus'),
+                'non_statutory_bonus' => $request->input('non_statutory_bonus'),
+                'other_allowances' => $request->input('other_allowances'),
+                'leasing_contract' => $request->input('leasing_contract'),
                 'cost_center' => $request->input('cost_center'),
                 'requester_observation' => $request->input('requester_observation'),
                 'human_resources_observation' => $request->input('human_resources_observation'),
+                'recruiter_name' => $request->input('recruiter_name'),
+                'hired_quantity' => $request->input('hired_quantity', 0),
+                'hiring_date' => $request->input('hiring_date'),
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
                 'closed_at' => in_array($newStatus, [PersonalRequisition::STATUS_CONTRATADO, PersonalRequisition::STATUS_CANCELADA], true) ? now() : null,
@@ -229,7 +250,7 @@ class RequisitionController extends Controller
     public function parameters(string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement();
+        $this->authorizeParameterManagement($module);
 
         $catalogs = collect(self::PARAMETER_TYPES)
             ->map(function (array $definition, string $type): array {
@@ -238,7 +259,7 @@ class RequisitionController extends Controller
                 return [
                     'key' => $type,
                     'label' => $definition['label'],
-                    'items' => $modelClass::query()->orderBy('sort_order')->orderBy('name')->get(),
+                    'items' => $modelClass::query()->orderBy('name')->get(),
                 ];
             })
             ->values();
@@ -254,7 +275,7 @@ class RequisitionController extends Controller
     public function storeParameter(StoreRequisitionParameterRequest $request, string $module, string $type): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement();
+        $this->authorizeParameterManagement($module);
 
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
@@ -265,7 +286,6 @@ class RequisitionController extends Controller
             ['name' => Str::of($request->string('name')->toString())->trim()->squish()->toString()],
             [
                 'is_active' => $request->boolean('is_active', true),
-                'sort_order' => $request->integer('sort_order'),
             ]
         );
 
@@ -277,7 +297,7 @@ class RequisitionController extends Controller
     public function updateParameter(StoreRequisitionParameterRequest $request, string $module, string $type, int $parameterId): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement();
+        $this->authorizeParameterManagement($module);
 
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
@@ -287,7 +307,6 @@ class RequisitionController extends Controller
         $record->update([
             'name'       => Str::of($request->string('name')->toString())->trim()->squish()->toString(),
             'is_active'  => $request->boolean('is_active'),
-            'sort_order' => $request->integer('sort_order'),
         ]);
 
         return redirect()
@@ -298,7 +317,7 @@ class RequisitionController extends Controller
     public function destroyParameter(string $module, string $type, int $parameterId): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement();
+        $this->authorizeParameterManagement($module);
 
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
@@ -343,8 +362,10 @@ class RequisitionController extends Controller
         abort_unless($canManageAll || $user?->area_key === $module, 403);
     }
 
-    private function authorizeManagement(): void
+    private function authorizeManagement(string $module): void
     {
+        abort_unless($module === 'gestion_humana', 403);
+
         abort_unless(
             auth()->user()?->can('manage.requisitions')
             || auth()->user()?->can('manage.area.gestion_humana'),
@@ -352,8 +373,10 @@ class RequisitionController extends Controller
         );
     }
 
-    private function authorizeParameterManagement(): void
+    private function authorizeParameterManagement(string $module): void
     {
+        abort_unless($module === 'gestion_humana', 403);
+
         abort_unless(
             auth()->user()?->can('manage.requisition.parameters')
             || auth()->user()?->can('manage.users')
@@ -368,12 +391,12 @@ class RequisitionController extends Controller
     private function catalogs(): array
     {
         return [
-            'positions' => RequisitionPosition::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
-            'reasons' => RequisitionRequestReason::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
-            'clients' => RequisitionClient::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
-            'cities' => RequisitionCity::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
-            'clientTypes' => RequisitionClientType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
-            'programmingTypes' => RequisitionProgrammingType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
+            'positions' => RequisitionPosition::query()->where('is_active', true)->orderBy('name')->get(),
+            'reasons' => RequisitionRequestReason::query()->where('is_active', true)->orderBy('name')->get(),
+            'clients' => RequisitionClient::query()->where('is_active', true)->orderBy('name')->get(),
+            'cities' => RequisitionCity::query()->where('is_active', true)->orderBy('name')->get(),
+            'clientTypes' => RequisitionClientType::query()->where('is_active', true)->orderBy('name')->get(),
+            'programmingTypes' => RequisitionProgrammingType::query()->where('is_active', true)->orderBy('name')->get(),
         ];
     }
 

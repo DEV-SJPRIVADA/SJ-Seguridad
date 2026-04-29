@@ -1,8 +1,10 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+    </x-slot>
+
     <div class="page-section">
         <div class="app-container">
-            @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
-
             <div class="panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Gestion de requisiciones</h3>
@@ -42,7 +44,11 @@
                                         <td>{{ $requisition->leader_name }}</td>
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ $requisition->client?->name }}</td>
-                                        <td>{{ $statusLabels[$requisition->status] ?? $requisition->status }}</td>
+                                        <td>
+                                            <span class="status-pill status-pill--req-{{ $requisition->status }}">
+                                                {{ $statusLabels[$requisition->status] ?? $requisition->status }}
+                                            </span>
+                                        </td>
                                         <td class="table-actions">
                                             <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary">Abrir</a>
                                         </td>

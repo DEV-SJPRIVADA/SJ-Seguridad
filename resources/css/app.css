@@ -161,9 +161,7 @@ a {
 }
 
 .requisition-subtabs {
-    margin: -2rem -1rem 1.5rem;
     background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -757,6 +755,52 @@ a {
 .status-pill--warning {
     background: #fef3c7;
     color: #92400e;
+}
+
+/* Requisition Statuses */
+.status-pill--req-solicitada {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--req-en_gestion {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-pill--req-contratado {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--req-cancelada {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+.requisition-subtabs {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.dashboard-stat-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(5, 1fr) !important;
+    margin-bottom: 2rem;
+}
+
+.dashboard-stat-grid .card {
+    padding: 0.75rem 1rem !important;
+}
+
+.dashboard-stat-grid .text-caption {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.25rem;
+}
+
+.dashboard-stat-grid .page-title {
+    font-size: 1.4rem !important;
 }
 
 .status-dot {

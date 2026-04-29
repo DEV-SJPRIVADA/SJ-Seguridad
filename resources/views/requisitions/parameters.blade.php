@@ -1,14 +1,10 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+    </x-slot>
+
     <div class="page-section">
         <div class="app-container">
-            @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
-
-            @foreach (['requisition-parameter-created' => 'Parametro registrado correctamente.', 'requisition-parameter-updated' => 'Parametro actualizado correctamente.', 'requisition-parameter-deleted' => 'Parametro eliminado correctamente.'] as $key => $msg)
-                @if (session('status') === $key)
-                    <div class="notice notice--success bottom-spaced">{{ $msg }}</div>
-                @endif
-            @endforeach
-
             <div class="form-layout">
                 @foreach ($catalogs as $catalog)
                     <section class="panel">
@@ -22,16 +18,12 @@
                             <form
                                 method="POST"
                                 action="{{ route('requisitions.parameters.store', ['module' => $moduleKey, 'type' => $catalog['key']]) }}"
-                                class="form-grid form-grid--two"
+                                class="form-stack"
                             >
                                 @csrf
                                 <div class="form-field">
                                     <x-input-label :for="'name_'.$catalog['key']" value="Nuevo valor" />
                                     <input id="{{ 'name_'.$catalog['key'] }}" name="name" type="text" class="form-input" required>
-                                </div>
-                                <div class="form-field">
-                                    <x-input-label :for="'sort_'.$catalog['key']" value="Orden" />
-                                    <input id="{{ 'sort_'.$catalog['key'] }}" name="sort_order" type="number" min="0" class="form-input" value="0">
                                 </div>
                                 <label class="checkbox-card form-field--full">
                                     <input type="checkbox" name="is_active" value="1" class="form-check" checked>
@@ -52,7 +44,6 @@
                                     <thead>
                                         <tr>
                                             <th>Nombre</th>
-                                            <th style="width:80px;">Orden</th>
                                             <th style="width:100px;">Estado</th>
                                             <th style="width:160px;">Acciones</th>
                                         </tr>
@@ -61,7 +52,6 @@
                                         @foreach ($catalog['items'] as $item)
                                             <tr>
                                                 <td>{{ $item->name }}</td>
-                                                <td>{{ $item->sort_order }}</td>
                                                 <td>
                                                     <span class="status-pill {{ $item->is_active ? 'status-pill--success' : 'status-pill--muted' }}">
                                                         {{ $item->is_active ? 'Activo' : 'Inactivo' }}
@@ -114,14 +104,10 @@
             <form method="POST" id="param-edit-form" class="panel__body form-stack">
                 @csrf
                 @method('PATCH')
-                <div class="form-grid form-grid--two">
-                    <div class="form-field form-field--full">
+                <div class="form-stack">
+                    <div class="form-field">
                         <x-input-label for="edit-param-name" value="Nombre" />
                         <input id="edit-param-name" name="name" type="text" class="form-input" required autocomplete="off">
-                    </div>
-                    <div class="form-field">
-                        <x-input-label for="edit-param-sort" value="Orden" />
-                        <input id="edit-param-sort" name="sort_order" type="number" min="0" class="form-input">
                     </div>
                     <label class="checkbox-card">
                         <input type="checkbox" id="edit-param-active" name="is_active" value="1" class="form-check">

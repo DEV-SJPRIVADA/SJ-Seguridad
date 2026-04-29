@@ -1,8 +1,10 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+    </x-slot>
+
     <div class="page-section">
         <div class="app-container">
-            @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
-
             <div class="panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Nueva requisicion</h3>

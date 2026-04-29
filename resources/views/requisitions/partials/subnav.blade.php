@@ -1,4 +1,4 @@
-<div class="requisition-subtabs bottom-spaced">
+<div class="requisition-subtabs">
     <div class="requisition-subtabs__inner">
         <nav class="module-tabs">
             @foreach ($subTabs as $tab)

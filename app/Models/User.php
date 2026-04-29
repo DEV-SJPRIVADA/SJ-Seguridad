@@ -92,11 +92,11 @@ class User extends Authenticatable
             $tabs->push('solicitar');
         }
 
-        if ($this->can('manage.requisitions') || $this->can('manage.area.gestion_humana')) {
+        if ($moduleKey === 'gestion_humana' && ($this->can('manage.requisitions') || $this->can('manage.area.gestion_humana'))) {
             $tabs->push('gestion');
         }
 
-        if ($this->can('manage.requisition.parameters') || $this->can('manage.users') || $this->can('manage.area.gestion_humana')) {
+        if ($moduleKey === 'gestion_humana' && ($this->can('manage.requisition.parameters') || $this->can('manage.users') || $this->can('manage.area.gestion_humana'))) {
             $tabs->push('parametros');
         }
 

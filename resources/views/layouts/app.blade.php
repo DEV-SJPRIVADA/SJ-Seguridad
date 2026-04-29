@@ -136,9 +136,189 @@
                 font-size: 0.875rem;
                 margin-top: 1rem;
             }
+
+            /* Sistema de Toasts */
+            .toast-container {
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                z-index: 99999;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                pointer-events: none;
+            }
+
+            .toast {
+                pointer-events: auto;
+                min-width: 300px;
+                max-width: 450px;
+                padding: 1rem 1.25rem;
+                border-radius: 16px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                animation: toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                border: 1px solid transparent;
+            }
+
+            @keyframes toast-in {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+
+            .toast--success {
+                background: #ecfdf5;
+                border-color: #10b981;
+                color: #065f46;
+            }
+
+            .toast--error {
+                background: #fff1f2;
+                border-color: #f43f5e;
+                color: #9f1239;
+            }
+
+            .toast__close {
+                background: transparent;
+                border: 0;
+                color: inherit;
+                cursor: pointer;
+                opacity: 0.6;
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+
+            .toast__close:hover {
+                opacity: 1;
+            }
+            /* Requisition Statuses Forced */
+            .status-pill--req-solicitada {
+                background-color: #e0f2fe !important;
+                color: #0369a1 !important;
+            }
+
+            .status-pill--req-en_gestion {
+                background-color: #fef3c7 !important;
+                color: #92400e !important;
+            }
+
+            .status-pill--req-contratado {
+                background-color: #dcfce7 !important;
+                color: #15803d !important;
+            }
+
+            .status-pill--req-cancelada {
+                background-color: #ffe4e6 !important;
+                color: #be123c !important;
+            }
+
+            /* Workspace Layout Enforcement */
+            .app-workspace {
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+            }
+
+            .module-strip {
+                z-index: 20;
+                position: relative;
+                flex-shrink: 0 !important;
+            }
+
+            .app-workspace-header {
+                z-index: 10;
+                position: relative;
+                flex-shrink: 0 !important;
+                background: var(--color-surface);
+            }
+
+            .requisition-subtabs {
+                margin: 0 !important;
+                padding: 0 !important;
+                border-top: 1px solid var(--color-border) !important;
+            }
+
+            .dashboard-stat-grid {
+                display: grid !important;
+                gap: 1rem !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                margin-bottom: 2rem !important;
+            }
+
+            .dashboard-stat-grid .card {
+                padding: 0.75rem 1rem !important;
+            }
+
+            .dashboard-stat-grid .text-caption {
+                font-size: 0.7rem !important;
+                margin-bottom: 0.25rem !important;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .dashboard-stat-grid .page-title {
+                font-size: 1.4rem !important;
+                margin: 0 !important;
+            }
         </style>
+
+        <script>
+            window.showToast = function(message, type = 'success') {
+                const container = document.getElementById('global-toast-container');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = `toast toast--${type}`;
+                toast.innerHTML = `
+                    <span>${message}</span>
+                    <button class="toast__close" onclick="this.parentElement.remove()">✕</button>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.animation = 'toast-in 0.4s reverse forwards';
+                    setTimeout(() => toast.remove(), 400);
+                }, 5000);
+            };
+
+            // Disparar desde session status de Laravel
+            $(document).ready(function() {
+                @if (session('status'))
+                    @php
+                        $msg = session('status');
+                        $type = 'success';
+                        
+                        // Mapeo simple de mensajes comunes
+                        $messages = [
+                            'user-created' => 'Usuario creado correctamente.',
+                            'user-updated' => 'Usuario actualizado correctamente.',
+                            'requisition-created' => 'Requisicion registrada con exito.',
+                            'requisition-updated' => 'Requisicion actualizada correctamente.',
+                            'requisition-parameter-created' => 'Parametro registrado correctamente.',
+                            'requisition-parameter-updated' => 'Parametro actualizado correctamente.',
+                            'requisition-parameter-deleted' => 'Parametro eliminado correctamente.',
+                        ];
+
+                        $finalMsg = $messages[$msg] ?? $msg;
+                        if (str_contains(strtolower($msg), 'error') || str_contains(strtolower($msg), 'fail')) {
+                            $type = 'error';
+                        }
+                    @endphp
+                    showToast("{{ $finalMsg }}", "{{ $type }}");
+                @endif
+
+                @if ($errors->any())
+                    showToast("Por favor verifica los errores en el formulario.", "error");
+                @endif
+            });
+        </script>
     </head>
     <body>
+        <div id="global-toast-container" class="toast-container"></div>
         <div class="app-shell">
             @include('layouts.navigation')
 
@@ -175,7 +355,9 @@
                     @endif
 
                     @isset($header)
-                        {{ $header }}
+                        <div class="app-workspace-header">
+                            {{ $header }}
+                        </div>
                     @endisset
 
                     <main class="app-main">

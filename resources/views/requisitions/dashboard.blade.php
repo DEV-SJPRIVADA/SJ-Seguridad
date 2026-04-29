@@ -1,14 +1,10 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+    </x-slot>
+
     <div class="page-section">
         <div class="app-container">
-            @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
-
-            @if (session('status') === 'requisition-created')
-                <div class="notice notice--success bottom-spaced">
-                    Requisicion {{ session('requisition_code') }} creada correctamente.
-                </div>
-            @endif
-
             <div class="dashboard-stat-grid bottom-spaced">
                 <article class="card card--muted">
                     <p class="text-caption">Total</p>
@@ -62,7 +58,11 @@
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ $requisition->client?->name }}</td>
                                         <td>{{ $requisition->requester?->name }}</td>
-                                        <td>{{ $statusLabels[$requisition->status] ?? $requisition->status }}</td>
+                                        <td>
+                                            <span class="status-pill status-pill--req-{{ $requisition->status }}">
+                                                {{ $statusLabels[$requisition->status] ?? $requisition->status }}
+                                            </span>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

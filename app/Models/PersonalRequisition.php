@@ -28,6 +28,15 @@ class PersonalRequisition extends Model
         'quantity',
         'replacement_document',
         'replacement_name',
+        'contract_type',
+        'contract_duration',
+        'base_salary',
+        'transport_allowance',
+        'mobility_allowance',
+        'statutory_bonus',
+        'non_statutory_bonus',
+        'other_allowances',
+        'leasing_contract',
         'operating_area_key',
         'request_reason_id',
         'client_id',
@@ -39,6 +48,9 @@ class PersonalRequisition extends Model
         'cost_center',
         'requester_observation',
         'human_resources_observation',
+        'recruiter_name',
+        'hired_quantity',
+        'hiring_date',
         'status',
         'status_changed_at',
         'closed_at',
@@ -48,8 +60,15 @@ class PersonalRequisition extends Model
     {
         return [
             'request_date' => 'date',
+            'hiring_date' => 'date',
             'status_changed_at' => 'datetime',
             'closed_at' => 'datetime',
+            'base_salary' => 'decimal:2',
+            'transport_allowance' => 'decimal:2',
+            'mobility_allowance' => 'decimal:2',
+            'statutory_bonus' => 'decimal:2',
+            'non_statutory_bonus' => 'decimal:2',
+            'other_allowances' => 'decimal:2',
         ];
     }
 

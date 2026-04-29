@@ -1,11 +1,6 @@
 <x-app-layout>
     <div class="page-section admin-users-page">
         <div class="app-container page-stack admin-users-page__stack">
-            @if (session('status') === 'user-created')
-                <div class="notice notice--success">
-                    Usuario creado correctamente.
-                </div>
-            @endif
             <div class="panel users-panel">
                 <div class="panel__body panel__body--soft">
                     <div class="action-row">

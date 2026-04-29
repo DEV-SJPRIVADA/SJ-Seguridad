@@ -1,14 +1,10 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+    </x-slot>
+
     <div class="page-section">
         <div class="app-container">
-            @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
-
-            @if (session('status') === 'requisition-updated')
-                <div class="notice notice--success bottom-spaced">
-                    Requisicion actualizada correctamente.
-                </div>
-            @endif
-
             <div class="form-layout bottom-spaced">
                 <section class="panel">
                     <div class="panel__header">
@@ -60,7 +56,16 @@
                                     @foreach ($requisition->statusLogs->sortByDesc('created_at') as $log)
                                         <tr>
                                             <td>{{ $log->created_at?->format('Y-m-d H:i') }}</td>
-                                            <td>{{ $statusLabels[$log->from_status] ?? 'Inicial' }} -> {{ $statusLabels[$log->to_status] ?? $log->to_status }}</td>
+                                                <td>
+                                                    <div class="status-pill status-pill--req-{{ $log->from_status }}">
+                                                        {{ $statusLabels[$log->from_status] ?? 'Inicial' }}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="status-pill status-pill--req-{{ $log->to_status }}">
+                                                        {{ $statusLabels[$log->to_status] ?? $log->to_status }}
+                                                    </div>
+                                                </td>
                                             <td>{{ $log->author?->name }}</td>
                                         </tr>
                                     @endforeach
