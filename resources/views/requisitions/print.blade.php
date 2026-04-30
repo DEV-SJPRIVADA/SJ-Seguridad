@@ -37,7 +37,7 @@
         }
         .text-center { text-align: center; }
         .bg-gray { background-color: #e0e0e0 !important; font-weight: bold; }
-        .header-table td { height: 25px; }
+        .header-table td { height: 20px; }
         .row-h15 td { height: 12pt; }
         .section-title {
             background-color: #e0e0e0 !important;
@@ -97,7 +97,7 @@
         <table class="header-table">
             <tr>
                 <td style="width: 20%;" class="text-center">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo" style="height: 70px; width: auto; display: block; margin: 0 auto;">
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo" style="height: 50px; width: auto; display: block; margin: 0 auto;">
                 </td>
                 <td style="width: 60%;" class="text-center">
                     <h1 style="margin: 0; font-size: 11pt;">REQUISICIÓN DE PERSONAL</h1>
