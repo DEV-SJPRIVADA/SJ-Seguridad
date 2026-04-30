@@ -106,6 +106,11 @@ class PersonalRequisition extends Model
         return $this->belongsTo(RequisitionClient::class);
     }
 
+    public function recruiter(): BelongsTo
+    {
+        return $this->belongsTo(RequisitionRecruiter::class, 'recruiter_id');
+    }
+
     public function city(): BelongsTo
     {
         return $this->belongsTo(RequisitionCity::class);

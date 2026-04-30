@@ -14,6 +14,7 @@ use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionContractType;
 use App\Models\RequisitionUniform;
+use App\Models\RequisitionRecruiter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class RequisitionController extends Controller
         'programming-types' => ['label' => 'Tipos de programacion', 'model' => RequisitionProgrammingType::class],
         'uniforms' => ['label' => 'Dotación requerida', 'model' => RequisitionUniform::class],
         'contract-types' => ['label' => 'Tipos de contrato', 'model' => RequisitionContractType::class],
+        'recruiters' => ['label' => 'Encargados de selección', 'model' => RequisitionRecruiter::class],
     ];
 
     public function dashboard(string $module): View
@@ -135,6 +137,7 @@ class RequisitionController extends Controller
                     'other_allowances' => $request->input('other_allowances'),
                     'leasing_contract' => $request->input('leasing_contract'),
                     'cost_center' => $request->input('cost_center'),
+                    'recruiter_id' => $request->integer('recruiter_id'),
                     'requester_observation' => $request->input('requester_observation'),
                     'status' => PersonalRequisition::STATUS_SOLICITADA,
                     'status_changed_at' => now(),
@@ -266,6 +269,7 @@ class RequisitionController extends Controller
                 'non_statutory_bonus' => $request->input('non_statutory_bonus'),
                 'other_allowances' => $request->input('other_allowances'),
                 'leasing_contract' => $request->input('leasing_contract'),
+                'recruiter_id' => $request->integer('recruiter_id'),
                 'cost_center' => $request->input('cost_center'),
                 'requester_observation' => $request->input('requester_observation'),
                 'human_resources_observation' => $request->input('human_resources_observation'),
@@ -443,6 +447,7 @@ class RequisitionController extends Controller
             'programmingTypes' => RequisitionProgrammingType::query()->where('is_active', true)->orderBy('name')->get(),
             'uniforms' => RequisitionUniform::query()->where('is_active', true)->orderBy('name')->get(),
             'contractTypes' => RequisitionContractType::query()->where('is_active', true)->orderBy('name')->get(),
+            'recruiters' => RequisitionRecruiter::query()->where('is_active', true)->orderBy('name')->get(),
         ];
     }
 

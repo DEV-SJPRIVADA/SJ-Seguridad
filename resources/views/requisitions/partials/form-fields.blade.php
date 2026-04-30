@@ -225,9 +225,14 @@
         </div>
 
         <div class="form-field">
-            <x-input-label for="recruiter_name" value="Encargado de seleccion" />
-            <input id="recruiter_name" name="recruiter_name" type="text" class="form-input" value="{{ old('recruiter_name', $requisition?->recruiter_name) }}">
-            <x-input-error :messages="$errors->get('recruiter_name')" />
+            <x-input-label for="recruiter_id" value="Reclutador" />
+            <select id="recruiter_id" name="recruiter_id" class="form-select">
+                <option value="">Selecciona un reclutador</option>
+                @foreach ($catalogs['recruiters'] as $item)
+                    <option value="{{ $item->id }}" @selected((string) old('recruiter_id', $requisition?->recruiter_id) === (string) $item->id)>{{ $item->name }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('recruiter_id')" />
         </div>
 
         <div class="form-field">
