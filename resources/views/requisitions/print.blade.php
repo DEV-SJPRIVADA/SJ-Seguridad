@@ -195,10 +195,10 @@
         {{-- CONTRATO Y AREA --}}
         <table>
             <tr class="bg-gray">
-                <td colspan="6" style="width: 50%;" class="text-center">TIPO DE CONTRATO (Marque con una x)</td>
-                <td colspan="3" style="width: 50%;" class="text-center">AREA (Marque con una x)</td>
+                <td colspan="6" style="width: 60%;" class="text-center">TIPO DE CONTRATO (Marque con una x)</td>
+                <td colspan="4" style="width: 40%;" class="text-center">AREA (Marque con una x)</td>
             </tr>
-            <tr>
+            <tr class="row-h12">
                 <td style="width: 15%;">Obra Labor</td>
                 <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->contractType?->name, 'Obra') !== false ? 'X' : '' }}</td>
                 <td style="width: 15%;">Fijo</td>
@@ -206,9 +206,9 @@
                 <td style="width: 15%;">Indefinido</td>
                 <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->contractType?->name, 'Indefinido') !== false ? 'X' : '' }}</td>
                 
-                <td style="width: 20%;">Administrativo</td>
+                <td style="width: 15%;">Administrativo</td>
                 <td class="checkbox-cell" style="width: 5%;">{{ $requisition->operating_area_key == 'administrativa' ? 'X' : '' }}</td>
-                <td style="width: 20%;">Operativo</td>
+                <td style="width: 15%;">Operativo</td>
                 <td class="checkbox-cell" style="width: 5%;">{{ $requisition->operating_area_key == 'operaciones' ? 'X' : '' }}</td>
             </tr>
         </table>
@@ -267,14 +267,14 @@
             </tr>
             <tr>
                 <td colspan="2" style="padding: 0;">
-                    <table style="border: none; margin: 0;">
+                    <table style="width: 100%; border-collapse: collapse; border: none; margin: -1px;">
                         <tr>
-                            <td style="border: none; width: 25%;" class="bg-gray">Contrato Arrendamiento</td>
-                            <td style="border: none; width: 10%;">SI</td>
-                            <td class="checkbox-cell" style="width: 5%; border-top: none; border-bottom: none;">{{ stripos($requisition->leasing_contract, 'SI') !== false ? 'X' : '' }}</td>
-                            <td style="border: none; width: 10%;">NO</td>
-                            <td class="checkbox-cell" style="width: 5%; border-top: none; border-bottom: none;">{{ stripos($requisition->leasing_contract, 'NO') !== false || empty($requisition->leasing_contract) ? 'X' : '' }}</td>
-                            <td style="border: none; width: 45%; text-align: right;">$ 0</td>
+                            <td style="border: none; border-right: 1px solid #000; width: 30%;" class="bg-gray">Contrato Arrendamiento</td>
+                            <td style="border: none; border-right: 1px solid #000; width: 8%; text-align: center;">SI</td>
+                            <td class="checkbox-cell" style="width: 5%; border: none; border-right: 1px solid #000;">{{ stripos($requisition->leasing_contract, 'SI') !== false ? 'X' : '' }}</td>
+                            <td style="border: none; border-right: 1px solid #000; width: 8%; text-align: center;">NO</td>
+                            <td class="checkbox-cell" style="width: 5%; border: none; border-right: 1px solid #000;">{{ stripos($requisition->leasing_contract, 'NO') !== false || empty($requisition->leasing_contract) ? 'X' : '' }}</td>
+                            <td style="border: none; width: 44%; text-align: right;">$ {{ number_format(floatval($requisition->leasing_contract), 0) }}</td>
                         </tr>
                     </table>
                 </td>
