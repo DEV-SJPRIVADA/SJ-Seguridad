@@ -34,26 +34,42 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Despues de creada, la requisicion ya no se modifica desde el flujo del solicitante; solo gestion humana puede hacerlo
 - Usuarios con `manage.users` o `manage.area.gestion_humana` pueden crear solicitudes en cualquier modulo sin necesidad de tener `area_key` coincidente
 
-## Orden de campos en el formulario de solicitud
+## Orden de campos y Matriz de Visibilidad (Sprint 2026-04-29)
 
-1. Lider / solicitante (readonly, tomado del usuario autenticado)
-2. Area solicitante (readonly, tomado del modulo)
+El formulario ha sido expandido para incluir toda la matriz de compensación y seguimiento, con visibilidad restringida según el rol:
+
+### Campos visibles para Solicitantes (Perfil de área)
+1. Lider / solicitante (readonly)
+2. Area solicitante (readonly)
 3. Cargo solicitado
 4. Sexo
 5. Cantidad
-6. Cedula a quien reemplaza
-7. Nombre completo a quien reemplaza
-8. Area operativa
-9. Motivo
-10. Cliente
-11. Ciudad
-12. Tipo de cliente
-13. Tipo de programacion
-14. Perfil requerido
-15. Dotacion requerida
-16. Centro de costo
-17. Observaciones del solicitante
-18. (Solo en edicion por gestion humana) Estado y Observaciones de gestion humana
+6. Cedula / Nombre a quien reemplaza (opcional)
+7. Area operativa
+8. Motivo
+9. Cliente
+10. Ciudad
+11. Tipo de cliente
+12. Tipo de programacion
+13. Perfil requerido
+14. Dotacion requerida
+15. Centro de costo
+16. Observaciones del solicitante
+
+### Campos exclusivos para Gestión Humana (GH)
+17. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
+18. **Seguimiento**: Encargado de selección (Recruiter).
+19. **Cierre**: Cantidad contratada, Fecha de contratación, Observaciones de GH.
+
+## Identificación Visual y UI
+
+- **Estados por colores**: Se implementó un sistema de indicadores visuales (status-pills) en tablas e historial:
+  - 🔵 `solicitada`: Pendiente.
+  - 🟡 `en_gestion`: En proceso por GH.
+  - 🟢 `contratado`: Proceso finalizado con éxito.
+  - 🔴 `cancelada`: Solicitud descartada.
+- **Layout Fijo**: Las barras de navegación (Módulo y Sub-tableros) permanecen fijas en la parte superior, optimizando el desplazamiento en pantallas pequeñas y formularios largos.
+- **Dashboard Compacto**: Indicadores KPI en una sola fila para maximizar el espacio de las tablas de datos.
 
 ## Rutas
 
@@ -73,12 +89,12 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 - `view.board.{area}.requisiciones`
 - `manage.requisitions`
 - `manage.requisition.parameters`
-- `manage.area.gestion_humana`
+- `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
 - `manage.users`
 
 ## Tablas implicadas
 
-- `personal_requisitions`
+- `personal_requisitions` (Actualizada con 12 campos nuevos de compensación y cierre)
 - `personal_requisition_status_logs`
 - `requisition_positions`
 - `requisition_request_reasons`
@@ -89,13 +105,15 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 
 ## Riesgos
 
-- Si el usuario no tiene `area_key`, no puede usar el tablero `Solicitar` (excepto usuarios con `manage.users` o `manage.area.gestion_humana`)
-- Cambios en parametros impactan formularios, filtros y tableros del modulo
-- Cambios en navegacion deben revisar la resolucion del tablero `Requisiciones` en `AppServiceProvider`
+- **Visibilidad Sensible**: Los campos de compensación son críticos; cualquier cambio en la lógica de `showHumanResourcesFields` puede exponer salarios a solicitantes.
+- **Validación de Cierre**: `hired_quantity` y `hiring_date` son requeridos para estados finales.
 
-## Correcciones aplicadas (sprint 2026-04)
+## Correcciones aplicadas (Sprint final 2026-04)
 
-- **Tab Solicitar no aparecia**: La condicion `area_key === moduleKey` bloqueaba a super-admin y administrador. Ahora usuarios con `manage.users` o `manage.area.gestion_humana` siempre ven el tab.
-- **403 al acceder al dashboard con `view.area.*`**: `authorizeBoardAccess` no aceptaba permisos de area. Ahora incluye `view.area.{module}` y `manage.area.{module}` como condiciones validas.
-- **Variables indefinidas en edicion**: El `@include` de `form-fields` en `edit.blade.php` no pasaba `$catalogs`, `$sexOptions`, `$areaOptions` ni `$statusLabels`. Corregido pasando todas las variables al include explicitamente.
-- **Codigo de requisicion inconsistente**: `nextCode()` usaba `max('id')` que falla con registros eliminados. Ahora parsea el ultimo codigo del anio actual por query ordenada.
+- **Ampliación de Modelo**: Migración `2026_04_29_144000` ejecutada para campos de compensación y reclutamiento.
+- **Matriz de Visibilidad**: Formulario `partials/form-fields.blade.php` reorganizado por secciones de acceso controlado.
+- **Sistema de Colores**: Implementación de clases `.status-pill--req-*` en CSS y vistas.
+- **Navegación Fija**: Reestructuración de `app.blade.php` y slots de cabecera para evitar superposición de menús.
+- **Dashboard KPI**: Compactación de indicadores en 4 columnas fijas en una sola fila.
+- **Notificaciones**: Migración a sistema de Toasts dinámicos en la esquina inferior derecha.
+

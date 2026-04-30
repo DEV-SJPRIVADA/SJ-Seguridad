@@ -131,17 +131,27 @@
     </div>
 
     <div class="form-field form-field--full">
-        <x-input-label for="required_uniform" value="Dotacion requerida" />
-        <input id="required_uniform" name="required_uniform" type="text" class="form-input" value="{{ old('required_uniform', $requisition?->required_uniform) }}">
-        <x-input-error :messages="$errors->get('required_uniform')" />
+        <x-input-label for="uniform_id" value="Dotacion requerida" />
+        <select id="uniform_id" name="uniform_id" class="form-select">
+            <option value="">Selecciona una dotacion</option>
+            @foreach ($catalogs['uniforms'] as $item)
+                <option value="{{ $item->id }}" @selected((string) old('uniform_id', $requisition?->uniform_id) === (string) $item->id)>{{ $item->name }}</option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('uniform_id')" />
     </div>
 
     {{-- GRUPO 2: CAMPOS PARA GESTION HUMANA O SOLICITANTE SEGUN IMAGEN (CON OBSERVACIONES) --}}
     @if ($showHumanResourcesFields)
         <div class="form-field">
-            <x-input-label for="contract_type" value="Tipo de contrato" />
-            <input id="contract_type" name="contract_type" type="text" class="form-input" value="{{ old('contract_type', $requisition?->contract_type) }}">
-            <x-input-error :messages="$errors->get('contract_type')" />
+            <x-input-label for="contract_type_id" value="Tipo de contrato" />
+            <select id="contract_type_id" name="contract_type_id" class="form-select">
+                <option value="">Selecciona un tipo de contrato</option>
+                @foreach ($catalogs['contractTypes'] as $item)
+                    <option value="{{ $item->id }}" @selected((string) old('contract_type_id', $requisition?->contract_type_id) === (string) $item->id)>{{ $item->name }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('contract_type_id')" />
         </div>
 
         <div class="form-field">
@@ -220,11 +230,7 @@
             <x-input-error :messages="$errors->get('recruiter_name')" />
         </div>
 
-        <div class="form-field">
-            <x-input-label for="hired_quantity" value="Contratados" />
-            <input id="hired_quantity" name="hired_quantity" type="number" min="0" class="form-input" value="{{ old('hired_quantity', $requisition?->hired_quantity ?? 0) }}">
-            <x-input-error :messages="$errors->get('hired_quantity')" />
-        </div>
+
 
         <div class="form-field">
             <x-input-label for="hiring_date" value="Fecha de contratacion" />

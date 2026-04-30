@@ -36,8 +36,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'client_type_id' => ['required', 'integer', Rule::exists('requisition_client_types', 'id')],
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],
             'required_profile' => ['required', 'string'],
-            'required_uniform' => ['nullable', 'string', 'max:255'],
-            'contract_type' => ['nullable', 'string', 'max:255'],
+            'uniform_id' => ['nullable', 'integer', Rule::exists('requisition_uniforms', 'id')],
+            'contract_type_id' => ['nullable', 'integer', Rule::exists('requisition_contract_types', 'id')],
             'contract_duration' => ['nullable', 'string', 'max:255'],
             'base_salary' => ['nullable', 'numeric', 'min:0'],
             'transport_allowance' => ['nullable', 'numeric', 'min:0'],
@@ -50,7 +50,6 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'requester_observation' => ['nullable', 'string'],
             'human_resources_observation' => ['nullable', 'string'],
             'recruiter_name' => ['nullable', 'string', 'max:255'],
-            'hired_quantity' => ['nullable', 'integer', 'min:0'],
             'hiring_date' => ['nullable', 'date'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];

@@ -8,6 +8,8 @@ use App\Models\RequisitionClientType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
+use App\Models\RequisitionContractType;
+use App\Models\RequisitionUniform;
 use Illuminate\Database\Seeder;
 
 class RequisitionParameterSeeder extends Seeder
@@ -46,6 +48,20 @@ class RequisitionParameterSeeder extends Seeder
         $this->seedCatalog(RequisitionProgrammingType::class, [
             '5x2',
             '2x2x2',
+        ]);
+
+        $this->seedCatalog(RequisitionUniform::class, [
+            'Camisa + Pantalón + Botas',
+            'Overol + Botas',
+            'Traje Formal',
+            'Sin Dotación',
+        ]);
+
+        $this->seedCatalog(RequisitionContractType::class, [
+            'Fijo',
+            'Indefinido',
+            'Obra o Labor',
+            'Aprendizaje',
         ]);
     }
 

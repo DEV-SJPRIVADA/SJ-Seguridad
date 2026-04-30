@@ -12,6 +12,8 @@ use App\Models\RequisitionClientType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
+use App\Models\RequisitionContractType;
+use App\Models\RequisitionUniform;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +32,8 @@ class RequisitionController extends Controller
         'cities' => ['label' => 'Ciudades', 'model' => RequisitionCity::class],
         'client-types' => ['label' => 'Tipos de cliente', 'model' => RequisitionClientType::class],
         'programming-types' => ['label' => 'Tipos de programacion', 'model' => RequisitionProgrammingType::class],
+        'uniforms' => ['label' => 'Dotación requerida', 'model' => RequisitionUniform::class],
+        'contract-types' => ['label' => 'Tipos de contrato', 'model' => RequisitionContractType::class],
     ];
 
     public function dashboard(string $module): View
@@ -100,8 +104,8 @@ class RequisitionController extends Controller
                 'client_type_id' => $request->integer('client_type_id'),
                 'programming_type_id' => $request->integer('programming_type_id'),
                 'required_profile' => $request->string('required_profile')->toString(),
-                'required_uniform' => $request->input('required_uniform'),
-                'contract_type' => $request->input('contract_type'),
+                'uniform_id' => $request->integer('uniform_id'),
+                'contract_type_id' => $request->integer('contract_type_id'),
                 'contract_duration' => $request->input('contract_duration'),
                 'base_salary' => $request->input('base_salary'),
                 'transport_allowance' => $request->input('transport_allowance'),
@@ -211,8 +215,8 @@ class RequisitionController extends Controller
                 'client_type_id' => $request->integer('client_type_id'),
                 'programming_type_id' => $request->integer('programming_type_id'),
                 'required_profile' => $request->string('required_profile')->toString(),
-                'required_uniform' => $request->input('required_uniform'),
-                'contract_type' => $request->input('contract_type'),
+                'uniform_id' => $request->integer('uniform_id'),
+                'contract_type_id' => $request->integer('contract_type_id'),
                 'contract_duration' => $request->input('contract_duration'),
                 'base_salary' => $request->input('base_salary'),
                 'transport_allowance' => $request->input('transport_allowance'),
@@ -225,7 +229,6 @@ class RequisitionController extends Controller
                 'requester_observation' => $request->input('requester_observation'),
                 'human_resources_observation' => $request->input('human_resources_observation'),
                 'recruiter_name' => $request->input('recruiter_name'),
-                'hired_quantity' => $request->input('hired_quantity', 0),
                 'hiring_date' => $request->input('hiring_date'),
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
@@ -397,6 +400,8 @@ class RequisitionController extends Controller
             'cities' => RequisitionCity::query()->where('is_active', true)->orderBy('name')->get(),
             'clientTypes' => RequisitionClientType::query()->where('is_active', true)->orderBy('name')->get(),
             'programmingTypes' => RequisitionProgrammingType::query()->where('is_active', true)->orderBy('name')->get(),
+            'uniforms' => RequisitionUniform::query()->where('is_active', true)->orderBy('name')->get(),
+            'contractTypes' => RequisitionContractType::query()->where('is_active', true)->orderBy('name')->get(),
         ];
     }
 

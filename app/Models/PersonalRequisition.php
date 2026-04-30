@@ -28,7 +28,7 @@ class PersonalRequisition extends Model
         'quantity',
         'replacement_document',
         'replacement_name',
-        'contract_type',
+        'contract_type_id',
         'contract_duration',
         'base_salary',
         'transport_allowance',
@@ -44,12 +44,11 @@ class PersonalRequisition extends Model
         'client_type_id',
         'programming_type_id',
         'required_profile',
-        'required_uniform',
+        'uniform_id',
         'cost_center',
         'requester_observation',
         'human_resources_observation',
         'recruiter_name',
-        'hired_quantity',
         'hiring_date',
         'status',
         'status_changed_at',
@@ -120,6 +119,16 @@ class PersonalRequisition extends Model
     public function programmingType(): BelongsTo
     {
         return $this->belongsTo(RequisitionProgrammingType::class);
+    }
+
+    public function contractType(): BelongsTo
+    {
+        return $this->belongsTo(RequisitionContractType::class);
+    }
+
+    public function uniform(): BelongsTo
+    {
+        return $this->belongsTo(RequisitionUniform::class);
     }
 
     public function statusLogs(): HasMany
