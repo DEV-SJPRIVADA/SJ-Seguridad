@@ -11,14 +11,43 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @endif
-
         <!-- jQuery y DataTables CDN -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+        @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @endif
+
+        <style>
+            /* Estilo Global de Tablas Corporativas */
+            .data-table th, 
+            .js-datatable thead th,
+            table.dataTable thead th,
+            table.dataTable thead td {
+                background-color: #003366 !important; /* Azul oscuro corporativo */
+                color: #ffffff !important;
+                font-size: clamp(10px, 0.8vw, 13px) !important;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 12px 10px !important;
+                white-space: nowrap !important;
+                border-bottom: 2px solid #002244 !important;
+                text-align: center !important;
+            }
+
+            .data-table tbody tr:hover, 
+            .js-datatable tbody tr:hover,
+            table.dataTable tbody tr:hover {
+                background-color: rgba(0, 51, 102, 0.05) !important;
+            }
+
+            /* Forzar centrado de texto en celdas de encabezado de DataTables */
+            table.dataTable thead th {
+                text-align: center !important;
+            }
+        </style>
         <script>
             $(document).ready(function() {
                 // Silenciar alertas de DataTables (mejor UX)

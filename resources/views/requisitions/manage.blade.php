@@ -3,23 +3,7 @@
         @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
-    <style>
-        .js-datatable thead th {
-            background-color: #003366 !important; /* Azul oscuro corporativo */
-            color: #ffffff !important;
-            font-size: clamp(10px, 0.8vw, 13px) !important;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 12px 10px !important;
-            white-space: nowrap;
-            border-bottom: 2px solid #002244;
-            text-align: center !important;
-        }
-        
-        .js-datatable tbody tr:hover {
-            background-color: rgba(0, 51, 102, 0.05);
-        }
-    </style>
+
 
     <div class="page-section">
         <div class="app-container">
