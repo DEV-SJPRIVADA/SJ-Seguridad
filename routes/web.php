@@ -84,6 +84,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/solicitar', [RequisitionController::class, 'store'])->name('store');
         Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');
         Route::get('/gestion/{requisition}/editar', [RequisitionController::class, 'edit'])->name('edit');
+        Route::get('/gestion/{requisition}/imprimir', [RequisitionController::class, 'print'])->name('print');
         Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');
         Route::get('/parametros', [RequisitionController::class, 'parameters'])->name('parameters');
         Route::post('/parametros/{type}', [RequisitionController::class, 'storeParameter'])->name('parameters.store');

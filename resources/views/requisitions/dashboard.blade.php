@@ -46,6 +46,7 @@
                                     <th>Fecha</th>
                                     <th>Cargo</th>
                                     <th>Cliente</th>
+                                    <th>Reemplaza a</th>
                                     <th>Solicita</th>
                                     <th>Estado</th>
                                 </tr>
@@ -57,6 +58,7 @@
                                         <td>{{ $requisition->request_date?->format('Y-m-d') }}</td>
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ $requisition->client?->name }}</td>
+                                        <td>{{ $requisition->replacement_name ?? 'N/A' }}</td>
                                         <td>{{ $requisition->requester?->name }}</td>
                                         <td>
                                             <span class="status-pill status-pill--req-{{ $requisition->status }}">

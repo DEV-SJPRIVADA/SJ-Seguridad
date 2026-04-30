@@ -3,6 +3,24 @@
         @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
+    <style>
+        .js-datatable thead th {
+            background-color: #003366 !important; /* Azul oscuro corporativo */
+            color: #ffffff !important;
+            font-size: clamp(10px, 0.8vw, 13px) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 10px !important;
+            white-space: nowrap;
+            border-bottom: 2px solid #002244;
+            text-align: center !important;
+        }
+        
+        .js-datatable tbody tr:hover {
+            background-color: rgba(0, 51, 102, 0.05);
+        }
+    </style>
+
     <div class="page-section">
         <div class="app-container">
             <div class="panel">
@@ -32,8 +50,10 @@
                                     <th>Lider</th>
                                     <th>Cargo</th>
                                     <th>Cliente</th>
+                                    <th>Ciudad</th>
+                                    <th>Reemplaza a</th>
                                     <th>Estado</th>
-                                    <th></th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -44,6 +64,8 @@
                                         <td>{{ $requisition->leader_name }}</td>
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ $requisition->client?->name }}</td>
+                                        <td>{{ $requisition->city?->name }}</td>
+                                        <td>{{ $requisition->replacement_name ?? 'N/A' }}</td>
                                         <td>
                                             <span class="status-pill status-pill--req-{{ $requisition->status }}">
                                                 {{ $statusLabels[$requisition->status] ?? $requisition->status }}
@@ -51,6 +73,10 @@
                                         </td>
                                         <td class="table-actions">
                                             <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary">Abrir</a>
+                                            <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary" title="Previsualizar e Imprimir">
+                                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                Imprimir
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach

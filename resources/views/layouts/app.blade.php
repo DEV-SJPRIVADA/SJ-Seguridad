@@ -103,12 +103,18 @@
             }
 
             /* DataTables Custom */
+            .dataTables_wrapper .dataTables_filter {
+                margin-bottom: 1.5rem !important;
+                text-align: right !important;
+            }
             .dataTables_wrapper .dataTables_filter input {
-                border: 1px solid var(--border-color);
-                border-radius: var(--radius-sm);
-                padding: 0.4rem 0.8rem;
-                background-color: var(--bg-primary);
-                color: var(--text-primary);
+                border: 1px solid var(--color-border) !important;
+                border-radius: 12px !important;
+                padding: 0.6rem 1rem !important;
+                background-color: #fff !important;
+                color: var(--color-text) !important;
+                min-width: 280px !important;
+                margin-left: 0.5rem !important;
             }
             .dataTables_wrapper .dataTables_length select {
                 border: 1px solid var(--border-color);
@@ -223,22 +229,24 @@
             }
 
             .module-strip {
-                z-index: 20;
+                z-index: 25;
                 position: relative;
                 flex-shrink: 0 !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
 
             .app-workspace-header {
-                z-index: 10;
+                z-index: 20;
                 position: relative;
                 flex-shrink: 0 !important;
                 background: var(--color-surface);
+                border-bottom: 1px solid var(--color-border);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             }
 
             .requisition-subtabs {
                 margin: 0 !important;
                 padding: 0 !important;
-                border-top: 1px solid var(--color-border) !important;
             }
 
             .dashboard-stat-grid {
@@ -366,5 +374,6 @@
                 </div>
             </div>
         </div>
+        @stack('scripts')
     </body>
 </html>

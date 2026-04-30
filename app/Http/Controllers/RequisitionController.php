@@ -41,7 +41,7 @@ class RequisitionController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeBoardAccess($module);
 
-        $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
+        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
 
         $requisitions = PersonalRequisition::query()
             ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
@@ -85,55 +85,77 @@ class RequisitionController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeRequestCreation($module);
 
-        $requisition = DB::transaction(function () use ($request, $module): PersonalRequisition {
-            $requisition = PersonalRequisition::create([
-                'code' => $this->nextCode(),
-                'requested_by' => $request->user()->id,
-                'request_date' => now()->toDateString(),
-                'leader_name' => $request->user()->name,
-                'requesting_area_key' => $module,
-                'position_id' => $request->integer('position_id'),
-                'sex' => $request->string('sex')->toString(),
-                'quantity' => $request->integer('quantity'),
-                'replacement_document' => $request->input('replacement_document'),
-                'replacement_name' => $request->input('replacement_name'),
-                'operating_area_key' => $request->string('operating_area_key')->toString(),
-                'request_reason_id' => $request->integer('request_reason_id'),
-                'client_id' => $request->integer('client_id'),
-                'city_id' => $request->integer('city_id'),
-                'client_type_id' => $request->integer('client_type_id'),
-                'programming_type_id' => $request->integer('programming_type_id'),
-                'required_profile' => $request->string('required_profile')->toString(),
-                'uniform_id' => $request->integer('uniform_id'),
-                'contract_type_id' => $request->integer('contract_type_id'),
-                'contract_duration' => $request->input('contract_duration'),
-                'base_salary' => $request->input('base_salary'),
-                'transport_allowance' => $request->input('transport_allowance'),
-                'mobility_allowance' => $request->input('mobility_allowance'),
-                'statutory_bonus' => $request->input('statutory_bonus'),
-                'non_statutory_bonus' => $request->input('non_statutory_bonus'),
-                'other_allowances' => $request->input('other_allowances'),
-                'leasing_contract' => $request->input('leasing_contract'),
-                'cost_center' => $request->input('cost_center'),
-                'requester_observation' => $request->input('requester_observation'),
-                'status' => PersonalRequisition::STATUS_SOLICITADA,
-                'status_changed_at' => now(),
-            ]);
+        $requisitions = DB::transaction(function () use ($request, $module): array {
+            $quantity = $request->integer('quantity', 1);
+            $created = [];
+            
+            // Obtener el numero base para el codigo una sola vez
+            $year = now()->format('Y');
+            $lastCode = PersonalRequisition::query()
+                ->where('code', 'like', "REQ-{$year}-%")
+                ->orderByDesc('id')
+                ->value('code');
 
-            $requisition->statusLogs()->create([
-                'from_status' => null,
-                'to_status' => PersonalRequisition::STATUS_SOLICITADA,
-                'changed_by' => $request->user()->id,
-                'comment' => 'Solicitud creada desde el tablero de requisiciones.',
-            ]);
+            $lastNumber = 0;
+            if ($lastCode) {
+                $parts = explode('-', $lastCode);
+                $lastNumber = (int) end($parts);
+            }
 
-            return $requisition;
+            for ($i = 0; $i < $quantity; $i++) {
+                $currentNumber = $lastNumber + $i + 1;
+                $newCode = 'REQ-'.$year.'-'.str_pad((string) $currentNumber, 4, '0', STR_PAD_LEFT);
+
+                $requisition = PersonalRequisition::create([
+                    'code' => $newCode,
+                    'requested_by' => $request->user()->id,
+                    'request_date' => now()->toDateString(),
+                    'leader_name' => $request->user()->name,
+                    'requesting_area_key' => $module,
+                    'position_id' => $request->integer('position_id'),
+                    'sex' => $request->string('sex')->toString(),
+                    'quantity' => 1, // Ahora cada registro es individual
+                    'replacement_document' => $request->input('replacement_document'),
+                    'replacement_name' => $request->input('replacement_name'),
+                    'operating_area_key' => $request->string('operating_area_key')->toString(),
+                    'request_reason_id' => $request->integer('request_reason_id'),
+                    'client_id' => $request->integer('client_id'),
+                    'city_id' => $request->integer('city_id'),
+                    'client_type_id' => $request->integer('client_type_id'),
+                    'programming_type_id' => $request->integer('programming_type_id'),
+                    'required_profile' => $request->string('required_profile')->toString(),
+                    'uniform_id' => $request->integer('uniform_id'),
+                    'contract_type_id' => $request->integer('contract_type_id'),
+                    'contract_duration' => $request->input('contract_duration'),
+                    'base_salary' => $request->input('base_salary'),
+                    'transport_allowance' => $request->input('transport_allowance'),
+                    'mobility_allowance' => $request->input('mobility_allowance'),
+                    'statutory_bonus' => $request->input('statutory_bonus'),
+                    'non_statutory_bonus' => $request->input('non_statutory_bonus'),
+                    'other_allowances' => $request->input('other_allowances'),
+                    'leasing_contract' => $request->input('leasing_contract'),
+                    'cost_center' => $request->input('cost_center'),
+                    'requester_observation' => $request->input('requester_observation'),
+                    'status' => PersonalRequisition::STATUS_SOLICITADA,
+                    'status_changed_at' => now(),
+                ]);
+
+                $requisition->statusLogs()->create([
+                    'from_status' => null,
+                    'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+                    'changed_by' => $request->user()->id,
+                    'comment' => 'Solicitud creada (' . ($i + 1) . '/' . $quantity . ') desde el tablero de requisiciones.',
+                ]);
+
+                $created[] = $requisition;
+            }
+
+            return $created;
         });
 
         return redirect()
             ->route('requisitions.dashboard', ['module' => $module])
-            ->with('status', 'requisition-created')
-            ->with('requisition_code', $requisition->code);
+            ->with('status', 'requisition-created');
     }
 
     public function manage(Request $request, string $module): View
@@ -144,7 +166,7 @@ class RequisitionController extends Controller
         $search = trim($request->string('q')->toString());
         $status = $request->string('status')->toString();
 
-        $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
+        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
 
         $requisitions = PersonalRequisition::query()
             ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
@@ -153,7 +175,11 @@ class RequisitionController extends Controller
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('code', 'like', "%{$search}%")
                         ->orWhere('leader_name', 'like', "%{$search}%")
-                        ->orWhere('required_profile', 'like', "%{$search}%");
+                        ->orWhere('required_profile', 'like', "%{$search}%")
+                        ->orWhere('replacement_name', 'like', "%{$search}%")
+                        ->orWhereHas('position', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('client', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('city', fn($q) => $q->where('name', 'like', "%{$search}%"));
                 });
             })
             ->when($status !== '', fn ($query) => $query->where('status', $status))
@@ -171,11 +197,26 @@ class RequisitionController extends Controller
         ]);
     }
 
+    public function print(string $module, PersonalRequisition $requisition): View
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeBoardAccess($module); // Permitir a cualquier usuario que pueda ver el tablero
+        
+        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
+        abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
+
+        return view('requisitions.print', [
+            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'contractType', 'uniform']),
+            'statusLabels' => PersonalRequisition::statuses(),
+            'moduleLabel' => config("access.areas.{$requisition->requesting_area_key}"),
+        ]);
+    }
+
     public function edit(string $module, PersonalRequisition $requisition): View
     {
         $this->abortIfUnknownModule($module);
         $this->authorizeManagement($module);
-        $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
+        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
         return view('requisitions.edit', [
@@ -194,7 +235,7 @@ class RequisitionController extends Controller
     {
         $this->abortIfUnknownModule($module);
         $this->authorizeManagement($module);
-        $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
+        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
         DB::transaction(function () use ($request, $requisition): void {
