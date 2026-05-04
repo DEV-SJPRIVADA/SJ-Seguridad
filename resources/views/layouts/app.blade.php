@@ -97,13 +97,14 @@
             }
 
             .app-frame {
-                display: grid;
+                display: flex;
                 flex: 1;
-                grid-template-columns: 280px minmax(0, 1fr);
                 overflow: hidden;
             }
 
             .app-sidebar {
+                width: 280px;
+                flex-shrink: 0;
                 background: #e9eef5;
                 border-right: 1px solid var(--color-border, #dbe3ef);
                 padding: 1.5rem 1rem;
@@ -112,6 +113,7 @@
             }
 
             .app-workspace {
+                flex: 1;
                 display: flex;
                 flex-direction: column;
                 height: 100%;
@@ -129,6 +131,46 @@
                 flex: 1;
                 overflow-y: auto;
                 width: 100%;
+                background: var(--color-bg, #f4f7fb);
+            }
+
+            @media (max-width: 1024px) {
+                .nav-toggle {
+                    display: inline-flex !important;
+                }
+                .app-shell {
+                    height: auto !important;
+                    min-height: 100vh !important;
+                    overflow-y: auto !important;
+                }
+                .app-frame {
+                    flex-direction: column !important;
+                    overflow: visible !important;
+                    height: auto !important;
+                }
+                .app-sidebar {
+                    display: block !important;
+                    width: 100% !important;
+                    height: auto !important;
+                    border-right: none !important;
+                    border-bottom: 1px solid var(--color-border) !important;
+                    padding: 1rem !important;
+                }
+                .app-workspace {
+                    height: auto !important;
+                    overflow: visible !important;
+                    width: 100% !important;
+                }
+                .app-main {
+                    overflow: visible !important;
+                    padding: 0 !important;
+                }
+                .app-container {
+                    width: 100% !important;
+                    padding-left: 1rem !important;
+                    padding-right: 1rem !important;
+                    margin: 0 !important;
+                }
             }
 
             /* DataTables Custom */
@@ -281,24 +323,54 @@
             .dashboard-stat-grid {
                 display: grid !important;
                 gap: 1rem !important;
-                grid-template-columns: repeat(4, 1fr) !important;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
                 margin-bottom: 2rem !important;
             }
 
             .dashboard-stat-grid .card {
-                padding: 0.75rem 1rem !important;
+                padding: 1.25rem !important;
+                height: 100% !important;
             }
 
-            .dashboard-stat-grid .text-caption {
-                font-size: 0.7rem !important;
-                margin-bottom: 0.25rem !important;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-            }
+            @media (max-width: 1024px) {
+                .dashboard-stat-grid {
+                    grid-template-columns: 1fr !important;
+                }
+                .dashboard-stat-grid .card {
+                    text-align: center !important;
+                }
+                .dashboard-hero__header {
+                    flex-direction: column !important;
+                    align-items: center !important;
+                    text-align: center !important;
+                    gap: 1.5rem !important;
+                }
+                /* Botones de navegación (módulos y pestañas) en dos columnas en mobile */
+                .app-sidebar__nav, 
+                .module-tabs, 
+                .requisition-subtabs__inner {
+                    display: flex !important;
+                    flex-direction: row !important;
+                    flex-wrap: wrap !important;
+                    gap: 0.5rem !important;
+                    justify-content: center !important;
+                }
 
-            .dashboard-stat-grid .page-title {
-                font-size: 1.4rem !important;
-                margin: 0 !important;
+                .sidebar-link, 
+                .module-tab,
+                .requisition-subtabs__inner .module-tab {
+                    width: calc(50% - 0.5rem) !important;
+                    margin: 0 !important;
+                    justify-content: center !important;
+                    text-align: center !important;
+                    padding: 0.6rem 0.4rem !important;
+                    font-size: 0.8rem !important;
+                }
+
+                .app-sidebar__header {
+                    text-align: center !important;
+                }
+            }
             }
         </style>
 
@@ -362,7 +434,7 @@
             <div class="app-frame">
                 <aside class="app-sidebar">
                     <div class="app-sidebar__header">
-                        <p class="text-caption">Modulos autorizados</p>
+                        <p class="text-caption">Navegación</p>
                     </div>
 
                     <nav class="app-sidebar__nav">

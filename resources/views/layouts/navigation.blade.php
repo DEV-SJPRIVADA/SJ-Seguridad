@@ -53,38 +53,19 @@
 
     <div x-show="open" class="nav-mobile" style="display: none;">
         <div class="app-container">
-            <div class="nav-mobile__links">
-                @foreach ($appNavigation as $module)
-                    <a href="{{ $module['url'] }}" class="nav-mobile-link {{ $module['active'] ? 'nav-mobile-link--active' : '' }}">
-                        {{ $module['label'] }}
-                    </a>
-                @endforeach
-            </div>
-
+            {{-- En el menú móvil solo dejamos lo que no está en el sidebar visible o acceso rápido --}}
             <div class="nav-mobile__meta">
                 <strong>{{ Auth::user()->name }}</strong>
-                <span>{{ Auth::user()->email }}</span>
+                <span style="display: block; font-size: 0.85rem; color: var(--color-text-soft);">{{ Auth::user()->email }}</span>
             </div>
 
-            @if ($currentModule)
-                <div class="nav-mobile__actions panel-divider-top">
-                    @foreach ($currentModuleTabs as $tab)
-                        <a href="{{ $tab['url'] }}" class="nav-mobile-link {{ $tab['active'] ? 'nav-mobile-link--active' : '' }}">
-                            {{ $tab['label'] }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-
-            <div class="nav-mobile__actions">
+            <div class="nav-mobile__actions" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(0,0,0,0.05);">
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Perfil') }}
                 </x-responsive-nav-link>
 
-                <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">
@@ -92,6 +73,8 @@
                     </x-responsive-nav-link>
                 </form>
             </div>
+            
+            {{-- Las ÁREAS y GESTIÓN se eliminan de aquí porque ya son visibles en el sidebar superior sin click --}}
         </div>
     </div>
 </nav>
