@@ -371,6 +371,12 @@
                     text-align: center !important;
                 }
             }
+
+            /* Fix para flechas de paginación gigantes */
+            nav[role="navigation"] svg {
+                width: 1.25rem !important;
+                height: 1.25rem !important;
+                display: inline-block !important;
             }
         </style>
 

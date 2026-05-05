@@ -23,6 +23,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isHired = $this->input('status') === PersonalRequisition::STATUS_CONTRATADO;
+
         return [
             'position_id' => ['required', 'integer', Rule::exists('requisition_positions', 'id')],
             'sex' => ['required', 'string', Rule::in(['masculino', 'femenino', 'indiferente'])],
@@ -37,20 +39,23 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],
             'required_profile' => ['required', 'string'],
             'uniform_id' => ['required', 'integer', Rule::exists('requisition_uniforms', 'id')],
-            'contract_type_id' => ['required', 'integer', Rule::exists('requisition_contract_types', 'id')],
-            'contract_duration' => ['required', 'string', 'max:255'],
-            'base_salary' => ['required', 'numeric', 'min:0'],
-            'transport_allowance' => ['required', 'numeric', 'min:0'],
+            
+            // Campos de GH condicionales: Solo obligatorios si el estado es 'contratado'
+            'contract_type_id' => [$isHired ? 'required' : 'nullable', 'integer', Rule::exists('requisition_contract_types', 'id')],
+            'contract_duration' => [$isHired ? 'required' : 'nullable', 'string', 'max:255'],
+            'base_salary' => [$isHired ? 'required' : 'nullable', 'numeric', 'min:0'],
+            'transport_allowance' => [$isHired ? 'required' : 'nullable', 'numeric', 'min:0'],
             'mobility_allowance' => ['nullable', 'numeric', 'min:0'],
-            'statutory_bonus' => ['required', 'numeric', 'min:0'],
+            'statutory_bonus' => [$isHired ? 'required' : 'nullable', 'numeric', 'min:0'],
             'non_statutory_bonus' => ['nullable', 'numeric', 'min:0'],
             'other_allowances' => ['nullable', 'numeric', 'min:0'],
             'leasing_contract' => ['nullable', 'string', 'max:255'],
             'cost_center' => ['required', 'string', 'max:255'],
+            
             'requester_observation' => ['nullable', 'string'],
             'human_resources_observation' => ['nullable', 'string'],
             'recruiter_name' => ['nullable', 'string', 'max:255'],
-            'hiring_date' => ['nullable', 'date'],
+            'hiring_date' => [$isHired ? 'required' : 'nullable', 'date'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];
     }

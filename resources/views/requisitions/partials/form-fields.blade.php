@@ -145,7 +145,7 @@
     @if ($showHumanResourcesFields)
         <div class="form-field">
             <x-input-label for="contract_type_id" value="Tipo de contrato *" />
-            <select id="contract_type_id" name="contract_type_id" class="form-select" required>
+            <select id="contract_type_id" name="contract_type_id" class="form-select">
                 <option value="">Selecciona un tipo de contrato</option>
                 @foreach ($catalogs['contractTypes'] as $item)
                     <option value="{{ $item->id }}" @selected((string) old('contract_type_id', $requisition?->contract_type_id) === (string) $item->id)>{{ $item->name }}</option>
@@ -156,19 +156,19 @@
 
         <div class="form-field">
             <x-input-label for="contract_duration" value="Duracion del contrato *" />
-            <input id="contract_duration" name="contract_duration" type="text" class="form-input" value="{{ old('contract_duration', $requisition?->contract_duration) }}" required>
+            <input id="contract_duration" name="contract_duration" type="text" class="form-input" value="{{ old('contract_duration', $requisition?->contract_duration) }}">
             <x-input-error :messages="$errors->get('contract_duration')" />
         </div>
 
         <div class="form-field">
             <x-input-label for="base_salary" value="Valor salario base *" />
-            <input id="base_salary" name="base_salary" type="text" class="form-input js-currency" data-raw-name="base_salary" value="{{ old('base_salary', $requisition?->base_salary ?? 0) }}" required>
+            <input id="base_salary" name="base_salary" type="text" class="form-input js-currency" data-raw-name="base_salary" value="{{ old('base_salary', $requisition?->base_salary ?? 0) }}">
             <x-input-error :messages="$errors->get('base_salary')" />
         </div>
 
         <div class="form-field">
             <x-input-label for="transport_allowance" value="Auxilio de transporte *" />
-            <input id="transport_allowance" name="transport_allowance" type="text" class="form-input js-currency" data-raw-name="transport_allowance" value="{{ old('transport_allowance', $requisition?->transport_allowance ?? 0) }}" required>
+            <input id="transport_allowance" name="transport_allowance" type="text" class="form-input js-currency" data-raw-name="transport_allowance" value="{{ old('transport_allowance', $requisition?->transport_allowance ?? 0) }}">
             <x-input-error :messages="$errors->get('transport_allowance')" />
         </div>
 
@@ -180,7 +180,7 @@
 
         <div class="form-field">
             <x-input-label for="statutory_bonus" value="Bonificacion prestacional *" />
-            <input id="statutory_bonus" name="statutory_bonus" type="text" class="form-input js-currency" data-raw-name="statutory_bonus" value="{{ old('statutory_bonus', $requisition?->statutory_bonus ?? 0) }}" required>
+            <input id="statutory_bonus" name="statutory_bonus" type="text" class="form-input js-currency" data-raw-name="statutory_bonus" value="{{ old('statutory_bonus', $requisition?->statutory_bonus ?? 0) }}">
             <x-input-error :messages="$errors->get('statutory_bonus')" />
         </div>
 
@@ -204,7 +204,7 @@
 
         <div class="form-field">
             <x-input-label for="cost_center" value="Centro de costo *" />
-            <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}" required>
+            <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}">
             <x-input-error :messages="$errors->get('cost_center')" />
         </div>
 
