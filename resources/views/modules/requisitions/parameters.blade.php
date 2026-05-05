@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+        @include('modules.requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
     <style>

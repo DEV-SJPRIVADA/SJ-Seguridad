@@ -27,6 +27,18 @@
 - Los permisos del sistema y por area viven en `config/access.php`.
 - La gestion inicial de usuarios esta en el modulo `admin/users`.
 
+## Estructura y Arquitectura Modular (Híbrida)
+- **Módulos Compartidos:** Funcionalidades usadas por múltiples áreas (ej. Requisiciones). Se ubican en:
+    - Controladores: `App\Http\Controllers\{Modulo}\`
+    - Vistas: `resources/views/modules/{modulo}/`
+    - Rutas: `routes/modules/{modulo}.php`
+- **Funcionalidades Únicas de Área:** Lógica exclusiva de un departamento. Se ubican en:
+    - Controladores: `App\Http\Controllers\{Area}\`
+    - Vistas: `resources/views/areas/{area}/`
+    - Rutas: `routes/areas/{area}.php`
+- **Visión SaaS:** El código debe estar preparado para escalar a múltiples clientes y ser gestionado por un SuperUsuario global.
+- **Navegación Dinámica:** El sidebar se genera automáticamente basándose en `config/access.php` y los permisos del usuario.
+
 ## Criterio de revision continua
 - Verificar que no se rompan rutas protegidas ni estados de sesion.
 - Verificar migraciones nuevas y compatibilidad con despliegue en hosting compartido.

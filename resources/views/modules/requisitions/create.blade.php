@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+        @include('modules.requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
     <div class="page-section">
@@ -14,7 +14,7 @@
                 <form method="POST" action="{{ route('requisitions.store', ['module' => $moduleKey]) }}" class="panel__body form-stack">
                     @csrf
 
-                    @include('requisitions.partials.form-fields', [
+                    @include('modules.requisitions.partials.form-fields', [
                         'moduleLabel' => $moduleLabel,
                         'requisition' => null,
                         'showHumanResourcesFields' => false,

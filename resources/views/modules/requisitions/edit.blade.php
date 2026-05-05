@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        @include('requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
+        @include('modules.requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
     <div class="page-section">
@@ -16,7 +16,7 @@
                         @csrf
                         @method('PATCH')
 
-                        @include('requisitions.partials.form-fields', [
+                        @include('modules.requisitions.partials.form-fields', [
                             'moduleLabel' => $moduleLabel,
                             'requisition' => $requisition,
                             'showHumanResourcesFields' => true,

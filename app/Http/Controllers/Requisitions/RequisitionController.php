@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Requisitions;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
 use App\Http\Requests\Requisitions\UpdatePersonalRequisitionRequest;
@@ -55,7 +56,7 @@ class RequisitionController extends Controller
             ->with(['client', 'position', 'requester'])
             ->get();
 
-        return view('requisitions.dashboard', [
+        return view('modules.requisitions.dashboard', [
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'statusLabels' => PersonalRequisition::statuses(),
@@ -76,7 +77,7 @@ class RequisitionController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeRequestCreation($module);
 
-        return view('requisitions.create', [
+        return view('modules.requisitions.create', [
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'subTabs' => $this->subTabs($module, 'solicitar'),
@@ -215,7 +216,7 @@ class RequisitionController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        return view('requisitions.manage', [
+        return view('modules.requisitions.manage', [
             'filters' => ['q' => $search, 'status' => $status],
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
@@ -233,7 +234,7 @@ class RequisitionController extends Controller
         $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
-        return view('requisitions.print', [
+        return view('modules.requisitions.print', [
             'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'contractType', 'uniform']),
             'statusLabels' => PersonalRequisition::statuses(),
             'moduleLabel' => config("access.areas.{$requisition->requesting_area_key}"),
@@ -247,7 +248,7 @@ class RequisitionController extends Controller
         $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
-        return view('requisitions.edit', [
+        return view('modules.requisitions.edit', [
             'areaOptions' => config('access.areas'),
             'catalogs' => $this->catalogs(),
             'moduleKey' => $module,
@@ -337,7 +338,7 @@ class RequisitionController extends Controller
             })
             ->values();
 
-        return view('requisitions.parameters', [
+        return view('modules.requisitions.parameters', [
             'catalogs' => $catalogs,
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
