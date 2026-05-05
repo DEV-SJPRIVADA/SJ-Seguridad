@@ -15,10 +15,13 @@ use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionContractType;
 use App\Models\RequisitionUniform;
 use App\Models\RequisitionRecruiter;
+use App\Models\RequisitionNotificationEmail;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PersonalRequisitionNotification;
 use Illuminate\Support\Str;
 
 class RequisitionController extends Controller
@@ -36,6 +39,7 @@ class RequisitionController extends Controller
         'uniforms' => ['label' => 'Dotación requerida', 'model' => RequisitionUniform::class],
         'contract-types' => ['label' => 'Tipos de contrato', 'model' => RequisitionContractType::class],
         'recruiters' => ['label' => 'Encargados de selección', 'model' => RequisitionRecruiter::class],
+        'emails' => ['label' => 'Correos de notificación', 'model' => RequisitionNotificationEmail::class],
     ];
 
     public function dashboard(string $module): View
@@ -127,7 +131,7 @@ class RequisitionController extends Controller
                     'programming_type_id' => $request->integer('programming_type_id'),
                     'required_profile' => $request->string('required_profile')->toString(),
                     'uniform_id' => $request->integer('uniform_id'),
-                    'contract_type_id' => $request->integer('contract_type_id'),
+                    'contract_type_id' => $request->filled('contract_type_id') ? $request->integer('contract_type_id') : null,
                     'contract_duration' => $request->input('contract_duration'),
                     'base_salary' => $request->input('base_salary'),
                     'transport_allowance' => $request->input('transport_allowance'),
@@ -137,7 +141,7 @@ class RequisitionController extends Controller
                     'other_allowances' => $request->input('other_allowances'),
                     'leasing_contract' => $request->input('leasing_contract'),
                     'cost_center' => $request->input('cost_center'),
-                    'recruiter_id' => $request->integer('recruiter_id'),
+                    'recruiter_id' => $request->filled('recruiter_id') ? $request->integer('recruiter_id') : null,
                     'requester_observation' => $request->input('requester_observation'),
                     'status' => PersonalRequisition::STATUS_SOLICITADA,
                     'status_changed_at' => now(),
@@ -155,6 +159,27 @@ class RequisitionController extends Controller
 
             return $created;
         });
+
+        // Envío de notificaciones por correo (Un solo correo consolidado por solicitud)
+        try {
+            $notificationEmails = RequisitionNotificationEmail::where('is_active', true)->pluck('name')->toArray();
+            
+            // Si no hay correos parametrizados, usamos el correo base de desarrollo
+            if (empty($notificationEmails)) {
+                $notificationEmails = ['desarrollo.tic@sjsp.com.co'];
+            }
+
+            // Enviamos un solo correo informando de la solicitud completa
+            if (!empty($requisitions)) {
+                $mainRequisition = $requisitions[0];
+                $totalCount = count($requisitions);
+                
+                Mail::to($notificationEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
+            }
+        } catch (\Exception $e) {
+            // Logueamos el error pero permitimos que la app continúe para no bloquear al usuario
+            \Illuminate\Support\Facades\Log::error("Error enviando correos de requisición: " . $e->getMessage());
+        }
 
         return redirect()
             ->route('requisitions.dashboard', ['module' => $module])

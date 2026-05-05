@@ -93,4 +93,15 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 });
 
+Route::get('/mail-preview', function () {
+    $requisition = \App\Models\PersonalRequisition::with(['position', 'client', 'requester'])->latest()->first();
+    
+    if (!$requisition) {
+        return "No hay requisiciones creadas para visualizar el correo.";
+    }
+
+    // Le pasamos la requisición y simulamos que fue un lote de 3 vacantes
+    return new \App\Mail\PersonalRequisitionNotification($requisition, 3);
+})->middleware(['auth']);
+
 require __DIR__.'/auth.php';

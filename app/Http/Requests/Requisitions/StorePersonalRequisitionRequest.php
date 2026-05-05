@@ -37,12 +37,12 @@ class StorePersonalRequisitionRequest extends FormRequest
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],
             'required_profile' => ['required', 'string'],
             'uniform_id' => ['required', 'integer', Rule::exists('requisition_uniforms', 'id')],
-            'contract_type_id' => ['required', 'integer', Rule::exists('requisition_contract_types', 'id')],
-            'contract_duration' => ['required', 'string', 'max:255'],
-            'base_salary' => ['required', 'numeric', 'min:0'],
-            'transport_allowance' => ['required', 'numeric', 'min:0'],
+            'contract_type_id' => ['nullable', 'integer', Rule::exists('requisition_contract_types', 'id')],
+            'contract_duration' => ['nullable', 'string', 'max:255'],
+            'base_salary' => ['nullable', 'numeric', 'min:0'],
+            'transport_allowance' => ['nullable', 'numeric', 'min:0'],
             'mobility_allowance' => ['nullable', 'numeric', 'min:0'],
-            'statutory_bonus' => ['required', 'numeric', 'min:0'],
+            'statutory_bonus' => ['nullable', 'numeric', 'min:0'],
             'non_statutory_bonus' => ['nullable', 'numeric', 'min:0'],
             'other_allowances' => ['nullable', 'numeric', 'min:0'],
             'leasing_contract' => ['nullable', 'string', 'max:255'],
@@ -51,7 +51,7 @@ class StorePersonalRequisitionRequest extends FormRequest
             'human_resources_observation' => ['nullable', 'string'],
             'recruiter_name' => ['nullable', 'string', 'max:255'],
             'hiring_date' => ['nullable', 'date'],
-            'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
+            'status' => ['nullable', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];
     }
 }
