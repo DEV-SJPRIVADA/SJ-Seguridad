@@ -97,7 +97,8 @@
                     <thead>
                         <tr>
                             <th style="display:none;">Modulo ID</th>
-                            <th>Modulo / permiso</th>
+                            <th style="text-align: left !important; padding-left: 1.5rem !important;">Área / Módulo</th>
+                            <th style="text-align: left !important;">Permiso específico</th>
                             <th class="table-center permission-table__checkbox-col">Asignar</th>
                         </tr>
                     </thead>
@@ -107,8 +108,11 @@
                         @foreach ($permissionGroups['administration_module']['rows'] as $row)
                             <tr>
                                 <td style="display:none;">00</td>
-                                <td class="permission-table__label">
-                                    <span class="text-caption text-muted">Administracion:</span> {{ $row['label'] }}
+                                <td style="font-weight: 700; color: var(--color-primary); padding-left: 1.5rem;">
+                                    Administración de usuarios
+                                </td>
+                                <td>
+                                    {{ $row['label'] }}
                                 </td>
                                 <td class="table-center">
                                     <input type="checkbox" name="permissions[]" value="{{ $row['name'] }}" class="form-check" @checked(in_array($row['name'], $selectedPermissions, true))>
@@ -121,8 +125,11 @@
                             @foreach ($area['rows'] as $row)
                                 <tr>
                                     <td style="display:none;">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</td>
-                                    <td class="permission-table__label">
-                                        <span class="text-caption text-muted">{{ $area['area'] }}:</span> {{ $row['label'] }}
+                                    <td style="font-weight: 700; color: var(--color-primary); padding-left: 1.5rem;">
+                                        {{ $area['area'] }}
+                                    </td>
+                                    <td>
+                                        {{ $row['label'] }}
                                     </td>
                                     <td class="table-center">
                                         <input type="checkbox" name="permissions[]" value="{{ $row['name'] }}" class="form-check" @checked(in_array($row['name'], $selectedPermissions, true))>

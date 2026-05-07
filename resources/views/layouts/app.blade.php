@@ -72,14 +72,17 @@
                             language: {
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
                             },
-                            paging: true,
-                            pageLength: 25,
+                            paging: false,
                             scrollY: '450px',
                             scrollCollapse: true,
                             responsive: true,
                             order: [[0, 'asc']],
+                            autoWidth: false,
                             columnDefs: [
-                                { targets: [0], visible: false }
+                                { targets: [0], visible: false },
+                                { targets: [1], width: '30%' },
+                                { targets: [2], width: '55%' },
+                                { targets: [3], width: '15%', className: 'text-center' }
                             ]
                         });
                     }
