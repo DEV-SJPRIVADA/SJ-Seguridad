@@ -17,7 +17,7 @@
                         
                         <div class="form-group block-spaced">
                             <label class="form-label">Observaciones Generales</label>
-                            <textarea name="observations" class="form-control" rows="2" placeholder="Explica brevemente el motivo del pedido si es necesario..."></textarea>
+                            <textarea name="observations" class="supply-textarea" placeholder="Explica brevemente el motivo del pedido si es necesario..."></textarea>
                         </div>
 
                         <div class="block-spaced">
@@ -66,7 +66,7 @@
                 </select>
             </td>
             <td>
-                <input type="number" name="items[{index}][current_inventory]" class="supply-input" min="0" value="0" required>
+                <input type="number" name="items[{index}][current_inventory]" class="supply-input" min="0" required>
             </td>
             <td>
                 <input type="number" name="items[{index}][quantity]" class="supply-input" min="1" required>

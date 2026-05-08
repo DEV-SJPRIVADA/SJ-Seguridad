@@ -159,18 +159,65 @@ class SupplyRequestController extends Controller
             ->with('success', 'Solicitud procesada correctamente.');
     }
 
-    public function purchasingIndex()
+    public function purchasingIndex(string $module)
     {
-        // Bandeja para Compras
+        $requests = SupplyRequest::whereIn('status', ['aprobada_calidad', 'en_compras', 'completada'])
+            ->latest()
+            ->with(['user', 'items.product'])
+            ->get();
+
+        return view('modules.supplies.purchasing.index', [
+            'module' => $module,
+            'requests' => $requests,
+            'subTabs' => $this->getSubTabs($module),
+        ]);
     }
 
     public function purchasingEdit(string $module, SupplyRequest $supplyRequest)
     {
-        // Formulario de costeo para Compras
+        $supplyRequest->load(['user', 'items.product', 'qualityReviewer']);
+
+        // Al entrar a costear, marcamos como "en compras" si estaba solo aprobada
+        if ($supplyRequest->status === 'aprobada_calidad') {
+            $supplyRequest->update(['status' => 'en_compras']);
+        }
+
+        return view('modules.supplies.purchasing.edit', [
+            'module' => $module,
+            'request' => $supplyRequest,
+            'subTabs' => $this->getSubTabs($module),
+        ]);
     }
 
     public function purchasingUpdate(Request $request, string $module, SupplyRequest $supplyRequest)
     {
-        // Procesar costeo y cierre por Compras
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.unit_cost' => 'required|numeric|min:0',
+            'items.*.purchasing_observations' => 'nullable|string',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $supplyRequest) {
+            $totalCost = 0;
+
+            foreach ($request->items as $itemId => $data) {
+                $item = $supplyRequest->items()->findOrFail($itemId);
+                $item->update([
+                    'unit_cost' => $data['unit_cost'],
+                    'purchasing_observations' => $data['purchasing_observations'] ?? null,
+                ]);
+
+                $totalCost += ($item->approved_quantity * $data['unit_cost']);
+            }
+
+            $supplyRequest->update([
+                'status' => 'completada',
+                'purchasing_manager_id' => auth()->id(),
+                'total_cost' => $totalCost,
+            ]);
+        });
+
+        return redirect()->route('supplies.purchasing.index', ['module' => $module])
+            ->with('success', 'Costos registrados y solicitud completada correctamente.');
     }
 }

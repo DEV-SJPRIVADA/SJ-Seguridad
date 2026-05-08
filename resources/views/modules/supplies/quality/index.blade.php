@@ -12,8 +12,8 @@
                 </div>
 
                 <div class="panel__body">
-                    <div class="data-table-wrap">
-                        <table class="data-table js-datatable">
+                    <div class="block-spaced">
+                        <table class="supply-table js-datatable">
                             <thead>
                                 <tr>
                                     <th>ID</th>

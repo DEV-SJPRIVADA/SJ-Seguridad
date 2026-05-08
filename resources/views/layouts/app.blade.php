@@ -14,7 +14,11 @@
         <!-- jQuery y DataTables CDN -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -57,8 +61,24 @@
                     if (!$.fn.DataTable.isDataTable(this)) {
                         $(this).DataTable({
                             language: {
-                                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+                                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                                buttons: {
+                                    copyTitle: 'Copiado al portapapeles',
+                                    copySuccess: {
+                                        _: '%d filas copiadas',
+                                        1: '1 fila copiada'
+                                    }
+                                }
                             },
+                            dom: 'Bfrtip',
+                            buttons: [
+                                {
+                                    extend: 'excelHtml5',
+                                    text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
+                                    className: 'btn btn--secondary btn--sm',
+                                    titleAttr: 'Exportar tabla a Excel'
+                                }
+                            ],
                             pageLength: 10,
                             responsive: true,
                             retrieve: true
@@ -288,10 +308,12 @@
                 padding: 15px !important;
                 border: none !important;
                 vertical-align: middle !important;
+                text-align: center !important;
             }
             .supply-table tbody tr td:first-child {
                 border-top-left-radius: 12px;
                 border-bottom-left-radius: 12px;
+                text-align: left !important;
             }
             .supply-table tbody tr td:last-child {
                 border-top-right-radius: 12px;
@@ -299,7 +321,7 @@
             }
 
             /* Inputs estilizados para suministros */
-            .supply-input {
+            .supply-input, .supply-textarea {
                 border: 1.5px solid #e2e8f0 !important;
                 border-radius: 10px !important;
                 padding: 0.5rem 0.8rem !important;
@@ -307,12 +329,33 @@
                 transition: all 0.2s !important;
                 width: 100% !important;
                 background-color: #f8fafc !important;
+                font-family: inherit;
             }
-            .supply-input:focus {
+            .supply-input:focus, .supply-textarea:focus {
                 border-color: var(--color-primary, #2563eb) !important;
                 background-color: #ffffff !important;
                 box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
                 outline: none !important;
+            }
+            .supply-textarea {
+                min-height: 100px;
+                resize: vertical;
+            }
+            .currency-input-wrap {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+            .currency-input-wrap::before {
+                content: '$';
+                position: absolute;
+                left: 12px;
+                color: #64748b;
+                font-weight: 600;
+                z-index: 5;
+            }
+            .currency-input-wrap .supply-input {
+                padding-left: 28px !important;
             }
             .supply-select {
                 appearance: none;
@@ -367,6 +410,72 @@
             .status-pill--req-cancelada {
                 background-color: #ffe4e6 !important;
                 color: #be123c !important;
+            }
+
+            /* Supply Statuses Forced */
+            .status-pill--req-pendiente_calidad {
+                background-color: #e0f2fe !important;
+                color: #0369a1 !important;
+            }
+
+            .status-pill--req-aprobada_calidad {
+                background-color: #dcfce7 !important;
+                color: #15803d !important;
+            }
+
+            .status-pill--req-rechazada_calidad {
+                background-color: #ffe4e6 !important;
+                color: #be123c !important;
+            }
+
+            .status-pill--req-en_compras {
+                background-color: #fef3c7 !important;
+                color: #92400e !important;
+            }
+
+            .status-pill--req-completada {
+                background-color: #e2e8f0 !important;
+                color: #475569 !important;
+            }
+
+            /* DataTables Buttons Premium Styles */
+            .dt-buttons {
+                margin-bottom: 15px !important;
+                display: flex !important;
+                gap: 8px !important;
+            }
+            .dt-button {
+                background: #ffffff !important;
+                border: 1px solid var(--color-border-strong, #cbd5e1) !important;
+                border-radius: 12px !important;
+                color: #334155 !important;
+                padding: 8px 16px !important;
+                font-size: 0.85rem !important;
+                font-weight: 700 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                transition: all 0.2s ease !important;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+                cursor: pointer !important;
+            }
+            .dt-button:hover {
+                background: #f8fafc !important;
+                border-color: var(--color-border-strong) !important;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            }
+            .dt-button.buttons-excel {
+                color: #15803d !important; /* Verde Excel */
+            }
+            .dt-button.buttons-excel:hover {
+                background: #f0fdf4 !important;
+            }
+            div.dataTables_wrapper .dataTables_filter input {
+                border: 1.5px solid #e2e8f0 !important;
+                border-radius: 10px !important;
+                padding: 5px 10px !important;
+                margin-left: 10px !important;
             }
 
             /* Workspace Layout Enforcement */

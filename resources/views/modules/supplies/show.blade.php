@@ -54,6 +54,7 @@
                                     <th>Inventario Reportado</th>
                                     <th>Cant. Solicitada</th>
                                     <th>Cant. Autorizada</th>
+                                    <th>Novedades Compras</th>
                                     <th>Estado Item</th>
                                 </tr>
                             </thead>
@@ -67,6 +68,9 @@
                                         <td class="text-center">{{ $item->requested_quantity }}</td>
                                         <td class="text-center">
                                             <span style="font-weight: 700;">{{ $item->approved_quantity ?? '---' }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="text-small">{{ $item->purchasing_observations ?: '---' }}</span>
                                         </td>
                                         <td class="text-center">
                                             @if($request->status === 'rechazada_calidad')
