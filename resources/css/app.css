@@ -785,6 +785,32 @@ table.dataTable thead td {
     color: #be123c;
 }
 
+/* Supply Statuses */
+.status-pill--req-pendiente_calidad {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--req-aprobada_calidad {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--req-rechazada_calidad {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+.status-pill--req-en_compras {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-pill--req-completada {
+    background: #e2e8f0;
+    color: #475569;
+}
+
 .requisition-subtabs {
     margin-left: 0;
     margin-right: 0;

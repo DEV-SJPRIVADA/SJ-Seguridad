@@ -124,17 +124,25 @@ class AppServiceProvider extends ServiceProvider
                             return null;
                         }
 
-                        $url = $boardKey === 'requisiciones'
-                            ? route('requisitions.dashboard', ['module' => $key])
-                            : route('dashboard', ['module' => $key, 'board' => $boardKey]);
+                        $url = match($boardKey) {
+                            'requisiciones' => route('requisitions.dashboard', ['module' => $key]),
+                            'suministros' => route('supplies.index', ['module' => $key]),
+                            default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
+                        };
 
                         $requestModule = str_starts_with((string) $routeName, 'requisitions.')
                             ? (string) request()->route('module')
-                            : request()->string('module')->toString();
+                            : (str_starts_with((string) $routeName, 'supplies.') 
+                                ? (string) request()->route('module')
+                                : request()->string('module')->toString());
+                        
                         $requestBoard = request()->string('board')->toString();
-                        $active = $boardKey === 'requisiciones'
-                            ? str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key
-                            : $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key;
+                        
+                        $active = match($boardKey) {
+                            'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
+                            'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                            default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
+                        };
 
                         return [
                             'label' => $boardLabel,

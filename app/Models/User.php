@@ -102,4 +102,34 @@ class User extends Authenticatable
 
         return $tabs->unique()->values();
     }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function supplyBoardTabsFor(string $moduleKey): Collection
+    {
+        $tabs = collect([]);
+
+        // Si tiene permiso para ver suministros en el área, puede ver sus solicitudes
+        if ($this->can("view.board.{$moduleKey}.suministros")) {
+            $tabs->push('mis_solicitudes');
+        }
+
+        // Calidad (o admin) puede revisar
+        if ($this->can('approve.supply.quality') || $this->can('manage.users')) {
+            $tabs->push('revision_calidad');
+        }
+
+        // Compras (o admin) puede gestionar precios/cierres
+        if ($this->can('manage.supply.purchasing') || $this->can('manage.users')) {
+            $tabs->push('gestion_compras');
+        }
+
+        // Admin de catálogo
+        if ($this->can('manage.supply.catalog') || $this->can('manage.users')) {
+            $tabs->push('catalogo');
+        }
+
+        return $tabs->unique()->values();
+    }
 }

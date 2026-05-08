@@ -249,6 +249,80 @@
                 to { transform: translateX(0); opacity: 1; }
             }
 
+            /* Estilos para Tablas de Suministros (Premium Look) */
+            .supply-table {
+                width: 100%;
+                border-collapse: separate !important;
+                border-spacing: 0 10px !important;
+                margin-top: 0;
+            }
+            .supply-table thead th {
+                padding: 14px 15px !important;
+                background: #003366 !important;
+                border: none !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                text-align: center !important;
+            }
+            .supply-table thead tr th:first-child {
+                border-top-left-radius: 12px;
+                border-bottom-left-radius: 12px;
+            }
+            .supply-table thead tr th:last-child {
+                border-top-right-radius: 12px;
+                border-bottom-right-radius: 12px;
+            }
+            .supply-table tbody tr {
+                background: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+                transition: all 0.2s ease;
+            }
+            .supply-table tbody tr:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            }
+            .supply-table tbody td {
+                padding: 15px !important;
+                border: none !important;
+                vertical-align: middle !important;
+            }
+            .supply-table tbody tr td:first-child {
+                border-top-left-radius: 12px;
+                border-bottom-left-radius: 12px;
+            }
+            .supply-table tbody tr td:last-child {
+                border-top-right-radius: 12px;
+                border-bottom-right-radius: 12px;
+            }
+
+            /* Inputs estilizados para suministros */
+            .supply-input {
+                border: 1.5px solid #e2e8f0 !important;
+                border-radius: 10px !important;
+                padding: 0.5rem 0.8rem !important;
+                font-size: 0.9rem !important;
+                transition: all 0.2s !important;
+                width: 100% !important;
+                background-color: #f8fafc !important;
+            }
+            .supply-input:focus {
+                border-color: var(--color-primary, #2563eb) !important;
+                background-color: #ffffff !important;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+                outline: none !important;
+            }
+            .supply-select {
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 0.75rem center;
+                background-size: 1rem;
+                padding-right: 2.5rem !important;
+            }
+
             .toast--success {
                 background: #ecfdf5;
                 border-color: #10b981;

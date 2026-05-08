@@ -6,6 +6,9 @@ return [
         'manage.users' => 'Gestionar usuarios, roles y permisos',
         'manage.requisitions' => 'Gestionar requisiciones de personal',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
+        'manage.supply.catalog' => 'Administrar catalogo de suministros',
+        'approve.supply.quality' => 'Revisar y aprobar suministros (Calidad)',
+        'manage.supply.purchasing' => 'Gestionar compras y costeo de suministros',
     ],
 
     'areas' => [
@@ -28,6 +31,7 @@ return [
     'boards' => [
         'dashboard' => 'Dashboard',
         'requisiciones' => 'Requisiciones',
+        'suministros' => 'Suministros',
     ],
 
     'requisition_tabs' => [
@@ -35,6 +39,13 @@ return [
         'solicitar' => 'Solicitar',
         'gestion' => 'Gestion',
         'parametros' => 'Parametros',
+    ],
+
+    'supply_tabs' => [
+        'mis_solicitudes' => 'Mis Solicitudes',
+        'revision_calidad' => 'Revision Calidad',
+        'gestion_compras' => 'Gestion Compras',
+        'catalogo' => 'Catalogo',
     ],
 
     'navigation' => [

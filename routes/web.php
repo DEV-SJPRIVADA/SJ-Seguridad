@@ -80,6 +80,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // Modulos del sistema
     require __DIR__.'/modules/requisitions.php';
+    require __DIR__.'/modules/supplies.php';
 });
 
 Route::get('/mail-preview', function () {
