@@ -6,9 +6,16 @@ return [
         'manage.users' => 'Gestionar usuarios, roles y permisos',
         'manage.requisitions' => 'Gestionar requisiciones de personal',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
-        'manage.supply.catalog' => 'Administrar catalogo de suministros',
-        'approve.supply.quality' => 'Revisar y aprobar suministros (Calidad)',
-        'manage.supply.purchasing' => 'Gestionar compras y costeo de suministros',
+        
+        // Permisos Granulares de Suministros
+        'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
+        'supply.tab.quality' => 'Suministros: Acceso a Revision Calidad',
+        'supply.tab.purchasing' => 'Suministros: Acceso a Gestion Compras',
+        'supply.tab.catalog' => 'Suministros: Acceso a Catalogo',
+
+        'manage.supply.catalog' => 'Administrar catalogo de suministros (Full)',
+        'approve.supply.quality' => 'Revisar y aprobar suministros (Calidad Full)',
+        'manage.supply.purchasing' => 'Gestionar compras y costeo de suministros (Full)',
     ],
 
     'areas' => [

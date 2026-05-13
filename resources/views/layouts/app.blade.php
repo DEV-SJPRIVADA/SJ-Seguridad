@@ -24,6 +24,8 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
 
+        <link rel="stylesheet" href="{{ asset('css/user-admin.css') }}?v={{ time() }}">
+
         <style>
             /* Estilo Global de Tablas Corporativas */
             .data-table th, 

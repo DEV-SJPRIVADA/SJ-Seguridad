@@ -134,67 +134,37 @@ class UserController extends Controller
 
     private function permissionGroups(): array
     {
-        $permissions = Permission::query()->pluck('name')->all();
+        $allPermissions = Permission::query()->pluck('name')->all();
 
-        $administrationPermissions = collect(config('access.system_permissions'))
-            ->filter(fn (string $label, string $permission) => in_array($permission, $permissions, true))
-            ->map(fn (string $label, string $permission) => [
+        // 1. Permisos Funcionales (Capacidades del sistema)
+        $functional = collect(config('access.system_permissions'))
+            ->filter(fn ($label, $name) => in_array($name, $allPermissions, true))
+            ->map(fn ($label, $name) => [
+                'name' => $name,
                 'label' => $label,
-                'name' => $permission,
+                'category' => str_contains($name, 'supply') ? 'Suministros' : (str_contains($name, 'requisition') ? 'Requisiciones' : 'Administración')
             ])
-            ->values()
-            ->all();
+            ->groupBy('category');
 
-        $administrationModule = [
-            'key' => 'administracion_usuarios',
-            'area' => 'Administracion de usuarios',
-            'rows' => collect($administrationPermissions)
-                ->values()
-                ->map(fn (array $permission, int $index) => [
-                    'label' => ($index + 1).'.- '.$permission['label'],
-                    'name' => $permission['name'],
-                ])
-                ->all(),
-        ];
-
-        $areaPermissions = collect(config('access.areas'))
-            ->map(function (string $label, string $key) use ($permissions) {
-                $rows = collect([
-                    [
-                        'label' => '1.- Abrir modulo (modo vista)',
-                        'name' => "view.area.{$key}",
-                    ],
-                    [
-                        'label' => '2.- Gestion del modulo',
-                        'name' => "manage.area.{$key}",
-                    ],
-                ])->merge(
-                    collect(config('access.boards', []))
-                        ->map(fn (string $boardLabel, string $boardKey) => [
-                            'label' => $boardLabel,
-                            'name' => "view.board.{$key}.{$boardKey}",
-                        ])
-                        ->values()
-                        ->map(fn (array $board, int $index) => [
-                            'label' => ($index + 3).'.- Tablero '.$board['label'],
-                            'name' => $board['name'],
-                        ])
-                )->filter(fn (array $row) => in_array($row['name'], $permissions, true))
-                    ->values()
-                    ->all();
-
+        // 2. Permisos de Área (Alcance)
+        $areas = collect(config('access.areas'))
+            ->map(function ($label, $key) use ($allPermissions) {
                 return [
                     'key' => $key,
-                    'area' => $label,
-                    'rows' => $rows,
+                    'label' => $label,
+                    'options' => collect([
+                        ['label' => 'Abrir Área', 'name' => "view.area.{$key}"],
+                        ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
+                        ['label' => 'Tablero Requisiciones', 'name' => "view.board.{$key}.requisiciones"],
+                        ['label' => 'Tablero Suministros', 'name' => "view.board.{$key}.suministros"],
+                    ])->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values()
                 ];
             })
-            ->values()
-            ->all();
+            ->values();
 
         return [
-            'administration_module' => $administrationModule,
-            'area_permissions' => $areaPermissions,
+            'functional' => $functional,
+            'areas' => $areas,
         ];
     }
 

@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Supplies;
 use App\Http\Controllers\Controller;
 use App\Models\SupplyRequest;
 use App\Models\SupplyProduct;
+use App\Traits\HasSupplyTabs;
 use Illuminate\Http\Request;
 
 class SupplyRequestController extends Controller
 {
+    use HasSupplyTabs;
     public function index(string $module)
     {
         $requests = SupplyRequest::where('user_id', auth()->id())
@@ -20,7 +22,7 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.index', [
             'module' => $module,
             'requests' => $requests,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
@@ -31,32 +33,10 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.show', [
             'module' => $module,
             'request' => $supplyRequest,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
-    private function getSubTabs(string $module)
-    {
-        $user = auth()->user();
-        $tabs = $user->supplyBoardTabsFor($module);
-        $routeName = request()->route()?->getName();
-        
-        return $tabs->map(function($tab) use ($module, $routeName) {
-            $targetRoute = match($tab) {
-                'mis_solicitudes' => 'supplies.index',
-                'revision_calidad' => 'supplies.quality.index',
-                'gestion_compras' => 'supplies.purchasing.index',
-                'catalogo' => 'supplies.products.index',
-                default => 'supplies.index',
-            };
-
-            return [
-                'label' => config("access.supply_tabs.{$tab}"),
-                'url' => route($targetRoute, ['module' => $module]),
-                'active' => $routeName === $targetRoute,
-            ];
-        });
-    }
 
     public function create(string $module)
     {
@@ -69,7 +49,7 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.create', [
             'module' => $module,
             'products' => $products,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
@@ -113,7 +93,7 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.quality.index', [
             'module' => $module,
             'requests' => $requests,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
@@ -124,7 +104,7 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.quality.edit', [
             'module' => $module,
             'request' => $supplyRequest,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
@@ -169,7 +149,7 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.purchasing.index', [
             'module' => $module,
             'requests' => $requests,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
@@ -185,7 +165,7 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.purchasing.edit', [
             'module' => $module,
             'request' => $supplyRequest,
-            'subTabs' => $this->getSubTabs($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 

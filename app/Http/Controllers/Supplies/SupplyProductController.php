@@ -5,21 +5,21 @@ namespace App\Http\Controllers\Supplies;
 use App\Http\Controllers\Controller;
 use App\Models\SupplyProduct;
 use App\Models\User;
+use App\Traits\HasSupplyTabs;
 use Illuminate\Http\Request;
 
 class SupplyProductController extends Controller
 {
+    use HasSupplyTabs;
+
     public function index(string $module)
     {
         $products = SupplyProduct::orderBy('category')->orderBy('name')->get();
         
-        // Agrupamos por categoría para el formulario si es necesario, 
-        // pero para la tabla mandamos la lista plana.
-        
         return view('modules.supplies.products.index', [
             'module' => $module,
             'products' => $products,
-            'subTabs' => (new User())->supplyBoardTabsFor($module),
+            'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
