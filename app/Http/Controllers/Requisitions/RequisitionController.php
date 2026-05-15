@@ -43,32 +43,77 @@ class RequisitionController extends Controller
         'emails' => ['label' => 'Correos de notificación', 'model' => RequisitionNotificationEmail::class],
     ];
 
-    public function dashboard(string $module): View
+    public function dashboard(Request $request, string $module): View
     {
         $this->abortIfUnknownModule($module);
         $this->authorizeBoardAccess($module);
 
         $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
 
-        $requisitions = PersonalRequisition::query()
+        // Filtros
+        $filters = [
+            'client_id' => $request->input('client_id'),
+            'position_id' => $request->input('position_id'),
+            'city_id' => $request->input('city_id'),
+            'status' => $request->input('status'),
+            'year' => $request->input('year', now()->year),
+            'month' => $request->input('month'),
+        ];
+
+        $query = PersonalRequisition::query()
             ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
-            ->latest()
-            ->with(['client', 'position', 'requester'])
-            ->get();
+            ->when($filters['client_id'], fn($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['position_id'], fn($q) => $q->where('position_id', $filters['position_id']))
+            ->when($filters['city_id'], fn($q) => $q->where('city_id', $filters['city_id']))
+            ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
+            ->when($filters['year'], fn($q) => $q->whereYear('request_date', $filters['year']))
+            ->when($filters['month'], fn($q) => $q->whereMonth('request_date', $filters['month']));
+
+        $requisitions = $query->get();
+
+        // Datos para Gráficos
+        $statsByStatus = $requisitions->groupBy('status')->map->count();
+        $statsByMonth = $requisitions->groupBy(fn($r) => \Carbon\Carbon::parse($r->request_date)->format('n'))
+            ->map->count();
+        
+        $statsByCity = $requisitions->groupBy('city_id')->map->count()->sortDesc()->take(5);
+        $cityNames = RequisitionCity::whereIn('id', $statsByCity->keys())->pluck('name', 'id');
+
+        $statsByClient = $requisitions->groupBy('client_id')->map->count()->sortDesc()->take(5);
+        $clientNames = RequisitionClient::whereIn('id', $statsByClient->keys())->pluck('name', 'id');
 
         return view('modules.requisitions.dashboard', [
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->subTabs($module, 'dashboard'),
+            'filters' => $filters,
+            'catalogs' => $this->catalogs(),
             'stats' => [
                 'total' => $requisitions->count(),
-                'solicitada' => $requisitions->where('status', PersonalRequisition::STATUS_SOLICITADA)->count(),
-                'en_gestion' => $requisitions->where('status', PersonalRequisition::STATUS_EN_GESTION)->count(),
-                'contratado' => $requisitions->where('status', PersonalRequisition::STATUS_CONTRATADO)->count(),
-                'cancelada' => $requisitions->where('status', PersonalRequisition::STATUS_CANCELADA)->count(),
+                'solicitada' => $statsByStatus->get(PersonalRequisition::STATUS_SOLICITADA, 0),
+                'en_gestion' => $statsByStatus->get(PersonalRequisition::STATUS_EN_GESTION, 0),
+                'contratado' => $statsByStatus->get(PersonalRequisition::STATUS_CONTRATADO, 0),
+                'cancelada' => $statsByStatus->get(PersonalRequisition::STATUS_CANCELADA, 0),
             ],
-            'latestRequisitions' => $requisitions->take(8),
+            'chartData' => [
+                'status' => [
+                    'labels' => collect(PersonalRequisition::statuses())->only($statsByStatus->keys())->values(),
+                    'data' => $statsByStatus->values(),
+                ],
+                'trend' => [
+                    'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    'data' => collect(range(1, 12))->map(fn($m) => $statsByMonth->get($m, 0)),
+                ],
+                'cities' => [
+                    'labels' => $statsByCity->keys()->map(fn($id) => $cityNames[$id] ?? 'Desconocida'),
+                    'data' => $statsByCity->values(),
+                ],
+                'clients' => [
+                    'labels' => $statsByClient->keys()->map(fn($id) => $clientNames[$id] ?? 'Desconocido'),
+                    'data' => $statsByClient->values(),
+                ]
+            ]
         ]);
     }
 
