@@ -98,8 +98,8 @@ class RequisitionController extends Controller
             ],
             'chartData' => [
                 'status' => [
-                    'labels' => collect(PersonalRequisition::statuses())->only($statsByStatus->keys())->values(),
-                    'data' => $statsByStatus->values(),
+                    'labels' => collect(PersonalRequisition::statuses())->values(),
+                    'data' => collect(PersonalRequisition::statuses())->keys()->map(fn($k) => $statsByStatus->get($k, 0)),
                 ],
                 'trend' => [
                     'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
