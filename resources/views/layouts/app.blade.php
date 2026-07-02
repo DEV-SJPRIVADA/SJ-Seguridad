@@ -128,7 +128,6 @@
             }
 
             .app-sidebar {
-                width: 280px;
                 flex-shrink: 0;
                 background: #e9eef5;
                 border-right: 1px solid var(--color-border, #dbe3ef);
@@ -628,7 +627,7 @@
             <div class="app-frame">
                 <aside class="app-sidebar">
                     <div class="app-sidebar__header">
-                        <p class="text-caption">Navegación</p>
+                        <p class="text-caption">Procesos</p>
                     </div>
 
                     <nav class="app-sidebar__nav">

@@ -75,7 +75,7 @@ a {
 .app-frame {
     display: grid;
     flex: 1;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: max-content minmax(0, 1fr);
     overflow: hidden;
 }
 
@@ -99,30 +99,32 @@ a {
 
 .sidebar-link {
     display: block;
-    padding: 0.95rem 1rem;
-    border: 1px solid transparent;
-    border-radius: 16px;
-    color: #334155;
-    background: rgba(255, 255, 255, 0.45);
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    padding: 0.42rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-text-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-link:hover {
-    background: #fff;
-    border-color: var(--color-border);
-    transform: translateX(2px);
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
 }
 
 .sidebar-link--active {
-    background: #fff;
-    border-color: #bfdbfe;
-    box-shadow: var(--shadow-soft);
+    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 .sidebar-link__title {
     display: block;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 .app-workspace {
