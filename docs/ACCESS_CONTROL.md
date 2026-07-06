@@ -18,6 +18,10 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 - `manage.users`
 - `manage.requisitions`
 - `manage.requisition.parameters`
+- `requisitions.tab.dashboard`
+- `requisitions.tab.solicitar`
+- `requisitions.tab.seguimiento`
+- `requisitions.tab.gestion`
 
 Estos permisos se administran visualmente dentro de la fila `Administracion de usuarios` en la matriz de permisos.
 
@@ -76,7 +80,8 @@ Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el s
 - Los usuarios inactivos no pueden operar
 - Las contrasenas temporales deben obligar cambio al primer ingreso
 - Una vez el usuario actualiza correctamente su contrasena, `must_change_password` debe pasar a `false`
-- El tablero `Solicitar` de requisiciones exige que `users.area_key` coincida con el modulo solicitado
+- En requisiciones, un permiso explicito de tablero o pestaña habilita el acceso aunque `users.area_key` sea diferente
+- `users.area_key` sigue usandose como contexto operativo del usuario, no como filtro oculto para negar pestañas ya autorizadas
 
 ## Impacto de cambios
 

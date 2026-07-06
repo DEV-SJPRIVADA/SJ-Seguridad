@@ -37,18 +37,14 @@ class UserController extends Controller
             $users = $query->paginate(14, ['*'], 'page', 1)->withQueryString();
         }
 
-        $selectedUser = null;
-        $selectedId = $request->integer('selected');
+        $selectedUserId = $request->integer('selected');
+        $selectedUser = $selectedUserId > 0
+            ? User::query()->with(['roles', 'permissions', 'creator'])->find($selectedUserId)
+            : null;
 
-        if ($selectedId > 0) {
-            $selectedUser = User::query()
-                ->with(['roles', 'permissions', 'creator'])
-                ->find($selectedId);
-        }
-
-        if (! $selectedUser) {
-            $selectedUser = $users->getCollection()->first()
-                ?? User::query()->with(['roles', 'permissions', 'creator'])->orderBy('name')->first();
+        if (! $selectedUser && $users->isNotEmpty()) {
+            /** @var \App\Models\User $selectedUser */
+            $selectedUser = $users->first();
         }
 
         return view('admin.users.index', [

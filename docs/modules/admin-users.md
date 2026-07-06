@@ -7,7 +7,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 ## Alcance actual
 
 - Panel lateral con listado paginado y busqueda de usuarios
-- Vista de detalle operativo del usuario seleccionado
+- Panel dividido con listado lateral y resumen operativo del usuario seleccionado
 - Creacion de usuarios
 - Edicion de usuarios
 - Asignacion de rol
@@ -77,6 +77,7 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 - Los permisos del sistema se muestran dentro de la fila `Administracion de usuarios`; los tableros de negocio se habilitan por columna en la misma matriz
 - La administracion y auditoria de permisos usan una tabla jerarquica por modulo con filtros en cliente para buscar rapidamente por area, permiso o codigo
 - La matriz de permisos solo se expone en creacion y edicion de usuario; la pantalla principal de `admin/users` se reserva para contexto operativo y acceso rapido a editar
+- Cada fila del listado principal selecciona al usuario y muestra su resumen de areas y permisos; desde el panel derecho se entra a `Editar usuario`
 - En edicion y creacion, la tabla de permisos prioriza lectura operativa: muestra nombre del permiso y asignacion, sin columna separada de codigo tecnico
 
 ## Riesgos

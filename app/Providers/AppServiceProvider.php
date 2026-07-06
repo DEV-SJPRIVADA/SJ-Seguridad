@@ -125,7 +125,7 @@ class AppServiceProvider extends ServiceProvider
                         }
 
                         $url = match($boardKey) {
-                            'requisiciones' => route('requisitions.dashboard', ['module' => $key]),
+                            'requisiciones' => $user->defaultRequisitionBoardUrl($key),
                             'suministros' => route('supplies.index', ['module' => $key]),
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };

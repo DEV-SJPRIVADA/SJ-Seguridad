@@ -6,7 +6,7 @@
                     <div class="action-row">
                         <div>
                             <p class="eyebrow">Administracion de usuarios</p>
-                            <p class="panel-text">Selecciona un usuario a la izquierda o crea uno nuevo para asignar visualizaciones, gestion y estado operativo.</p>
+                            <p class="panel-text">Selecciona un usuario para revisar areas y permisos. Desde el panel derecho puedes entrar a editar.</p>
                         </div>
 
                         <div class="form-actions__group">
@@ -37,7 +37,7 @@
                                 <input
                                     type="text"
                                     name="q"
-                                    value="{{ $filters['q'] }}"
+                                    value="{{ $filters['q'] ?? '' }}"
                                     placeholder="Buscar por nombre o correo"
                                     class="form-input"
                                 >
@@ -45,12 +45,17 @@
                                     Buscar
                                 </button>
                             </form>
+                            <a href="{{ route('admin.users.create') }}" class="btn btn--primary">Nuevo usuario</a>
                         </div>
 
                         <div class="users-list">
                             @forelse ($users as $user)
                                 <a
-                                    href="{{ route('admin.users.index', array_filter(['q' => $filters['q'], 'selected' => $user->id, 'page' => $users->currentPage()])) }}"
+                                    href="{{ route('admin.users.index', array_filter([
+                                        'q' => $filters['q'] ?? null,
+                                        'selected' => $user->id,
+                                        'page' => $users->currentPage(),
+                                    ])) }}"
                                     class="users-list-item {{ $selectedUser?->id === $user->id ? 'users-list-item--active' : '' }}"
                                 >
                                     <div class="users-list-item__top">
@@ -62,6 +67,10 @@
 
                                         <span class="status-dot {{ $user->is_active ? 'status-dot--success' : 'status-dot--danger' }}"></span>
                                     </div>
+
+                                    <p class="users-list-item__meta">
+                                        {{ $user->areaLabel() ?: 'Sin area base asignada' }}
+                                    </p>
 
                                     @if ($user->must_change_password)
                                         <span class="status-pill status-pill--warning block-spaced">Cambio pendiente</span>
@@ -77,11 +86,51 @@
 
                     <section class="users-content">
                         @if ($selectedUser)
+                            @php
+                                $enabledAreas = collect($permissionGroups['areas'])
+                                    ->map(function (array $area) use ($selectedUser) {
+                                        $matches = collect($area['options'])
+                                            ->filter(fn (array $option) => $selectedUser->can($option['name']))
+                                            ->pluck('label')
+                                            ->values();
+
+                                        if ($matches->isEmpty()) {
+                                            return null;
+                                        }
+
+                                        return [
+                                            'label' => $area['label'],
+                                            'permissions' => $matches,
+                                        ];
+                                    })
+                                    ->filter()
+                                    ->values();
+
+                                $functionalPermissions = collect($permissionGroups['functional'])
+                                    ->map(function ($permissions, $category) use ($selectedUser) {
+                                        $matches = collect($permissions)
+                                            ->filter(fn (array $permission) => $selectedUser->can($permission['name']))
+                                            ->pluck('label')
+                                            ->values();
+
+                                        if ($matches->isEmpty()) {
+                                            return null;
+                                        }
+
+                                        return [
+                                            'category' => $category,
+                                            'permissions' => $matches,
+                                        ];
+                                    })
+                                    ->filter()
+                                    ->values();
+                            @endphp
+
                             <div class="users-content__header">
                                 <div class="panel__header">
                                     <div class="action-row">
                                         <div>
-                                            <p class="text-caption">Administracion de usuario</p>
+                                            <p class="text-caption">Resumen del usuario</p>
                                             <h3 class="page-title page-title--sm title-spaced">{{ $selectedUser->name }}</h3>
                                             <p class="page-subtitle">{{ $selectedUser->email }}</p>
                                         </div>
@@ -108,6 +157,10 @@
                                             <h4 class="panel-title">Ficha operativa</h4>
                                             <div class="detail-grid block-spaced">
                                                 <div class="card">
+                                                    <p class="text-caption">Area base</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin area asignada' }}</p>
+                                                </div>
+                                                <div class="card">
                                                     <p class="text-caption">Ultimo acceso</p>
                                                     <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->last_login_at?->format('Y-m-d H:i') ?? 'Sin acceso registrado' }}</p>
                                                 </div>
@@ -119,32 +172,53 @@
                                                     <p class="text-caption">Cambio de contrasena</p>
                                                     <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->must_change_password ? 'Pendiente al siguiente ingreso' : 'No requerido' }}</p>
                                                 </div>
-                                                <div class="card">
-                                                    <p class="text-caption">Permisos directos</p>
-                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->permissions->count() }}</p>
-                                                </div>
                                             </div>
+                                        </div>
+
+                                        <div class="card card--muted">
+                                            <h4 class="panel-title">Areas habilitadas</h4>
+
+                                            @if ($enabledAreas->isNotEmpty())
+                                                <div class="section-stack block-spaced-sm">
+                                                    @foreach ($enabledAreas as $area)
+                                                        <div class="card">
+                                                            <p class="text-caption">{{ $area['label'] }}</p>
+                                                            <p class="text-small block-spaced-sm">{{ $area['permissions']->implode(' | ') }}</p>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <p class="text-small text-muted block-spaced-sm">No tiene accesos de area asignados de forma efectiva.</p>
+                                            @endif
                                         </div>
                                     </div>
 
                                     <div class="section-stack">
                                         <div class="card card--info">
-                                            <h4 class="panel-title">Permisos y visualizaciones</h4>
-                                            <p class="text-small text-small--info block-spaced">
-                                                La matriz de visualizaciones, gestion y tableros solo se muestra en la pantalla de edicion del usuario para mantener este panel principal mas limpio.
-                                            </p>
-                                            <div class="block-spaced">
-                                                <a href="{{ route('admin.users.edit', $selectedUser) }}" class="btn btn--info">
-                                                    Ir a editar permisos
-                                                </a>
-                                            </div>
+                                            <h4 class="panel-title">Permisos funcionales</h4>
+
+                                            @if ($functionalPermissions->isNotEmpty())
+                                                <div class="section-stack block-spaced-sm">
+                                                    @foreach ($functionalPermissions as $group)
+                                                        <div class="card">
+                                                            <p class="text-caption">{{ $group['category'] }}</p>
+                                                            <p class="text-small text-small--info block-spaced-sm">{{ $group['permissions']->implode(' | ') }}</p>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <p class="text-small text-small--info block-spaced-sm">No tiene permisos funcionales adicionales por fuera del rol.</p>
+                                            @endif
                                         </div>
 
                                         <div class="card card--warning">
-                                            <h4 class="panel-title warning-text">Regla administrativa</h4>
+                                            <h4 class="panel-title warning-text">Accion rapida</h4>
                                             <p class="text-small block-spaced warning-text">
-                                                El rol <span class="font-strong">administrador</span> debe conservar acceso total a todos los modulos y tableros que se construyan. Los ajustes finos por visualizacion y permiso directo se gestionan desde la edicion.
+                                                Desde la edicion puedes ajustar rol, area base, activacion y toda la matriz detallada de permisos del usuario.
                                             </p>
+                                            <a href="{{ route('admin.users.edit', $selectedUser) }}" class="btn btn--info">
+                                                Abrir formulario de edicion
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

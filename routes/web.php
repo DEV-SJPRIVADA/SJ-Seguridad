@@ -43,7 +43,7 @@ Route::get('/dashboard', function () {
         $defaultBoard = $defaultModule['boards']->first()['key'] ?? null;
 
         if ($defaultBoard === 'requisiciones') {
-            return redirect()->route('requisitions.dashboard', ['module' => $defaultModule['key']]);
+            return redirect(auth()->user()->defaultRequisitionBoardUrl($defaultModule['key']));
         }
 
         return redirect()->route('dashboard', array_filter([
@@ -59,7 +59,7 @@ Route::get('/dashboard', function () {
         : null;
 
     if ($selectedModule && $selectedBoardKey === 'requisiciones') {
-        return redirect()->route('requisitions.dashboard', ['module' => $selectedModule['key']]);
+        return redirect(auth()->user()->defaultRequisitionBoardUrl($selectedModule['key']));
     }
 
     return view('dashboard', [

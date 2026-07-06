@@ -80,27 +80,51 @@ class User extends Authenticatable
      */
     public function requisitionBoardTabsFor(string $moduleKey): Collection
     {
-        $tabs = collect(['dashboard']);
+        $tabs = collect([]);
+        $canManageAll = $this->can('manage.users') || $this->can('manage.area.gestion_humana');
+        $canViewBoard = $this->can("view.board.{$moduleKey}.requisiciones");
+        $canTrackModule = $canManageAll || ($this->hasAssignedArea() && $this->area_key === $moduleKey);
+
+        if ($this->can('requisitions.tab.dashboard') || $canManageAll) {
+            $tabs->push('dashboard');
+        }
 
         // El tab Solicitar se muestra si:
-        // - El usuario tiene permiso de ver el tablero del modulo Y su area_key coincide (caso normal), O
-        // - El usuario puede gestionar usuarios o el area de gestion humana (acceso administrativo)
-        $canManageAll = $this->can('manage.users') || $this->can('manage.area.gestion_humana');
-        $canSolicitar = $this->can("view.board.{$moduleKey}.requisiciones") && $this->area_key === $moduleKey;
-
-        if ($canSolicitar || $canManageAll) {
+        // - El usuario tiene permiso explícito 'requisitions.tab.solicitar' O
+        // - Tiene permiso genérico de ver el tablero de requisiciones de ese módulo O
+        // - El usuario puede gestionar usuarios o el área de gestión humana
+        if ($this->can('requisitions.tab.solicitar') || $canViewBoard || $canManageAll) {
             $tabs->push('solicitar');
         }
 
-        if ($moduleKey === 'gestion_humana' && ($this->can('manage.requisitions') || $this->can('manage.area.gestion_humana'))) {
+        if ($canTrackModule && ($this->can('requisitions.tab.seguimiento') || $this->can('requisitions.tab.solicitar') || $canViewBoard || $canManageAll)) {
+            $tabs->push('seguimiento');
+        }
+
+        if ($this->can('requisitions.tab.gestion') || $this->can('manage.requisitions') || $canManageAll) {
             $tabs->push('gestion');
         }
 
-        if ($moduleKey === 'gestion_humana' && ($this->can('manage.requisition.parameters') || $this->can('manage.users') || $this->can('manage.area.gestion_humana'))) {
+        if ($this->can('manage.requisition.parameters') || $canManageAll) {
             $tabs->push('parametros');
         }
 
         return $tabs->unique()->values();
+    }
+
+    public function defaultRequisitionBoardUrl(string $moduleKey): string
+    {
+        $tabs = $this->requisitionBoardTabsFor($moduleKey);
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('requisitions.dashboard', ['module' => $moduleKey]),
+            'solicitar' => route('requisitions.create', ['module' => $moduleKey]),
+            'seguimiento' => route('requisitions.tracking', ['module' => $moduleKey]),
+            'gestion' => route('requisitions.manage', ['module' => $moduleKey]),
+            'parametros' => route('requisitions.parameters', ['module' => $moduleKey]),
+            default => route('dashboard', ['module' => $moduleKey]),
+        };
     }
 
     /**

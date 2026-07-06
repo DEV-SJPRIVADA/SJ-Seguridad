@@ -49,6 +49,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('profile.edit')->with('status', 'temporary-password');
         }
 
+        if ($user->can('manage.users')) {
+            return redirect()->intended(route('admin.users.index', absolute: false));
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

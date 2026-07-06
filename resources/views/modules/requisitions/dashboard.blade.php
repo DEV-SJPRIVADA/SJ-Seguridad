@@ -93,45 +93,24 @@
                 width: 100% !important;
             }
         }
-        /* Contenedor flexible para fijar el top y scrollear el resto */
+        /* Flujo natural para permitir el scroll de toda la página */
         .page-section {
-            display: flex !important;
-            flex-direction: column !important;
-            height: 100% !important;
-            overflow: hidden !important;
             padding-top: 0.5rem !important;
             padding-bottom: 0.5rem !important;
+            height: auto !important;
+            overflow: visible !important;
         }
         .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
+            height: auto;
+            overflow: visible;
         }
         
         .dashboard-filters, .dashboard-stat-grid {
-            flex-shrink: 0; /* Evita que los filtros o KPIs se encojan */
+            margin-bottom: 1rem;
         }
 
         .dashboard-scroll-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
             padding-right: 0.5rem;
-            /* Se remueve el max-height para que tome el espacio sobrante automáticamente */
-        }
-        
-        .dashboard-scroll-area::-webkit-scrollbar {
-            width: 8px;
-        }
-        .dashboard-scroll-area::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-        .dashboard-scroll-area::-webkit-scrollbar-thumb {
-            background-color: var(--color-sky);
-            border-radius: 10px;
-            border: 2px solid #f1f5f9;
         }
     </style>
 

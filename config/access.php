@@ -6,6 +6,10 @@ return [
         'manage.users' => 'Gestionar usuarios, roles y permisos',
         'manage.requisitions' => 'Gestionar requisiciones de personal',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
+        'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
+        'requisitions.tab.solicitar' => 'Requisiciones: Solicitar Personal',
+        'requisitions.tab.seguimiento' => 'Requisiciones: Seguimiento de Solicitudes',
+        'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
         
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -44,6 +48,7 @@ return [
     'requisition_tabs' => [
         'dashboard' => 'Dashboard',
         'solicitar' => 'Solicitar',
+        'seguimiento' => 'Seguimiento',
         'gestion' => 'Gestion',
         'parametros' => 'Parametros',
     ],

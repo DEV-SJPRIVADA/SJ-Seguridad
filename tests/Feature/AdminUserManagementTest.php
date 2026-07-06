@@ -57,10 +57,11 @@ class AdminUserManagementTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.users.index'));
 
         $response->assertOk();
-        $response->assertSee('Modulos autorizados');
+        $response->assertSee('Procesos');
         $response->assertSee('Administracion');
         $response->assertSee('Usuarios');
         $response->assertSee('Nuevo usuario');
+        $response->assertSee('Selecciona un usuario para revisar areas y permisos. Desde el panel derecho puedes entrar a editar.');
     }
 
     public function test_user_with_board_permission_sees_its_module_and_tab(): void

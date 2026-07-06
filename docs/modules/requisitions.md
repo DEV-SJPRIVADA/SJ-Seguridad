@@ -10,16 +10,19 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Subtableros internos:
   - `Dashboard`
   - `Solicitar`
+  - `Seguimiento`
   - `Gestion`
   - `Parametros`
-- Creacion de requisiciones sobre el area propia del usuario autenticado
+- Creacion de requisiciones sobre el modulo autorizado, incluso si el `area_key` del usuario es diferente
 - Edicion solo para gestion humana o usuarios con permiso operativo equivalente
 - Historial de cambios de estado
 - Catalogos iniciales para cargos, motivos, clientes, ciudades, tipos de cliente y tipos de programacion
 
 ## Reglas de negocio actuales
 
-- El usuario solicita requisiciones solo para su `area_key`
+- El usuario puede solicitar en cualquier modulo de requisiciones que tenga autorizado por permiso explicito
+- El tablero `Seguimiento` es solo lectura para usuarios solicitantes y muestra requisiciones del area propia del usuario
+- El filtro `Solo mis solicitudes` permite reducir la vista del area a lo creado por el usuario autenticado
 - `leader_name` y `requesting_area_key` se toman del usuario autenticado
 - `Cliente` y `Motivo` se seleccionan desde parametros
 - `Centro de costo` es texto libre
@@ -87,6 +90,10 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 ## Permisos relacionados
 
 - `view.board.{area}.requisiciones`
+- `requisitions.tab.dashboard`
+- `requisitions.tab.solicitar`
+- `requisitions.tab.seguimiento`
+- `requisitions.tab.gestion`
 - `manage.requisitions`
 - `manage.requisition.parameters`
 - `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
@@ -116,4 +123,3 @@ Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
 - **Navegación Fija**: Reestructuración de `app.blade.php` y slots de cabecera para evitar superposición de menús.
 - **Dashboard KPI**: Compactación de indicadores en 4 columnas fijas en una sola fila.
 - **Notificaciones**: Migración a sistema de Toasts dinámicos en la esquina inferior derecha.
-
