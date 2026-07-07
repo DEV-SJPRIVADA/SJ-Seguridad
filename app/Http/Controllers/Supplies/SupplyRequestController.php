@@ -28,6 +28,8 @@ class SupplyRequestController extends Controller
 
     public function show(string $module, SupplyRequest $supplyRequest)
     {
+        $this->authorizeSupplyView($supplyRequest);
+
         $supplyRequest->load(['user', 'items.product', 'qualityReviewer']);
 
         return view('modules.supplies.show', [
@@ -117,6 +119,12 @@ class SupplyRequestController extends Controller
             'items.*.approved_quantity' => 'required_if:action,approve|integer|min:0',
         ]);
 
+        abort_if(
+            $supplyRequest->status !== 'pendiente_calidad',
+            403,
+            'Esta solicitud ya fue procesada por Calidad.'
+        );
+
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $supplyRequest) {
             $isApprove = $request->action === 'approve';
             
@@ -155,6 +163,12 @@ class SupplyRequestController extends Controller
 
     public function purchasingEdit(string $module, SupplyRequest $supplyRequest)
     {
+        abort_unless(
+            in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras'], true),
+            403,
+            'Esta solicitud no esta disponible para costeo.'
+        );
+
         $supplyRequest->load(['user', 'items.product', 'qualityReviewer']);
 
         // Al entrar a costear, marcamos como "en compras" si estaba solo aprobada
@@ -176,6 +190,12 @@ class SupplyRequestController extends Controller
             'items.*.unit_cost' => 'required|numeric|min:0',
             'items.*.purchasing_observations' => 'nullable|string',
         ]);
+
+        abort_unless(
+            in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras'], true),
+            403,
+            'Esta solicitud ya fue completada.'
+        );
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $supplyRequest) {
             $totalCost = 0;
@@ -199,5 +219,22 @@ class SupplyRequestController extends Controller
 
         return redirect()->route('supplies.purchasing.index', ['module' => $module])
             ->with('success', 'Costos registrados y solicitud completada correctamente.');
+    }
+
+    /**
+     * Solo el solicitante duenio o los perfiles de revision (Calidad, Compras,
+     * administracion de usuarios y super-admin) pueden ver el detalle de una solicitud.
+     */
+    private function authorizeSupplyView(SupplyRequest $supplyRequest): void
+    {
+        $user = auth()->user();
+
+        $canReview = $user->can('supply.tab.quality')
+            || $user->can('approve.supply.quality')
+            || $user->can('supply.tab.purchasing')
+            || $user->can('manage.supply.purchasing')
+            || $user->can('manage.users');
+
+        abort_unless($supplyRequest->user_id === $user->id || $canReview, 403);
     }
 }

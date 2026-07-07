@@ -10,6 +10,8 @@ El proyecto usa `spatie/laravel-permission` con guard `web`.
 - `administrador`
 - `usuario`
 
+Los roles antiguos `coordinador` y `consulta` fueron eliminados; el seeder migra a `usuario` cualquier usuario que aun los tenga.
+
 ## Permisos del sistema
 
 Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php):
@@ -22,6 +24,16 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
+
+Permisos del modulo de suministros:
+
+- `supply.tab.my_requests`
+- `supply.tab.quality`
+- `supply.tab.purchasing`
+- `supply.tab.catalog`
+- `manage.supply.catalog`
+- `approve.supply.quality`
+- `manage.supply.purchasing`
 
 Estos permisos se administran visualmente dentro de la fila `Administracion de usuarios` en la matriz de permisos.
 
@@ -55,13 +67,16 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 
 - `dashboard`
 - `requisiciones`
+- `suministros`
 
 Esto produce permisos como:
 
 - `view.board.gestion_humana.dashboard`
 - `view.board.gestion_humana.requisiciones`
+- `view.board.gestion_humana.suministros`
 - `view.board.operaciones.dashboard`
 - `view.board.operaciones.requisiciones`
+- `view.board.operaciones.suministros`
 
 ## Asignacion base de roles
 

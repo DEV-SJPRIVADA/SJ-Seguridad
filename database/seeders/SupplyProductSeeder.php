@@ -68,7 +68,14 @@ class SupplyProductSeeder extends Seeder
         ];
 
         foreach ($products as $product) {
-            SupplyProduct::create($product);
+            SupplyProduct::firstOrCreate(
+                ['name' => $product['name']],
+                [
+                    'description' => $product['description'],
+                    'category' => $product['category'],
+                    'is_active' => true,
+                ]
+            );
         }
     }
 }

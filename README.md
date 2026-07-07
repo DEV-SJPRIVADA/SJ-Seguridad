@@ -20,6 +20,8 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 - Dashboard protegido por autenticacion, estado activo y cambio obligatorio de contrasena
 - Gestion inicial de usuarios en `admin/users`
 - Roles y permisos sembrados desde configuracion
+- Modulo de requisiciones de personal con dashboard, solicitud, seguimiento, gestion y parametros
+- Modulo compartido de suministros con flujo solicitante, revision de calidad, gestion de compras y catalogo
 
 ## Inicio rapido local
 
@@ -71,6 +73,8 @@ Documentos principales:
 - [`docs/PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
 - [`docs/modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
 - [`docs/modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
+- [`docs/modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
+- [`docs/modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 
 ## Regla operativa
 

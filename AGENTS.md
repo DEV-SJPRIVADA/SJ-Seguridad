@@ -23,7 +23,7 @@
 
 ## Convenciones actuales
 - El control de acceso usa `spatie/laravel-permission`.
-- Los roles base son `super-admin`, `administrador`, `coordinador` y `consulta`.
+- Los roles base son `super-admin`, `administrador` y `usuario` (los antiguos `coordinador` y `consulta` fueron migrados a `usuario`).
 - Los permisos del sistema y por area viven en `config/access.php`.
 - La gestion inicial de usuarios esta en el modulo `admin/users`.
 

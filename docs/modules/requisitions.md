@@ -76,16 +76,20 @@ El formulario ha sido expandido para incluir toda la matriz de compensación y s
 
 ## Rutas
 
-Definidas en [`routes/web.php`](c:/laragon/www/SJSEGURIDAD/routes/web.php):
+Definidas en [`routes/modules/requisitions.php`](c:/laragon/www/SJSEGURIDAD/routes/modules/requisitions.php):
 
 - `GET /requisitions/{module}/dashboard`
 - `GET /requisitions/{module}/solicitar`
 - `POST /requisitions/{module}/solicitar`
+- `GET /requisitions/{module}/seguimiento`
 - `GET /requisitions/{module}/gestion`
 - `GET /requisitions/{module}/gestion/{requisition}/editar`
+- `GET /requisitions/{module}/gestion/{requisition}/imprimir`
 - `PATCH /requisitions/{module}/gestion/{requisition}`
 - `GET /requisitions/{module}/parametros`
 - `POST /requisitions/{module}/parametros/{type}`
+- `PATCH /requisitions/{module}/parametros/{type}/{parameterId}`
+- `DELETE /requisitions/{module}/parametros/{type}/{parameterId}`
 
 ## Permisos relacionados
 

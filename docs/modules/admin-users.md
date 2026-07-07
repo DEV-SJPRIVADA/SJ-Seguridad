@@ -17,7 +17,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Forzar cambio de contrasena
 - Creacion con contrasena temporal sin confirmacion; el usuario debe renovarla en su primer ingreso cuando `must_change_password` este activo
 - Matriz visible de visualizacion y gestion por area
-- Matriz de tableros por area; inicialmente cada modulo tiene `Dashboard` y `Requisiciones`
+- Matriz de tableros por area; cada modulo puede habilitar `Dashboard`, `Requisiciones` y `Suministros`
 - Matriz tabular con filtros por modulo y texto para administrar crecimiento de permisos
 
 ## Rutas

@@ -70,4 +70,57 @@ Siguiendo la arquitectura actual, los accesos se controlarán con:
 7. **Paso 7: Vistas - Compras.** Bandeja para procesar pedidos, ingresar precios y cerrar.
 
 ---
+
+## 7. Estado real implementado (actualizado)
+
+### Permisos vigentes (`config/access.php`)
+Los accesos NO usan el esquema `view.board.suministros.*` planteado en el diseño inicial. El control real es granular por pestaña mas el tablero por area:
+
+- `supply.tab.my_requests`: ver y crear solicitudes propias.
+- `supply.tab.quality`: tablero de revision de Calidad.
+- `supply.tab.purchasing`: tablero de gestion de Compras.
+- `supply.tab.catalog`: administrar el catalogo.
+- `manage.supply.catalog`, `approve.supply.quality`, `manage.supply.purchasing`: variantes "full".
+- `view.board.{area}.suministros`: habilita la pestaña de suministros del area en la navegacion.
+
+El acceso a cada pestaña se resuelve en `User::supplyBoardTabsFor()` y `HasSupplyTabs`.
+
+### Rutas reales (`routes/modules/supplies.php`)
+Prefijo `supplies/{module}`:
+
+- `GET /mis-solicitudes` (`supplies.index`)
+- `GET /solicitud/{supply_request}` (`supplies.show`)
+- `GET|POST /solicitar` (`supplies.create` / `supplies.store`)
+- `GET /revision-calidad` (`supplies.quality.index`)
+- `GET /revision-calidad/{supply_request}/editar` (`supplies.quality.edit`)
+- `PATCH /revision-calidad/{supply_request}` (`supplies.quality.update`)
+- `GET /gestion-compras` (`supplies.purchasing.index`)
+- `GET /gestion-compras/{supply_request}/costear` (`supplies.purchasing.edit`)
+- `PATCH /gestion-compras/{supply_request}` (`supplies.purchasing.update`)
+- `GET|POST /catalogo` y `PATCH /catalogo/{product}` (catalogo)
+
+### Campos adicionales en base de datos
+Ademas de lo descrito en la seccion 3, `supply_request_items` incluye:
+
+- `current_inventory` (integer, default 0): inventario actual reportado por el solicitante.
+- `purchasing_observations` (text, nullable): notas de Compras por linea.
+
+### Seeder
+`SupplyProductSeeder` carga el catalogo inicial (aseo y cafeteria) de forma idempotente (`firstOrCreate` por `name`) y esta registrado en `DatabaseSeeder`.
+
+### Reglas de autorizacion aplicadas
+- `supplies.show`: solo el solicitante duenio o perfiles de revision (Calidad, Compras, `manage.users`, super-admin) pueden ver el detalle. Ver `SupplyRequestController::authorizeSupplyView()`.
+- `quality.update`: solo procesa solicitudes en estado `pendiente_calidad`.
+- `purchasing.edit` / `purchasing.update`: solo operan sobre estados `aprobada_calidad` o `en_compras`.
+
+### Pruebas
+- `tests/Feature/SupplyModuleTest.php` cubre: catalogo sembrado, creacion de solicitud, visibilidad por propiedad, acceso de revisor, aprobacion de calidad, bloqueo de reproceso y cierre de compras con calculo de total.
+
+### Pendientes conocidos
+- Estado `borrador` documentado pero no implementado.
+- `qualityIndex` lista todas las solicitudes sin filtro por area.
+- No hay notificaciones por correo (a diferencia de requisiciones).
+- Falta `defaultSupplyBoardUrl()` equivalente al de requisiciones.
+
+---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*
