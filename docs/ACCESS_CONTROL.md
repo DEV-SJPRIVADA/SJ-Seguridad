@@ -35,6 +35,10 @@ Permisos del modulo de suministros:
 - `approve.supply.quality`
 - `manage.supply.purchasing`
 
+Permisos del modulo de documentos de Calidad:
+
+- `manage.quality.documents`
+
 Estos permisos se administran visualmente dentro de la fila `Administracion de usuarios` en la matriz de permisos.
 
 ## Areas actuales
@@ -68,15 +72,17 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `dashboard`
 - `requisiciones`
 - `suministros`
+- `documentos`
 
 Esto produce permisos como:
 
 - `view.board.gestion_humana.dashboard`
 - `view.board.gestion_humana.requisiciones`
 - `view.board.gestion_humana.suministros`
-- `view.board.operaciones.dashboard`
-- `view.board.operaciones.requisiciones`
-- `view.board.operaciones.suministros`
+
+El tablero `documentos` **no** usa `view.board.{area}.documentos`. Aparece en cada area con acceso (`view.area.*` o `manage.area.*`) y la biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
+
+Adicionalmente, un documento puede asignarse a usuarios especificos mediante la tabla `quality_document_users`. Esos destinatarios lo consultan en la pestaña `Mis documentos` del tablero `Documentos` de su area (`/quality-documents/{module}/mis-documentos`). No se requiere permiso adicional para ver esa pestaña.
 
 ## Asignacion base de roles
 

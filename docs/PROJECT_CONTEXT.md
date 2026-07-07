@@ -26,6 +26,7 @@
 - Modulo inicial de requisiciones de personal con subtableros de dashboard, solicitud, seguimiento, gestion y parametros
 - Modulo compartido de suministros con subtableros de mis solicitudes, revision de calidad, gestion de compras y catalogo
 - Notificaciones por correo al crear solicitudes de suministros (destinatarios: usuarios con permiso de Calidad)
+- Modulo compartido de documentos de Calidad con biblioteca por area y administracion centralizada
 
 ## Principios del proyecto
 
@@ -43,6 +44,8 @@
 - `supply_products`
 - `supply_requests`
 - `supply_request_items`
+- `quality_documents`
+- `quality_document_areas`
 - `roles`
 - `permissions`
 - tablas pivote de permisos del paquete `spatie/laravel-permission`

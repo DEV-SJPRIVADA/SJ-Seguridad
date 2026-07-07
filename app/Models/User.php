@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\QualityDocument;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -166,5 +167,52 @@ class User extends Authenticatable
             'catalogo' => route('supplies.products.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function qualityDocumentBoardTabsFor(string $moduleKey): Collection
+    {
+        $tabs = collect([]);
+        $canManage = $this->can('manage.quality.documents');
+        $hasAreaAccess = $this->can("view.area.{$moduleKey}") || $this->can("manage.area.{$moduleKey}");
+        $hasPersonalDocuments = QualityDocument::hasActiveForUser($this->id);
+
+        if ($canManage && $moduleKey === 'calidad') {
+            $tabs->push('administrar');
+        }
+
+        if ($hasAreaAccess) {
+            $tabs->push('biblioteca');
+        }
+
+        if ($hasPersonalDocuments) {
+            $tabs->push('mis_documentos');
+        }
+
+        return $tabs->unique()->values();
+    }
+
+    public function defaultQualityDocumentBoardUrl(string $moduleKey): string
+    {
+        $tabs = $this->qualityDocumentBoardTabsFor($moduleKey);
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'administrar' => route('quality-documents.admin.index', ['module' => $moduleKey]),
+            'biblioteca' => route('quality-documents.library.index', ['module' => $moduleKey]),
+            'mis_documentos' => route('quality-documents.mine.index', ['module' => $moduleKey]),
+            default => route('dashboard', ['module' => $moduleKey]),
+        };
+    }
+
+    public function canViewDocumentsBoardFor(string $areaKey): bool
+    {
+        if ($this->can("view.area.{$areaKey}") || $this->can("manage.area.{$areaKey}")) {
+            return true;
+        }
+
+        return $this->area_key === $areaKey && QualityDocument::hasActiveForUser($this->id);
     }
 }

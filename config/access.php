@@ -20,6 +20,7 @@ return [
         'manage.supply.catalog' => 'Administrar catalogo de suministros (Full)',
         'approve.supply.quality' => 'Revisar y aprobar suministros (Calidad Full)',
         'manage.supply.purchasing' => 'Gestionar compras y costeo de suministros (Full)',
+        'manage.quality.documents' => 'Calidad: Administrar documentos',
     ],
 
     'areas' => [
@@ -43,6 +44,7 @@ return [
         'dashboard' => 'Dashboard',
         'requisiciones' => 'Requisiciones',
         'suministros' => 'Suministros',
+        'documentos' => 'Documentos',
     ],
 
     'requisition_tabs' => [
@@ -58,6 +60,22 @@ return [
         'revision_calidad' => 'Revision Calidad',
         'gestion_compras' => 'Gestion Compras',
         'catalogo' => 'Catalogo',
+    ],
+
+    'quality_document_tabs' => [
+        'biblioteca' => 'Biblioteca',
+        'mis_documentos' => 'Mis documentos',
+        'administrar' => 'Administrar',
+    ],
+
+    'quality_document_types' => [
+        'formato' => 'Formato',
+        'indicador' => 'Indicador',
+        'instructivo' => 'Instructivo',
+        'manual' => 'Manual',
+        'matriz' => 'Matriz',
+        'formulario' => 'Formulario',
+        'general' => 'Documentos Generales',
     ],
 
     'navigation' => [

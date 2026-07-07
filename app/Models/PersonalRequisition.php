@@ -67,7 +67,6 @@ class PersonalRequisition extends Model
             'mobility_allowance' => 'decimal:2',
             'statutory_bonus' => 'decimal:2',
             'non_statutory_bonus' => 'decimal:2',
-            'other_allowances' => 'decimal:2',
         ];
     }
 

@@ -57,3 +57,4 @@ Si ademas quieres limpiar caches y verificar el entorno completo:
 - Si `.env` apunta a `sqlite` y PHP no tiene `pdo_sqlite`, Laravel falla con `could not find driver`.
 - Si la base `sjseguridad` no existe, Laravel falla con `Unknown database 'sjseguridad'`.
 - Si la tabla `users` queda vacia o el admin semilla no coincide con `.env`, el login devolvera `auth.failed`.
+- Para subir documentos de Calidad (hasta 10 MB), verificar en `php.ini` que `upload_max_filesize` y `post_max_size` sean al menos `10M`.

@@ -45,6 +45,17 @@ Artisan::command('app:doctor', function () {
         }
     }
 
+    $qualityDocsReady = Schema::hasTable('quality_documents')
+        && Schema::hasTable('quality_document_areas')
+        && Schema::hasTable('quality_document_users');
+    $checks[] = [
+        'label' => 'Tablas documentos Calidad',
+        'ok' => $qualityDocsReady,
+        'detail' => $qualityDocsReady
+            ? 'Disponibles'
+            : 'Ejecutar: php artisan migrate --path=database/migrations/2026_05_09_100000_create_quality_documents_tables.php',
+    ];
+
     $this->newLine();
     $this->info('Diagnostico local de autenticacion');
     $this->table(

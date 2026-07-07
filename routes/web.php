@@ -12,16 +12,27 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     $areas = collect(config('access.areas'))
         ->map(function (string $label, string $key) {
-            $canView = auth()->user()->can("view.area.{$key}") || auth()->user()->can("manage.area.{$key}");
-            $canManage = auth()->user()->can("manage.area.{$key}");
+            $user = auth()->user();
+            $canView = $user->can("view.area.{$key}") || $user->can("manage.area.{$key}");
+            $canManage = $user->can("manage.area.{$key}");
             $boards = collect(config('access.boards', []))
-                ->map(fn (string $boardLabel, string $boardKey) => [
-                    'key' => $boardKey,
-                    'label' => $boardLabel,
-                    'can_view' => $boardKey === 'dashboard'
-                        ? ($canView || auth()->user()->can("view.board.{$key}.{$boardKey}"))
-                        : auth()->user()->can("view.board.{$key}.{$boardKey}"),
-                ])
+                ->map(function (string $boardLabel, string $boardKey) use ($key, $user, $canView) {
+                    if ($boardKey === 'documentos') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->canViewDocumentsBoardFor($key),
+                        ];
+                    }
+
+                    return [
+                        'key' => $boardKey,
+                        'label' => $boardLabel,
+                        'can_view' => $boardKey === 'dashboard'
+                            ? ($canView || $user->can("view.board.{$key}.{$boardKey}"))
+                            : $user->can("view.board.{$key}.{$boardKey}"),
+                    ];
+                })
                 ->filter(fn (array $board) => $board['can_view'])
                 ->values();
 
@@ -50,6 +61,10 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultSupplyBoardUrl($defaultModule['key']));
         }
 
+        if ($defaultBoard === 'documentos') {
+            return redirect(auth()->user()->defaultQualityDocumentBoardUrl($defaultModule['key']));
+        }
+
         return redirect()->route('dashboard', array_filter([
             'module' => $defaultModule['key'],
             'board' => $defaultBoard,
@@ -68,6 +83,10 @@ Route::get('/dashboard', function () {
 
     if ($selectedModule && $selectedBoardKey === 'suministros') {
         return redirect(auth()->user()->defaultSupplyBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'documentos') {
+        return redirect(auth()->user()->defaultQualityDocumentBoardUrl($selectedModule['key']));
     }
 
     return view('dashboard', [
@@ -89,6 +108,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Modulos del sistema
     require __DIR__.'/modules/requisitions.php';
     require __DIR__.'/modules/supplies.php';
+    require __DIR__.'/modules/quality-documents.php';
 });
 
 if (app()->environment('local')) {

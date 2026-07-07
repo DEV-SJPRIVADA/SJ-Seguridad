@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\QualityDocument;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -118,6 +119,22 @@ class AppServiceProvider extends ServiceProvider
 
                 $boardItems = collect(config('access.boards', []))
                     ->map(function (string $boardLabel, string $boardKey) use ($key, $user, $routeName): ?array {
+                        if ($boardKey === 'documentos') {
+                            if (! $this->canViewDocumentsBoard($user, $key)) {
+                                return null;
+                            }
+
+                            $url = $user->defaultQualityDocumentBoardUrl($key);
+                            $requestModule = $this->resolveRequestModule($routeName);
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'quality-documents.library.index',
+                                'url' => $url,
+                                'active' => str_starts_with((string) $routeName, 'quality-documents.') && $requestModule === $key,
+                            ];
+                        }
+
                         $permission = "view.board.{$key}.{$boardKey}";
 
                         if (! $user->can($permission)) {
@@ -130,14 +147,9 @@ class AppServiceProvider extends ServiceProvider
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };
 
-                        $requestModule = str_starts_with((string) $routeName, 'requisitions.')
-                            ? (string) request()->route('module')
-                            : (str_starts_with((string) $routeName, 'supplies.') 
-                                ? (string) request()->route('module')
-                                : request()->string('module')->toString());
-                        
+                        $requestModule = $this->resolveRequestModule($routeName);
                         $requestBoard = request()->string('board')->toString();
-                        
+
                         $active = match($boardKey) {
                             'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
@@ -178,6 +190,8 @@ class AppServiceProvider extends ServiceProvider
                     str_starts_with((string) $routeName, 'requisitions.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'supplies.') && (string) request()->route('module') === $key
+                ) || (
+                    str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 );
 
                 return [
@@ -220,5 +234,25 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return false;
+    }
+
+    private function canViewDocumentsBoard(User $user, string $areaKey): bool
+    {
+        if ($user->can("view.area.{$areaKey}") || $user->can("manage.area.{$areaKey}")) {
+            return true;
+        }
+
+        return $user->area_key === $areaKey && QualityDocument::hasActiveForUser($user->id);
+    }
+
+    private function resolveRequestModule(?string $routeName): string
+    {
+        if (str_starts_with((string) $routeName, 'requisitions.')
+            || str_starts_with((string) $routeName, 'supplies.')
+            || str_starts_with((string) $routeName, 'quality-documents.')) {
+            return (string) request()->route('module');
+        }
+
+        return request()->string('module')->toString();
     }
 }

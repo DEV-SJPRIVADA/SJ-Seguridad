@@ -263,7 +263,7 @@
             </tr>
             <tr>
                 <td class="label-cell">Otros valores, cuales:</td>
-                <td>$ {{ number_format($requisition->other_allowances, 0) }}</td>
+                <td>{{ $requisition->other_allowances ?: '—' }}</td>
             </tr>
             <tr>
                 <td colspan="2" style="padding: 0;">

@@ -138,7 +138,12 @@ class UserController extends Controller
             ->map(fn ($label, $name) => [
                 'name' => $name,
                 'label' => $label,
-                'category' => str_contains($name, 'supply') ? 'Suministros' : (str_contains($name, 'requisition') ? 'Requisiciones' : 'Administración')
+                'category' => match (true) {
+                    str_contains($name, 'supply') => 'Suministros',
+                    str_contains($name, 'quality.documents') => 'Calidad',
+                    str_contains($name, 'requisition') => 'Requisiciones',
+                    default => 'Administración',
+                },
             ])
             ->groupBy('category');
 
@@ -153,7 +158,7 @@ class UserController extends Controller
                         ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
                         ['label' => 'Tablero Requisiciones', 'name' => "view.board.{$key}.requisiciones"],
                         ['label' => 'Tablero Suministros', 'name' => "view.board.{$key}.suministros"],
-                    ])->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values()
+                    ])->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values(),
                 ];
             })
             ->values();

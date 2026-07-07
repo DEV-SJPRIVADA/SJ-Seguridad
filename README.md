@@ -22,6 +22,7 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 - Roles y permisos sembrados desde configuracion
 - Modulo de requisiciones de personal con dashboard, solicitud, seguimiento, gestion y parametros
 - Modulo compartido de suministros con flujo solicitante, revision de calidad, gestion de compras y catalogo
+- Modulo de documentos de Calidad con publicacion de archivos/enlaces y biblioteca por area
 
 ## Inicio rapido local
 
@@ -75,6 +76,7 @@ Documentos principales:
 - [`docs/modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`docs/modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 - [`docs/modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
+- [`docs/modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 
 ## Regla operativa
 

@@ -48,7 +48,7 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'mobility_allowance' => ['nullable', 'numeric', 'min:0'],
             'statutory_bonus' => [$isHired ? 'required' : 'nullable', 'numeric', 'min:0'],
             'non_statutory_bonus' => ['nullable', 'numeric', 'min:0'],
-            'other_allowances' => ['nullable', 'numeric', 'min:0'],
+            'other_allowances' => ['nullable', 'string', 'max:500'],
             'leasing_contract' => ['nullable', 'string', 'max:255'],
             'cost_center' => ['required', 'string', 'max:255'],
             

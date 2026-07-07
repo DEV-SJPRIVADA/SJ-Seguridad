@@ -192,7 +192,7 @@
 
         <div class="form-field">
             <x-input-label for="other_allowances" value="Otros valores" />
-            <input id="other_allowances" name="other_allowances" type="text" class="form-input js-currency" data-raw-name="other_allowances" value="{{ old('other_allowances', $requisition?->other_allowances ?? 0) }}">
+            <input id="other_allowances" name="other_allowances" type="text" class="form-input" value="{{ old('other_allowances', $requisition?->other_allowances) }}" maxlength="500">
             <x-input-error :messages="$errors->get('other_allowances')" />
         </div>
 

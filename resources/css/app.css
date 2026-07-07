@@ -2071,3 +2071,190 @@ table.dataTable thead td {
         max-width: none;
     }
 }
+
+/* ==========================================================================
+   Documentos de Calidad - Formulario
+   ========================================================================== */
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.doc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.doc-form__section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: #fbfdff;
+}
+
+.doc-form__section-title {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand-blue);
+}
+
+.doc-form .form-field {
+    gap: 0.4rem;
+}
+
+.doc-form .form-field .text-small {
+    margin: 0;
+}
+
+.doc-form__radio-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.doc-form__radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--color-text);
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.doc-form__radio input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--color-primary);
+}
+
+.doc-form__radio.is-active {
+    border-color: var(--color-sky);
+    background: var(--brand-blue-pale);
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+}
+
+.doc-form__check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.6rem;
+}
+
+.doc-form__check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.92rem;
+    color: var(--color-text);
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.doc-form__check:hover {
+    border-color: var(--color-border-strong);
+    background: #f8fafc;
+}
+
+.doc-form__check input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.doc-form__check span {
+    line-height: 1.4;
+}
+
+.doc-form__check--switch {
+    display: inline-flex;
+}
+
+.doc-form__file {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 1rem;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.doc-form__file:hover {
+    border-color: var(--color-sky);
+    background: var(--brand-blue-pale);
+}
+
+.doc-form__file input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.doc-form__file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: filter 0.2s ease;
+}
+
+.doc-form__file:hover .doc-form__file-btn {
+    filter: brightness(1.1);
+}
+
+.doc-form__file-name {
+    font-size: 0.9rem;
+    color: var(--color-text-soft);
+    word-break: break-all;
+}
+
+.doc-form__file-name.is-selected {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .doc-form__check-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .doc-form__radio-row {
+        flex-direction: column;
+    }
+
+    .doc-form__radio {
+        justify-content: flex-start;
+    }
+}
