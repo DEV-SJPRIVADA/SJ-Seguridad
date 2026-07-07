@@ -25,6 +25,7 @@
 - Modulos base configurados: gestion humana, operaciones, programacion, juridico, comercial, calidad, remuneraciones, facturacion y compras
 - Modulo inicial de requisiciones de personal con subtableros de dashboard, solicitud, seguimiento, gestion y parametros
 - Modulo compartido de suministros con subtableros de mis solicitudes, revision de calidad, gestion de compras y catalogo
+- Notificaciones por correo al crear solicitudes de suministros (destinatarios: usuarios con permiso de Calidad)
 
 ## Principios del proyecto
 

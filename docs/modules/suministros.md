@@ -110,17 +110,25 @@ Ademas de lo descrito en la seccion 3, `supply_request_items` incluye:
 
 ### Reglas de autorizacion aplicadas
 - `supplies.show`: solo el solicitante duenio o perfiles de revision (Calidad, Compras, `manage.users`, super-admin) pueden ver el detalle. Ver `SupplyRequestController::authorizeSupplyView()`.
-- `quality.update`: solo procesa solicitudes en estado `pendiente_calidad`.
-- `purchasing.edit` / `purchasing.update`: solo operan sobre estados `aprobada_calidad` o `en_compras`.
+- `quality.update`: solo procesa solicitudes en estado `pendiente_calidad` del modulo activo.
+- `quality.edit`: valida modulo y estado `pendiente_calidad`.
+- `purchasing.edit` / `purchasing.update`: solo operan sobre estados `aprobada_calidad` o `en_compras` del modulo activo.
+- `qualityIndex` y `purchasingIndex` filtran por `area_key` del modulo en la URL.
+
+### Navegacion
+- `User::defaultSupplyBoardUrl()` redirige a la primera pestaña autorizada (mis solicitudes, calidad, compras o catalogo).
+- El dashboard usa esa URL al seleccionar el tablero `suministros`.
+- `HasSupplyTabs` marca activa la pestaña en sub-rutas (`show`, `create`, `edit`).
+- `AppServiceProvider` marca activo el modulo de area cuando la ruta es `supplies.*`.
+
+### Notificaciones
+- Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios activos con `supply.tab.quality` o `approve.supply.quality`. Si no hay destinatarios, usa `ADMIN_EMAIL` como respaldo.
 
 ### Pruebas
-- `tests/Feature/SupplyModuleTest.php` cubre: catalogo sembrado, creacion de solicitud, visibilidad por propiedad, acceso de revisor, aprobacion de calidad, bloqueo de reproceso y cierre de compras con calculo de total.
+- `tests/Feature/SupplyModuleTest.php` cubre: catalogo sembrado, creacion, visibilidad, aprobacion, compras, filtros por modulo, redireccion de tablero y notificacion por correo.
 
 ### Pendientes conocidos
-- Estado `borrador` documentado pero no implementado.
-- `qualityIndex` lista todas las solicitudes sin filtro por area.
-- No hay notificaciones por correo (a diferencia de requisiciones).
-- Falta `defaultSupplyBoardUrl()` equivalente al de requisiciones.
+- Estado `borrador` documentado pero no implementado (requiere UI de guardado parcial).
 
 ---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*

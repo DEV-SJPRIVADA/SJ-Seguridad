@@ -126,7 +126,7 @@ class AppServiceProvider extends ServiceProvider
 
                         $url = match($boardKey) {
                             'requisiciones' => $user->defaultRequisitionBoardUrl($key),
-                            'suministros' => route('supplies.index', ['module' => $key]),
+                            'suministros' => $user->defaultSupplyBoardUrl($key),
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };
 
@@ -176,6 +176,8 @@ class AppServiceProvider extends ServiceProvider
                     $routeName === 'dashboard' && request()->string('module')->toString() === $key
                 ) || (
                     str_starts_with((string) $routeName, 'requisitions.') && (string) request()->route('module') === $key
+                ) || (
+                    str_starts_with((string) $routeName, 'supplies.') && (string) request()->route('module') === $key
                 );
 
                 return [

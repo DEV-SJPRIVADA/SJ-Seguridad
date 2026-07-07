@@ -45,7 +45,7 @@
                                     Buscar
                                 </button>
                             </form>
-                            <a href="{{ route('admin.users.create') }}" class="btn btn--primary">Nuevo usuario</a>
+                            
                         </div>
 
                         <div class="users-list">

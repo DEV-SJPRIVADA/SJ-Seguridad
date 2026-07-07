@@ -46,6 +46,10 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultRequisitionBoardUrl($defaultModule['key']));
         }
 
+        if ($defaultBoard === 'suministros') {
+            return redirect(auth()->user()->defaultSupplyBoardUrl($defaultModule['key']));
+        }
+
         return redirect()->route('dashboard', array_filter([
             'module' => $defaultModule['key'],
             'board' => $defaultBoard,
@@ -60,6 +64,10 @@ Route::get('/dashboard', function () {
 
     if ($selectedModule && $selectedBoardKey === 'requisiciones') {
         return redirect(auth()->user()->defaultRequisitionBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'suministros') {
+        return redirect(auth()->user()->defaultSupplyBoardUrl($selectedModule['key']));
     }
 
     return view('dashboard', [
@@ -83,15 +91,16 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/modules/supplies.php';
 });
 
-Route::get('/mail-preview', function () {
-    $requisition = \App\Models\PersonalRequisition::with(['position', 'client', 'requester'])->latest()->first();
-    
-    if (!$requisition) {
-        return "No hay requisiciones creadas para visualizar el correo.";
-    }
+if (app()->environment('local')) {
+    Route::get('/mail-preview', function () {
+        $requisition = \App\Models\PersonalRequisition::with(['position', 'client', 'requester'])->latest()->first();
 
-    // Le pasamos la requisición y simulamos que fue un lote de 3 vacantes
-    return new \App\Mail\PersonalRequisitionNotification($requisition, 3);
-})->middleware(['auth']);
+        if (! $requisition) {
+            return 'No hay requisiciones creadas para visualizar el correo.';
+        }
+
+        return new \App\Mail\PersonalRequisitionNotification($requisition, 3);
+    })->middleware(['auth', 'permission:manage.users']);
+}
 
 require __DIR__.'/auth.php';

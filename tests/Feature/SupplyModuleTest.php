@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class SupplyModuleTest extends TestCase
@@ -179,6 +181,103 @@ class SupplyModuleTest extends TestCase
             'purchasing_manager_id' => $buyer->id,
             'total_cost' => 5000,
         ]);
+    }
+
+    public function test_quality_index_only_shows_pending_requests_for_current_module(): void
+    {
+        $owner = $this->requester('operaciones');
+        $reviewer = $this->requester('calidad');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $pendingOperaciones = $this->supplyRequest($owner, 'operaciones');
+        $comercialPending = $this->supplyRequest($owner, 'comercial');
+        $this->supplyRequest($owner, 'operaciones', 'aprobada_calidad');
+
+        $response = $this->actingAs($reviewer)->get(route('supplies.quality.index', ['module' => 'operaciones']));
+
+        $response->assertOk();
+        $response->assertSee('>#'.$pendingOperaciones->id.'<', false);
+        $response->assertDontSee('>#'.$comercialPending->id.'<', false);
+    }
+
+    public function test_purchasing_index_only_shows_requests_for_current_module(): void
+    {
+        $owner = $this->requester('operaciones');
+        $buyer = $this->requester('compras');
+        $buyer->givePermissionTo('supply.tab.purchasing');
+
+        $operacionesRequest = $this->supplyRequest($owner, 'operaciones', 'aprobada_calidad');
+        $comercialRequest = $this->supplyRequest($owner, 'comercial', 'aprobada_calidad');
+
+        $response = $this->actingAs($buyer)->get(route('supplies.purchasing.index', ['module' => 'operaciones']));
+
+        $response->assertOk();
+        $response->assertSee('>#'.$operacionesRequest->id.'<', false);
+        $response->assertDontSee('>#'.$comercialRequest->id.'<', false);
+    }
+
+    public function test_default_supply_board_url_uses_first_authorized_tab(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'calidad',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('supply.tab.quality');
+
+        $this->assertSame(
+            route('supplies.quality.index', ['module' => 'calidad']),
+            $user->defaultSupplyBoardUrl('calidad')
+        );
+    }
+
+    public function test_dashboard_redirects_to_default_supply_board(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'calidad',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('view.board.calidad.suministros');
+        $user->givePermissionTo('supply.tab.quality');
+
+        $response = $this->actingAs($user)->get(route('dashboard', [
+            'module' => 'calidad',
+            'board' => 'suministros',
+        ]));
+
+        $response->assertRedirect($user->defaultSupplyBoardUrl('calidad'));
+    }
+
+    public function test_store_notifies_quality_reviewers(): void
+    {
+        Mail::fake();
+
+        $requester = $this->requester('operaciones');
+        $reviewer = User::factory()->create([
+            'area_key' => 'calidad',
+            'email' => 'calidad.reviewer@example.com',
+            'must_change_password' => false,
+        ]);
+        $reviewer->assignRole('usuario');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $product = SupplyProduct::query()->firstOrFail();
+
+        $this->actingAs($requester)->post(route('supplies.store', ['module' => 'operaciones']), [
+            'observations' => 'Pedido mensual.',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'current_inventory' => 1,
+                    'quantity' => 5,
+                ],
+            ],
+        ]);
+
+        Mail::assertQueued(SupplyRequestNotification::class, function (SupplyRequestNotification $mail) use ($reviewer) {
+            return $mail->hasTo($reviewer->email);
+        });
     }
 
     private function requester(string $areaKey): User

@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Supplies;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyRequest;
 use App\Models\SupplyProduct;
+use App\Models\User;
 use App\Traits\HasSupplyTabs;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SupplyRequestController extends Controller
 {
@@ -65,7 +70,7 @@ class SupplyRequestController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $module) {
+        $supplyRequest = DB::transaction(function () use ($request, $module) {
             $supplyRequest = SupplyRequest::create([
                 'user_id' => auth()->id(),
                 'area_key' => $module,
@@ -80,7 +85,11 @@ class SupplyRequestController extends Controller
                     'requested_quantity' => $item['quantity'],
                 ]);
             }
+
+            return $supplyRequest;
         });
+
+        $this->notifyQualityReviewers($supplyRequest);
 
         return redirect()->route('supplies.index', ['module' => $module])
             ->with('success', 'Solicitud enviada correctamente a Calidad.');
@@ -88,7 +97,9 @@ class SupplyRequestController extends Controller
 
     public function qualityIndex(string $module)
     {
-        $requests = SupplyRequest::latest()
+        $requests = SupplyRequest::where('area_key', $module)
+            ->where('status', 'pendiente_calidad')
+            ->latest()
             ->with(['user', 'items.product'])
             ->get();
 
@@ -101,6 +112,9 @@ class SupplyRequestController extends Controller
 
     public function qualityEdit(string $module, SupplyRequest $supplyRequest)
     {
+        abort_unless($supplyRequest->area_key === $module, 404);
+        abort_if($supplyRequest->status !== 'pendiente_calidad', 403, 'Esta solicitud ya fue procesada por Calidad.');
+
         $supplyRequest->load(['user', 'items.product']);
 
         return view('modules.supplies.quality.edit', [
@@ -125,7 +139,9 @@ class SupplyRequestController extends Controller
             'Esta solicitud ya fue procesada por Calidad.'
         );
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $supplyRequest) {
+        abort_unless($supplyRequest->area_key === $module, 404);
+
+        DB::transaction(function () use ($request, $supplyRequest) {
             $isApprove = $request->action === 'approve';
             
             $supplyRequest->update([
@@ -149,7 +165,8 @@ class SupplyRequestController extends Controller
 
     public function purchasingIndex(string $module)
     {
-        $requests = SupplyRequest::whereIn('status', ['aprobada_calidad', 'en_compras', 'completada'])
+        $requests = SupplyRequest::where('area_key', $module)
+            ->whereIn('status', ['aprobada_calidad', 'en_compras', 'completada'])
             ->latest()
             ->with(['user', 'items.product'])
             ->get();
@@ -163,6 +180,7 @@ class SupplyRequestController extends Controller
 
     public function purchasingEdit(string $module, SupplyRequest $supplyRequest)
     {
+        abort_unless($supplyRequest->area_key === $module, 404);
         abort_unless(
             in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras'], true),
             403,
@@ -197,7 +215,9 @@ class SupplyRequestController extends Controller
             'Esta solicitud ya fue completada.'
         );
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $supplyRequest) {
+        abort_unless($supplyRequest->area_key === $module, 404);
+
+        DB::transaction(function () use ($request, $supplyRequest) {
             $totalCost = 0;
 
             foreach ($request->items as $itemId => $data) {
@@ -236,5 +256,27 @@ class SupplyRequestController extends Controller
             || $user->can('manage.users');
 
         abort_unless($supplyRequest->user_id === $user->id || $canReview, 403);
+    }
+
+    private function notifyQualityReviewers(SupplyRequest $supplyRequest): void
+    {
+        try {
+            $emails = User::query()
+                ->where('is_active', true)
+                ->permission(['supply.tab.quality', 'approve.supply.quality'])
+                ->pluck('email')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($emails === []) {
+                $emails = [env('ADMIN_EMAIL', 'admin@sjseguridad.local')];
+            }
+
+            Mail::to($emails)->send(new SupplyRequestNotification($supplyRequest));
+        } catch (\Throwable $exception) {
+            Log::error('Error enviando correos de suministros: '.$exception->getMessage());
+        }
     }
 }

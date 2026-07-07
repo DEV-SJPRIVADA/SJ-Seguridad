@@ -153,4 +153,18 @@ class User extends Authenticatable
 
         return $tabs->unique()->values();
     }
+
+    public function defaultSupplyBoardUrl(string $moduleKey): string
+    {
+        $tabs = $this->supplyBoardTabsFor($moduleKey);
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'mis_solicitudes' => route('supplies.index', ['module' => $moduleKey]),
+            'revision_calidad' => route('supplies.quality.index', ['module' => $moduleKey]),
+            'gestion_compras' => route('supplies.purchasing.index', ['module' => $moduleKey]),
+            'catalogo' => route('supplies.products.index', ['module' => $moduleKey]),
+            default => route('dashboard', ['module' => $moduleKey]),
+        };
+    }
 }
