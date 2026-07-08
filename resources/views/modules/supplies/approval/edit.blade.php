@@ -60,18 +60,27 @@
                             </table>
                         </div>
 
-                        <div class="form-group block-spaced">
-                            <label class="form-label">Observaciones de aprobacion (opcional)</label>
-                            <textarea name="quality_observations" class="form-control" rows="3" placeholder="Justifica cualquier ajuste en las cantidades..."></textarea>
+                        <div class="form-field block-spaced">
+                            <label class="form-label" for="quality_observations">Observaciones de aprobacion (opcional)</label>
+                            <textarea
+                                id="quality_observations"
+                                name="quality_observations"
+                                class="form-textarea"
+                                rows="3"
+                                placeholder="Justifica cualquier ajuste en las cantidades..."
+                            >{{ old('quality_observations') }}</textarea>
                         </div>
 
-                        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
-                            <button type="submit" name="action" value="reject" class="btn-secondary" style="color: var(--color-danger); border-color: var(--color-danger);">
-                                Rechazar Solicitud
-                            </button>
-                            <button type="submit" name="action" value="approve" class="btn-primary">
-                                Aprobar Solicitud
-                            </button>
+                        <div class="form-actions">
+                            <p class="text-small text-muted">Al aprobar, las cantidades autorizadas quedan listas para exportar en Insumos aprobados.</p>
+                            <div class="form-actions__group">
+                                <button type="submit" name="action" value="reject" class="btn btn--danger">
+                                    Rechazar solicitud
+                                </button>
+                                <button type="submit" name="action" value="approve" class="btn btn--primary">
+                                    Aprobar solicitud
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
