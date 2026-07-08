@@ -16,6 +16,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{mod
         Route::get('/aprobacion-insumos', [SupplyRequestController::class, 'approvalIndex'])->name('approval.index');
         Route::get('/aprobacion-insumos/{supply_request}/editar', [SupplyRequestController::class, 'approvalEdit'])->name('approval.edit');
         Route::patch('/aprobacion-insumos/{supply_request}', [SupplyRequestController::class, 'approvalUpdate'])->name('approval.update');
+        Route::get('/insumos-aprobados', [SupplyRequestController::class, 'approvedIndex'])->name('approved.index');
+        Route::get('/insumos-aprobados/{supply_request}/exportar', [SupplyRequestController::class, 'approvedExport'])->name('approved.export');
     });
 
     Route::middleware(['supply.tab:catalog'])->group(function () {

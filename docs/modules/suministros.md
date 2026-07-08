@@ -74,10 +74,10 @@ Siguiendo la arquitectura actual, los accesos se controlarán con:
 ## 7. Estado real implementado (actualizado)
 
 ### Permisos vigentes (`config/access.php`)
-El modulo tiene **3 pestañas** activas. El control es granular por pestaña mas el tablero por area:
+El modulo tiene **4 pestañas** activas. El control es granular por pestaña mas el tablero por area:
 
 - `supply.tab.my_requests`: ver y crear solicitudes propias.
-- `supply.tab.quality`: bandeja de **Aprobacion Insumos** (asignable a la jefa de Calidad u otro usuario).
+- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados** (mismo permiso para ambas).
 - `supply.tab.catalog`: administrar el catalogo.
 - `manage.supply.catalog`, `approve.supply.quality`: variantes "full".
 - `view.board.{area}.suministros`: habilita Mis solicitudes en la navegacion aunque no exista `supply.tab.my_requests`.
@@ -98,6 +98,8 @@ Prefijo `supplies/{module}`:
 - `GET /aprobacion-insumos` (`supplies.approval.index`)
 - `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)
 - `PATCH /aprobacion-insumos/{supply_request}` (`supplies.approval.update`)
+- `GET /insumos-aprobados` (`supplies.approved.index`) — tabla de aprobadas con filtros
+- `GET /insumos-aprobados/{supply_request}/exportar` (`supplies.approved.export`) — Excel FO-AD-44 por solicitud
 - `GET|POST /catalogo` y `PATCH /catalogo/{product}` (catalogo)
 
 ### Items fuera de catalogo
@@ -111,6 +113,33 @@ En `supply_request_items`:
 - `current_inventory` (integer, default 0): inventario actual reportado por el solicitante.
 - `purchasing_observations`, `unit_cost`, `total_cost`: reservados para el proceso de compra futuro.
 
+### Sedes (`supply_sites`) y snapshot en solicitudes
+Catálogo de sedes físicas con `name`, `utilization` (columna Utilización del Excel), `city` (columna Ubicación) e `is_active`.
+
+- Seeder inicial: Cali (Sede Principal y central de monitoreo), Cartagena, Manizales.
+- Cada usuario puede tener `sede_id` (FK nullable) asignada desde **Admin > Usuarios**.
+- Desde el formulario de usuario, botón **Gestionar** abre un modal para crear, editar o eliminar sedes (`admin/supply-sites`).
+- Al crear una solicitud (`store`), se copia snapshot: `sede_id`, `site_utilization`, `site_city` desde la sede del usuario. Sin sede asignada no puede solicitar.
+- `exported_at` en `supply_requests`: marca solicitudes ya incluidas en un export FO-AD-44.
+
+### Reporte Excel FO-AD-44 (por solicitud)
+Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
+
+1. Listado cross-área de solicitudes `aprobada_calidad` con filtros (sede, fechas, estado de exportación, solicitante).
+2. Cada fila permite **Descargar FO-AD-44** para esa solicitud.
+3. El Excel incluye solo los ítems de la solicitud con `approved_quantity > 0`; une filas duplicadas por Descripción + Referencia dentro de la misma solicitud.
+4. Genera `.xlsx` con formato FO-AD-44 (`config/supplies.php`, servicio `SupplyPurchaseReportExporter`).
+5. Marca `exported_at` en la primera descarga (filtro “Pendientes”); las descargas posteriores siguen disponibles.
+
+| Columna Excel | Fuente |
+|---------------|--------|
+| Cantidad | Suma `approved_quantity` tras merge |
+| Insertar Foto del Artículo | `N/A` |
+| Descripción | `product.name` o `custom_product_name` |
+| Referencia | `product.description` o `N/A` si fuera de catálogo |
+| Utilización | `site_utilization` (snapshot) |
+| Ubicación | `site_city` (snapshot) |
+
 ### Reglas de autorizacion aplicadas
 - `supplies.show`: solicitante duenio o quien tenga permiso de aprobacion (`supply.tab.quality`, `approve.supply.quality`, `manage.users`).
 - `supplies.approval.*`: solo solicitudes `pendiente_calidad` del modulo activo.
@@ -118,16 +147,15 @@ En `supply_request_items`:
 
 ### Navegacion
 - `User::defaultSupplyBoardUrl()` redirige a la primera pestaña autorizada (mis solicitudes, aprobacion insumos o catalogo).
-- Pestañas internas: `mis_solicitudes`, `aprobacion_insumos`, `catalogo`.
+- Pestañas internas: `mis_solicitudes`, `aprobacion_insumos`, `insumos_aprobados`, `catalogo`.
 
 ### Notificaciones
 - Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios con `supply.tab.quality` o `approve.supply.quality`.
 
 ### Pruebas
-- `tests/Feature/SupplyModuleTest.php`: catalogo, creacion (catalogo y custom), aprobacion, rutas purchasing eliminadas, filtros por modulo, redireccion y correo.
+- `tests/Feature/SupplyModuleTest.php`: catálogo, creación (catálogo y custom), snapshot de sede, bloqueo sin sede, aprobación, tablero Insumos aprobados (filtros, export por solicitud, `exported_at`), rutas purchasing eliminadas, filtros por módulo, redirección y correo.
 
 ### Pendientes conocidos
-- Reporte Excel de insumos autorizados (estructura pendiente).
 - Proceso de compra con costeo (fase posterior).
 - Estado `borrador` documentado pero no implementado.
 

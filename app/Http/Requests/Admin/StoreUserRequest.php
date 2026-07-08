@@ -26,6 +26,7 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'area_key' => ['nullable', 'string', Rule::in(array_keys(config('access.areas', [])))],
+            'sede_id' => ['nullable', 'integer', Rule::exists('supply_sites', 'id')],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', Password::defaults()],
             'role' => ['required', 'string', Rule::exists('roles', 'name')],
@@ -40,6 +41,7 @@ class StoreUserRequest extends FormRequest
     {
         $this->merge([
             'area_key' => blank($this->input('area_key')) ? null : $this->string('area_key')->toString(),
+            'sede_id' => blank($this->input('sede_id')) ? null : $this->integer('sede_id'),
             'is_active' => $this->boolean('is_active'),
             'must_change_password' => $this->boolean('must_change_password'),
         ]);

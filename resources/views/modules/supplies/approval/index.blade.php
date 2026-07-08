@@ -20,18 +20,20 @@
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
                                     <th>Area</th>
+                                    <th>Sede</th>
                                     <th>Items</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($requests as $request)
+                                @forelse ($requests as $request)
                                     <tr>
                                         <td>#{{ $request->id }}</td>
                                         <td>{{ $request->created_at->format('Y-m-d H:i') }}</td>
                                         <td>{{ $request->user->name }}</td>
                                         <td>{{ config("access.areas.{$request->area_key}") }}</td>
+                                        <td>{{ $request->site_utilization ?? '—' }}</td>
                                         <td>{{ $request->items->count() }} productos</td>
                                         <td>
                                             <span class="status-pill status-pill--req-{{ $request->status }}">
@@ -48,7 +50,11 @@
                                             @endif
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="text-muted">No hay solicitudes pendientes de aprobacion.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>

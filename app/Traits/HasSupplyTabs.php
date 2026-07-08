@@ -16,6 +16,7 @@ trait HasSupplyTabs
             $targetRoute = match ($tab) {
                 'mis_solicitudes' => 'supplies.index',
                 'aprobacion_insumos' => 'supplies.approval.index',
+                'insumos_aprobados' => 'supplies.approved.index',
                 'catalogo' => 'supplies.products.index',
                 default => 'supplies.index',
             };
@@ -23,6 +24,7 @@ trait HasSupplyTabs
             $active = match ($tab) {
                 'mis_solicitudes' => in_array($routeName, ['supplies.index', 'supplies.show', 'supplies.create'], true),
                 'aprobacion_insumos' => str_starts_with((string) $routeName, 'supplies.approval.'),
+                'insumos_aprobados' => str_starts_with((string) $routeName, 'supplies.approved.'),
                 'catalogo' => str_starts_with((string) $routeName, 'supplies.products.'),
                 default => false,
             };

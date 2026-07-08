@@ -14,16 +14,21 @@ class SupplyRequest extends Model
     protected $fillable = [
         'user_id',
         'area_key',
+        'sede_id',
+        'site_utilization',
+        'site_city',
         'status',
         'observations',
         'quality_reviewer_id',
         'quality_observations',
         'purchasing_manager_id',
         'total_cost',
+        'exported_at',
     ];
 
     protected $casts = [
         'total_cost' => 'decimal:2',
+        'exported_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -44,6 +49,11 @@ class SupplyRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SupplyRequestItem::class);
+    }
+
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(SupplySite::class, 'sede_id');
     }
 
     public function statusLabel(): string

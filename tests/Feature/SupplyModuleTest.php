@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
+use App\Models\SupplySite;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -48,6 +49,9 @@ class SupplyModuleTest extends TestCase
             'user_id' => $user->id,
             'area_key' => 'operaciones',
             'status' => 'pendiente_calidad',
+            'sede_id' => $user->sede_id,
+            'site_utilization' => $user->site?->utilization,
+            'site_city' => $user->site?->city,
         ]);
         $this->assertDatabaseHas('supply_request_items', [
             'supply_product_id' => $product->id,
@@ -326,10 +330,170 @@ class SupplyModuleTest extends TestCase
         });
     }
 
-    private function requester(string $areaKey): User
+    public function test_user_without_site_cannot_create_supply_request(): void
     {
         $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'sede_id' => null,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('supply.tab.my_requests');
+
+        $product = SupplyProduct::query()->firstOrFail();
+
+        $response = $this->actingAs($user)->post(route('supplies.store', ['module' => 'operaciones']), [
+            'items' => [
+                [
+                    'type' => 'catalog',
+                    'product_id' => $product->id,
+                    'current_inventory' => 1,
+                    'quantity' => 2,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('sede');
+    }
+
+    public function test_approved_tab_is_visible_with_quality_permission(): void
+    {
+        $reviewer = $this->requester('calidad');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $tabs = $reviewer->supplyBoardTabsFor('calidad');
+
+        $this->assertTrue($tabs->contains('aprobacion_insumos'));
+        $this->assertTrue($tabs->contains('insumos_aprobados'));
+    }
+
+    public function test_approved_index_lists_approved_requests_cross_area(): void
+    {
+        $site = SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+        $product = SupplyProduct::query()->firstOrFail();
+
+        $userA = $this->requester('operaciones', $site);
+        $userB = $this->requester('gestion_humana', $site);
+
+        $requestA = $this->approvedSupplyRequest($userA, 'operaciones', $site, $product, 5);
+        $requestB = $this->approvedSupplyRequest($userB, 'gestion_humana', $site, $product, 3);
+
+        $reviewer = $this->requester('calidad');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $response = $this->actingAs($reviewer)->get(route('supplies.approved.index', ['module' => 'calidad']));
+
+        $response->assertOk();
+        $response->assertSee('>#'.$requestA->id.'<', false);
+        $response->assertSee('>#'.$requestB->id.'<', false);
+    }
+
+    public function test_approved_index_filters_by_export_status(): void
+    {
+        $site = SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+        $product = SupplyProduct::query()->firstOrFail();
+        $user = $this->requester('operaciones', $site);
+
+        $pending = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 2);
+        $exported = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 4);
+        $exported->update(['exported_at' => now()]);
+
+        $reviewer = $this->requester('calidad');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $response = $this->actingAs($reviewer)->get(route('supplies.approved.index', [
+            'module' => 'calidad',
+            'export_status' => 'pending',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('>#'.$pending->id.'<', false);
+        $response->assertDontSee('>#'.$exported->id.'<', false);
+    }
+
+    public function test_approved_export_downloads_excel_for_single_request(): void
+    {
+        $site = SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+        $product = SupplyProduct::query()->firstOrFail();
+        $user = $this->requester('operaciones', $site);
+        $request = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 5);
+
+        $reviewer = $this->requester('calidad');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $response = $this->actingAs($reviewer)->get(route('supplies.approved.export', [
+            'module' => 'calidad',
+            'supply_request' => $request->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertNotNull($request->fresh()->exported_at);
+    }
+
+    public function test_approved_export_can_be_downloaded_again_after_export(): void
+    {
+        $site = SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+        $product = SupplyProduct::query()->firstOrFail();
+        $user = $this->requester('operaciones', $site);
+        $request = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 2);
+        $request->update(['exported_at' => now()]);
+
+        $reviewer = $this->requester('calidad');
+        $reviewer->givePermissionTo('supply.tab.quality');
+
+        $response = $this->actingAs($reviewer)->get(route('supplies.approved.export', [
+            'module' => 'calidad',
+            'supply_request' => $request->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    public function test_approved_export_merges_quantities_for_duplicate_description_and_reference(): void
+    {
+        $site = SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+        $product = SupplyProduct::query()->firstOrFail();
+        $user = $this->requester('operaciones', $site);
+
+        $request = SupplyRequest::create([
+            'user_id' => $user->id,
+            'area_key' => 'operaciones',
+            'sede_id' => $site->id,
+            'site_utilization' => $site->utilization,
+            'site_city' => $site->city,
+            'status' => 'aprobada_calidad',
+        ]);
+
+        $request->items()->create([
+            'supply_product_id' => $product->id,
+            'requested_quantity' => 5,
+            'approved_quantity' => 5,
+            'is_not_in_catalog' => false,
+        ]);
+
+        $request->items()->create([
+            'supply_product_id' => $product->id,
+            'requested_quantity' => 3,
+            'approved_quantity' => 3,
+            'is_not_in_catalog' => false,
+        ]);
+
+        $exporter = app(\App\Services\Supplies\SupplyPurchaseReportExporter::class);
+        $rows = $exporter->buildMergedRowsForRequest($request);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame(8, $rows->first()['quantity']);
+    }
+
+    private function requester(string $areaKey, ?SupplySite $site = null): User
+    {
+        $site ??= SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+
+        $user = User::factory()->create([
             'area_key' => $areaKey,
+            'sede_id' => $site->id,
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
@@ -340,11 +504,15 @@ class SupplyModuleTest extends TestCase
 
     private function supplyRequest(User $user, string $areaKey, string $status = 'pendiente_calidad'): SupplyRequest
     {
+        $site = $user->site ?? SupplySite::query()->where('name', 'cali_central')->firstOrFail();
         $product = SupplyProduct::query()->firstOrFail();
 
         $request = SupplyRequest::create([
             'user_id' => $user->id,
             'area_key' => $areaKey,
+            'sede_id' => $site->id,
+            'site_utilization' => $site->utilization,
+            'site_city' => $site->city,
             'status' => $status,
             'observations' => 'Solicitud de prueba.',
         ]);
@@ -353,6 +521,32 @@ class SupplyModuleTest extends TestCase
             'supply_product_id' => $product->id,
             'current_inventory' => 1,
             'requested_quantity' => 8,
+            'is_not_in_catalog' => false,
+        ]);
+
+        return $request;
+    }
+
+    private function approvedSupplyRequest(
+        User $user,
+        string $areaKey,
+        SupplySite $site,
+        SupplyProduct $product,
+        int $approvedQuantity
+    ): SupplyRequest {
+        $request = SupplyRequest::create([
+            'user_id' => $user->id,
+            'area_key' => $areaKey,
+            'sede_id' => $site->id,
+            'site_utilization' => $site->utilization,
+            'site_city' => $site->city,
+            'status' => 'aprobada_calidad',
+        ]);
+
+        $request->items()->create([
+            'supply_product_id' => $product->id,
+            'requested_quantity' => $approvedQuantity,
+            'approved_quantity' => $approvedQuantity,
             'is_not_in_catalog' => false,
         ]);
 

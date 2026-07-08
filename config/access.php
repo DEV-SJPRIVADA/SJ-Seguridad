@@ -56,6 +56,7 @@ return [
     'supply_tabs' => [
         'mis_solicitudes' => 'Mis Solicitudes',
         'aprobacion_insumos' => 'Aprobacion Insumos',
+        'insumos_aprobados' => 'Insumos aprobados',
         'catalogo' => 'Catalogo',
     ],
 

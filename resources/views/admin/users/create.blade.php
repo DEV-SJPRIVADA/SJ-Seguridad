@@ -26,6 +26,11 @@
             <div class="panel">
                 @include('admin.users.partials.form', [
                     'action' => route('admin.users.store'),
+                    'areas' => $areas,
+                    'sites' => $sites,
+                    'allSites' => $allSites,
+                    'roles' => $roles,
+                    'permissionGroups' => $permissionGroups,
                     'buttonLabel' => 'Guardar usuario',
                     'method' => 'POST',
                     'selectedPermissions' => old('permissions', []),

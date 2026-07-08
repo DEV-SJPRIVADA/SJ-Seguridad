@@ -64,6 +64,26 @@
                         </select>
                     </div>
                     <div class="form-field">
+                        <label class="form-label">Sede física</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                            <select name="sede_id" id="user-sede-id" class="form-select" style="flex: 1;">
+                                <option value="">Sin sede asignada</option>
+                                @foreach ($sites ?? [] as $site)
+                                    <option value="{{ $site->id }}" @selected((string) old('sede_id', $user?->sede_id) === (string) $site->id)>
+                                        {{ $site->utilization }} ({{ $site->city }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn--secondary" id="open-sites-modal" title="Gestionar sedes">
+                                Gestionar
+                            </button>
+                        </div>
+                        <p class="text-small text-muted">Requerida para solicitar insumos.</p>
+                        @if (($sites ?? collect())->isEmpty())
+                            <p class="text-small" style="color: var(--color-warning, #b45309);">No hay sedes activas. Use <strong>Gestionar</strong> para crear la primera sede.</p>
+                        @endif
+                    </div>
+                    <div class="form-field">
                         <label class="form-label">Perfil / Rol Principal</label>
                         <select name="role" class="form-select" required>
                             @foreach ($roles as $role)
@@ -214,6 +234,8 @@
         </div>
     </div>
 </form>
+
+@include('admin.users.partials.sites-modal')
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

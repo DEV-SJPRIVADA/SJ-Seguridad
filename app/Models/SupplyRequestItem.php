@@ -44,4 +44,13 @@ class SupplyRequestItem extends Model
 
         return (string) ($this->product?->name ?? 'Producto');
     }
+
+    public function referenceLabel(): string
+    {
+        if ($this->is_not_in_catalog) {
+            return (string) config('supplies.report.custom_reference_placeholder', 'N/A');
+        }
+
+        return (string) ($this->product?->description ?? config('supplies.report.custom_reference_placeholder', 'N/A'));
+    }
 }

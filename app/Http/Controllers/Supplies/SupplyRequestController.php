@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
+use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Supplies\SupplyPurchaseReportExporter;
 use App\Traits\HasSupplyTabs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -64,12 +66,30 @@ class SupplyRequestController extends Controller
 
     public function store(Request $request, string $module)
     {
+        $user = auth()->user();
+
+        if (! $user->hasAssignedSite()) {
+            throw ValidationException::withMessages([
+                'sede' => 'Debe tener una sede asignada para solicitar insumos. Contacte al administrador.',
+            ]);
+        }
+
+        $site = $user->site;
+        if ($site === null || ! $site->is_active) {
+            throw ValidationException::withMessages([
+                'sede' => 'La sede asignada no es válida o está inactiva.',
+            ]);
+        }
+
         $validated = $this->validateStoreItems($request);
 
-        $supplyRequest = DB::transaction(function () use ($validated, $module) {
+        $supplyRequest = DB::transaction(function () use ($validated, $module, $user, $site) {
             $supplyRequest = SupplyRequest::create([
-                'user_id' => auth()->id(),
+                'user_id' => $user->id,
                 'area_key' => $module,
+                'sede_id' => $site->id,
+                'site_utilization' => $site->utilization,
+                'site_city' => $site->city,
                 'status' => 'pendiente_calidad',
                 'observations' => $validated['observations'] ?? null,
             ]);
@@ -167,6 +187,75 @@ class SupplyRequestController extends Controller
 
         return redirect()->route('supplies.approval.index', ['module' => $module])
             ->with('success', 'Solicitud procesada correctamente.');
+    }
+
+    public function approvedIndex(Request $request, string $module)
+    {
+        $filters = $request->validate([
+            'sede_id' => ['nullable', 'integer', 'exists:supply_sites,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'export_status' => ['nullable', 'in:pending,exported,all'],
+            'requester' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $exportStatus = $filters['export_status'] ?? 'all';
+
+        $requests = SupplyRequest::query()
+            ->where('status', 'aprobada_calidad')
+            ->with(['user'])
+            ->withCount(['items as approved_items_count' => function ($query): void {
+                $query->where('approved_quantity', '>', 0);
+            }])
+            ->when(filled($filters['sede_id'] ?? null), fn ($query) => $query->where('sede_id', $filters['sede_id']))
+            ->when(filled($filters['date_from'] ?? null), fn ($query) => $query->whereDate('created_at', '>=', $filters['date_from']))
+            ->when(filled($filters['date_to'] ?? null), fn ($query) => $query->whereDate('created_at', '<=', $filters['date_to']))
+            ->when($exportStatus === 'pending', fn ($query) => $query->whereNull('exported_at'))
+            ->when($exportStatus === 'exported', fn ($query) => $query->whereNotNull('exported_at'))
+            ->when(filled($filters['requester'] ?? null), function ($query) use ($filters): void {
+                $term = '%'.$filters['requester'].'%';
+                $query->whereHas('user', function ($userQuery) use ($term): void {
+                    $userQuery->where('name', 'like', $term)
+                        ->orWhere('email', 'like', $term);
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        $sites = SupplySite::query()->active()->ordered()->get();
+
+        return view('modules.supplies.approved.index', [
+            'module' => $module,
+            'requests' => $requests,
+            'sites' => $sites,
+            'filters' => array_merge([
+                'sede_id' => null,
+                'date_from' => null,
+                'date_to' => null,
+                'export_status' => 'all',
+                'requester' => null,
+            ], $filters),
+            'subTabs' => $this->getSupplySubTabs($module),
+        ]);
+    }
+
+    public function approvedExport(string $module, SupplyRequest $supplyRequest, SupplyPurchaseReportExporter $exporter)
+    {
+        abort_unless($supplyRequest->status === 'aprobada_calidad', 403, 'Solo se pueden exportar solicitudes aprobadas.');
+
+        $rows = $exporter->buildMergedRowsForRequest($supplyRequest);
+
+        if ($rows->isEmpty()) {
+            return redirect()->route('supplies.approved.index', ['module' => $module])
+                ->with('warning', 'La solicitud no tiene ítems aprobados para exportar.');
+        }
+
+        if ($supplyRequest->exported_at === null) {
+            $supplyRequest->update(['exported_at' => now()]);
+        }
+
+        return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
     }
 
     private function authorizeSupplyView(SupplyRequest $supplyRequest): void

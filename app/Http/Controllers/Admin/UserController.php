@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\SupplySite;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -66,6 +67,8 @@ class UserController extends Controller
     {
         return view('admin.users.create', [
             'areas' => config('access.areas', []),
+            'sites' => SupplySite::query()->active()->ordered()->get(),
+            'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'roles' => $this->roles(),
             'permissionGroups' => $this->permissionGroups(),
         ]);
@@ -77,6 +80,7 @@ class UserController extends Controller
             $user = User::create([
                 'name' => $request->string('name')->toString(),
                 'area_key' => $request->input('area_key'),
+                'sede_id' => $request->input('sede_id'),
                 'email' => Str::lower($request->string('email')->toString()),
                 'password' => $request->string('password')->toString(),
                 'is_active' => $request->boolean('is_active', true),
@@ -96,6 +100,8 @@ class UserController extends Controller
     {
         return view('admin.users.edit', [
             'areas' => config('access.areas', []),
+            'sites' => SupplySite::query()->active()->ordered()->get(),
+            'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'permissionGroups' => $this->permissionGroups(),
             'roles' => $this->roles(),
             'selectedPermissions' => $user->permissions->pluck('name')->all(),
@@ -110,6 +116,7 @@ class UserController extends Controller
             $attributes = [
                 'name' => $request->string('name')->toString(),
                 'area_key' => $request->input('area_key'),
+                'sede_id' => $request->input('sede_id'),
                 'email' => Str::lower($request->string('email')->toString()),
                 'is_active' => $request->boolean('is_active'),
                 'must_change_password' => $request->boolean('must_change_password'),

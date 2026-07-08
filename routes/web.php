@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\SupplySiteController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RequisitionController;
@@ -102,6 +103,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::middleware(['password.changed', 'permission:manage.users'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('supply-sites', [SupplySiteController::class, 'index'])->name('supply-sites.index');
+        Route::post('supply-sites', [SupplySiteController::class, 'store'])->name('supply-sites.store');
+        Route::patch('supply-sites/{supply_site}', [SupplySiteController::class, 'update'])->name('supply-sites.update');
+        Route::delete('supply-sites/{supply_site}', [SupplySiteController::class, 'destroy'])->name('supply-sites.destroy');
+
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
     });
 

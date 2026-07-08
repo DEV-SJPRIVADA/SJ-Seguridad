@@ -38,6 +38,11 @@
             <div class="panel">
                 @include('admin.users.partials.form', [
                     'action' => route('admin.users.update', $user),
+                    'areas' => $areas,
+                    'sites' => $sites,
+                    'allSites' => $allSites,
+                    'roles' => $roles,
+                    'permissionGroups' => $permissionGroups,
                     'buttonLabel' => 'Actualizar usuario',
                     'method' => 'PATCH',
                     'selectedPermissions' => old('permissions', $selectedPermissions),

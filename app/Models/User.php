@@ -27,6 +27,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'area_key',
+        'sede_id',
         'email',
         'password',
         'is_active',
@@ -65,6 +66,16 @@ class User extends Authenticatable
     public function creator(): BelongsTo
     {
         return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(SupplySite::class, 'sede_id');
+    }
+
+    public function hasAssignedSite(): bool
+    {
+        return $this->sede_id !== null;
     }
 
     public function areaLabel(): ?string
@@ -143,6 +154,7 @@ class User extends Authenticatable
 
         if ($this->can("supply.tab.quality") || $this->can('approve.supply.quality') || $this->can('manage.users')) {
             $tabs->push('aprobacion_insumos');
+            $tabs->push('insumos_aprobados');
         }
 
         if ($this->can("supply.tab.catalog") || $this->can('manage.supply.catalog') || $this->can('manage.users')) {
@@ -170,6 +182,7 @@ class User extends Authenticatable
         return match ($firstTab) {
             'mis_solicitudes' => route('supplies.index', ['module' => $moduleKey]),
             'aprobacion_insumos' => route('supplies.approval.index', ['module' => $moduleKey]),
+            'insumos_aprobados' => route('supplies.approved.index', ['module' => $moduleKey]),
             'catalogo' => route('supplies.products.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };

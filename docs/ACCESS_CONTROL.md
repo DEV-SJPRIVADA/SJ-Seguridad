@@ -110,6 +110,10 @@ Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo.
 - Administracion de documentos de Calidad solo responde en `module=calidad`; otras areas devuelven 404 aunque el usuario tenga `manage.quality.documents`.
 - `supply_request` en rutas se resuelve acotado al `module` de la URL (proteccion IDOR).
 
+## Sede fisica del usuario (suministros)
+
+En **Administracion de usuarios** (`manage.users`) cada usuario puede tener `sede_id` (catalogo `supply_sites`). Es requerida para crear solicitudes de insumos y define el snapshot Utilizacion/Ubicacion del reporte FO-AD-44. Las sedes se administran desde el modal **Gestionar** en el formulario de usuario (rutas `admin.supply-sites.*`). El permiso `supply.tab.quality` habilita las pestañas **Aprobacion Insumos** e **Insumos aprobados**. Ver [`docs/modules/suministros.md`](modules/suministros.md).
+
 ## Reglas obligatorias
 
 - No habilitar registro publico salvo instruccion expresa

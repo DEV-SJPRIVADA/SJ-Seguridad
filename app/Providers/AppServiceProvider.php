@@ -44,10 +44,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PersonalRequisition::class, PersonalRequisitionPolicy::class);
 
         Route::bind('supply_request', function (string $value, $route) {
-            return SupplyRequest::query()
-                ->whereKey($value)
-                ->where('area_key', (string) $route->parameter('module'))
-                ->firstOrFail();
+            $query = SupplyRequest::query()->whereKey($value);
+
+            $routeName = (string) $route->getName();
+            $isCrossAreaApprovedRoute = str_starts_with($routeName, 'supplies.approved.');
+
+            if (! $isCrossAreaApprovedRoute) {
+                $query->where('area_key', (string) $route->parameter('module'));
+            }
+
+            return $query->firstOrFail();
         });
 
         View::composer(['layouts.app', 'layouts.navigation'], function ($view): void {
