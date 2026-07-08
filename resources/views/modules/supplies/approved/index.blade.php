@@ -67,7 +67,6 @@
                                     <td>
                                         @if ($request->exported_at)
                                             <span class="status-pill status-pill--success">Exportada</span>
-                                            <span class="text-small text-muted">{{ $request->exported_at->format('Y-m-d') }}</span>
                                         @else
                                             <span class="status-pill status-pill--warning">Pendiente</span>
                                         @endif
