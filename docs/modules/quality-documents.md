@@ -36,6 +36,7 @@ Permitir al director de Calidad publicar documentos (Word/Excel) o enlaces exter
 - Los documentos asignados solo a usuarios no aparecen en bibliotecas de area; el destinatario los ve en la pestaña `Mis documentos` del tablero `Documentos`.
 - La pestaña `Mis documentos` aparece junto a `Biblioteca` cuando el usuario tiene al menos un documento activo asignado directamente.
 - La pestaña `Administrar` solo aparece en el modulo `calidad` y requiere `manage.quality.documents`.
+- Las rutas bajo `/administrar` responden solo con `module=calidad`; cualquier otro modulo devuelve 404.
 - No se usa `view.board.{area}.documentos`; el tablero es automatico con el acceso al area.
 - Documentos inactivos no aparecen en bibliotecas de area.
 - La biblioteca filtra por el `{module}` de la URL (area del tablero activo).

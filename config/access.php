@@ -13,13 +13,11 @@ return [
         
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
-        'supply.tab.quality' => 'Suministros: Acceso a Revision Calidad',
-        'supply.tab.purchasing' => 'Suministros: Acceso a Gestion Compras',
+        'supply.tab.quality' => 'Suministros: Acceso a Aprobacion Insumos',
         'supply.tab.catalog' => 'Suministros: Acceso a Catalogo',
 
         'manage.supply.catalog' => 'Administrar catalogo de suministros (Full)',
-        'approve.supply.quality' => 'Revisar y aprobar suministros (Calidad Full)',
-        'manage.supply.purchasing' => 'Gestionar compras y costeo de suministros (Full)',
+        'approve.supply.quality' => 'Aprobar insumos (permiso completo)',
         'manage.quality.documents' => 'Calidad: Administrar documentos',
     ],
 
@@ -57,8 +55,7 @@ return [
 
     'supply_tabs' => [
         'mis_solicitudes' => 'Mis Solicitudes',
-        'revision_calidad' => 'Revision Calidad',
-        'gestion_compras' => 'Gestion Compras',
+        'aprobacion_insumos' => 'Aprobacion Insumos',
         'catalogo' => 'Catalogo',
     ],
 

@@ -8,6 +8,7 @@ use App\Http\Requests\QualityDocuments\UpdateQualityDocumentRequest;
 use App\Models\QualityDocument;
 use App\Models\User;
 use App\Traits\HasQualityDocumentTabs;
+use App\Traits\ValidatesModule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class QualityDocumentController extends Controller
 {
-    use HasQualityDocumentTabs;
+    use HasQualityDocumentTabs, ValidatesModule;
 
     public function myDocuments(string $module): View
     {
@@ -63,7 +64,7 @@ class QualityDocumentController extends Controller
     public function adminIndex(string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         $documents = QualityDocument::query()
             ->with(['uploader', 'areas', 'assignedUsers.user'])
@@ -80,7 +81,7 @@ class QualityDocumentController extends Controller
     public function create(string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         return view('modules.quality-documents.admin.create', [
             'module' => $module,
@@ -95,7 +96,7 @@ class QualityDocumentController extends Controller
     public function store(StoreQualityDocumentRequest $request, string $module): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         DB::transaction(function () use ($request): void {
             $document = QualityDocument::create([
@@ -128,7 +129,7 @@ class QualityDocumentController extends Controller
     public function edit(string $module, QualityDocument $qualityDocument): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         $qualityDocument->load(['areas', 'assignedUsers']);
 
@@ -147,7 +148,7 @@ class QualityDocumentController extends Controller
     public function update(UpdateQualityDocumentRequest $request, string $module, QualityDocument $qualityDocument): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         DB::transaction(function () use ($request, $qualityDocument): void {
             $qualityDocument->update([
@@ -188,7 +189,7 @@ class QualityDocumentController extends Controller
     public function toggleStatus(string $module, QualityDocument $qualityDocument): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         $qualityDocument->update([
             'is_active' => ! $qualityDocument->is_active,
@@ -202,7 +203,7 @@ class QualityDocumentController extends Controller
     public function destroy(string $module, QualityDocument $qualityDocument): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManage();
+        $this->authorizeManage($module);
 
         DB::transaction(function () use ($qualityDocument): void {
             $this->deleteStoredFile($qualityDocument);
@@ -246,8 +247,9 @@ class QualityDocumentController extends Controller
         return $this->redirectToExternalLink($qualityDocument);
     }
 
-    private function authorizeManage(): void
+    private function authorizeManage(string $module): void
     {
+        abort_unless($module === 'calidad', 404);
         abort_unless(auth()->user()?->can('manage.quality.documents'), 403);
     }
 
@@ -290,35 +292,6 @@ class QualityDocumentController extends Controller
         abort_unless($user instanceof User && $document->isAssignedToUser($user->id), 403);
     }
 
-    private function userCanView(QualityDocument $document, User $user, ?string $module = null): bool
-    {
-        if (! $document->is_active) {
-            return false;
-        }
-
-        if ($user->can('manage.quality.documents')) {
-            return true;
-        }
-
-        if ($document->isAssignedToUser($user->id)) {
-            return true;
-        }
-
-        if ($module && $document->isAssignedToArea($module)) {
-            return $user->can("view.area.{$module}") || $user->can("manage.area.{$module}");
-        }
-
-        return false;
-    }
-
-    private function abortIfUnknownModule(string $module): void
-    {
-        abort_unless(array_key_exists($module, config('access.areas', [])), 404);
-    }
-
-    /**
-     * @param  array<int, string>  $areaKeys
-     */
     private function syncAreas(QualityDocument $document, array $areaKeys): void
     {
         $document->areas()->delete();

@@ -28,12 +28,10 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 Permisos del modulo de suministros:
 
 - `supply.tab.my_requests`
-- `supply.tab.quality`
-- `supply.tab.purchasing`
+- `supply.tab.quality` (Aprobacion Insumos)
 - `supply.tab.catalog`
 - `manage.supply.catalog`
 - `approve.supply.quality`
-- `manage.supply.purchasing`
 
 Permisos del modulo de documentos de Calidad:
 
@@ -93,6 +91,24 @@ Sembrada en [`database/seeders/RoleAndPermissionSeeder.php`](c:/laragon/www/SJSE
 - `usuario`: `view.dashboard`
 
 Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el seeder si existen. Los permisos de areas que ya no esten definidos en `config/access.php` se eliminan para evitar accesos obsoletos.
+
+### Sincronizar permisos sin resetear roles
+
+Comando artisan `app:sync-permissions`:
+
+- Crea o actualiza permisos de sistema, areas y tableros segun `config/access.php`
+- Excluye `view.board.{area}.documentos` (el tablero Documentos no usa ese permiso)
+- Elimina permisos huerfanos de areas/tableros obsoletos
+- **No** modifica roles ni permisos asignados a usuarios
+
+Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo.
+
+## Middleware y enforcement
+
+- `/dashboard` exige `view.dashboard` ademas de autenticacion, usuario activo y contrasena cambiada.
+- Rutas de suministros usan middleware `supply.tab:{tab}` alineado con `User::canAccessSupplyTab()` (acepta permisos granulares `supply.tab.*`, variantes full y `view.board.{area}.suministros` para mis solicitudes).
+- Administracion de documentos de Calidad solo responde en `module=calidad`; otras areas devuelven 404 aunque el usuario tenga `manage.quality.documents`.
+- `supply_request` en rutas se resuelve acotado al `module` de la URL (proteccion IDOR).
 
 ## Reglas obligatorias
 

@@ -1,35 +1,24 @@
 <?php
 
-use App\Http\Controllers\Supplies\SupplyRequestController;
 use App\Http\Controllers\Supplies\SupplyProductController;
+use App\Http\Controllers\Supplies\SupplyRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{module}')->name('supplies.')->group(function () {
-    
-    // Tablero principal y Mis Solicitudes (Acceso base o granular)
-    Route::middleware(['can:supply.tab.my_requests'])->group(function() {
+    Route::middleware(['supply.tab:my_requests'])->group(function () {
         Route::get('/mis-solicitudes', [SupplyRequestController::class, 'index'])->name('index');
         Route::get('/solicitud/{supply_request}', [SupplyRequestController::class, 'show'])->name('show');
         Route::get('/solicitar', [SupplyRequestController::class, 'create'])->name('create');
         Route::post('/solicitar', [SupplyRequestController::class, 'store'])->name('store');
     });
-    
-    // Revisión Calidad
-    Route::middleware(['can:supply.tab.quality'])->group(function() {
-        Route::get('/revision-calidad', [SupplyRequestController::class, 'qualityIndex'])->name('quality.index');
-        Route::get('/revision-calidad/{supply_request}/editar', [SupplyRequestController::class, 'qualityEdit'])->name('quality.edit');
-        Route::patch('/revision-calidad/{supply_request}', [SupplyRequestController::class, 'qualityUpdate'])->name('quality.update');
+
+    Route::middleware(['supply.tab:quality'])->group(function () {
+        Route::get('/aprobacion-insumos', [SupplyRequestController::class, 'approvalIndex'])->name('approval.index');
+        Route::get('/aprobacion-insumos/{supply_request}/editar', [SupplyRequestController::class, 'approvalEdit'])->name('approval.edit');
+        Route::patch('/aprobacion-insumos/{supply_request}', [SupplyRequestController::class, 'approvalUpdate'])->name('approval.update');
     });
-    
-    // Gestión Compras
-    Route::middleware(['can:supply.tab.purchasing'])->group(function() {
-        Route::get('/gestion-compras', [SupplyRequestController::class, 'purchasingIndex'])->name('purchasing.index');
-        Route::get('/gestion-compras/{supply_request}/costear', [SupplyRequestController::class, 'purchasingEdit'])->name('purchasing.edit');
-        Route::patch('/gestion-compras/{supply_request}', [SupplyRequestController::class, 'purchasingUpdate'])->name('purchasing.update');
-    });
-    
-    // Catálogo (Administrable)
-    Route::middleware(['can:supply.tab.catalog'])->group(function() {
+
+    Route::middleware(['supply.tab:catalog'])->group(function () {
         Route::get('/catalogo', [SupplyProductController::class, 'index'])->name('products.index');
         Route::post('/catalogo', [SupplyProductController::class, 'store'])->name('products.store');
         Route::patch('/catalogo/{product}', [SupplyProductController::class, 'update'])->name('products.update');

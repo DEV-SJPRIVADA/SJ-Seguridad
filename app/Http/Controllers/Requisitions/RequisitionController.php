@@ -23,10 +23,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PersonalRequisitionNotification;
+use App\Traits\HasRequisitionTabs;
+use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
 
 class RequisitionController extends Controller
 {
+    use HasRequisitionTabs, ValidatesModule;
     /**
      * @var array<string, array{label: string, model: class-string<\Illuminate\Database\Eloquent\Model>}>
      */
@@ -91,7 +94,7 @@ class RequisitionController extends Controller
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'statusLabels' => PersonalRequisition::statuses(),
-            'subTabs' => $this->subTabs($module, 'dashboard'),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'dashboard'),
             'filters' => $filters,
             'catalogs' => $this->catalogs(),
             'stats' => [
@@ -130,7 +133,7 @@ class RequisitionController extends Controller
         return view('modules.requisitions.create', [
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
-            'subTabs' => $this->subTabs($module, 'solicitar'),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'solicitar'),
             'catalogs' => $this->catalogs(),
             'sexOptions' => $this->sexOptions(),
             'areaOptions' => config('access.areas'),
@@ -272,7 +275,7 @@ class RequisitionController extends Controller
             'moduleLabel' => config("access.areas.{$module}"),
             'requisitions' => $requisitions,
             'statusLabels' => PersonalRequisition::statuses(),
-            'subTabs' => $this->subTabs($module, 'gestion'),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
         ]);
     }
 
@@ -324,7 +327,7 @@ class RequisitionController extends Controller
             'moduleLabel' => config("access.areas.{$module}"),
             'requisitions' => $requisitions,
             'statusLabels' => PersonalRequisition::statuses(),
-            'subTabs' => $this->subTabs($module, 'seguimiento'),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'seguimiento'),
         ]);
     }
 
@@ -358,7 +361,7 @@ class RequisitionController extends Controller
             'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author']),
             'sexOptions' => $this->sexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
-            'subTabs' => $this->subTabs($module, 'gestion'),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
         ]);
     }
 
@@ -444,7 +447,7 @@ class RequisitionController extends Controller
             'catalogs' => $catalogs,
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
-            'subTabs' => $this->subTabs($module, 'parametros'),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'parametros'),
         ]);
     }
 
@@ -503,11 +506,6 @@ class RequisitionController extends Controller
         return redirect()
             ->route('requisitions.parameters', ['module' => $module])
             ->with('status', 'requisition-parameter-deleted');
-    }
-
-    private function abortIfUnknownModule(string $module): void
-    {
-        abort_unless(array_key_exists($module, config('access.areas', [])), 404);
     }
 
     private function authorizeBoardAccess(string $module): void
@@ -596,34 +594,6 @@ class RequisitionController extends Controller
             'femenino' => 'Femenino',
             'indiferente' => 'Indiferente',
         ];
-    }
-
-    /**
-     * @return array<int, array{key: string, label: string, url: string, active: bool}>
-     */
-    private function subTabs(string $module, string $activeKey): array
-    {
-        $user = auth()->user();
-
-        return $user->requisitionBoardTabsFor($module)
-            ->map(function (string $tabKey) use ($activeKey, $module): array {
-                $routes = [
-                    'dashboard' => route('requisitions.dashboard', ['module' => $module]),
-                    'solicitar' => route('requisitions.create', ['module' => $module]),
-                    'seguimiento' => route('requisitions.tracking', ['module' => $module]),
-                    'gestion' => route('requisitions.manage', ['module' => $module]),
-                    'parametros' => route('requisitions.parameters', ['module' => $module]),
-                ];
-
-                return [
-                    'key' => $tabKey,
-                    'label' => config("access.requisition_tabs.{$tabKey}", Str::headline($tabKey)),
-                    'url' => $routes[$tabKey],
-                    'active' => $tabKey === $activeKey,
-                ];
-            })
-            ->values()
-            ->all();
     }
 
     private function nextCode(): string

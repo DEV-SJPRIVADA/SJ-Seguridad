@@ -3,7 +3,13 @@
 namespace App\Providers;
 
 use App\Models\QualityDocument;
+use App\Models\PersonalRequisition;
+use App\Models\SupplyRequest;
 use App\Models\User;
+use App\Policies\PersonalRequisitionPolicy;
+use App\Policies\QualityDocumentPolicy;
+use App\Policies\SupplyRequestPolicy;
+use App\Services\Access\BoardAccessService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -31,6 +37,17 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return null;
+        });
+
+        Gate::policy(QualityDocument::class, QualityDocumentPolicy::class);
+        Gate::policy(SupplyRequest::class, SupplyRequestPolicy::class);
+        Gate::policy(PersonalRequisition::class, PersonalRequisitionPolicy::class);
+
+        Route::bind('supply_request', function (string $value, $route) {
+            return SupplyRequest::query()
+                ->whereKey($value)
+                ->where('area_key', (string) $route->parameter('module'))
+                ->firstOrFail();
         });
 
         View::composer(['layouts.app', 'layouts.navigation'], function ($view): void {
@@ -238,11 +255,7 @@ class AppServiceProvider extends ServiceProvider
 
     private function canViewDocumentsBoard(User $user, string $areaKey): bool
     {
-        if ($user->can("view.area.{$areaKey}") || $user->can("manage.area.{$areaKey}")) {
-            return true;
-        }
-
-        return $user->area_key === $areaKey && QualityDocument::hasActiveForUser($user->id);
+        return app(BoardAccessService::class)->canViewDocumentsBoard($user, $areaKey);
     }
 
     private function resolveRequestModule(?string $routeName): string

@@ -123,15 +123,6 @@ class QualityDocument extends Model
             && Schema::hasTable('quality_document_users');
     }
 
-    public static function hasActiveForArea(string $areaKey): bool
-    {
-        if (! static::tablesReady()) {
-            return false;
-        }
-
-        return static::query()->active()->forArea($areaKey)->exists();
-    }
-
     public static function hasActiveForUser(int $userId): bool
     {
         if (! static::tablesReady()) {

@@ -7,42 +7,67 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Nueva Solicitud de Suministros</h3>
-                    <p class="panel-text">Selecciona los productos y cantidades necesarias. Esta solicitud pasara a revision por Calidad.</p>
+                    <h3 class="panel-title">Nueva Solicitud de Insumos</h3>
+                    <p class="panel-text">Selecciona productos del catalogo o agrega items no listados. La solicitud pasara a aprobacion de insumos.</p>
                 </div>
 
                 <div class="panel__body">
-                    <form action="{{ route('supplies.store', ['module' => $module]) }}" method="POST">
+                    <form action="{{ route('supplies.store', ['module' => $module]) }}" method="POST" id="supply-request-form">
                         @csrf
-                        
-                        <div class="form-group block-spaced">
-                            <label class="form-label">Observaciones Generales</label>
-                            <textarea name="observations" class="supply-textarea" placeholder="Explica brevemente el motivo del pedido si es necesario..."></textarea>
-                        </div>
 
-                        <div class="block-spaced">
-                            <table class="supply-table" id="items-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 40%;">Producto</th>
-                                        <th style="width: 25%;">Inventario Actual</th>
-                                        <th style="width: 25%;">Cantidad a Pedir</th>
-                                        <th style="width: 10%;">Accion</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {{-- Se agregan dinamicamente con JS --}}
-                                </tbody>
-                            </table>
-                        </div>
+                        <div class="supply-cart-layout">
+                            <aside class="supply-cart-layout__catalog">
+                                <div class="supply-cart-layout__search">
+                                    <input type="search" id="catalog-search" class="form-input" placeholder="Buscar en el catalogo...">
+                                </div>
 
-                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                            <button type="button" class="btn btn--secondary" id="add-item-btn">
-                                + Agregar Item
-                            </button>
-                            <button type="submit" class="btn btn--primary">
-                                Enviar Solicitud
-                            </button>
+                                <div class="supply-catalog-list" id="catalog-list">
+                                    @foreach ($products as $category => $catProducts)
+                                        <div class="supply-catalog-group" data-category="{{ $category ?: 'General' }}">
+                                            <h4 class="supply-catalog-group__title">{{ $category ?: 'General' }}</h4>
+                                            @foreach ($catProducts as $product)
+                                                <button type="button"
+                                                    class="supply-catalog-item"
+                                                    data-product-id="{{ $product->id }}"
+                                                    data-product-name="{{ $product->name }}"
+                                                    data-product-description="{{ $product->description }}"
+                                                    data-search="{{ strtolower($product->name.' '.$product->description.' '.($category ?: '')) }}">
+                                                    <span class="supply-catalog-item__name">{{ $product->name }}</span>
+                                                    @if($product->description)
+                                                        <span class="supply-catalog-item__desc">{{ $product->description }}</span>
+                                                    @endif
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </aside>
+
+                            <section class="supply-cart-layout__cart">
+                                <div class="supply-cart-layout__cart-header">
+                                    <h4 class="form-label">Mi pedido</h4>
+                                    <button type="button" class="btn btn--secondary btn--sm" id="add-custom-item-btn">
+                                        + Producto no listado
+                                    </button>
+                                </div>
+
+                                <div id="cart-empty" class="supply-cart-empty">
+                                    Agrega productos desde el catalogo o registra uno no listado.
+                                </div>
+
+                                <div id="cart-items" class="supply-cart-items"></div>
+
+                                <div class="form-group block-spaced" style="margin-top: 1.5rem;">
+                                    <label class="form-label">Observaciones generales</label>
+                                    <textarea name="observations" class="supply-textarea" placeholder="Explica brevemente el motivo del pedido si es necesario...">{{ old('observations') }}</textarea>
+                                </div>
+
+                                <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                                    <button type="submit" class="btn btn--primary" id="submit-request-btn" disabled>
+                                        Enviar solicitud
+                                    </button>
+                                </div>
+                            </section>
                         </div>
                     </form>
                 </div>
@@ -50,59 +75,117 @@
         </div>
     </div>
 
-    {{-- Plantilla para nueva fila --}}
-    <template id="row-template">
-        <tr>
-            <td>
-                <select name="items[{index}][product_id]" class="supply-input supply-select" required>
-                    <option value="">Seleccione un producto...</option>
-                    @foreach ($products as $category => $catProducts)
-                        <optgroup label="{{ $category ?: 'General' }}">
-                            @foreach ($catProducts as $product)
-                                <option value="{{ $product->id }}">{{ $product->name }} ({{ $product->description }})</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-            </td>
-            <td>
-                <input type="number" name="items[{index}][current_inventory]" class="supply-input" min="0" required>
-            </td>
-            <td>
-                <input type="number" name="items[{index}][quantity]" class="supply-input" min="1" required>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn-secondary btn-sm remove-row-btn" style="color: var(--color-danger); border: none; background: transparent;">
-                    <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-            </td>
-        </tr>
-    </template>
-
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tableBody = document.querySelector('#items-table tbody');
-            const addBtn = document.querySelector('#add-item-btn');
-            const template = document.querySelector('#row-template').innerHTML;
-            let index = 0;
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('supply-request-form');
+            const cartItems = document.getElementById('cart-items');
+            const cartEmpty = document.getElementById('cart-empty');
+            const submitBtn = document.getElementById('submit-request-btn');
+            const searchInput = document.getElementById('catalog-search');
+            const catalogItems = Array.from(document.querySelectorAll('.supply-catalog-item'));
+            let itemIndex = 0;
 
-            function addRow() {
-                const html = template.replace(/{index}/g, index);
-                const tr = document.createElement('tr');
-                tr.innerHTML = html;
-                tableBody.appendChild(tr);
-                index++;
+            function updateCartState() {
+                const hasItems = cartItems.children.length > 0;
+                cartEmpty.style.display = hasItems ? 'none' : 'block';
+                submitBtn.disabled = !hasItems;
+            }
 
-                tr.querySelector('.remove-row-btn').addEventListener('click', function() {
-                    tr.remove();
+            function addCatalogItem(productId, productName) {
+                const existing = cartItems.querySelector(`[data-product-id="${productId}"][data-item-type="catalog"]`);
+                if (existing) {
+                    const qtyInput = existing.querySelector('input[name$="[quantity]"]');
+                    qtyInput.value = parseInt(qtyInput.value || '0', 10) + 1;
+                    return;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'supply-cart-row';
+                wrapper.dataset.itemType = 'catalog';
+                wrapper.dataset.productId = productId;
+                wrapper.innerHTML = `
+                    <div class="supply-cart-row__info">
+                        <strong>${productName}</strong>
+                    </div>
+                    <div class="supply-cart-row__fields">
+                        <input type="hidden" name="items[${itemIndex}][type]" value="catalog">
+                        <input type="hidden" name="items[${itemIndex}][product_id]" value="${productId}">
+                        <label class="supply-cart-field">
+                            <span>Inventario</span>
+                            <input type="number" name="items[${itemIndex}][current_inventory]" class="supply-input" min="0" value="0" required>
+                        </label>
+                        <label class="supply-cart-field">
+                            <span>Cantidad</span>
+                            <input type="number" name="items[${itemIndex}][quantity]" class="supply-input" min="1" value="1" required>
+                        </label>
+                        <button type="button" class="btn btn--secondary btn--sm supply-cart-row__remove">Quitar</button>
+                    </div>
+                `;
+                cartItems.appendChild(wrapper);
+                itemIndex++;
+                bindRemove(wrapper);
+                updateCartState();
+            }
+
+            function addCustomItem() {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'supply-cart-row supply-cart-row--custom';
+                wrapper.dataset.itemType = 'custom';
+                wrapper.innerHTML = `
+                    <div class="supply-cart-row__info">
+                        <strong>Producto no listado</strong>
+                        <span class="status-pill status-pill--warning">Fuera de catalogo</span>
+                    </div>
+                    <div class="supply-cart-row__fields">
+                        <input type="hidden" name="items[${itemIndex}][type]" value="custom">
+                        <label class="supply-cart-field supply-cart-field--wide">
+                            <span>Nombre del producto</span>
+                            <input type="text" name="items[${itemIndex}][custom_name]" class="supply-input" placeholder="Describe el producto" required>
+                        </label>
+                        <label class="supply-cart-field">
+                            <span>Cantidad</span>
+                            <input type="number" name="items[${itemIndex}][quantity]" class="supply-input" min="1" value="1" required>
+                        </label>
+                        <button type="button" class="btn btn--secondary btn--sm supply-cart-row__remove">Quitar</button>
+                    </div>
+                `;
+                cartItems.appendChild(wrapper);
+                itemIndex++;
+                bindRemove(wrapper);
+                updateCartState();
+            }
+
+            function bindRemove(wrapper) {
+                wrapper.querySelector('.supply-cart-row__remove').addEventListener('click', function () {
+                    wrapper.remove();
+                    updateCartState();
                 });
             }
 
-            addBtn.addEventListener('click', addRow);
-            
-            // Agregar la primera fila por defecto
-            addRow();
+            catalogItems.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    addCatalogItem(button.dataset.productId, button.dataset.productName);
+                });
+            });
+
+            document.getElementById('add-custom-item-btn').addEventListener('click', addCustomItem);
+
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.trim().toLowerCase();
+                catalogItems.forEach(function (button) {
+                    const matches = query === '' || (button.dataset.search || '').includes(query);
+                    button.style.display = matches ? '' : 'none';
+                });
+            });
+
+            form.addEventListener('submit', function (event) {
+                if (cartItems.children.length === 0) {
+                    event.preventDefault();
+                }
+            });
+
+            updateCartState();
         });
     </script>
     @endpush

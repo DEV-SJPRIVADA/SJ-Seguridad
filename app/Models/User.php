@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\QualityDocument;
+use App\Services\Access\BoardAccessService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -141,11 +142,7 @@ class User extends Authenticatable
         }
 
         if ($this->can("supply.tab.quality") || $this->can('approve.supply.quality') || $this->can('manage.users')) {
-            $tabs->push('revision_calidad');
-        }
-
-        if ($this->can("supply.tab.purchasing") || $this->can('manage.supply.purchasing') || $this->can('manage.users')) {
-            $tabs->push('gestion_compras');
+            $tabs->push('aprobacion_insumos');
         }
 
         if ($this->can("supply.tab.catalog") || $this->can('manage.supply.catalog') || $this->can('manage.users')) {
@@ -155,6 +152,16 @@ class User extends Authenticatable
         return $tabs->unique()->values();
     }
 
+    public function canAccessSupplyTab(string $moduleKey, string $tab): bool
+    {
+        return match ($tab) {
+            'my_requests' => $this->can('supply.tab.my_requests') || $this->can("view.board.{$moduleKey}.suministros"),
+            'quality' => $this->can('supply.tab.quality') || $this->can('approve.supply.quality') || $this->can('manage.users'),
+            'catalog' => $this->can('supply.tab.catalog') || $this->can('manage.supply.catalog') || $this->can('manage.users'),
+            default => false,
+        };
+    }
+
     public function defaultSupplyBoardUrl(string $moduleKey): string
     {
         $tabs = $this->supplyBoardTabsFor($moduleKey);
@@ -162,8 +169,7 @@ class User extends Authenticatable
 
         return match ($firstTab) {
             'mis_solicitudes' => route('supplies.index', ['module' => $moduleKey]),
-            'revision_calidad' => route('supplies.quality.index', ['module' => $moduleKey]),
-            'gestion_compras' => route('supplies.purchasing.index', ['module' => $moduleKey]),
+            'aprobacion_insumos' => route('supplies.approval.index', ['module' => $moduleKey]),
             'catalogo' => route('supplies.products.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
@@ -209,10 +215,6 @@ class User extends Authenticatable
 
     public function canViewDocumentsBoardFor(string $areaKey): bool
     {
-        if ($this->can("view.area.{$areaKey}") || $this->can("manage.area.{$areaKey}")) {
-            return true;
-        }
-
-        return $this->area_key === $areaKey && QualityDocument::hasActiveForUser($this->id);
+        return app(BoardAccessService::class)->canViewDocumentsBoard($this, $areaKey);
     }
 }

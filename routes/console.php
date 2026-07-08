@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -122,3 +123,21 @@ Artisan::command('app:stabilize-local', function () {
 
     return $this->call('app:doctor');
 })->purpose('Limpia cache y restablece el estado minimo para iniciar sesion en local');
+
+Artisan::command('app:sync-permissions', function () {
+    $this->info('Sincronizando permisos desde config/access.php...');
+
+    $result = PermissionCatalog::sync();
+
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Permisos configurados', (string) $result['synced']],
+            ['Permisos huerfanos eliminados', (string) $result['deleted']],
+        ]
+    );
+
+    $this->info('Permisos sincronizados sin modificar roles ni usuarios.');
+
+    return self::SUCCESS;
+})->purpose('Sincroniza permisos de areas y tableros desde config sin resetear roles');

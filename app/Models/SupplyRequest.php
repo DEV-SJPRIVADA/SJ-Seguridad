@@ -45,4 +45,16 @@ class SupplyRequest extends Model
     {
         return $this->hasMany(SupplyRequestItem::class);
     }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'pendiente_calidad' => 'Pendiente',
+            'aprobada_calidad' => 'Aprobada',
+            'rechazada_calidad' => 'Rechazada',
+            'en_compras' => 'En compras',
+            'completada' => 'Completada',
+            default => ucfirst(str_replace('_', ' ', $this->status)),
+        };
+    }
 }

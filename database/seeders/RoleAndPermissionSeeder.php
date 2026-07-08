@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Support\PermissionCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
@@ -16,38 +17,7 @@ class RoleAndPermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-        $permissions = collect(config('access.system_permissions'))
-            ->keys()
-            ->merge(
-                collect(config('access.areas'))->flatMap(fn (string $label, string $key) => [
-                    "view.area.{$key}",
-                    "manage.area.{$key}",
-                ])
-            )
-            ->merge(
-                collect(config('access.areas'))->keys()->flatMap(fn (string $areaKey) => (
-                    collect(config('access.boards'))->keys()->map(fn (string $boardKey) => "view.board.{$areaKey}.{$boardKey}")
-                ))
-            )
-            ->unique()
-            ->values();
-
-        $permissions->each(fn (string $permission) => Permission::findOrCreate($permission, 'web'));
-
-        Permission::query()
-            ->where(function ($query): void {
-                $query->where('name', 'like', 'view.area.%')
-                    ->orWhere('name', 'like', 'manage.area.%')
-                    ->orWhere('name', 'like', 'view.board.%');
-            })
-            ->whereNotIn('name', $permissions->all())
-            ->get()
-            ->each
-            ->delete();
-
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        PermissionCatalog::sync();
 
         $allPermissions = Permission::query()->pluck('name')->all();
         $roles = [

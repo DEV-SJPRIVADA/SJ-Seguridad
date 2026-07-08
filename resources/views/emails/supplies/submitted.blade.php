@@ -11,11 +11,11 @@ Se registro una nueva solicitud de suministros en **SJ Seguridad**. A continuaci
 **Fecha:** {{ $supplyRequest->created_at?->format('d/m/Y H:i') }}
 </x-mail::panel>
 
-<x-mail::button :url="route('supplies.quality.edit', ['module' => $supplyRequest->area_key, 'supply_request' => $supplyRequest->id])">
+<x-mail::button :url="route('supplies.approval.edit', ['module' => $supplyRequest->area_key, 'supply_request' => $supplyRequest->id])">
 Revisar solicitud
 </x-mail::button>
 
-Ingresa al tablero de Revision Calidad para aprobar o ajustar cantidades.
+Ingresa al tablero de Aprobacion Insumos para aprobar o ajustar cantidades.
 
 Atentamente,  
 Sistema de Notificaciones **{{ config('app.name') }}**

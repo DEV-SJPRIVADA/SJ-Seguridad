@@ -94,7 +94,7 @@ Route::get('/dashboard', function () {
         'selectedBoard' => $selectedBoard,
         'selectedModule' => $selectedModule,
     ]);
-})->middleware(['auth', 'active', 'password.changed'])->name('dashboard');
+})->middleware(['auth', 'active', 'password.changed', 'can:view.dashboard'])->name('dashboard');
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

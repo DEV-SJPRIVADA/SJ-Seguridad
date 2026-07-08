@@ -7,8 +7,8 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Revision de Suministros (Calidad)</h3>
-                    <p class="panel-text">Listado de solicitudes pendientes de aprobacion técnica y ajuste de cantidades.</p>
+                    <h3 class="panel-title">Aprobacion de Insumos</h3>
+                    <p class="panel-text">Solicitudes pendientes de aprobacion y ajuste de cantidades.</p>
                 </div>
 
                 <div class="panel__body">
@@ -35,12 +35,12 @@
                                         <td>{{ $request->items->count() }} productos</td>
                                         <td>
                                             <span class="status-pill status-pill--req-{{ $request->status }}">
-                                                {{ str_replace('_', ' ', ucfirst($request->status)) }}
+                                                {{ $request->statusLabel() }}
                                             </span>
                                         </td>
                                         <td class="table-actions">
                                             @if($request->status === 'pendiente_calidad')
-                                                <a href="{{ route('supplies.quality.edit', ['module' => $module, 'supply_request' => $request->id]) }}" class="btn btn--secondary btn--sm">
+                                                <a href="{{ route('supplies.approval.edit', ['module' => $module, 'supply_request' => $request->id]) }}" class="btn btn--secondary btn--sm">
                                                     Revisar
                                                 </a>
                                             @else

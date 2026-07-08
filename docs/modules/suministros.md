@@ -74,61 +74,62 @@ Siguiendo la arquitectura actual, los accesos se controlarán con:
 ## 7. Estado real implementado (actualizado)
 
 ### Permisos vigentes (`config/access.php`)
-Los accesos NO usan el esquema `view.board.suministros.*` planteado en el diseño inicial. El control real es granular por pestaña mas el tablero por area:
+El modulo tiene **3 pestañas** activas. El control es granular por pestaña mas el tablero por area:
 
 - `supply.tab.my_requests`: ver y crear solicitudes propias.
-- `supply.tab.quality`: tablero de revision de Calidad.
-- `supply.tab.purchasing`: tablero de gestion de Compras.
+- `supply.tab.quality`: bandeja de **Aprobacion Insumos** (asignable a la jefa de Calidad u otro usuario).
 - `supply.tab.catalog`: administrar el catalogo.
-- `manage.supply.catalog`, `approve.supply.quality`, `manage.supply.purchasing`: variantes "full".
-- `view.board.{area}.suministros`: habilita la pestaña de suministros del area en la navegacion.
+- `manage.supply.catalog`, `approve.supply.quality`: variantes "full".
+- `view.board.{area}.suministros`: habilita Mis solicitudes en la navegacion aunque no exista `supply.tab.my_requests`.
 
-El acceso a cada pestaña se resuelve en `User::supplyBoardTabsFor()` y `HasSupplyTabs`.
+**Eliminado:** `supply.tab.purchasing`, `manage.supply.purchasing` y la pestaña Gestión Compras (costeo). El flujo termina en aprobacion/rechazo.
+
+El acceso a cada pestaña se resuelve en `User::supplyBoardTabsFor()` y `User::canAccessSupplyTab()`. Las rutas aplican middleware `supply.tab:{tab}`.
+
+### Flujo de estados
+`pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad`. Los estados `en_compras` y `completada` quedan obsoletos hasta el proceso de compra futuro.
 
 ### Rutas reales (`routes/modules/supplies.php`)
 Prefijo `supplies/{module}`:
 
 - `GET /mis-solicitudes` (`supplies.index`)
 - `GET /solicitud/{supply_request}` (`supplies.show`)
-- `GET|POST /solicitar` (`supplies.create` / `supplies.store`)
-- `GET /revision-calidad` (`supplies.quality.index`)
-- `GET /revision-calidad/{supply_request}/editar` (`supplies.quality.edit`)
-- `PATCH /revision-calidad/{supply_request}` (`supplies.quality.update`)
-- `GET /gestion-compras` (`supplies.purchasing.index`)
-- `GET /gestion-compras/{supply_request}/costear` (`supplies.purchasing.edit`)
-- `PATCH /gestion-compras/{supply_request}` (`supplies.purchasing.update`)
+- `GET|POST /solicitar` (`supplies.create` / `supplies.store`) — UI catalogo + carrito
+- `GET /aprobacion-insumos` (`supplies.approval.index`)
+- `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)
+- `PATCH /aprobacion-insumos/{supply_request}` (`supplies.approval.update`)
 - `GET|POST /catalogo` y `PATCH /catalogo/{product}` (catalogo)
 
+### Items fuera de catalogo
+En `supply_request_items`:
+
+- `supply_product_id` nullable
+- `custom_product_name` (string, nullable)
+- `is_not_in_catalog` (boolean): marca productos agregados manualmente por el solicitante
+
 ### Campos adicionales en base de datos
-Ademas de lo descrito en la seccion 3, `supply_request_items` incluye:
-
 - `current_inventory` (integer, default 0): inventario actual reportado por el solicitante.
-- `purchasing_observations` (text, nullable): notas de Compras por linea.
-
-### Seeder
-`SupplyProductSeeder` carga el catalogo inicial (aseo y cafeteria) de forma idempotente (`firstOrCreate` por `name`) y esta registrado en `DatabaseSeeder`.
+- `purchasing_observations`, `unit_cost`, `total_cost`: reservados para el proceso de compra futuro.
 
 ### Reglas de autorizacion aplicadas
-- `supplies.show`: solo el solicitante duenio o perfiles de revision (Calidad, Compras, `manage.users`, super-admin) pueden ver el detalle. Ver `SupplyRequestController::authorizeSupplyView()`.
-- `quality.update`: solo procesa solicitudes en estado `pendiente_calidad` del modulo activo.
-- `quality.edit`: valida modulo y estado `pendiente_calidad`.
-- `purchasing.edit` / `purchasing.update`: solo operan sobre estados `aprobada_calidad` o `en_compras` del modulo activo.
-- `qualityIndex` y `purchasingIndex` filtran por `area_key` del modulo en la URL.
+- `supplies.show`: solicitante duenio o quien tenga permiso de aprobacion (`supply.tab.quality`, `approve.supply.quality`, `manage.users`).
+- `supplies.approval.*`: solo solicitudes `pendiente_calidad` del modulo activo.
+- Bandejas filtran por `area_key` del modulo en la URL.
 
 ### Navegacion
-- `User::defaultSupplyBoardUrl()` redirige a la primera pestaña autorizada (mis solicitudes, calidad, compras o catalogo).
-- El dashboard usa esa URL al seleccionar el tablero `suministros`.
-- `HasSupplyTabs` marca activa la pestaña en sub-rutas (`show`, `create`, `edit`).
-- `AppServiceProvider` marca activo el modulo de area cuando la ruta es `supplies.*`.
+- `User::defaultSupplyBoardUrl()` redirige a la primera pestaña autorizada (mis solicitudes, aprobacion insumos o catalogo).
+- Pestañas internas: `mis_solicitudes`, `aprobacion_insumos`, `catalogo`.
 
 ### Notificaciones
-- Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios activos con `supply.tab.quality` o `approve.supply.quality`. Si no hay destinatarios, usa `ADMIN_EMAIL` como respaldo.
+- Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios con `supply.tab.quality` o `approve.supply.quality`.
 
 ### Pruebas
-- `tests/Feature/SupplyModuleTest.php` cubre: catalogo sembrado, creacion, visibilidad, aprobacion, compras, filtros por modulo, redireccion de tablero y notificacion por correo.
+- `tests/Feature/SupplyModuleTest.php`: catalogo, creacion (catalogo y custom), aprobacion, rutas purchasing eliminadas, filtros por modulo, redireccion y correo.
 
 ### Pendientes conocidos
-- Estado `borrador` documentado pero no implementado (requiere UI de guardado parcial).
+- Reporte Excel de insumos autorizados (estructura pendiente).
+- Proceso de compra con costeo (fase posterior).
+- Estado `borrador` documentado pero no implementado.
 
 ---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*

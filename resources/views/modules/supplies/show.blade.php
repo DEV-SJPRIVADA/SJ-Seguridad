@@ -10,9 +10,9 @@
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h3 class="panel-title">Detalle de Solicitud #{{ $request->id }}</h3>
-                            <p class="panel-text">Estado actual: 
+                            <p class="panel-text">Estado actual:
                                 <span class="status-pill status-pill--req-{{ $request->status }}">
-                                    {{ str_replace('_', ' ', ucfirst($request->status)) }}
+                                    {{ $request->statusLabel() }}
                                 </span>
                             </p>
                         </div>
@@ -40,7 +40,7 @@
 
                     @if($request->quality_observations)
                         <div class="card card--info block-spaced">
-                            <p class="text-caption">Observaciones de Calidad</p>
+                            <p class="text-caption">Observaciones de aprobacion</p>
                             <p>{{ $request->quality_observations }}</p>
                             <p class="text-small text-muted" style="margin-top: 0.5rem;">Revisado por: {{ $request->qualityReviewer->name ?? 'N/A' }}</p>
                         </div>
@@ -54,23 +54,28 @@
                                     <th>Inventario Reportado</th>
                                     <th>Cant. Solicitada</th>
                                     <th>Cant. Autorizada</th>
-                                    <th>Novedades Compras</th>
                                     <th>Estado Item</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($request->items as $item)
                                     <tr>
-                                        <td style="font-weight: 600; color: var(--color-primary);">{{ $item->product->name }}</td>
+                                        <td style="font-weight: 600; color: var(--color-primary);">
+                                            {{ $item->displayName() }}
+                                            @if($item->is_not_in_catalog)
+                                                <span class="status-pill status-pill--warning" style="margin-left: 0.5rem;">Fuera de catalogo</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
-                                            <span class="status-pill status-pill--muted">{{ $item->current_inventory }}</span>
+                                            @if($item->is_not_in_catalog)
+                                                <span class="text-muted">N/A</span>
+                                            @else
+                                                <span class="status-pill status-pill--muted">{{ $item->current_inventory }}</span>
+                                            @endif
                                         </td>
                                         <td class="text-center">{{ $item->requested_quantity }}</td>
                                         <td class="text-center">
                                             <span style="font-weight: 700;">{{ $item->approved_quantity ?? '---' }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="text-small">{{ $item->purchasing_observations ?: '---' }}</span>
                                         </td>
                                         <td class="text-center">
                                             @if($request->status === 'rechazada_calidad')

@@ -156,6 +156,7 @@ class UserController extends Controller
                     'options' => collect([
                         ['label' => 'Abrir Área', 'name' => "view.area.{$key}"],
                         ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
+                        ['label' => 'Tablero Dashboard', 'name' => "view.board.{$key}.dashboard"],
                         ['label' => 'Tablero Requisiciones', 'name' => "view.board.{$key}.requisiciones"],
                         ['label' => 'Tablero Suministros', 'name' => "view.board.{$key}.suministros"],
                     ])->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values(),
