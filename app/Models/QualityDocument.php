@@ -20,8 +20,16 @@ class QualityDocument extends Model
     protected $fillable = [
         'title',
         'code',
-        'root_process',
+        'process_key',
         'document_type',
+        'origin',
+        'document_status',
+        'activity_status',
+        'storage_type',
+        'current_version',
+        'last_updated_at',
+        'retention_period',
+        'final_disposition',
         'description',
         'type',
         'file_path',
@@ -36,6 +44,7 @@ class QualityDocument extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'file_size' => 'integer',
+        'last_updated_at' => 'date',
     ];
 
     public function uploader(): BelongsTo
@@ -88,22 +97,40 @@ class QualityDocument extends Model
         return in_array($userId, $this->assignedUserIds(), true);
     }
 
-    public function rootProcessLabel(): ?string
+    public function processLabel(): ?string
     {
-        if (! $this->root_process) {
-            return null;
-        }
-
-        return config("access.areas.{$this->root_process}", $this->root_process);
+        return $this->configLabel('processes', $this->process_key);
     }
 
     public function documentTypeLabel(): ?string
     {
-        if (! $this->document_type) {
-            return null;
-        }
+        return $this->configLabel('types', $this->document_type);
+    }
 
-        return config("access.quality_document_types.{$this->document_type}", $this->document_type);
+    public function originLabel(): ?string
+    {
+        return $this->configLabel('origins', $this->origin);
+    }
+
+    public function documentStatusLabel(): ?string
+    {
+        return $this->configLabel('document_statuses', $this->document_status);
+    }
+
+    public function activityStatusLabel(): ?string
+    {
+        return $this->configLabel('activity_statuses', $this->activity_status);
+    }
+
+    public function storageTypeLabel(): ?string
+    {
+        return $this->configLabel('storage_types', $this->storage_type);
+    }
+
+    /** @deprecated Use processLabel() */
+    public function rootProcessLabel(): ?string
+    {
+        return $this->processLabel();
     }
 
     public function isFile(): bool
@@ -130,5 +157,14 @@ class QualityDocument extends Model
         }
 
         return static::query()->active()->forUser($userId)->exists();
+    }
+
+    private function configLabel(string $catalog, ?string $key): ?string
+    {
+        if (! $key) {
+            return null;
+        }
+
+        return config("quality-documents.{$catalog}.{$key}", $key);
     }
 }

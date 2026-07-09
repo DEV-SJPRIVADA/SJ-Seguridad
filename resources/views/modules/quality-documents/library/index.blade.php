@@ -21,6 +21,7 @@
                                     <tr>
                                         <th>Codigo</th>
                                         <th>Titulo</th>
+                                        <th>Proceso</th>
                                         <th>Tipo documento</th>
                                         <th>Recurso</th>
                                         <th>Publicado</th>
@@ -37,6 +38,7 @@
                                                     <p class="text-small text-muted block-spaced-sm">{{ $document->description }}</p>
                                                 @endif
                                             </td>
+                                            <td>{{ $document->processLabel() ?? '—' }}</td>
                                             <td>{{ $document->documentTypeLabel() ?? '—' }}</td>
                                             <td>{{ $document->isFile() ? 'Archivo' : 'Enlace' }}</td>
                                             <td>{{ $document->created_at->format('d/m/Y') }}</td>

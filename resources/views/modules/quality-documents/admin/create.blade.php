@@ -16,7 +16,7 @@
                         @csrf
                         @include('modules.quality-documents.partials.form-fields', [
                             'areas' => $areas,
-                            'documentTypes' => $documentTypes,
+                            'catalogs' => $catalogs,
                             'users' => $users,
                             'selectedUsers' => $selectedUsers,
                         ])

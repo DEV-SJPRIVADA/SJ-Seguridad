@@ -86,7 +86,7 @@ class QualityDocumentController extends Controller
         return view('modules.quality-documents.admin.create', [
             'module' => $module,
             'areas' => config('access.areas', []),
-            'documentTypes' => config('access.quality_document_types', []),
+            'catalogs' => $this->documentCatalogs(),
             'users' => $this->activeUsersList(),
             'selectedUsers' => [],
             'subTabs' => $this->getQualityDocumentSubTabs($module),
@@ -99,12 +99,7 @@ class QualityDocumentController extends Controller
         $this->authorizeManage($module);
 
         DB::transaction(function () use ($request): void {
-            $document = QualityDocument::create([
-                'title' => $request->string('title')->toString(),
-                'code' => $request->string('code')->toString(),
-                'root_process' => $request->string('root_process')->toString(),
-                'document_type' => $request->string('document_type')->toString(),
-                'description' => $request->input('description'),
+            $document = QualityDocument::create($this->metadataFromRequest($request) + [
                 'type' => $request->string('type')->toString(),
                 'external_url' => $request->input('type') === QualityDocument::TYPE_LINK
                     ? $request->string('external_url')->toString()
@@ -137,7 +132,7 @@ class QualityDocumentController extends Controller
             'module' => $module,
             'document' => $qualityDocument,
             'areas' => config('access.areas', []),
-            'documentTypes' => config('access.quality_document_types', []),
+            'catalogs' => $this->documentCatalogs(),
             'users' => $this->activeUsersList(),
             'selectedAreas' => $qualityDocument->assignedAreaKeys(),
             'selectedUsers' => $qualityDocument->assignedUserIds(),
@@ -151,12 +146,7 @@ class QualityDocumentController extends Controller
         $this->authorizeManage($module);
 
         DB::transaction(function () use ($request, $qualityDocument): void {
-            $qualityDocument->update([
-                'title' => $request->string('title')->toString(),
-                'code' => $request->string('code')->toString(),
-                'root_process' => $request->string('root_process')->toString(),
-                'document_type' => $request->string('document_type')->toString(),
-                'description' => $request->input('description'),
+            $qualityDocument->update($this->metadataFromRequest($request) + [
                 'type' => $request->string('type')->toString(),
                 'external_url' => $request->input('type') === QualityDocument::TYPE_LINK
                     ? $request->string('external_url')->toString()
@@ -364,5 +354,41 @@ class QualityDocumentController extends Controller
         if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
             Storage::disk('local')->delete($document->file_path);
         }
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    private function documentCatalogs(): array
+    {
+        return [
+            'processes' => config('quality-documents.processes', []),
+            'types' => config('quality-documents.types', []),
+            'origins' => config('quality-documents.origins', []),
+            'document_statuses' => config('quality-documents.document_statuses', []),
+            'activity_statuses' => config('quality-documents.activity_statuses', []),
+            'storage_types' => config('quality-documents.storage_types', []),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function metadataFromRequest(StoreQualityDocumentRequest|UpdateQualityDocumentRequest $request): array
+    {
+        return [
+            'title' => $request->string('title')->toString(),
+            'code' => $request->string('code')->toString(),
+            'process_key' => $request->string('process_key')->toString(),
+            'document_type' => $request->string('document_type')->toString(),
+            'origin' => $request->string('origin')->toString(),
+            'document_status' => $request->string('document_status')->toString(),
+            'activity_status' => $request->string('activity_status')->toString(),
+            'storage_type' => $request->string('storage_type')->toString(),
+            'current_version' => $request->input('current_version'),
+            'last_updated_at' => $request->input('last_updated_at'),
+            'retention_period' => $request->input('retention_period'),
+            'final_disposition' => $request->input('final_disposition'),
+        ];
     }
 }

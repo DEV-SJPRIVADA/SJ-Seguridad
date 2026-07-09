@@ -26,6 +26,12 @@
 
         <link rel="stylesheet" href="{{ asset('css/user-admin.css') }}?v={{ time() }}">
 
+        @if (request()->routeIs('quality-documents.*'))
+            <link rel="stylesheet" href="{{ asset('css/quality-documents.css') }}?v={{ @filemtime(public_path('css/quality-documents.css')) ?: time() }}">
+        @endif
+
+        @stack('styles')
+
         <style>
             /* Estilo Global de Tablas Corporativas */
             .data-table th, 

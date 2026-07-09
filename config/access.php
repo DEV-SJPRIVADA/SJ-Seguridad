@@ -67,13 +67,20 @@ return [
     ],
 
     'quality_document_types' => [
+        'documento_general' => 'Documento general',
+        'procedimiento' => 'Procedimiento',
         'formato' => 'Formato',
-        'indicador' => 'Indicador',
+        'caracterizacion' => 'Caracterizacion',
         'instructivo' => 'Instructivo',
+        'programa' => 'Programa',
         'manual' => 'Manual',
-        'matriz' => 'Matriz',
+        'reglamento' => 'Reglamento',
+        'politica' => 'Politica',
+        'indicador_gestion' => 'Indicador de gestion',
+        'protocolo' => 'Protocolo',
+        'perfil_cargo' => 'Perfil de cargo',
         'formulario' => 'Formulario',
-        'general' => 'Documentos Generales',
+        'plan' => 'Plan',
     ],
 
     'navigation' => [

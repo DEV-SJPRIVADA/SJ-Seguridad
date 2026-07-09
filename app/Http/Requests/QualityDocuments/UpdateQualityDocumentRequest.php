@@ -19,12 +19,7 @@ class UpdateQualityDocumentRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'title' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:100'],
-            'root_process' => ['required', 'string', Rule::in(array_keys(config('access.areas', [])))],
-            'document_type' => ['required', 'string', Rule::in(array_keys(config('access.quality_document_types', [])))],
-            'description' => ['nullable', 'string', 'max:2000'],
+        return $this->metadataRules() + [
             'type' => ['required', Rule::in([QualityDocument::TYPE_FILE, QualityDocument::TYPE_LINK])],
             'file' => [
                 'nullable',
@@ -67,5 +62,26 @@ class UpdateQualityDocumentRequest extends FormRequest
                 $validator->errors()->add('file', 'El archivo debe ser Word o Excel (.doc, .docx, .xls, .xlsx).');
             }
         });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function metadataRules(): array
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'code' => ['required', 'string', 'max:100'],
+            'process_key' => ['required', 'string', Rule::in(array_keys(config('quality-documents.processes', [])))],
+            'document_type' => ['required', 'string', Rule::in(array_keys(config('quality-documents.types', [])))],
+            'origin' => ['required', 'string', Rule::in(array_keys(config('quality-documents.origins', [])))],
+            'document_status' => ['required', 'string', Rule::in(array_keys(config('quality-documents.document_statuses', [])))],
+            'activity_status' => ['required', 'string', Rule::in(array_keys(config('quality-documents.activity_statuses', [])))],
+            'storage_type' => ['required', 'string', Rule::in(array_keys(config('quality-documents.storage_types', [])))],
+            'current_version' => ['nullable', 'string', 'max:50'],
+            'last_updated_at' => ['nullable', 'date'],
+            'retention_period' => ['nullable', 'string', 'max:255'],
+            'final_disposition' => ['nullable', 'string', 'max:2000'],
+        ];
     }
 }

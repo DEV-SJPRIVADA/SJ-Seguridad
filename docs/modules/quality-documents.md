@@ -2,27 +2,43 @@
 
 ## Objetivo
 
-Permitir al director de Calidad publicar documentos (Word/Excel) o enlaces externos, asignar que areas pueden consultarlos o descargarlos, y activar o inactivar cada publicacion.
+Permitir al director de Calidad publicar documentos (Word/Excel) o enlaces externos, registrar la metadata documental del negocio, asignar que areas pueden consultarlos o descargarlos, y activar o inactivar cada publicacion.
 
 ## Alcance actual
 
-- Campos del documento:
-  - `title` (titulo)
-  - `code` (codigo, ej. `SG-FR-001`)
-  - `root_process` (proceso raiz: area propietaria del documento, distinta de las areas con acceso)
-  - `document_type` (tipo de documento: Formato, Indicador, Instructivo, Manual, Matriz, Formulario, Documentos Generales)
-  - `description` (descripcion)
-  - `type` (tipo de recurso: archivo o enlace)
+### Identificacion del documento (formulario Administrar)
+
+| Campo negocio | Columna BD | Catalogo |
+|---------------|------------|----------|
+| Codigo | `code` | Texto libre |
+| Nombre del documento o Registro | `title` | Texto libre |
+| Proceso al que pertenece | `process_key` | `quality-documents.processes` |
+| Tipo | `document_type` | `quality-documents.types` |
+| Origen | `origin` | `quality-documents.origins` |
+| Estado del documento | `document_status` | `quality-documents.document_statuses` |
+| Estado de la actividad | `activity_status` | `quality-documents.activity_statuses` |
+| Tipo de almacenamiento | `storage_type` | `quality-documents.storage_types` |
+| Version actual | `current_version` | Texto libre (opcional) |
+| Fecha ultima actualizacion | `last_updated_at` | Fecha (opcional) |
+| Tiempo de retencion documental | `retention_period` | Texto libre (opcional) |
+| Disposicion final | `final_disposition` | Texto libre (opcional) |
+
+- `type` (tipo de recurso: `file` o `link`) es independiente de `storage_type` (Digital / Impreso / Digital e impreso).
+- `is_active` controla visibilidad en biblioteca y Mis documentos; es distinto de `document_status` (Elaboracion / Revision / Aprobado).
+- `description` permanece en BD pero no se muestra en el formulario principal.
+
+### Tablero y visibilidad
+
 - Tablero compartido `Documentos` integrado en la navegacion por area.
 - Sub-pestanas:
   - `Biblioteca` (consulta por area)
+  - `Mis documentos` (documentos asignados al usuario)
   - `Administrar` (solo Calidad con permiso de gestion)
-- Tipos soportados:
+- Tipos de recurso soportados:
   - Archivo: `.doc`, `.docx`, `.xls`, `.xlsx` (max. 10 MB)
   - Enlace externo (URL validada)
 - Asignacion de visibilidad por area mediante checkboxes.
 - Asignacion de visibilidad por usuario especifico mediante checkboxes con buscador.
-- Tablero personal `Mis documentos` como pestaña del tablero `Documentos` (junto a `Biblioteca`), visible solo si el usuario tiene documentos activos asignados directamente.
 - Activacion / inactivacion sin eliminar el registro.
 - Descarga segura de archivos via controlador (disco `private`).
 
@@ -37,7 +53,7 @@ Permitir al director de Calidad publicar documentos (Word/Excel) o enlaces exter
 - La pestaña `Mis documentos` aparece junto a `Biblioteca` cuando el usuario tiene al menos un documento activo asignado directamente.
 - La pestaña `Administrar` solo aparece en el modulo `calidad` y requiere `manage.quality.documents`.
 - Las rutas bajo `/administrar` responden solo con `module=calidad`; cualquier otro modulo devuelve 404.
-- No se usa `view.board.{area}.documentos`; el tablero es automatico con el acceso al area.
+- **Proceso ≠ Area de acceso:** el select "Proceso al que pertenece" usa el catalogo de procesos de calidad; las areas de visibilidad siguen siendo `access.areas`.
 - Documentos inactivos no aparecen en bibliotecas de area.
 - La biblioteca filtra por el `{module}` de la URL (area del tablero activo).
 
@@ -65,18 +81,27 @@ Definidas en [`routes/modules/quality-documents.php`](c:/laragon/www/SJSEGURIDAD
 
 ## Tablas
 
-- `quality_documents` (incluye `code`, `root_process`, `document_type`)
+- `quality_documents` (incluye `code`, `process_key`, `document_type`, `origin`, `document_status`, `activity_status`, `storage_type`, `current_version`, `last_updated_at`, `retention_period`, `final_disposition`)
 - `quality_document_areas`
 - `quality_document_users`
 
 ## Catalogos en config
 
-- `access.quality_document_types` — tipos de documento seleccionables.
-- `access.areas` — se reutiliza para el `root_process` (proceso raiz).
+Archivo principal: [`config/quality-documents.php`](c:/laragon/www/SJSEGURIDAD/config/quality-documents.php)
+
+- `processes` — procesos de calidad (gestion gerencial, SST, gestion documental, etc.)
+- `types` — tipos de documento (procedimiento, formato, manual, plan, etc.)
+- `origins` — interno / externo
+- `document_statuses` — elaboracion / revision / aprobado
+- `activity_statuses` — pendiente / en proceso / actualizada
+- `storage_types` — digital / impreso / digital e impreso
+
+Visibilidad por area: `access.areas`
 
 ## Archivos clave
 
 - Controlador: [`app/Http/Controllers/QualityDocuments/QualityDocumentController.php`](c:/laragon/www/SJSEGURIDAD/app/Http/Controllers/QualityDocuments/QualityDocumentController.php)
+- Modelo: [`app/Models/QualityDocument.php`](c:/laragon/www/SJSEGURIDAD/app/Models/QualityDocument.php)
 - Requests: `app/Http/Requests/QualityDocuments/`
 - Vistas: `resources/views/modules/quality-documents/`
 - Trait de pestanas: [`app/Traits/HasQualityDocumentTabs.php`](c:/laragon/www/SJSEGURIDAD/app/Traits/HasQualityDocumentTabs.php)
@@ -89,9 +114,10 @@ Definidas en [`routes/modules/quality-documents.php`](c:/laragon/www/SJSEGURIDAD
 
 - En hosting compartido verificar `upload_max_filesize` y `post_max_size` >= 10M.
 - Los archivos se almacenan en `storage/app/private/quality-documents`; al eliminar un documento se borra el archivo fisico.
+- Documentos migrados desde `root_process` pueden requerir revision manual si el proceso no tenia equivalente en el nuevo catalogo.
 
 ## Pendientes (v2)
 
 - Categorias o etiquetas de documentos.
 - Notificaciones por correo al publicar.
-- Estado borrador y versionado.
+- Versionado historico de revisiones.

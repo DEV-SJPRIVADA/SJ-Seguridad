@@ -19,18 +19,23 @@
                 </div>
 
                 <div class="panel__body">
-                    <div class="block-spaced">
+                    <div class="block-spaced data-table-wrap">
                         <table class="supply-table js-datatable">
                             <thead>
                                 <tr>
                                     <th>Codigo</th>
-                                    <th>Titulo</th>
-                                    <th>Tipo documento</th>
-                                    <th>Proceso raiz</th>
-                                    <th>Recurso</th>
+                                    <th>Nombre</th>
+                                    <th>Proceso</th>
+                                    <th>Tipo</th>
+                                    <th>Origen</th>
+                                    <th>Estado doc.</th>
+                                    <th>Estado act.</th>
+                                    <th>Almacenamiento</th>
+                                    <th>Version</th>
+                                    <th>Ult. actualizacion</th>
                                     <th>Areas con acceso</th>
                                     <th>Usuarios</th>
-                                    <th>Estado</th>
+                                    <th>Activo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -44,9 +49,14 @@
                                                 <p class="text-small text-muted block-spaced-sm">{{ $document->original_name }}</p>
                                             @endif
                                         </td>
+                                        <td>{{ $document->processLabel() ?? '—' }}</td>
                                         <td>{{ $document->documentTypeLabel() ?? '—' }}</td>
-                                        <td>{{ $document->rootProcessLabel() ?? '—' }}</td>
-                                        <td>{{ $document->isFile() ? 'Archivo' : 'Enlace' }}</td>
+                                        <td>{{ $document->originLabel() ?? '—' }}</td>
+                                        <td>{{ $document->documentStatusLabel() ?? '—' }}</td>
+                                        <td>{{ $document->activityStatusLabel() ?? '—' }}</td>
+                                        <td>{{ $document->storageTypeLabel() ?? '—' }}</td>
+                                        <td>{{ $document->current_version ?? '—' }}</td>
+                                        <td>{{ $document->last_updated_at?->format('d/m/Y') ?? '—' }}</td>
                                         <td>
                                             @forelse ($document->areas as $area)
                                                 <span class="status-pill status-pill--info">{{ config("access.areas.{$area->area_key}") }}</span>
@@ -86,7 +96,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-muted">No hay documentos registrados.</td>
+                                        <td colspan="14" class="text-muted">No hay documentos registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

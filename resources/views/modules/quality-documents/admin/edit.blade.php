@@ -17,7 +17,7 @@
                         @method('PATCH')
                         @include('modules.quality-documents.partials.form-fields', [
                             'areas' => $areas,
-                            'documentTypes' => $documentTypes,
+                            'catalogs' => $catalogs,
                             'users' => $users,
                             'document' => $document,
                             'selectedAreas' => $selectedAreas,

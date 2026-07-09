@@ -25,27 +25,94 @@ class QualityDocumentModuleTest extends TestCase
     {
         $manager = $this->qualityManager();
 
-        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), [
+        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), $this->validStorePayload([
             'title' => 'Procedimiento SG-SST',
             'code' => 'SG-PR-001',
-            'root_process' => 'calidad',
-            'document_type' => 'formato',
-            'description' => 'Documento base de calidad.',
+            'document_type' => 'procedimiento',
             'type' => QualityDocument::TYPE_FILE,
             'file' => UploadedFile::fake()->create('procedimiento.docx', 120, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
             'areas' => ['operaciones', 'calidad'],
-            'is_active' => '1',
-        ]);
+        ]));
 
         $response->assertRedirect(route('quality-documents.admin.index', ['module' => 'calidad']));
         $this->assertDatabaseHas('quality_documents', [
             'title' => 'Procedimiento SG-SST',
+            'code' => 'SG-PR-001',
+            'process_key' => 'gestion_documental',
+            'document_type' => 'procedimiento',
+            'origin' => 'interno',
+            'document_status' => 'aprobado',
+            'activity_status' => 'actualizada',
+            'storage_type' => 'digital',
             'type' => QualityDocument::TYPE_FILE,
             'is_active' => true,
             'uploaded_by' => $manager->id,
         ]);
         $this->assertDatabaseHas('quality_document_areas', [
             'area_key' => 'operaciones',
+        ]);
+    }
+
+    public function test_quality_manager_can_create_document_with_all_metadata_fields(): void
+    {
+        $manager = $this->qualityManager();
+
+        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), $this->validStorePayload([
+            'title' => 'Manual completo',
+            'code' => 'SG-MN-010',
+            'process_key' => 'sst',
+            'document_type' => 'manual',
+            'origin' => 'externo',
+            'document_status' => 'revision',
+            'activity_status' => 'en_proceso',
+            'storage_type' => 'digital_impreso',
+            'current_version' => '03',
+            'last_updated_at' => '2026-07-01',
+            'retention_period' => '10 anos',
+            'final_disposition' => 'Conservacion permanente',
+            'type' => QualityDocument::TYPE_LINK,
+            'external_url' => 'https://example.com/manual',
+            'areas' => ['calidad'],
+        ]));
+
+        $response->assertRedirect(route('quality-documents.admin.index', ['module' => 'calidad']));
+        $this->assertDatabaseHas('quality_documents', [
+            'code' => 'SG-MN-010',
+            'process_key' => 'sst',
+            'document_type' => 'manual',
+            'origin' => 'externo',
+            'document_status' => 'revision',
+            'activity_status' => 'en_proceso',
+            'storage_type' => 'digital_impreso',
+            'current_version' => '03',
+            'retention_period' => '10 anos',
+            'final_disposition' => 'Conservacion permanente',
+        ]);
+    }
+
+    public function test_store_rejects_invalid_catalog_values(): void
+    {
+        $manager = $this->qualityManager();
+
+        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), $this->validStorePayload([
+            'process_key' => 'proceso_invalido',
+            'document_type' => 'tipo_invalido',
+            'origin' => 'origen_invalido',
+            'document_status' => 'estado_invalido',
+            'activity_status' => 'actividad_invalida',
+            'storage_type' => 'almacen_invalido',
+            'type' => QualityDocument::TYPE_LINK,
+            'external_url' => 'https://example.com/invalido',
+            'areas' => ['calidad'],
+        ]));
+
+        $response->assertSessionHasErrors([
+            'process_key',
+            'document_type',
+            'origin',
+            'document_status',
+            'activity_status',
+            'storage_type',
         ]);
     }
 
@@ -133,7 +200,7 @@ class QualityDocumentModuleTest extends TestCase
     {
         $manager = $this->qualityManager();
         $viewer = $this->areaUser('operaciones');
-        $document = QualityDocument::create([
+        $document = QualityDocument::create($this->metadataAttributes() + [
             'title' => 'Norma externa',
             'type' => QualityDocument::TYPE_LINK,
             'external_url' => 'https://example.com/norma',
@@ -195,17 +262,15 @@ class QualityDocumentModuleTest extends TestCase
         $manager = $this->qualityManager();
         $recipient = $this->areaUser('operaciones');
 
-        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), [
+        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), $this->validStorePayload([
             'title' => 'Documento confidencial',
             'code' => 'SG-CF-001',
-            'root_process' => 'calidad',
             'document_type' => 'instructivo',
-            'description' => 'Solo para un usuario.',
             'type' => QualityDocument::TYPE_LINK,
             'external_url' => 'https://example.com/confidencial',
             'users' => [$recipient->id],
-            'is_active' => '1',
-        ]);
+            'areas' => [],
+        ]));
 
         $response->assertRedirect(route('quality-documents.admin.index', ['module' => 'calidad']));
         $this->assertDatabaseHas('quality_document_users', [
@@ -277,17 +342,51 @@ class QualityDocumentModuleTest extends TestCase
     {
         $manager = $this->qualityManager();
 
-        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), [
+        $response = $this->actingAs($manager)->post(route('quality-documents.admin.store', ['module' => 'calidad']), $this->validStorePayload([
             'title' => 'Sin destino',
             'code' => 'SG-ND-001',
-            'root_process' => 'calidad',
-            'document_type' => 'formato',
             'type' => QualityDocument::TYPE_LINK,
             'external_url' => 'https://example.com/sin-destino',
-            'is_active' => '1',
-        ]);
+            'areas' => [],
+            'users' => [],
+        ]));
 
         $response->assertSessionHasErrors('areas');
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function validStorePayload(array $overrides = []): array
+    {
+        return array_merge([
+            'title' => 'Documento de prueba',
+            'code' => 'SG-PR-001',
+            'process_key' => 'gestion_documental',
+            'document_type' => 'formato',
+            'origin' => 'interno',
+            'document_status' => 'aprobado',
+            'activity_status' => 'actualizada',
+            'storage_type' => 'digital',
+            'is_active' => '1',
+        ], $overrides);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function metadataAttributes(): array
+    {
+        return [
+            'code' => 'SG-MD-001',
+            'process_key' => 'gestion_documental',
+            'document_type' => 'formato',
+            'origin' => 'interno',
+            'document_status' => 'aprobado',
+            'activity_status' => 'actualizada',
+            'storage_type' => 'digital',
+        ];
     }
 
     private function qualityManager(): User
@@ -320,7 +419,7 @@ class QualityDocumentModuleTest extends TestCase
      */
     private function createDocument(User $manager, array $areas, bool $active, string $title = 'Documento de prueba'): QualityDocument
     {
-        $document = QualityDocument::create([
+        $document = QualityDocument::create($this->metadataAttributes() + [
             'title' => $title,
             'type' => QualityDocument::TYPE_LINK,
             'external_url' => 'https://example.com/doc',
@@ -343,7 +442,7 @@ class QualityDocumentModuleTest extends TestCase
         $path = 'quality-documents/test.docx';
         Storage::disk('local')->put($path, 'contenido de prueba');
 
-        $document = QualityDocument::create([
+        $document = QualityDocument::create($this->metadataAttributes() + [
             'title' => 'Archivo de prueba',
             'type' => QualityDocument::TYPE_FILE,
             'file_path' => $path,
@@ -366,11 +465,9 @@ class QualityDocumentModuleTest extends TestCase
      */
     private function createDocumentForUsers(User $manager, array $userIds, bool $active, string $title = 'Documento personal'): QualityDocument
     {
-        $document = QualityDocument::create([
+        $document = QualityDocument::create($this->metadataAttributes() + [
             'title' => $title,
             'code' => 'SG-US-001',
-            'root_process' => 'calidad',
-            'document_type' => 'formato',
             'type' => QualityDocument::TYPE_LINK,
             'external_url' => 'https://example.com/personal',
             'is_active' => $active,
@@ -392,11 +489,9 @@ class QualityDocumentModuleTest extends TestCase
         $path = 'quality-documents/personal.docx';
         Storage::disk('local')->put($path, 'contenido personal');
 
-        $document = QualityDocument::create([
+        $document = QualityDocument::create($this->metadataAttributes() + [
             'title' => 'Archivo personal',
             'code' => 'SG-US-002',
-            'root_process' => 'calidad',
-            'document_type' => 'formato',
             'type' => QualityDocument::TYPE_FILE,
             'file_path' => $path,
             'original_name' => 'personal.docx',
