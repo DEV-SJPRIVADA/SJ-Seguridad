@@ -30,13 +30,31 @@ Todo cambio funcional debe cerrar con codigo, validacion y documentacion sincron
 
 ## Procedimiento para pruebas automatizadas
 
-1. Ejecutar pruebas con `phpunit.xml`, que usa `sqlite` en memoria.
+1. Ejecutar pruebas con `php artisan test` (`phpunit.xml` usa `sqlite` en memoria).
 2. No ejecutar pruebas automatizadas contra la base local `sjseguridad`, porque `RefreshDatabase` puede limpiar tablas reales de desarrollo.
-3. En Laragon, si SQLite no esta habilitado en `php.ini`, ejecutar PHPUnit indicando extensiones:
+3. En Laragon con PHP 8.3, verificar que `pdo_sqlite` y `sqlite3` esten habilitados en `php.ini`. Si no, habilitarlos y reiniciar la terminal.
 
 ```powershell
-& "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe" -d extension_dir="C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\ext" -d extension=pdo_sqlite -d extension=sqlite3 vendor\bin\phpunit
+php artisan test
 ```
+
+## Procedimiento para despliegue en Hostinger
+
+1. Confirmar PHP 8.3+ y extensiones (`pdo_mysql`, `mbstring`, `fileinfo`, `openssl`, `zip`).
+2. Configurar `.env` de produccion con `CACHE_PREFIX`, `REDIS_PREFIX` y `SESSION_COOKIE` (mismos valores que local si se desea continuidad de sesiones).
+3. Ejecutar en el servidor:
+
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+npm ci && npm run build
+```
+
+4. Validar login, permisos y modulos criticos antes de cerrar el deploy.
+5. Mantener plan de rollback (rama/tag anterior) hasta validar produccion.
 
 ## Procedimiento para nuevas areas del negocio
 

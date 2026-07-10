@@ -19,6 +19,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Serializable Cache Classes
+    |--------------------------------------------------------------------------
+    |
+    | Laravel 13 hardens cache unserialization. List classes that may be stored
+    | as PHP objects in cache, or leave empty if only arrays/scalars are cached.
+    |
+    */
+
+    'serializable_classes' => [
+        //
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |

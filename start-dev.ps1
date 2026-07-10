@@ -1,4 +1,4 @@
-$php = "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe"
+$php = "C:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe"
 
 if (-not (Test-Path $php)) {
     Write-Error "No se encontro PHP en: $php"

@@ -27,6 +27,12 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 - Estandarizar la forma de hacer cambios
 - Permitir que una IA retome el proyecto con contexto suficiente
 
+## Stack documentado
+
+- `Laravel 13` + `PHP 8.3` (minimo requerido)
+- Desarrollo local: `Laragon 8.6+`, `MySQL 8`, `Node.js` + Vite
+- Produccion: ver checklist en [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md) y [`PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
+
 ## Regla de mantenimiento
 
 Cada vez que se modifique el proyecto, se debe actualizar al menos uno de estos elementos si aplica:

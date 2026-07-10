@@ -1,6 +1,6 @@
 # SJ Seguridad
 
-Base de plataforma web modular para `SJ Seguridad`, construida con `Laravel 11`, `PHP 8.2`, `MySQL` y `Blade`.
+Base de plataforma web modular para `SJ Seguridad`, construida con `Laravel 13`, `PHP 8.3`, `MySQL` y `Blade`.
 
 ## Objetivo
 
@@ -8,9 +8,10 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 
 ## Stack actual
 
-- `PHP 8.2`
-- `Laravel 11.51`
-- `MySQL 8` para desarrollo local con `Laragon`
+- `PHP 8.3`
+- `Laravel 13`
+- `MySQL 8` para desarrollo local con `Laragon 8.6+`
+- `Vite 6` + `Node.js` para assets
 - `Blade` para interfaz
 - `spatie/laravel-permission` para roles y permisos
 
@@ -26,8 +27,8 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 
 ## Inicio rapido local
 
-1. Verificar que Laragon use `PHP 8.2` y `MySQL`.
-2. Crear o revisar `.env`.
+1. Verificar que Laragon use `PHP 8.3` y `MySQL` (Laragon 8.6+).
+2. Crear o revisar `.env` (ver [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)).
 3. Confirmar estos valores:
 
 ```env
@@ -37,21 +38,27 @@ DB_PORT=3306
 DB_DATABASE=sjseguridad
 DB_USERNAME=root
 DB_PASSWORD=
+CACHE_PREFIX=sj-seguridad-cache-
+SESSION_COOKIE=sj_seguridad_session
 ```
 
 4. Ejecutar:
 
 ```powershell
-& "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe" artisan config:clear
-& "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe" artisan migrate --seed
-& "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe" artisan app:doctor
-& "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe" artisan serve
+cd C:\laragon\www\SJSEGURIDAD
+composer install
+npm install && npm run build
+php artisan migrate --seed
+php artisan app:doctor
+php artisan test
 ```
+
+Desarrollo con hot reload: `.\dev.bat`
 
 Si el entorno local se desalineo y el login vuelve a fallar:
 
 ```powershell
-& "C:\laragon\bin\php\php-8.2.30-Win32-vs16-x64\php.exe" artisan app:stabilize-local
+php artisan app:stabilize-local
 ```
 
 ## Credenciales iniciales

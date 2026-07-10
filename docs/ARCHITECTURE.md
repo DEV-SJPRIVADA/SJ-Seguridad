@@ -2,8 +2,8 @@
 
 ## Stack
 
-- Backend: `Laravel 11`
-- Lenguaje: `PHP 8.2`
+- Backend: `Laravel 13`
+- Lenguaje: `PHP 8.3`
 - Base de datos: `MySQL`
 - Frontend: `Blade`, `Vite`, `JavaScript` simple
 - Permisos: `spatie/laravel-permission`

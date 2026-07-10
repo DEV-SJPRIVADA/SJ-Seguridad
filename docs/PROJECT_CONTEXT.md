@@ -6,8 +6,8 @@
 
 ## Objetivos tecnicos vigentes
 
-- Mantener una base estable sobre `Laravel 11`
-- Usar `PHP 8.2` como version objetivo
+- Mantener una base estable sobre `Laravel 13`
+- Usar `PHP 8.3` como version objetivo (minimo requerido por Laravel 13)
 - Trabajar con `MySQL` como motor principal
 - Evitar dependencias innecesarias
 - Construir modulos desacoplados por area

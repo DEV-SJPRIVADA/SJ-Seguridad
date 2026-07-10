@@ -2,7 +2,7 @@
 
 ## Objetivo base
 - Este repositorio es la base de una plataforma web modular para `SJ Seguridad`, desarrollada bajo un enfoque SCRUM e incremental.
-- El stack base debe priorizar compatibilidad con `Laragon`, `Laravel`, `PHP 8.2`, `MySQL/Hostinger` y `JavaScript` orientado a componentes simples y reutilizables.
+- El stack base debe priorizar compatibilidad con `Laragon 8.6+`, `Laravel 13`, `PHP 8.3`, `MySQL/Hostinger` y `JavaScript` orientado a componentes simples y reutilizables.
 
 ## Reglas para cualquier cambio futuro
 - Antes de modificar una funcionalidad, revisar impacto global en autenticacion, permisos, navegacion, base de datos, pruebas y despliegue.
