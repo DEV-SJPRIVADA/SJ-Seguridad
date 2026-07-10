@@ -28,8 +28,7 @@ return [
         'juridico' => 'Juridico',
         'comercial' => 'Comercial',
         'calidad' => 'Calidad',
-        'remuneraciones' => 'Remuneraciones',
-        'facturacion' => 'Facturacion',
+        'admin_financiero' => 'Admin y Financiero',
         'compras' => 'Compras',
     ],
 

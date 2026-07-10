@@ -47,9 +47,10 @@ Estos permisos se administran visualmente dentro de la fila `Administracion de u
 - `juridico`
 - `comercial`
 - `calidad`
-- `remuneraciones`
-- `facturacion`
+- `admin_financiero` (unifica las antiguas `remuneraciones` y `facturacion`)
 - `compras`
+
+La migracion `2026_07_10_120000_merge_remuneraciones_facturacion_into_admin_financiero` actualiza `area_key` en usuarios, requisiciones, suministros y documentos; fusiona permisos Spatie de las dos areas legacy hacia `admin_financiero`. Las URLs del modulo quedan como `/requisitions/admin_financiero`, `/supplies/admin_financiero`, etc. El proceso de Calidad `gestion_financiera` no cambia.
 
 ## Acciones por area
 

@@ -22,7 +22,7 @@
 - Roles y permisos basados en configuracion
 - Restriccion por usuario activo
 - Cambio obligatorio de contrasena temporal
-- Modulos base configurados: gestion humana, operaciones, programacion, juridico, comercial, calidad, remuneraciones, facturacion y compras
+- Modulos base configurados: gestion humana, operaciones, programacion, juridico, comercial, calidad, admin y financiero, y compras
 - Modulo inicial de requisiciones de personal con subtableros de dashboard, solicitud, seguimiento, gestion y parametros
 - Modulo compartido de suministros con subtableros de mis solicitudes, revision de calidad, gestion de compras y catalogo
 - Notificaciones por correo al crear solicitudes de suministros (destinatarios: usuarios con permiso de Calidad)
