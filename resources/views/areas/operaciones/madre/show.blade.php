@@ -9,7 +9,7 @@
                 <div class="panel__header">
                     <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
                         <div>
-                            <h3 class="panel-title">MADRE — {{ $indicator->code }}</h3>
+                            <h3 class="panel-title">Consolidado — {{ $indicator->code }}</h3>
                             <p class="panel-text">{{ $indicator->name }}</p>
                         </div>
                         @can('operations.export')
@@ -18,7 +18,7 @@
                         @endcan
                         <form method="GET" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end;">
                             <div>
-                                <label class="form-label">Ano</label>
+                                <label class="form-label">Año</label>
                                 <select name="year" onchange="this.form.submit()" class="supply-input supply-select">
                                     @foreach ($years as $yearOption)
                                         <option value="{{ $yearOption }}" @selected($year === (int) $yearOption)>{{ $yearOption }}</option>

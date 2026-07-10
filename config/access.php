@@ -61,7 +61,7 @@ return [
         'periodos' => 'Periodos',
         'pesos' => 'Pesos',
         'documentos' => 'Documentos',
-        'madre' => 'MADRE',
+        'madre' => 'Consolidado',
         'auditoria' => 'Auditoria',
     ],
 

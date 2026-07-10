@@ -7,7 +7,7 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Consolidado MADRE</h3>
+                    <h3 class="panel-title">Consolidado</h3>
                     <p class="panel-text">Vista consolidada por indicador a traves de todos los jefes de operaciones.</p>
                 </div>
                 <div class="panel__body">
@@ -25,7 +25,7 @@
                                     <td>{{ $indicator->code }}</td>
                                     <td>{{ $indicator->name }}</td>
                                     <td>
-                                        <a href="{{ route('indicadores.admin.mother.show', $indicator) }}" class="btn btn--secondary btn--sm">Ver MADRE</a>
+                                        <a href="{{ route('indicadores.admin.mother.show', $indicator) }}" class="btn btn--secondary btn--sm">Ver Consolidado</a>
                                     </td>
                                 </tr>
                             @endforeach
