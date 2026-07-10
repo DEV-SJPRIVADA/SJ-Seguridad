@@ -158,6 +158,23 @@ class AppServiceProvider extends ServiceProvider
                             ];
                         }
 
+                        if ($boardKey === 'indicadores') {
+                            if ($key !== 'operaciones') {
+                                return null;
+                            }
+
+                            if (! $user->can('operations.view') && ! $user->can('operations.manage') && ! $user->can('operations.capture')) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'indicadores.dashboard',
+                                'url' => $user->defaultIndicadorBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
+                            ];
+                        }
+
                         $permission = "view.board.{$key}.{$boardKey}";
 
                         if (! $user->can($permission)) {
@@ -176,6 +193,7 @@ class AppServiceProvider extends ServiceProvider
                         $active = match($boardKey) {
                             'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                            'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
 
@@ -215,6 +233,8 @@ class AppServiceProvider extends ServiceProvider
                     str_starts_with((string) $routeName, 'supplies.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
+                ) || (
+                    str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
                 );
 
                 return [

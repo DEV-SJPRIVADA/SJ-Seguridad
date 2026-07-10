@@ -37,7 +37,14 @@ Permisos del modulo de documentos de Calidad:
 
 - `manage.quality.documents`
 
-Estos permisos se administran visualmente dentro de la fila `Administracion de usuarios` en la matriz de permisos.
+Permisos del modulo de indicadores (area `operaciones`, board `indicadores`):
+
+- `operations.view`
+- `operations.capture`
+- `operations.manage`
+- `operations.export`
+
+Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Alcance por Area → Operaciones**, no en la seccion de permisos funcionales.
 
 ## Areas actuales
 
@@ -72,6 +79,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `requisiciones`
 - `suministros`
 - `documentos`
+- `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
 
 Esto produce permisos como:
 

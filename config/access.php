@@ -21,6 +21,15 @@ return [
         'manage.quality.documents' => 'Calidad: Administrar documentos',
     ],
 
+    'area_indicador_permissions' => [
+        'operaciones' => [
+            'operations.view' => 'Indicadores: Ver dashboards y jefes',
+            'operations.capture' => 'Indicadores: Capturar datos',
+            'operations.manage' => 'Indicadores: Administrar (periodos, pesos, MADRE)',
+            'operations.export' => 'Indicadores: Exportar PDF y Excel',
+        ],
+    ],
+
     'areas' => [
         'gestion_humana' => 'Gestion humana',
         'operaciones' => 'Operaciones',
@@ -42,6 +51,18 @@ return [
         'requisiciones' => 'Requisiciones',
         'suministros' => 'Suministros',
         'documentos' => 'Documentos',
+        'indicadores' => 'Indicadores',
+    ],
+
+    'indicador_tabs' => [
+        'dashboard' => 'Dashboard',
+        'captura' => 'Captura',
+        'jefes' => 'Jefes de operaciones',
+        'periodos' => 'Periodos',
+        'pesos' => 'Pesos',
+        'documentos' => 'Documentos',
+        'madre' => 'MADRE',
+        'auditoria' => 'Auditoria',
     ],
 
     'requisition_tabs' => [

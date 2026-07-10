@@ -230,4 +230,61 @@ class User extends Authenticatable
     {
         return app(BoardAccessService::class)->canViewDocumentsBoard($this, $areaKey);
     }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function indicadorBoardTabsFor(): Collection
+    {
+        $tabs = collect([]);
+
+        if ($this->can('operations.view') || $this->can('operations.manage')) {
+            $tabs->push('dashboard');
+            $tabs->push('jefes');
+        }
+
+        if ($this->can('operations.capture') || $this->can('operations.manage')) {
+            $tabs->push('captura');
+        }
+
+        if ($this->can('operations.manage')) {
+            $tabs->push('periodos');
+            $tabs->push('pesos');
+            $tabs->push('documentos');
+            $tabs->push('madre');
+            $tabs->push('auditoria');
+        }
+
+        return $tabs->unique()->values();
+    }
+
+    public function canAccessIndicadorTab(string $tab): bool
+    {
+        return match ($tab) {
+            'dashboard' => $this->can('operations.view') || $this->can('operations.manage'),
+            'capture' => $this->can('operations.capture') || $this->can('operations.manage'),
+            'leaders' => $this->can('operations.view') || $this->can('operations.manage'),
+            'leaders_manage' => $this->can('operations.manage'),
+            'manage' => $this->can('operations.manage'),
+            default => false,
+        };
+    }
+
+    public function defaultIndicadorBoardUrl(): string
+    {
+        $tabs = $this->indicadorBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('indicadores.dashboard'),
+            'captura' => route('indicadores.index'),
+            'jefes' => route('indicadores.leaders.index'),
+            'periodos' => route('indicadores.admin.periods.index'),
+            'pesos' => route('indicadores.admin.weights'),
+            'documentos' => route('indicadores.admin.documents.index'),
+            'madre' => route('indicadores.admin.mother.index'),
+            'auditoria' => route('indicadores.admin.audit.index'),
+            default => route('dashboard', ['module' => 'operaciones']),
+        };
+    }
 }

@@ -16,6 +16,10 @@ class PermissionCatalog
         return collect(config('access.system_permissions'))
             ->keys()
             ->merge(
+                collect(config('access.area_indicador_permissions', []))
+                    ->flatMap(fn (array $permissions) => array_keys($permissions))
+            )
+            ->merge(
                 collect(config('access.areas'))->flatMap(fn (string $label, string $key) => [
                     "view.area.{$key}",
                     "manage.area.{$key}",

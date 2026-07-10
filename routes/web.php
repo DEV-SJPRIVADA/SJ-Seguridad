@@ -26,6 +26,18 @@ Route::get('/dashboard', function () {
                         ];
                     }
 
+                    if ($boardKey === 'indicadores') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $key === 'operaciones' && (
+                                $user->can('operations.view')
+                                || $user->can('operations.manage')
+                                || $user->can('operations.capture')
+                            ),
+                        ];
+                    }
+
                     return [
                         'key' => $boardKey,
                         'label' => $boardLabel,
@@ -66,6 +78,10 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultQualityDocumentBoardUrl($defaultModule['key']));
         }
 
+        if ($defaultBoard === 'indicadores') {
+            return redirect(auth()->user()->defaultIndicadorBoardUrl());
+        }
+
         return redirect()->route('dashboard', array_filter([
             'module' => $defaultModule['key'],
             'board' => $defaultBoard,
@@ -88,6 +104,10 @@ Route::get('/dashboard', function () {
 
     if ($selectedModule && $selectedBoardKey === 'documentos') {
         return redirect(auth()->user()->defaultQualityDocumentBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'indicadores') {
+        return redirect(auth()->user()->defaultIndicadorBoardUrl());
     }
 
     return view('dashboard', [
@@ -115,6 +135,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/modules/requisitions.php';
     require __DIR__.'/modules/supplies.php';
     require __DIR__.'/modules/quality-documents.php';
+    require __DIR__.'/areas/operaciones.php';
 });
 
 if (app()->environment('local')) {

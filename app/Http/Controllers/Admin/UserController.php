@@ -141,7 +141,7 @@ class UserController extends Controller
 
         // 1. Permisos Funcionales (Capacidades del sistema)
         $functional = collect(config('access.system_permissions'))
-            ->filter(fn ($label, $name) => in_array($name, $allPermissions, true))
+            ->filter(fn ($label, $name) => in_array($name, $allPermissions, true) && ! str_starts_with($name, 'operations.'))
             ->map(fn ($label, $name) => [
                 'name' => $name,
                 'label' => $label,
@@ -154,19 +154,32 @@ class UserController extends Controller
             ])
             ->groupBy('category');
 
+        $indicadorPermissions = collect(config('access.area_indicador_permissions.operaciones', []));
+
         // 2. Permisos de Área (Alcance)
         $areas = collect(config('access.areas'))
-            ->map(function ($label, $key) use ($allPermissions) {
+            ->map(function ($label, $key) use ($allPermissions, $indicadorPermissions) {
+                $options = collect([
+                    ['label' => 'Abrir Área', 'name' => "view.area.{$key}"],
+                    ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
+                    ['label' => 'Tablero Dashboard', 'name' => "view.board.{$key}.dashboard"],
+                    ['label' => 'Tablero Requisiciones', 'name' => "view.board.{$key}.requisiciones"],
+                    ['label' => 'Tablero Suministros', 'name' => "view.board.{$key}.suministros"],
+                ]);
+
+                if ($key === 'operaciones') {
+                    foreach ($indicadorPermissions as $name => $indicadorLabel) {
+                        $options->push([
+                            'label' => $indicadorLabel,
+                            'name' => $name,
+                        ]);
+                    }
+                }
+
                 return [
                     'key' => $key,
                     'label' => $label,
-                    'options' => collect([
-                        ['label' => 'Abrir Área', 'name' => "view.area.{$key}"],
-                        ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
-                        ['label' => 'Tablero Dashboard', 'name' => "view.board.{$key}.dashboard"],
-                        ['label' => 'Tablero Requisiciones', 'name' => "view.board.{$key}.requisiciones"],
-                        ['label' => 'Tablero Suministros', 'name' => "view.board.{$key}.suministros"],
-                    ])->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values(),
+                    'options' => $options->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values(),
                 ];
             })
             ->values();

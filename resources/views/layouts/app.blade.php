@@ -30,7 +30,12 @@
             <link rel="stylesheet" href="{{ asset('css/quality-documents.css') }}?v={{ @filemtime(public_path('css/quality-documents.css')) ?: time() }}">
         @endif
 
+        @if (request()->routeIs('indicadores.*'))
+            <link rel="stylesheet" href="{{ asset('css/indicadores.css') }}?v={{ @filemtime(public_path('css/indicadores.css')) ?: time() }}">
+        @endif
+
         @stack('styles')
+        @livewireStyles
 
         <style>
             /* Estilo Global de Tablas Corporativas */
@@ -675,5 +680,6 @@
             </div>
         </div>
         @stack('scripts')
+        @livewireScripts
     </body>
 </html>
