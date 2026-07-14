@@ -16,7 +16,8 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Creacion de requisiciones sobre el modulo autorizado, incluso si el `area_key` del usuario es diferente
 - Edicion solo para gestion humana o usuarios con permiso operativo equivalente
 - Historial de cambios de estado
-- Catalogos iniciales para cargos, motivos, clientes, ciudades, tipos de cliente y tipos de programacion
+- Catalogos administrables: cargos, motivos, clientes, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion**
+- Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
 
 ## Reglas de negocio actuales
 
@@ -26,6 +27,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - `leader_name` y `requesting_area_key` se toman del usuario autenticado
 - `Cliente` y `Motivo` se seleccionan desde parametros
 - `Centro de costo` es texto libre
+- Cantidad N en Solicitar genera **N filas** con `quantity = 1` y codigos `REQ-{YEAR}-####`
 - Existen dos observaciones:
   - `requester_observation`
   - `human_resources_observation`
@@ -34,12 +36,24 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `en_gestion`
   - `contratado`
   - `cancelada`
+- Al cerrar como `contratado`, es obligatorio `hiring_date` y los campos de compensacion marcados como requeridos en la validacion de update
 - Despues de creada, la requisicion ya no se modifica desde el flujo del solicitante; solo gestion humana puede hacerlo
 - Usuarios con `manage.users` o `manage.area.gestion_humana` pueden crear solicitudes en cualquier modulo sin necesidad de tener `area_key` coincidente
 
+## Notificaciones por correo
+
+- Disparo: solo en `RequisitionController::store` tras crear el lote
+- Clase: `App\Mail\PersonalRequisitionNotification`
+- Vista: `resources/views/emails/requisitions/requested.blade.php`
+- Destinatarios: filas activas de `requisition_notification_emails` (Parametros → Correos de notificacion; el valor se guarda en `name`)
+- Fallback si no hay activos: `desarrollo.tic@sjsp.com.co`
+- CTA del correo: Gestion Humana con filtro `q` = codigo de la requisicion
+- Fallos de envio se registran en log; la solicitud HTTP sigue siendo exitosa
+- Pruebas locales: Mailpit + `MAIL_MAILER=smtp` puerto `1025` (ver [`LOCAL_SETUP.md`](../LOCAL_SETUP.md))
+
 ## Orden de campos y Matriz de Visibilidad (Sprint 2026-04-29)
 
-El formulario ha sido expandido para incluir toda la matriz de compensación y seguimiento, con visibilidad restringida según el rol:
+El formulario incluye matriz de compensacion y seguimiento, con visibilidad restringida segun el rol:
 
 ### Campos visibles para Solicitantes (Perfil de área)
 1. Lider / solicitante (readonly)
@@ -61,22 +75,23 @@ El formulario ha sido expandido para incluir toda la matriz de compensación y s
 
 ### Campos exclusivos para Gestión Humana (GH)
 17. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
-18. **Seguimiento**: Encargado de selección (Recruiter).
-19. **Cierre**: Cantidad contratada, Fecha de contratación, Observaciones de GH.
+18. **Seguimiento**: Encargado de selección (`recruiter_id`).
+19. **Cierre**: Fecha de contratación, Observaciones de GH.
 
 ## Identificación Visual y UI
 
-- **Estados por colores**: Se implementó un sistema de indicadores visuales (status-pills) en tablas e historial:
-  - 🔵 `solicitada`: Pendiente.
-  - 🟡 `en_gestion`: En proceso por GH.
-  - 🟢 `contratado`: Proceso finalizado con éxito.
-  - 🔴 `cancelada`: Solicitud descartada.
-- **Layout Fijo**: Las barras de navegación (Módulo y Sub-tableros) permanecen fijas en la parte superior, optimizando el desplazamiento en pantallas pequeñas y formularios largos.
-- **Dashboard Compacto**: Indicadores KPI en una sola fila para maximizar el espacio de las tablas de datos.
+- **Estados por colores**: indicadores visuales (status-pills) en tablas e historial:
+  - `solicitada`: Pendiente.
+  - `en_gestion`: En proceso por GH.
+  - `contratado`: Proceso finalizado con éxito.
+  - `cancelada`: Solicitud descartada.
+- **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
+- **Dashboard Compacto**: indicadores KPI en una sola fila.
+- **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).
 
 ## Rutas
 
-Definidas en [`routes/modules/requisitions.php`](c:/laragon/www/SJSEGURIDAD/routes/modules/requisitions.php):
+Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitions.php):
 
 - `GET /requisitions/{module}/dashboard`
 - `GET /requisitions/{module}/solicitar`
@@ -105,7 +120,7 @@ Definidas en [`routes/modules/requisitions.php`](c:/laragon/www/SJSEGURIDAD/rout
 
 ## Tablas implicadas
 
-- `personal_requisitions` (Actualizada con 12 campos nuevos de compensación y cierre)
+- `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`)
 - `personal_requisition_status_logs`
 - `requisition_positions`
 - `requisition_request_reasons`
@@ -113,17 +128,29 @@ Definidas en [`routes/modules/requisitions.php`](c:/laragon/www/SJSEGURIDAD/rout
 - `requisition_cities`
 - `requisition_client_types`
 - `requisition_programming_types`
+- `requisition_uniforms`
+- `requisition_contract_types`
+- `requisition_recruiters`
+- `requisition_notification_emails`
 
 ## Riesgos
 
-- **Visibilidad Sensible**: Los campos de compensación son críticos; cualquier cambio en la lógica de `showHumanResourcesFields` puede exponer salarios a solicitantes.
-- **Validación de Cierre**: `hired_quantity` y `hiring_date` son requeridos para estados finales.
+- **Visibilidad Sensible**: campos de compensacion criticos; cambios en `showHumanResourcesFields` pueden exponer salarios a solicitantes.
+- **Validacion de Cierre**: `hiring_date` y compensacion requerida cuando el estado es `contratado`.
+- **Cola de correo**: con `QUEUE_CONNECTION=database` hace falta `queue:work` o los mails no salen (Mailpit / SMTP).
 
-## Correcciones aplicadas (Sprint final 2026-04)
+## Deuda / pendientes (fuera del corte Mailpit)
 
-- **Ampliación de Modelo**: Migración `2026_04_29_144000` ejecutada para campos de compensación y reclutamiento.
-- **Matriz de Visibilidad**: Formulario `partials/form-fields.blade.php` reorganizado por secciones de acceso controlado.
-- **Sistema de Colores**: Implementación de clases `.status-pill--req-*` en CSS y vistas.
-- **Navegación Fija**: Reestructuración de `app.blade.php` y slots de cabecera para evitar superposición de menús.
-- **Dashboard KPI**: Compactación de indicadores en 4 columnas fijas en una sola fila.
-- **Notificaciones**: Migración a sistema de Toasts dinámicos en la esquina inferior derecha.
+- No hay correo en cambios de estado (solo al crear).
+- Motivo “Reemplazo” acoplado a `request_reason_id = 2` (frágil si cambia el seeder).
+- `PersonalRequisitionPolicy` registrada pero no usada en el controller.
+- Cobertura de tests acotada (sin factory dedicada; sin print/dashboard/parametros ampliados).
+- Campo legacy `recruiter_name` convive con `recruiter_id`.
+
+## Correcciones aplicadas (Sprint final 2026-04 y mantenimiento 2026-07)
+
+- Ampliacion de modelo y matriz de visibilidad.
+- Sistema de colores y navegacion fija.
+- Notificaciones toast en UI.
+- Mailpit documentado; CTA del correo con filtro `q`; validacion `email` en parametros tipo `emails`.
+- Persistencia de `recruiter_id` en mass assignment.

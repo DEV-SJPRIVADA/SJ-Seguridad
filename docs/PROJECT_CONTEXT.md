@@ -24,8 +24,10 @@
 - Cambio obligatorio de contrasena temporal
 - Modulos base configurados: gestion humana, operaciones, programacion, juridico, comercial, calidad, admin y financiero, y compras
 - Modulo inicial de requisiciones de personal con subtableros de dashboard, solicitud, seguimiento, gestion y parametros
+- Notificaciones por correo al crear requisiciones (destinatarios: catalogo `requisition_notification_emails` en Parametros)
 - Modulo compartido de suministros con subtableros de mis solicitudes, revision de calidad, gestion de compras y catalogo
 - Notificaciones por correo al crear solicitudes de suministros (destinatarios: usuarios con permiso de Calidad)
+- Correo local de desarrollo orientado a Laragon Mailpit (`MAIL_MAILER=smtp`, puerto `1025`; ver `docs/LOCAL_SETUP.md`)
 - Modulo compartido de documentos de Calidad con biblioteca por area y administracion centralizada
 
 ## Principios del proyecto

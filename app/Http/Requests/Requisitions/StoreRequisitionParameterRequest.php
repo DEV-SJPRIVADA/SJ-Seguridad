@@ -21,8 +21,14 @@ class StoreRequisitionParameterRequest extends FormRequest
      */
     public function rules(): array
     {
+        $nameRules = ['required', 'string', 'max:255'];
+
+        if ($this->route('type') === 'emails') {
+            $nameRules[] = 'email';
+        }
+
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => $nameRules,
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['nullable', 'boolean'],
         ];

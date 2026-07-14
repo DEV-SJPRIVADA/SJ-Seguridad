@@ -13,7 +13,7 @@ Se ha registrado una nueva solicitud de personal en el sistema **SJ Seguridad**.
 **Fecha de Solicitud:** {{ $requisition->request_date?->format('d/m/Y') }}
 </x-mail::panel>
 
-<x-mail::button :url="route('requisitions.manage', ['module' => 'gestion_humana', 'search' => $requisition->code])">
+<x-mail::button :url="route('requisitions.manage', ['module' => 'gestion_humana', 'q' => $requisition->code])">
 Ver Requisición
 </x-mail::button>
 

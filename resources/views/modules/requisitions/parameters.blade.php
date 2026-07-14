@@ -127,7 +127,14 @@
                                     <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
                                         <div class="form-field" style="flex: 1; min-width: 250px;">
                                             <x-input-label :for="'name_'.$catalog['key']" value="Nuevo valor para {{ $catalog['label'] }}" />
-                                            <input id="{{ 'name_'.$catalog['key'] }}" name="name" type="text" class="form-input" placeholder="Escribe el nombre aquí..." required>
+                                            <input
+                                                id="{{ 'name_'.$catalog['key'] }}"
+                                                name="name"
+                                                type="{{ $catalog['key'] === 'emails' ? 'email' : 'text' }}"
+                                                class="form-input"
+                                                placeholder="{{ $catalog['key'] === 'emails' ? 'ej. notificaciones@empresa.com' : 'Escribe el nombre aquí...' }}"
+                                                required
+                                            >
                                         </div>
                                         
                                         <div style="display: flex; align-items: center; gap: 1rem; height: 44px;">
@@ -209,7 +216,7 @@
                 @method('PATCH')
                 <div class="form-stack">
                     <div class="form-field">
-                        <x-input-label for="edit-param-name" value="Nombre" />
+                        <x-input-label for="edit-param-name" id="edit-param-name-label" value="Nombre" />
                         <input id="edit-param-name" name="name" type="text" class="form-input" required autocomplete="off">
                     </div>
                     <label class="checkbox-card">
@@ -263,8 +270,12 @@
 
         $(document).on('click', '.btn-param-edit', function() {
             const data = $(this).data();
+            const isEmail = data.type === 'emails';
             $mTitle.text('Editar: ' + data.label);
             $mName.val(data.name);
+            $mName.attr('type', isEmail ? 'email' : 'text');
+            $mName.attr('placeholder', isEmail ? 'ej. notificaciones@empresa.com' : '');
+            $('#edit-param-name-label').text(isEmail ? 'Correo' : 'Nombre');
             $mActive.prop('checked', data.active === 1);
             $form.attr('action', data.updateUrl);
             $modal.css('display', 'flex');
