@@ -8,7 +8,7 @@
             <div class="panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Consolidado</h3>
-                    <p class="panel-text">Vista consolidada por indicador a traves de todos los jefes de operaciones.</p>
+                    <p class="panel-text">Vista consolidada por indicador a traves de los usuarios de captura.</p>
                 </div>
                 <div class="panel__body">
                     <table class="supply-table js-datatable">

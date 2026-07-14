@@ -37,7 +37,7 @@
                             <label class="form-label">Motivo del cambio</label>
                             <input type="text" name="reason" class="supply-input" required value="{{ old('reason') }}">
                         </div>
-                        <button type="submit" class="btn btn--primary" style="margin-top:1rem;">Guardar pesos</button>
+                        <button type="submit" class="btn btn--primary btn--sm" style="margin-top:1rem;">Guardar pesos</button>
                     </form>
                 </div>
             </div>

@@ -18,10 +18,10 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
                         <div>
                             <h3 class="panel-title">Dashboard General de Operaciones</h3>
-                            <p class="panel-text">Consolidado mensual de indicadores FT-OP por jefe de operaciones.</p>
+                            <p class="panel-text">Consolidado mensual de indicadores FT-OP por usuario.</p>
                         </div>
                         @can('operations.export')
-                            <a href="{{ route('indicadores.export.dashboard.pdf', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary">
+                            <a href="{{ route('indicadores.export.dashboard.pdf', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
                                 Exportar PDF
                             </a>
                         @endcan
@@ -48,7 +48,7 @@
                                 </select>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn--primary">Aplicar</button>
+                                <button type="submit" class="btn btn--primary btn--sm">Aplicar</button>
                             </div>
                         </div>
                     </form>
@@ -102,13 +102,13 @@
 
                     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.5rem; margin-top:2rem;">
                         <div class="panel" style="margin:0;">
-                            <div class="panel__header"><h4 class="panel-title">Ranking de jefes</h4></div>
+                            <div class="panel__header"><h4 class="panel-title">Ranking de usuarios</h4></div>
                             <div class="panel__body">
                                 <table class="supply-table">
                                     <thead>
                                         <tr>
                                             <th>#</th>
-                                            <th>Jefe</th>
+                                            <th>Usuario</th>
                                             <th>Score</th>
                                             <th>En rojo</th>
                                         </tr>
@@ -117,16 +117,12 @@
                                         @forelse ($dashboard['zone_ranking'] as $index => $row)
                                             <tr>
                                                 <td>{{ $index + 1 }}</td>
-                                                <td>
-                                                    <a href="{{ route('indicadores.leaders.show', ['operationsLeader' => $row['operations_leader']->id, 'year' => $year, 'month' => $month]) }}">
-                                                        {{ $row['operations_leader']->name }}
-                                                    </a>
-                                                </td>
+                                                <td>{{ $row['user']->name }}</td>
                                                 <td>{{ number_format($row['score'], 2) }}%</td>
                                                 <td>{{ $row['red_count'] }}</td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="4">No hay jefes de operaciones registrados.</td></tr>
+                                            <tr><td colspan="4">No hay usuarios de captura registrados.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -141,7 +137,7 @@
                                         <tr>
                                             <th>Indicador</th>
                                             <th>Resultado</th>
-                                            <th>Jefes rojo</th>
+                                            <th>Usuarios rojo</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -167,7 +163,7 @@
                                     <input type="hidden" name="year" value="{{ $year }}">
                                     <input type="hidden" name="month" value="{{ $month }}">
                                     <textarea name="summary_text" class="supply-textarea" rows="5" placeholder="Resumen del periodo...">{{ old('summary_text', $summary?->summary_text) }}</textarea>
-                                    <button type="submit" class="btn btn--primary">Guardar resumen</button>
+                                    <button type="submit" class="btn btn--primary btn--sm">Guardar resumen</button>
                                 </form>
                             </div>
                         </div>

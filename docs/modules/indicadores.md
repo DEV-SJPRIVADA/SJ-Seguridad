@@ -1,6 +1,6 @@
 # Modulo Indicadores (Operaciones)
 
-Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09, dashboards, MADRE, periodos, pesos y auditoria.
+Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, MADRE, periodos, pesos y auditoria.
 
 ## Rutas
 
@@ -11,31 +11,31 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 | Dashboard global | `operations.view` o `operations.manage` |
 | Captura | `operations.capture` o `operations.manage` |
 | Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
-| Jefes de operaciones | `operations.view` o `operations.manage` |
-| Admin (periodos, pesos, documentos, MADRE, auditoria) | `operations.manage` |
-| Export PDF dashboard | `operations.export` |
+| Admin (periodos, pesos, MADRE, auditoria) | `operations.manage` |
+| Export PDF/Excel | `operations.export` |
+
+Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, periodos, pesos, madre, auditoria. Sin pestañas de jefes ni documentos internos.
 
 ## Permisos Spatie
 
-- `operations.view` — ver dashboards y jefes
-- `operations.capture` — capturar indicadores (todos los jefes activos)
-- `operations.manage` — administracion completa
+- `operations.view` — ver dashboards
+- `operations.capture` — capturar indicadores (propios del usuario autenticado)
+- `operations.manage` — administracion completa (periodos, pesos, MADRE, auditoria)
 - `operations.export` — exportaciones
 
-No hay asignacion por zona/jefe en usuarios: el acceso es solo por permiso.
+El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 
 ## Modelos clave
 
-- `OperationsLeader` — catalogo administrable de jefes (`operations_leaders`)
+- `User` — dueño de cada captura (`indicator_captures.user_id`)
 - `Indicator`, `Period` (`indicator_periods`), `IndicatorCapture`
 - `DashboardWeight`, `DashboardSummary`
-- `IndicatorSystemDocument` / `IndicatorSystemDocumentVersion` — docs internos del modulo (separados de `QualityDocument`)
+- `Improvement` — plan de mejora ligado a una captura en rojo
 
 ## Seeders
 
 - `IndicadorSeeder` — 9 indicadores FT-OP
 - `DashboardWeightSeeder` — pesos del score global
-- **No** se siembran jefes de operaciones (catalogo inicial vacio)
 
 ## Configuracion
 
@@ -46,9 +46,11 @@ No hay asignacion por zona/jefe en usuarios: el acceso es solo por permiso.
 
 Vistas en `resources/views/areas/operaciones/` con layout `<x-app-layout>`, paneles corporativos y subtabs via `App\Support\IndicadorNavigation`.
 
-Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`.
+Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros).
 
 El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
+
+MADRE consolida capturas de usuarios con permiso `operations.capture` o `operations.manage`.
 
 ## Exportaciones
 
@@ -57,18 +59,14 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 | Ruta | Descripcion |
 |---|---|
 | `indicadores.export.dashboard.pdf` | PDF dashboard ejecutivo |
-| `indicadores.export.leader.excel` | Excel captura por jefe (`operations_leader_id`, `year`, `month`) |
-| `indicadores.export.leader.pdf` | PDF captura por jefe |
+| `indicadores.export.leader.excel` | Excel captura por usuario (`user_id`, `year`, `month`; default auth) |
+| `indicadores.export.leader.pdf` | PDF captura por usuario |
 | `indicadores.export.mother.excel` | Excel consolidado MADRE |
 | `indicadores.export.mother.pdf` | PDF consolidado MADRE |
 
 Requiere permiso `operations.export`.
 
-## Documentacion interna
-
-CRUD en rutas `indicadores.admin.documents.*` sobre tablas `indicator_system_documents` y `indicator_system_document_versions` (separadas de `QualityDocument`). Al actualizar pesos del dashboard se versiona automaticamente el documento `pesos-dashboard`.
-
-Ejecutar en entorno local/despliegue:
+## Despliegue
 
 ```bash
 php artisan migrate

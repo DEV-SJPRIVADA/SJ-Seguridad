@@ -29,7 +29,6 @@ class StoreIndicatorCaptureRequest extends FormRequest
         $rules = [
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required', 'integer', 'min:1', 'max:12'],
-            'operations_leader_id' => ['required', 'integer', 'exists:operations_leaders,id'],
             'improvement.analysis' => ['required', 'string'],
             'improvement.action_taken' => ['required', 'string'],
             'improvement.action_defined' => ['required', 'string'],

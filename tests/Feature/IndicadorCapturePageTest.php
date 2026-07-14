@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Indicator;
-use App\Models\OperationsLeader;
 use App\Models\User;
 use App\Support\PermissionCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,15 +26,9 @@ class IndicadorCapturePageTest extends TestCase
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
-        $leader = OperationsLeader::query()->create([
-            'name' => 'TATIANA PRECIADO',
-            'code' => 'J-1',
-            'is_active' => true,
-        ]);
 
         $response = $this->actingAs($user)->get(route('indicadores.show', [
             'indicator' => $indicator->code,
-            'operations_leader_id' => $leader->id,
             'year' => 2026,
             'month' => 7,
         ]));
@@ -45,6 +38,7 @@ class IndicadorCapturePageTest extends TestCase
         $response->assertSee('name="form[total_personal]"', false);
         $response->assertSee('indicadores-capture.js', false);
         $response->assertSee('class="indicadores-form ftop01-sheet"', false);
+        $response->assertSee($user->name, false);
         $response->assertDontSee('wire:model', false);
         $response->assertDontSee('livewire.js', false);
         $response->assertDontSee('@livewire', false);
@@ -56,15 +50,9 @@ class IndicadorCapturePageTest extends TestCase
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
-        $leader = OperationsLeader::query()->create([
-            'name' => 'Jefe FT03',
-            'code' => 'JT03',
-            'is_active' => true,
-        ]);
 
         $response = $this->actingAs($user)->get(route('indicadores.show', [
             'indicator' => $indicator->code,
-            'operations_leader_id' => $leader->id,
             'year' => 2026,
             'month' => 7,
         ]));
@@ -81,16 +69,10 @@ class IndicadorCapturePageTest extends TestCase
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
-        $leader = OperationsLeader::query()->create([
-            'name' => 'Jefe FT03',
-            'code' => 'JT03',
-            'is_active' => true,
-        ]);
 
         $response = $this->actingAs($user)->post(route('indicadores.capture.store', $indicator), [
             'year' => 2026,
             'month' => 7,
-            'operations_leader_id' => $leader->id,
             'form' => [
                 'total_servicios' => 100,
                 'total_siniestros' => 2,
@@ -112,7 +94,7 @@ class IndicadorCapturePageTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('indicator_captures', [
             'indicator_id' => $indicator->id,
-            'operations_leader_id' => $leader->id,
+            'user_id' => $user->id,
         ]);
     }
 }

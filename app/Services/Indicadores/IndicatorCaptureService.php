@@ -5,7 +5,6 @@ namespace App\Services\Indicadores;
 use App\Models\Improvement;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
-use App\Models\OperationsLeader;
 use App\Models\Period;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -22,19 +21,10 @@ class IndicatorCaptureService
     /**
      * @return array<string, mixed>
      */
-    public function buildShowContext(Indicator $indicator, int $year, int $month, ?int $operationsLeaderId): array
+    public function buildShowContext(Indicator $indicator, int $year, int $month, User $user): array
     {
         $months = config('indicators.months');
         $years = $this->yearRangeService->years();
-        $leaders = OperationsLeader::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'code']);
-
-        $leaderIds = $leaders->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $selectedLeaderId = $operationsLeaderId && in_array($operationsLeaderId, $leaderIds, true)
-            ? $operationsLeaderId
-            : (int) ($leaderIds[0] ?? 0);
 
         $period = Period::query()->firstOrCreate(
             ['year' => $year, 'month' => $month],
@@ -53,35 +43,33 @@ class IndicatorCaptureService
             'improvement_required' => '',
         ];
 
-        if ($selectedLeaderId > 0) {
-            $capture = IndicatorCapture::query()->where([
-                'indicator_id' => $indicator->id,
-                'operations_leader_id' => $selectedLeaderId,
-                'period_id' => $period->id,
-            ])->first();
+        $capture = IndicatorCapture::query()->where([
+            'indicator_id' => $indicator->id,
+            'user_id' => $user->id,
+            'period_id' => $period->id,
+        ])->first();
 
-            if ($capture) {
-                $captureId = $capture->id;
-                $form = array_merge($defaultForm, $capture->input_data ?? []);
-                $analysisText = $capture->analysis_text ?? '';
-                $improvementModel = Improvement::query()->where('indicator_capture_id', $capture->id)->first();
-                $improvementId = $improvementModel?->id;
-                $improvement = [
-                    'analysis' => $improvementModel?->analysis ?? '',
-                    'action_taken' => $improvementModel?->action_taken ?? '',
-                    'action_defined' => $improvementModel?->action_defined ?? '',
-                    'improvement_required' => $improvementModel?->improvement_required ?? '',
-                ];
-            }
+        if ($capture) {
+            $captureId = $capture->id;
+            $form = array_merge($defaultForm, $capture->input_data ?? []);
+            $analysisText = $capture->analysis_text ?? '';
+            $improvementModel = Improvement::query()->where('indicator_capture_id', $capture->id)->first();
+            $improvementId = $improvementModel?->id;
+            $improvement = [
+                'analysis' => $improvementModel?->analysis ?? '',
+                'action_taken' => $improvementModel?->action_taken ?? '',
+                'action_defined' => $improvementModel?->action_defined ?? '',
+                'improvement_required' => $improvementModel?->improvement_required ?? '',
+            ];
         }
 
         $form = $this->normalizePostedForm($indicator->code, $form);
         $metrics = $this->calculator->calculate($indicator, $form);
         [$sheetDenominatorLabel, $sheetNumeratorLabel] = $this->calculator->sheetLabels($indicator);
 
-        $sheet = $this->buildSheetData($indicator, $selectedLeaderId, $year, $sheetDenominatorLabel, $sheetNumeratorLabel);
+        $sheet = $this->buildSheetData($indicator, $user->id, $year, $sheetDenominatorLabel, $sheetNumeratorLabel);
         $ftOp03 = $indicator->code === 'FT-OP-03'
-            ? $this->buildFtOp03Data($indicator, $selectedLeaderId, $year)
+            ? $this->buildFtOp03Data($indicator, $user->id, $year)
             : [
                 'financeRows' => [],
                 'incidentRows' => [],
@@ -95,8 +83,9 @@ class IndicatorCaptureService
             'indicator' => $indicator,
             'selectedYear' => $year,
             'selectedMonth' => $month,
-            'selectedOperationsLeaderId' => $selectedLeaderId ?: null,
-            'operationsLeaders' => $leaders,
+            'selectedUser' => $user,
+            'captureUser' => $user,
+            'captureUserName' => $user->name,
             'months' => $months,
             'years' => $years,
             'periodId' => $period->id,
@@ -141,13 +130,10 @@ class IndicatorCaptureService
         Indicator $indicator,
         int $year,
         int $month,
-        int $operationsLeaderId,
         array $form,
         array $improvement,
         User $user,
     ): IndicatorCapture {
-        $this->assertLeaderAccess($operationsLeaderId);
-
         $period = Period::query()->firstOrCreate(
             ['year' => $year, 'month' => $month],
             ['status' => Period::STATUS_OPEN]
@@ -170,13 +156,13 @@ class IndicatorCaptureService
 
         $existing = IndicatorCapture::query()->where([
             'indicator_id' => $indicator->id,
-            'operations_leader_id' => $operationsLeaderId,
+            'user_id' => $user->id,
             'period_id' => $period->id,
         ])->first();
 
         $payload = [
             'indicator_id' => $indicator->id,
-            'operations_leader_id' => $operationsLeaderId,
+            'user_id' => $user->id,
             'period_id' => $period->id,
             'input_data' => $form,
             'numerator' => $metrics['numerator'],
@@ -217,7 +203,7 @@ class IndicatorCaptureService
         $this->persistImprovement(
             capture: $capture,
             indicator: $indicator,
-            operationsLeaderId: $operationsLeaderId,
+            userId: $user->id,
             periodId: $period->id,
             improvement: $improvement,
             analysisText: $analysisText,
@@ -307,7 +293,7 @@ class IndicatorCaptureService
     private function persistImprovement(
         IndicatorCapture $capture,
         Indicator $indicator,
-        int $operationsLeaderId,
+        int $userId,
         int $periodId,
         array $improvement,
         string $analysisText,
@@ -318,7 +304,7 @@ class IndicatorCaptureService
         $payload = [
             'indicator_capture_id' => $capture->id,
             'indicator_id' => $indicator->id,
-            'operations_leader_id' => $operationsLeaderId,
+            'user_id' => $userId,
             'period_id' => $periodId,
             'analysis' => trim((string) ($improvement['analysis'] ?? '')),
             'action_taken' => trim((string) ($improvement['action_taken'] ?? '')),
@@ -354,25 +340,12 @@ class IndicatorCaptureService
         );
     }
 
-    private function assertLeaderAccess(int $operationsLeaderId): void
-    {
-        $allowed = OperationsLeader::query()
-            ->where('is_active', true)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        if (! in_array($operationsLeaderId, $allowed, true)) {
-            abort(403);
-        }
-    }
-
     /**
      * @return array{sheetRows: list<array<string, mixed>>, chartPayload: array<string, mixed>}
      */
     private function buildSheetData(
         Indicator $indicator,
-        int $operationsLeaderId,
+        int $userId,
         int $year,
         string $sheetDenominatorLabel,
         string $sheetNumeratorLabel,
@@ -383,7 +356,7 @@ class IndicatorCaptureService
             9 => 'SEP', 10 => 'OCT', 11 => 'NOV', 12 => 'DIC',
         ];
 
-        if ($operationsLeaderId <= 0) {
+        if ($userId <= 0) {
             return ['sheetRows' => [], 'chartPayload' => []];
         }
 
@@ -395,7 +368,7 @@ class IndicatorCaptureService
 
         $captures = IndicatorCapture::query()
             ->where('indicator_id', $indicator->id)
-            ->where('operations_leader_id', $operationsLeaderId)
+            ->where('user_id', $userId)
             ->whereIn('period_id', $periods->pluck('id'))
             ->get(['id', 'period_id', 'numerator', 'denominator', 'result_percentage', 'complies', 'analysis_text'])
             ->keyBy(function (IndicatorCapture $capture) use ($periods): int {
@@ -461,7 +434,7 @@ class IndicatorCaptureService
      *     quarterChartPayload: array<int, mixed>
      * }
      */
-    private function buildFtOp03Data(Indicator $indicator, int $operationsLeaderId, int $year): array
+    private function buildFtOp03Data(Indicator $indicator, int $userId, int $year): array
     {
         $monthNames = [
             1 => 'ENE', 2 => 'FEB', 3 => 'MAR', 4 => 'ABR',
@@ -478,7 +451,7 @@ class IndicatorCaptureService
             'quarterChartPayload' => [],
         ];
 
-        if ($operationsLeaderId <= 0) {
+        if ($userId <= 0) {
             return $empty;
         }
 
@@ -490,7 +463,7 @@ class IndicatorCaptureService
 
         $captures = IndicatorCapture::query()
             ->where('indicator_id', $indicator->id)
-            ->where('operations_leader_id', $operationsLeaderId)
+            ->where('user_id', $userId)
             ->whereIn('period_id', $periods->pluck('id'))
             ->get(['id', 'period_id', 'input_data'])
             ->keyBy(function (IndicatorCapture $capture) use ($periods): int {

@@ -5,8 +5,8 @@ namespace App\Services\Indicadores\Dashboard;
 use App\Models\DashboardWeight;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
-use App\Models\OperationsLeader;
 use App\Models\Period;
+use App\Models\User;
 use App\Services\Indicadores\IndicatorMotherService;
 use Illuminate\Support\Collection;
 
@@ -25,14 +25,14 @@ class OperationsDashboardService
     {
         $indicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
         $weights = DashboardWeight::query()->get()->keyBy('indicator_id');
-        $zones = OperationsLeader::query()->where('is_active', true)->orderBy('name')->get();
+        $users = $this->capturableUsers();
 
         $kpis = [];
         $weightedAccumulator = 0.0;
         $criticalRows = [];
 
         foreach ($indicators as $indicator) {
-            $monthly = $this->motherService->getMonthlyData($indicator, $year, $month, $zones);
+            $monthly = $this->motherService->getMonthlyData($indicator, $year, $month, $users);
             $result = $this->resultForIndicator($indicator, $monthly['consolidated']);
             $normalized = $this->normalizeIndicator($indicator, $monthly['consolidated'], $result);
             $weight = (float) ($weights[$indicator->id]->weight ?? 0);
@@ -70,7 +70,7 @@ class OperationsDashboardService
 
         $globalScore = round($weightedAccumulator, 2);
 
-        $zoneRanking = $this->zoneRanking($year, $month, $indicators, $weights, $zones);
+        $zoneRanking = $this->zoneRanking($year, $month, $indicators, $weights, $users);
         $criticalRanking = collect($criticalRows)->sortByDesc('criticality')->values()->all();
         $trends = $withTrends ? $this->trends($year, $month) : ['months' => [], 'global' => [], 'indicators' => []];
 
@@ -84,17 +84,17 @@ class OperationsDashboardService
         ];
     }
 
-    public function zoneSummary(int $year, int $month, OperationsLeader $zone): array
+    public function zoneSummary(int $year, int $month, User $user): array
     {
         $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
         $indicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
 
-        return $indicators->map(function (Indicator $indicator) use ($zone, $period): array {
+        return $indicators->map(function (Indicator $indicator) use ($user, $period): array {
             $capture = null;
             if ($period) {
                 $capture = IndicatorCapture::query()
                     ->where('indicator_id', $indicator->id)
-                    ->where('operations_leader_id', $zone->id)
+                    ->where('user_id', $user->id)
                     ->where('period_id', $period->id)
                     ->first();
             }
@@ -109,27 +109,38 @@ class OperationsDashboardService
         })->all();
     }
 
-    private function zoneRanking(int $year, int $month, Collection $indicators, Collection $weights, Collection $zones): array
+    /**
+     * @return Collection<int, User>
+     */
+    private function capturableUsers(): Collection
+    {
+        return User::permission(['operations.capture', 'operations.manage'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function zoneRanking(int $year, int $month, Collection $indicators, Collection $weights, Collection $users): array
     {
         $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
         if (! $period) {
-            return $zones->map(fn (OperationsLeader $zone) => ['operations_leader' => $zone, 'score' => 0.0, 'red_count' => 0])->all();
+            return $users->map(fn (User $user) => ['user' => $user, 'score' => 0.0, 'red_count' => 0])->all();
         }
 
         $captures = IndicatorCapture::query()
             ->where('period_id', $period->id)
             ->whereIn('indicator_id', $indicators->pluck('id'))
-            ->whereIn('operations_leader_id', $zones->pluck('id'))
+            ->whereIn('user_id', $users->pluck('id'))
             ->get()
-            ->keyBy(fn (IndicatorCapture $capture) => $capture->indicator_id.'-'.$capture->operations_leader_id);
+            ->keyBy(fn (IndicatorCapture $capture) => $capture->indicator_id.'-'.$capture->user_id);
 
         $ranking = [];
-        foreach ($zones as $zone) {
+        foreach ($users as $user) {
             $score = 0.0;
             $red = 0;
             foreach ($indicators as $indicator) {
                 /** @var IndicatorCapture|null $capture */
-                $capture = $captures->get($indicator->id.'-'.$zone->id);
+                $capture = $captures->get($indicator->id.'-'.$user->id);
                 if (! $capture) {
                     continue;
                 }
@@ -141,7 +152,7 @@ class OperationsDashboardService
                     $red++;
                 }
             }
-            $ranking[] = ['operations_leader' => $zone, 'score' => round($score, 2), 'red_count' => $red];
+            $ranking[] = ['user' => $user, 'score' => round($score, 2), 'red_count' => $red];
         }
 
         return collect($ranking)->sortByDesc('score')->values()->all();

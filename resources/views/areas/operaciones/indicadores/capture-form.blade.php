@@ -14,7 +14,7 @@
             <div class="indicadores-capture-toolbar">
                 <div>@include($fieldsView)</div>
                 <div class="indicadores-capture-toolbar__action">
-                    <button type="button" class="btn btn--secondary js-open-improvement-modal" @disabled($isPeriodClosed)>
+                    <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
                         Abrir modal de analisis
                     </button>
                 </div>

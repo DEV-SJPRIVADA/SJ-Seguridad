@@ -29,7 +29,7 @@
 
 <div class="indicadores-actions">
     @can('operations.export')
-        <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'operations_leader_id' => $selectedOperationsLeaderId]) }}" class="btn btn--secondary">Exportar Excel</a>
-        <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'operations_leader_id' => $selectedOperationsLeaderId]) }}" class="btn btn--secondary">Exportar PDF</a>
+        <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+        <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
     @endcan
 </div>

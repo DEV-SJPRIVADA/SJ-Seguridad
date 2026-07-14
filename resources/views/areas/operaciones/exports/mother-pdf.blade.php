@@ -18,7 +18,7 @@
     <table>
         <thead>
             <tr>
-                <th>Jefe</th>
+                <th>Usuario</th>
                 <th>Numerador</th>
                 <th>Denominador</th>
                 <th>%</th>
@@ -28,7 +28,7 @@
         <tbody>
             @foreach ($monthly['rows'] as $row)
                 <tr>
-                    <td>{{ $row['operations_leader']->code }} - {{ $row['operations_leader']->name }}</td>
+                    <td>{{ $row['user']->name }}</td>
                     <td>{{ $row['capture']?->numerator }}</td>
                     <td>{{ $row['capture']?->denominator }}</td>
                     <td>{{ $row['result_percentage'] }}</td>

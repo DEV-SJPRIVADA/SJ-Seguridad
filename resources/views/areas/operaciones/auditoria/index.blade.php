@@ -32,7 +32,7 @@
                                 </select>
                             </div>
                             <div style="display:flex; align-items:flex-end;">
-                                <button type="submit" class="btn btn--secondary">Filtrar</button>
+                                <button type="submit" class="btn btn--secondary btn--sm">Filtrar</button>
                             </div>
                         </div>
                     </form>

@@ -12,7 +12,7 @@ class Improvement extends Model
     protected $fillable = [
         'indicator_capture_id',
         'indicator_id',
-        'operations_leader_id',
+        'user_id',
         'period_id',
         'analysis',
         'action_taken',
@@ -32,9 +32,9 @@ class Improvement extends Model
         return $this->belongsTo(Indicator::class);
     }
 
-    public function operationsLeader(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(OperationsLeader::class);
+        return $this->belongsTo(User::class);
     }
 
     public function period(): BelongsTo

@@ -72,9 +72,9 @@
             </template>
 
             <div class="indicadores-actions indicadores-actions--end">
-                <button type="button" class="btn btn--secondary js-add-classification-row">Agregar fila</button>
-                <button type="button" class="btn btn--secondary js-close-classification-modal">Cancelar</button>
-                <button type="button" class="btn btn--primary js-close-classification-modal">Guardar clasificacion</button>
+                <button type="button" class="btn btn--secondary btn--sm js-add-classification-row">Agregar fila</button>
+                <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cancelar</button>
+                <button type="button" class="btn btn--primary btn--sm js-close-classification-modal">Guardar clasificacion</button>
             </div>
         </div>
     </div>

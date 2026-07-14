@@ -240,7 +240,6 @@ class User extends Authenticatable
 
         if ($this->can('operations.view') || $this->can('operations.manage')) {
             $tabs->push('dashboard');
-            $tabs->push('jefes');
         }
 
         if ($this->can('operations.capture') || $this->can('operations.manage')) {
@@ -250,7 +249,6 @@ class User extends Authenticatable
         if ($this->can('operations.manage')) {
             $tabs->push('periodos');
             $tabs->push('pesos');
-            $tabs->push('documentos');
             $tabs->push('madre');
             $tabs->push('auditoria');
         }
@@ -263,8 +261,6 @@ class User extends Authenticatable
         return match ($tab) {
             'dashboard' => $this->can('operations.view') || $this->can('operations.manage'),
             'capture' => $this->can('operations.capture') || $this->can('operations.manage'),
-            'leaders' => $this->can('operations.view') || $this->can('operations.manage'),
-            'leaders_manage' => $this->can('operations.manage'),
             'manage' => $this->can('operations.manage'),
             default => false,
         };
@@ -278,10 +274,8 @@ class User extends Authenticatable
         return match ($firstTab) {
             'dashboard' => route('indicadores.dashboard'),
             'captura' => route('indicadores.index'),
-            'jefes' => route('indicadores.leaders.index'),
             'periodos' => route('indicadores.admin.periods.index'),
             'pesos' => route('indicadores.admin.weights'),
-            'documentos' => route('indicadores.admin.documents.index'),
             'madre' => route('indicadores.admin.mother.index'),
             'auditoria' => route('indicadores.admin.audit.index'),
             default => route('dashboard', ['module' => 'operaciones']),

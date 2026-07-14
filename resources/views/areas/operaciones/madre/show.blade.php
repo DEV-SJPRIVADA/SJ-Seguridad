@@ -57,7 +57,7 @@
                     <table class="supply-table">
                         <thead>
                             <tr>
-                                <th>Jefe</th>
+                                <th>Usuario</th>
                                 <th>Resultado</th>
                                 <th>Cumple</th>
                                 <th>Mejora</th>
@@ -66,7 +66,7 @@
                         <tbody>
                             @foreach ($monthly['rows'] as $row)
                                 <tr>
-                                    <td>{{ $row['operations_leader']->code }} — {{ $row['operations_leader']->name }}</td>
+                                    <td>{{ $row['user']->name }}</td>
                                     <td>{{ $row['result_percentage'] !== null ? number_format((float) $row['result_percentage'], 2).'%' : 'Sin registro' }}</td>
                                     <td>{{ $row['semaforo'] ?? '-' }}</td>
                                     <td>{{ ($row['has_improvement'] ?? false) ? 'Si' : 'No' }}</td>

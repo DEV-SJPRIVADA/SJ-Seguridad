@@ -17,16 +17,6 @@ Route::middleware(['password.changed'])
             Route::post('/captura/{indicator:code}', [IndicadorController::class, 'storeCapture'])->name('capture.store');
         });
 
-        Route::middleware(['indicador.tab:leaders'])->group(function (): void {
-            Route::get('/jefes', [IndicadorController::class, 'leadersIndex'])->name('leaders.index');
-            Route::get('/jefes/{operationsLeader}', [IndicadorController::class, 'leaderShow'])->name('leaders.show');
-        });
-
-        Route::middleware(['indicador.tab:leaders_manage'])->group(function (): void {
-            Route::post('/jefes', [IndicadorController::class, 'leaderStore'])->name('leaders.store');
-            Route::patch('/jefes/{operationsLeader}', [IndicadorController::class, 'leaderUpdate'])->name('leaders.update');
-        });
-
         Route::middleware(['can:operations.export'])->group(function (): void {
             Route::get('/exportar/pdf', [IndicadorController::class, 'exportDashboardPdf'])->name('export.dashboard.pdf');
             Route::get('/exportar/captura/{indicator:code}/excel', [IndicadorController::class, 'exportLeaderExcel'])->name('export.leader.excel');
@@ -43,15 +33,6 @@ Route::middleware(['password.changed'])
 
             Route::get('/pesos', [IndicadorController::class, 'weights'])->name('weights');
             Route::patch('/pesos', [IndicadorController::class, 'updateWeights'])->name('weights.update');
-
-            Route::get('/documentos', [IndicadorController::class, 'documents'])->name('documents.index');
-            Route::get('/documentos/crear', [IndicadorController::class, 'createDocument'])->name('documents.create');
-            Route::post('/documentos', [IndicadorController::class, 'storeDocument'])->name('documents.store');
-            Route::get('/documentos/{indicatorSystemDocument}', [IndicadorController::class, 'showDocument'])->name('documents.show');
-            Route::get('/documentos/{indicatorSystemDocument}/editar', [IndicadorController::class, 'editDocument'])->name('documents.edit');
-            Route::patch('/documentos/{indicatorSystemDocument}', [IndicadorController::class, 'updateDocument'])->name('documents.update');
-            Route::delete('/documentos/{indicatorSystemDocument}', [IndicadorController::class, 'destroyDocument'])->name('documents.destroy');
-            Route::post('/documentos/{indicatorSystemDocument}/versiones', [IndicadorController::class, 'storeDocumentVersion'])->name('documents.versions.store');
 
             Route::get('/madre', [IndicadorController::class, 'mother'])->name('mother.index');
             Route::get('/madre/{indicator:code}', [IndicadorController::class, 'motherShow'])->name('mother.show');

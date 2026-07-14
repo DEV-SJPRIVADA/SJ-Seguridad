@@ -74,11 +74,6 @@ class IndicadorModuleTest extends TestCase
         $user->givePermissionTo(['view.dashboard', 'operations.manage']);
 
         $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
-        \App\Models\OperationsLeader::query()->create([
-            'name' => 'TATIANA PRECIADO',
-            'code' => 'J-1',
-            'is_active' => true,
-        ]);
 
         $this->actingAs($user)
             ->get(route('indicadores.admin.mother.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
@@ -86,44 +81,18 @@ class IndicadorModuleTest extends TestCase
             ->assertSee('Consolidado — FT-OP-01');
     }
 
-    public function test_operations_manage_user_can_create_document(): void
-    {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
-        $user->givePermissionTo(['view.dashboard', 'operations.manage']);
-
-        $response = $this->actingAs($user)->post(route('indicadores.admin.documents.store'), [
-            'slug' => 'procedimiento-test',
-            'title' => 'Procedimiento de prueba',
-            'scope' => 'system',
-            'indicator_id' => null,
-            'is_active' => true,
-            'initial_status' => 'vigente',
-            'content' => 'Contenido inicial',
-            'change_summary' => 'Alta inicial',
-            'change_reason' => 'Prueba automatizada',
-        ]);
-
-        $response->assertRedirect(route('indicadores.admin.documents.index'));
-        $this->assertDatabaseHas('indicator_system_documents', ['slug' => 'procedimiento-test']);
-    }
-
-    public function test_operations_export_user_can_download_leader_excel(): void
+    public function test_operations_export_user_can_download_capture_excel(): void
     {
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.capture']);
 
         $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
-        $leader = \App\Models\OperationsLeader::query()->create([
-            'name' => 'Jefe Test',
-            'code' => 'JT01',
-            'is_active' => true,
-        ]);
 
         $response = $this->actingAs($user)->get(route('indicadores.export.leader.excel', [
             'indicator' => $indicator->code,
             'year' => now()->year,
             'month' => now()->month,
-            'operations_leader_id' => $leader->id,
+            'user_id' => $user->id,
         ]));
 
         $response->assertOk();

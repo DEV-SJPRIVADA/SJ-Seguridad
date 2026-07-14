@@ -10,7 +10,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
                         <div>
                             <h3 class="panel-title">{{ $indicator->code }} — {{ $indicator->name }}</h3>
-                            <p class="panel-text">Captura mensual por jefe de operaciones.</p>
+                            <p class="panel-text">Captura mensual del indicador.</p>
                         </div>
                         <form method="GET" action="{{ route('indicadores.show', $indicator) }}" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end;">
                             <div>
@@ -30,14 +30,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label">Jefe de operaciones</label>
-                                <select name="operations_leader_id" onchange="this.form.submit()" class="supply-input supply-select">
-                                    @foreach ($headerFilters['leaders'] as $leader)
-                                        <option value="{{ $leader->id }}" @selected($headerFilters['selectedOperationsLeaderId'] === (int) $leader->id)>
-                                            {{ $leader->code }} — {{ $leader->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label class="form-label">Usuario</label>
+                                <p class="panel-text" style="margin:0.35rem 0 0;">{{ $headerFilters['captureUserName'] ?? auth()->user()?->name }}</p>
                             </div>
                             <div>
                                 <span class="status-pill {{ $headerFilters['isPeriodClosed'] ? 'status-pill--req-cancelada' : 'status-pill--req-contratado' }}">
@@ -57,7 +51,6 @@
                             @csrf
                             <input type="hidden" name="year" value="{{ $selectedYear }}">
                             <input type="hidden" name="month" value="{{ $selectedMonth }}">
-                            <input type="hidden" name="operations_leader_id" value="{{ $selectedOperationsLeaderId }}">
 
                             @if ($indicator->code === 'FT-OP-03')
                                 @include('areas.operaciones.indicadores.capture-form-03')

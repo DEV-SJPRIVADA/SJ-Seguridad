@@ -45,9 +45,4 @@ class Indicator extends Model
     {
         return $this->hasMany(IndicatorCapture::class);
     }
-
-    public function systemDocuments(): HasMany
-    {
-        return $this->hasMany(IndicatorSystemDocument::class);
-    }
 }

@@ -10,9 +10,9 @@
     </style>
 </head>
 <body>
-    <h2>Reporte por jefe de operaciones</h2>
+    <h2>Reporte de captura</h2>
     <p><strong>Indicador:</strong> {{ $indicator->code }} - {{ $indicator->name }}</p>
-    <p><strong>Jefe:</strong> {{ $operations_leader->code }} - {{ $operations_leader->name }}</p>
+    <p><strong>Usuario:</strong> {{ $user->name }}</p>
     <p><strong>Periodo:</strong> {{ $year }}-{{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</p>
 
     <table>

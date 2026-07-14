@@ -37,13 +37,6 @@ class IndicadorNavigation
                 'visible' => $user->can('operations.capture') || $user->can('operations.manage'),
             ],
             [
-                'key' => 'jefes',
-                'label' => config('access.indicador_tabs.jefes'),
-                'route' => 'indicadores.leaders.index',
-                'patterns' => ['indicadores.leaders.*'],
-                'visible' => $user->can('operations.view') || $user->can('operations.manage'),
-            ],
-            [
                 'key' => 'periodos',
                 'label' => config('access.indicador_tabs.periodos'),
                 'route' => 'indicadores.admin.periods.index',
@@ -55,13 +48,6 @@ class IndicadorNavigation
                 'label' => config('access.indicador_tabs.pesos'),
                 'route' => 'indicadores.admin.weights',
                 'patterns' => ['indicadores.admin.weights*'],
-                'visible' => $user->can('operations.manage'),
-            ],
-            [
-                'key' => 'documentos',
-                'label' => config('access.indicador_tabs.documentos'),
-                'route' => 'indicadores.admin.documents.index',
-                'patterns' => ['indicadores.admin.documents.*'],
                 'visible' => $user->can('operations.manage'),
             ],
             [

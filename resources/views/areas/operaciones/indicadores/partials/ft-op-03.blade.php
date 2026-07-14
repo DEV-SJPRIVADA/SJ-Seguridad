@@ -16,12 +16,12 @@
         <input type="number" step="0.01" name="form[total_siniestros]" value="{{ old('form.total_siniestros', $form['total_siniestros'] ?? '') }}" class="supply-input js-capture-field" data-field="total_siniestros" @disabled($isPeriodClosed) />
     </div>
     <div class="indicadores-ftop03-row__action">
-        <button type="button" class="btn btn--secondary js-open-classification-modal" @disabled($isPeriodClosed)>
+        <button type="button" class="btn btn--secondary btn--sm js-open-classification-modal" @disabled($isPeriodClosed)>
             Clasificar siniestros
         </button>
     </div>
     <div class="indicadores-ftop03-row__action">
-        <button type="button" class="btn btn--secondary js-open-improvement-modal" @disabled($isPeriodClosed)>
+        <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
             Analisis
         </button>
     </div>

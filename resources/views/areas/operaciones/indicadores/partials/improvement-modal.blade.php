@@ -18,14 +18,6 @@
             </div>
         </div>
         <div class="panel__body form-stack">
-            @if (! $selectedOperationsLeaderId)
-                <div class="panel indicadores-alert indicadores-alert--error" style="margin:0;">
-                    <div class="panel__body text-small">
-                        Debes seleccionar un jefe de operaciones en los filtros superiores antes de guardar.
-                    </div>
-                </div>
-            @endif
-
             <div class="indicadores-modal-fields">
                 <div>
                     <label class="form-label">Analisis</label>
@@ -45,8 +37,8 @@
                 </div>
             </div>
             <div class="indicadores-actions indicadores-actions--end">
-                <button type="button" class="btn btn--secondary js-close-improvement-modal">Cancelar</button>
-                <button type="submit" class="btn btn--primary" @disabled($isPeriodClosed || ! $selectedOperationsLeaderId)>
+                <button type="button" class="btn btn--secondary btn--sm js-close-improvement-modal">Cancelar</button>
+                <button type="submit" class="btn btn--primary btn--sm" @disabled($isPeriodClosed)>
                     Guardar mes
                 </button>
             </div>

@@ -19,14 +19,14 @@ class IndicatorReportExporter
         $sheet->setTitle('Captura');
 
         $indicator = $report['indicator'];
-        $leader = $report['operations_leader'];
+        $user = $report['user'];
         $year = $report['year'];
         $month = $report['month'];
         $capture = $report['capture'] ?? null;
 
-        $this->writeHeaderBlock($sheet, 'Reporte por jefe de operaciones', [
+        $this->writeHeaderBlock($sheet, 'Reporte de captura', [
             'Indicador' => $indicator->code.' - '.$indicator->name,
-            'Jefe' => $leader->code.' - '.$leader->name,
+            'Usuario' => $user->name,
             'Periodo' => sprintf('%d-%02d', $year, $month),
         ]);
 
@@ -63,9 +63,9 @@ class IndicatorReportExporter
         $sheet->getColumnDimension('B')->setWidth(48);
 
         $filename = sprintf(
-            'jefe-%s-%s-%d-%02d.xlsx',
+            'captura-%s-%d-%d-%02d.xlsx',
             $indicator->code,
-            $leader->code,
+            $user->id,
             $year,
             $month
         );
@@ -90,7 +90,7 @@ class IndicatorReportExporter
         ]);
 
         $row = 5;
-        $headers = ['Jefe', 'Numerador', 'Denominador', '%', 'Semaforo'];
+        $headers = ['Usuario', 'Numerador', 'Denominador', '%', 'Semaforo'];
         foreach ($headers as $index => $header) {
             $column = chr(ord('A') + $index);
             $sheet->setCellValue($column.$row, $header);
@@ -100,7 +100,7 @@ class IndicatorReportExporter
 
         foreach ($monthly['rows'] as $leaderRow) {
             $capture = $leaderRow['capture'] ?? null;
-            $sheet->setCellValue('A'.$row, $leaderRow['operations_leader']->code.' - '.$leaderRow['operations_leader']->name);
+            $sheet->setCellValue('A'.$row, $leaderRow['user']->name);
             $sheet->setCellValue('B'.$row, $capture?->numerator);
             $sheet->setCellValue('C'.$row, $capture?->denominator);
             $sheet->setCellValue('D'.$row, $leaderRow['result_percentage']);

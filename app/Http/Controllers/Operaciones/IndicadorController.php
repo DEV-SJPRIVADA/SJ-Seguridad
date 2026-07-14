@@ -2,26 +2,20 @@
 
 namespace App\Http\Controllers\Operaciones;
 
-use App\Http\Requests\Operaciones\StoreIndicatorCaptureRequest;
-use App\Http\Requests\Operaciones\StoreIndicatorSystemDocumentRequest;
-use App\Http\Requests\Operaciones\StoreIndicatorSystemDocumentVersionRequest;
-use App\Http\Requests\Operaciones\UpdateIndicatorSystemDocumentRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Operaciones\StoreIndicatorCaptureRequest;
 use App\Models\AuditLog;
 use App\Models\DashboardSummary;
 use App\Models\DashboardWeight;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
-use App\Models\IndicatorSystemDocument;
-use App\Models\OperationsLeader;
 use App\Models\Period;
-use App\Services\Indicadores\DocumentationService;
-use App\Services\Indicadores\IndicatorCaptureService;
-use App\Services\Indicadores\IndicatorReportExporter;
+use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
-use App\Services\Indicadores\Dashboard\ZoneDashboardService;
+use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorMotherService;
+use App\Services\Indicadores\IndicatorReportExporter;
 use App\Services\Indicadores\YearRangeService;
 use App\Support\IndicadorNavigation;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -35,11 +29,9 @@ class IndicadorController extends Controller
 {
     public function __construct(
         private readonly OperationsDashboardService $dashboardService,
-        private readonly ZoneDashboardService $leaderDashboardService,
         private readonly IndicatorMotherService $motherService,
         private readonly AuditLogService $auditLogService,
         private readonly YearRangeService $yearRangeService,
-        private readonly DocumentationService $documentationService,
         private readonly IndicatorReportExporter $reportExporter,
         private readonly IndicatorCaptureService $captureService,
     ) {
@@ -86,13 +78,12 @@ class IndicadorController extends Controller
 
         $selectedYear = $this->yearRangeService->normalize((int) $request->integer('year', (int) now()->year));
         $selectedMonth = $this->normalizeMonth((int) $request->integer('month', (int) now()->month));
-        $selectedLeaderId = (int) $request->integer('operations_leader_id', 0);
 
         $capture = $this->captureService->buildShowContext(
             indicator: $indicator,
             year: $selectedYear,
             month: $selectedMonth,
-            operationsLeaderId: $selectedLeaderId > 0 ? $selectedLeaderId : null,
+            user: $request->user(),
         );
 
         return view('areas.operaciones.indicadores.show', array_merge($capture, [
@@ -100,11 +91,10 @@ class IndicadorController extends Controller
             'headerFilters' => [
                 'years' => $capture['years'],
                 'months' => $capture['months'],
-                'leaders' => $capture['operationsLeaders'],
                 'selectedYear' => $capture['selectedYear'],
                 'selectedMonth' => $capture['selectedMonth'],
-                'selectedOperationsLeaderId' => (int) ($capture['selectedOperationsLeaderId'] ?? 0),
                 'isPeriodClosed' => $capture['isPeriodClosed'],
+                'captureUserName' => $capture['captureUserName'],
             ],
         ]));
     }
@@ -115,13 +105,11 @@ class IndicadorController extends Controller
 
         $year = $this->yearRangeService->normalize((int) $request->integer('year'));
         $month = $this->normalizeMonth((int) $request->integer('month'));
-        $leaderId = (int) $request->integer('operations_leader_id');
 
         $this->captureService->save(
             indicator: $indicator,
             year: $year,
             month: $month,
-            operationsLeaderId: $leaderId,
             form: (array) $request->input('form', []),
             improvement: $request->improvementPayload(),
             user: $request->user(),
@@ -132,92 +120,8 @@ class IndicadorController extends Controller
                 'indicator' => $indicator->code,
                 'year' => $year,
                 'month' => $month,
-                'operations_leader_id' => $leaderId,
             ])
             ->with('status', 'Captura guardada correctamente para el mes seleccionado.');
-    }
-
-    public function leadersIndex(): View
-    {
-        $leaders = OperationsLeader::query()->orderBy('name')->paginate(20);
-
-        return view('areas.operaciones.leaders.index', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'leaders' => $leaders,
-        ]);
-    }
-
-    public function leaderStore(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:50', 'unique:operations_leaders,code'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
-
-        $leader = OperationsLeader::query()->create([
-            'name' => $validated['name'],
-            'code' => strtoupper($validated['code']),
-            'is_active' => $request->boolean('is_active', true),
-        ]);
-
-        $this->auditLogService->logModelChange(
-            eventType: 'operations_leader',
-            action: 'create',
-            model: $leader,
-            before: null,
-            after: $leader->toArray(),
-            reason: 'Creacion de jefe de operaciones'
-        );
-
-        return back()->with('status', 'Jefe de operaciones creado correctamente.');
-    }
-
-    public function leaderUpdate(Request $request, OperationsLeader $operationsLeader): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:50', Rule::unique('operations_leaders', 'code')->ignore($operationsLeader->id)],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
-
-        $before = $operationsLeader->toArray();
-
-        $operationsLeader->update([
-            'name' => $validated['name'],
-            'code' => strtoupper($validated['code']),
-            'is_active' => $request->boolean('is_active', $operationsLeader->is_active),
-        ]);
-
-        $this->auditLogService->logModelChange(
-            eventType: 'operations_leader',
-            action: 'update',
-            model: $operationsLeader,
-            before: $before,
-            after: $operationsLeader->fresh()->toArray(),
-            reason: 'Actualizacion de jefe de operaciones'
-        );
-
-        return back()->with('status', 'Jefe de operaciones actualizado.');
-    }
-
-    public function leaderShow(Request $request, OperationsLeader $operationsLeader): View
-    {
-        abort_unless($operationsLeader->is_active, 404);
-
-        $selectedYear = $this->yearRangeService->normalize((int) $request->integer('year', (int) now()->year));
-        $selectedMonth = $this->normalizeMonth((int) $request->integer('month', (int) now()->month));
-        $dashboard = $this->leaderDashboardService->build($operationsLeader, $selectedYear, $selectedMonth);
-
-        return view('areas.operaciones.leaders.show', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'leader' => $operationsLeader,
-            'dashboard' => $dashboard,
-            'years' => $this->yearRangeService->years(),
-            'months' => config('indicators.months'),
-            'selectedYear' => $selectedYear,
-            'selectedMonth' => $selectedMonth,
-        ]);
     }
 
     public function periods(): View
@@ -268,7 +172,7 @@ class IndicadorController extends Controller
         ]);
 
         $pending = IndicatorCapture::query()
-            ->with(['indicator', 'operationsLeader'])
+            ->with(['indicator', 'user'])
             ->where('period_id', $period->id)
             ->where('complies', false)
             ->whereDoesntHave('improvement')
@@ -277,7 +181,7 @@ class IndicadorController extends Controller
         if ($pending->isNotEmpty()) {
             $items = $pending->map(fn (IndicatorCapture $capture) => [
                 'indicator' => $capture->indicator?->code,
-                'leader' => $capture->operationsLeader?->code,
+                'user' => $capture->user?->name,
                 'result' => $capture->result_percentage,
             ])->all();
 
@@ -369,175 +273,19 @@ class IndicadorController extends Controller
 
             $afterCollection = DashboardWeight::query()->with('indicator')->get();
             $after = $afterCollection->toArray();
-
-            $content = $afterCollection
-                ->sortBy(fn (DashboardWeight $item) => $item->indicator?->code)
-                ->map(fn (DashboardWeight $item) => ($item->indicator?->code ?? 'N/A').': '.$item->weight.'%')
-                ->implode("\n");
-
-            $version = $this->documentationService->upsertDashboardWeightsDocument($content, $validated['reason']);
+            $auditModel = $afterCollection->first() ?? DashboardWeight::query()->firstOrFail();
 
             $this->auditLogService->logModelChange(
                 eventType: 'dashboard_weights',
                 action: 'update',
-                model: $version->document,
+                model: $auditModel,
                 before: $before,
                 after: $after,
-                reason: $validated['reason'],
-                metadata: ['document_version_id' => $version->id]
+                reason: $validated['reason']
             );
         });
 
-        return back()->with('status', 'Pesos actualizados y versionados en documentacion.');
-    }
-
-    public function documents(): View
-    {
-        $documents = IndicatorSystemDocument::query()
-            ->with(['indicator', 'currentVersion'])
-            ->orderByDesc('updated_at')
-            ->paginate(20);
-
-        return view('areas.operaciones.documentos.index', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'documents' => $documents,
-        ]);
-    }
-
-    public function createDocument(): View
-    {
-        $indicators = Indicator::query()->orderBy('code')->get();
-
-        return view('areas.operaciones.documentos.create', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'indicators' => $indicators,
-        ]);
-    }
-
-    public function storeDocument(StoreIndicatorSystemDocumentRequest $request): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $document = IndicatorSystemDocument::query()->create([
-            'slug' => $validated['slug'],
-            'title' => $validated['title'],
-            'scope' => $validated['scope'],
-            'indicator_id' => $validated['indicator_id'] ?? null,
-            'is_active' => $validated['is_active'],
-        ]);
-
-        $version = $this->documentationService->createVersion(
-            document: $document,
-            content: $validated['content'],
-            status: $validated['initial_status'],
-            changeSummary: $validated['change_summary'],
-            changeReason: $validated['change_reason']
-        );
-
-        $this->auditLogService->logModelChange(
-            eventType: 'document',
-            action: 'create',
-            model: $document,
-            before: null,
-            after: $document->fresh()->load('currentVersion')->toArray(),
-            reason: $validated['change_reason'],
-            metadata: ['document_version_id' => $version->id]
-        );
-
-        return redirect()->route('indicadores.admin.documents.index')->with('status', 'Documento creado correctamente.');
-    }
-
-    public function showDocument(IndicatorSystemDocument $indicatorSystemDocument): View
-    {
-        $indicatorSystemDocument->load(['indicator', 'currentVersion', 'versions.author']);
-
-        return view('areas.operaciones.documentos.show', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'document' => $indicatorSystemDocument,
-        ]);
-    }
-
-    public function editDocument(IndicatorSystemDocument $indicatorSystemDocument): View
-    {
-        $indicators = Indicator::query()->orderBy('code')->get();
-
-        return view('areas.operaciones.documentos.edit', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'document' => $indicatorSystemDocument,
-            'indicators' => $indicators,
-        ]);
-    }
-
-    public function updateDocument(UpdateIndicatorSystemDocumentRequest $request, IndicatorSystemDocument $indicatorSystemDocument): RedirectResponse
-    {
-        $before = $indicatorSystemDocument->toArray();
-        $validated = $request->validated();
-
-        $indicatorSystemDocument->update([
-            'slug' => $validated['slug'],
-            'title' => $validated['title'],
-            'scope' => $validated['scope'],
-            'indicator_id' => $validated['indicator_id'] ?? null,
-            'is_active' => $validated['is_active'],
-        ]);
-
-        $this->auditLogService->logModelChange(
-            eventType: 'document',
-            action: 'update',
-            model: $indicatorSystemDocument,
-            before: $before,
-            after: $indicatorSystemDocument->fresh()->toArray(),
-            reason: $validated['reason']
-        );
-
-        return redirect()
-            ->route('indicadores.admin.documents.show', $indicatorSystemDocument)
-            ->with('status', 'Documento actualizado.');
-    }
-
-    public function destroyDocument(IndicatorSystemDocument $indicatorSystemDocument): RedirectResponse
-    {
-        $before = $indicatorSystemDocument->load('versions')->toArray();
-        $indicatorSystemDocument->delete();
-
-        $this->auditLogService->logModelChange(
-            eventType: 'document',
-            action: 'delete',
-            model: $indicatorSystemDocument,
-            before: $before,
-            after: null,
-            reason: 'Eliminacion de documento'
-        );
-
-        return redirect()->route('indicadores.admin.documents.index')->with('status', 'Documento eliminado.');
-    }
-
-    public function storeDocumentVersion(StoreIndicatorSystemDocumentVersionRequest $request, IndicatorSystemDocument $indicatorSystemDocument): RedirectResponse
-    {
-        $before = $indicatorSystemDocument->load('currentVersion')->toArray();
-        $validated = $request->validated();
-
-        $version = $this->documentationService->createVersion(
-            document: $indicatorSystemDocument,
-            content: $validated['content'],
-            status: $validated['status'],
-            changeSummary: $validated['change_summary'],
-            changeReason: $validated['change_reason']
-        );
-
-        $this->auditLogService->logModelChange(
-            eventType: 'document_version',
-            action: 'create',
-            model: $indicatorSystemDocument,
-            before: $before,
-            after: $indicatorSystemDocument->fresh()->load('currentVersion')->toArray(),
-            reason: $validated['change_reason'],
-            metadata: ['document_version_id' => $version->id]
-        );
-
-        return redirect()
-            ->route('indicadores.admin.documents.show', $indicatorSystemDocument)
-            ->with('status', 'Nueva version registrada correctamente.');
+        return back()->with('status', 'Pesos actualizados.');
     }
 
     public function mother(): View
@@ -556,9 +304,8 @@ class IndicadorController extends Controller
 
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
-        $zones = OperationsLeader::query()->where('is_active', true)->orderBy('name')->get();
 
-        $monthly = $this->motherService->getMonthlyData($indicator, $year, $month, $zones);
+        $monthly = $this->motherService->getMonthlyData($indicator, $year, $month);
         $quarterly = $indicator->code === 'FT-OP-08'
             ? $this->motherService->getQuarterlyDataFtOp08($year)
             : null;
@@ -668,10 +415,10 @@ class IndicadorController extends Controller
         $this->auditLogService->logEvent(
             eventType: 'export',
             action: 'leader_excel',
-            reason: 'Exporte Excel por jefe de operaciones',
+            reason: 'Exporte Excel de captura por usuario',
             metadata: [
                 'indicator' => $indicator->code,
-                'operations_leader_id' => $report['operations_leader']->id,
+                'user_id' => $report['user']->id,
                 'year' => $report['year'],
                 'month' => $report['month'],
             ]
@@ -688,10 +435,10 @@ class IndicadorController extends Controller
         $this->auditLogService->logEvent(
             eventType: 'export',
             action: 'leader_pdf',
-            reason: 'Exporte PDF por jefe de operaciones',
+            reason: 'Exporte PDF de captura por usuario',
             metadata: [
                 'indicator' => $indicator->code,
-                'operations_leader_id' => $report['operations_leader']->id,
+                'user_id' => $report['user']->id,
                 'year' => $report['year'],
                 'month' => $report['month'],
             ]
@@ -700,9 +447,9 @@ class IndicadorController extends Controller
         $pdf = Pdf::loadView('areas.operaciones.exports.leader-pdf', $report)->setPaper('a4', 'portrait');
 
         return $pdf->download(sprintf(
-            'jefe-%s-%s-%d-%02d.pdf',
+            'captura-%s-%d-%d-%02d.pdf',
             $indicator->code,
-            $report['operations_leader']->code,
+            $report['user']->id,
             $report['year'],
             $report['month']
         ));
@@ -747,8 +494,7 @@ class IndicadorController extends Controller
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
-        $leaderId = (int) $request->integer('operations_leader_id');
-        $leader = OperationsLeader::query()->findOrFail($leaderId);
+        $user = User::query()->findOrFail((int) $request->integer('user_id', $request->user()->id));
 
         $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
         $capture = null;
@@ -756,14 +502,15 @@ class IndicadorController extends Controller
             $capture = IndicatorCapture::query()
                 ->with('improvement')
                 ->where('indicator_id', $indicator->id)
-                ->where('operations_leader_id', $leader->id)
+                ->where('user_id', $user->id)
                 ->where('period_id', $period->id)
                 ->first();
         }
 
         return [
             'indicator' => $indicator,
-            'operations_leader' => $leader,
+            'user' => $user,
+            'operations_leader' => $user,
             'year' => $year,
             'month' => $month,
             'capture' => $capture,
@@ -778,13 +525,12 @@ class IndicadorController extends Controller
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
-        $zones = OperationsLeader::query()->where('is_active', true)->orderBy('name')->get();
 
         return [
             'indicator' => $indicator,
             'year' => $year,
             'month' => $month,
-            'monthly' => $this->motherService->getMonthlyData($indicator, $year, $month, $zones),
+            'monthly' => $this->motherService->getMonthlyData($indicator, $year, $month),
         ];
     }
 

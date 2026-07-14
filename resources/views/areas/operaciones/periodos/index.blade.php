@@ -35,7 +35,7 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn--primary">Crear periodo</button>
+                        <button type="submit" class="btn btn--primary btn--sm">Crear periodo</button>
                     </form>
                 </div>
             </div>
@@ -47,7 +47,7 @@
                         @if (session('pending_improvements'))
                             <ul>
                                 @foreach (session('pending_improvements') as $item)
-                                    <li>{{ $item['indicator'] }} / {{ $item['leader'] }} — {{ $item['result'] }}%</li>
+                                    <li>{{ $item['indicator'] }} / {{ $item['user'] ?? $item['leader'] ?? '-' }} — {{ $item['result'] }}%</li>
                                 @endforeach
                             </ul>
                         @endif

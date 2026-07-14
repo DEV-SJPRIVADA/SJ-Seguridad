@@ -5,33 +5,33 @@ namespace App\Services\Indicadores;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
-use App\Models\OperationsLeader;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class IndicatorMotherService
 {
-    public function getMonthlyData(Indicator $indicator, int $year, int $month, ?Collection $zones = null): array
+    public function getMonthlyData(Indicator $indicator, int $year, int $month, ?Collection $users = null): array
     {
-        $zones = $zones ?: OperationsLeader::query()->where('is_active', true)->orderBy('name')->get();
+        $users = $users ?: $this->capturableUsers();
         $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
 
         $captures = collect();
         if ($period) {
             $captures = IndicatorCapture::query()
-                ->with(['operationsLeader', 'improvement'])
+                ->with(['user', 'improvement'])
                 ->where('indicator_id', $indicator->id)
                 ->where('period_id', $period->id)
                 ->get()
-                ->keyBy('operations_leader_id');
+                ->keyBy('user_id');
         }
 
-        $rows = $zones->map(function (OperationsLeader $zone) use ($captures, $indicator): array {
+        $rows = $users->map(function (User $user) use ($captures, $indicator): array {
             /** @var IndicatorCapture|null $capture */
-            $capture = $captures->get($zone->id);
+            $capture = $captures->get($user->id);
             $input = $capture?->input_data ?? [];
 
             return [
-                'operations_leader' => $zone,
+                'user' => $user,
                 'capture' => $capture,
                 'input' => $input,
                 'result_percentage' => $capture?->result_percentage,
@@ -50,15 +50,15 @@ class IndicatorMotherService
         ];
     }
 
-    public function getQuarterlyDataFtOp08(int $year, ?Collection $zones = null): array
+    public function getQuarterlyDataFtOp08(int $year, ?Collection $users = null): array
     {
-        $zones = $zones ?: OperationsLeader::query()->where('is_active', true)->orderBy('name')->get();
+        $users = $users ?: $this->capturableUsers();
         $periods = Period::query()->where('year', $year)->whereBetween('month', [1, 12])->get()->keyBy('month');
         $captures = IndicatorCapture::query()
             ->whereHas('indicator', fn ($q) => $q->where('code', 'FT-OP-08'))
             ->whereIn('period_id', $periods->pluck('id'))
             ->get()
-            ->groupBy(fn (IndicatorCapture $capture) => $capture->operations_leader_id.'-'.$capture->period?->month);
+            ->groupBy(fn (IndicatorCapture $capture) => $capture->user_id.'-'.$capture->period?->month);
 
         $quarters = [
             'Q1' => [1, 2, 3],
@@ -69,7 +69,7 @@ class IndicatorMotherService
 
         $rows = [];
         foreach ($quarters as $quarter => $months) {
-            $zoneRows = $zones->map(function (OperationsLeader $zone) use ($months, $periods): array {
+            $userRows = $users->map(function (User $user) use ($months, $periods): array {
                 $num = 0.0;
                 $den = 0.0;
                 foreach ($months as $month) {
@@ -79,7 +79,7 @@ class IndicatorMotherService
                     }
                     $capture = IndicatorCapture::query()
                         ->whereHas('indicator', fn ($q) => $q->where('code', 'FT-OP-08'))
-                        ->where('operations_leader_id', $zone->id)
+                        ->where('user_id', $user->id)
                         ->where('period_id', $period->id)
                         ->first();
                     if ($capture) {
@@ -89,8 +89,9 @@ class IndicatorMotherService
                 }
                 $pct = $den > 0 ? round(($num / $den) * 100, 2) : null;
                 $complies = $pct !== null && $pct >= 100;
+
                 return [
-                    'operations_leader' => $zone,
+                    'user' => $user,
                     'numerator' => $num,
                     'denominator' => $den,
                     'result_percentage' => $pct,
@@ -98,12 +99,12 @@ class IndicatorMotherService
                 ];
             });
 
-            $totalNum = (float) $zoneRows->sum('numerator');
-            $totalDen = (float) $zoneRows->sum('denominator');
+            $totalNum = (float) $userRows->sum('numerator');
+            $totalDen = (float) $userRows->sum('denominator');
             $totalPct = $totalDen > 0 ? round(($totalNum / $totalDen) * 100, 2) : null;
 
             $rows[$quarter] = [
-                'zones' => $zoneRows,
+                'zones' => $userRows,
                 'consolidated' => [
                     'numerator' => $totalNum,
                     'denominator' => $totalDen,
@@ -114,6 +115,17 @@ class IndicatorMotherService
         }
 
         return $rows;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    private function capturableUsers(): Collection
+    {
+        return User::permission(['operations.capture', 'operations.manage'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
     }
 
     private function buildConsolidated(Indicator $indicator, Collection $captures): array
@@ -182,7 +194,7 @@ class IndicatorMotherService
 
     private function buildChartData(Indicator $indicator, Collection $rows): array
     {
-        $zones = $rows->map(fn ($row) => $row['operations_leader']->code)->values()->all();
+        $zones = $rows->map(fn ($row) => $row['user']->name)->values()->all();
         $bars = [];
         $linePct = [];
         $lineMeta = [];

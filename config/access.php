@@ -23,7 +23,7 @@ return [
 
     'area_indicador_permissions' => [
         'operaciones' => [
-            'operations.view' => 'Indicadores: Ver dashboards y jefes',
+            'operations.view' => 'Indicadores: Ver dashboards',
             'operations.capture' => 'Indicadores: Capturar datos',
             'operations.manage' => 'Indicadores: Administrar (periodos, pesos, MADRE)',
             'operations.export' => 'Indicadores: Exportar PDF y Excel',
@@ -57,10 +57,8 @@ return [
     'indicador_tabs' => [
         'dashboard' => 'Dashboard',
         'captura' => 'Captura',
-        'jefes' => 'Jefes de operaciones',
         'periodos' => 'Periodos',
         'pesos' => 'Pesos',
-        'documentos' => 'Documentos',
         'madre' => 'Consolidado',
         'auditoria' => 'Auditoria',
     ],
