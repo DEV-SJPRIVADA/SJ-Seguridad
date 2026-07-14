@@ -18,6 +18,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Historial de cambios de estado
 - Catalogos administrables: cargos, motivos, clientes, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion**
 - Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
+- Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
 
 ## Reglas de negocio actuales
 
@@ -42,12 +43,24 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 
 ## Notificaciones por correo
 
-- Disparo: solo en `RequisitionController::store` tras crear el lote
+### Al crear (Gestion Humana / catalogo)
+- Disparo: `RequisitionController::store` tras crear el lote
 - Clase: `App\Mail\PersonalRequisitionNotification`
 - Vista: `resources/views/emails/requisitions/requested.blade.php`
 - Destinatarios: filas activas de `requisition_notification_emails` (Parametros → Correos de notificacion; el valor se guarda en `name`)
 - Fallback si no hay activos: `desarrollo.tic@sjsp.com.co`
-- CTA del correo: Gestion Humana con filtro `q` = codigo de la requisicion
+- CTA: Gestion Humana con filtro `q` = codigo
+
+### Al cambiar de estado (solicitante)
+- Disparo: `RequisitionController::update` **solo si** el estado cambio (`old !== new`)
+- Clase: `App\Mail\PersonalRequisitionStatusChangedMail`
+- Vista: `resources/views/emails/requisitions/status-changed.blade.php`
+- Destinatario: email del usuario `requested_by` (si no hay email, no se envia)
+- Contenido: codigo, cargo, cliente, estado anterior → nuevo, observacion GH; CTA a Seguimiento del area solicitante con `q`
+- No notifica al catalogo de Parametros ni al fallback GH
+
+### Compartido
+- Ambos mailables usan cola (`ShouldQueue`)
 - Fallos de envio se registran en log; la solicitud HTTP sigue siendo exitosa
 - Pruebas locales: Mailpit + `MAIL_MAILER=smtp` puerto `1025` (ver [`LOCAL_SETUP.md`](../LOCAL_SETUP.md))
 
@@ -141,7 +154,6 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 
 ## Deuda / pendientes (fuera del corte Mailpit)
 
-- No hay correo en cambios de estado (solo al crear).
 - Motivo “Reemplazo” acoplado a `request_reason_id = 2` (frágil si cambia el seeder).
 - `PersonalRequisitionPolicy` registrada pero no usada en el controller.
 - Cobertura de tests acotada (sin factory dedicada; sin print/dashboard/parametros ampliados).
@@ -154,3 +166,4 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Notificaciones toast en UI.
 - Mailpit documentado; CTA del correo con filtro `q`; validacion `email` en parametros tipo `emails`.
 - Persistencia de `recruiter_id` en mass assignment.
+- Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).

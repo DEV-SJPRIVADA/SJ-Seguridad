@@ -21,8 +21,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PersonalRequisitionNotification;
+use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
@@ -372,10 +374,10 @@ class RequisitionController extends Controller
         $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
         abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
 
-        DB::transaction(function () use ($request, $requisition): void {
-            $oldStatus = $requisition->status;
-            $newStatus = $request->string('status')->toString();
+        $oldStatus = $requisition->status;
+        $newStatus = $request->string('status')->toString();
 
+        DB::transaction(function () use ($request, $requisition, $oldStatus, $newStatus): void {
             $requisition->update([
                 'managed_by' => $request->user()->id,
                 'position_id' => $request->integer('position_id'),
@@ -420,6 +422,21 @@ class RequisitionController extends Controller
                 ]);
             }
         });
+
+        if ($oldStatus !== $newStatus) {
+            try {
+                $requisition->loadMissing('requester');
+                $requesterEmail = $requisition->requester?->email;
+
+                if (filled($requesterEmail)) {
+                    Mail::to($requisition->requester)->send(
+                        new PersonalRequisitionStatusChangedMail($requisition->fresh(), $oldStatus, $newStatus)
+                    );
+                }
+            } catch (\Exception $e) {
+                Log::error('Error enviando correo de cambio de estado de requisición: '.$e->getMessage());
+            }
+        }
 
         return redirect()
             ->route('requisitions.edit', ['module' => $module, 'requisition' => $requisition])
