@@ -30,6 +30,7 @@
 - Notificaciones por correo al crear solicitudes de suministros (destinatarios: usuarios con permiso de Calidad)
 - Correo local de desarrollo orientado a Laragon Mailpit (`MAIL_MAILER=smtp`, puerto `1025`; ver `docs/LOCAL_SETUP.md`)
 - Modulo compartido de documentos de Calidad con biblioteca por area y administracion centralizada
+- Matriz de clientes MT-CO-01 en Comercial (`commercial_clients` + `commercial_services` por portafolio)
 
 ## Principios del proyecto
 

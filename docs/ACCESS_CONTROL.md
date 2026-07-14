@@ -46,6 +46,14 @@ Permisos del modulo de indicadores (area `operaciones`, board `indicadores`):
 
 Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Alcance por Area → Operaciones**, no en la seccion de permisos funcionales.
 
+Permisos de Matriz de clientes (area `comercial`, board `matriz_clientes`):
+
+- `comercial.matriz.view`
+- `comercial.matriz.manage`
+- `view.board.comercial.matriz_clientes` (tambien habilita el board)
+
+Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Alcance por Area → Comercial**.
+
 ## Areas actuales
 
 - `gestion_humana`
@@ -80,6 +88,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `suministros`
 - `documentos`
 - `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
+- `matriz_clientes` (solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.matriz_clientes`)
 
 Esto produce permisos como:
 

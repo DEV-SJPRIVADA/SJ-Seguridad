@@ -1,0 +1,146 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\CommercialClient;
+use App\Models\CommercialService;
+use App\Models\User;
+use App\Support\PermissionCatalog;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class CommercialMatrixTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        PermissionCatalog::sync();
+    }
+
+    public function test_user_without_permission_cannot_view_matrix(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.index'))
+            ->assertForbidden();
+    }
+
+    public function test_viewer_can_list_clients_but_cannot_create(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.index'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.create'))
+            ->assertForbidden();
+    }
+
+    public function test_manager_can_create_client_with_services_in_different_portfolios(): void
+    {
+        $user = $this->matrizManager();
+
+        $response = $this->actingAs($user)->post(route('comercial.matriz.clients.store'), [
+            'nit' => '901.360.444-1',
+            'name' => 'MADEMAX SAS',
+            'city' => 'YUMBO',
+            'phone' => '3175527429',
+        ]);
+
+        $client = CommercialClient::query()->where('nit', '901360444-1')->first();
+        $this->assertNotNull($client);
+        $response->assertRedirect(route('comercial.matriz.clients.show', $client));
+
+        $this->actingAs($user)->post(route('comercial.matriz.services.store', $client), [
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ2021-SF133',
+            'advisor_name' => 'TATIANA',
+            'doc_contract' => CommercialService::DOC_OK,
+        ])->assertRedirect(route('comercial.matriz.clients.show', $client));
+
+        $this->actingAs($user)->post(route('comercial.matriz.services.store', $client), [
+            'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
+            'contract_number' => 'SJ2023-MT048',
+            'advisor_name' => 'ANDREA',
+        ])->assertRedirect(route('comercial.matriz.clients.show', $client));
+
+        $this->assertSame(2, $client->services()->count());
+        $this->assertDatabaseHas('commercial_services', [
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ2021-SF133',
+        ]);
+        $this->assertDatabaseHas('commercial_services', [
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
+            'contract_number' => 'SJ2023-MT048',
+        ]);
+    }
+
+    public function test_inactivating_service_keeps_other_services(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '800040390',
+            'name' => 'Cliente Demo',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $active = $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-ACTIVE',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+        $keep = $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
+            'contract_number' => 'SJ-KEEP',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.inactivate', [$client, $active]))
+            ->assertRedirect(route('comercial.matriz.clients.show', $client));
+
+        $this->assertDatabaseHas('commercial_services', [
+            'id' => $active->id,
+            'portfolio' => CommercialService::PORTFOLIO_INACTIVOS,
+        ]);
+        $this->assertDatabaseHas('commercial_services', [
+            'id' => $keep->id,
+            'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
+        ]);
+        $this->assertSame(1, $client->fresh()->activeServices()->count());
+    }
+
+    private function matrizManager(): User
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo('comercial.matriz.manage');
+
+        return $user;
+    }
+}

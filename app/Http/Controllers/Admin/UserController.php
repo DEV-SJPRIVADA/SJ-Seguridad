@@ -155,10 +155,11 @@ class UserController extends Controller
             ->groupBy('category');
 
         $indicadorPermissions = collect(config('access.area_indicador_permissions.operaciones', []));
+        $comercialMatrizPermissions = collect(config('access.area_indicador_permissions.comercial', []));
 
         // 2. Permisos de Área (Alcance)
         $areas = collect(config('access.areas'))
-            ->map(function ($label, $key) use ($allPermissions, $indicadorPermissions) {
+            ->map(function ($label, $key) use ($allPermissions, $indicadorPermissions, $comercialMatrizPermissions) {
                 $options = collect([
                     ['label' => 'Abrir Área', 'name' => "view.area.{$key}"],
                     ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
@@ -171,6 +172,20 @@ class UserController extends Controller
                     foreach ($indicadorPermissions as $name => $indicadorLabel) {
                         $options->push([
                             'label' => $indicadorLabel,
+                            'name' => $name,
+                        ]);
+                    }
+                }
+
+                if ($key === 'comercial') {
+                    $options->push([
+                        'label' => 'Tablero Matriz de clientes',
+                        'name' => 'view.board.comercial.matriz_clientes',
+                    ]);
+
+                    foreach ($comercialMatrizPermissions as $name => $matrizLabel) {
+                        $options->push([
+                            'label' => $matrizLabel,
                             'name' => $name,
                         ]);
                     }

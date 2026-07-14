@@ -28,6 +28,10 @@ return [
             'operations.manage' => 'Indicadores: Administrar (periodos, pesos, MADRE)',
             'operations.export' => 'Indicadores: Exportar PDF y Excel',
         ],
+        'comercial' => [
+            'comercial.matriz.view' => 'Matriz clientes: Ver',
+            'comercial.matriz.manage' => 'Matriz clientes: Administrar',
+        ],
     ],
 
     'areas' => [
@@ -52,6 +56,7 @@ return [
         'suministros' => 'Suministros',
         'documentos' => 'Documentos',
         'indicadores' => 'Indicadores',
+        'matriz_clientes' => 'Matriz de clientes',
     ],
 
     'indicador_tabs' => [

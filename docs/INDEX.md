@@ -19,6 +19,7 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
+- [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)
 
 ## Objetivo de esta documentacion
 

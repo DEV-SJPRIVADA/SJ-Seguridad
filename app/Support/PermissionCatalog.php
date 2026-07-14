@@ -29,7 +29,21 @@ class PermissionCatalog
                 collect(config('access.areas'))->keys()->flatMap(fn (string $areaKey) => (
                     collect(config('access.boards'))
                         ->keys()
-                        ->reject(fn (string $boardKey) => $boardKey === 'documentos')
+                        ->reject(function (string $boardKey) use ($areaKey): bool {
+                            if ($boardKey === 'documentos') {
+                                return true;
+                            }
+
+                            if ($boardKey === 'indicadores' && $areaKey !== 'operaciones') {
+                                return true;
+                            }
+
+                            if ($boardKey === 'matriz_clientes' && $areaKey !== 'comercial') {
+                                return true;
+                            }
+
+                            return false;
+                        })
                         ->map(fn (string $boardKey) => "view.board.{$areaKey}.{$boardKey}")
                 ))
             )

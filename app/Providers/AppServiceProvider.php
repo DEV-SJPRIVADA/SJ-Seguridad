@@ -175,6 +175,23 @@ class AppServiceProvider extends ServiceProvider
                             ];
                         }
 
+                        if ($boardKey === 'matriz_clientes') {
+                            if ($key !== 'comercial') {
+                                return null;
+                            }
+
+                            if (! $user->can('comercial.matriz.view') && ! $user->can('comercial.matriz.manage') && ! $user->can('view.board.comercial.matriz_clientes')) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'comercial.matriz.clients.index',
+                                'url' => route('comercial.matriz.clients.index'),
+                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.'),
+                            ];
+                        }
+
                         $permission = "view.board.{$key}.{$boardKey}";
 
                         if (! $user->can($permission)) {
@@ -194,6 +211,7 @@ class AppServiceProvider extends ServiceProvider
                             'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
                             'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
+                            'matriz_clientes' => str_starts_with((string) $routeName, 'comercial.matriz.') && $key === 'comercial',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
 
@@ -235,6 +253,8 @@ class AppServiceProvider extends ServiceProvider
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
+                ) || (
+                    str_starts_with((string) $routeName, 'comercial.matriz.') && $key === 'comercial'
                 );
 
                 return [

@@ -110,6 +110,10 @@ Route::get('/dashboard', function () {
         return redirect(auth()->user()->defaultIndicadorBoardUrl());
     }
 
+    if ($selectedModule && $selectedBoardKey === 'matriz_clientes') {
+        return redirect()->route('comercial.matriz.clients.index');
+    }
+
     return view('dashboard', [
         'areas' => $areas,
         'selectedBoard' => $selectedBoard,
@@ -136,6 +140,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/modules/supplies.php';
     require __DIR__.'/modules/quality-documents.php';
     require __DIR__.'/areas/operaciones.php';
+    require __DIR__.'/areas/comercial.php';
 });
 
 if (app()->environment('local')) {
