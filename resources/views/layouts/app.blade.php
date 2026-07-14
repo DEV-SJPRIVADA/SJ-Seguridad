@@ -35,7 +35,6 @@
         @endif
 
         @stack('styles')
-        @livewireStyles
 
         <style>
             /* Estilo Global de Tablas Corporativas */
@@ -680,6 +679,5 @@
             </div>
         </div>
         @stack('scripts')
-        @livewireScripts
     </body>
 </html>

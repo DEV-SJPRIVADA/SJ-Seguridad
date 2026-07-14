@@ -19,15 +19,15 @@ return [
         12 => 'Diciembre',
     ],
 
-    'livewire_forms' => [
-        'FT-OP-01' => \App\Livewire\Indicadores\FtOp01Form::class,
-        'FT-OP-02' => \App\Livewire\Indicadores\FtOp02Form::class,
-        'FT-OP-03' => \App\Livewire\Indicadores\FtOp03Form::class,
-        'FT-OP-04' => \App\Livewire\Indicadores\FtOp04Form::class,
-        'FT-OP-05' => \App\Livewire\Indicadores\FtOp05Form::class,
-        'FT-OP-06' => \App\Livewire\Indicadores\FtOp06Form::class,
-        'FT-OP-07' => \App\Livewire\Indicadores\FtOp07Form::class,
-        'FT-OP-08' => \App\Livewire\Indicadores\FtOp08Form::class,
-        'FT-OP-09' => \App\Livewire\Indicadores\FtOp09Form::class,
+    'capture_codes' => [
+        'FT-OP-01',
+        'FT-OP-02',
+        'FT-OP-03',
+        'FT-OP-04',
+        'FT-OP-05',
+        'FT-OP-06',
+        'FT-OP-07',
+        'FT-OP-08',
+        'FT-OP-09',
     ],
 ];

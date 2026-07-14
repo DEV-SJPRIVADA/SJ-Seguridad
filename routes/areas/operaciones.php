@@ -14,6 +14,7 @@ Route::middleware(['password.changed'])
         Route::middleware(['indicador.tab:capture'])->group(function (): void {
             Route::get('/captura', [IndicadorController::class, 'index'])->name('index');
             Route::get('/captura/{indicator:code}', [IndicadorController::class, 'show'])->name('show');
+            Route::post('/captura/{indicator:code}', [IndicadorController::class, 'storeCapture'])->name('capture.store');
         });
 
         Route::middleware(['indicador.tab:leaders'])->group(function (): void {

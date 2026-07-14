@@ -1,5 +1,10 @@
-<div class="indicadores-form ftop03-sheet">
-    @include('livewire.indicadores.partials.capture-alerts')
+<div
+    class="indicadores-form ftop03-sheet"
+    data-indicadores-capture
+    data-formula='@json($clientFormula)'
+    data-complies="{{ $complies ? '1' : '0' }}"
+>
+    @include('areas.operaciones.indicadores.partials.capture-alerts')
 
     <div class="panel" style="margin:0;">
         <div class="panel__header">
@@ -7,7 +12,7 @@
         </div>
         <div class="panel__body form-stack">
             @include($fieldsView)
-            @include('livewire.indicadores.partials.capture-metrics')
+            @include('areas.operaciones.indicadores.partials.capture-metrics')
         </div>
     </div>
 
@@ -126,7 +131,7 @@
         </table>
 
         <div class="border border-gray-600 border-t-0 p-3" style="width:1036px; min-width:1036px;">
-            <div wire:ignore id="ft-op-03-chart-finance" data-chart='@json($financeChartPayload)' class="w-full h-[360px]"></div>
+            <div id="ft-op-03-chart-finance" data-chart='@json($financeChartPayload)' class="w-full h-[360px]"></div>
         </div>
 
         <table class="border-collapse table-fixed text-[13px] text-black border border-gray-600 border-t-0" style="min-width: 1036px;">
@@ -163,7 +168,7 @@
         </table>
 
         <div class="border border-gray-600 border-t-0 p-3" style="width:1036px; min-width:1036px;">
-            <div wire:ignore id="ft-op-03-chart-clients" data-chart='@json($incidentChartPayload)' class="w-full h-[360px]"></div>
+            <div id="ft-op-03-chart-clients" data-chart='@json($incidentChartPayload)' class="w-full h-[360px]"></div>
         </div>
 
         @for ($q = 1; $q <= 4; $q++)
@@ -197,7 +202,7 @@
                     </tr>
                 </table>
                 <div class="md:col-span-2 p-3">
-                    <div wire:ignore id="ft-op-03-quarter-{{ $q }}" data-chart='@json($quarterChartPayload[$q] ?? [])' class="w-full h-[320px]"></div>
+                    <div id="ft-op-03-quarter-{{ $q }}" data-chart='@json($quarterChartPayload[$q] ?? [])' class="w-full h-[320px]"></div>
                 </div>
             </div>
         @endfor
@@ -224,241 +229,6 @@
         </div>
     </div>
 
-    @include('livewire.indicadores.partials.improvement-modal')
-
-    @if ($showClassificationModal)
-        <div
-            class="indicadores-modal-backdrop"
-            wire:key="classification-modal"
-            role="dialog"
-            aria-modal="true"
-            wire:click.self="closeClassificationModal"
-        >
-            <div class="panel indicadores-modal" wire:click.stop>
-                <div class="panel__header">
-                    <div class="indicadores-modal__header">
-                        <h4 class="panel-title">Clasificacion de siniestros</h4>
-                        <button type="button" wire:click="closeClassificationModal" class="btn btn--secondary btn--sm">Cerrar</button>
-                    </div>
-                </div>
-                <div class="panel__body form-stack">
-                    <table class="supply-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align:left;">Tipo de siniestro</th>
-                                <th>Cantidad</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($form['clasificacion_por_tipo'] as $index => $row)
-                                <tr>
-                                    <td style="text-align:left;">
-                                        <select wire:model.live="form.clasificacion_por_tipo.{{ $index }}.tipo" wire:change="handleClassificationTypeChange({{ $index }})" class="supply-input supply-select">
-                                            <option value="">Seleccione...</option>
-                                            @foreach ($siniestroOptions as $option)
-                                                <option value="{{ $option }}">{{ $option }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01" wire:model.live="form.clasificacion_por_tipo.{{ $index }}.cantidad" class="supply-input" />
-                                    </td>
-                                    <td>
-                                        <button type="button" wire:click="removeTypeRow({{ $index }})" class="btn btn--secondary btn--sm">X</button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-
-                    <div class="indicadores-actions indicadores-actions--end">
-                        <button type="button" wire:click="closeClassificationModal" class="btn btn--secondary">Cancelar</button>
-                        <button type="button" wire:click="saveClassification" class="btn btn--primary">Guardar clasificacion</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+    @include('areas.operaciones.indicadores.partials.improvement-modal')
+    @include('areas.operaciones.indicadores.partials.classification-modal')
 </div>
-
-@assets
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-@endassets
-
-@script
-<script>
-    (function () {
-        if (window.__ftop03ChartsInit) return;
-        window.__ftop03ChartsInit = true;
-        window.__ftop03ChartInstances = window.__ftop03ChartInstances || {};
-
-        function parseData(id) {
-            const el = document.getElementById(id);
-            if (!el || !el.dataset?.chart) return {};
-            try { return JSON.parse(el.dataset.chart); } catch (e) { return {}; }
-        }
-
-        function getChart(id) {
-            const el = document.getElementById(id);
-            if (!el || !window.echarts) return null;
-
-            if (window.__ftop03ChartInstances[id] && !window.__ftop03ChartInstances[id].isDisposed()) {
-                return window.__ftop03ChartInstances[id];
-            }
-
-            const current = echarts.getInstanceByDom(el);
-            if (current) {
-                window.__ftop03ChartInstances[id] = current;
-                return current;
-            }
-
-            const chart = echarts.init(el);
-            window.__ftop03ChartInstances[id] = chart;
-            return chart;
-        }
-
-        function renderBar(id, payload, config) {
-            const chart = getChart(id);
-            if (!chart) return;
-            chart.setOption({
-                tooltip: { trigger: 'axis' },
-                legend: { top: 0, data: [config.bar1Label, config.bar2Label, config.lineLabel] },
-                grid: { left: 50, right: 20, top: 35, bottom: 30 },
-                xAxis: { type: 'category', data: payload.months || [] },
-                yAxis: [{ type: 'value' }, { type: 'value', min: 0, max: 100 }],
-                series: [
-                    {
-                        type: 'bar',
-                        name: config.bar1Label,
-                        data: payload[config.bar1Key] || [],
-                        barMaxWidth: 28,
-                        barGap: '20%',
-                    },
-                    {
-                        type: 'bar',
-                        name: config.bar2Label,
-                        data: payload[config.bar2Key] || [],
-                        barMaxWidth: 28,
-                        barGap: '20%',
-                    },
-                    {
-                        type: 'line',
-                        yAxisIndex: 1,
-                        name: config.lineLabel,
-                        data: payload[config.lineKey] || [],
-                        smooth: true,
-                    },
-                ]
-            }, true);
-            chart.resize();
-        }
-
-        function renderPie(id, payload) {
-            const chart = getChart(id);
-            if (!chart) return;
-            const data = payload.data || [];
-            const total = data.reduce(function (sum, item) {
-                return sum + Number(item.value || 0);
-            }, 0);
-
-            chart.setOption({
-                title: { text: payload.title || '', top: 5, left: 'center', textStyle: { fontSize: 22, fontWeight: 'bold', fontFamily: 'serif' } },
-                tooltip: total > 0 ? {
-                    trigger: 'item',
-                    formatter: function (params) {
-                        return params.name + '<br/>Cantidad: ' + params.value + '<br/>Porcentaje: ' + params.percent + '%';
-                    }
-                } : { show: false },
-                legend: {
-                    show: total > 0,
-                    bottom: 0,
-                    left: 'center',
-                    orient: 'horizontal',
-                    itemWidth: 12,
-                    itemHeight: 12,
-                    textStyle: { fontSize: 11 },
-                },
-                graphic: total === 0 ? [{
-                    type: 'text',
-                    left: 'center',
-                    top: '85%',
-                    style: {
-                        text: 'Sin datos para este trimestre',
-                        fill: '#6b7280',
-                        fontSize: 13,
-                        fontWeight: 500,
-                    }
-                }] : [],
-                series: [{
-                    type: 'pie',
-                    radius: total > 0 ? ['0%', '58%'] : ['0%', '52%'],
-                    center: ['50%', '42%'],
-                    avoidLabelOverlap: true,
-                    label: { show: false },
-                    labelLine: { show: false },
-                    emphasis: {
-                        scale: true,
-                        label: { show: false },
-                    },
-                    data: total > 0 ? data : [{ name: 'Sin datos', value: 1, itemStyle: { color: '#e5e7eb' } }],
-                }]
-            }, true);
-            chart.resize();
-        }
-
-        function renderAll(finance, clients, quarters) {
-            renderBar('ft-op-03-chart-finance', finance, {
-                bar1Key: 'facturacion',
-                bar2Key: 'pagado',
-                lineKey: 'cumplimiento',
-                bar1Label: 'TOTAL FACTURACION MENSUAL',
-                bar2Label: 'VALOR PAGADO MENSUAL',
-                lineLabel: '% CUMPLIMIENTO',
-            });
-            renderBar('ft-op-03-chart-clients', clients, {
-                bar1Key: 'clientes',
-                bar2Key: 'siniestros',
-                lineKey: 'porcentaje',
-                bar1Label: 'TOTAL DE CLIENTES MENSUAL',
-                bar2Label: 'TOTAL SINIESTROS MENSUAL',
-                lineLabel: '% SINIESTROS',
-            });
-
-            [1, 2, 3, 4].forEach(function (q) {
-                renderPie('ft-op-03-quarter-' + q, quarters[q] || parseData('ft-op-03-quarter-' + q));
-            });
-        }
-
-        function boot() {
-            renderAll(
-                parseData('ft-op-03-chart-finance'),
-                parseData('ft-op-03-chart-clients'),
-                {
-                    1: parseData('ft-op-03-quarter-1'),
-                    2: parseData('ft-op-03-quarter-2'),
-                    3: parseData('ft-op-03-quarter-3'),
-                    4: parseData('ft-op-03-quarter-4'),
-                }
-            );
-        }
-
-        window.addEventListener('ft-op-03-charts-refresh', function (event) {
-            const detail = event.detail || {};
-            renderAll(detail.finance || {}, detail.clients || {}, detail.quarters || {});
-        });
-
-        window.addEventListener('resize', function () {
-            Object.values(window.__ftop03ChartInstances).forEach(function (chart) {
-                if (chart && !chart.isDisposed()) {
-                    chart.resize();
-                }
-            });
-        });
-
-        document.addEventListener('livewire:initialized', boot);
-        document.addEventListener('livewire:navigated', boot);
-        window.setTimeout(boot, 80);
-    })();
-</script>
-@endscript

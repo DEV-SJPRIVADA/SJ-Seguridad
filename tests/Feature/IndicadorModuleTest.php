@@ -83,7 +83,7 @@ class IndicadorModuleTest extends TestCase
         $this->actingAs($user)
             ->get(route('indicadores.admin.mother.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
             ->assertOk()
-            ->assertSee('MADRE — FT-OP-01');
+            ->assertSee('Consolidado — FT-OP-01');
     }
 
     public function test_operations_manage_user_can_create_document(): void

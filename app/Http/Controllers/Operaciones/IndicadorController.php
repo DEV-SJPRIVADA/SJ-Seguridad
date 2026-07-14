@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Operaciones;
 
+use App\Http\Requests\Operaciones\StoreIndicatorCaptureRequest;
 use App\Http\Requests\Operaciones\StoreIndicatorSystemDocumentRequest;
 use App\Http\Requests\Operaciones\StoreIndicatorSystemDocumentVersionRequest;
 use App\Http\Requests\Operaciones\UpdateIndicatorSystemDocumentRequest;
@@ -15,6 +16,7 @@ use App\Models\IndicatorSystemDocument;
 use App\Models\OperationsLeader;
 use App\Models\Period;
 use App\Services\Indicadores\DocumentationService;
+use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorReportExporter;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
@@ -39,6 +41,7 @@ class IndicadorController extends Controller
         private readonly YearRangeService $yearRangeService,
         private readonly DocumentationService $documentationService,
         private readonly IndicatorReportExporter $reportExporter,
+        private readonly IndicatorCaptureService $captureService,
     ) {
     }
 
@@ -81,37 +84,57 @@ class IndicadorController extends Controller
     {
         abort_unless($indicator->is_active, 404);
 
-        $months = config('indicators.months');
-        $years = $this->yearRangeService->years();
-        $leaders = OperationsLeader::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']);
-
         $selectedYear = $this->yearRangeService->normalize((int) $request->integer('year', (int) now()->year));
         $selectedMonth = $this->normalizeMonth((int) $request->integer('month', (int) now()->month));
+        $selectedLeaderId = (int) $request->integer('operations_leader_id', 0);
 
-        $leaderIds = $leaders->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $selectedLeaderId = (int) $request->integer('operations_leader_id', (int) ($leaderIds[0] ?? 0));
-        if (! in_array($selectedLeaderId, $leaderIds, true)) {
-            $selectedLeaderId = (int) ($leaderIds[0] ?? 0);
-        }
+        $capture = $this->captureService->buildShowContext(
+            indicator: $indicator,
+            year: $selectedYear,
+            month: $selectedMonth,
+            operationsLeaderId: $selectedLeaderId > 0 ? $selectedLeaderId : null,
+        );
 
-        $period = Period::query()
-            ->where('year', $selectedYear)
-            ->where('month', $selectedMonth)
-            ->first();
-
-        return view('areas.operaciones.indicadores.show', [
+        return view('areas.operaciones.indicadores.show', array_merge($capture, [
             'subTabs' => IndicadorNavigation::subTabs(),
-            'indicator' => $indicator,
             'headerFilters' => [
-                'years' => $years,
-                'months' => $months,
-                'leaders' => $leaders,
-                'selectedYear' => $selectedYear,
-                'selectedMonth' => $selectedMonth,
-                'selectedOperationsLeaderId' => $selectedLeaderId,
-                'isPeriodClosed' => $period?->isClosed() ?? false,
+                'years' => $capture['years'],
+                'months' => $capture['months'],
+                'leaders' => $capture['operationsLeaders'],
+                'selectedYear' => $capture['selectedYear'],
+                'selectedMonth' => $capture['selectedMonth'],
+                'selectedOperationsLeaderId' => (int) ($capture['selectedOperationsLeaderId'] ?? 0),
+                'isPeriodClosed' => $capture['isPeriodClosed'],
             ],
-        ]);
+        ]));
+    }
+
+    public function storeCapture(StoreIndicatorCaptureRequest $request, Indicator $indicator): RedirectResponse
+    {
+        abort_unless($indicator->is_active, 404);
+
+        $year = $this->yearRangeService->normalize((int) $request->integer('year'));
+        $month = $this->normalizeMonth((int) $request->integer('month'));
+        $leaderId = (int) $request->integer('operations_leader_id');
+
+        $this->captureService->save(
+            indicator: $indicator,
+            year: $year,
+            month: $month,
+            operationsLeaderId: $leaderId,
+            form: (array) $request->input('form', []),
+            improvement: $request->improvementPayload(),
+            user: $request->user(),
+        );
+
+        return redirect()
+            ->route('indicadores.show', [
+                'indicator' => $indicator->code,
+                'year' => $year,
+                'month' => $month,
+                'operations_leader_id' => $leaderId,
+            ])
+            ->with('status', 'Captura guardada correctamente para el mes seleccionado.');
     }
 
     public function leadersIndex(): View

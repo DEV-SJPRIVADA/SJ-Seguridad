@@ -73,6 +73,11 @@
     padding: 1rem;
 }
 
+.indicadores-modal-backdrop.is-hidden,
+.indicadores-modal-backdrop[hidden] {
+    display: none !important;
+}
+
 .indicadores-modal {
     width: 100%;
     max-width: 960px;

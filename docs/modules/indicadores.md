@@ -10,6 +10,7 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 |---|---|
 | Dashboard global | `operations.view` o `operations.manage` |
 | Captura | `operations.capture` o `operations.manage` |
+| Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
 | Jefes de operaciones | `operations.view` o `operations.manage` |
 | Admin (periodos, pesos, documentos, MADRE, auditoria) | `operations.manage` |
 | Export PDF dashboard | `operations.export` |
@@ -38,16 +39,16 @@ No hay asignacion por zona/jefe en usuarios: el acceso es solo por permiso.
 
 ## Configuracion
 
-- `config/indicators.php` — anio base, meses, mapa Livewire por codigo
+- `config/indicators.php` — anio base, meses y codigos de captura FT-OP
 - `config/access.php` — board `indicadores`, tabs y permisos `operations.*` (bloque `area_indicador_permissions.operaciones`; asignacion en UI bajo Alcance por Area → Operaciones)
 
 ## UI
 
 Vistas en `resources/views/areas/operaciones/` con layout `<x-app-layout>`, paneles corporativos y subtabs via `App\Support\IndicadorNavigation`.
 
-Formularios Livewire en `app/Livewire/Indicadores/` con estilos complementarios en `public/css/indicadores.css`.
+Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`.
 
-El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequeñas.
+El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
 
 ## Exportaciones
 

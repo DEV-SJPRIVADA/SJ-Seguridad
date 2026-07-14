@@ -1,7 +1,3 @@
-@php
-    $livewireClass = config('indicators.livewire_forms')[$indicator->code] ?? null;
-@endphp
-
 <x-app-layout>
     <x-slot name="header">
         @include('areas.operaciones.partials.subnav', ['subTabs' => $subTabs])
@@ -51,9 +47,24 @@
                         </form>
                     </div>
                 </div>
-                <div class="panel__body indicadores-livewire-wrap">
-                    @if ($livewireClass)
-                        @livewire($livewireClass, ['indicator' => $indicator])
+                <div class="panel__body">
+                    @if ($fieldsView)
+                        <form
+                            method="POST"
+                            action="{{ route('indicadores.capture.store', $indicator) }}"
+                            id="indicadores-capture-form"
+                        >
+                            @csrf
+                            <input type="hidden" name="year" value="{{ $selectedYear }}">
+                            <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                            <input type="hidden" name="operations_leader_id" value="{{ $selectedOperationsLeaderId }}">
+
+                            @if ($indicator->code === 'FT-OP-03')
+                                @include('areas.operaciones.indicadores.capture-form-03')
+                            @else
+                                @include('areas.operaciones.indicadores.capture-form')
+                            @endif
+                        </form>
                     @else
                         <div class="panel-text">Indicador no implementado.</div>
                     @endif
@@ -61,4 +72,9 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+        <script src="{{ asset('js/indicadores-capture.js') }}"></script>
+    @endpush
 </x-app-layout>

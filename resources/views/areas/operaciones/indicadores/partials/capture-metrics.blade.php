@@ -3,22 +3,24 @@
 <div class="dashboard-stat-grid indicadores-metrics-grid">
     <div class="card kpi-card">
         <p class="text-caption">Resultado %</p>
-        <p class="kpi-value">{{ number_format($resultPercentage, 2) }}%</p>
+        <p class="kpi-value"><span data-metric="result">{{ number_format($resultPercentage, 2) }}</span>%</p>
     </div>
     <div class="card kpi-card">
         <p class="text-caption">Semaforo</p>
         <p class="kpi-value">
-            <span class="status-pill {{ $complies ? 'status-pill--req-contratado' : 'status-pill--req-cancelada' }}">{{ $semaforo }}</span>
+            <span class="status-pill {{ $complies ? 'status-pill--req-contratado' : 'status-pill--req-cancelada' }}" data-metric="semaforo-pill">
+                <span data-metric="semaforo">{{ $semaforo }}</span>
+            </span>
         </p>
     </div>
     <div class="card kpi-card">
         <p class="text-caption">Cumple</p>
-        <p class="kpi-value">{{ $complies ? 'SI' : 'NO' }}</p>
+        <p class="kpi-value"><span data-metric="complies">{{ $complies ? 'SI' : 'NO' }}</span></p>
     </div>
     <div class="card kpi-card">
         <p class="text-caption">Mejora</p>
         <p class="kpi-value">
-            <button type="button" wire:click="openImprovementModal" class="btn btn--secondary btn--sm" @disabled($isPeriodClosed)>
+            <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
                 {{ $improvementId ? 'SI' : 'NO' }}
             </button>
         </p>

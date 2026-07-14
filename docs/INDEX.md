@@ -31,8 +31,8 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 ## Stack documentado
 
 - `Laravel 13` + `PHP 8.3` (minimo requerido)
-- Desarrollo local: `Laragon 8.6+`, `MySQL 8`, `Node.js` + Vite
-- Produccion: ver checklist en [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md) y [`PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
+- Desarrollo local: `Laragon 8.6+`, `MySQL 8`, `Node.js` + Vite, `Alpine.js` (layout) + JS vanilla por modulo
+- Captura de Indicadores: Controllers + Blade + `public/js/indicadores-capture.js` (sin Livewire)
 
 ## Regla de mantenimiento
 
