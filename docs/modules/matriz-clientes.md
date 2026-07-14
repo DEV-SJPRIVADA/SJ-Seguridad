@@ -7,7 +7,8 @@ Digitalizar la matriz comercial MT-CO-01: maestro de **clientes** (NIT) con mult
 ## Alcance V1
 
 - Area exclusiva: `comercial`
-- Board: `matriz_clientes`
+- Board: `matriz_clientes` (etiqueta de navegacion: **Clientes**)
+- Listado principal: NIT, cliente, ciudad, **portafolio(s)**, tipos de servicio, **inicio/fin contrato** (rango sobre servicios activos: inicio mas antiguo y fin mas reciente), conteos
 - Modelo:
   - `commercial_clients` (NIT unico, datos maestros)
   - `commercial_services` (1:N, portafolio, contrato, checklist, vigencia, contacto operativo)

@@ -88,7 +88,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `suministros`
 - `documentos`
 - `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
-- `matriz_clientes` (solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.matriz_clientes`)
+- `matriz_clientes` (etiqueta UI: **Clientes**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.matriz_clientes`)
 
 Esto produce permisos como:
 

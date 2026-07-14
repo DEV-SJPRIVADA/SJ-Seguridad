@@ -179,7 +179,7 @@ class UserController extends Controller
 
                 if ($key === 'comercial') {
                     $options->push([
-                        'label' => 'Tablero Matriz de clientes',
+                        'label' => 'Tablero Clientes',
                         'name' => 'view.board.comercial.matriz_clientes',
                     ]);
 

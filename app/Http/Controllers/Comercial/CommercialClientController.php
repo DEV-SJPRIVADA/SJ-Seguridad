@@ -27,7 +27,14 @@ class CommercialClientController extends Controller
             ])
             ->with([
                 'services' => fn ($query) => $query
-                    ->select(['id', 'commercial_client_id', 'commercial_service_type_id', 'portfolio'])
+                    ->select([
+                        'id',
+                        'commercial_client_id',
+                        'commercial_service_type_id',
+                        'portfolio',
+                        'contract_start',
+                        'contract_end',
+                    ])
                     ->with('serviceType:id,name'),
             ])
             ->when($q !== '', function ($query) use ($q): void {
@@ -43,6 +50,10 @@ class CommercialClientController extends Controller
             ->withQueryString();
 
         $clients->getCollection()->transform(function (CommercialClient $client): CommercialClient {
+            $activeServices = $client->services
+                ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS);
+            $servicesForDates = $activeServices->isNotEmpty() ? $activeServices : $client->services;
+
             $client->setAttribute(
                 'service_type_labels',
                 $client->services
@@ -52,6 +63,27 @@ class CommercialClientController extends Controller
                     ->sort()
                     ->values()
                     ->all()
+            );
+
+            $portfolioLabels = CommercialService::portfolios();
+            $client->setAttribute(
+                'portfolio_labels',
+                $client->services
+                    ->pluck('portfolio')
+                    ->filter()
+                    ->unique()
+                    ->map(fn (string $portfolio) => $portfolioLabels[$portfolio] ?? $portfolio)
+                    ->sort()
+                    ->values()
+                    ->all()
+            );
+            $client->setAttribute(
+                'contract_start_display',
+                optional($servicesForDates->pluck('contract_start')->filter()->sort()->first())->format('Y-m-d')
+            );
+            $client->setAttribute(
+                'contract_end_display',
+                optional($servicesForDates->pluck('contract_end')->filter()->sort()->last())->format('Y-m-d')
             );
 
             return $client;

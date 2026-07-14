@@ -56,7 +56,7 @@ return [
         'suministros' => 'Suministros',
         'documentos' => 'Documentos',
         'indicadores' => 'Indicadores',
-        'matriz_clientes' => 'Matriz de clientes',
+        'matriz_clientes' => 'Clientes',
     ],
 
     'indicador_tabs' => [

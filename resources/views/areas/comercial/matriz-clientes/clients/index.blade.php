@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
-            <h2 class="panel-title" style="margin:0;">Matriz de clientes (MT-CO-01)</h2>
-            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — clientes y servicios por portafolio</p>
+            <h2 class="panel-title" style="margin:0;">Clientes</h2>
+            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — MT-CO-01 · clientes y servicios por portafolio</p>
         </div>
     </x-slot>
 
@@ -15,7 +15,7 @@
             <div class="panel">
                 <div class="panel__header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
                     <div>
-                        <h3 class="panel-title">Clientes</h3>
+                        <h3 class="panel-title">Listado de clientes</h3>
                         <p class="panel-text">Busque por NIT, nombre o ciudad. Cada cliente puede tener varios servicios.</p>
                     </div>
                     @if ($canManage)
@@ -37,7 +37,10 @@
                                     <th>NIT</th>
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
+                                    <th>Portafolio</th>
                                     <th>Tipos de servicio</th>
+                                    <th>Inicio contrato</th>
+                                    <th>Fin contrato</th>
                                     <th>Servicios</th>
                                     <th>Activos</th>
                                     <th>Acciones</th>
@@ -50,6 +53,17 @@
                                         <td>{{ $client->name }}</td>
                                         <td>{{ $client->city ?: '—' }}</td>
                                         <td>
+                                            @if (! empty($client->portfolio_labels))
+                                                <div style="display:flex; flex-wrap:wrap; gap:0.35rem; justify-content:center;">
+                                                    @foreach ($client->portfolio_labels as $portfolioLabel)
+                                                        <span class="status-pill status-pill--muted">{{ $portfolioLabel }}</span>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td>
                                             @if (! empty($client->service_type_labels))
                                                 <div style="display:flex; flex-wrap:wrap; gap:0.35rem; justify-content:center;">
                                                     @foreach ($client->service_type_labels as $typeLabel)
@@ -60,6 +74,8 @@
                                                 —
                                             @endif
                                         </td>
+                                        <td>{{ $client->contract_start_display ?: '—' }}</td>
+                                        <td>{{ $client->contract_end_display ?: '—' }}</td>
                                         <td>{{ $client->services_count }}</td>
                                         <td>{{ $client->active_services_count }}</td>
                                         <td class="table-actions">
@@ -68,7 +84,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7">No hay clientes registrados.</td>
+                                        <td colspan="10">No hay clientes registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
