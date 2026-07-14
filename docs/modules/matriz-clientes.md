@@ -2,8 +2,9 @@
 
 ## Objetivo
 
-Digitalizar la matriz comercial MT-CO-01 con dos tableros independientes:
+Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 
+- **Dashboard**: indicadores interactivos de clientes/servicios
 - **Clientes**: maestro por NIT
 - **Servicios**: contratos/portafolios vinculados a un cliente (seleccion obligatorio al crear)
 
@@ -11,10 +12,12 @@ Digitalizar la matriz comercial MT-CO-01 con dos tableros independientes:
 
 - Area exclusiva: `comercial`
 - Boards:
+  - `dashboard` (etiqueta: **Dashboard**) — redirige a `comercial/dashboard`
   - `matriz_clientes` (etiqueta: **Clientes**)
   - `servicios_comerciales` (etiqueta: **Servicios**)
+- Dashboard: filtros portafolio/ciudad (stock); año/mes para **clientes nuevos** (`created_at`) y tendencia de altas (`contract_start`); KPIs (total clientes, clientes nuevos, activos, por vencer ≤30, vencidos, inactivos) y Chart.js
 - Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, inicio/fin contrato, conteos
-- Listado servicios: cliente, NIT, portafolio, contrato, tipo, asesor, vigencia, acciones
+- Listado servicios: cliente, NIT, portafolio, contrato, tipo, asesor, vigencia, acciones; filtros `vigencia=expiring|expired`
 - Modelo:
   - `commercial_clients` (NIT unico, datos maestros)
   - `commercial_services` (N:1 con cliente; portafolio, contrato, checklist, vigencia, contacto operativo)
@@ -54,6 +57,10 @@ Por defecto lee [`docs/MT-CO-01 Matriz de clientes.xlsx`](../MT-CO-01%20Matriz%2
 
 `routes/areas/comercial.php`:
 
+### Dashboard
+
+- `GET /comercial/dashboard` (`comercial.dashboard`) — KPIs y graficos; el board Dashboard de Comercial redirige aqui
+
 ### Clientes — prefijo `comercial/clientes`
 
 - `GET /` listado
@@ -75,15 +82,16 @@ Desde la ficha del cliente, “Agregar servicio” abre el alta de servicios con
 
 ## Permisos
 
-- `comercial.matriz.view` — ver clientes y servicios
+- `comercial.matriz.view` — ver clientes, servicios y dashboard
 - `comercial.matriz.manage` — crear/editar cliente y servicios, inactivar
+- `view.board.comercial.dashboard` / `view.area.comercial` — tambien habilitan el dashboard
 - `view.board.comercial.matriz_clientes` — habilita tablero Clientes
 - `view.board.comercial.servicios_comerciales` — habilita tablero Servicios
 - Quien tenga `comercial.matriz.*` o el board de clientes tambien ve Servicios en nav
 - Assignables en Admin usuarios → Alcance Comercial
 - `manage.users` puede administrar (bypass)
 
-Ambos boards solo aparecen en el area Comercial.
+Los boards de matriz y el dashboard KPI solo aplican al area Comercial.
 
 ## Relacion con otros modulos
 

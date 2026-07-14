@@ -1,8 +1,13 @@
 <?php
 
 use App\Http\Controllers\Comercial\CommercialClientController;
+use App\Http\Controllers\Comercial\CommercialDashboardController;
 use App\Http\Controllers\Comercial\CommercialServiceController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware(['password.changed'])->group(function (): void {
+    Route::get('comercial/dashboard', CommercialDashboardController::class)->name('comercial.dashboard');
+});
 
 Route::middleware(['password.changed'])
     ->prefix('comercial/clientes')

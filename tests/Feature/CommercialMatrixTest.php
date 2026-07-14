@@ -36,6 +36,10 @@ class CommercialMatrixTest extends TestCase
         $this->actingAs($user)
             ->get(route('comercial.matriz.services.index'))
             ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('comercial.dashboard'))
+            ->assertForbidden();
     }
 
     public function test_viewer_can_list_clients_and_services_but_cannot_create(): void
@@ -186,6 +190,92 @@ class CommercialMatrixTest extends TestCase
             'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
         ]);
         $this->assertSame(1, $client->fresh()->activeServices()->count());
+    }
+
+    public function test_dashboard_shows_client_indicators(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111222',
+            'name' => 'Cliente KPI',
+            'city' => 'CALI',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-KPI-1',
+            'contract_start' => now()->startOfYear()->addMonth(),
+            'contract_end' => now()->addDays(10),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+        $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
+            'contract_number' => 'SJ-KPI-2',
+            'contract_start' => now()->startOfYear()->addMonths(2),
+            'contract_end' => now()->subDays(5),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+        $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_INACTIVOS,
+            'contract_number' => 'SJ-KPI-3',
+            'contract_start' => now()->startOfYear(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.dashboard', ['year' => now()->year]))
+            ->assertOk()
+            ->assertSee('Dashboard Comercial')
+            ->assertSee('Total clientes')
+            ->assertSee('Clientes nuevos')
+            ->assertSee('Por vencer')
+            ->assertViewHas('stats', function (array $stats): bool {
+                return $stats['total_clients'] === 1
+                    && $stats['new_clients'] === 1
+                    && $stats['active_services'] === 2
+                    && $stats['expiring_soon'] === 1
+                    && $stats['expired'] === 1
+                    && $stats['inactive_services'] === 1;
+            });
+
+        $this->actingAs($user)
+            ->get(route('comercial.dashboard', [
+                'year' => now()->year,
+                'month' => (int) now()->format('n'),
+            ]))
+            ->assertOk()
+            ->assertViewHas('stats', function (array $stats): bool {
+                // Año/mes no deben vaciar el stock de servicios activos.
+                return $stats['active_services'] === 2
+                    && $stats['total_clients'] === 1
+                    && $stats['new_clients'] === 1;
+            });
+
+        $this->actingAs($user)
+            ->get(route('comercial.dashboard', [
+                'year' => now()->year,
+                'month' => now()->month === 1 ? 2 : 1,
+            ]))
+            ->assertOk()
+            ->assertViewHas('stats', function (array $stats): bool {
+                return $stats['active_services'] === 2
+                    && $stats['new_clients'] === 0;
+            });
+
+        $this->actingAs($user)
+            ->get(route('dashboard', ['module' => 'comercial', 'board' => 'dashboard']))
+            ->assertRedirect(route('comercial.dashboard'));
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index', ['vigencia' => 'expired']))
+            ->assertOk()
+            ->assertSee('SJ-KPI-2')
+            ->assertDontSee('SJ-KPI-1');
     }
 
     private function matrizManager(): User

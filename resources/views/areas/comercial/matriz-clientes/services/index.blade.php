@@ -32,6 +32,11 @@
                                 <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <select name="vigencia" class="form-select permission-filter-bar__select">
+                            <option value="">Toda vigencia</option>
+                            <option value="expiring" @selected(($filters['vigencia'] ?? '') === 'expiring')>Por vencer ≤30 dias</option>
+                            <option value="expired" @selected(($filters['vigencia'] ?? '') === 'expired')>Vencidos</option>
+                        </select>
                         <button type="submit" class="btn btn--secondary">Filtrar</button>
                     </form>
 

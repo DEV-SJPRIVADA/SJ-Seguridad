@@ -110,6 +110,10 @@ Route::get('/dashboard', function () {
         return redirect(auth()->user()->defaultIndicadorBoardUrl());
     }
 
+    if ($selectedModuleKey === 'comercial' && $selectedBoardKey === 'dashboard') {
+        return redirect()->route('comercial.dashboard');
+    }
+
     if ($selectedModule && $selectedBoardKey === 'matriz_clientes') {
         return redirect()->route('comercial.matriz.clients.index');
     }
