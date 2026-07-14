@@ -1,17 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem; display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
-            <div>
-                <h2 class="panel-title" style="margin:0;">{{ $client->name }}</h2>
-                <p class="panel-text" style="margin:0.25rem 0 0;">NIT {{ $client->nit }} · {{ $client->city ?: 'Sin ciudad' }}</p>
-            </div>
-            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Listado</a>
-                @if ($canManage)
-                    <a href="{{ route('comercial.matriz.clients.edit', $client) }}" class="btn btn--secondary btn--sm">Editar cliente</a>
-                    <a href="{{ route('comercial.matriz.services.create', ['client' => $client->id]) }}" class="btn btn--primary btn--sm">Agregar servicio</a>
-                @endif
-            </div>
+        <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
+            <h2 class="panel-title" style="margin:0;">Servicios</h2>
+            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — contratos y portafolios vinculados a clientes</p>
         </div>
     </x-slot>
 
@@ -21,25 +12,20 @@
                 <div class="alert alert--success bottom-spaced">{{ session('status') }}</div>
             @endif
 
-            <div class="panel bottom-spaced">
-                <div class="panel__header">
-                    <h3 class="panel-title">Datos del cliente</h3>
-                </div>
-                <div class="panel__body" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
-                    <div><strong>Telefono</strong><br>{{ $client->phone ?: '—' }}</div>
-                    <div><strong>Direccion</strong><br>{{ $client->address ?: '—' }}</div>
-                    <div><strong>R. Legal</strong><br>{{ $client->legal_rep_name ?: '—' }}</div>
-                    <div><strong>Doc. RL</strong><br>{{ $client->legal_rep_doc ?: '—' }}</div>
-                </div>
-            </div>
-
             <div class="panel">
-                <div class="panel__header">
-                    <h3 class="panel-title">Servicios / contratos</h3>
-                    <p class="panel-text">Un cliente puede tener lineas en distintos portafolios.</p>
+                <div class="panel__header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                    <div>
+                        <h3 class="panel-title">Listado de servicios</h3>
+                        <p class="panel-text">Cada servicio pertenece a un cliente. Filtre por contrato, asesor, NIT o portafolio.</p>
+                    </div>
+                    @if ($canManage)
+                        <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary">Nuevo servicio</a>
+                    @endif
                 </div>
+
                 <div class="panel__body">
                     <form method="GET" class="permission-filter-bar bottom-spaced">
+                        <input type="search" name="q" class="form-input permission-filter-bar__search" value="{{ $filters['q'] }}" placeholder="Cliente, NIT, contrato o asesor">
                         <select name="portfolio" class="form-select permission-filter-bar__select">
                             <option value="">Todos los portafolios</option>
                             @foreach ($portfolios as $key => $label)
@@ -53,6 +39,8 @@
                         <table class="data-table js-datatable" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th>Cliente</th>
+                                    <th>NIT</th>
                                     <th>Portafolio</th>
                                     <th>Contrato</th>
                                     <th>Tipo</th>
@@ -66,6 +54,14 @@
                             <tbody>
                                 @forelse ($services as $service)
                                     <tr>
+                                        <td>
+                                            @if ($service->client)
+                                                <a href="{{ route('comercial.matriz.clients.show', $service->client) }}">{{ $service->client->name }}</a>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td>{{ $service->client?->nit ?: '—' }}</td>
                                         <td>{{ $portfolios[$service->portfolio] ?? $service->portfolio }}</td>
                                         <td>{{ $service->contract_number ?: '—' }}</td>
                                         <td>{{ $service->serviceType?->name ?: '—' }}</td>
@@ -97,11 +93,15 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8">Sin servicios{{ $filters['portfolio'] ? ' en este portafolio' : '' }}.</td>
+                                        <td colspan="10">No hay servicios registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="pagination-wrap top-spaced">
+                        {{ $services->links() }}
                     </div>
                 </div>
             </div>

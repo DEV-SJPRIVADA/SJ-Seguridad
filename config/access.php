@@ -29,8 +29,8 @@ return [
             'operations.export' => 'Indicadores: Exportar PDF y Excel',
         ],
         'comercial' => [
-            'comercial.matriz.view' => 'Matriz clientes: Ver',
-            'comercial.matriz.manage' => 'Matriz clientes: Administrar',
+            'comercial.matriz.view' => 'Matriz comercial: Ver clientes y servicios',
+            'comercial.matriz.manage' => 'Matriz comercial: Administrar clientes y servicios',
         ],
     ],
 
@@ -57,6 +57,7 @@ return [
         'documentos' => 'Documentos',
         'indicadores' => 'Indicadores',
         'matriz_clientes' => 'Clientes',
+        'servicios_comerciales' => 'Servicios',
     ],
 
     'indicador_tabs' => [

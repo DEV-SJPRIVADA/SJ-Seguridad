@@ -32,9 +32,13 @@ class CommercialMatrixTest extends TestCase
         $this->actingAs($user)
             ->get(route('comercial.matriz.clients.index'))
             ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index'))
+            ->assertForbidden();
     }
 
-    public function test_viewer_can_list_clients_but_cannot_create(): void
+    public function test_viewer_can_list_clients_and_services_but_cannot_create(): void
     {
         $user = User::factory()->create([
             'must_change_password' => false,
@@ -48,11 +52,19 @@ class CommercialMatrixTest extends TestCase
             ->assertOk();
 
         $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index'))
+            ->assertOk();
+
+        $this->actingAs($user)
             ->get(route('comercial.matriz.clients.create'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.create'))
             ->assertForbidden();
     }
 
-    public function test_manager_can_create_client_with_services_in_different_portfolios(): void
+    public function test_manager_can_create_client_and_independent_services(): void
     {
         $user = $this->matrizManager();
 
@@ -67,18 +79,20 @@ class CommercialMatrixTest extends TestCase
         $this->assertNotNull($client);
         $response->assertRedirect(route('comercial.matriz.clients.show', $client));
 
-        $this->actingAs($user)->post(route('comercial.matriz.services.store', $client), [
+        $this->actingAs($user)->post(route('comercial.matriz.services.store'), [
+            'commercial_client_id' => $client->id,
             'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
             'contract_number' => 'SJ2021-SF133',
             'advisor_name' => 'TATIANA',
             'doc_contract' => CommercialService::DOC_OK,
-        ])->assertRedirect(route('comercial.matriz.clients.show', $client));
+        ])->assertRedirect(route('comercial.matriz.services.index'));
 
-        $this->actingAs($user)->post(route('comercial.matriz.services.store', $client), [
+        $this->actingAs($user)->post(route('comercial.matriz.services.store'), [
+            'commercial_client_id' => $client->id,
             'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
             'contract_number' => 'SJ2023-MT048',
             'advisor_name' => 'ANDREA',
-        ])->assertRedirect(route('comercial.matriz.clients.show', $client));
+        ])->assertRedirect(route('comercial.matriz.services.index'));
 
         $this->assertSame(2, $client->services()->count());
         $this->assertDatabaseHas('commercial_services', [
@@ -91,6 +105,49 @@ class CommercialMatrixTest extends TestCase
             'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
             'contract_number' => 'SJ2023-MT048',
         ]);
+    }
+
+    public function test_client_search_returns_matches_by_name_and_nit(): void
+    {
+        $user = $this->matrizManager();
+
+        $client = CommercialClient::query()->create([
+            'nit' => '901360444-1',
+            'name' => 'MADEMAX SAS',
+            'city' => 'YUMBO',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialClient::query()->create([
+            'nit' => '800040390',
+            'name' => 'OTRO CLIENTE',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson(route('comercial.matriz.clients.search', ['q' => 'made']))
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $client->id)
+            ->assertJsonCount(1, 'data');
+
+        $this->actingAs($user)
+            ->getJson(route('comercial.matriz.clients.search', ['q' => '901360']))
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $client->id);
+    }
+
+    public function test_service_store_requires_client(): void
+    {
+        $user = $this->matrizManager();
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.store'), [
+                'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+                'contract_number' => 'SJ-NO-CLIENT',
+            ])
+            ->assertSessionHasErrors(['commercial_client_id']);
     }
 
     public function test_inactivating_service_keeps_other_services(): void
@@ -117,8 +174,8 @@ class CommercialMatrixTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('comercial.matriz.services.inactivate', [$client, $active]))
-            ->assertRedirect(route('comercial.matriz.clients.show', $client));
+            ->post(route('comercial.matriz.services.inactivate', $active))
+            ->assertRedirect(route('comercial.matriz.services.index'));
 
         $this->assertDatabaseHas('commercial_services', [
             'id' => $active->id,

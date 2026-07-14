@@ -1,8 +1,54 @@
 @php
     /** @var \App\Models\CommercialService $service */
+    /** @var \App\Models\CommercialClient|null $selectedClient */
+    $selectedClient = $selectedClient ?? null;
 @endphp
 
 <div class="form-stack">
+    <h4 class="panel-title" style="font-size:1rem;">Cliente</h4>
+    <div
+        class="form-field js-client-picker"
+        data-search-url="{{ $clientSearchUrl }}"
+    >
+        <x-input-label for="client_search" value="Buscar cliente" />
+        <p class="panel-text" style="margin:0 0 0.5rem;">Escriba nombre o NIT (min. 2 caracteres) y seleccione el resultado.</p>
+
+        <div class="js-client-picker-search" style="{{ $selectedClient ? 'display:none;' : '' }}">
+            <x-text-input
+                id="client_search"
+                type="search"
+                class="form-input"
+                autocomplete="off"
+                placeholder="Ej. MADEMAX o 901360444"
+            />
+            <div class="client-picker-results js-client-picker-results" hidden role="listbox" aria-label="Resultados de clientes"></div>
+            <p class="panel-text js-client-picker-hint" style="margin:0.5rem 0 0;" hidden></p>
+        </div>
+
+        <div class="client-picker-selected js-client-picker-selected" style="{{ $selectedClient ? '' : 'display:none;' }}">
+            <div class="client-picker-selected__card">
+                <div>
+                    <strong class="js-client-picker-name">{{ $selectedClient?->name }}</strong>
+                    <div class="panel-text" style="margin:0.15rem 0 0;">
+                        NIT <span class="js-client-picker-nit">{{ $selectedClient?->nit }}</span>
+                        <span class="js-client-picker-city">{{ $selectedClient?->city ? ' · '.$selectedClient->city : '' }}</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn--secondary btn--sm js-client-picker-clear">Cambiar</button>
+            </div>
+        </div>
+
+        <input
+            type="hidden"
+            id="commercial_client_id"
+            name="commercial_client_id"
+            class="js-client-picker-id"
+            value="{{ old('commercial_client_id', $service->commercial_client_id) }}"
+            required
+        >
+        <x-input-error :messages="$errors->get('commercial_client_id')" />
+    </div>
+
     <h4 class="panel-title" style="font-size:1rem;">Servicio / contrato</h4>
     <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
         <div class="form-field">

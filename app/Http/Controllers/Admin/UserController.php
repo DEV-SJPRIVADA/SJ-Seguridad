@@ -182,6 +182,10 @@ class UserController extends Controller
                         'label' => 'Tablero Clientes',
                         'name' => 'view.board.comercial.matriz_clientes',
                     ]);
+                    $options->push([
+                        'label' => 'Tablero Servicios',
+                        'name' => 'view.board.comercial.servicios_comerciales',
+                    ]);
 
                     foreach ($comercialMatrizPermissions as $name => $matrizLabel) {
                         $options->push([

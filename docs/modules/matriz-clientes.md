@@ -1,21 +1,27 @@
-# Modulo Matriz de clientes (MT-CO-01)
+# Modulo Matriz comercial (MT-CO-01)
 
 ## Objetivo
 
-Digitalizar la matriz comercial MT-CO-01: maestro de **clientes** (NIT) con multiples **servicios/contratos** que pueden pertenecer a distintos portafolios.
+Digitalizar la matriz comercial MT-CO-01 con dos tableros independientes:
+
+- **Clientes**: maestro por NIT
+- **Servicios**: contratos/portafolios vinculados a un cliente (seleccion obligatorio al crear)
 
 ## Alcance V1
 
 - Area exclusiva: `comercial`
-- Board: `matriz_clientes` (etiqueta de navegacion: **Clientes**)
-- Listado principal: NIT, cliente, ciudad, **portafolio(s)**, tipos de servicio, **inicio/fin contrato** (rango sobre servicios activos: inicio mas antiguo y fin mas reciente), conteos
+- Boards:
+  - `matriz_clientes` (etiqueta: **Clientes**)
+  - `servicios_comerciales` (etiqueta: **Servicios**)
+- Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, inicio/fin contrato, conteos
+- Listado servicios: cliente, NIT, portafolio, contrato, tipo, asesor, vigencia, acciones
 - Modelo:
   - `commercial_clients` (NIT unico, datos maestros)
-  - `commercial_services` (1:N, portafolio, contrato, checklist, vigencia, contacto operativo)
+  - `commercial_services` (N:1 con cliente; portafolio, contrato, checklist, vigencia, contacto operativo)
 - Portafolios: `seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`
 - Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`
 - Checklist documental por servicio (estados, sin adjuntos)
-- Badge de vencimiento (30/60 dias) en ficha cliente
+- Badge de vencimiento (30/60 dias)
 
 ## Fuera de V1
 
@@ -46,25 +52,38 @@ Por defecto lee [`docs/MT-CO-01 Matriz de clientes.xlsx`](../MT-CO-01%20Matriz%2
 
 ## Rutas
 
-Prefijo `comercial/matriz-clientes` (`routes/areas/comercial.php`):
+`routes/areas/comercial.php`:
 
-- `GET /` listado clientes
-- `GET|POST /crear` alta cliente
-- `GET /{client}` ficha + servicios
+### Clientes — prefijo `comercial/clientes`
+
+- `GET /` listado
+- `GET|POST /crear` alta
+- `GET /{client}` ficha (servicios relacionados, solo lectura/enlaces)
 - `GET|PATCH /{client}/editar`
-- `GET|POST /{client}/servicios/crear`
-- `GET|PATCH /{client}/servicios/{service}/editar`
-- `POST /{client}/servicios/{service}/inactivar`
+
+### Servicios — prefijo `comercial/servicios`
+
+- `GET /` listado independiente
+- `GET|POST /crear` alta con **busqueda de cliente** por nombre/NIT (`commercial_client_id`)
+- Endpoint auxiliar: `GET /comercial/clientes/buscar?q=` (JSON)
+- `GET|PATCH /{service}/editar` (puede reasignar cliente)
+- `POST /{service}/inactivar`
+
+Nombres de ruta: `comercial.matriz.clients.*` y `comercial.matriz.services.*`.
+
+Desde la ficha del cliente, “Agregar servicio” abre el alta de servicios con el cliente preseleccionado (`?client={id}`).
 
 ## Permisos
 
-- `comercial.matriz.view` — ver listado y fichas
+- `comercial.matriz.view` — ver clientes y servicios
 - `comercial.matriz.manage` — crear/editar cliente y servicios, inactivar
-- `view.board.comercial.matriz_clientes` — tambien habilita el board en nav
+- `view.board.comercial.matriz_clientes` — habilita tablero Clientes
+- `view.board.comercial.servicios_comerciales` — habilita tablero Servicios
+- Quien tenga `comercial.matriz.*` o el board de clientes tambien ve Servicios en nav
 - Assignables en Admin usuarios → Alcance Comercial
 - `manage.users` puede administrar (bypass)
 
-El board solo aparece en el area Comercial (mismo patron que Indicadores en Operaciones).
+Ambos boards solo aparecen en el area Comercial.
 
 ## Relacion con otros modulos
 

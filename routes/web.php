@@ -114,6 +114,10 @@ Route::get('/dashboard', function () {
         return redirect()->route('comercial.matriz.clients.index');
     }
 
+    if ($selectedModule && $selectedBoardKey === 'servicios_comerciales') {
+        return redirect()->route('comercial.matriz.services.index');
+    }
+
     return view('dashboard', [
         'areas' => $areas,
         'selectedBoard' => $selectedBoard,

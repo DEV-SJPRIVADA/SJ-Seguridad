@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
             <h2 class="panel-title" style="margin:0;">Clientes</h2>
-            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — MT-CO-01 · clientes y servicios por portafolio</p>
+            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — maestro de clientes (NIT)</p>
         </div>
     </x-slot>
 

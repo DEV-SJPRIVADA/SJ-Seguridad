@@ -8,6 +8,7 @@ use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -93,6 +94,42 @@ class CommercialClientController extends Controller
             'clients' => $clients,
             'filters' => ['q' => $q, 'city' => $city],
             'canManage' => $this->canManage(),
+        ]);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $digits = preg_replace('/\D+/', '', $q) ?: '';
+
+        $clients = CommercialClient::query()
+            ->where(function ($query) use ($q, $digits): void {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('nit', 'like', "%{$q}%");
+
+                if ($digits !== '' && $digits !== $q) {
+                    $query->orWhere('nit', 'like', "%{$digits}%");
+                }
+            })
+            ->orderBy('name')
+            ->limit(15)
+            ->get(['id', 'nit', 'name', 'city']);
+
+        return response()->json([
+            'data' => $clients->map(fn (CommercialClient $client) => [
+                'id' => $client->id,
+                'nit' => $client->nit,
+                'name' => $client->name,
+                'city' => $client->city,
+                'label' => "{$client->name} ({$client->nit})",
+            ])->values(),
         ]);
     }
 

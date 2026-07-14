@@ -26,6 +26,7 @@ class StoreCommercialServiceRequest extends FormRequest
         $docValues = array_keys(CommercialService::documentStatuses());
 
         $rules = [
+            'commercial_client_id' => ['required', 'integer', Rule::exists('commercial_clients', 'id')],
             'portfolio' => ['required', 'string', Rule::in(array_keys(CommercialService::portfolios()))],
             'contract_number' => ['nullable', 'string', 'max:80'],
             'advisor_name' => ['nullable', 'string', 'max:120'],
