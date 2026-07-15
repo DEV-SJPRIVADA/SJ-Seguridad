@@ -40,8 +40,29 @@
         }
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 280px;
+            max-height: 280px;
             width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .chart-container canvas {
+            max-width: 100% !important;
+            max-height: 100% !important;
+        }
+        .dashboard-scroll-area {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        .dashboard-scroll-area .form-panels {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+            max-width: 100%;
+        }
+        .dashboard-scroll-area .form-panels > .panel {
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
         }
         .kpi-card {
             padding: 0.75rem 1rem !important;
@@ -49,6 +70,7 @@
             text-decoration: none;
             color: inherit;
             display: block;
+            min-width: 0;
         }
         .kpi-card .text-caption {
             font-size: 0.7rem !important;
@@ -69,13 +91,55 @@
         .kpi-card .text-small {
             font-size: 0.65rem !important;
         }
-        .dashboard-stat-grid {
+        .dashboard-stat-grid.dashboard-stat-grid--comercial-kpis {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
             margin-bottom: 1rem !important;
-            gap: 0.75rem !important;
+            width: 100%;
         }
-        @media (max-width: 768px) {
+        .dashboard-stat-grid--comercial-kpis .kpi-card {
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+            padding: clamp(0.45rem, 0.9vw, 0.75rem) clamp(0.4rem, 0.8vw, 0.85rem) !important;
+            height: auto !important;
+        }
+        .dashboard-stat-grid--comercial-kpis .text-caption {
+            font-size: clamp(0.58rem, 0.85vw, 0.72rem) !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dashboard-stat-grid--comercial-kpis .kpi-value {
+            font-size: clamp(1.05rem, 1.7vw, 1.55rem);
+        }
+        .dashboard-stat-grid--comercial-kpis .text-small {
+            font-size: clamp(0.52rem, 0.7vw, 0.65rem) !important;
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        @media (max-width: 900px) {
+            .dashboard-scroll-area .form-panels {
+                grid-template-columns: minmax(0, 1fr) !important;
+            }
+        }
+        /* Solo celular: KPIs en 2 columnas */
+        @media (max-width: 640px) {
+            .dashboard-stat-grid.dashboard-stat-grid--comercial-kpis {
+                flex-wrap: wrap !important;
+            }
+            .dashboard-stat-grid--comercial-kpis .text-caption {
+                white-space: normal;
+            }
+            .dashboard-stat-grid--comercial-kpis .kpi-value {
+                font-size: 1.35rem;
+            }
             .form-panels {
-                grid-template-columns: 1fr !important;
+                grid-template-columns: minmax(0, 1fr) !important;
                 width: 100% !important;
                 gap: 1rem;
                 display: flex !important;
@@ -88,10 +152,8 @@
             }
             .chart-container {
                 height: 220px !important;
+                max-height: 220px !important;
                 width: 100% !important;
-            }
-            .kpi-value {
-                font-size: 1.4rem;
             }
         }
         .app-container {
@@ -149,7 +211,7 @@
                 <p class="panel-text" style="margin:0.65rem 0 0;">Año/mes afectan <strong>clientes nuevos</strong> y la tendencia de altas. Portafolio y ciudad aplican a todos los KPIs de stock.</p>
             </form>
 
-            <div class="dashboard-stat-grid bottom-spaced">
+            <div class="dashboard-stat-grid dashboard-stat-grid--matriz-kpis bottom-spaced">
                 <a href="{{ route('comercial.matriz.clients.index', array_filter(['city' => $filters['city'] ?: null])) }}" class="card kpi-card" style="border-left: 5px solid var(--color-primary);">
                     <p class="text-caption">Total clientes</p>
                     <p class="kpi-value">{{ $stats['total_clients'] }}</p>
@@ -176,7 +238,7 @@
                 </a>
 
                 <a href="{{ route('comercial.matriz.services.index', ['vigencia' => 'expiring']) }}" class="card kpi-card" style="border-left: 5px solid var(--color-warning);">
-                    <p class="text-caption">Por vencer ≤30 dias</p>
+                    <p class="text-caption">Por vencer â‰¤30 dias</p>
                     <p class="kpi-value" style="color: var(--color-warning);">{{ $stats['expiring_soon'] }}</p>
                     <p class="text-small text-muted">Contratos proximos a vencer</p>
                 </a>
@@ -258,6 +320,12 @@
             }
 
             const data = @json($chartData);
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 120,
+                animation: false,
+            };
 
             new Chart(document.getElementById('trendChart'), {
                 type: 'line',
@@ -273,8 +341,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...chartDefaults,
                     plugins: { legend: { display: false } }
                 }
             });
@@ -290,8 +357,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...chartDefaults,
                     plugins: { legend: { position: 'bottom' } }
                 }
             });
@@ -308,9 +374,8 @@
                     }]
                 },
                 options: {
+                    ...chartDefaults,
                     indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } }
                 }
             });
@@ -327,8 +392,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...chartDefaults,
                     plugins: { legend: { display: false } }
                 }
             });
