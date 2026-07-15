@@ -27,33 +27,44 @@ class CommercialDashboardController extends Controller
                 : null,
         ];
 
-        // Stock actual: solo portafolio / ciudad (no fecha de inicio de contrato).
+        $referenceMonth = $filters['month'] ?? (int) now()->month;
+        $referenceDate = Carbon::create($filters['year'], $referenceMonth, 1)->startOfDay();
+        $in30 = $referenceDate->copy()->addDays(30);
+
+        // Clientes activos: con al menos un servicio vigente en la fecha de referencia
+        $activeClients = $this->activeClientsQuery($filters, $referenceDate)->count();
+
+        // Servicios activos: contract_start <= refDate <= contract_end
+        $activeServicesQuery = $this->stockServicesQuery($filters)
+            ->where('contract_start', '<=', $referenceDate)
+            ->where('contract_end', '>=', $referenceDate);
+        $activeServicesCount = $activeServicesQuery->count();
+
         $services = $this->stockServicesQuery($filters)
             ->with(['client:id,name,nit,city', 'serviceType:id,name'])
             ->get();
 
-        $today = now()->startOfDay();
-        $in30 = now()->startOfDay()->addDays(30);
-
-        $activeServices = $services->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS);
         $inactiveServices = $services->where('portfolio', CommercialService::PORTFOLIO_INACTIVOS);
 
-        $expiringSoon = $activeServices->filter(function (CommercialService $service) use ($today, $in30): bool {
-            if (! $service->contract_end instanceof Carbon) {
-                return false;
-            }
+        $expiringSoon = $services
+            ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
+            ->filter(function (CommercialService $service) use ($referenceDate, $in30): bool {
+                if (! $service->contract_end instanceof Carbon) {
+                    return false;
+                }
 
-            return $service->contract_end->gte($today) && $service->contract_end->lte($in30);
-        });
+                return $service->contract_end->gte($referenceDate) && $service->contract_end->lte($in30);
+            });
 
-        $expired = $activeServices->filter(function (CommercialService $service) use ($today): bool {
-            return $service->contract_end instanceof Carbon && $service->contract_end->lt($today);
-        });
+        $expired = $services
+            ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
+            ->filter(function (CommercialService $service) use ($referenceDate): bool {
+                return $service->contract_end instanceof Carbon && $service->contract_end->lt($referenceDate);
+            });
 
-        $totalClients = $this->stockClientsQuery($filters)->count();
         $newClients = $this->newClientsQuery($filters)->count();
 
-        // Tendencia: altas de servicios por mes del año (contract_start), sin filtrar por mes del formulario.
+        // Tendencia: altas de servicios por mes del año (contract_start)
         $trendServices = $this->stockServicesQuery($filters)
             ->when($filters['year'] > 0, fn ($query) => $query->whereYear('contract_start', $filters['year']))
             ->get(['id', 'portfolio', 'contract_start', 'commercial_client_id', 'commercial_service_type_id']);
@@ -92,13 +103,14 @@ class CommercialDashboardController extends Controller
 
         return view('areas.comercial.dashboard', [
             'filters' => $filters,
+            'referenceDate' => $referenceDate,
             'portfolios' => $portfolioLabels,
             'cities' => $cities,
             'yearOptions' => $this->yearOptions(),
             'stats' => [
-                'total_clients' => $totalClients,
+                'active_clients' => $activeClients,
+                'active_services' => $activeServicesCount,
                 'new_clients' => $newClients,
-                'active_services' => $activeServices->count(),
                 'expiring_soon' => $expiringSoon->count(),
                 'expired' => $expired->count(),
                 'inactive_services' => $inactiveServices->count(),
@@ -148,26 +160,38 @@ class CommercialDashboardController extends Controller
     /**
      * @param  array{portfolio: string, city: string, year: int, month: int|null}  $filters
      */
-    private function stockClientsQuery(array $filters): Builder
+    private function activeClientsQuery(array $filters, Carbon $referenceDate): Builder
     {
         return CommercialClient::query()
             ->when($filters['city'] !== '', fn ($query) => $query->where('city', $filters['city']))
-            ->when(
-                $filters['portfolio'] !== '' && array_key_exists($filters['portfolio'], CommercialService::portfolios()),
-                fn ($query) => $query->whereHas('services', fn ($serviceQuery) => $serviceQuery->where('portfolio', $filters['portfolio']))
-            );
+            ->whereHas('services', function (Builder $serviceQuery) use ($filters, $referenceDate): void {
+                $serviceQuery
+                    ->where('contract_start', '<=', $referenceDate)
+                    ->where('contract_end', '>=', $referenceDate);
+
+                if ($filters['portfolio'] !== '' && array_key_exists($filters['portfolio'], CommercialService::portfolios())) {
+                    $serviceQuery->where('portfolio', $filters['portfolio']);
+                }
+            });
     }
 
     /**
-     * Clientes ingresados en el periodo del filtro (año, y mes si aplica).
+     * Clientes nuevos: siempre filtrados por el mes de referencia.
      *
      * @param  array{portfolio: string, city: string, year: int, month: int|null}  $filters
      */
     private function newClientsQuery(array $filters): Builder
     {
-        return $this->stockClientsQuery($filters)
-            ->when($filters['year'] > 0, fn ($query) => $query->whereYear('created_at', $filters['year']))
-            ->when($filters['month'], fn ($query) => $query->whereMonth('created_at', $filters['month']));
+        $referenceMonth = $filters['month'] ?? (int) now()->month;
+
+        return CommercialClient::query()
+            ->when($filters['city'] !== '', fn ($query) => $query->where('city', $filters['city']))
+            ->when(
+                $filters['portfolio'] !== '' && array_key_exists($filters['portfolio'], CommercialService::portfolios()),
+                fn ($query) => $query->whereHas('services', fn ($serviceQuery) => $serviceQuery->where('portfolio', $filters['portfolio']))
+            )
+            ->whereYear('created_at', $filters['year'])
+            ->whereMonth('created_at', $referenceMonth);
     }
 
     /**

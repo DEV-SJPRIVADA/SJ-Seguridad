@@ -196,11 +196,11 @@
                         </select>
                     </div>
                     <div class="form-field" style="max-width: 120px;">
-                        <label class="form-label">Mes (altas)</label>
+                        <label class="form-label">MES</label>
                         <select name="month" class="form-select">
                             <option value="">Todos</option>
                             @foreach (['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] as $idx => $monthLabel)
-                                <option value="{{ $idx + 1 }}" @selected((int) $filters['month'] === ($idx + 1))>{{ $monthLabel }}</option>
+                                <option value="{{ $idx + 1 }}" @selected($filters['month'] !== null && (int) $filters['month'] === ($idx + 1))>{{ $monthLabel }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -208,45 +208,40 @@
                         <a href="{{ route('comercial.dashboard') }}" class="btn btn--secondary" style="height: 36px;" title="Limpiar filtros">Limpiar</a>
                     </div>
                 </div>
-                <p class="panel-text" style="margin:0.65rem 0 0;">Año/mes afectan <strong>clientes nuevos</strong> y la tendencia de altas. Portafolio y ciudad aplican a todos los KPIs de stock.</p>
+                <p class="panel-text" style="margin:0.65rem 0 0;">Mes y año definen la fecha de referencia para todos los KPIs. Portafolio y ciudad filtran en todos los indicadores.</p>
             </form>
 
             <div class="dashboard-stat-grid dashboard-stat-grid--matriz-kpis bottom-spaced">
                 <a href="{{ route('comercial.matriz.clients.index', array_filter(['city' => $filters['city'] ?: null])) }}" class="card kpi-card" style="border-left: 5px solid var(--color-primary);">
-                    <p class="text-caption">Total clientes</p>
-                    <p class="kpi-value">{{ $stats['total_clients'] }}</p>
-                    <p class="text-small text-muted">Stock actual (portafolio/ciudad)</p>
+                    <p class="text-caption">Clientes activos</p>
+                    <p class="kpi-value">{{ $stats['active_clients'] }}</p>
+                    <p class="text-small text-muted">Con servicio vigente al {{ $referenceDate->locale('es')->isoFormat('MMM YYYY') }}</p>
+                </a>
+
+                <a href="{{ route('comercial.matriz.services.index', array_filter(['portfolio' => $filters['portfolio'] ?: null])) }}" class="card kpi-card" style="border-left: 5px solid var(--color-sky);">
+                    <p class="text-caption">Servicios activos</p>
+                    <p class="kpi-value" style="color: var(--color-sky);">{{ $stats['active_services'] }}</p>
+                    <p class="text-small text-muted">Vigentes al {{ $referenceDate->locale('es')->isoFormat('MMM YYYY') }}</p>
                 </a>
 
                 <a href="{{ route('comercial.matriz.clients.index') }}" class="card kpi-card" style="border-left: 5px solid #0f766e;">
                     <p class="text-caption">Clientes nuevos</p>
                     <p class="kpi-value" style="color: #0f766e;">{{ $stats['new_clients'] }}</p>
                     <p class="text-small text-muted">
-                        Ingresados
-                        @if ($filters['month'])
-                            en {{ ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][$filters['month']] }} {{ $filters['year'] }}
-                        @else
-                            en {{ $filters['year'] }}
-                        @endif
+                        Ingresados en {{ $referenceDate->locale('es')->isoFormat('MMM YYYY') }}
                     </p>
                 </a>
 
-                <a href="{{ route('comercial.matriz.services.index', array_filter(['portfolio' => $filters['portfolio'] ?: null])) }}" class="card kpi-card" style="border-left: 5px solid var(--color-sky);">
-                    <p class="text-caption">Servicios activos</p>
-                    <p class="kpi-value" style="color: var(--color-sky);">{{ $stats['active_services'] }}</p>
-                    <p class="text-small text-muted">Excluye portafolio Inactivos</p>
-                </a>
-
                 <a href="{{ route('comercial.matriz.services.index', ['vigencia' => 'expiring']) }}" class="card kpi-card" style="border-left: 5px solid var(--color-warning);">
-                    <p class="text-caption">Por vencer â‰¤30 dias</p>
+                    <p class="text-caption">Servicios por vencer</p>
                     <p class="kpi-value" style="color: var(--color-warning);">{{ $stats['expiring_soon'] }}</p>
-                    <p class="text-small text-muted">Contratos proximos a vencer</p>
+                    <p class="text-small text-muted">Proximos 30 dias desde {{ $referenceDate->locale('es')->isoFormat('MMM YYYY') }}</p>
                 </a>
 
                 <a href="{{ route('comercial.matriz.services.index', ['vigencia' => 'expired']) }}" class="card kpi-card" style="border-left: 5px solid #be123c;">
-                    <p class="text-caption">Vencidos</p>
+                    <p class="text-caption">Servicios vencidos</p>
                     <p class="kpi-value" style="color: #be123c;">{{ $stats['expired'] }}</p>
-                    <p class="text-small text-muted">Fin de contrato ya pasado</p>
+                    <p class="text-small text-muted">Contract_end previo al {{ $referenceDate->locale('es')->isoFormat('MMM YYYY') }}</p>
                 </a>
 
                 <a href="{{ route('comercial.matriz.services.index', ['portfolio' => \App\Models\CommercialService::PORTFOLIO_INACTIVOS]) }}" class="card kpi-card" style="border-left: 5px solid #64748b;">
