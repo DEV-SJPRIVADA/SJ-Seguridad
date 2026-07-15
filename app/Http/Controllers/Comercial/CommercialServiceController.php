@@ -57,8 +57,7 @@ class CommercialServiceController extends Controller
             ->orderByRaw('CASE WHEN portfolio = ? THEN 1 ELSE 0 END', [CommercialService::PORTFOLIO_INACTIVOS])
             ->orderByDesc('contract_end')
             ->orderBy('contract_number')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
 
         return view('areas.comercial.matriz-clientes.services.index', [
             'services' => $services,

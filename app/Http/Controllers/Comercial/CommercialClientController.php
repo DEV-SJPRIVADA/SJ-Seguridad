@@ -47,10 +47,9 @@ class CommercialClientController extends Controller
             })
             ->when($city !== '', fn ($query) => $query->where('city', 'like', "%{$city}%"))
             ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
 
-        $clients->getCollection()->transform(function (CommercialClient $client): CommercialClient {
+        $clients->transform(function (CommercialClient $client): CommercialClient {
             $activeServices = $client->services
                 ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS);
             $servicesForDates = $activeServices->isNotEmpty() ? $activeServices : $client->services;

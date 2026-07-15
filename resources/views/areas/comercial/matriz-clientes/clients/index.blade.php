@@ -91,9 +91,7 @@
                         </table>
                     </div>
 
-                    <div class="pagination-wrap top-spaced">
-                        {{ $clients->links() }}
-                    </div>
+                    <!-- DataTables maneja paginacion y selector de filas -->
                 </div>
             </div>
         </div>
