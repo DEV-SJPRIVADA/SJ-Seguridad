@@ -12,15 +12,18 @@
                             <h3 class="panel-title">Catalogo de Suministros</h3>
                             <p class="panel-text">Gestiona los productos disponibles para que el personal realice sus pedidos.</p>
                         </div>
-                        <button type="button" class="btn btn--primary" onclick="openCreateModal()">
-                            + Nuevo Producto
-                        </button>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <x-export-excel route="{{ route('supplies.products.export', ['module' => $module]) }}" />
+                            <button type="button" class="btn btn--primary" onclick="openCreateModal()">
+                                + Nuevo Producto
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <div class="panel__body">
                     <div class="block-spaced">
-                        <table class="supply-table js-datatable">
+                        <table class="supply-table js-datatable" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>Categoria</th>

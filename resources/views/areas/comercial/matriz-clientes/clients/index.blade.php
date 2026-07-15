@@ -18,9 +18,12 @@
                         <h3 class="panel-title">Listado de clientes</h3>
                         <p class="panel-text">Busque por NIT, nombre o ciudad. Cada cliente puede tener varios servicios.</p>
                     </div>
-                    @if ($canManage)
-                        <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary">Nuevo cliente</a>
-                    @endif
+                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
+                        @if ($canManage)
+                            <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary">Nuevo cliente</a>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -28,10 +31,10 @@
                         <input type="search" name="q" class="form-input permission-filter-bar__search" value="{{ $filters['q'] }}" placeholder="NIT, nombre o representante">
                         <input type="search" name="city" class="form-input permission-filter-bar__select" value="{{ $filters['city'] }}" placeholder="Ciudad">
                         <button type="submit" class="btn btn--secondary">Filtrar</button>
-                    </form>
+                    </form> 
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable" style="width:100%">
+                        <table class="data-table js-datatable" data-no-excel style="width:100%">
                             <thead>
                                 <tr>
                                     <th>NIT</th>

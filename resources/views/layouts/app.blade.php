@@ -71,7 +71,7 @@
 
                 $('.js-datatable').each(function() {
                     if (!$.fn.DataTable.isDataTable(this)) {
-                        $(this).DataTable({
+                        var config = {
                             language: {
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
                                 buttons: {
@@ -82,20 +82,26 @@
                                     }
                                 }
                             },
-                            dom: 'lBfrtip',
+                            dom: 'lfrtip',
                             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
-                            buttons: [
+                            pageLength: 10,
+                            responsive: true,
+                            retrieve: true
+                        };
+
+                        if (!$(this).is('[data-no-excel]')) {
+                            config.dom = 'lBfrtip';
+                            config.buttons = [
                                 {
                                     extend: 'excelHtml5',
                                     text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
                                     className: 'btn btn--secondary btn--sm',
                                     titleAttr: 'Exportar tabla a Excel'
                                 }
-                            ],
-                            pageLength: 10,
-                            responsive: true,
-                            retrieve: true
-                        });
+                            ];
+                        }
+
+                        $(this).DataTable(config);
                     }
                 });
 

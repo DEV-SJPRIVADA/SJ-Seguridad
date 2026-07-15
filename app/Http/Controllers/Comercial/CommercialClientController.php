@@ -7,6 +7,7 @@ use App\Http\Requests\Comercial\StoreCommercialClientRequest;
 use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
+use App\Exports\BaseExport;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -94,6 +95,68 @@ class CommercialClientController extends Controller
             'filters' => ['q' => $q, 'city' => $city],
             'canManage' => $this->canManage(),
         ]);
+    }
+
+    public function exportExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+        $city = trim($request->string('city')->toString());
+
+        $clients = CommercialClient::query()
+            ->withCount(['services', 'activeServices'])
+            ->with([
+                'services' => fn ($query) => $query
+                    ->select(['id', 'commercial_client_id', 'commercial_service_type_id', 'portfolio', 'contract_start', 'contract_end'])
+                    ->with('serviceType:id,name'),
+            ])
+            ->when($q !== '', function ($query) use ($q): void {
+                $query->where(function ($inner) use ($q): void {
+                    $inner->where('nit', 'like', "%{$q}%")
+                        ->orWhere('name', 'like', "%{$q}%")
+                        ->orWhere('legal_rep_name', 'like', "%{$q}%");
+                });
+            })
+            ->when($city !== '', fn ($query) => $query->where('city', 'like', "%{$city}%"))
+            ->orderBy('name')
+            ->get();
+
+        $portfolioLabels = CommercialService::portfolios();
+
+        $clients->transform(function (CommercialClient $client) use ($portfolioLabels): CommercialClient {
+            $activeServices = $client->services
+                ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS);
+            $servicesForDates = $activeServices->isNotEmpty() ? $activeServices : $client->services;
+
+            $client->setAttribute('service_type_labels', $client->services
+                ->pluck('serviceType.name')->filter()->unique()->sort()->values()->all());
+
+            $client->setAttribute('portfolio_labels', $client->services
+                ->pluck('portfolio')->filter()->unique()
+                ->map(fn (string $p) => $portfolioLabels[$p] ?? $p)->sort()->values()->all());
+
+            $client->setAttribute('contract_start_display',
+                optional($servicesForDates->pluck('contract_start')->filter()->sort()->first())?->format('Y-m-d'));
+            $client->setAttribute('contract_end_display',
+                optional($servicesForDates->pluck('contract_end')->filter()->sort()->last())?->format('Y-m-d'));
+
+            return $client;
+        });
+
+        $columns = [
+            ['key' => 'nit', 'label' => 'NIT'],
+            ['key' => 'name', 'label' => 'Cliente'],
+            ['key' => 'city', 'label' => 'Ciudad'],
+            ['key' => fn($c) => implode(', ', $c->portfolio_labels ?? []), 'label' => 'Portafolios'],
+            ['key' => fn($c) => implode(', ', $c->service_type_labels ?? []), 'label' => 'Tipos de servicio'],
+            ['key' => 'contract_start_display', 'label' => 'Inicio contrato'],
+            ['key' => 'contract_end_display', 'label' => 'Fin contrato'],
+            ['key' => 'services_count', 'label' => 'Servicios'],
+            ['key' => 'active_services_count', 'label' => 'Activos'],
+        ];
+
+        return (new BaseExport($clients, $columns, 'clientes_' . now()->format('Y-m-d') . '.xlsx', 'Clientes - SJ Seguridad'))->download();
     }
 
     public function search(Request $request): JsonResponse

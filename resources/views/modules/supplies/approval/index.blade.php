@@ -9,11 +9,14 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Aprobacion de Insumos</h3>
                     <p class="panel-text">Solicitudes pendientes de aprobacion y ajuste de cantidades.</p>
+                    <div style="margin-top:0.5rem;">
+                        <x-export-excel route="{{ route('supplies.approval.export', ['module' => $module]) }}" />
+                    </div>
                 </div>
 
                 <div class="panel__body">
                     <div class="block-spaced">
-                        <table class="supply-table js-datatable">
+                        <table class="supply-table js-datatable" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>ID</th>

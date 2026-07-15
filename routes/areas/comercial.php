@@ -14,6 +14,7 @@ Route::middleware(['password.changed'])
     ->name('comercial.matriz.clients.')
     ->group(function (): void {
         Route::get('/', [CommercialClientController::class, 'index'])->name('index');
+        Route::get('/exportar', [CommercialClientController::class, 'exportExcel'])->name('export');
         Route::get('/buscar', [CommercialClientController::class, 'search'])->name('search');
         Route::get('/crear', [CommercialClientController::class, 'create'])->name('create');
         Route::post('/', [CommercialClientController::class, 'store'])->name('store');
@@ -27,6 +28,7 @@ Route::middleware(['password.changed'])
     ->name('comercial.matriz.services.')
     ->group(function (): void {
         Route::get('/', [CommercialServiceController::class, 'index'])->name('index');
+        Route::get('/exportar', [CommercialServiceController::class, 'exportExcel'])->name('export');
         Route::get('/crear', [CommercialServiceController::class, 'create'])->name('create');
         Route::post('/', [CommercialServiceController::class, 'store'])->name('store');
         Route::get('/{service}/editar', [CommercialServiceController::class, 'edit'])->name('edit');

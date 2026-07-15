@@ -18,9 +18,12 @@
                         <h3 class="panel-title">Listado de servicios</h3>
                         <p class="panel-text">Cada servicio pertenece a un cliente. Filtre por contrato, asesor, NIT o portafolio.</p>
                     </div>
-                    @if ($canManage)
-                        <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary">Nuevo servicio</a>
-                    @endif
+                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <x-export-excel route="{{ route('comercial.matriz.services.export', request()->query()) }}" />
+                        @if ($canManage)
+                            <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary">Nuevo servicio</a>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -41,7 +44,7 @@
                     </form>
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable" style="width:100%">
+                        <table class="data-table js-datatable" data-no-excel style="width:100%">
                             <thead>
                                 <tr>
                                     <th>Cliente</th>

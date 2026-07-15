@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Requisitions;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
@@ -279,6 +280,101 @@ class RequisitionController extends Controller
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
         ]);
+    }
+
+    public function trackingExport(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeTracking($module);
+
+        $user = auth()->user();
+        $search = trim($request->string('q')->toString());
+        $status = $request->string('status')->toString();
+        $clientId = $request->integer('client_id');
+        $cityId = $request->integer('city_id');
+        $mineOnly = $request->boolean('mine_only');
+        $isManager = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana') || $user?->can('manage.requisitions');
+
+        $requisitions = PersonalRequisition::query()
+            ->with(['client', 'position', 'requester', 'city'])
+            ->when(! $isManager, fn ($query) => $query->where('requesting_area_key', $user?->area_key))
+            ->when($isManager, fn ($query) => $query->where('requesting_area_key', $module))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($inner) use ($search): void {
+                    $inner->where('code', 'like', "%{$search}%")
+                        ->orWhere('leader_name', 'like', "%{$search}%")
+                        ->orWhere('required_profile', 'like', "%{$search}%")
+                        ->orWhereHas('requester', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('position', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('client', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($status !== '', fn ($query) => $query->where('status', $status))
+            ->when($clientId > 0, fn ($query) => $query->where('client_id', $clientId))
+            ->when($cityId > 0, fn ($query) => $query->where('city_id', $cityId))
+            ->when($mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
+            ->latest()
+            ->get();
+
+        $statusLabels = PersonalRequisition::statuses();
+
+        $columns = [
+            ['key' => 'code', 'label' => 'Código'],
+            ['key' => fn($r) => $r->request_date?->format('Y-m-d'), 'label' => 'Fecha'],
+            ['key' => fn($r) => $r->requester?->name ?? $r->leader_name, 'label' => 'Solicitante'],
+            ['key' => fn($r) => $r->position?->name ?? '—', 'label' => 'Cargo'],
+            ['key' => fn($r) => $r->client?->name ?? '—', 'label' => 'Cliente'],
+            ['key' => fn($r) => $r->city?->name ?? '—', 'label' => 'Ciudad'],
+            ['key' => 'quantity', 'label' => 'Cantidad'],
+            ['key' => fn($r) => $statusLabels[$r->status] ?? $r->status, 'label' => 'Estado'],
+            ['key' => fn($r) => $r->status_changed_at?->format('Y-m-d H:i') ?? 'Sin cambios', 'label' => 'Últ. actualización'],
+        ];
+
+        return (new BaseExport($requisitions, $columns, 'seguimiento_requisiciones_' . now()->format('Y-m-d') . '.xlsx', 'Seguimiento de Requisiciones'))->download();
+    }
+
+    public function exportExcel(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeManagement($module);
+
+        $search = trim($request->string('q')->toString());
+        $status = $request->string('status')->toString();
+
+        $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
+
+        $requisitions = PersonalRequisition::query()
+            ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
+            ->with(['client', 'position', 'city', 'requester'])
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($inner) use ($search): void {
+                    $inner->where('code', 'like', "%{$search}%")
+                        ->orWhere('leader_name', 'like', "%{$search}%")
+                        ->orWhere('required_profile', 'like', "%{$search}%")
+                        ->orWhere('replacement_name', 'like', "%{$search}%")
+                        ->orWhereHas('position', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('client', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('city', fn($q) => $q->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($status !== '', fn ($query) => $query->where('status', $status))
+            ->latest()
+            ->get();
+
+        $statusLabels = PersonalRequisition::statuses();
+
+        $columns = [
+            ['key' => 'code', 'label' => 'Código'],
+            ['key' => fn($r) => $r->request_date?->format('Y-m-d'), 'label' => 'Fecha'],
+            ['key' => 'leader_name', 'label' => 'Líder'],
+            ['key' => fn($r) => $r->position?->name ?? '—', 'label' => 'Cargo'],
+            ['key' => fn($r) => $r->client?->name ?? '—', 'label' => 'Cliente'],
+            ['key' => fn($r) => $r->city?->name ?? '—', 'label' => 'Ciudad'],
+            ['key' => fn($r) => $r->replacement_name ?? 'N/A', 'label' => 'Reemplaza a'],
+            ['key' => fn($r) => $statusLabels[$r->status] ?? $r->status, 'label' => 'Estado'],
+        ];
+
+        return (new BaseExport($requisitions, $columns, 'requisiciones_' . now()->format('Y-m-d') . '.xlsx', 'Gestión de Requisiciones'))->download();
     }
 
     public function tracking(Request $request, string $module): View

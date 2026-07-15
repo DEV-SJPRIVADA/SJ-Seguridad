@@ -10,6 +10,7 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
+use App\Exports\BaseExport;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,64 @@ class CommercialServiceController extends Controller
             'filters' => ['q' => $q, 'portfolio' => $portfolio, 'vigencia' => $vigencia],
             'canManage' => $this->canManage(),
         ]);
+    }
+
+    public function exportExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+        $portfolio = $request->string('portfolio')->toString();
+        $vigencia = $request->string('vigencia')->toString();
+        $today = now()->startOfDay();
+        $in30 = now()->startOfDay()->addDays(30);
+
+        $services = CommercialService::query()
+            ->with(['client', 'serviceType'])
+            ->when($q !== '', function ($query) use ($q): void {
+                $query->where(function ($inner) use ($q): void {
+                    $inner->where('contract_number', 'like', "%{$q}%")
+                        ->orWhere('advisor_name', 'like', "%{$q}%")
+                        ->orWhereHas('client', function ($clientQuery) use ($q): void {
+                            $clientQuery->where('nit', 'like', "%{$q}%")
+                                ->orWhere('name', 'like', "%{$q}%");
+                        });
+                });
+            })
+            ->when($portfolio !== '' && array_key_exists($portfolio, CommercialService::portfolios()),
+                fn ($query) => $query->where('portfolio', $portfolio)
+            )
+            ->when($vigencia === 'expiring', function ($query) use ($today, $in30): void {
+                $query->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
+                    ->whereNotNull('contract_end')
+                    ->whereDate('contract_end', '>=', $today)
+                    ->whereDate('contract_end', '<=', $in30);
+            })
+            ->when($vigencia === 'expired', function ($query) use ($today): void {
+                $query->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
+                    ->whereNotNull('contract_end')
+                    ->whereDate('contract_end', '<', $today);
+            })
+            ->orderByRaw('CASE WHEN portfolio = ? THEN 1 ELSE 0 END', [CommercialService::PORTFOLIO_INACTIVOS])
+            ->orderByDesc('contract_end')
+            ->orderBy('contract_number')
+            ->get();
+
+        $portfolios = CommercialService::portfolios();
+
+        $columns = [
+            ['key' => fn($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
+            ['key' => fn($s) => $s->client?->nit ?? '—', 'label' => 'NIT'],
+            ['key' => fn($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
+            ['key' => 'contract_number', 'label' => 'Contrato'],
+            ['key' => fn($s) => $s->serviceType?->name ?? '—', 'label' => 'Tipo servicio'],
+            ['key' => 'advisor_name', 'label' => 'Asesor'],
+            ['key' => fn($s) => $s->contract_start?->format('Y-m-d') ?? '—', 'label' => 'Inicio'],
+            ['key' => fn($s) => $s->contract_end?->format('Y-m-d') ?? '—', 'label' => 'Fin'],
+            ['key' => fn($s) => $s->isExpired() ? 'Vencido' : ($s->isExpiringSoon(30) ? '≤30 dias' : ($s->isExpiringSoon(60) ? '≤60 dias' : '—')), 'label' => 'Vigencia'],
+        ];
+
+        return (new BaseExport($services, $columns, 'servicios_' . now()->format('Y-m-d') . '.xlsx', 'Servicios - SJ Seguridad'))->download();
     }
 
     public function create(Request $request): View

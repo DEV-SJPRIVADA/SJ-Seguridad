@@ -9,6 +9,9 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Seguimiento de requisiciones</h3>
                     <p class="panel-text">Consulta de solicitudes del area actual con filtros de estado, cliente y vista rapida de tus propios requerimientos.</p>
+                    <div style="margin-top:0.5rem;">
+                        <x-export-excel route="{{ route('requisitions.tracking.export', ['module' => $moduleKey, ...request()->query()]) }}" />
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -40,7 +43,7 @@
                     </form>
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable">
+                        <table class="data-table js-datatable" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>Codigo</th>
