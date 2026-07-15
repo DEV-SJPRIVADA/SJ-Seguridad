@@ -30,6 +30,10 @@
             <link rel="stylesheet" href="{{ asset('css/quality-documents.css') }}?v={{ @filemtime(public_path('css/quality-documents.css')) ?: time() }}">
         @endif
 
+        @if (request()->routeIs('indicadores.*'))
+            <link rel="stylesheet" href="{{ asset('css/indicadores.css') }}?v={{ @filemtime(public_path('css/indicadores.css')) ?: time() }}">
+        @endif
+
         @stack('styles')
 
         <style>
@@ -67,7 +71,7 @@
 
                 $('.js-datatable').each(function() {
                     if (!$.fn.DataTable.isDataTable(this)) {
-                        $(this).DataTable({
+                        var config = {
                             language: {
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
                                 buttons: {
@@ -78,19 +82,26 @@
                                     }
                                 }
                             },
-                            dom: 'Bfrtip',
-                            buttons: [
+                            dom: 'lfrtip',
+                            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
+                            pageLength: 10,
+                            responsive: true,
+                            retrieve: true
+                        };
+
+                        if (!$(this).is('[data-no-excel]')) {
+                            config.dom = 'lBfrtip';
+                            config.buttons = [
                                 {
                                     extend: 'excelHtml5',
                                     text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
                                     className: 'btn btn--secondary btn--sm',
                                     titleAttr: 'Exportar tabla a Excel'
                                 }
-                            ],
-                            pageLength: 10,
-                            responsive: true,
-                            retrieve: true
-                        });
+                            ];
+                        }
+
+                        $(this).DataTable(config);
                     }
                 });
 
@@ -513,23 +524,59 @@
                 padding: 0 !important;
             }
 
-            .dashboard-stat-grid {
+            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) {
                 display: grid !important;
                 gap: 1rem !important;
                 grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
                 margin-bottom: 2rem !important;
             }
 
-            .dashboard-stat-grid .card {
+            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) .card {
                 padding: 1.25rem !important;
                 height: 100% !important;
             }
 
+            /* Comercial: 6 KPIs siempre en una fila (se compactan); wrap solo en celular */
+            .dashboard-stat-grid.dashboard-stat-grid--matriz-kpis {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                align-items: stretch !important;
+                gap: 0.5rem !important;
+                margin-bottom: 1rem !important;
+                width: 100% !important;
+            }
+
+            .dashboard-stat-grid--matriz-kpis > .kpi-card,
+            .dashboard-stat-grid--matriz-kpis > .card {
+                flex: 1 1 0 !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                height: auto !important;
+                padding: 0.55rem 0.6rem !important;
+                box-sizing: border-box !important;
+            }
+
+            .dashboard-stat-grid--matriz-kpis .text-caption {
+                font-size: clamp(0.55rem, 0.8vw, 0.7rem) !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .dashboard-stat-grid--matriz-kpis .kpi-value {
+                font-size: clamp(1rem, 1.5vw, 1.5rem) !important;
+            }
+
+            .dashboard-stat-grid--matriz-kpis .text-small {
+                font-size: clamp(0.5rem, 0.65vw, 0.65rem) !important;
+                line-height: 1.2 !important;
+            }
+
             @media (max-width: 1024px) {
-                .dashboard-stat-grid {
+                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) {
                     grid-template-columns: 1fr !important;
                 }
-                .dashboard-stat-grid .card {
+                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) .card {
                     text-align: center !important;
                 }
                 .dashboard-hero__header {
@@ -562,6 +609,22 @@
 
                 .app-sidebar__header {
                     text-align: center !important;
+                }
+            }
+
+            @media (max-width: 640px) {
+                .dashboard-stat-grid.dashboard-stat-grid--matriz-kpis {
+                    flex-wrap: wrap !important;
+                }
+
+                .dashboard-stat-grid--matriz-kpis > .kpi-card,
+                .dashboard-stat-grid--matriz-kpis > .card {
+                    flex: 1 1 calc(50% - 0.35rem) !important;
+                    max-width: calc(50% - 0.35rem) !important;
+                }
+
+                .dashboard-stat-grid--matriz-kpis .text-caption {
+                    white-space: normal !important;
                 }
             }
 

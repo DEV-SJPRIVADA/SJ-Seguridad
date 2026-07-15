@@ -39,6 +39,13 @@
 - **Visión SaaS:** El código debe estar preparado para escalar a múltiples clientes y ser gestionado por un SuperUsuario global.
 - **Navegación Dinámica:** El sidebar se genera automáticamente basándose en `config/access.php` y los permisos del usuario.
 
+## Exportacion a Excel
+- Toda exportacion a Excel debe usar `App\Exports\BaseExport` con columnas configurables.
+- Exportaciones con formato complejo requieren clase dedicada en `app/Exports/`.
+- Boton reutilizable mediante el componente Blade `<x-export-excel>`.
+- No agregar dependencias adicionales de exportacion; usar `PhpSpreadsheet` (ya incluido via `phpoffice/phpspreadsheet`).
+- El boton DataTables `excelHtml5` esta deprecado; no reintroducirlo.
+
 ## Criterio de revision continua
 - Verificar que no se rompan rutas protegidas ni estados de sesion.
 - Verificar migraciones nuevas y compatibilidad con despliegue en hosting compartido.

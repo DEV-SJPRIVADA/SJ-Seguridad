@@ -422,6 +422,15 @@ a {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
+.btn--sm {
+    min-height: 32px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8125rem;
+    border-radius: 10px;
+    letter-spacing: 0.02em;
+    gap: 0.35rem;
+}
+
 .btn:hover {
     transform: translateY(-1px);
 }

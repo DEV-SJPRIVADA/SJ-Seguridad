@@ -37,7 +37,24 @@ Permisos del modulo de documentos de Calidad:
 
 - `manage.quality.documents`
 
-Estos permisos se administran visualmente dentro de la fila `Administracion de usuarios` en la matriz de permisos.
+Permisos del modulo de indicadores (area `operaciones`, board `indicadores`):
+
+- `operations.view`
+- `operations.capture`
+- `operations.manage`
+- `operations.export`
+
+Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Alcance por Area → Operaciones**, no en la seccion de permisos funcionales.
+
+Permisos de Matriz comercial (area `comercial`, boards `dashboard`, `matriz_clientes` y `servicios_comerciales`):
+
+- `comercial.matriz.view`
+- `comercial.matriz.manage`
+- `view.board.comercial.dashboard` / `view.area.comercial` (tablero **Dashboard** KPI)
+- `view.board.comercial.matriz_clientes` (tablero **Clientes**)
+- `view.board.comercial.servicios_comerciales` (tablero **Servicios**)
+
+Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Alcance por Area → Comercial**.
 
 ## Areas actuales
 
@@ -47,9 +64,10 @@ Estos permisos se administran visualmente dentro de la fila `Administracion de u
 - `juridico`
 - `comercial`
 - `calidad`
-- `remuneraciones`
-- `facturacion`
+- `admin_financiero` (unifica las antiguas `remuneraciones` y `facturacion`)
 - `compras`
+
+La migracion `2026_07_10_120000_merge_remuneraciones_facturacion_into_admin_financiero` actualiza `area_key` en usuarios, requisiciones, suministros y documentos; fusiona permisos Spatie de las dos areas legacy hacia `admin_financiero`. Las URLs del modulo quedan como `/requisitions/admin_financiero`, `/supplies/admin_financiero`, etc. El proceso de Calidad `gestion_financiera` no cambia.
 
 ## Acciones por area
 
@@ -71,6 +89,10 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `requisiciones`
 - `suministros`
 - `documentos`
+- `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
+- `matriz_clientes` (etiqueta UI: **Clientes**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.matriz_clientes`)
+- `servicios_comerciales` (etiqueta UI: **Servicios**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.servicios_comerciales` / board clientes)
+- En area `comercial`, el board `dashboard` redirige a `comercial/dashboard` (KPIs de matriz); acceso por `comercial.matriz.*`, `view.board.comercial.dashboard` o `view.area.comercial`
 
 Esto produce permisos como:
 

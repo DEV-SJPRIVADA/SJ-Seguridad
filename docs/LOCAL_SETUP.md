@@ -42,6 +42,18 @@ DB_PASSWORD=
 CACHE_PREFIX=sj-seguridad-cache-
 REDIS_PREFIX=sj-seguridad-database-
 SESSION_COOKIE=sj_seguridad_session
+
+# Correo local hacia Mailpit (Laragon)
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="noreply@sjseguridad.local"
+MAIL_FROM_NAME="${APP_NAME}"
+
+# Para pruebas de mail sin worker: sync. En produccion preferir database/redis.
+QUEUE_CONNECTION=sync
 ```
 
 Los prefijos de cache/sesion evitan invalidar sesiones tras el upgrade a Laravel 13.
@@ -67,6 +79,27 @@ php artisan migrate --seed
 php artisan app:doctor
 php artisan test
 ```
+
+## Correo con Mailpit (Laragon)
+
+Los mailables de Requisiciones y Suministros implementan `ShouldQueue`. Con Mailpit:
+
+1. En Laragon, iniciar **Mailpit** (SMTP en `127.0.0.1:1025`; UI en el panel de Laragon).
+2. En `.env`, usar `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1`, `MAIL_PORT=1025` (ver variables arriba).
+3. Cola:
+   - **Opcion A (recomendada para pruebas):** `QUEUE_CONNECTION=sync` — el correo se envia al instante.
+   - **Opcion B:** `QUEUE_CONNECTION=database` y en otra terminal:
+
+```powershell
+php artisan queue:work
+```
+
+4. Limpiar config: `php artisan config:clear`.
+5. **Requisiciones:** en Parametros → Correos de notificacion, agregar un email de prueba activo. Sin filas activas se usa el fallback hardcoded del controller.
+6. Crear una requisicion (o una solicitud de suministros) y abrir la UI de Mailpit para ver el mensaje.
+7. Preview HTML sin enviar (solo local + `manage.users`): `GET /mail-preview`.
+
+Si `MAIL_MAILER=log`, el correo se escribe en el log y **no** aparece en Mailpit.
 
 ## Desarrollo con Vite (hot reload)
 

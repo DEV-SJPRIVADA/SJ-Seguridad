@@ -16,6 +16,10 @@ class PermissionCatalog
         return collect(config('access.system_permissions'))
             ->keys()
             ->merge(
+                collect(config('access.area_indicador_permissions', []))
+                    ->flatMap(fn (array $permissions) => array_keys($permissions))
+            )
+            ->merge(
                 collect(config('access.areas'))->flatMap(fn (string $label, string $key) => [
                     "view.area.{$key}",
                     "manage.area.{$key}",
@@ -25,7 +29,25 @@ class PermissionCatalog
                 collect(config('access.areas'))->keys()->flatMap(fn (string $areaKey) => (
                     collect(config('access.boards'))
                         ->keys()
-                        ->reject(fn (string $boardKey) => $boardKey === 'documentos')
+                        ->reject(function (string $boardKey) use ($areaKey): bool {
+                            if ($boardKey === 'documentos') {
+                                return true;
+                            }
+
+                            if ($boardKey === 'indicadores' && $areaKey !== 'operaciones') {
+                                return true;
+                            }
+
+                            if ($boardKey === 'matriz_clientes' && $areaKey !== 'comercial') {
+                                return true;
+                            }
+
+                            if ($boardKey === 'servicios_comerciales' && $areaKey !== 'comercial') {
+                                return true;
+                            }
+
+                            return false;
+                        })
                         ->map(fn (string $boardKey) => "view.board.{$areaKey}.{$boardKey}")
                 ))
             )

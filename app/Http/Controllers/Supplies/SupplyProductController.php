@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Supplies;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Models\SupplyProduct;
 use App\Models\User;
@@ -21,6 +22,20 @@ class SupplyProductController extends Controller
             'products' => $products,
             'subTabs' => $this->getSupplySubTabs($module),
         ]);
+    }
+
+    public function exportExcel(string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $products = SupplyProduct::orderBy('category')->orderBy('name')->get();
+
+        $columns = [
+            ['key' => 'category', 'label' => 'Categoría'],
+            ['key' => 'name', 'label' => 'Producto'],
+            ['key' => 'description', 'label' => 'Descripción'],
+            ['key' => fn($p) => $p->is_active ? 'Activo' : 'Inactivo', 'label' => 'Estado'],
+        ];
+
+        return (new BaseExport($products, $columns, 'catalogo_suministros_' . now()->format('Y-m-d') . '.xlsx', 'Catálogo de Suministros'))->download();
     }
 
     public function store(Request $request, string $module)

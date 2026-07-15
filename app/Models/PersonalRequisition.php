@@ -48,6 +48,7 @@ class PersonalRequisition extends Model
         'cost_center',
         'requester_observation',
         'human_resources_observation',
+        'recruiter_id',
         'recruiter_name',
         'hiring_date',
         'status',

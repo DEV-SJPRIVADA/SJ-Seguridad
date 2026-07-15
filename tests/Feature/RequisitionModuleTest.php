@@ -2,16 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Mail\PersonalRequisitionNotification;
+use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
+use App\Models\RequisitionNotificationEmail;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
+use App\Models\RequisitionRecruiter;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class RequisitionModuleTest extends TestCase
@@ -45,6 +50,73 @@ class RequisitionModuleTest extends TestCase
         $this->assertDatabaseHas('personal_requisition_status_logs', [
             'to_status' => PersonalRequisition::STATUS_SOLICITADA,
             'changed_by' => $user->id,
+        ]);
+    }
+
+    public function test_store_queues_notification_to_active_emails(): void
+    {
+        Mail::fake();
+
+        RequisitionNotificationEmail::query()->create([
+            'name' => 'gh.notify@example.com',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('view.board.operaciones.requisiciones');
+
+        $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $this->validPayload());
+
+        Mail::assertQueued(PersonalRequisitionNotification::class, function (PersonalRequisitionNotification $mail) {
+            return $mail->hasTo('gh.notify@example.com') && $mail->totalQuantity === 3;
+        });
+    }
+
+    public function test_gestion_humana_can_persist_recruiter_id(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('manage.area.gestion_humana');
+
+        $recruiter = RequisitionRecruiter::query()->create([
+            'name' => 'Ana Seleccion',
+            'is_active' => true,
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0301', 'operaciones', 'Perfil con reclutador'));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+
+        $response = $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_EN_GESTION,
+                'recruiter_id' => $recruiter->id,
+                'human_resources_observation' => 'Asignado a seleccion.',
+            ]
+        ));
+
+        $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+        $this->assertDatabaseHas('personal_requisitions', [
+            'id' => $requisition->id,
+            'recruiter_id' => $recruiter->id,
         ]);
     }
 
@@ -232,6 +304,93 @@ class RequisitionModuleTest extends TestCase
             'to_status' => PersonalRequisition::STATUS_EN_GESTION,
             'changed_by' => $manager->id,
         ]);
+    }
+
+    public function test_status_change_queues_mail_to_requester(): void
+    {
+        Mail::fake();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'email' => 'solicitante.ops@example.com',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('manage.area.gestion_humana');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0401',
+            'operaciones',
+            'Perfil para aviso de estado'
+        ));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_EN_GESTION,
+                'human_resources_observation' => 'En gestion por GH.',
+            ]
+        ));
+
+        Mail::assertQueued(PersonalRequisitionStatusChangedMail::class, function (PersonalRequisitionStatusChangedMail $mail) use ($requester) {
+            return $mail->hasTo($requester->email)
+                && $mail->fromStatus === PersonalRequisition::STATUS_SOLICITADA
+                && $mail->toStatus === PersonalRequisition::STATUS_EN_GESTION;
+        });
+    }
+
+    public function test_update_without_status_change_does_not_queue_status_mail(): void
+    {
+        Mail::fake();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'email' => 'solicitante.silent@example.com',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('manage.area.gestion_humana');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0402',
+            'operaciones',
+            'Perfil sin cambio de estado'
+        ));
+        $requisition->update(['status' => PersonalRequisition::STATUS_EN_GESTION]);
+        $requisition->statusLogs()->create([
+            'from_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'to_status' => PersonalRequisition::STATUS_EN_GESTION,
+            'changed_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_EN_GESTION,
+                'human_resources_observation' => 'Solo actualiza observaciones.',
+            ]
+        ));
+
+        Mail::assertNotQueued(PersonalRequisitionStatusChangedMail::class);
     }
 
     /**

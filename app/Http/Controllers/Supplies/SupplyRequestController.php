@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Supplies;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
@@ -34,6 +35,24 @@ class SupplyRequestController extends Controller
             'requests' => $requests,
             'subTabs' => $this->getSupplySubTabs($module),
         ]);
+    }
+
+    public function exportExcel(string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $requests = SupplyRequest::where('user_id', auth()->id())
+            ->where('area_key', $module)
+            ->latest()
+            ->with(['items.product'])
+            ->get();
+
+        $columns = [
+            ['key' => 'id', 'label' => 'ID'],
+            ['key' => fn($r) => $r->created_at->format('Y-m-d'), 'label' => 'Fecha'],
+            ['key' => fn($r) => $r->statusLabel(), 'label' => 'Estado'],
+            ['key' => fn($r) => $r->items->count() . ' productos', 'label' => 'Items'],
+        ];
+
+        return (new BaseExport($requests, $columns, 'mis_solicitudes_' . now()->format('Y-m-d') . '.xlsx', 'Mis Solicitudes de Insumos'))->download();
     }
 
     public function show(string $module, SupplyRequest $supplyRequest)
@@ -134,6 +153,27 @@ class SupplyRequestController extends Controller
             'requests' => $requests,
             'subTabs' => $this->getSupplySubTabs($module),
         ]);
+    }
+
+    public function approvalExport(string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $requests = SupplyRequest::where('area_key', $module)
+            ->where('status', 'pendiente_calidad')
+            ->latest()
+            ->with(['user', 'items.product'])
+            ->get();
+
+        $columns = [
+            ['key' => 'id', 'label' => 'ID'],
+            ['key' => fn($r) => $r->created_at->format('Y-m-d H:i'), 'label' => 'Fecha'],
+            ['key' => fn($r) => $r->user->name, 'label' => 'Solicitante'],
+            ['key' => fn($r) => config("access.areas.{$r->area_key}"), 'label' => 'Área'],
+            ['key' => 'site_utilization', 'label' => 'Sede'],
+            ['key' => fn($r) => $r->items->count() . ' productos', 'label' => 'Items'],
+            ['key' => fn($r) => $r->statusLabel(), 'label' => 'Estado'],
+        ];
+
+        return (new BaseExport($requests, $columns, 'aprobacion_insumos_' . now()->format('Y-m-d') . '.xlsx', 'Aprobación de Insumos'))->download();
     }
 
     public function approvalEdit(string $module, SupplyRequest $supplyRequest)
@@ -238,6 +278,52 @@ class SupplyRequestController extends Controller
             ], $filters),
             'subTabs' => $this->getSupplySubTabs($module),
         ]);
+    }
+
+    public function approvedExportAll(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $filters = $request->validate([
+            'sede_id' => ['nullable', 'integer', 'exists:supply_sites,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'export_status' => ['nullable', 'in:pending,exported,all'],
+            'requester' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $exportStatus = $filters['export_status'] ?? 'all';
+
+        $requests = SupplyRequest::query()
+            ->where('status', 'aprobada_calidad')
+            ->with(['user'])
+            ->withCount(['items as approved_items_count' => function ($query): void {
+                $query->where('approved_quantity', '>', 0);
+            }])
+            ->when(filled($filters['sede_id'] ?? null), fn ($query) => $query->where('sede_id', $filters['sede_id']))
+            ->when(filled($filters['date_from'] ?? null), fn ($query) => $query->whereDate('created_at', '>=', $filters['date_from']))
+            ->when(filled($filters['date_to'] ?? null), fn ($query) => $query->whereDate('created_at', '<=', $filters['date_to']))
+            ->when($exportStatus === 'pending', fn ($query) => $query->whereNull('exported_at'))
+            ->when($exportStatus === 'exported', fn ($query) => $query->whereNotNull('exported_at'))
+            ->when(filled($filters['requester'] ?? null), function ($query) use ($filters): void {
+                $term = '%'.$filters['requester'].'%';
+                $query->whereHas('user', function ($userQuery) use ($term): void {
+                    $userQuery->where('name', 'like', $term)
+                        ->orWhere('email', 'like', $term);
+                });
+            })
+            ->latest()
+            ->get();
+
+        $columns = [
+            ['key' => 'id', 'label' => 'ID'],
+            ['key' => fn($r) => $r->created_at->format('Y-m-d H:i'), 'label' => 'Fecha'],
+            ['key' => fn($r) => $r->user->name, 'label' => 'Solicitante'],
+            ['key' => fn($r) => config("access.areas.{$r->area_key}"), 'label' => 'Área'],
+            ['key' => 'site_utilization', 'label' => 'Sede'],
+            ['key' => 'approved_items_count', 'label' => 'Ítems aprobados'],
+            ['key' => fn($r) => $r->exported_at ? 'Exportada' : 'Pendiente', 'label' => 'Exportación'],
+        ];
+
+        return (new BaseExport($requests, $columns, 'insumos_aprobados_' . now()->format('Y-m-d') . '.xlsx', 'Insumos Aprobados'))->download();
     }
 
     public function approvedExport(string $module, SupplyRequest $supplyRequest, SupplyPurchaseReportExporter $exporter)

@@ -21,6 +21,19 @@ return [
         'manage.quality.documents' => 'Calidad: Administrar documentos',
     ],
 
+    'area_indicador_permissions' => [
+        'operaciones' => [
+            'operations.view' => 'Indicadores: Ver dashboards',
+            'operations.capture' => 'Indicadores: Capturar datos',
+            'operations.manage' => 'Indicadores: Administrar (periodos, pesos, MADRE)',
+            'operations.export' => 'Indicadores: Exportar PDF y Excel',
+        ],
+        'comercial' => [
+            'comercial.matriz.view' => 'Matriz comercial: Ver clientes y servicios',
+            'comercial.matriz.manage' => 'Matriz comercial: Administrar clientes y servicios',
+        ],
+    ],
+
     'areas' => [
         'gestion_humana' => 'Gestion humana',
         'operaciones' => 'Operaciones',
@@ -28,8 +41,7 @@ return [
         'juridico' => 'Juridico',
         'comercial' => 'Comercial',
         'calidad' => 'Calidad',
-        'remuneraciones' => 'Remuneraciones',
-        'facturacion' => 'Facturacion',
+        'admin_financiero' => 'Admin y Financiero',
         'compras' => 'Compras',
     ],
 
@@ -43,6 +55,18 @@ return [
         'requisiciones' => 'Requisiciones',
         'suministros' => 'Suministros',
         'documentos' => 'Documentos',
+        'indicadores' => 'Indicadores',
+        'matriz_clientes' => 'Clientes',
+        'servicios_comerciales' => 'Servicios',
+    ],
+
+    'indicador_tabs' => [
+        'dashboard' => 'Dashboard',
+        'captura' => 'Captura',
+        'periodos' => 'Periodos',
+        'pesos' => 'Pesos',
+        'madre' => 'Consolidado',
+        'auditoria' => 'Auditoria',
     ],
 
     'requisition_tabs' => [

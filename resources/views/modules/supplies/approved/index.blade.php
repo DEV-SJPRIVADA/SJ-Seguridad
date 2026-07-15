@@ -13,6 +13,9 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Insumos aprobados</h3>
                     <p class="panel-text">Solicitudes aprobadas por calidad. Descargue el reporte FO-AD-44 por solicitud</p>
+                    <div style="margin-top:0.5rem;">
+                        <x-export-excel route="{{ route('supplies.approved.export-all', ['module' => $module, ...request()->query()]) }}" label="Exportar lista a Excel" />
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -42,7 +45,7 @@
                         <a href="{{ route('supplies.approved.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">Limpiar</a>
                     </form>
 
-                    <table class="supply-table js-datatable">
+                    <table class="supply-table js-datatable" data-no-excel>
                         <thead>
                             <tr>
                                 <th>ID</th>

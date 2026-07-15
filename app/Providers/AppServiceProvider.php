@@ -158,30 +158,91 @@ class AppServiceProvider extends ServiceProvider
                             ];
                         }
 
+                        if ($boardKey === 'indicadores') {
+                            if ($key !== 'operaciones') {
+                                return null;
+                            }
+
+                            if (! $user->can('operations.view') && ! $user->can('operations.manage') && ! $user->can('operations.capture')) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'indicadores.dashboard',
+                                'url' => $user->defaultIndicadorBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
+                            ];
+                        }
+
+                        if ($boardKey === 'matriz_clientes') {
+                            if ($key !== 'comercial') {
+                                return null;
+                            }
+
+                            if (! $user->can('comercial.matriz.view') && ! $user->can('comercial.matriz.manage') && ! $user->can('view.board.comercial.matriz_clientes')) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'comercial.matriz.clients.index',
+                                'url' => route('comercial.matriz.clients.index'),
+                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.clients.'),
+                            ];
+                        }
+
+                        if ($boardKey === 'servicios_comerciales') {
+                            if ($key !== 'comercial') {
+                                return null;
+                            }
+
+                            if (
+                                ! $user->can('comercial.matriz.view')
+                                && ! $user->can('comercial.matriz.manage')
+                                && ! $user->can('view.board.comercial.servicios_comerciales')
+                                && ! $user->can('view.board.comercial.matriz_clientes')
+                            ) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'comercial.matriz.services.index',
+                                'url' => route('comercial.matriz.services.index'),
+                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.services.'),
+                            ];
+                        }
+
                         $permission = "view.board.{$key}.{$boardKey}";
 
                         if (! $user->can($permission)) {
                             return null;
                         }
 
-                        $url = match($boardKey) {
-                            'requisiciones' => $user->defaultRequisitionBoardUrl($key),
-                            'suministros' => $user->defaultSupplyBoardUrl($key),
+                        $url = match (true) {
+                            $boardKey === 'requisiciones' => $user->defaultRequisitionBoardUrl($key),
+                            $boardKey === 'suministros' => $user->defaultSupplyBoardUrl($key),
+                            $key === 'comercial' && $boardKey === 'dashboard' => route('comercial.dashboard'),
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };
 
                         $requestModule = $this->resolveRequestModule($routeName);
                         $requestBoard = request()->string('board')->toString();
 
-                        $active = match($boardKey) {
-                            'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
-                            'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                        $active = match (true) {
+                            $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
+                            $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                            $boardKey === 'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
+                            $boardKey === 'matriz_clientes' => str_starts_with((string) $routeName, 'comercial.matriz.clients.') && $key === 'comercial',
+                            $boardKey === 'servicios_comerciales' => str_starts_with((string) $routeName, 'comercial.matriz.services.') && $key === 'comercial',
+                            $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
 
                         return [
                             'label' => $boardLabel,
-                            'route' => $boardKey === 'requisiciones' ? 'requisitions.dashboard' : 'dashboard',
+                            'route' => $boardKey === 'requisiciones' ? 'requisitions.dashboard' : ($key === 'comercial' && $boardKey === 'dashboard' ? 'comercial.dashboard' : 'dashboard'),
                             'url' => $url,
                             'active' => $active,
                         ];
@@ -189,16 +250,40 @@ class AppServiceProvider extends ServiceProvider
                     ->filter()
                     ->values();
 
+                if ($key === 'comercial'
+                    && (
+                        $user->can('comercial.matriz.view')
+                        || $user->can('comercial.matriz.manage')
+                        || $user->can('view.board.comercial.matriz_clientes')
+                        || $user->can('view.board.comercial.servicios_comerciales')
+                    )
+                    && $boardItems->doesntContain('label', config('access.boards.dashboard'))
+                ) {
+                    $boardItems->prepend([
+                        'label' => config('access.boards.dashboard'),
+                        'route' => 'comercial.dashboard',
+                        'url' => route('comercial.dashboard'),
+                        'active' => $routeName === 'comercial.dashboard',
+                    ]);
+                }
+
                 if ($canViewArea && $boardItems->doesntContain('label', config('access.boards.dashboard'))) {
-                    $dashboardUrl = route('dashboard', ['module' => $key, 'board' => 'dashboard']);
+                    $isComercialDashboard = $key === 'comercial';
+                    $dashboardUrl = $isComercialDashboard
+                        ? route('comercial.dashboard')
+                        : route('dashboard', ['module' => $key, 'board' => 'dashboard']);
 
                     $boardItems->prepend([
                         'label' => config('access.boards.dashboard'),
-                        'route' => 'dashboard',
+                        'route' => $isComercialDashboard ? 'comercial.dashboard' : 'dashboard',
                         'url' => $dashboardUrl,
-                        'active' => $routeName === 'dashboard'
-                            && request()->string('module')->toString() === $key
-                            && request()->string('board')->toString() === 'dashboard',
+                        'active' => $isComercialDashboard
+                            ? $routeName === 'comercial.dashboard'
+                            : (
+                                $routeName === 'dashboard'
+                                && request()->string('module')->toString() === $key
+                                && request()->string('board')->toString() === 'dashboard'
+                            ),
                     ]);
                 }
 
@@ -215,6 +300,14 @@ class AppServiceProvider extends ServiceProvider
                     str_starts_with((string) $routeName, 'supplies.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
+                ) || (
+                    str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
+                ) || (
+                    (
+                        $routeName === 'comercial.dashboard'
+                        || str_starts_with((string) $routeName, 'comercial.matriz.clients.')
+                        || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                    ) && $key === 'comercial'
                 );
 
                 return [

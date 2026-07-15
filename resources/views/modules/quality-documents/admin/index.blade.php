@@ -12,15 +12,18 @@
                             <h3 class="panel-title">Administracion de Documentos</h3>
                             <p class="panel-text">Publica archivos o enlaces y define areas o usuarios que pueden consultarlos.</p>
                         </div>
-                        <a href="{{ route('quality-documents.admin.create', ['module' => $module]) }}" class="btn btn--primary">
-                            Nuevo documento
-                        </a>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <x-export-excel route="{{ route('quality-documents.admin.export', ['module' => $module]) }}" />
+                            <a href="{{ route('quality-documents.admin.create', ['module' => $module]) }}" class="btn btn--primary">
+                                Nuevo documento
+                            </a>
+                        </div>
                     </div>
                 </div>
 
                 <div class="panel__body">
                     <div class="block-spaced data-table-wrap">
-                        <table class="supply-table js-datatable">
+                        <table class="supply-table js-datatable" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>Codigo</th>

@@ -8,7 +8,9 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/
     Route::get('/solicitar', [RequisitionController::class, 'create'])->name('create');
     Route::post('/solicitar', [RequisitionController::class, 'store'])->name('store');
     Route::get('/seguimiento', [RequisitionController::class, 'tracking'])->name('tracking');
+    Route::get('/seguimiento/exportar', [RequisitionController::class, 'trackingExport'])->name('tracking.export');
     Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');
+    Route::get('/gestion/exportar', [RequisitionController::class, 'exportExcel'])->name('export');
     Route::get('/gestion/{requisition}/editar', [RequisitionController::class, 'edit'])->name('edit');
     Route::get('/gestion/{requisition}/imprimir', [RequisitionController::class, 'print'])->name('print');
     Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');

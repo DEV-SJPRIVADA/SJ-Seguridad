@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
             RequisitionParameterSeeder::class,
             SupplySiteSeeder::class,
             SupplyProductSeeder::class,
+            IndicadorSeeder::class,
+            DashboardWeightSeeder::class,
+            CommercialMatrixCatalogSeeder::class,
         ]);
     }
 }

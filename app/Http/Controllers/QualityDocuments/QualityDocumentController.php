@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\QualityDocuments;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QualityDocuments\StoreQualityDocumentRequest;
 use App\Http\Requests\QualityDocuments\UpdateQualityDocumentRequest;
@@ -76,6 +77,84 @@ class QualityDocumentController extends Controller
             'documents' => $documents,
             'subTabs' => $this->getQualityDocumentSubTabs($module),
         ]);
+    }
+
+    public function adminExport(string $module): StreamedResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeManage($module);
+
+        $documents = QualityDocument::query()
+            ->with(['uploader', 'areas', 'assignedUsers.user'])
+            ->latest()
+            ->get();
+
+        $columns = [
+            ['key' => 'code', 'label' => 'Código'],
+            ['key' => 'title', 'label' => 'Nombre'],
+            ['key' => fn($d) => $d->processLabel(), 'label' => 'Proceso'],
+            ['key' => fn($d) => $d->documentTypeLabel(), 'label' => 'Tipo'],
+            ['key' => fn($d) => $d->originLabel(), 'label' => 'Origen'],
+            ['key' => fn($d) => $d->documentStatusLabel(), 'label' => 'Estado doc.'],
+            ['key' => fn($d) => $d->activityStatusLabel(), 'label' => 'Estado act.'],
+            ['key' => fn($d) => $d->storageTypeLabel(), 'label' => 'Almacenamiento'],
+            ['key' => 'current_version', 'label' => 'Versión'],
+            ['key' => fn($d) => $d->last_updated_at?->format('d/m/Y') ?? '—', 'label' => 'Últ. actualización'],
+            ['key' => fn($d) => $d->is_active ? 'Activo' : 'Inactivo', 'label' => 'Activo'],
+        ];
+
+        return (new BaseExport($documents, $columns, 'documentos_calidad_' . now()->format('Y-m-d') . '.xlsx', 'Documentos de Calidad'))->download();
+    }
+
+    public function libraryExport(string $module): StreamedResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeModuleAccess($module);
+
+        $documents = QualityDocument::query()
+            ->active()
+            ->forArea($module)
+            ->with('uploader')
+            ->latest()
+            ->get();
+
+        $columns = [
+            ['key' => 'code', 'label' => 'Código'],
+            ['key' => 'title', 'label' => 'Título'],
+            ['key' => fn($d) => $d->processLabel(), 'label' => 'Proceso'],
+            ['key' => fn($d) => $d->documentTypeLabel(), 'label' => 'Tipo documento'],
+            ['key' => fn($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
+            ['key' => fn($d) => $d->created_at->format('d/m/Y'), 'label' => 'Publicado'],
+        ];
+
+        return (new BaseExport($documents, $columns, 'biblioteca_calidad_' . now()->format('Y-m-d') . '.xlsx', 'Biblioteca de Documentos'))->download();
+    }
+
+    public function mineExport(string $module): StreamedResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizePersonalDocumentsAccess($module);
+
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+
+        $documents = QualityDocument::query()
+            ->active()
+            ->forUser($user->id)
+            ->with('uploader')
+            ->latest()
+            ->get();
+
+        $columns = [
+            ['key' => 'code', 'label' => 'Código'],
+            ['key' => 'title', 'label' => 'Título'],
+            ['key' => fn($d) => $d->processLabel(), 'label' => 'Proceso'],
+            ['key' => fn($d) => $d->documentTypeLabel(), 'label' => 'Tipo documento'],
+            ['key' => fn($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
+            ['key' => fn($d) => $d->created_at->format('d/m/Y'), 'label' => 'Publicado'],
+        ];
+
+        return (new BaseExport($documents, $columns, 'mis_documentos_' . now()->format('Y-m-d') . '.xlsx', 'Mis Documentos'))->download();
     }
 
     public function create(string $module): View

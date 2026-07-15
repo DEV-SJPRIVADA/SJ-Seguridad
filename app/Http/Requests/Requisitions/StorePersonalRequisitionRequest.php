@@ -49,6 +49,7 @@ class StorePersonalRequisitionRequest extends FormRequest
             'cost_center' => ['required', 'string', 'max:255'],
             'requester_observation' => ['nullable', 'string'],
             'human_resources_observation' => ['nullable', 'string'],
+            'recruiter_id' => ['nullable', 'integer', Rule::exists('requisition_recruiters', 'id')],
             'recruiter_name' => ['nullable', 'string', 'max:255'],
             'hiring_date' => ['nullable', 'date'],
             'status' => ['nullable', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],

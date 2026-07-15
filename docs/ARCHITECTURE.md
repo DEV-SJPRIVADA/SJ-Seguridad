@@ -5,7 +5,7 @@
 - Backend: `Laravel 13`
 - Lenguaje: `PHP 8.3`
 - Base de datos: `MySQL`
-- Frontend: `Blade`, `Vite`, `JavaScript` simple
+- Frontend: `Blade`, `Vite`, `Alpine.js` (layout), `JavaScript` simple por modulo
 - Permisos: `spatie/laravel-permission`
 
 ## Capa visual reutilizable

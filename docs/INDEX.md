@@ -18,6 +18,8 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
+- [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
+- [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)
 
 ## Objetivo de esta documentacion
 
@@ -30,8 +32,9 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 ## Stack documentado
 
 - `Laravel 13` + `PHP 8.3` (minimo requerido)
-- Desarrollo local: `Laragon 8.6+`, `MySQL 8`, `Node.js` + Vite
-- Produccion: ver checklist en [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md) y [`PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
+- Desarrollo local: `Laragon 8.6+`, `MySQL 8`, `Node.js` + Vite, `Alpine.js` (layout) + JS vanilla por modulo
+- Captura de Indicadores: Controllers + Blade + `public/js/indicadores-capture.js` (sin Livewire)
+- Correo local: Laragon Mailpit (`smtp` `127.0.0.1:1025`); ver [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md)
 
 ## Regla de mantenimiento
 

@@ -9,6 +9,9 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Biblioteca de Documentos</h3>
                     <p class="panel-text">Documentos de Calidad disponibles para el area {{ config("access.areas.{$module}") }}.</p>
+                    <div style="margin-top:0.5rem;">
+                        <x-export-excel route="{{ route('quality-documents.library.export', ['module' => $module]) }}" />
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -16,7 +19,7 @@
                         <p class="panel-text text-muted">No hay documentos activos asignados a esta area.</p>
                     @else
                         <div class="block-spaced">
-                            <table class="supply-table js-datatable">
+                            <table class="supply-table js-datatable" data-no-excel>
                                 <thead>
                                     <tr>
                                         <th>Codigo</th>

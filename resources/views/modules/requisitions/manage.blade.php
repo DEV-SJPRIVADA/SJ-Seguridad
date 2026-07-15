@@ -11,6 +11,9 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Gestion de requisiciones</h3>
                     <p class="panel-text">Seguimiento centralizado para actualizacion de datos y cambios de estado.</p>
+                    <div style="margin-top:0.5rem;">
+                        <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -26,7 +29,7 @@
                     </form>
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable">
+                        <table class="data-table js-datatable" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>Codigo</th>

@@ -54,6 +54,7 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             
             'requester_observation' => ['nullable', 'string'],
             'human_resources_observation' => ['nullable', 'string'],
+            'recruiter_id' => ['nullable', 'integer', Rule::exists('requisition_recruiters', 'id')],
             'recruiter_name' => ['nullable', 'string', 'max:255'],
             'hiring_date' => [$isHired ? 'required' : 'nullable', 'date'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],

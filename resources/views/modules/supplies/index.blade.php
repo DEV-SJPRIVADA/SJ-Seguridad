@@ -12,15 +12,18 @@
                             <h3 class="panel-title">Mis Solicitudes de Insumos</h3>
                             <p class="panel-text">Historial de pedidos realizados por tu usuario para el area seleccionada.</p>
                         </div>
-                        <a href="{{ route('supplies.create', ['module' => $module]) }}" class="btn btn--primary">
-                            Nueva Solicitud
-                        </a>
+                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                            <x-export-excel route="{{ route('supplies.export', ['module' => $module]) }}" />
+                            <a href="{{ route('supplies.create', ['module' => $module]) }}" class="btn btn--primary">
+                                Nueva Solicitud
+                            </a>
+                        </div>
                     </div>
                 </div>
 
                 <div class="panel__body">
                     <div class="block-spaced">
-                        <table class="supply-table js-datatable">
+                        <table class="supply-table js-datatable" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>ID</th>

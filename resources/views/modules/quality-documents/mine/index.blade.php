@@ -9,6 +9,9 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Mis documentos</h3>
                     <p class="panel-text">Documentos de Calidad asignados directamente a tu usuario.</p>
+                    <div style="margin-top:0.5rem;">
+                        <x-export-excel route="{{ route('quality-documents.mine.export', ['module' => $module]) }}" />
+                    </div>
                 </div>
 
                 <div class="panel__body">
@@ -16,7 +19,7 @@
                         <p class="panel-text text-muted">No tienes documentos asignados en este momento.</p>
                     @else
                         <div class="block-spaced">
-                            <table class="supply-table js-datatable">
+                            <table class="supply-table js-datatable" data-no-excel>
                                 <thead>
                                     <tr>
                                         <th>Codigo</th>
