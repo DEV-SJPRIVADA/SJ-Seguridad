@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
 use App\Http\Requests\Requisitions\UpdatePersonalRequisitionRequest;
+use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
@@ -19,6 +20,7 @@ use App\Models\RequisitionUniform;
 use App\Models\RequisitionRecruiter;
 use App\Models\RequisitionNotificationEmail;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
+use App\Services\Requisitions\CommercialClientBridge;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
@@ -39,7 +42,6 @@ class RequisitionController extends Controller
     private const PARAMETER_TYPES = [
         'positions' => ['label' => 'Cargos solicitados', 'model' => RequisitionPosition::class],
         'reasons' => ['label' => 'Motivos de solicitud', 'model' => RequisitionRequestReason::class],
-        'clients' => ['label' => 'Clientes', 'model' => RequisitionClient::class],
         'cities' => ['label' => 'Ciudades', 'model' => RequisitionCity::class],
         'client-types' => ['label' => 'Tipos de cliente', 'model' => RequisitionClientType::class],
         'programming-types' => ['label' => 'Tipos de programacion', 'model' => RequisitionProgrammingType::class],
@@ -140,6 +142,45 @@ class RequisitionController extends Controller
             'catalogs' => $this->catalogs(),
             'sexOptions' => $this->sexOptions(),
             'areaOptions' => config('access.areas'),
+            'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
+            'selectedCommercialClient' => CommercialClientBridge::findForRequisition(null),
+        ]);
+    }
+
+    public function searchClients(Request $request, string $module): JsonResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeBoardAccess($module);
+
+        $q = trim($request->string('q')->toString());
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $digits = preg_replace('/\D+/', '', $q) ?: '';
+
+        $clients = CommercialClient::query()
+            ->where(function ($query) use ($q, $digits): void {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('nit', 'like', "%{$q}%");
+
+                if ($digits !== '' && $digits !== $q) {
+                    $query->orWhere('nit', 'like', "%{$digits}%");
+                }
+            })
+            ->orderBy('name')
+            ->limit(15)
+            ->get(['id', 'nit', 'name', 'city']);
+
+        return response()->json([
+            'data' => $clients->map(fn (CommercialClient $client) => [
+                'id' => $client->id,
+                'nit' => $client->nit,
+                'name' => $client->name,
+                'city' => $client->city,
+                'label' => "{$client->name} ({$client->nit})",
+            ])->values(),
         ]);
     }
 
@@ -255,7 +296,7 @@ class RequisitionController extends Controller
 
         $requisitions = PersonalRequisition::query()
             ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
-            ->with(['client', 'position', 'requester'])
+            ->with(['client', 'position', 'requester', 'city'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('code', 'like', "%{$search}%")
@@ -268,9 +309,9 @@ class RequisitionController extends Controller
                 });
             })
             ->when($status !== '', fn ($query) => $query->where('status', $status))
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
+            ->orderByDesc('request_date')
+            ->orderByDesc('id')
+            ->get();
 
         return view('modules.requisitions.manage', [
             'filters' => ['q' => $search, 'status' => $status],
@@ -358,7 +399,8 @@ class RequisitionController extends Controller
                 });
             })
             ->when($status !== '', fn ($query) => $query->where('status', $status))
-            ->latest()
+            ->orderByDesc('request_date')
+            ->orderByDesc('id')
             ->get();
 
         $statusLabels = PersonalRequisition::statuses();
@@ -460,6 +502,8 @@ class RequisitionController extends Controller
             'sexOptions' => $this->sexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
+            'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
+            'selectedCommercialClient' => CommercialClientBridge::findForRequisition($requisition),
         ]);
     }
 

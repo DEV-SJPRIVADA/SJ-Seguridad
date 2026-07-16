@@ -9,7 +9,9 @@
 
         const searchWrap = root.querySelector('.js-client-picker-search');
         const selectedWrap = root.querySelector('.js-client-picker-selected');
-        const input = root.querySelector('#client_search');
+        const input = root.querySelector('.js-client-picker-search-input')
+            || root.querySelector('#client_search')
+            || root.querySelector('input[type="search"]');
         const results = root.querySelector('.js-client-picker-results');
         const hint = root.querySelector('.js-client-picker-hint');
         const hiddenId = root.querySelector('.js-client-picker-id');

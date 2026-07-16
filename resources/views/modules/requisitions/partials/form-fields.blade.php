@@ -81,14 +81,10 @@
     </div>
 
     <div class="form-field">
-        <x-input-label for="client_id" value="Cliente *" />
-        <select id="client_id" name="client_id" class="form-select" required>
-            <option value="">Selecciona un cliente</option>
-            @foreach ($catalogs['clients'] as $item)
-                <option value="{{ $item->id }}" @selected((string) old('client_id', $requisition?->client_id) === (string) $item->id)>{{ $item->name }}</option>
-            @endforeach
-        </select>
-        <x-input-error :messages="$errors->get('client_id')" />
+        @include('modules.requisitions.partials.commercial-client-picker', [
+            'clientSearchUrl' => $clientSearchUrl,
+            'selectedCommercialClient' => $selectedCommercialClient ?? null,
+        ])
     </div>
 
     <div class="form-field">

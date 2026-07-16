@@ -3,7 +3,9 @@
         @include('modules.requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
-
+    @php
+        $hasActiveFilters = ($filters['q'] ?? '') !== '' || ($filters['status'] ?? '') !== '';
+    @endphp
 
     <div class="page-section">
         <div class="app-container">
@@ -11,25 +13,80 @@
                 <div class="panel__header">
                     <h3 class="panel-title">Gestion de requisiciones</h3>
                     <p class="panel-text">Seguimiento centralizado para actualizacion de datos y cambios de estado.</p>
-                    <div style="margin-top:0.5rem;">
-                        <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
-                    </div>
                 </div>
 
                 <div class="panel__body">
-                    <form method="GET" class="permission-filter-bar bottom-spaced">
-                        <input type="search" name="q" class="form-input permission-filter-bar__search" value="{{ $filters['q'] }}" placeholder="Buscar por codigo, lider o perfil">
-                        <select name="status" class="form-select permission-filter-bar__select">
-                            <option value="">Todos los estados</option>
-                            @foreach ($statusLabels as $statusKey => $statusLabel)
-                                <option value="{{ $statusKey }}" @selected($filters['status'] === $statusKey)>{{ $statusLabel }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" class="btn btn--secondary">Filtrar</button>
-                    </form>
+                    <div class="req-manage-filters">
+                        <div class="req-manage-filters__head">
+                            <h4 class="req-manage-filters__title">Filtros</h4>
+                            <div class="req-manage-filters__actions">
+                                <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
+                                @if ($hasActiveFilters)
+                                    <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="req-manage-filters__toolbar">
+                            <form method="GET" id="manage-filters-form" class="req-manage-filters__search-col">
+                                @if ($filters['status'] ?? '')
+                                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                @endif
+
+                                <label class="req-manage-filters__label" for="manage-search-input">Buscar</label>
+                                <div class="req-manage-filters__search-group">
+                                    <input
+                                        id="manage-search-input"
+                                        type="search"
+                                        name="q"
+                                        class="form-input"
+                                        value="{{ $filters['q'] }}"
+                                        placeholder="Codigo, lider, cargo..."
+                                    >
+                                    <button type="submit" class="btn btn--primary">Buscar</button>
+                                </div>
+                            </form>
+
+                            <div class="req-manage-filters__status-col">
+                                <p class="req-manage-filters__status-label">Estado</p>
+                                <div class="req-manage-filters__pills">
+                                    <a
+                                        href="{{ route('requisitions.manage', array_filter(['module' => $moduleKey, 'q' => $filters['q'] ?: null])) }}"
+                                        class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
+                                    >Todos</a>
+                                    @foreach ($statusLabels as $statusKey => $statusLabel)
+                                        <a
+                                            href="{{ route('requisitions.manage', array_filter([
+                                                'module' => $moduleKey,
+                                                'q' => $filters['q'] ?: null,
+                                                'status' => $statusKey,
+                                            ])) }}"
+                                            class="req-manage-filters__pill status-pill--req-{{ $statusKey }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
+                                        >{{ $statusLabel }}</a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="req-manage-filters__meta">
+                            <strong>{{ number_format($requisitions->count()) }}</strong>
+                            {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}
+                            @if ($filters['status'] ?? '')
+                                · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
+                            @endif
+                            @if ($filters['q'] ?? '')
+                                · Busqueda servidor: <strong>{{ $filters['q'] }}</strong>
+                            @endif
+                            · Use la busqueda de la tabla para filtrar filas visibles
+                        </p>
+                    </div>
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable" data-no-excel>
+                        <table
+                            class="data-table js-datatable"
+                            data-no-excel
+                            data-order='[[1, "desc"]]'
+                        >
                             <thead>
                                 <tr>
                                     <th>Codigo</th>
@@ -44,7 +101,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($requisitions as $requisition)
+                                @forelse ($requisitions as $requisition)
                                     <tr>
                                         <td>{{ $requisition->code }}</td>
                                         <td>{{ $requisition->request_date?->format('Y-m-d') }}</td>
@@ -59,20 +116,19 @@
                                             </span>
                                         </td>
                                         <td class="table-actions">
-                                            <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary">Abrir</a>
-                                            <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary" title="Previsualizar e Imprimir">
-                                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                            <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary btn--sm">Abrir</a>
+                                            <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary btn--sm" title="Previsualizar e Imprimir">
                                                 Imprimir
                                             </a>
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="9">No hay requisiciones con los filtros seleccionados.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
-                    </div>
-
-                    <div class="pagination-wrap top-spaced">
-                        {{ $requisitions->links() }}
                     </div>
                 </div>
             </div>

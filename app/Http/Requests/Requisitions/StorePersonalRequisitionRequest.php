@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Requisitions;
 
+use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Models\PersonalRequisition;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StorePersonalRequisitionRequest extends FormRequest
 {
+    use ResolvesCommercialClient;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -31,7 +34,7 @@ class StorePersonalRequisitionRequest extends FormRequest
             'replacement_name' => ['required_if:request_reason_id,2', 'nullable', 'string', 'max:255'],
             'operating_area_key' => ['required', 'string', Rule::in(array_keys(config('access.areas', [])))],
             'request_reason_id' => ['required', 'integer', Rule::exists('requisition_request_reasons', 'id')],
-            'client_id' => ['required', 'integer', Rule::exists('requisition_clients', 'id')],
+            ...$this->commercialClientRules(),
             'city_id' => ['required', 'integer', Rule::exists('requisition_cities', 'id')],
             'client_type_id' => ['required', 'integer', Rule::exists('requisition_client_types', 'id')],
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],

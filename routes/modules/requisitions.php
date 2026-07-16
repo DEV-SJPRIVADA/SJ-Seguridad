@@ -7,6 +7,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/
     Route::get('/dashboard', [RequisitionController::class, 'dashboard'])->name('dashboard');
     Route::get('/solicitar', [RequisitionController::class, 'create'])->name('create');
     Route::post('/solicitar', [RequisitionController::class, 'store'])->name('store');
+    Route::get('/clientes/buscar', [RequisitionController::class, 'searchClients'])->name('clients.search');
     Route::get('/seguimiento', [RequisitionController::class, 'tracking'])->name('tracking');
     Route::get('/seguimiento/exportar', [RequisitionController::class, 'trackingExport'])->name('tracking.export');
     Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');

@@ -16,7 +16,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Creacion de requisiciones sobre el modulo autorizado, incluso si el `area_key` del usuario es diferente
 - Edicion solo para gestion humana o usuarios con permiso operativo equivalente
 - Historial de cambios de estado
-- Catalogos administrables: cargos, motivos, clientes, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion**
+- Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
 - Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
 - Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
 
@@ -26,7 +26,8 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - El tablero `Seguimiento` es solo lectura para usuarios solicitantes y muestra requisiciones del area propia del usuario
 - El filtro `Solo mis solicitudes` permite reducir la vista del area a lo creado por el usuario autenticado
 - `leader_name` y `requesting_area_key` se toman del usuario autenticado
-- `Cliente` y `Motivo` se seleccionan desde parametros
+- `Cliente` se busca en la matriz comercial (`commercial_clients`) cuando el tipo de cliente **no** es *Interno*; para *Interno* (personal administrativo) se asigna automaticamente `Cliente interno SJ Seguridad` en `requisition_clients`
+- `Motivo` se selecciona desde parametros
 - `Centro de costo` es texto libre
 - Cantidad N en Solicitar genera **N filas** con `quantity = 1` y codigos `REQ-{YEAR}-####`
 - Existen dos observaciones:
@@ -77,7 +78,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 6. Cedula / Nombre a quien reemplaza (opcional)
 7. Area operativa
 8. Motivo
-9. Cliente
+9. Cliente (buscador sobre matriz comercial; min. 2 caracteres)
 10. Ciudad
 11. Tipo de cliente
 12. Tipo de programacion
@@ -99,6 +100,8 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
   - `contratado`: Proceso finalizado con éxito.
   - `cancelada`: Solicitud descartada.
 - **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
+- **Formulario Solicitar**: secciones numeradas (motivo, cargo, servicio, perfil, administrativo); cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas motivos envian 1); barra lateral con checklist y acciones destacadas al pie.
+- **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
 - **Dashboard Compacto**: indicadores KPI en una sola fila.
 - **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).
 
@@ -109,6 +112,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `GET /requisitions/{module}/dashboard`
 - `GET /requisitions/{module}/solicitar`
 - `POST /requisitions/{module}/solicitar`
+- `GET /requisitions/{module}/clientes/buscar` — JSON de clientes comerciales para el formulario (param `q`, min. 2 caracteres)
 - `GET /requisitions/{module}/seguimiento`
 - `GET /requisitions/{module}/gestion`
 - `GET /requisitions/{module}/gestion/{requisition}/editar`
@@ -137,7 +141,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `personal_requisition_status_logs`
 - `requisition_positions`
 - `requisition_request_reasons`
-- `requisition_clients`
+- `requisition_clients` (tabla interna de enlace; se alimenta automaticamente desde matriz comercial al crear/editar; **no** se administra en Parametros)
+- `commercial_clients` (fuente del buscador en Solicitar y Gestion)
 - `requisition_cities`
 - `requisition_client_types`
 - `requisition_programming_types`
@@ -167,3 +172,5 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Mailpit documentado; CTA del correo con filtro `q`; validacion `email` en parametros tipo `emails`.
 - Persistencia de `recruiter_id` en mass assignment.
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
+- Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
+- Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.

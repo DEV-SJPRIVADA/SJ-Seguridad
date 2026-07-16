@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
+use App\Models\CommercialServiceType;
 use App\Models\User;
 use App\Support\PermissionCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -109,6 +110,51 @@ class CommercialMatrixTest extends TestCase
             'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
             'contract_number' => 'SJ2023-MT048',
         ]);
+    }
+
+    public function test_manager_can_update_service_type_even_with_corrupt_imported_duration(): void
+    {
+        $user = $this->matrizManager();
+
+        $client = CommercialClient::query()->create([
+            'nit' => '10107482',
+            'name' => 'CESAR AUGUSTO GOMEZ GIRALDO / PISTA BMX',
+            'city' => 'MANIZALES',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $guardaType = CommercialServiceType::query()->where('name', 'GUARDA')->firstOrFail();
+        $vigilanciaType = CommercialServiceType::query()->where('name', 'VIGILANCIA')->firstOrFail();
+
+        $service = CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_INACTIVOS,
+            'contract_number' => 'SJ20203-SF188',
+            'commercial_service_type_id' => $guardaType->id,
+            'duration_months' => 7963230,
+            'contract_start' => '1969-12-31',
+            'contract_end' => '1969-12-31',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)->patch(route('comercial.matriz.services.update', $service), [
+            'commercial_client_id' => $client->id,
+            'portfolio' => $service->portfolio,
+            'contract_number' => $service->contract_number,
+            'commercial_service_type_id' => $vigilanciaType->id,
+            'duration_months' => 7963230,
+            'contract_start' => '1969-12-31',
+            'contract_end' => '1969-12-31',
+        ])->assertRedirect(route('comercial.matriz.services.index'));
+
+        $service->refresh();
+
+        $this->assertSame($vigilanciaType->id, $service->commercial_service_type_id);
+        $this->assertNull($service->duration_months);
+        $this->assertNull($service->contract_start);
+        $this->assertNull($service->contract_end);
     }
 
     public function test_client_search_returns_matches_by_name_and_nit(): void

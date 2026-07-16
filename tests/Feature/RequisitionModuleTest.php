@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
+use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
+use App\Services\Requisitions\CommercialClientBridge;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
@@ -30,6 +32,52 @@ class RequisitionModuleTest extends TestCase
         $this->seed(\Database\Seeders\DatabaseSeeder::class);
     }
 
+    public function test_user_can_search_commercial_clients_for_requisition_form(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('view.board.operaciones.requisiciones');
+
+        CommercialClient::query()->create([
+            'nit' => '901360444-1',
+            'name' => 'MADEMAX',
+            'city' => 'Cali',
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('requisitions.clients.search', [
+            'module' => 'operaciones',
+            'q' => 'MADE',
+        ]));
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.name', 'MADEMAX');
+    }
+
+    public function test_clients_parameter_type_is_no_longer_manageable(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('manage.requisition.parameters');
+
+        $this->actingAs($user)
+            ->post(route('requisitions.parameters.store', ['module' => 'gestion_humana', 'type' => 'clients']), [
+                'name' => 'Cliente manual',
+                'is_active' => 1,
+            ])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->get(route('requisitions.parameters', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertDontSee('Gestionar: Clientes', false);
+    }
+
     public function test_user_can_create_requisition_for_its_own_area(): void
     {
         $user = User::factory()->create([
@@ -50,6 +98,39 @@ class RequisitionModuleTest extends TestCase
         $this->assertDatabaseHas('personal_requisition_status_logs', [
             'to_status' => PersonalRequisition::STATUS_SOLICITADA,
             'changed_by' => $user->id,
+        ]);
+    }
+
+    public function test_user_can_create_internal_requisition_without_commercial_client(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('view.board.operaciones.requisiciones');
+
+        $internalType = RequisitionClientType::query()
+            ->whereRaw('LOWER(name) = ?', ['interno'])
+            ->firstOrFail();
+
+        $payload = $this->validPayload();
+        $payload['client_type_id'] = $internalType->id;
+        unset($payload['commercial_client_id']);
+
+        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
+
+        $response->assertRedirect(route('requisitions.dashboard', ['module' => 'operaciones']));
+
+        $internalClientId = RequisitionClient::query()
+            ->where('name', CommercialClientBridge::INTERNAL_REQUISITION_CLIENT_NAME)
+            ->value('id');
+
+        $this->assertNotNull($internalClientId);
+        $this->assertDatabaseHas('personal_requisitions', [
+            'requested_by' => $user->id,
+            'client_id' => $internalClientId,
+            'client_type_id' => $internalType->id,
         ]);
     }
 
@@ -243,6 +324,42 @@ class RequisitionModuleTest extends TestCase
         $this->assertFalse($tabs->contains('seguimiento'));
     }
 
+    public function test_manage_lists_requisitions_by_request_date_desc_and_filters_by_status(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('manage.area.gestion_humana');
+
+        $older = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0100', 'operaciones', 'Perfil A'),
+            ['request_date' => '2026-01-10', 'status' => PersonalRequisition::STATUS_SOLICITADA]
+        ));
+        $newer = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0101', 'operaciones', 'Perfil B'),
+            ['request_date' => '2026-03-15', 'status' => PersonalRequisition::STATUS_EN_GESTION]
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSeeInOrder([$newer->code, $older->code]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'operaciones', 'status' => PersonalRequisition::STATUS_EN_GESTION]))
+            ->assertOk()
+            ->assertSee($newer->code)
+            ->assertDontSee($older->code);
+    }
+
     public function test_gestion_humana_user_can_update_status_and_create_status_log(): void
     {
         $requester = User::factory()->create([
@@ -393,6 +510,17 @@ class RequisitionModuleTest extends TestCase
         Mail::assertNotQueued(PersonalRequisitionStatusChangedMail::class);
     }
 
+    private function commercialClient(): CommercialClient
+    {
+        return CommercialClient::query()->firstOrCreate(
+            ['nit' => '900123456-1'],
+            [
+                'name' => 'Constructora Solanillas SAS',
+                'city' => 'Cali',
+            ]
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -406,7 +534,7 @@ class RequisitionModuleTest extends TestCase
             'replacement_name' => 'Servicio nuevo',
             'operating_area_key' => 'operaciones',
             'request_reason_id' => RequisitionRequestReason::query()->firstOrFail()->id,
-            'client_id' => RequisitionClient::query()->firstOrFail()->id,
+            'commercial_client_id' => $this->commercialClient()->id,
             'city_id' => RequisitionCity::query()->firstOrFail()->id,
             'client_type_id' => RequisitionClientType::query()->firstOrFail()->id,
             'programming_type_id' => RequisitionProgrammingType::query()->firstOrFail()->id,
