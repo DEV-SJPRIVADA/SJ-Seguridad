@@ -1043,6 +1043,25 @@ a {
     color: #334155;
 }
 
+.req-manage-filters__extras {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.req-manage-filters__field--compact {
+    flex: 0 1 auto;
+    min-width: min(100%, 260px);
+}
+
+.req-manage-filters__pills--start {
+    justify-content: flex-start;
+}
+
+.req-manage-filters__extras .form-select {
+    min-height: 42px;
+}
+
 .checkbox-card {
     display: flex;
     gap: 0.85rem;
@@ -2515,6 +2534,15 @@ table.dataTable thead td {
 
     .req-manage-filters__search-group .btn {
         width: 100%;
+    }
+
+    .req-manage-filters__extras .req-manage-filters__row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .req-manage-filters__field--compact {
+        min-width: 100%;
     }
 
     .req-form-aside {
