@@ -39,23 +39,8 @@
                 </div>
 
                 <aside class="req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de guardar</h3>
-                            <p class="panel-text">Verifica coherencia entre motivo, cliente y compensacion.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item">Confirma que el estado refleje el avance real del proceso.</li>
-                                <li class="req-form-guide__item">Asigna reclutador cuando la solicitud entre en gestion activa.</li>
-                                <li class="req-form-guide__item">Valida la matriz de compensacion antes de contratacion.</li>
-                                <li class="req-form-guide__item">Usa observaciones de GH para contexto visible en seguimiento.</li>
-                                <li class="req-form-guide__item">Cliente externo debe coincidir con la matriz comercial.</li>
-                            </ul>
-                        </div>
-                    </div>
 
-                    <div class="panel">
+                <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de estados</h3>
                             <p class="panel-text">Traza de cambios y responsable del movimiento.</p>
@@ -84,6 +69,23 @@
                             @endif
                         </div>
                     </div>
+                    <div class="panel">
+                        <div class="panel__header">
+                            <h3 class="panel-title">Antes de guardar</h3>
+                            <p class="panel-text">Verifica coherencia entre motivo, cliente y compensacion.</p>
+                        </div>
+                        <div class="panel__body">
+                            <ul class="req-form-guide__list">
+                                <li class="req-form-guide__item">Confirma que el estado refleje el avance real del proceso.</li>
+                                <li class="req-form-guide__item">Asigna reclutador cuando la solicitud entre en gestion activa.</li>
+                                <li class="req-form-guide__item">Valida la matriz de compensacion antes de contratacion.</li>
+                                <li class="req-form-guide__item">Usa observaciones de GH para contexto visible en seguimiento.</li>
+                                <li class="req-form-guide__item">Cliente externo debe coincidir con la matriz comercial.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+
                 </aside>
             </div>
         </div>
