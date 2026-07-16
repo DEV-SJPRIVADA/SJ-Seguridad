@@ -338,18 +338,27 @@ class MtCo01Importer
 
         try {
             if (is_numeric($value)) {
-                return ExcelDate::excelToDateTimeObject((float) $value)->format('Y-m-d');
+                $date = ExcelDate::excelToDateTimeObject((float) $value)->format('Y-m-d');
+            } else {
+                $string = trim((string) $value);
+                if ($string === '') {
+                    return null;
+                }
+
+                $date = date('Y-m-d', strtotime($string));
             }
 
-            $string = trim((string) $value);
-            if ($string === '') {
-                return null;
-            }
-
-            return date('Y-m-d', strtotime($string));
+            return $this->isInvalidImportedDate($date) ? null : $date;
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private function isInvalidImportedDate(string $date): bool
+    {
+        $year = (int) substr($date, 0, 4);
+
+        return $year > 0 && $year < 1980;
     }
 
     private function parseDuration(mixed $value): ?int
@@ -358,15 +367,19 @@ class MtCo01Importer
             return null;
         }
 
+        $parsed = null;
+
         if (is_numeric($value)) {
-            return (int) round((float) $value);
+            $parsed = (int) round((float) $value);
+        } elseif (preg_match('/(\d+)/', (string) $value, $matches)) {
+            $parsed = (int) $matches[1];
         }
 
-        if (preg_match('/(\d+)/', (string) $value, $matches)) {
-            return (int) $matches[1];
+        if ($parsed === null || $parsed < 0 || $parsed > 600) {
+            return null;
         }
 
-        return null;
+        return $parsed;
     }
 
     private function mapDocStatus(mixed $value): ?string

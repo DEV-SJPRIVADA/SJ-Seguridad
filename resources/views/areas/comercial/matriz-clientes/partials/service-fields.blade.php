@@ -129,14 +129,17 @@
         <div class="form-field">
             <x-input-label for="contract_start" value="Inicio contrato" />
             <x-text-input id="contract_start" name="contract_start" type="date" class="form-input" :value="old('contract_start', optional($service->contract_start)->format('Y-m-d'))" />
+            <x-input-error :messages="$errors->get('contract_start')" />
         </div>
         <div class="form-field">
             <x-input-label for="contract_end" value="Fin contrato" />
             <x-text-input id="contract_end" name="contract_end" type="date" class="form-input" :value="old('contract_end', optional($service->contract_end)->format('Y-m-d'))" />
+            <x-input-error :messages="$errors->get('contract_end')" />
         </div>
         <div class="form-field">
             <x-input-label for="duration_months" value="Duracion (meses)" />
-            <x-text-input id="duration_months" name="duration_months" type="number" min="0" class="form-input" :value="old('duration_months', $service->duration_months)" />
+            <x-text-input id="duration_months" name="duration_months" type="number" min="0" max="600" class="form-input" :value="old('duration_months', $service->duration_months)" />
+            <x-input-error :messages="$errors->get('duration_months')" />
         </div>
     </div>
 

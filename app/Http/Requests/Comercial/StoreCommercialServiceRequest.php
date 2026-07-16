@@ -13,9 +13,57 @@ class StoreCommercialServiceRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $duration = $this->input('duration_months');
+        if (is_numeric($duration) && (int) $duration > 600) {
+            $this->merge(['duration_months' => null]);
+        }
+
+        foreach (['contract_start', 'contract_end'] as $dateField) {
+            $value = $this->input($dateField);
+            if (is_string($value) && $this->isInvalidImportedDate($value)) {
+                $this->merge([$dateField => null]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         return $this->serviceRules();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'duration_months.max' => 'La duracion en meses no puede superar 600.',
+            'contract_end.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
+            'commercial_client_id.required' => 'Debe seleccionar un cliente.',
+            'commercial_service_type_id.exists' => 'El tipo de servicio seleccionado no es valido.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'duration_months' => 'duracion (meses)',
+            'contract_start' => 'inicio contrato',
+            'contract_end' => 'fin contrato',
+            'commercial_service_type_id' => 'tipo de servicio',
+        ];
+    }
+
+    private function isInvalidImportedDate(string $value): bool
+    {
+        $year = (int) substr($value, 0, 4);
+
+        return $year > 0 && $year < 1980;
     }
 
     /**

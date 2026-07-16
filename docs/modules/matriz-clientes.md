@@ -52,6 +52,7 @@ Por defecto lee [`docs/MT-CO-01 Matriz de clientes.xlsx`](../MT-CO-01%20Matriz%2
 - Servicio: upsert por cliente + portafolio + numero de contrato
 - Catalogos sector/tipo se crean si no existen
 - Implementacion: `App\Services\Comercial\MtCo01Importer` + `comercial:import-mt-co-01`
+- Al importar/guardar se descartan duraciones > 600 meses y fechas de contrato anteriores a 1980 (artefactos de Excel); al editar un servicio con datos corruptos, el guardado los normaliza automaticamente
 
 ## Rutas
 
