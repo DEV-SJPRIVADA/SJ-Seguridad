@@ -101,6 +101,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
   - `cancelada`: Solicitud descartada.
 - **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
 - **Formulario Solicitar**: secciones numeradas (motivo, cargo, servicio, perfil, administrativo); cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas motivos envian 1); barra lateral con checklist y acciones destacadas al pie.
+- **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con guia operativa e historial de estados.
 - **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
 - **Seguimiento**: mismo panel de filtros que Gestion (busqueda, pills de estado, cliente, ciudad, alcance mis/todas); resumen de resultados y exportacion Excel en la cabecera del panel.
 - **Dashboard Compacto**: indicadores KPI en una sola fila.

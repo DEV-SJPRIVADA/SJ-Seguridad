@@ -709,6 +709,54 @@ a {
     background: linear-gradient(135deg, var(--brand-blue-pale) 0%, #fff 100%);
 }
 
+.req-form__meta--edit {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.req-form-history {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.req-form-history__item {
+    padding: 0.85rem 0.95rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+}
+
+.req-form-history__date {
+    margin: 0 0 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.req-form-history__change {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.req-form-history__arrow {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.req-form-history__author {
+    margin: 0.45rem 0 0;
+    font-size: 0.82rem;
+    color: #475569;
+}
+
 .req-form__meta-item {
     display: flex;
     flex-direction: column;
@@ -2509,6 +2557,7 @@ table.dataTable thead td {
     .detail-grid,
     .form-grid--two,
     .req-form__meta,
+    .req-form__meta--edit,
     .req-form__replacement,
     .req-form-layout,
     .req-form-layout {

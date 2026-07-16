@@ -5,14 +5,14 @@
 
     <div class="page-section">
         <div class="app-container">
-            <div class="form-layout bottom-spaced">
-                <section class="panel">
-                    <div class="panel__header">
-                        <h3 class="panel-title">Editar {{ $requisition->code }}</h3>
-                        <p class="panel-text">Gestion humana puede ajustar datos, registrar observaciones y cambiar el estado.</p>
-                    </div>
+            <div class="page-header-inner" style="padding-top: 0; margin-bottom: 1.25rem;">
+                <h2 class="page-title">Editar {{ $requisition->code }}</h2>
+                <p class="page-subtitle">Gestion humana puede ajustar datos operativos, registrar compensacion, cambiar el estado y dejar trazabilidad en el historial.</p>
+            </div>
 
-                    <form method="POST" action="{{ route('requisitions.update', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="panel__body form-stack">
+            <div class="req-form-layout">
+                <div class="req-form-layout__main">
+                    <form method="POST" action="{{ route('requisitions.update', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="form-stack">
                         @csrf
                         @method('PATCH')
 
@@ -28,51 +28,60 @@
                             'selectedCommercialClient' => $selectedCommercialClient,
                         ])
 
-                        <div class="form-actions">
-                            <p class="text-small text-muted">Cada cambio de estado queda registrado en el historial operativo.</p>
-                            <div class="form-actions__group">
+                        <div class="req-form-actions">
+                            <p class="req-form-actions__note">Cada cambio de estado queda registrado en el historial operativo junto con el usuario responsable.</p>
+                            <div class="req-form-actions__group">
                                 <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary">Volver</a>
                                 <x-primary-button>Guardar cambios</x-primary-button>
                             </div>
                         </div>
                     </form>
-                </section>
+                </div>
 
-                <aside class="panel">
-                    <div class="panel__header">
-                        <h3 class="panel-title">Historial de estados</h3>
-                        <p class="panel-text">Traza de cambios y responsable del movimiento.</p>
+                <aside class="req-form-aside">
+                    <div class="panel">
+                        <div class="panel__header">
+                            <h3 class="panel-title">Antes de guardar</h3>
+                            <p class="panel-text">Verifica coherencia entre motivo, cliente y compensacion.</p>
+                        </div>
+                        <div class="panel__body">
+                            <ul class="req-form-guide__list">
+                                <li class="req-form-guide__item">Confirma que el estado refleje el avance real del proceso.</li>
+                                <li class="req-form-guide__item">Asigna reclutador cuando la solicitud entre en gestion activa.</li>
+                                <li class="req-form-guide__item">Valida la matriz de compensacion antes de contratacion.</li>
+                                <li class="req-form-guide__item">Usa observaciones de GH para contexto visible en seguimiento.</li>
+                                <li class="req-form-guide__item">Cliente externo debe coincidir con la matriz comercial.</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div class="panel__body">
-                        <div class="data-table-wrap">
-                            <table class="data-table js-datatable">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Cambio</th>
-                                        <th>Usuario</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <div class="panel">
+                        <div class="panel__header">
+                            <h3 class="panel-title">Historial de estados</h3>
+                            <p class="panel-text">Traza de cambios y responsable del movimiento.</p>
+                        </div>
+                        <div class="panel__body">
+                            @if ($requisition->statusLogs->isEmpty())
+                                <p class="panel-text" style="margin: 0;">Sin cambios de estado registrados.</p>
+                            @else
+                                <ul class="req-form-history">
                                     @foreach ($requisition->statusLogs->sortByDesc('created_at') as $log)
-                                        <tr>
-                                            <td>{{ $log->created_at?->format('Y-m-d H:i') }}</td>
-                                                <td>
-                                                    <div class="status-pill status-pill--req-{{ $log->from_status }}">
-                                                        {{ $statusLabels[$log->from_status] ?? 'Inicial' }}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="status-pill status-pill--req-{{ $log->to_status }}">
-                                                        {{ $statusLabels[$log->to_status] ?? $log->to_status }}
-                                                    </div>
-                                                </td>
-                                            <td>{{ $log->author?->name }}</td>
-                                        </tr>
+                                        <li class="req-form-history__item">
+                                            <p class="req-form-history__date">{{ $log->created_at?->format('Y-m-d H:i') }}</p>
+                                            <div class="req-form-history__change">
+                                                <span class="status-pill status-pill--req-{{ $log->from_status }}">
+                                                    {{ $statusLabels[$log->from_status] ?? 'Inicial' }}
+                                                </span>
+                                                <span class="req-form-history__arrow" aria-hidden="true">→</span>
+                                                <span class="status-pill status-pill--req-{{ $log->to_status }}">
+                                                    {{ $statusLabels[$log->to_status] ?? $log->to_status }}
+                                                </span>
+                                            </div>
+                                            <p class="req-form-history__author">{{ $log->author?->name ?? 'Sistema' }}</p>
+                                        </li>
                                     @endforeach
-                                </tbody>
-                            </table>
+                                </ul>
+                            @endif
                         </div>
                     </div>
                 </aside>
