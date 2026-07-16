@@ -16,6 +16,7 @@
   botones, formularios, tablas, tarjetas, layout, navegacion y paneles de administracion
 - Las vistas autenticadas comparten ahora una estructura comun:
   barra superior, panel lateral izquierdo para modulos autorizados y menu horizontal para tableros del modulo activo
+- En pantallas <= 1024px la navegacion se compacta: selector nativo de procesos; **Tableros del area** (Dashboard, Requisiciones, Suministros…) y, debajo, subtabs del modulo activo (`module-subnav`, p. ej. Solicitar/Gestion) con scroll horizontal.
 - El `dashboard` funciona como pantalla neutra: no carga un modulo por defecto y muestra el area de trabajo vacia hasta que el usuario seleccione un modulo autorizado
 
 ## Estructura principal

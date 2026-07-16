@@ -598,31 +598,6 @@
                     text-align: center !important;
                     gap: 1.5rem !important;
                 }
-                /* Botones de navegación (módulos y pestañas) en dos columnas en mobile */
-                .app-sidebar__nav, 
-                .module-tabs, 
-                .requisition-subtabs__inner {
-                    display: flex !important;
-                    flex-direction: row !important;
-                    flex-wrap: wrap !important;
-                    gap: 0.5rem !important;
-                    justify-content: center !important;
-                }
-
-                .sidebar-link, 
-                .module-tab,
-                .requisition-subtabs__inner .module-tab {
-                    width: calc(50% - 0.5rem) !important;
-                    margin: 0 !important;
-                    justify-content: center !important;
-                    text-align: center !important;
-                    padding: 0.6rem 0.4rem !important;
-                    font-size: 0.8rem !important;
-                }
-
-                .app-sidebar__header {
-                    text-align: center !important;
-                }
             }
 
             @media (max-width: 640px) {
@@ -698,6 +673,22 @@
                 @if ($errors->any())
                     showToast("Por favor verifica los errores en el formulario.", "error");
                 @endif
+
+                var moduleSelect = document.getElementById('app-module-select');
+                if (moduleSelect) {
+                    moduleSelect.addEventListener('change', function() {
+                        if (this.value) {
+                            window.location.href = this.value;
+                        }
+                    });
+                }
+
+                document.querySelectorAll('.module-tabs').forEach(function(nav) {
+                    var activeTab = nav.querySelector('.module-tab--active');
+                    if (activeTab && typeof activeTab.scrollIntoView === 'function') {
+                        activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+                    }
+                });
             });
         </script>
     </head>
@@ -709,10 +700,21 @@
             <div class="app-frame">
                 <aside class="app-sidebar">
                     <div class="app-sidebar__header">
-                        <p class="text-caption">Procesos</p>
+                        <p class="text-caption app-sidebar__label">Procesos</p>
                     </div>
 
-                    <nav class="app-sidebar__nav">
+                    @if ($appNavigation->isNotEmpty())
+                        <div class="app-sidebar__mobile-select">
+                            <label class="sr-only" for="app-module-select">Cambiar proceso</label>
+                            <select id="app-module-select" class="form-input app-sidebar__select">
+                                @foreach ($appNavigation as $module)
+                                    <option value="{{ $module['url'] }}" @selected($module['active'])>{{ $module['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
+                    <nav class="app-sidebar__nav app-sidebar__nav--desktop" aria-label="Procesos">
                         @foreach ($appNavigation as $module)
                             <a href="{{ $module['url'] }}" class="sidebar-link {{ $module['active'] ? 'sidebar-link--active' : '' }}">
                                 <span class="sidebar-link__title">{{ $module['label'] }}</span>
@@ -722,11 +724,12 @@
                 </aside>
 
                 <div class="app-workspace">
-                    @if ($currentModule)
-                        <div class="module-strip">
+                    @if ($currentModule && $currentModuleTabs->isNotEmpty())
+                        <div class="module-strip module-strip--area">
                             <div class="app-container">
                                 <div class="module-strip__inner">
-                                    <nav class="module-tabs">
+                                    <p class="text-caption module-strip__label">Tableros del area</p>
+                                    <nav class="module-tabs module-tabs--scroll" aria-label="Tableros">
                                         @foreach ($currentModuleTabs as $tab)
                                             <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
                                                 {{ $tab['label'] }}
