@@ -26,7 +26,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - El tablero `Seguimiento` es solo lectura para usuarios solicitantes y muestra requisiciones del area propia del usuario
 - El filtro `Solo mis solicitudes` permite reducir la vista del area a lo creado por el usuario autenticado
 - `leader_name` y `requesting_area_key` se toman del usuario autenticado
-- `Cliente` se busca en la matriz comercial (`commercial_clients`) mediante autocompletado por nombre o NIT; al guardar se vincula al catalogo legacy `requisition_clients` por nombre (o crea el registro si no existe)
+- `Cliente` se busca en la matriz comercial (`commercial_clients`) cuando el tipo de cliente **no** es *Interno*; para *Interno* (personal administrativo) se asigna automaticamente `Cliente interno SJ Seguridad` en `requisition_clients`
 - `Motivo` se selecciona desde parametros
 - `Centro de costo` es texto libre
 - Cantidad N en Solicitar genera **N filas** con `quantity = 1` y codigos `REQ-{YEAR}-####`
@@ -100,6 +100,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
   - `contratado`: Proceso finalizado con éxito.
   - `cancelada`: Solicitud descartada.
 - **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
+- **Formulario Solicitar**: secciones numeradas (motivo, cargo, servicio, perfil, administrativo); cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas motivos envian 1); barra lateral con checklist y acciones destacadas al pie.
 - **Dashboard Compacto**: indicadores KPI en una sola fila.
 - **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).
 

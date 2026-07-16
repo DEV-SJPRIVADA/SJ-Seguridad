@@ -6,6 +6,7 @@ use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
+use App\Services\Requisitions\CommercialClientBridge;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
@@ -97,6 +98,39 @@ class RequisitionModuleTest extends TestCase
         $this->assertDatabaseHas('personal_requisition_status_logs', [
             'to_status' => PersonalRequisition::STATUS_SOLICITADA,
             'changed_by' => $user->id,
+        ]);
+    }
+
+    public function test_user_can_create_internal_requisition_without_commercial_client(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('view.board.operaciones.requisiciones');
+
+        $internalType = RequisitionClientType::query()
+            ->whereRaw('LOWER(name) = ?', ['interno'])
+            ->firstOrFail();
+
+        $payload = $this->validPayload();
+        $payload['client_type_id'] = $internalType->id;
+        unset($payload['commercial_client_id']);
+
+        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
+
+        $response->assertRedirect(route('requisitions.dashboard', ['module' => 'operaciones']));
+
+        $internalClientId = RequisitionClient::query()
+            ->where('name', CommercialClientBridge::INTERNAL_REQUISITION_CLIENT_NAME)
+            ->value('id');
+
+        $this->assertNotNull($internalClientId);
+        $this->assertDatabaseHas('personal_requisitions', [
+            'requested_by' => $user->id,
+            'client_id' => $internalClientId,
+            'client_type_id' => $internalType->id,
         ]);
     }
 

@@ -1,14 +1,15 @@
 @php
     /** @var \App\Models\CommercialClient|null $selectedCommercialClient */
     $selectedCommercialClient = $selectedCommercialClient ?? null;
+    $clientRequired = $clientRequired ?? true;
 @endphp
 
 <div
     class="form-field js-client-picker"
     data-search-url="{{ $clientSearchUrl }}"
 >
-    <x-input-label for="requisition_client_search" value="Cliente *" />
-    <p class="panel-text" style="margin:0 0 0.5rem; font-size:0.8rem;">Busque por nombre o NIT en la matriz comercial (min. 2 caracteres).</p>
+    <x-input-label for="requisition_client_search" :value="'Cliente'.($clientRequired ? ' *' : '')" />
+    <p class="req-form__hint">Busque por nombre o NIT en la matriz comercial (min. 2 caracteres).</p>
 
     <div class="js-client-picker-search" style="{{ $selectedCommercialClient ? 'display:none;' : '' }}">
         <x-text-input
@@ -41,7 +42,7 @@
         name="commercial_client_id"
         class="js-client-picker-id"
         value="{{ old('commercial_client_id', $selectedCommercialClient?->id) }}"
-        required
+        @if($clientRequired) required @endif
     >
     <x-input-error :messages="$errors->get('commercial_client_id')" />
 </div>
@@ -51,11 +52,12 @@
         <style>
             .client-picker-results {
                 margin-top: 0.4rem;
-                border: 1px solid #d0d7de;
-                border-radius: 0.5rem;
+                border: 1px solid var(--color-border-strong);
+                border-radius: 12px;
                 background: #fff;
                 max-height: 240px;
                 overflow: auto;
+                box-shadow: var(--shadow-soft);
             }
             .client-picker-results__item {
                 display: flex;
@@ -80,8 +82,8 @@
                 gap: 1rem;
                 padding: 0.85rem 1rem;
                 border: 1px solid #c9d6e5;
-                border-radius: 0.5rem;
-                background: rgba(0, 51, 102, 0.04);
+                border-radius: 12px;
+                background: var(--brand-blue-pale);
             }
         </style>
     @endpush
