@@ -324,6 +324,42 @@ class RequisitionModuleTest extends TestCase
         $this->assertFalse($tabs->contains('seguimiento'));
     }
 
+    public function test_manage_lists_requisitions_by_request_date_desc_and_filters_by_status(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('manage.area.gestion_humana');
+
+        $older = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0100', 'operaciones', 'Perfil A'),
+            ['request_date' => '2026-01-10', 'status' => PersonalRequisition::STATUS_SOLICITADA]
+        ));
+        $newer = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0101', 'operaciones', 'Perfil B'),
+            ['request_date' => '2026-03-15', 'status' => PersonalRequisition::STATUS_EN_GESTION]
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSeeInOrder([$newer->code, $older->code]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'operaciones', 'status' => PersonalRequisition::STATUS_EN_GESTION]))
+            ->assertOk()
+            ->assertSee($newer->code)
+            ->assertDontSee($older->code);
+    }
+
     public function test_gestion_humana_user_can_update_status_and_create_status_log(): void
     {
         $requester = User::factory()->create([

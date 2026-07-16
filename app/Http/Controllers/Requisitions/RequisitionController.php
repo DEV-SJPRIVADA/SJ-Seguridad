@@ -296,7 +296,7 @@ class RequisitionController extends Controller
 
         $requisitions = PersonalRequisition::query()
             ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
-            ->with(['client', 'position', 'requester'])
+            ->with(['client', 'position', 'requester', 'city'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('code', 'like', "%{$search}%")
@@ -309,9 +309,9 @@ class RequisitionController extends Controller
                 });
             })
             ->when($status !== '', fn ($query) => $query->where('status', $status))
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
+            ->orderByDesc('request_date')
+            ->orderByDesc('id')
+            ->get();
 
         return view('modules.requisitions.manage', [
             'filters' => ['q' => $search, 'status' => $status],
@@ -399,7 +399,8 @@ class RequisitionController extends Controller
                 });
             })
             ->when($status !== '', fn ($query) => $query->where('status', $status))
-            ->latest()
+            ->orderByDesc('request_date')
+            ->orderByDesc('id')
             ->get();
 
         $statusLabels = PersonalRequisition::statuses();

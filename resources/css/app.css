@@ -831,6 +831,179 @@ a {
     flex-wrap: wrap;
 }
 
+/* Requisiciones — filtros de gestion */
+.req-manage-filters {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.15rem 1.35rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.req-manage-filters__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.req-manage-filters__title {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-blue);
+}
+
+.req-manage-filters__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.req-manage-filters__toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: end;
+}
+
+.req-manage-filters__search-col {
+    min-width: 0;
+}
+
+.req-manage-filters__status-col {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.req-manage-filters__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.req-manage-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1 1 280px;
+    min-width: 0;
+}
+
+.req-manage-filters__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.req-manage-filters__search-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.req-manage-filters__search-group .form-input {
+    min-height: 42px;
+}
+
+.req-manage-filters__search-group .btn {
+    flex-shrink: 0;
+    min-height: 42px;
+}
+
+.req-manage-filters__status-label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.req-manage-filters__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.req-manage-filters__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.42rem 0.9rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.req-manage-filters__pill:hover {
+    border-color: var(--brand-blue);
+    color: var(--color-primary);
+    background: var(--brand-blue-pale);
+}
+
+.req-manage-filters__pill.is-active {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.18);
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-solicitada,
+.req-manage-filters__pill.status-pill--req-solicitada.is-active {
+    background: #64748b;
+    border-color: #64748b;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-en_gestion,
+.req-manage-filters__pill.status-pill--req-en_gestion.is-active {
+    background: #0284c7;
+    border-color: #0284c7;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-contratado,
+.req-manage-filters__pill.status-pill--req-contratado.is-active {
+    background: #15803d;
+    border-color: #15803d;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-cancelada,
+.req-manage-filters__pill.status-pill--req-cancelada.is-active {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.req-manage-filters__meta {
+    margin: 0.85rem 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.req-manage-filters__meta strong {
+    color: #334155;
+}
+
 .checkbox-card {
     display: flex;
     gap: 0.85rem;
@@ -2204,6 +2377,27 @@ table.dataTable thead td {
     .req-form-layout,
     .req-form-layout {
         grid-template-columns: 1fr;
+    }
+
+    .req-manage-filters__status-col {
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .req-manage-filters__pills {
+        justify-content: flex-start;
+    }
+
+    .req-manage-filters__toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .req-manage-filters__search-group {
+        flex-direction: column;
+    }
+
+    .req-manage-filters__search-group .btn {
+        width: 100%;
     }
 
     .req-form-aside {

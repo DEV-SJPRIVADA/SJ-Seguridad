@@ -89,6 +89,19 @@
                             retrieve: true
                         };
 
+                        var tableOrder = $(this).data('order');
+                        if (tableOrder) {
+                            config.order = tableOrder;
+                        }
+
+                        if ($(this).is('[data-server-pagination]')) {
+                            config.paging = false;
+                            config.lengthChange = false;
+                            config.info = false;
+                            config.searching = false;
+                            config.dom = 'rt';
+                        }
+
                         if (!$(this).is('[data-no-excel]')) {
                             config.dom = 'lBfrtip';
                             config.buttons = [
