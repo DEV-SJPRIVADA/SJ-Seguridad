@@ -24,6 +24,8 @@
                             'catalogs' => $catalogs,
                             'sexOptions' => $sexOptions,
                             'statusLabels' => $statusLabels,
+                            'clientSearchUrl' => $clientSearchUrl,
+                            'selectedCommercialClient' => $selectedCommercialClient,
                         ])
 
                         <div class="form-actions">

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
+use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
@@ -28,6 +29,30 @@ class RequisitionModuleTest extends TestCase
         parent::setUp();
 
         $this->seed(\Database\Seeders\DatabaseSeeder::class);
+    }
+
+    public function test_user_can_search_commercial_clients_for_requisition_form(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('view.board.operaciones.requisiciones');
+
+        CommercialClient::query()->create([
+            'nit' => '901360444-1',
+            'name' => 'MADEMAX',
+            'city' => 'Cali',
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('requisitions.clients.search', [
+            'module' => 'operaciones',
+            'q' => 'MADE',
+        ]));
+
+        $response->assertOk()
+            ->assertJsonPath('data.0.name', 'MADEMAX');
     }
 
     public function test_user_can_create_requisition_for_its_own_area(): void
@@ -393,6 +418,17 @@ class RequisitionModuleTest extends TestCase
         Mail::assertNotQueued(PersonalRequisitionStatusChangedMail::class);
     }
 
+    private function commercialClient(): CommercialClient
+    {
+        return CommercialClient::query()->firstOrCreate(
+            ['nit' => '900123456-1'],
+            [
+                'name' => 'Constructora Solanillas SAS',
+                'city' => 'Cali',
+            ]
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -406,7 +442,7 @@ class RequisitionModuleTest extends TestCase
             'replacement_name' => 'Servicio nuevo',
             'operating_area_key' => 'operaciones',
             'request_reason_id' => RequisitionRequestReason::query()->firstOrFail()->id,
-            'client_id' => RequisitionClient::query()->firstOrFail()->id,
+            'commercial_client_id' => $this->commercialClient()->id,
             'city_id' => RequisitionCity::query()->firstOrFail()->id,
             'client_type_id' => RequisitionClientType::query()->firstOrFail()->id,
             'programming_type_id' => RequisitionProgrammingType::query()->firstOrFail()->id,

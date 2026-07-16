@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
 use App\Http\Requests\Requisitions\UpdatePersonalRequisitionRequest;
+use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
@@ -19,6 +20,7 @@ use App\Models\RequisitionUniform;
 use App\Models\RequisitionRecruiter;
 use App\Models\RequisitionNotificationEmail;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
+use App\Services\Requisitions\CommercialClientBridge;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
@@ -140,6 +143,45 @@ class RequisitionController extends Controller
             'catalogs' => $this->catalogs(),
             'sexOptions' => $this->sexOptions(),
             'areaOptions' => config('access.areas'),
+            'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
+            'selectedCommercialClient' => CommercialClientBridge::findForRequisition(null),
+        ]);
+    }
+
+    public function searchClients(Request $request, string $module): JsonResponse
+    {
+        $this->abortIfUnknownModule($module);
+        $this->authorizeBoardAccess($module);
+
+        $q = trim($request->string('q')->toString());
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $digits = preg_replace('/\D+/', '', $q) ?: '';
+
+        $clients = CommercialClient::query()
+            ->where(function ($query) use ($q, $digits): void {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('nit', 'like', "%{$q}%");
+
+                if ($digits !== '' && $digits !== $q) {
+                    $query->orWhere('nit', 'like', "%{$digits}%");
+                }
+            })
+            ->orderBy('name')
+            ->limit(15)
+            ->get(['id', 'nit', 'name', 'city']);
+
+        return response()->json([
+            'data' => $clients->map(fn (CommercialClient $client) => [
+                'id' => $client->id,
+                'nit' => $client->nit,
+                'name' => $client->name,
+                'city' => $client->city,
+                'label' => "{$client->name} ({$client->nit})",
+            ])->values(),
         ]);
     }
 
@@ -460,6 +502,8 @@ class RequisitionController extends Controller
             'sexOptions' => $this->sexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
+            'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
+            'selectedCommercialClient' => CommercialClientBridge::findForRequisition($requisition),
         ]);
     }
 
