@@ -29,7 +29,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 ## Fuera de V1
 
 - BORRADOR SVC / facturacion / consecutivos
-- Sync con `requisition_clients`
+- Sync automatico con `requisition_clients` al crear/editar requisiciones (`CommercialClientBridge`)
 - Adjuntos PDF / documentos Calidad
 - Notificaciones de vencimiento
 
@@ -95,7 +95,7 @@ Los boards de matriz y el dashboard KPI solo aplican al area Comercial.
 
 ## Relacion con otros modulos
 
-`RequisitionClient` (parametros de requisiciones) **no** se mezcla con esta matriz.
+Al crear o editar una requisicion de personal, el cliente se elige desde esta matriz. `CommercialClientBridge` vincula por nombre con `requisition_clients` (tabla interna usada por `personal_requisitions.client_id` y filtros del dashboard). Esa tabla **no** se administra en Parametros de requisiciones.
 
 ## Fuente documental
 

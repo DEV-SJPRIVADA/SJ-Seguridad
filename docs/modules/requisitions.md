@@ -16,7 +16,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Creacion de requisiciones sobre el modulo autorizado, incluso si el `area_key` del usuario es diferente
 - Edicion solo para gestion humana o usuarios con permiso operativo equivalente
 - Historial de cambios de estado
-- Catalogos administrables: cargos, motivos, clientes, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion**
+- Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
 - Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
 - Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
 
@@ -139,7 +139,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `personal_requisition_status_logs`
 - `requisition_positions`
 - `requisition_request_reasons`
-- `requisition_clients` (catalogo legacy; se alimenta automaticamente desde matriz comercial al crear/editar)
+- `requisition_clients` (tabla interna de enlace; se alimenta automaticamente desde matriz comercial al crear/editar; **no** se administra en Parametros)
 - `commercial_clients` (fuente del buscador en Solicitar y Gestion)
 - `requisition_cities`
 - `requisition_client_types`
@@ -171,3 +171,4 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Persistencia de `recruiter_id` en mass assignment.
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
 - Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
+- Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.

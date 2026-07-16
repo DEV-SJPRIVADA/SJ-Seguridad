@@ -42,7 +42,6 @@ class RequisitionController extends Controller
     private const PARAMETER_TYPES = [
         'positions' => ['label' => 'Cargos solicitados', 'model' => RequisitionPosition::class],
         'reasons' => ['label' => 'Motivos de solicitud', 'model' => RequisitionRequestReason::class],
-        'clients' => ['label' => 'Clientes', 'model' => RequisitionClient::class],
         'cities' => ['label' => 'Ciudades', 'model' => RequisitionCity::class],
         'client-types' => ['label' => 'Tipos de cliente', 'model' => RequisitionClientType::class],
         'programming-types' => ['label' => 'Tipos de programacion', 'model' => RequisitionProgrammingType::class],

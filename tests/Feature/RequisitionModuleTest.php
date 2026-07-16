@@ -55,6 +55,28 @@ class RequisitionModuleTest extends TestCase
             ->assertJsonPath('data.0.name', 'MADEMAX');
     }
 
+    public function test_clients_parameter_type_is_no_longer_manageable(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('manage.requisition.parameters');
+
+        $this->actingAs($user)
+            ->post(route('requisitions.parameters.store', ['module' => 'gestion_humana', 'type' => 'clients']), [
+                'name' => 'Cliente manual',
+                'is_active' => 1,
+            ])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->get(route('requisitions.parameters', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertDontSee('Gestionar: Clientes', false);
+    }
+
     public function test_user_can_create_requisition_for_its_own_area(): void
     {
         $user = User::factory()->create([
