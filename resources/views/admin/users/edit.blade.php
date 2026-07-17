@@ -35,6 +35,17 @@
                 </div>
             @endif
 
+            @if (session('permission_warnings'))
+                <div class="notice notice--warning bottom-spaced">
+                    <p class="text-small font-bold">Avisos de permisos</p>
+                    <ul class="text-small" style="margin: 0.5rem 0 0 1rem;">
+                        @foreach (session('permission_warnings', []) as $warning)
+                            <li>{{ $warning }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="panel">
                 @include('admin.users.partials.form', [
                     'action' => route('admin.users.update', $user),
@@ -42,7 +53,7 @@
                     'sites' => $sites,
                     'allSites' => $allSites,
                     'roles' => $roles,
-                    'permissionGroups' => $permissionGroups,
+                    'permissionForm' => $permissionForm,
                     'buttonLabel' => 'Actualizar usuario',
                     'method' => 'PATCH',
                     'selectedPermissions' => old('permissions', $selectedPermissions),

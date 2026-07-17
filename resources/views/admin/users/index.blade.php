@@ -87,43 +87,20 @@
                     <section class="users-content">
                         @if ($selectedUser)
                             @php
-                                $enabledAreas = collect($permissionGroups['areas'])
-                                    ->map(function (array $area) use ($selectedUser) {
-                                        $matches = collect($area['options'])
-                                            ->filter(fn (array $option) => $selectedUser->can($option['name']))
-                                            ->pluck('label')
-                                            ->values();
+                                $sections = $permissionForm['sections'] ?? [];
+                                $assignedLabels = collect($sections['assigned_area']['permissions'] ?? [])
+                                    ->filter(fn (array $perm) => $selectedUser->can($perm['name']))
+                                    ->pluck('label');
 
-                                        if ($matches->isEmpty()) {
-                                            return null;
-                                        }
+                                $globalLabels = collect($sections['global']['groups'] ?? [])
+                                    ->flatMap(fn (array $group) => collect($group['permissions'] ?? [])
+                                        ->filter(fn (array $perm) => $selectedUser->can($perm['name']))
+                                        ->pluck('label'));
 
-                                        return [
-                                            'label' => $area['label'],
-                                            'permissions' => $matches,
-                                        ];
-                                    })
-                                    ->filter()
-                                    ->values();
-
-                                $functionalPermissions = collect($permissionGroups['functional'])
-                                    ->map(function ($permissions, $category) use ($selectedUser) {
-                                        $matches = collect($permissions)
-                                            ->filter(fn (array $permission) => $selectedUser->can($permission['name']))
-                                            ->pluck('label')
-                                            ->values();
-
-                                        if ($matches->isEmpty()) {
-                                            return null;
-                                        }
-
-                                        return [
-                                            'category' => $category,
-                                            'permissions' => $matches,
-                                        ];
-                                    })
-                                    ->filter()
-                                    ->values();
+                                $otherAreaLabels = collect($sections['other_areas']['areas'] ?? [])
+                                    ->flatMap(fn (array $area) => collect($area['permissions'] ?? [])
+                                        ->filter(fn (array $perm) => $selectedUser->can($perm['name']))
+                                        ->map(fn (array $perm) => $perm['label'].' ('.$area['label'].')'));
                             @endphp
 
                             <div class="users-content__header">
@@ -176,39 +153,28 @@
                                         </div>
 
                                         <div class="card card--muted">
-                                            <h4 class="panel-title">Areas habilitadas</h4>
-
-                                            @if ($enabledAreas->isNotEmpty())
-                                                <div class="section-stack block-spaced-sm">
-                                                    @foreach ($enabledAreas as $area)
-                                                        <div class="card">
-                                                            <p class="text-caption">{{ $area['label'] }}</p>
-                                                            <p class="text-small block-spaced-sm">{{ $area['permissions']->implode(' | ') }}</p>
-                                                        </div>
-                                                    @endforeach
+                                            <h4 class="panel-title">Permisos asignados</h4>
+                                            <div class="section-stack block-spaced-sm">
+                                                <div class="card">
+                                                    <p class="text-caption">En su area</p>
+                                                    <p class="text-small block-spaced-sm">{{ $assignedLabels->isNotEmpty() ? $assignedLabels->implode(' | ') : 'Ninguno' }}</p>
                                                 </div>
-                                            @else
-                                                <p class="text-small text-muted block-spaced-sm">No tiene accesos de area asignados de forma efectiva.</p>
-                                            @endif
+                                                <div class="card">
+                                                    <p class="text-caption">Transversales</p>
+                                                    <p class="text-small block-spaced-sm">{{ $globalLabels->isNotEmpty() ? $globalLabels->implode(' | ') : 'Ninguno' }}</p>
+                                                </div>
+                                                <div class="card">
+                                                    <p class="text-caption">Otras areas</p>
+                                                    <p class="text-small block-spaced-sm">{{ $otherAreaLabels->isNotEmpty() ? $otherAreaLabels->implode(' | ') : 'Ninguno' }}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div class="section-stack">
                                         <div class="card card--info">
-                                            <h4 class="panel-title">Permisos funcionales</h4>
-
-                                            @if ($functionalPermissions->isNotEmpty())
-                                                <div class="section-stack block-spaced-sm">
-                                                    @foreach ($functionalPermissions as $group)
-                                                        <div class="card">
-                                                            <p class="text-caption">{{ $group['category'] }}</p>
-                                                            <p class="text-small text-small--info block-spaced-sm">{{ $group['permissions']->implode(' | ') }}</p>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <p class="text-small text-small--info block-spaced-sm">No tiene permisos funcionales adicionales por fuera del rol.</p>
-                                            @endif
+                                            <h4 class="panel-title">Area base</h4>
+                                            <p class="text-small text-small--info block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin area asignada' }}</p>
                                         </div>
 
                                         <div class="card card--warning">
