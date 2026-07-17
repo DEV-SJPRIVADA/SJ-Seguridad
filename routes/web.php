@@ -14,10 +14,8 @@ Route::get('/dashboard', function () {
     $areas = collect(config('access.areas'))
         ->map(function (string $label, string $key) {
             $user = auth()->user();
-            $canView = $user->can("view.area.{$key}") || $user->can("manage.area.{$key}");
-            $canManage = $user->can("manage.area.{$key}");
             $boards = collect(config('access.boards', []))
-                ->map(function (string $boardLabel, string $boardKey) use ($key, $user, $canView) {
+                ->map(function (string $boardLabel, string $boardKey) use ($key, $user) {
                     if ($boardKey === 'documentos') {
                         return [
                             'key' => $boardKey,
@@ -38,12 +36,51 @@ Route::get('/dashboard', function () {
                         ];
                     }
 
+                    if ($boardKey === 'matriz_clientes') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $key === 'comercial' && (
+                                $user->can('comercial.matriz.view')
+                                || $user->can('comercial.matriz.manage')
+                                || $user->can('view.board.comercial.matriz_clientes')
+                            ),
+                        ];
+                    }
+
+                    if ($boardKey === 'servicios_comerciales') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $key === 'comercial' && (
+                                $user->can('comercial.matriz.view')
+                                || $user->can('comercial.matriz.manage')
+                                || $user->can('view.board.comercial.servicios_comerciales')
+                                || $user->can('view.board.comercial.matriz_clientes')
+                            ),
+                        ];
+                    }
+
+                    if ($boardKey === 'requisiciones') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->canViewRequisitionsBoardFor($key),
+                        ];
+                    }
+
+                    if ($boardKey === 'suministros') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->canViewSupplyBoardFor($key),
+                        ];
+                    }
+
                     return [
                         'key' => $boardKey,
                         'label' => $boardLabel,
-                        'can_view' => $boardKey === 'dashboard'
-                            ? ($canView || $user->can("view.board.{$key}.{$boardKey}"))
-                            : $user->can("view.board.{$key}.{$boardKey}"),
+                        'can_view' => $user->can("view.board.{$key}.{$boardKey}"),
                     ];
                 })
                 ->filter(fn (array $board) => $board['can_view'])
@@ -52,12 +89,12 @@ Route::get('/dashboard', function () {
             return [
                 'key' => $key,
                 'label' => $label,
-                'can_manage' => $canManage,
-                'can_view' => $canView,
+                'can_manage' => $user->can("manage.area.{$key}"),
+                'can_view' => $boards->isNotEmpty(),
                 'boards' => $boards,
             ];
         })
-        ->filter(fn (array $area) => $area['can_view'] || $area['boards']->isNotEmpty())
+        ->filter(fn (array $area) => $area['boards']->isNotEmpty())
         ->values();
 
     $selectedModuleKey = request()->string('module')->toString();

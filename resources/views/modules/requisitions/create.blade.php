@@ -60,7 +60,7 @@
                         <div class="panel__body">
                             <p class="panel-text" style="margin: 0; line-height: 1.55;">
                                 Gestion humana recibe la solicitud, asigna reclutador y actualiza el estado.
-                                Puedes hacer seguimiento desde el tablero <strong>Seguimiento</strong> de tu area.
+                                Puedes consultar el estado desde <strong>Mis requisiciones</strong> de tu area.
                             </p>
                         </div>
                     </div>

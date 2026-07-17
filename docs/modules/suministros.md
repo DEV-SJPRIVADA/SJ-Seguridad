@@ -76,15 +76,13 @@ Siguiendo la arquitectura actual, los accesos se controlarán con:
 ### Permisos vigentes (`config/access.php`)
 El modulo tiene **4 pestañas** activas. El control es granular por pestaña mas el tablero por area:
 
-- `supply.tab.my_requests`: ver y crear solicitudes propias.
-- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados** (mismo permiso para ambas).
-- `supply.tab.catalog`: administrar el catalogo.
-- `manage.supply.catalog`, `approve.supply.quality`: variantes "full".
-- `view.board.{area}.suministros`: habilita Mis solicitudes en la navegacion aunque no exista `supply.tab.my_requests`.
+- `supply.tab.my_requests`: ver y crear solicitudes propias (area base del usuario).
+- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados**; requiere `view.board.{module}.suministros`.
+- `supply.tab.catalog`: administrar el catalogo; requiere `view.board.{module}.suministros`.
+- `manage.supply.catalog`, `approve.supply.quality`: variantes "full" (con tablero visible).
+- `view.board.{area}.suministros`: solo visualiza el tablero en sidebar; no sustituye permisos funcionales.
 
-**Eliminado:** `supply.tab.purchasing`, `manage.supply.purchasing` y la pestaña Gestión Compras (costeo). El flujo termina en aprobacion/rechazo.
-
-El acceso a cada pestaña se resuelve en `User::supplyBoardTabsFor()` y `User::canAccessSupplyTab()`. Las rutas aplican middleware `supply.tab:{tab}`.
+El acceso se resuelve en `SupplyAccessService`, `User::supplyBoardTabsFor()` y middleware `supply.tab:{tab}`.
 
 ### Flujo de estados
 `pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad`. Los estados `en_compras` y `completada` quedan obsoletos hasta el proceso de compra futuro.

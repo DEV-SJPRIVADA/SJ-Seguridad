@@ -18,12 +18,13 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 
 - `view.dashboard`
 - `manage.users`
-- `manage.requisitions`
 - `manage.requisition.parameters`
 - `requisitions.tab.dashboard`
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
+
+`manage.requisitions` permanece en codigo por compatibilidad con asignaciones legacy, pero **no aparece en Admin**. Usar `requisitions.tab.gestion` + tablero visible en alcance.
 
 Permisos del modulo de suministros:
 
@@ -81,6 +82,35 @@ Esto produce permisos como:
 - `view.area.operaciones`
 - `manage.area.operaciones`
 
+## Modelo de tres dimensiones
+
+1. **`users.area_key` (area base):** contexto operativo. Solicitar, Mis requisiciones y Mis solicitudes de suministros operan siempre en esta area.
+2. **`view.board.{area}.{board}` (alcance):** solo visualiza el tablero en el sidebar. No otorga acciones.
+3. **Permisos funcionales:** habilitan subtabs/acciones.
+
+### Funcionalidades de area base
+
+Operan en `{area_key}` del usuario (sin exigir `view.board` en el area base):
+
+- `requisitions.tab.solicitar`
+- `requisitions.tab.seguimiento` (UI: **Mis requisiciones**)
+- `supply.tab.my_requests`
+
+### Funcionalidades por tablero visible
+
+Requieren permiso funcional **y** `view.board.{module}.{board}`:
+
+- `requisitions.tab.gestion`, `requisitions.tab.dashboard`, `manage.requisition.parameters`
+- `supply.tab.quality`, `supply.tab.catalog`, etc.
+
+`view.area.*` y `manage.area.*` no sustituyen `view.board.*` para requisiciones o suministros. Documentos sigue usando `view.area.*`.
+
+### Migracion manual post-deploy
+
+- Directores: tablero + `requisitions.tab.solicitar` (+ Mis requisiciones si aplica)
+- Administradores de personal: funcionalidades de area base + tableros visibles en alcance + tabs por modulo (ej. Gestión en GH)
+- Solicitantes insumos: `supply.tab.my_requests` (+ tablero visible si actuan fuera del area base)
+
 ## Tableros por area
 
 Cada area puede tener tableros internos definidos en `config/access.php`. Los tableros base son:
@@ -125,12 +155,28 @@ Comando artisan `app:sync-permissions`:
 
 Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo.
 
+## Configuracion en Admin de usuarios
+
+El formulario en **Administracion → Usuarios** usa tres bloques (`config/access.php` → `admin_ui`):
+
+1. **En su area asignada:** solicitar, mis requisiciones, mis solicitudes suministros (operan en `users.area_key`).
+2. **Funcionalidades transversales:** gestion/parametros requisiciones, suministros, admin, biblioteca documentos por area (una sola lista).
+3. **Otras areas:** modulos exclusivos (Gestión humana tableros, Operaciones/indicadores, Comercial, Calidad).
+
+Documentacion: [`docs/modules/admin-users.md`](modules/admin-users.md).
+
 ## Middleware y enforcement
 
 - `/dashboard` exige `view.dashboard` ademas de autenticacion, usuario activo y contrasena cambiada.
-- Rutas de suministros usan middleware `supply.tab:{tab}` alineado con `User::canAccessSupplyTab()` (acepta permisos granulares `supply.tab.*`, variantes full y `view.board.{area}.suministros` para mis solicitudes).
+- Rutas de requisiciones usan middleware `requisition.tab:{tab}` alineado con `RequisitionAccessService`.
+- Rutas de suministros usan middleware `supply.tab:{tab}` alineado con `SupplyAccessService`.
 - Administracion de documentos de Calidad solo responde en `module=calidad`; otras areas devuelven 404 aunque el usuario tenga `manage.quality.documents`.
 - `supply_request` en rutas se resuelve acotado al `module` de la URL (proteccion IDOR).
+
+Servicios centrales:
+
+- [`app/Services/Access/RequisitionAccessService.php`](../app/Services/Access/RequisitionAccessService.php)
+- [`app/Services/Access/SupplyAccessService.php`](../app/Services/Access/SupplyAccessService.php)
 
 ## Sede fisica del usuario (suministros)
 
@@ -143,8 +189,8 @@ En **Administracion de usuarios** (`manage.users`) cada usuario puede tener `sed
 - Los usuarios inactivos no pueden operar
 - Las contrasenas temporales deben obligar cambio al primer ingreso
 - Una vez el usuario actualiza correctamente su contrasena, `must_change_password` debe pasar a `false`
-- En requisiciones, un permiso explicito de tablero o pestaña habilita el acceso aunque `users.area_key` sea diferente
-- `users.area_key` sigue usandose como contexto operativo del usuario, no como filtro oculto para negar pestañas ya autorizadas
+- `users.area_key` define el modulo de Solicitar y Mis requisiciones; no otorga permisos por si solo
+- `view.board.*` en alcance solo visualiza; las acciones requieren permisos funcionales explicitos
 
 ## Impacto de cambios
 

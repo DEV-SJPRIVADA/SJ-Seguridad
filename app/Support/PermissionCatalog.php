@@ -56,6 +56,17 @@ class PermissionCatalog
     }
 
     /**
+     * Garantiza que los permisos funcionales de system_permissions existan en Spatie.
+     * Usado al cargar Admin de usuarios para que el formulario refleje config/access.php.
+     */
+    public static function ensureSystemPermissions(): void
+    {
+        collect(config('access.system_permissions', []))
+            ->keys()
+            ->each(fn (string $permission) => Permission::findOrCreate($permission, 'web'));
+    }
+
+    /**
      * @return array{synced: int, deleted: int}
      */
     public static function sync(): array

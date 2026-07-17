@@ -34,7 +34,21 @@ class AuthorizationAccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_supply_board_permission_grants_my_requests_access_without_supply_tab(): void
+    public function test_supply_tab_my_requests_works_in_base_area_without_board_scope(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'calidad',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('supply.tab.my_requests');
+
+        $this->actingAs($user)
+            ->get(route('supplies.index', ['module' => 'calidad']))
+            ->assertOk();
+    }
+
+    public function test_supply_board_alone_does_not_grant_my_requests_access(): void
     {
         $user = User::factory()->create([
             'area_key' => 'calidad',
@@ -45,17 +59,20 @@ class AuthorizationAccessTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('supplies.index', ['module' => 'calidad']))
-            ->assertOk();
+            ->assertForbidden();
     }
 
-    public function test_supply_full_permission_grants_quality_tab_access(): void
+    public function test_supply_quality_tab_requires_visible_board(): void
     {
         $user = User::factory()->create([
             'area_key' => 'calidad',
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('approve.supply.quality');
+        $user->givePermissionTo([
+            'view.board.calidad.suministros',
+            'approve.supply.quality',
+        ]);
 
         $this->actingAs($user)
             ->get(route('supplies.approval.index', ['module' => 'calidad']))

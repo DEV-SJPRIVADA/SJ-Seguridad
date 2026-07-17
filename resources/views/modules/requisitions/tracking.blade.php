@@ -25,7 +25,7 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Seguimiento de requisiciones</h3>
+                    <h3 class="panel-title">Mis requisiciones</h3>
                     <p class="panel-text">Consulta de solicitudes del area actual con filtros de estado, cliente y vista rapida de tus propios requerimientos.</p>
                 </div>
 

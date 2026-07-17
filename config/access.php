@@ -1,14 +1,19 @@
 <?php
 
 return [
+    // Permisos ocultos en Admin (compatibilidad legacy en codigo; no asignar a usuarios nuevos).
+    'admin_hidden_permissions' => [
+        'manage.requisitions',
+    ],
+
     'system_permissions' => [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
-        'manage.requisitions' => 'Gestionar requisiciones de personal',
+        'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
-        'requisitions.tab.solicitar' => 'Requisiciones: Solicitar Personal',
-        'requisitions.tab.seguimiento' => 'Requisiciones: Seguimiento de Solicitudes',
+        'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
+        'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
         'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
         
         // Permisos Granulares de Suministros
@@ -72,7 +77,7 @@ return [
     'requisition_tabs' => [
         'dashboard' => 'Dashboard',
         'solicitar' => 'Solicitar',
-        'seguimiento' => 'Seguimiento',
+        'seguimiento' => 'Mis requisiciones',
         'gestion' => 'Gestion',
         'parametros' => 'Parametros',
     ],
@@ -105,6 +110,97 @@ return [
         'perfil_cargo' => 'Perfil de cargo',
         'formulario' => 'Formulario',
         'plan' => 'Plan',
+    ],
+
+    'admin_ui' => [
+        'tabs' => [
+            'user' => 'Usuario',
+            'capabilities' => 'Que puede hacer',
+        ],
+        'help' => [
+            'area_key' => 'Contexto operativo del usuario. Las acciones de esta seccion solo aplican en el area seleccionada aqui.',
+            'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, las funciones exclusivas de cada area.',
+            'assigned_area' => 'Operan unicamente en el area base definida en la pestana Usuario.',
+            'global' => 'No dependen de un area fija; puede combinarlas con tableros visibles en Otras areas.',
+            'other_areas' => 'Modulos y tableros propios de cada area (Gestión humana, Comercial, Operaciones, etc.).',
+        ],
+        'assigned_area_permissions' => [
+            'requisitions.tab.solicitar',
+            'requisitions.tab.seguimiento',
+            'supply.tab.my_requests',
+        ],
+        'global_groups' => [
+            'administration' => [
+                'label' => 'Administracion del sistema',
+                'permissions' => [
+                    'view.dashboard',
+                    'manage.users',
+                ],
+            ],
+            'requisitions' => [
+                'label' => 'Requisiciones (acciones globales)',
+                'permissions' => [
+                    'requisitions.tab.gestion',
+                    'requisitions.tab.dashboard',
+                    'manage.requisition.parameters',
+                ],
+            ],
+            'supplies' => [
+                'label' => 'Suministros (acciones globales)',
+                'permissions' => [
+                    'supply.tab.quality',
+                    'supply.tab.catalog',
+                    'approve.supply.quality',
+                    'manage.supply.catalog',
+                ],
+            ],
+            'documents' => [
+                'label' => 'Documentos de Calidad',
+                'permissions' => [
+                    'manage.quality.documents',
+                ],
+                'view_area_access' => true,
+            ],
+        ],
+        'other_areas' => [
+            'gestion_humana' => [
+                'label' => 'Gestion humana',
+                'permissions' => [
+                    'view.board.gestion_humana.requisiciones',
+                    'view.board.gestion_humana.suministros',
+                    'view.board.gestion_humana.dashboard',
+                ],
+            ],
+            'operaciones' => [
+                'label' => 'Operaciones',
+                'permissions' => [
+                    'operations.view',
+                    'operations.capture',
+                    'operations.manage',
+                    'operations.export',
+                    'view.board.operaciones.dashboard',
+                    'view.board.operaciones.indicadores',
+                ],
+            ],
+            'comercial' => [
+                'label' => 'Comercial',
+                'permissions' => [
+                    'comercial.matriz.view',
+                    'comercial.matriz.manage',
+                    'view.board.comercial.dashboard',
+                    'view.board.comercial.matriz_clientes',
+                    'view.board.comercial.servicios_comerciales',
+                ],
+            ],
+            'calidad' => [
+                'label' => 'Calidad',
+                'permissions' => [
+                    'view.area.calidad',
+                    'manage.area.calidad',
+                    'view.board.calidad.dashboard',
+                ],
+            ],
+        ],
     ],
 
     'navigation' => [

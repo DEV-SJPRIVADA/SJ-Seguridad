@@ -6,15 +6,15 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 
 ## Alcance actual
 
-- Tablero interno de `Requisiciones` disponible por area segun permiso `view.board.{area}.requisiciones`
+- Tablero `Requisiciones` visible por `view.board.{area}.requisiciones` o por funcionalidades de **area base** en el area del usuario
 - Subtableros internos:
   - `Dashboard`
   - `Solicitar`
-  - `Seguimiento`
+  - `Mis requisiciones` (permiso `requisitions.tab.seguimiento`)
   - `Gestion`
   - `Parametros`
-- Creacion de requisiciones sobre el modulo autorizado, incluso si el `area_key` del usuario es diferente
-- Edicion solo para gestion humana o usuarios con permiso operativo equivalente
+- Solicitar y Mis requisiciones operan siempre en `users.area_key`
+- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** muestra solicitudes de todas las areas.
 - Historial de cambios de estado
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
 - Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
@@ -22,8 +22,9 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 
 ## Reglas de negocio actuales
 
-- El usuario puede solicitar en cualquier modulo de requisiciones que tenga autorizado por permiso explicito
-- El tablero `Seguimiento` es solo lectura para usuarios solicitantes y muestra requisiciones del area propia del usuario
+- El usuario solo puede solicitar en su `area_key` con permiso `requisitions.tab.solicitar`
+- **Mis requisiciones** es solo lectura y muestra requisiciones del **area base** del usuario (`users.area_key`).
+- **Gestión** lista **todas** las solicitudes de **todas** las areas (vista transversal para validadores GH).
 - El filtro `Solo mis solicitudes` permite reducir la vista del area a lo creado por el usuario autenticado
 - `leader_name` y `requesting_area_key` se toman del usuario autenticado
 - `Cliente` se busca en la matriz comercial (`commercial_clients`) cuando el tipo de cliente **no** es *Interno*; para *Interno* (personal administrativo) se asigna automaticamente `Cliente interno SJ Seguridad` en `requisition_clients`
@@ -132,8 +133,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
-- `manage.requisitions`
 - `manage.requisition.parameters`
+- `manage.requisitions` (legacy; no asignar en Admin; equivalente practico a `requisitions.tab.gestion` + tablero visible)
 - `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
 - `manage.users`
 

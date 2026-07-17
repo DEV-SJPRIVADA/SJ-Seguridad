@@ -117,15 +117,14 @@ class SupplyModuleTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_approval_reviewer_can_view_any_supply_request(): void
+    public function test_approval_reviewer_can_open_approval_form_for_any_supply_request(): void
     {
         $owner = $this->requester('operaciones');
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('operaciones');
 
         $request = $this->supplyRequest($owner, 'operaciones');
 
-        $response = $this->actingAs($reviewer)->get(route('supplies.show', [
+        $response = $this->actingAs($reviewer)->get(route('supplies.approval.edit', [
             'module' => 'operaciones',
             'supply_request' => $request->id,
         ]));
@@ -136,8 +135,7 @@ class SupplyModuleTest extends TestCase
     public function test_approval_can_approve_request_and_set_approved_quantities(): void
     {
         $owner = $this->requester('operaciones');
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('operaciones');
 
         $request = $this->supplyRequest($owner, 'operaciones');
         $item = $request->items()->firstOrFail();
@@ -168,8 +166,7 @@ class SupplyModuleTest extends TestCase
     public function test_approval_can_approve_custom_item(): void
     {
         $owner = $this->requester('operaciones');
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('operaciones');
 
         $request = SupplyRequest::create([
             'user_id' => $owner->id,
@@ -204,8 +201,7 @@ class SupplyModuleTest extends TestCase
     public function test_approval_cannot_reprocess_an_already_processed_request(): void
     {
         $owner = $this->requester('operaciones');
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('calidad');
 
         $request = $this->supplyRequest($owner, 'operaciones', 'aprobada_calidad');
         $item = $request->items()->firstOrFail();
@@ -240,7 +236,10 @@ class SupplyModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('supply.tab.catalog');
+        $user->givePermissionTo([
+            'view.board.compras.suministros',
+            'supply.tab.catalog',
+        ]);
 
         $tabs = $user->supplyBoardTabsFor('compras');
 
@@ -251,8 +250,7 @@ class SupplyModuleTest extends TestCase
     public function test_approval_index_only_shows_pending_requests_for_current_module(): void
     {
         $owner = $this->requester('operaciones');
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('operaciones');
 
         $pendingOperaciones = $this->supplyRequest($owner, 'operaciones');
         $comercialPending = $this->supplyRequest($owner, 'comercial');
@@ -272,7 +270,10 @@ class SupplyModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('supply.tab.quality');
+        $user->givePermissionTo([
+            'view.board.calidad.suministros',
+            'supply.tab.quality',
+        ]);
 
         $this->assertSame(
             route('supplies.approval.index', ['module' => 'calidad']),
@@ -309,7 +310,10 @@ class SupplyModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $reviewer->assignRole('usuario');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer->givePermissionTo([
+            'view.board.calidad.suministros',
+            'supply.tab.quality',
+        ]);
 
         $product = SupplyProduct::query()->firstOrFail();
 
@@ -358,8 +362,7 @@ class SupplyModuleTest extends TestCase
 
     public function test_approved_tab_is_visible_with_quality_permission(): void
     {
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('calidad');
 
         $tabs = $reviewer->supplyBoardTabsFor('calidad');
 
@@ -378,8 +381,7 @@ class SupplyModuleTest extends TestCase
         $requestA = $this->approvedSupplyRequest($userA, 'operaciones', $site, $product, 5);
         $requestB = $this->approvedSupplyRequest($userB, 'gestion_humana', $site, $product, 3);
 
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('calidad');
 
         $response = $this->actingAs($reviewer)->get(route('supplies.approved.index', ['module' => 'calidad']));
 
@@ -398,8 +400,7 @@ class SupplyModuleTest extends TestCase
         $exported = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 4);
         $exported->update(['exported_at' => now()]);
 
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('calidad');
 
         $response = $this->actingAs($reviewer)->get(route('supplies.approved.index', [
             'module' => 'calidad',
@@ -418,8 +419,7 @@ class SupplyModuleTest extends TestCase
         $user = $this->requester('operaciones', $site);
         $request = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 5);
 
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('calidad');
 
         $response = $this->actingAs($reviewer)->get(route('supplies.approved.export', [
             'module' => 'calidad',
@@ -439,8 +439,7 @@ class SupplyModuleTest extends TestCase
         $request = $this->approvedSupplyRequest($user, 'operaciones', $site, $product, 2);
         $request->update(['exported_at' => now()]);
 
-        $reviewer = $this->requester('calidad');
-        $reviewer->givePermissionTo('supply.tab.quality');
+        $reviewer = $this->qualityReviewer('calidad');
 
         $response = $this->actingAs($reviewer)->get(route('supplies.approved.export', [
             'module' => 'calidad',
@@ -485,6 +484,15 @@ class SupplyModuleTest extends TestCase
 
         $this->assertCount(1, $rows);
         $this->assertSame(8, $rows->first()['quantity']);
+    }
+
+    private function qualityReviewer(string $areaKey): User
+    {
+        $user = $this->requester($areaKey);
+        $user->givePermissionTo('view.board.'.$areaKey.'.suministros');
+        $user->givePermissionTo('supply.tab.quality');
+
+        return $user;
     }
 
     private function requester(string $areaKey, ?SupplySite $site = null): User

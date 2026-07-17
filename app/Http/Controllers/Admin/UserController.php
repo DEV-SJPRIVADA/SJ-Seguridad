@@ -7,16 +7,22 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Admin\UserPermissionFormBuilder;
+use App\Services\Admin\UserPermissionValidator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly UserPermissionFormBuilder $permissionFormBuilder,
+        private readonly UserPermissionValidator $permissionValidator,
+    ) {}
+
     public function index(Request $request): View
     {
         $search = trim($request->string('q')->toString());
@@ -52,7 +58,7 @@ class UserController extends Controller
             'filters' => [
                 'q' => $search,
             ],
-            'permissionGroups' => $this->permissionGroups(),
+            'permissionForm' => $this->permissionFormBuilder->build(),
             'selectedUser' => $selectedUser,
             'stats' => [
                 'total' => User::query()->count(),
@@ -70,13 +76,17 @@ class UserController extends Controller
             'sites' => SupplySite::query()->active()->ordered()->get(),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'roles' => $this->roles(),
-            'permissionGroups' => $this->permissionGroups(),
+            'permissionForm' => $this->permissionFormBuilder->build(),
         ]);
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
-        DB::transaction(function () use ($request): void {
+        $permissions = $request->input('permissions', []);
+        $areaKey = $request->input('area_key');
+        $warnings = $this->permissionValidator->warnings($areaKey, $permissions);
+
+        DB::transaction(function () use ($request, $permissions): void {
             $user = User::create([
                 'name' => $request->string('name')->toString(),
                 'area_key' => $request->input('area_key'),
@@ -90,10 +100,13 @@ class UserController extends Controller
             ]);
 
             $user->assignRole($request->string('role')->toString());
-            $user->syncPermissions($request->input('permissions', []));
+            $user->syncPermissions($permissions);
         });
 
-        return redirect()->route('admin.users.index')->with('status', 'user-created');
+        return redirect()
+            ->route('admin.users.index')
+            ->with('status', 'user-created')
+            ->with('permission_warnings', $warnings);
     }
 
     public function edit(User $user): View
@@ -102,7 +115,7 @@ class UserController extends Controller
             'areas' => config('access.areas', []),
             'sites' => SupplySite::query()->active()->ordered()->get(),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
-            'permissionGroups' => $this->permissionGroups(),
+            'permissionForm' => $this->permissionFormBuilder->build(),
             'roles' => $this->roles(),
             'selectedPermissions' => $user->permissions->pluck('name')->all(),
             'selectedRole' => old('role', $user->roles->pluck('name')->first()),
@@ -112,7 +125,11 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        DB::transaction(function () use ($request, $user): void {
+        $permissions = $request->input('permissions', []);
+        $areaKey = $request->input('area_key');
+        $warnings = $this->permissionValidator->warnings($areaKey, $permissions);
+
+        DB::transaction(function () use ($request, $user, $permissions): void {
             $attributes = [
                 'name' => $request->string('name')->toString(),
                 'area_key' => $request->input('area_key'),
@@ -129,84 +146,13 @@ class UserController extends Controller
 
             $user->update($attributes);
             $user->syncRoles([$request->string('role')->toString()]);
-            $user->syncPermissions($request->input('permissions', []));
+            $user->syncPermissions($permissions);
         });
 
-        return redirect()->route('admin.users.edit', $user)->with('status', 'user-updated');
-    }
-
-    private function permissionGroups(): array
-    {
-        $allPermissions = Permission::query()->pluck('name')->all();
-
-        // 1. Permisos Funcionales (Capacidades del sistema)
-        $functional = collect(config('access.system_permissions'))
-            ->filter(fn ($label, $name) => in_array($name, $allPermissions, true) && ! str_starts_with($name, 'operations.'))
-            ->map(fn ($label, $name) => [
-                'name' => $name,
-                'label' => $label,
-                'category' => match (true) {
-                    str_contains($name, 'supply') => 'Suministros',
-                    str_contains($name, 'quality.documents') => 'Calidad',
-                    str_contains($name, 'requisition') => 'Requisiciones',
-                    default => 'Administración',
-                },
-            ])
-            ->groupBy('category');
-
-        $indicadorPermissions = collect(config('access.area_indicador_permissions.operaciones', []));
-        $comercialMatrizPermissions = collect(config('access.area_indicador_permissions.comercial', []));
-
-        // 2. Permisos de Área (Alcance)
-        $areas = collect(config('access.areas'))
-            ->map(function ($label, $key) use ($allPermissions, $indicadorPermissions, $comercialMatrizPermissions) {
-                $options = collect([
-                    ['label' => 'Abrir Área', 'name' => "view.area.{$key}"],
-                    ['label' => 'Gestionar Área', 'name' => "manage.area.{$key}"],
-                    ['label' => 'Tablero Dashboard', 'name' => "view.board.{$key}.dashboard"],
-                    ['label' => 'Tablero Requisiciones', 'name' => "view.board.{$key}.requisiciones"],
-                    ['label' => 'Tablero Suministros', 'name' => "view.board.{$key}.suministros"],
-                ]);
-
-                if ($key === 'operaciones') {
-                    foreach ($indicadorPermissions as $name => $indicadorLabel) {
-                        $options->push([
-                            'label' => $indicadorLabel,
-                            'name' => $name,
-                        ]);
-                    }
-                }
-
-                if ($key === 'comercial') {
-                    $options->push([
-                        'label' => 'Tablero Clientes',
-                        'name' => 'view.board.comercial.matriz_clientes',
-                    ]);
-                    $options->push([
-                        'label' => 'Tablero Servicios',
-                        'name' => 'view.board.comercial.servicios_comerciales',
-                    ]);
-
-                    foreach ($comercialMatrizPermissions as $name => $matrizLabel) {
-                        $options->push([
-                            'label' => $matrizLabel,
-                            'name' => $name,
-                        ]);
-                    }
-                }
-
-                return [
-                    'key' => $key,
-                    'label' => $label,
-                    'options' => $options->filter(fn ($opt) => in_array($opt['name'], $allPermissions, true))->values(),
-                ];
-            })
-            ->values();
-
-        return [
-            'functional' => $functional,
-            'areas' => $areas,
-        ];
+        return redirect()
+            ->route('admin.users.edit', $user)
+            ->with('status', 'user-updated')
+            ->with('permission_warnings', $warnings);
     }
 
     private function roles()
