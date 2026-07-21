@@ -7,6 +7,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 ## Alcance actual
 
 - Panel lateral con listado paginado y busqueda de usuarios
+- Resumen del usuario seleccionado: ficha operativa y lista plana de permisos directos asignados (sin agrupar por transversales u otras areas)
 - Formulario en dos pestanas: **Usuario** y **Que puede hacer**
 - Tres bloques de permisos sin repeticion por area:
   1. **En su area asignada** (solicitar, mis requisiciones, mis solicitudes suministros)

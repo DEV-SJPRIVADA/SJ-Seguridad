@@ -135,6 +135,34 @@ class AdminUserManagementTest extends TestCase
         $response->assertRedirect(route('quality-documents.library.index', ['module' => 'gestion_humana']));
     }
 
+    public function test_admin_user_index_shows_flat_assigned_permissions_without_section_groups(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $user->assignRole('usuario');
+        $user->syncPermissions([
+            'requisitions.tab.solicitar',
+            'requisitions.tab.gestion',
+            'view.board.gestion_humana.requisiciones',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', ['selected' => $user->id]));
+
+        $response->assertOk();
+        $response->assertSee('Permisos asignados');
+        $response->assertSee('Solicitar requisiciones de personal');
+        $response->assertSee('Requisiciones: Gestion de Solicitudes');
+        $response->assertSee('Ver Requisiciones (Gestion humana)');
+        $response->assertDontSee('Transversales');
+        $response->assertDontSee('Otras areas');
+        $response->assertDontSee('En su area');
+    }
+
     public function test_admin_can_update_user_permissions_without_setting_new_password(): void
     {
         $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();

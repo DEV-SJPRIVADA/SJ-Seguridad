@@ -88,19 +88,16 @@
                         @if ($selectedUser)
                             @php
                                 $sections = $permissionForm['sections'] ?? [];
-                                $assignedLabels = collect($sections['assigned_area']['permissions'] ?? [])
-                                    ->filter(fn (array $perm) => $selectedUser->can($perm['name']))
-                                    ->pluck('label');
+                                $permissionLabels = collect($sections['assigned_area']['permissions'] ?? [])
+                                    ->merge(collect($sections['global']['groups'] ?? [])->flatMap(fn (array $group) => $group['permissions'] ?? []))
+                                    ->merge(collect($sections['other_areas']['areas'] ?? [])->flatMap(fn (array $area) => $area['permissions'] ?? []))
+                                    ->keyBy('name');
 
-                                $globalLabels = collect($sections['global']['groups'] ?? [])
-                                    ->flatMap(fn (array $group) => collect($group['permissions'] ?? [])
-                                        ->filter(fn (array $perm) => $selectedUser->can($perm['name']))
-                                        ->pluck('label'));
-
-                                $otherAreaLabels = collect($sections['other_areas']['areas'] ?? [])
-                                    ->flatMap(fn (array $area) => collect($area['permissions'] ?? [])
-                                        ->filter(fn (array $perm) => $selectedUser->can($perm['name']))
-                                        ->map(fn (array $perm) => $perm['label'].' ('.$area['label'].')'));
+                                $assignedPermissionLabels = $selectedUser->permissions
+                                    ->pluck('name')
+                                    ->map(fn (string $name) => $permissionLabels->get($name, ['label' => $name])['label'])
+                                    ->sort()
+                                    ->values();
                             @endphp
 
                             <div class="users-content__header">
@@ -154,20 +151,15 @@
 
                                         <div class="card card--muted">
                                             <h4 class="panel-title">Permisos asignados</h4>
-                                            <div class="section-stack block-spaced-sm">
-                                                <div class="card">
-                                                    <p class="text-caption">En su area</p>
-                                                    <p class="text-small block-spaced-sm">{{ $assignedLabels->isNotEmpty() ? $assignedLabels->implode(' | ') : 'Ninguno' }}</p>
-                                                </div>
-                                                <div class="card">
-                                                    <p class="text-caption">Transversales</p>
-                                                    <p class="text-small block-spaced-sm">{{ $globalLabels->isNotEmpty() ? $globalLabels->implode(' | ') : 'Ninguno' }}</p>
-                                                </div>
-                                                <div class="card">
-                                                    <p class="text-caption">Otras areas</p>
-                                                    <p class="text-small block-spaced-sm">{{ $otherAreaLabels->isNotEmpty() ? $otherAreaLabels->implode(' | ') : 'Ninguno' }}</p>
-                                                </div>
-                                            </div>
+                                            @if ($assignedPermissionLabels->isNotEmpty())
+                                                <ul class="user-permission-tags">
+                                                    @foreach ($assignedPermissionLabels as $label)
+                                                        <li class="user-permission-tag">{{ $label }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p class="text-small text-muted block-spaced-sm">Este usuario no tiene permisos adicionales asignados.</p>
+                                            @endif
                                         </div>
                                     </div>
 

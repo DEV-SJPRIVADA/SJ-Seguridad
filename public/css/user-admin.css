@@ -530,6 +530,27 @@ input:checked + .toggle-slider:before {
     background: #f8fafc;
 }
 
+.user-permission-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.user-permission-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
 @media (max-width: 900px) {
     .split-view {
         flex-direction: column;
