@@ -74,10 +74,14 @@ class AdminUserManagementTest extends TestCase
         $response->assertOk();
         $response->assertSee('En su area asignada');
         $response->assertSee('Funcionalidades transversales');
-        $response->assertSee('Otras areas');
+        $response->assertSee('Activa visualizacion de otras areas');
         $response->assertSee('Solicitar requisiciones de personal');
+        $response->assertSee('Suministros — Calidad (aprobacion)');
+        $response->assertSee('Suministros — Compras (catalogo)');
+        $response->assertSee('Compras');
         $response->assertSee('Gestion humana');
-        $response->assertSee('Comercial');
+        $response->assertDontSee('Ver Suministros (Gestion humana)');
+        $response->assertSee('Ver Suministros (Compras)');
         $response->assertDontSee('Plantilla de perfil');
         $response->assertDontSee('Vista previa del menu');
         $response->assertDontSee('value="manage.requisitions"', false);
@@ -180,6 +184,26 @@ class AdminUserManagementTest extends TestCase
         $response->assertOk();
         $response->assertSee('Mostrar usuarios inactivos');
         $response->assertSee('Usuario Inactivo Visible');
+    }
+
+    public function test_permission_validator_warns_when_compras_catalog_lacks_supply_board(): void
+    {
+        $warnings = app(\App\Services\Admin\UserPermissionValidator::class)->warnings('compras', [
+            'supply.tab.catalog',
+        ]);
+
+        $this->assertContains('Marco acciones de catalogo de Suministros (Compras), pero no habilito ver Suministros en el menu de ninguna area.', $warnings);
+    }
+
+    public function test_admin_user_index_shows_access_summary_for_super_admin(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', ['selected' => $admin->id]));
+
+        $response->assertOk();
+        $response->assertSee('El rol super-admin otorga acceso total al sistema');
     }
 
     public function test_admin_user_index_shows_flat_assigned_permissions_without_section_groups(): void

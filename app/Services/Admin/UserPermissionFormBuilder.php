@@ -19,6 +19,7 @@ class UserPermissionFormBuilder
         $systemLabels = config('access.system_permissions', []);
         $areas = config('access.areas', []);
         $indicadorLabels = config('access.area_indicador_permissions', []);
+        $sectionLabels = config('access.admin_ui.sections', []);
 
         $labelFor = function (string $name) use ($systemLabels, $indicadorLabels): string {
             foreach ($indicadorLabels as $group) {
@@ -101,20 +102,62 @@ class UserPermissionFormBuilder
 
         $otherAreas = collect(config('access.admin_ui.other_areas', []))
             ->map(function (array $areaConfig, string $areaKey) use ($allPermissions, $hiddenFromAdmin, $labelFor): ?array {
-                $permissions = collect($areaConfig['permissions'] ?? [])
-                    ->map(fn (string $name) => $this->permissionItem($name, $labelFor($name), $allPermissions, $hiddenFromAdmin))
+                $areaLabel = $areaConfig['label'] ?? config("access.areas.{$areaKey}", $areaKey);
+
+                $subgroups = collect($areaConfig['subgroups'] ?? [])
+                    ->map(function (array $subgroup, string $subgroupKey) use ($allPermissions, $hiddenFromAdmin, $labelFor): ?array {
+                        $permissions = collect($subgroup['permissions'] ?? [])
+                            ->map(fn (string $name) => $this->permissionItem($name, $labelFor($name), $allPermissions, $hiddenFromAdmin))
+                            ->filter()
+                            ->values()
+                            ->all();
+
+                        if ($permissions === []) {
+                            return null;
+                        }
+
+                        return [
+                            'key' => $subgroupKey,
+                            'label' => $subgroup['label'] ?? $subgroupKey,
+                            'permissions' => $permissions,
+                        ];
+                    })
                     ->filter()
                     ->values()
                     ->all();
 
-                if ($permissions === []) {
+                if ($subgroups === [] && ! empty($areaConfig['permissions'])) {
+                    $permissions = collect($areaConfig['permissions'])
+                        ->map(fn (string $name) => $this->permissionItem($name, $labelFor($name), $allPermissions, $hiddenFromAdmin))
+                        ->filter()
+                        ->values()
+                        ->all();
+
+                    if ($permissions === []) {
+                        return null;
+                    }
+
+                    $subgroups = [[
+                        'key' => 'default',
+                        'label' => 'Permisos',
+                        'permissions' => $permissions,
+                    ]];
+                }
+
+                if ($subgroups === []) {
                     return null;
                 }
 
+                $flatPermissions = collect($subgroups)
+                    ->flatMap(fn (array $subgroup) => $subgroup['permissions'])
+                    ->values()
+                    ->all();
+
                 return [
                     'key' => $areaKey,
-                    'label' => $areaConfig['label'] ?? config("access.areas.{$areaKey}", $areaKey),
-                    'permissions' => $permissions,
+                    'label' => $areaLabel,
+                    'subgroups' => $subgroups,
+                    'permissions' => $flatPermissions,
                 ];
             })
             ->filter()
@@ -124,17 +167,17 @@ class UserPermissionFormBuilder
         return [
             'sections' => [
                 'assigned_area' => [
-                    'label' => 'En su area asignada',
+                    'label' => $sectionLabels['assigned_area'] ?? 'En su area asignada',
                     'help' => config('access.admin_ui.help.assigned_area'),
                     'permissions' => $assignedArea,
                 ],
                 'global' => [
-                    'label' => 'Funcionalidades transversales',
+                    'label' => $sectionLabels['global'] ?? 'Funcionalidades transversales',
                     'help' => config('access.admin_ui.help.global'),
                     'groups' => $globalGroups,
                 ],
                 'other_areas' => [
-                    'label' => 'Activa visualizacion de otras areas',
+                    'label' => $sectionLabels['other_areas'] ?? 'Activa visualizacion de otras areas',
                     'help' => config('access.admin_ui.help.other_areas'),
                     'areas' => $otherAreas,
                 ],

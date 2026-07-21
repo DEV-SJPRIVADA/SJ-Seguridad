@@ -163,6 +163,13 @@
 
                                         <div class="card card--muted">
                                             <h4 class="panel-title">Permisos asignados</h4>
+                                            @if (! empty($accessSummary['notes'] ?? []))
+                                                <div class="user-access-notes block-spaced-sm">
+                                                    @foreach ($accessSummary['notes'] as $note)
+                                                        <p class="text-small text-muted" style="margin: 0 0 0.35rem;">{{ $note }}</p>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                             @if ($assignedPermissionLabels->isNotEmpty())
                                                 <ul class="user-permission-tags">
                                                     @foreach ($assignedPermissionLabels as $label)

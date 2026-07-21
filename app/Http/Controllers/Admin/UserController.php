@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Admin\UserAccessSummary;
 use App\Services\Admin\UserPermissionFormBuilder;
 use App\Services\Admin\UserPermissionValidator;
 use Illuminate\Contracts\View\View;
@@ -21,6 +22,7 @@ class UserController extends Controller
     public function __construct(
         private readonly UserPermissionFormBuilder $permissionFormBuilder,
         private readonly UserPermissionValidator $permissionValidator,
+        private readonly UserAccessSummary $accessSummary,
     ) {}
 
     public function index(Request $request): View
@@ -63,6 +65,7 @@ class UserController extends Controller
             ],
             'permissionForm' => $this->permissionFormBuilder->build(),
             'selectedUser' => $selectedUser,
+            'accessSummary' => $selectedUser ? $this->accessSummary->summarize($selectedUser) : null,
             'stats' => [
                 'total' => User::query()->count(),
                 'active' => User::query()->where('is_active', true)->count(),

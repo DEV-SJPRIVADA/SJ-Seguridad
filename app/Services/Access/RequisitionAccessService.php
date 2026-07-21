@@ -30,7 +30,7 @@ class RequisitionAccessService
 
     public function isHrOperator(User $user): bool
     {
-        return $user->can('manage.requisitions') || $this->isAdminBypass($user);
+        return $user->can('requisitions.tab.gestion') || $this->isAdminBypass($user);
     }
 
     public function hasBaseAreaRequisitionAccess(User $user): bool
@@ -161,10 +161,6 @@ class RequisitionAccessService
 
         if ($permission === null) {
             return false;
-        }
-
-        if ($tab === 'gestion') {
-            return $user->can($permission) || $user->can('manage.requisitions');
         }
 
         return $user->can($permission);

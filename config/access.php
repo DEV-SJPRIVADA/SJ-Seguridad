@@ -117,12 +117,17 @@ return [
             'user' => 'Usuario',
             'capabilities' => 'Que puede hacer',
         ],
+        'sections' => [
+            'assigned_area' => 'En su area asignada',
+            'global' => 'Funcionalidades transversales',
+            'other_areas' => 'Activa visualizacion de otras areas',
+        ],
         'help' => [
             'area_key' => 'Contexto operativo del usuario. Las acciones de esta seccion solo aplican en el area seleccionada aqui.',
-            'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, las funciones exclusivas de cada area.',
+            'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, tableros y funciones exclusivas por area.',
             'assigned_area' => 'Operan unicamente en el area base definida en la pestana Usuario.',
-            'global' => 'No dependen de un area fija; puede combinarlas con tableros visibles en Otras areas.',
-            'other_areas' => 'Modulos y tableros propios de cada area (Gestión humana, Comercial, Operaciones, etc.).',
+            'global' => 'Acciones que no dependen del area base. Combinelas con tableros visibles en la seccion inferior.',
+            'other_areas' => 'Tableros visibles y modulos propios de cada area (GH, Compras, Operaciones, Comercial, Calidad).',
         ],
         'assigned_area_permissions' => [
             'requisitions.tab.solicitar',
@@ -138,19 +143,24 @@ return [
                 ],
             ],
             'requisitions' => [
-                'label' => 'Requisiciones (acciones globales)',
+                'label' => 'Requisiciones — Gestion humana',
                 'permissions' => [
                     'requisitions.tab.gestion',
                     'requisitions.tab.dashboard',
                     'manage.requisition.parameters',
                 ],
             ],
-            'supplies' => [
-                'label' => 'Suministros (acciones globales)',
+            'supplies_calidad' => [
+                'label' => 'Suministros — Calidad (aprobacion)',
                 'permissions' => [
                     'supply.tab.quality',
-                    'supply.tab.catalog',
                     'approve.supply.quality',
+                ],
+            ],
+            'supplies_compras' => [
+                'label' => 'Suministros — Compras (catalogo)',
+                'permissions' => [
+                    'supply.tab.catalog',
                     'manage.supply.catalog',
                 ],
             ],
@@ -165,39 +175,85 @@ return [
         'other_areas' => [
             'gestion_humana' => [
                 'label' => 'Gestion humana',
-                'permissions' => [
-                    'view.board.gestion_humana.requisiciones',
-                    'view.board.gestion_humana.suministros',
-                    'view.board.gestion_humana.dashboard',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros',
+                        'permissions' => [
+                            'view.board.gestion_humana.requisiciones',
+                            'view.board.gestion_humana.dashboard',
+                        ],
+                    ],
+                ],
+            ],
+            'compras' => [
+                'label' => 'Compras',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros de suministros',
+                        'permissions' => [
+                            'view.board.compras.suministros',
+                            'view.board.compras.dashboard',
+                        ],
+                    ],
                 ],
             ],
             'operaciones' => [
                 'label' => 'Operaciones',
-                'permissions' => [
-                    'operations.view',
-                    'operations.capture',
-                    'operations.manage',
-                    'operations.export',
-                    'view.board.operaciones.dashboard',
-                    'view.board.operaciones.indicadores',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros',
+                        'permissions' => [
+                            'view.board.operaciones.dashboard',
+                            'view.board.operaciones.indicadores',
+                        ],
+                    ],
+                    'indicadores' => [
+                        'label' => 'Indicadores (funciones)',
+                        'permissions' => [
+                            'operations.view',
+                            'operations.capture',
+                            'operations.manage',
+                            'operations.export',
+                        ],
+                    ],
                 ],
             ],
             'comercial' => [
                 'label' => 'Comercial',
-                'permissions' => [
-                    'comercial.matriz.view',
-                    'comercial.matriz.manage',
-                    'view.board.comercial.dashboard',
-                    'view.board.comercial.matriz_clientes',
-                    'view.board.comercial.servicios_comerciales',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros',
+                        'permissions' => [
+                            'view.board.comercial.dashboard',
+                            'view.board.comercial.matriz_clientes',
+                            'view.board.comercial.servicios_comerciales',
+                        ],
+                    ],
+                    'matriz' => [
+                        'label' => 'Matriz comercial (funciones)',
+                        'permissions' => [
+                            'comercial.matriz.view',
+                            'comercial.matriz.manage',
+                        ],
+                    ],
                 ],
             ],
             'calidad' => [
                 'label' => 'Calidad',
-                'permissions' => [
-                    'view.area.calidad',
-                    'manage.area.calidad',
-                    'view.board.calidad.dashboard',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros',
+                        'permissions' => [
+                            'view.board.calidad.dashboard',
+                        ],
+                    ],
+                    'area' => [
+                        'label' => 'Acceso al area',
+                        'permissions' => [
+                            'view.area.calidad',
+                            'manage.area.calidad',
+                        ],
+                    ],
                 ],
             ],
         ],

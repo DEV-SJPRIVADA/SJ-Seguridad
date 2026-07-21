@@ -28,28 +28,88 @@ class UserPermissionValidator
         ]);
 
         if ($requisitionScoped->isNotEmpty()) {
-            $hasRequisitionBoard = $permissionSet->contains(fn (string $name) => str_starts_with($name, 'view.board.') && str_ends_with($name, '.requisiciones'));
+            $hasRequisitionBoard = $permissionSet->contains(
+                fn (string $name) => str_starts_with($name, 'view.board.') && str_ends_with($name, '.requisiciones')
+            );
 
             if (! $hasRequisitionBoard) {
-                $warnings[] = 'Marco acciones de Requisiciones por tablero visible, pero no habilito ver Requisiciones en el menu de ninguna area.';
+                $warnings[] = 'Marco acciones de Requisiciones (GH), pero no habilito ver Requisiciones en el menu de ninguna area.';
             }
         }
 
-        $supplyScoped = $permissionSet->intersect([
+        $supplyQualityScoped = $permissionSet->intersect([
             'supply.tab.quality',
-            'supply.tab.catalog',
             'approve.supply.quality',
+        ]);
+
+        if ($supplyQualityScoped->isNotEmpty() && ! $this->hasSupplyBoard($permissionSet)) {
+            $warnings[] = 'Marco acciones de Suministros para Calidad, pero no habilito ver Suministros en el menu de ninguna area (normalmente Compras).';
+        }
+
+        $supplyPurchasingScoped = $permissionSet->intersect([
+            'supply.tab.catalog',
             'manage.supply.catalog',
         ]);
 
-        if ($supplyScoped->isNotEmpty()) {
-            $hasSupplyBoard = $permissionSet->contains(fn (string $name) => str_starts_with($name, 'view.board.') && str_ends_with($name, '.suministros'));
+        if ($supplyPurchasingScoped->isNotEmpty()) {
+            if (! $this->hasSupplyBoard($permissionSet)) {
+                $warnings[] = 'Marco acciones de catalogo de Suministros (Compras), pero no habilito ver Suministros en el menu de ninguna area.';
+            }
 
-            if (! $hasSupplyBoard) {
-                $warnings[] = 'Marco acciones de Suministros por tablero visible, pero no habilito ver Suministros en el menu de ninguna area.';
+            if (! $permissionSet->contains('view.board.compras.suministros')) {
+                $warnings[] = 'Las acciones de catalogo de Suministros suelen combinarse con el tablero Suministros en el area Compras.';
             }
         }
 
+        $operationsScoped = $permissionSet->intersect([
+            'operations.view',
+            'operations.capture',
+            'operations.manage',
+            'operations.export',
+        ]);
+
+        if ($operationsScoped->isNotEmpty()) {
+            $hasOperationsBoard = $permissionSet->contains(
+                fn (string $name) => str_starts_with($name, 'view.board.operaciones.')
+            );
+
+            if (! $hasOperationsBoard && $areaKey !== 'operaciones') {
+                $warnings[] = 'Marco permisos de Indicadores, pero no tiene tableros visibles en Operaciones ni area base Operaciones.';
+            }
+        }
+
+        $commercialScoped = $permissionSet->intersect([
+            'comercial.matriz.view',
+            'comercial.matriz.manage',
+        ]);
+
+        if ($commercialScoped->isNotEmpty()) {
+            $hasCommercialBoard = $permissionSet->contains(
+                fn (string $name) => str_starts_with($name, 'view.board.comercial.')
+            );
+
+            if (! $hasCommercialBoard) {
+                $warnings[] = 'Marco funciones de Matriz comercial, pero no habilito tableros visibles en Comercial.';
+            }
+        }
+
+        if ($permissionSet->contains('manage.quality.documents')
+            && ! $permissionSet->contains('view.area.calidad')
+            && ! $permissionSet->contains('manage.area.calidad')
+        ) {
+            $warnings[] = 'Marco administrar documentos de Calidad, pero no habilito acceso al area Calidad (biblioteca o gestion).';
+        }
+
         return array_values(array_unique($warnings));
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, string>  $permissionSet
+     */
+    private function hasSupplyBoard(\Illuminate\Support\Collection $permissionSet): bool
+    {
+        return $permissionSet->contains(
+            fn (string $name) => str_starts_with($name, 'view.board.') && str_ends_with($name, '.suministros')
+        );
     }
 }

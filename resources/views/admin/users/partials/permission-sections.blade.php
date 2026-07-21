@@ -25,10 +25,23 @@
     $otherSelected = $countSelected($otherPermissions);
 
     $otherGroups = collect($otherAreas['areas'] ?? [])
-        ->map(fn (array $area) => [
-            'label' => $area['label'],
-            'permissions' => $area['permissions'],
-        ])
+        ->flatMap(function (array $area): array {
+            $subgroups = $area['subgroups'] ?? [];
+
+            if ($subgroups !== []) {
+                return collect($subgroups)
+                    ->map(fn (array $subgroup) => [
+                        'label' => ($area['label'] ?? '').' — '.($subgroup['label'] ?? ''),
+                        'permissions' => $subgroup['permissions'] ?? [],
+                    ])
+                    ->all();
+            }
+
+            return [[
+                'label' => $area['label'] ?? '',
+                'permissions' => $area['permissions'] ?? [],
+            ]];
+        })
         ->all();
 @endphp
 

@@ -45,7 +45,7 @@ Permisos del modulo de indicadores (area `operaciones`, board `indicadores`):
 - `operations.manage`
 - `operations.export`
 
-Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Alcance por Area → Operaciones**, no en la seccion de permisos funcionales.
+Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Activa visualizacion de otras areas → Operaciones → Indicadores (funciones)**.
 
 Permisos de Matriz comercial (area `comercial`, boards `dashboard`, `matriz_clientes` y `servicios_comerciales`):
 
@@ -55,7 +55,7 @@ Permisos de Matriz comercial (area `comercial`, boards `dashboard`, `matriz_clie
 - `view.board.comercial.matriz_clientes` (tablero **Clientes**)
 - `view.board.comercial.servicios_comerciales` (tablero **Servicios**)
 
-Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Alcance por Area → Comercial**.
+Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Activa visualizacion de otras areas → Comercial**.
 
 ## Areas actuales
 
@@ -128,7 +128,8 @@ Esto produce permisos como:
 
 - `view.board.gestion_humana.dashboard`
 - `view.board.gestion_humana.requisiciones`
-- `view.board.gestion_humana.suministros`
+- `view.board.gestion_humana.requisiciones`
+- `view.board.compras.suministros` (tablero de suministros; area **Compras**, no GH)
 
 El tablero `documentos` **no** usa `view.board.{area}.documentos`. Aparece en cada area con acceso (`view.area.*` o `manage.area.*`) y la biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
 
@@ -160,8 +161,14 @@ Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo.
 El formulario en **Administracion → Usuarios** usa tres bloques (`config/access.php` → `admin_ui`):
 
 1. **En su area asignada:** solicitar, mis requisiciones, mis solicitudes suministros (operan en `users.area_key`).
-2. **Funcionalidades transversales:** gestion/parametros requisiciones, suministros, admin, biblioteca documentos por area (una sola lista).
-3. **Otras areas:** modulos exclusivos (Gestión humana tableros, Operaciones/indicadores, Comercial, Calidad).
+2. **Funcionalidades transversales:** requisiciones GH, suministros Calidad/Compras, admin, biblioteca documentos por area.
+3. **Activa visualizacion de otras areas:** tableros y modulos por area (GH, **Compras**, Operaciones, Comercial, Calidad) con subgrupos *Ver tableros* / *funciones*.
+
+El listado de usuarios muestra permisos **directos** y notas de acceso efectivo por rol (`UserAccessSummary`).
+
+Migracion `2026_07_21_140000_migrate_legacy_requisition_and_supply_board_permissions` reemplaza:
+- `manage.requisitions` → `requisitions.tab.gestion`
+- `view.board.gestion_humana.suministros` → `view.board.compras.suministros`
 
 Documentacion: [`docs/modules/admin-users.md`](modules/admin-users.md).
 
