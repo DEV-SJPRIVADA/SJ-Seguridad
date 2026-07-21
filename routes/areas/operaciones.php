@@ -26,6 +26,8 @@ Route::middleware(['password.changed'])
         });
 
         Route::middleware(['indicador.tab:manage'])->prefix('admin')->name('admin.')->group(function (): void {
+            Route::get('/ajustes', [IndicadorController::class, 'ajustes'])->name('ajustes');
+
             Route::get('/periodos', [IndicadorController::class, 'periods'])->name('periods.index');
             Route::post('/periodos', [IndicadorController::class, 'storePeriod'])->name('periods.store');
             Route::post('/periodos/{period}/cerrar', [IndicadorController::class, 'closePeriod'])->name('periods.close');

@@ -12,10 +12,10 @@
     </x-slot>
 
     <div class="page-section">
-        <div class="app-container">
+        <div class="app-container indicadores-board">
             <div class="panel">
                 <div class="panel__header">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                    <div class="indicadores-panel-header">
                         <div>
                             <h3 class="panel-title">Dashboard General de Operaciones</h3>
                             <p class="panel-text">Consolidado mensual de indicadores FT-OP por usuario.</p>
@@ -29,9 +29,9 @@
                 </div>
 
                 <div class="panel__body">
-                    <form method="GET" class="dashboard-filters form-stack" style="margin-bottom:1.5rem;">
-                        <div class="filter-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:0.75rem; align-items:end;">
-                            <div>
+                    <form method="GET" class="indicadores-inline-form">
+                        <div class="indicadores-filter-bar">
+                            <div class="indicadores-field indicadores-field--xs">
                                 <label class="form-label">Ano</label>
                                 <select name="year" class="supply-input supply-select">
                                     @foreach ($years as $yearOption)
@@ -39,7 +39,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
+                            <div class="indicadores-field indicadores-field--sm">
                                 <label class="form-label">Mes</label>
                                 <select name="month" class="supply-input supply-select">
                                     @foreach ($months as $monthNumber => $monthName)
@@ -47,7 +47,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
+                            <div class="indicadores-field indicadores-field--action">
                                 <button type="submit" class="btn btn--primary btn--sm">Aplicar</button>
                             </div>
                         </div>
@@ -72,8 +72,9 @@
                         </div>
                     </div>
 
-                    <h4 class="panel-title" style="margin-bottom:1rem;">KPIs del mes</h4>
-                    <table class="supply-table indicadores-kpi-table">
+                    <h4 class="indicadores-subpanel__title" style="margin-bottom:0.75rem;">KPIs del mes</h4>
+                    <div class="indicadores-table-wrap">
+                    <table class="supply-table indicadores-table indicadores-kpi-table">
                         <thead>
                             <tr>
                                 <th>Codigo</th>
@@ -99,12 +100,14 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
 
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.5rem; margin-top:2rem;">
-                        <div class="panel" style="margin:0;">
+                    <div class="indicadores-split-grid">
+                        <div class="panel indicadores-nested-panel">
                             <div class="panel__header"><h4 class="panel-title">Ranking de usuarios</h4></div>
                             <div class="panel__body">
-                                <table class="supply-table">
+                                <div class="indicadores-table-wrap">
+                                <table class="supply-table indicadores-table">
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -126,13 +129,15 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="panel" style="margin:0;">
+                        <div class="panel indicadores-nested-panel">
                             <div class="panel__header"><h4 class="panel-title">Indicadores criticos</h4></div>
                             <div class="panel__body">
-                                <table class="supply-table">
+                                <div class="indicadores-table-wrap">
+                                <table class="supply-table indicadores-table">
                                     <thead>
                                         <tr>
                                             <th>Indicador</th>
@@ -150,19 +155,20 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     @can('operations.manage')
-                        <div class="panel" style="margin-top:2rem;">
+                        <div class="panel indicadores-nested-panel" style="margin-top:1.5rem;">
                             <div class="panel__header"><h4 class="panel-title">Resumen ejecutivo</h4></div>
                             <div class="panel__body">
-                                <form method="POST" action="{{ route('indicadores.admin.dashboard.summary') }}" class="form-stack">
+                                <form method="POST" action="{{ route('indicadores.admin.dashboard.summary') }}" class="indicadores-form-compact">
                                     @csrf
                                     <input type="hidden" name="year" value="{{ $year }}">
                                     <input type="hidden" name="month" value="{{ $month }}">
-                                    <textarea name="summary_text" class="supply-textarea" rows="5" placeholder="Resumen del periodo...">{{ old('summary_text', $summary?->summary_text) }}</textarea>
+                                    <textarea name="summary_text" class="supply-textarea" rows="4" placeholder="Resumen del periodo...">{{ old('summary_text', $summary?->summary_text) }}</textarea>
                                     <button type="submit" class="btn btn--primary btn--sm">Guardar resumen</button>
                                 </form>
                             </div>

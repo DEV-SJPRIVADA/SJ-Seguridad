@@ -214,10 +214,8 @@ class User extends Authenticatable
         }
 
         if ($this->can('operations.manage')) {
-            $tabs->push('periodos');
-            $tabs->push('pesos');
+            $tabs->push('ajustes');
             $tabs->push('madre');
-            $tabs->push('auditoria');
         }
 
         return $tabs->unique()->values();
@@ -241,10 +239,8 @@ class User extends Authenticatable
         return match ($firstTab) {
             'dashboard' => route('indicadores.dashboard'),
             'captura' => route('indicadores.index'),
-            'periodos' => route('indicadores.admin.periods.index'),
-            'pesos' => route('indicadores.admin.weights'),
+            'ajustes' => route('indicadores.admin.ajustes'),
             'madre' => route('indicadores.admin.mother.index'),
-            'auditoria' => route('indicadores.admin.audit.index'),
             default => route('dashboard', ['module' => 'operaciones']),
         };
     }

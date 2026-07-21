@@ -124,16 +124,55 @@ class IndicadorController extends Controller
             ->with('status', 'Captura guardada correctamente para el mes seleccionado.');
     }
 
-    public function periods(): View
+    public function ajustes(Request $request): View
     {
-        $periods = Period::query()->orderByDesc('year')->orderByDesc('month')->paginate(24);
+        $section = (string) $request->query('section', 'periodos');
 
-        return view('areas.operaciones.periodos.index', [
+        if (! in_array($section, ['periodos', 'pesos', 'auditoria'], true)) {
+            $section = 'periodos';
+        }
+
+        $data = [
             'subTabs' => IndicadorNavigation::subTabs(),
-            'periods' => $periods,
+            'section' => $section,
             'years' => $this->yearRangeService->years(),
             'months' => config('indicators.months'),
-        ]);
+        ];
+
+        if ($section === 'periodos') {
+            $data['periods'] = Period::query()
+                ->orderByDesc('year')
+                ->orderByDesc('month')
+                ->paginate(24)
+                ->withQueryString();
+        }
+
+        if ($section === 'pesos') {
+            $data['indicators'] = Indicator::query()
+                ->orderBy('code')
+                ->with('dashboardWeight')
+                ->get();
+        }
+
+        if ($section === 'auditoria') {
+            $data['logs'] = AuditLog::query()
+                ->with('user')
+                ->when($request->filled('event_type'), fn ($query) => $query->where('event_type', $request->string('event_type')))
+                ->when($request->filled('action'), fn ($query) => $query->where('action', $request->string('action')))
+                ->orderByDesc('created_at')
+                ->paginate(30)
+                ->withQueryString();
+
+            $data['eventTypes'] = AuditLog::query()->select('event_type')->distinct()->orderBy('event_type')->pluck('event_type');
+            $data['actions'] = AuditLog::query()->select('action')->distinct()->orderBy('action')->pluck('action');
+        }
+
+        return view('areas.operaciones.ajustes.index', $data);
+    }
+
+    public function periods(): RedirectResponse
+    {
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'periodos']);
     }
 
     public function storePeriod(Request $request): RedirectResponse
@@ -237,17 +276,9 @@ class IndicadorController extends Controller
         return back()->with('status', 'Periodo reabierto correctamente.');
     }
 
-    public function weights(): View
+    public function weights(): RedirectResponse
     {
-        $indicators = Indicator::query()
-            ->orderBy('code')
-            ->with('dashboardWeight')
-            ->get();
-
-        return view('areas.operaciones.configuracion.pesos', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'indicators' => $indicators,
-        ]);
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'pesos']);
     }
 
     public function updateWeights(Request $request): RedirectResponse
@@ -329,25 +360,13 @@ class IndicadorController extends Controller
         ]);
     }
 
-    public function auditLog(Request $request): View
+    public function auditLog(Request $request): RedirectResponse
     {
-        $logs = AuditLog::query()
-            ->with('user')
-            ->when($request->filled('event_type'), fn ($query) => $query->where('event_type', $request->string('event_type')))
-            ->when($request->filled('action'), fn ($query) => $query->where('action', $request->string('action')))
-            ->orderByDesc('created_at')
-            ->paginate(30)
-            ->withQueryString();
-
-        $eventTypes = AuditLog::query()->select('event_type')->distinct()->orderBy('event_type')->pluck('event_type');
-        $actions = AuditLog::query()->select('action')->distinct()->orderBy('action')->pluck('action');
-
-        return view('areas.operaciones.auditoria.index', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'logs' => $logs,
-            'eventTypes' => $eventTypes,
-            'actions' => $actions,
-        ]);
+        return redirect()->route('indicadores.admin.ajustes', array_filter([
+            'section' => 'auditoria',
+            'event_type' => $request->query('event_type'),
+            'action' => $request->query('action'),
+        ]));
     }
 
     public function saveSummary(Request $request): RedirectResponse

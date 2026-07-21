@@ -30,7 +30,7 @@ return [
         'operaciones' => [
             'operations.view' => 'Indicadores: Ver dashboards',
             'operations.capture' => 'Indicadores: Capturar datos',
-            'operations.manage' => 'Indicadores: Administrar (periodos, pesos, MADRE)',
+            'operations.manage' => 'Indicadores: Administrar (ajustes, consolidado)',
             'operations.export' => 'Indicadores: Exportar PDF y Excel',
         ],
         'comercial' => [
@@ -68,10 +68,8 @@ return [
     'indicador_tabs' => [
         'dashboard' => 'Dashboard',
         'captura' => 'Captura',
-        'periodos' => 'Periodos',
-        'pesos' => 'Pesos',
+        'ajustes' => 'Ajustes',
         'madre' => 'Consolidado',
-        'auditoria' => 'Auditoria',
     ],
 
     'requisition_tabs' => [

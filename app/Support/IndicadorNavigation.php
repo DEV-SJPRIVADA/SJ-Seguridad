@@ -37,17 +37,15 @@ class IndicadorNavigation
                 'visible' => $user->can('operations.capture') || $user->can('operations.manage'),
             ],
             [
-                'key' => 'periodos',
-                'label' => config('access.indicador_tabs.periodos'),
-                'route' => 'indicadores.admin.periods.index',
-                'patterns' => ['indicadores.admin.periods.*'],
-                'visible' => $user->can('operations.manage'),
-            ],
-            [
-                'key' => 'pesos',
-                'label' => config('access.indicador_tabs.pesos'),
-                'route' => 'indicadores.admin.weights',
-                'patterns' => ['indicadores.admin.weights*'],
+                'key' => 'ajustes',
+                'label' => config('access.indicador_tabs.ajustes'),
+                'route' => 'indicadores.admin.ajustes',
+                'patterns' => [
+                    'indicadores.admin.ajustes',
+                    'indicadores.admin.periods.*',
+                    'indicadores.admin.weights*',
+                    'indicadores.admin.audit.*',
+                ],
                 'visible' => $user->can('operations.manage'),
             ],
             [
@@ -55,13 +53,6 @@ class IndicadorNavigation
                 'label' => config('access.indicador_tabs.madre'),
                 'route' => 'indicadores.admin.mother.index',
                 'patterns' => ['indicadores.admin.mother.*'],
-                'visible' => $user->can('operations.manage'),
-            ],
-            [
-                'key' => 'auditoria',
-                'label' => config('access.indicador_tabs.auditoria'),
-                'route' => 'indicadores.admin.audit.index',
-                'patterns' => ['indicadores.admin.audit.*'],
                 'visible' => $user->can('operations.manage'),
             ],
         ];

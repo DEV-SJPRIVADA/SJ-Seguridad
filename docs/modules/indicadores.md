@@ -1,6 +1,6 @@
 # Modulo Indicadores (Operaciones)
 
-Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, MADRE, periodos, pesos y auditoria.
+Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, consolidado (MADRE), ajustes y auditoria.
 
 ## Rutas
 
@@ -11,16 +11,27 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 | Dashboard global | `operations.view` o `operations.manage` |
 | Captura | `operations.capture` o `operations.manage` |
 | Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
-| Admin (periodos, pesos, MADRE, auditoria) | `operations.manage` |
+| Ajustes (periodos, pesos, auditoria) | `operations.manage` |
+| Consolidado (MADRE) | `operations.manage` |
 | Export PDF/Excel | `operations.export` |
 
-Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, periodos, pesos, madre, auditoria. Sin pestañas de jefes ni documentos internos.
+Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, ajustes, madre (Consolidado). Sin pestañas de jefes ni documentos internos.
+
+La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones internas via query `?section=`:
+
+| Seccion | Contenido |
+|---|---|
+| `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
+| `pesos` | Pesos del score global del dashboard |
+| `auditoria` | Log de cambios con filtros |
+
+Las rutas legacy `/admin/periodos`, `/admin/pesos` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas.
 
 ## Permisos Spatie
 
 - `operations.view` — ver dashboards
 - `operations.capture` — capturar indicadores (propios del usuario autenticado)
-- `operations.manage` — administracion completa (periodos, pesos, MADRE, auditoria)
+- `operations.manage` — administracion completa (ajustes, consolidado)
 - `operations.export` — exportaciones
 
 El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
@@ -47,6 +58,8 @@ El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 Vistas en `resources/views/areas/operaciones/` con layout `<x-app-layout>`, paneles corporativos y subtabs via `App\Support\IndicadorNavigation`.
 
 Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros).
+
+Los tableros usan la clase contenedora `indicadores-board` para tablas compactas, filtros acotados y botones al ancho de su contenido.
 
 El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
 
