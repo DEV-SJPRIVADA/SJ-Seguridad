@@ -369,6 +369,102 @@ class RequisitionModuleTest extends TestCase
             ->assertDontSee($older->code);
     }
 
+    public function test_gestion_update_logs_field_changes_without_status_change(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0501',
+            'operaciones',
+            'Perfil inicial'
+        ));
+
+        $response = $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_SOLICITADA,
+                'quantity' => 5,
+                'human_resources_observation' => 'Se ajusta cantidad por nueva necesidad.',
+            ]
+        ));
+
+        $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+
+        $this->assertDatabaseHas('personal_requisition_change_logs', [
+            'personal_requisition_id' => $requisition->id,
+            'field_key' => 'quantity',
+            'old_value' => '1',
+            'new_value' => '5',
+            'changed_by' => $manager->id,
+        ]);
+        $this->assertDatabaseHas('personal_requisition_change_logs', [
+            'personal_requisition_id' => $requisition->id,
+            'field_key' => 'human_resources_observation',
+            'old_value' => null,
+            'new_value' => 'Se ajusta cantidad por nueva necesidad.',
+            'changed_by' => $manager->id,
+        ]);
+        $this->assertDatabaseCount('personal_requisition_status_logs', 0);
+    }
+
+    public function test_edit_view_shows_change_log_history(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'name' => 'Analista GH',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0502',
+            'operaciones',
+            'Perfil inicial'
+        ));
+
+        $requisition->changeLogs()->create([
+            'change_batch' => (string) \Illuminate\Support\Str::uuid(),
+            'field_key' => 'quantity',
+            'field_label' => 'Cantidad',
+            'old_value' => '1',
+            'new_value' => '3',
+            'changed_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Historial de cambios')
+            ->assertSee('Cantidad')
+            ->assertSee('Analista GH');
+    }
+
     public function test_gestion_humana_user_can_update_status_and_create_status_log(): void
     {
         $requester = User::factory()->create([

@@ -140,4 +140,9 @@ class PersonalRequisition extends Model
     {
         return $this->hasMany(PersonalRequisitionStatusLog::class);
     }
+
+    public function changeLogs(): HasMany
+    {
+        return $this->hasMany(PersonalRequisitionChangeLog::class);
+    }
 }

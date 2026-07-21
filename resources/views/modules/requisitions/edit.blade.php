@@ -29,7 +29,7 @@
                         ])
 
                         <div class="req-form-actions">
-                            <p class="req-form-actions__note">Cada cambio de estado queda registrado en el historial operativo junto con el usuario responsable.</p>
+                            <p class="req-form-actions__note">Los cambios de estado y de datos quedan registrados en el historial operativo con fecha, usuario y detalle.</p>
                             <div class="req-form-actions__group">
                                 <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary">Volver</a>
                                 <x-primary-button>Guardar cambios</x-primary-button>
@@ -69,6 +69,49 @@
                             @endif
                         </div>
                     </div>
+
+                    <div class="panel">
+                        <div class="panel__header">
+                            <h3 class="panel-title">Historial de cambios</h3>
+                            <p class="panel-text">Trazabilidad de modificaciones en campos de la requisicion.</p>
+                        </div>
+                        <div class="panel__body">
+                            @php
+                                $changeBatches = $requisition->changeLogs
+                                    ->sortByDesc('created_at')
+                                    ->groupBy('change_batch');
+                            @endphp
+
+                            @if ($changeBatches->isEmpty())
+                                <p class="panel-text" style="margin: 0;">Sin cambios registrados en edicion.</p>
+                            @else
+                                <ul class="req-form-history">
+                                    @foreach ($changeBatches as $batchLogs)
+                                        @php
+                                            $firstLog = $batchLogs->first();
+                                        @endphp
+                                        <li class="req-form-history__item">
+                                            <p class="req-form-history__date">{{ $firstLog->created_at?->format('Y-m-d H:i') }}</p>
+                                            <ul class="req-form-change-log">
+                                                @foreach ($batchLogs as $log)
+                                                    <li class="req-form-change-log__item">
+                                                        <span class="req-form-change-log__field">{{ $log->field_label }}</span>
+                                                        <span class="req-form-change-log__values">
+                                                            <span class="req-form-change-log__value req-form-change-log__value--old">{{ $log->old_value ?? '—' }}</span>
+                                                            <span class="req-form-history__arrow" aria-hidden="true">→</span>
+                                                            <span class="req-form-change-log__value req-form-change-log__value--new">{{ $log->new_value ?? '—' }}</span>
+                                                        </span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            <p class="req-form-history__author">{{ $firstLog->author?->name ?? 'Sistema' }}</p>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Antes de guardar</h3>

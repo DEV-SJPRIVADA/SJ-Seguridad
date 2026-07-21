@@ -16,6 +16,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Solicitar y Mis requisiciones operan siempre en `users.area_key`
 - Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** muestra solicitudes de todas las areas.
 - Historial de cambios de estado
+- Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
 - Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
 - Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
@@ -61,6 +62,14 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Contenido: codigo, cargo, cliente, estado anterior → nuevo, observacion GH; CTA a Seguimiento del area solicitante con `q`
 - No notifica al catalogo de Parametros ni al fallback GH
 
+### Trazabilidad en edicion (gestion)
+- Disparo: `RequisitionController::update` en cada guardado con cambios en campos editables
+- Servicio: `App\Services\Requisitions\PersonalRequisitionChangeLogger`
+- Tabla: `personal_requisition_change_logs` (agrupado por `change_batch` por cada guardado)
+- Registra: fecha/hora, campo (etiqueta legible), valor anterior, valor nuevo, usuario (`changed_by`)
+- UI: panel **Historial de cambios** en `resources/views/modules/requisitions/edit.blade.php`
+- El **Historial de estados** sigue siendo independiente y solo registra transiciones de estado
+
 ### Compartido
 - Ambos mailables usan cola (`ShouldQueue`)
 - Fallos de envio se registran en log; la solicitud HTTP sigue siendo exitosa
@@ -102,7 +111,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
   - `cancelada`: Solicitud descartada.
 - **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
 - **Formulario Solicitar**: secciones numeradas (motivo, cargo, servicio, perfil, administrativo); cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas motivos envian 1); barra lateral con checklist y acciones destacadas al pie.
-- **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con guia operativa e historial de estados.
+- **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con historial de estados, historial de cambios de campos y guia operativa.
 - **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
 - **Seguimiento**: mismo panel de filtros que Gestion (busqueda, pills de estado, cliente, ciudad, alcance mis/todas); resumen de resultados y exportacion Excel en la cabecera del panel.
 - **Dashboard Compacto**: indicadores KPI en una sola fila.
@@ -142,6 +151,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 
 - `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`)
 - `personal_requisition_status_logs`
+- `personal_requisition_change_logs` (trazabilidad de campos editados en gestion)
 - `requisition_positions`
 - `requisition_request_reasons`
 - `requisition_clients` (tabla interna de enlace; se alimenta automaticamente desde matriz comercial al crear/editar; **no** se administra en Parametros)

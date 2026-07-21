@@ -30,6 +30,7 @@ use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Requisitions\CommercialClientBridge;
+use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
@@ -40,6 +41,7 @@ class RequisitionController extends Controller
 
     public function __construct(
         private readonly RequisitionAccessService $requisitionAccess,
+        private readonly PersonalRequisitionChangeLogger $changeLogger,
     ) {}
     /**
      * @var array<string, array{label: string, model: class-string<\Illuminate\Database\Eloquent\Model>}>
@@ -480,7 +482,7 @@ class RequisitionController extends Controller
             'catalogs' => $this->catalogs(),
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
-            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author']),
+            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author', 'changeLogs.author']),
             'sexOptions' => $this->sexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
@@ -498,7 +500,7 @@ class RequisitionController extends Controller
         $newStatus = $request->string('status')->toString();
 
         DB::transaction(function () use ($request, $requisition, $oldStatus, $newStatus): void {
-            $requisition->update([
+            $updateData = [
                 'managed_by' => $request->user()->id,
                 'position_id' => $request->integer('position_id'),
                 'sex' => $request->string('sex')->toString(),
@@ -531,7 +533,11 @@ class RequisitionController extends Controller
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
                 'closed_at' => in_array($newStatus, [PersonalRequisition::STATUS_CONTRATADO, PersonalRequisition::STATUS_CANCELADA], true) ? now() : null,
-            ]);
+            ];
+
+            $this->changeLogger->logUpdate($requisition, $updateData, $request->user()->id);
+
+            $requisition->update($updateData);
 
             if ($oldStatus !== $newStatus) {
                 $requisition->statusLogs()->create([

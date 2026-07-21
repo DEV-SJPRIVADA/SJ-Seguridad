@@ -757,6 +757,55 @@ a {
     color: #475569;
 }
 
+.req-form-change-log {
+    margin: 0.65rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.req-form-change-log__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.req-form-change-log__field {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.req-form-change-log__values {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.req-form-change-log__value {
+    font-size: 0.82rem;
+    line-height: 1.35;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.45rem;
+    word-break: break-word;
+}
+
+.req-form-change-log__value--old {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.req-form-change-log__value--new {
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-weight: 600;
+}
+
 .req-form__meta-item {
     display: flex;
     flex-direction: column;
