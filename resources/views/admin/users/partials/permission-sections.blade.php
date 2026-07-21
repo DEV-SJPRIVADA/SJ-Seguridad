@@ -70,7 +70,7 @@
     <x-permission-accordion
         id="other"
         icon="🗂️"
-        :title="$otherAreas['label'] ?? 'Otras areas'"
+        :title="$otherAreas['label'] ?? 'Activa visualizacion de otras areas'"
         :help="$otherAreas['help'] ?? ''"
         :open="false"
         :search="'otras areas '.Str::lower($otherAreas['label'] ?? '')"

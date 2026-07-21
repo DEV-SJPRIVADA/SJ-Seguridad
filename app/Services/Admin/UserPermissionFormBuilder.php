@@ -134,7 +134,7 @@ class UserPermissionFormBuilder
                     'groups' => $globalGroups,
                 ],
                 'other_areas' => [
-                    'label' => 'Otras areas',
+                    'label' => 'Activa visualizacion de otras areas',
                     'help' => config('access.admin_ui.help.other_areas'),
                     'areas' => $otherAreas,
                 ],
