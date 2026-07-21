@@ -135,6 +135,53 @@ class AdminUserManagementTest extends TestCase
         $response->assertRedirect(route('quality-documents.library.index', ['module' => 'gestion_humana']));
     }
 
+    public function test_admin_user_index_lists_only_active_users_by_default(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $activeUser = User::factory()->create([
+            'name' => 'Usuario Activo Visible',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $activeUser->assignRole('usuario');
+
+        $inactiveUser = User::factory()->create([
+            'name' => 'Usuario Inactivo Oculto',
+            'must_change_password' => false,
+            'is_active' => false,
+        ]);
+        $inactiveUser->assignRole('usuario');
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index'));
+
+        $response->assertOk();
+        $response->assertSee('Usuario Activo Visible');
+        $response->assertDontSee('Usuario Inactivo Oculto');
+    }
+
+    public function test_admin_user_index_can_include_inactive_users_with_checkbox_filter(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $inactiveUser = User::factory()->create([
+            'name' => 'Usuario Inactivo Visible',
+            'must_change_password' => false,
+            'is_active' => false,
+        ]);
+        $inactiveUser->assignRole('usuario');
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', [
+            'include_inactive' => '1',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Mostrar usuarios inactivos');
+        $response->assertSee('Usuario Inactivo Visible');
+    }
+
     public function test_admin_user_index_shows_flat_assigned_permissions_without_section_groups(): void
     {
         $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();

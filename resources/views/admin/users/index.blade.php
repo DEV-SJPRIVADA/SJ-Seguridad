@@ -33,19 +33,30 @@
                         <div class="panel__header">
                             <p class="text-caption">Lista de usuarios</p>
                             <p class="panel-text">{{ $users->total() }} registros encontrados</p>
-                            <form method="GET" action="{{ route('admin.users.index') }}" class="search-bar block-spaced-sm">
-                                <input
-                                    type="text"
-                                    name="q"
-                                    value="{{ $filters['q'] ?? '' }}"
-                                    placeholder="Buscar por nombre o correo"
-                                    class="form-input"
-                                >
-                                <button type="submit" class="btn btn--secondary">
-                                    Buscar
-                                </button>
+                            <form method="GET" action="{{ route('admin.users.index') }}" class="users-list-toolbar block-spaced-sm">
+                                <div class="search-bar">
+                                    <input
+                                        type="text"
+                                        name="q"
+                                        value="{{ $filters['q'] ?? '' }}"
+                                        placeholder="Buscar por nombre o correo"
+                                        class="form-input"
+                                    >
+                                    <button type="submit" class="btn btn--secondary">
+                                        Buscar
+                                    </button>
+                                </div>
+                                <label class="users-filter-toggle">
+                                    <input
+                                        type="checkbox"
+                                        name="include_inactive"
+                                        value="1"
+                                        @checked($filters['include_inactive'] ?? false)
+                                        onchange="this.form.submit()"
+                                    >
+                                    <span>Mostrar usuarios inactivos</span>
+                                </label>
                             </form>
-                            
                         </div>
 
                         <div class="users-list">
@@ -53,6 +64,7 @@
                                 <a
                                     href="{{ route('admin.users.index', array_filter([
                                         'q' => $filters['q'] ?? null,
+                                        'include_inactive' => ($filters['include_inactive'] ?? false) ? '1' : null,
                                         'selected' => $user->id,
                                         'page' => $users->currentPage(),
                                     ])) }}"

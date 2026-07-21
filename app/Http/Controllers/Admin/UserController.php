@@ -26,9 +26,11 @@ class UserController extends Controller
     public function index(Request $request): View
     {
         $search = trim($request->string('q')->toString());
+        $includeInactive = $request->boolean('include_inactive');
 
         $query = User::query()
             ->with(['roles', 'permissions', 'creator'])
+            ->when(! $includeInactive, fn ($builder) => $builder->where('is_active', true))
             ->when($search !== '', function ($builder) use ($search): void {
                 $builder->where(function ($inner) use ($search): void {
                     $inner
@@ -57,6 +59,7 @@ class UserController extends Controller
         return view('admin.users.index', [
             'filters' => [
                 'q' => $search,
+                'include_inactive' => $includeInactive,
             ],
             'permissionForm' => $this->permissionFormBuilder->build(),
             'selectedUser' => $selectedUser,
