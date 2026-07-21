@@ -85,7 +85,7 @@
                             @if ($changeBatches->isEmpty())
                                 <p class="panel-text" style="margin: 0;">Sin cambios registrados en edicion.</p>
                             @else
-                                <ul class="req-form-history">
+                                <ul class="req-form-history req-form-history--scrollable">
                                     @foreach ($changeBatches as $batchLogs)
                                         @php
                                             $firstLog = $batchLogs->first();

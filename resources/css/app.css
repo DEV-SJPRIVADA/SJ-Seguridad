@@ -722,6 +722,31 @@ a {
     gap: 0.85rem;
 }
 
+.req-form-history--scrollable {
+    max-height: 22rem;
+    overflow-y: auto;
+    padding-right: 0.35rem;
+    scrollbar-gutter: stable;
+}
+
+.req-form-history--scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.req-form-history--scrollable::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 999px;
+}
+
+.req-form-history--scrollable::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+.req-form-history--scrollable::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 .req-form-history__item {
     padding: 0.85rem 0.95rem;
     border: 1px solid var(--color-border);
