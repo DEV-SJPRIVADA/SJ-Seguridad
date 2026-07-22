@@ -488,8 +488,10 @@
 .indicadores-table--periods th:nth-child(2),
 .indicadores-table--periods td:nth-child(2) { width: 7rem; }
 
-.indicadores-table--weights th:nth-child(2),
-.indicadores-table--weights td:nth-child(2) { width: 7rem; }
+.indicadores-table--metas th:nth-child(2),
+.indicadores-table--metas th:nth-child(3),
+.indicadores-table--metas td:nth-child(2),
+.indicadores-table--metas td:nth-child(3) { width: 7rem; }
 
 .indicadores-table--audit th:nth-child(1),
 .indicadores-table--audit td:nth-child(1) { width: 9rem; }

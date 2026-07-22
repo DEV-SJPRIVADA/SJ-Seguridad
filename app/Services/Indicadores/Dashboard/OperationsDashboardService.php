@@ -298,7 +298,7 @@ class OperationsDashboardService
             $a = (float) ($consolidated['a']['result_percentage'] ?? 0);
             $b = (float) ($consolidated['b']['result_percentage'] ?? 0);
 
-            return max(0, $a - 3) + max(0, $b - 1);
+            return max(0, $a - (float) $indicator->target_value) + max(0, $b - (float) ($indicator->critical_value ?? 1));
         }
 
         $result = (float) ($consolidated['result_percentage'] ?? 0);
@@ -315,7 +315,7 @@ class OperationsDashboardService
     private function metaLabel(Indicator $indicator): string
     {
         if ($indicator->code === 'FT-OP-03') {
-            return 'A<=3% y B<=1%';
+            return 'A<='.(float) $indicator->target_value.'% y B<='.(float) ($indicator->critical_value ?? 1).'%';
         }
 
         return $indicator->target_operator.' '.$indicator->target_value.'%';

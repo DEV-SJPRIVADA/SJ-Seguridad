@@ -24,6 +24,7 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 - Plantillas: [`docs/templates/`](c:/laragon/www/SJSEGURIDAD/docs/templates/)
 - Feature briefs: [`docs/briefs/`](c:/laragon/www/SJSEGURIDAD/docs/briefs/)
 - Review reports: [`docs/reviews/`](c:/laragon/www/SJSEGURIDAD/docs/reviews/)
+- Run logs (trazabilidad por agente): [`docs/runs/`](c:/laragon/www/SJSEGURIDAD/docs/runs/)
 
 ## Documentacion de usuario
 

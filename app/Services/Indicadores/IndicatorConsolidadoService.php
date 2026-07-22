@@ -138,8 +138,10 @@ class IndicatorConsolidadoService
 
             $freq = $sumServicios > 0 ? round(($sumSiniestros / $sumServicios) * 100, 2) : null;
             $impacto = $sumFacturacion > 0 ? round(($sumPagado / $sumFacturacion) * 100, 2) : null;
-            $cumpleA = $freq !== null && $freq <= 3;
-            $cumpleB = $impacto !== null && $impacto <= 1;
+            $freqThreshold = (float) $indicator->target_value;
+            $impactThreshold = (float) ($indicator->critical_value ?? 1);
+            $cumpleA = $freq !== null && $freq <= $freqThreshold;
+            $cumpleB = $impacto !== null && $impacto <= $impactThreshold;
 
             return [
                 'a' => [

@@ -96,13 +96,13 @@ class IndicatorMetricCalculator
         return match ($indicator->code) {
             'FT-OP-01' => $this->ratioGe($form, 'total_personal', 'personal_capacitado', (float) $indicator->target_value),
             'FT-OP-02' => $this->ratioLe($form, 'total_servicios', 'no_conformes', (float) $indicator->target_value),
-            'FT-OP-03' => $this->calculateFtOp03($form),
-            'FT-OP-04' => $this->ratioGe($form, 'supervisiones_programadas', 'supervisiones_realizadas', 90.0),
-            'FT-OP-05' => $this->ratioGe($form, 'visitas_programadas', 'visitas_realizadas', 100.0),
-            'FT-OP-06' => $this->ratioEqZero($form, 'total_clientes_cadena', 'eventos_indeseables'),
-            'FT-OP-07' => $this->ratioGe($form, 'analisis_programados', 'analisis_realizados', 100.0),
-            'FT-OP-08' => $this->ratioGe($form, 'inventarios_programados', 'inventarios_realizados', 100.0),
-            'FT-OP-09' => $this->ratioGe($form, 'armas_programadas', 'armas_inspeccionadas', 100.0),
+            'FT-OP-03' => $this->calculateFtOp03($form, $indicator),
+            'FT-OP-04' => $this->ratioGe($form, 'supervisiones_programadas', 'supervisiones_realizadas', (float) $indicator->target_value),
+            'FT-OP-05' => $this->ratioGe($form, 'visitas_programadas', 'visitas_realizadas', (float) $indicator->target_value),
+            'FT-OP-06' => $this->ratioEqZero($form, 'total_clientes_cadena', 'eventos_indeseables', (float) $indicator->target_value),
+            'FT-OP-07' => $this->ratioGe($form, 'analisis_programados', 'analisis_realizados', (float) $indicator->target_value),
+            'FT-OP-08' => $this->ratioGe($form, 'inventarios_programados', 'inventarios_realizados', (float) $indicator->target_value),
+            'FT-OP-09' => $this->ratioGe($form, 'armas_programadas', 'armas_inspeccionadas', (float) $indicator->target_value),
             default => [
                 'numerator' => 0.0,
                 'denominator' => 0.0,
@@ -172,13 +172,19 @@ class IndicatorMetricCalculator
         return match ($code) {
             'FT-OP-01' => ['type' => 'ratio_ge', 'den' => 'total_personal', 'num' => 'personal_capacitado', 'threshold' => (float) $indicator->target_value],
             'FT-OP-02' => ['type' => 'ratio_le', 'den' => 'total_servicios', 'num' => 'no_conformes', 'threshold' => (float) $indicator->target_value],
-            'FT-OP-03' => ['type' => 'ft_op_03', 'den' => 'total_servicios', 'num' => 'total_siniestros'],
-            'FT-OP-04' => ['type' => 'ratio_ge', 'den' => 'supervisiones_programadas', 'num' => 'supervisiones_realizadas', 'threshold' => 90.0],
-            'FT-OP-05' => ['type' => 'ratio_ge', 'den' => 'visitas_programadas', 'num' => 'visitas_realizadas', 'threshold' => 100.0],
-            'FT-OP-06' => ['type' => 'ratio_eq_zero', 'den' => 'total_clientes_cadena', 'num' => 'eventos_indeseables'],
-            'FT-OP-07' => ['type' => 'ratio_ge', 'den' => 'analisis_programados', 'num' => 'analisis_realizados', 'threshold' => 100.0],
-            'FT-OP-08' => ['type' => 'ratio_ge', 'den' => 'inventarios_programados', 'num' => 'inventarios_realizados', 'threshold' => 100.0],
-            'FT-OP-09' => ['type' => 'ratio_ge', 'den' => 'armas_programadas', 'num' => 'armas_inspeccionadas', 'threshold' => 100.0],
+            'FT-OP-03' => [
+                'type' => 'ft_op_03',
+                'den' => 'total_servicios',
+                'num' => 'total_siniestros',
+                'freqThreshold' => (float) $indicator->target_value,
+                'impactThreshold' => (float) ($indicator->critical_value ?? 1),
+            ],
+            'FT-OP-04' => ['type' => 'ratio_ge', 'den' => 'supervisiones_programadas', 'num' => 'supervisiones_realizadas', 'threshold' => (float) $indicator->target_value],
+            'FT-OP-05' => ['type' => 'ratio_ge', 'den' => 'visitas_programadas', 'num' => 'visitas_realizadas', 'threshold' => (float) $indicator->target_value],
+            'FT-OP-06' => ['type' => 'ratio_eq_zero', 'den' => 'total_clientes_cadena', 'num' => 'eventos_indeseables', 'threshold' => (float) $indicator->target_value],
+            'FT-OP-07' => ['type' => 'ratio_ge', 'den' => 'analisis_programados', 'num' => 'analisis_realizados', 'threshold' => (float) $indicator->target_value],
+            'FT-OP-08' => ['type' => 'ratio_ge', 'den' => 'inventarios_programados', 'num' => 'inventarios_realizados', 'threshold' => (float) $indicator->target_value],
+            'FT-OP-09' => ['type' => 'ratio_ge', 'den' => 'armas_programadas', 'num' => 'armas_inspeccionadas', 'threshold' => (float) $indicator->target_value],
             default => ['type' => 'none', 'den' => '', 'num' => ''],
         };
     }
@@ -233,7 +239,7 @@ class IndicatorMetricCalculator
      * @param  array<string, mixed>  $form
      * @return array{numerator: float, denominator: float, result_percentage: float, complies: bool, errors: list<string>}
      */
-    private function ratioEqZero(array $form, string $denKey, string $numKey): array
+    private function ratioEqZero(array $form, string $denKey, string $numKey, float $threshold = 0.0): array
     {
         $den = (float) ($form[$denKey] ?? 0);
         $num = (float) ($form[$numKey] ?? 0);
@@ -247,7 +253,7 @@ class IndicatorMetricCalculator
             'numerator' => $num,
             'denominator' => $den,
             'result_percentage' => $result,
-            'complies' => $den > 0 && $result == 0.0,
+            'complies' => $den > 0 && round($result, 2) === round($threshold, 2),
             'errors' => $errors,
         ];
     }
@@ -256,7 +262,7 @@ class IndicatorMetricCalculator
      * @param  array<string, mixed>  $form
      * @return array{numerator: float, denominator: float, result_percentage: float, complies: bool, errors: list<string>}
      */
-    private function calculateFtOp03(array $form): array
+    private function calculateFtOp03(array $form, Indicator $indicator): array
     {
         $totalServicios = (float) ($form['total_servicios'] ?? 0);
         $totalSiniestros = (float) ($form['total_siniestros'] ?? 0);
@@ -276,10 +282,13 @@ class IndicatorMetricCalculator
             $errors[] = 'La suma por tipo debe ser igual a total_siniestros.';
         }
 
+        $freqThreshold = (float) $indicator->target_value;
+        $impactThreshold = (float) ($indicator->critical_value ?? 1);
+
         $freq = $totalServicios > 0 ? round(($totalSiniestros / $totalServicios) * 100, 2) : 0.0;
         $impacto = $facturacion > 0 ? round(($valorPagado / $facturacion) * 100, 2) : 0.0;
-        $cumpleA = $totalServicios > 0 && $freq <= 3;
-        $cumpleB = $facturacion > 0 && $impacto <= 1;
+        $cumpleA = $totalServicios > 0 && $freq <= $freqThreshold;
+        $cumpleB = $facturacion > 0 && $impacto <= $impactThreshold;
 
         return [
             'numerator' => $totalSiniestros + $valorPagado,

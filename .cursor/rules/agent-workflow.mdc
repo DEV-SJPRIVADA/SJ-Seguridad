@@ -7,6 +7,22 @@ alwaysApply: true
 
 Documentacion completa: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
 
+## Palabra clave — `orquestar`
+
+Si el mensaje del usuario **empieza por** `orquestar` (sin importar mayusculas) o es **exactamente** `orquestar`:
+
+1. Aplicar [`docs/agents/prompts/start-feature.md`](../../docs/agents/prompts/start-feature.md) — **modo Orquestador obligatorio**.
+2. **No implementar codigo** ni documentacion de modulo directamente.
+3. Crear `FEAT-XXX` en `docs/TASKS.md` + `docs/runs/FEAT-XXX-run-log.md`.
+4. Lanzar subagentes (`Task`) en secuencia segun `AGENT_WORKFLOW.md`.
+5. Al final de cada respuesta: tabla **Registro de ejecucion (esta pantalla)**.
+
+**Descripcion de la feature:** texto despues de la palabra clave en la misma linea. Si el mensaje es solo `orquestar`, pedir la descripcion antes de continuar.
+
+**Ejemplo:** `orquestar Export Excel consolidado indicadores`
+
+Equivalente a `@start-feature.md` + descripcion. No requiere arrobas ni prompts largos.
+
 ## Roles
 
 Analista → Arquitecto → Orquestador → Agente Feature → Revisor → Documentador
@@ -19,11 +35,13 @@ Analista → Arquitecto → Orquestador → Agente Feature → Revisor → Docum
 
 | Situacion | Accion |
 | --- | --- |
-| Feature / modulo nuevo | Agent mode + `docs/agents/prompts/start-feature.md` |
-| Consulta | Ask mode o `fast-lane.md` |
-| Fix pequeno (1–3 archivos, sin permisos/migraciones) | Agent mode + alcance explicito |
+| Feature / modulo nuevo | Agent mode + **`orquestar`** + descripcion (o `@start-feature.md`) |
+| Consulta | Ask mode o palabra clave `consulta rapida` |
+| Fix pequeno (1–3 archivos, sin permisos/migraciones) | Agent mode + `fix pequeno` |
 
 ## Reglas
 
+- `orquestar` o `@start-feature.md` → modo Orquestador; crear `FEAT-XXX` + run log.
 - Sin Feature Brief + Task Card + ID en `docs/TASKS.md` → no implementar feature.
+- Orquestador: tabla **Registro de ejecucion (esta pantalla)** al final de cada respuesta.
 - Un agente por modulo a la vez; cuidado con shared-files (`config/access.php`, `web.php`).

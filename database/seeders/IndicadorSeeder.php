@@ -36,7 +36,7 @@ class IndicadorSeeder extends Seeder
                 'code' => 'FT-OP-03',
                 'name' => 'Siniestralidad',
                 'unit' => 'percentage',
-                'target_value' => 0,
+                'target_value' => 3,
                 'target_operator' => '==',
                 'frequency' => 'monthly',
                 'formula_description' => 'Cumple cuando frecuencia operativa <= 3 e impacto economico <= 1',
@@ -118,10 +118,24 @@ class IndicadorSeeder extends Seeder
             ],
         ];
 
+        $defaults = [
+            'FT-OP-01' => ['target_value' => 90, 'critical_value' => 80],
+            'FT-OP-02' => ['target_value' => 10, 'critical_value' => 15],
+            'FT-OP-03' => ['target_value' => 3, 'critical_value' => 1],
+            'FT-OP-04' => ['target_value' => 90, 'critical_value' => 80],
+            'FT-OP-05' => ['target_value' => 100, 'critical_value' => 90],
+            'FT-OP-06' => ['target_value' => 0, 'critical_value' => 0],
+            'FT-OP-07' => ['target_value' => 100, 'critical_value' => 90],
+            'FT-OP-08' => ['target_value' => 100, 'critical_value' => 90],
+            'FT-OP-09' => ['target_value' => 100, 'critical_value' => 90],
+        ];
+
         foreach ($indicators as $indicator) {
+            $values = $defaults[$indicator['code']] ?? ['target_value' => $indicator['target_value'], 'critical_value' => $indicator['target_value']];
+
             Indicator::query()->updateOrCreate(
                 ['code' => $indicator['code']],
-                $indicator + ['is_active' => true]
+                $indicator + $values + ['is_active' => true]
             );
         }
     }

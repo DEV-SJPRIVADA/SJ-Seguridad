@@ -10,6 +10,7 @@
 | Modo | orquestado / manual |
 | Rama Git | feat/FEAT-XXX-slug |
 | Modulo principal | |
+| Run log | `docs/runs/FEAT-XXX-run-log.md` |
 | shared-files | |
 
 ## Secuencia de tareas

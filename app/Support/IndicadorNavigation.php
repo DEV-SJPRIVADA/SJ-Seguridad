@@ -46,6 +46,7 @@ class IndicadorNavigation
                 'patterns' => [
                     'indicadores.admin.ajustes',
                     'indicadores.admin.periods.*',
+                    'indicadores.admin.metas*',
                     'indicadores.admin.weights*',
                     'indicadores.admin.audit.*',
                 ],

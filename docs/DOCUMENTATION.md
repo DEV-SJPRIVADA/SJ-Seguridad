@@ -87,6 +87,7 @@ Al cerrar una feature (paso **Documentador**):
 4. Si es modulo nuevo: crear ambos archivos y actualizar `INDEX.md`, `ARCHITECTURE.md` (ownership), `PROJECT_CONTEXT.md` (alcance).
 5. Incrementar fila en **Control de cambios** del doc usuario.
 6. Orquestador valida checklist en [`AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md).
+7. Orquestador cierra fila final en `docs/runs/FEAT-XXX-run-log.md`.
 
 ### Carril rapido
 

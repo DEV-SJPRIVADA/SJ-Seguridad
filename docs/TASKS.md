@@ -8,9 +8,9 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 ## En progreso
 
-| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | shared-files |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | |
+| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | Run log | shared-files |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | |
 
 ---
 
@@ -24,11 +24,11 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 ## Completadas (ultimas 10)
 
-| ID | Feature | Modo | Validado | Fecha cierre |
-| --- | --- | --- | --- | --- |
-| FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | 2026-07-22 |
-| FEAT-PILOT-001 | Doc usuario admin-users (piloto workflow) | orquestado | Si | 2026-07-22 |
-| DOC-ALIGN-001 | Alineacion documentacion IA/dev/usuario (7 modulos) | manual | Si | 2026-07-22 |
+| ID | Feature | Modo | Validado | Run log | Fecha cierre |
+| --- | --- | --- | --- | --- | --- |
+| FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | — | 2026-07-22 |
+| FEAT-PILOT-001 | Doc usuario admin-users (piloto workflow) | orquestado | Si | [`docs/runs/FEAT-PILOT-001-run-log.md`](runs/FEAT-PILOT-001-run-log.md) | 2026-07-22 |
+| DOC-ALIGN-001 | Alineacion documentacion IA/dev/usuario (7 modulos) | manual | Si | — | 2026-07-22 |
 
 ---
 
@@ -40,8 +40,8 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 1. Orquestador agrega fila en Cola o En progreso.
 2. Ejemplo:
 
-| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | shared-files |
-| FEAT-001 | Export Excel ajustes operaciones | orquestado | Analista | chat-2026-07-22 | feat/FEAT-001-export-ajustes | docs/briefs/FEAT-001.md | config/access.php |
+| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | Run log | shared-files |
+| FEAT-001 | Export Excel ajustes operaciones | orquestado | Analista | chat-2026-07-22 | feat/FEAT-001-export-ajustes | docs/briefs/FEAT-001.md | docs/runs/FEAT-001-run-log.md | config/access.php |
 
 3. Fases tipicas: Analista → Arquitecto → Feature (N tareas) → Revisor → Documentador → Cierre
 4. Al completar: mover a Completadas y limpiar En progreso.

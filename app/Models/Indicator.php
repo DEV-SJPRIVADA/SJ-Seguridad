@@ -13,6 +13,7 @@ class Indicator extends Model
         'name',
         'unit',
         'target_value',
+        'critical_value',
         'target_operator',
         'frequency',
         'formula_description',
@@ -25,6 +26,7 @@ class Indicator extends Model
     {
         return [
             'target_value' => 'decimal:2',
+            'critical_value' => 'decimal:2',
             'required_fields' => 'array',
             'allows_over_100' => 'boolean',
             'is_active' => 'boolean',

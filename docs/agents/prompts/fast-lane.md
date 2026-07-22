@@ -15,7 +15,13 @@ Usa este prompt para **consultas** o **fixes pequenos** que **no** requieren flu
 
 ## Palabras clave
 
-`consulta rapida` | `fix pequeno`
+| Carril | Palabra clave |
+| --- | --- |
+| Consulta | `consulta rapida` |
+| Fix pequeno | `fix pequeno` |
+| Feature orquestada | **`orquestar`** (+ descripcion) |
+
+No uses este archivo si el mensaje empieza por `orquestar`; usa el flujo completo en [`start-feature.md`](start-feature.md).
 
 ## Instruccion tipo — consulta
 

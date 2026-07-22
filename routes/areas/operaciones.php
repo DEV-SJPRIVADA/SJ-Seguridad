@@ -34,8 +34,10 @@ Route::middleware(['password.changed'])
             Route::post('/periodos/{period}/cerrar', [IndicadorController::class, 'closePeriod'])->name('periods.close');
             Route::post('/periodos/{period}/reabrir', [IndicadorController::class, 'reopenPeriod'])->name('periods.reopen');
 
+            Route::get('/metas', [IndicadorController::class, 'metas'])->name('metas');
+            Route::patch('/metas', [IndicadorController::class, 'updateMetas'])->name('metas.update');
             Route::get('/pesos', [IndicadorController::class, 'weights'])->name('weights');
-            Route::patch('/pesos', [IndicadorController::class, 'updateWeights'])->name('weights.update');
+            Route::patch('/pesos', [IndicadorController::class, 'updateMetas'])->name('weights.update');
 
             Route::get('/consolidado', [IndicadorController::class, 'consolidado'])->name('consolidado.index');
             Route::get('/consolidado/{indicator:code}', [IndicadorController::class, 'consolidadoShow'])->name('consolidado.show');

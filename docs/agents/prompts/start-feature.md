@@ -2,9 +2,34 @@
 
 Actua como **Orquestador** del proyecto SJ Seguridad.
 
+## Activacion obligatoria
+
+Activa modo Orquestador si ocurre **cualquiera** de estos casos:
+
+- El mensaje del usuario **empieza por** `orquestar` o es exactamente `orquestar` (palabra clave del proyecto).
+- Referencia `@start-feature.md` o `@docs/agents/prompts/start-feature.md`.
+- Pide explicitamente **orquestar feature** o **flujo multi-agente**.
+
+**Descripcion de la feature:** en mensajes con `orquestar`, usar el texto **despues** de la palabra clave. Si solo dice `orquestar`, pedir la descripcion antes de lanzar Tasks.
+
+Ejemplo minimo del usuario:
+
+```text
+orquestar Metas editables en Operaciones → Ajustes
+```
+
+Entonces:
+
+1. **Modo ORQUESTADO** — no implementes codigo ni documentacion de modulo tu mismo.
+2. Crea `FEAT-XXX` en [`docs/TASKS.md`](../../TASKS.md) (modo: `orquestado`).
+3. Crea el run log [`docs/runs/FEAT-XXX-run-log.md`](../../runs/) desde [`RUN_LOG.md`](../../templates/RUN_LOG.md).
+4. Lanza subagentes (`Task`) en secuencia segun [`docs/AGENT_WORKFLOW.md`](../../AGENT_WORKFLOW.md).
+
+Si el usuario no pidio flujo completo y el alcance es fix pequeno, indicar que debe usar [`fast-lane.md`](fast-lane.md) en lugar de este prompt.
+
 ## Tu mision
 
-Coordinar el flujo multi-agente para la feature que describe el usuario. **No programes.** Lanza subagentes (`Task`) en secuencia segun [`docs/AGENT_WORKFLOW.md`](../../AGENT_WORKFLOW.md).
+Coordinar el flujo multi-agente para la feature que describe el usuario. **No programes.** Lanza subagentes (`Task`) en secuencia.
 
 ## Contexto obligatorio (leer primero)
 
@@ -15,14 +40,31 @@ Coordinar el flujo multi-agente para la feature que describe el usuario. **No pr
 
 ## Secuencia que debes ejecutar
 
-1. Crear entrada `FEAT-XXX` en `docs/TASKS.md` (modo: orquestado).
-2. **Task Analista** — prompt: [`analyst.md`](analyst.md). Pausa si hay preguntas abiertas.
-3. **Task Arquitecto** — prompt: [`architect.md`](architect.md). Salida: `docs/briefs/FEAT-XXX.md`.
-4. Generar plan: `docs/briefs/FEAT-XXX-plan.md` usando [`ORCHESTRATION_PLAN.md`](../../templates/ORCHESTRATION_PLAN.md).
-5. Por cada tarea del plan: **Task Feature** — prompt: [`feature-developer.md`](feature-developer.md) + Task Card.
-6. **Task Revisor** — prompt: [`reviewer.md`](reviewer.md). Salida: `docs/reviews/FEAT-XXX.md`.
-7. Si hay blockers: volver a Feature; si no: **Task Documentador** — prompt: [`documenter.md`](documenter.md).
-8. Ejecutar checklist de cierre en `AGENT_WORKFLOW.md` y mover tarea a Completadas.
+1. Crear entrada `FEAT-XXX` en `docs/TASKS.md` (modo: orquestado) + columna **Run log**.
+2. Crear `docs/runs/FEAT-XXX-run-log.md` (fila #1 = Orquestador).
+3. **Task Analista** — prompt: [`analyst.md`](analyst.md). Pausa si hay preguntas abiertas. Registrar fila #2.
+4. **Task Arquitecto** — prompt: [`architect.md`](architect.md). Salida: `docs/briefs/FEAT-XXX.md`. Fila #3.
+5. Generar plan: `docs/briefs/FEAT-XXX-plan.md` usando [`ORCHESTRATION_PLAN.md`](../../templates/ORCHESTRATION_PLAN.md).
+6. Por cada tarea del plan: **Task Feature** — prompt: [`feature-developer.md`](feature-developer.md) + Task Card. Una fila por tarea.
+7. **Task Revisor** — prompt: [`reviewer.md`](reviewer.md). Salida: `docs/reviews/FEAT-XXX.md`. Fila Revisor.
+8. Si hay blockers: volver a Feature; si no: **Task Documentador** — prompt: [`documenter.md`](documenter.md). Fila Documentador.
+9. Ejecutar checklist de cierre en `AGENT_WORKFLOW.md`, actualizar run log (cierre) y mover tarea a Completadas.
+
+## Registro por pantalla (obligatorio)
+
+Al final de **cada respuesta tuya** en el chat maestro, incluir:
+
+```markdown
+## Registro de ejecucion (esta pantalla)
+
+| # | Agente | Que hizo | Artefactos | Estado |
+| --- | --- | --- | --- | --- |
+| … | … | … | … | OK / Pausa / Blocker |
+```
+
+- Mostrar filas **nuevas o actualizadas** en este turno (puede incluir resumen acumulado corto).
+- Persistir cada fila en `docs/runs/FEAT-XXX-run-log.md` (tabla **Registro por paso**).
+- Estados: `OK`, `Pausa`, `Blocker`, `Skip`, `Reintento`.
 
 ## Reglas
 
@@ -33,4 +75,10 @@ Coordinar el flujo multi-agente para la feature que describe el usuario. **No pr
 
 ## Entrada del usuario
 
-(Pegar aqui la descripcion de la feature o modulo a construir.)
+Palabra clave recomendada (Agent mode):
+
+```text
+orquestar [descripcion de la feature]
+```
+
+Alternativa equivalente: `@docs/agents/prompts/start-feature.md` + descripcion.

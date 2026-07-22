@@ -72,6 +72,51 @@ class IndicadorModuleTest extends TestCase
             ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'periodos']));
     }
 
+    public function test_legacy_pesos_route_redirects_to_metas(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.admin.weights'))
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'metas']));
+    }
+
+    public function test_operations_manage_user_can_update_metas(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($user)
+            ->patch(route('indicadores.admin.metas.update'), [
+                'metas' => [$indicator->id => 95],
+                'critical' => [$indicator->id => 85],
+                'reason' => 'Ajuste anual de metas',
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'metas']));
+
+        $indicator->refresh();
+        $this->assertSame('95.00', $indicator->target_value);
+        $this->assertSame('85.00', $indicator->critical_value);
+    }
+
+    public function test_capture_form_reflects_updated_meta(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.capture']);
+
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $indicator->update(['target_value' => 88, 'critical_value' => 75]);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.show', ['indicator' => $indicator->code]))
+            ->assertOk()
+            ->assertSee('88%')
+            ->assertSee('75%');
+    }
+
     public function test_dashboard_redirects_to_indicadores_when_board_selected(): void
     {
         $user = $this->operationsViewer();

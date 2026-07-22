@@ -56,7 +56,7 @@
 ## Trabajo con agentes
 - Guia de documentacion (IA, desarrollador, usuario): [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md).
 - Workflow multi-agente: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
-- **Feature o modulo nuevo:** flujo completo (Analista → Arquitecto → Orquestador → Feature → Revisor → Documentador). Modo recomendado: chat maestro en Agent mode con [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md).
+- **Feature o modulo nuevo:** flujo completo (Analista → Arquitecto → Orquestador → Feature → Revisor → Documentador). Inicio en Agent mode: **`orquestar`** + descripcion (equivalente a [`start-feature.md`](docs/agents/prompts/start-feature.md)).
 - **Consulta o fix pequeno:** carril rapido (Ask/Agent directo); no exige Feature Brief ni entrada en `docs/TASKS.md`. Ver [`docs/agents/prompts/fast-lane.md`](docs/agents/prompts/fast-lane.md).
 - Un Agente Feature = un modulo + Feature Brief + Task Card. No editar archivos compartidos (`config/access.php`, `routes/web.php`, layouts) sin flag `shared-files` en `docs/TASKS.md`.
 - Cierre de feature: doc tecnica en `docs/modules/{modulo}.md` y doc usuario en `docs/user/{modulo}.md` (Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios), generadas por el Documentador.

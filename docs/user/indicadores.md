@@ -10,7 +10,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 
 - **Dashboard:** ver indicadores globales y resumen del periodo.
 - **Captura:** registrar valores mensuales de indicadores asignados a su usuario.
-- **Ajustes:** administrar periodos, pesos del score y consultar auditoria (gestores).
+- **Ajustes:** administrar periodos, metas por indicador y consultar auditoria (gestores).
 - **Consolidado:** vista consolidada de capturas del equipo (gestores).
 - **Exportaciones:** PDF, Excel y PowerPoint (informe FO-GI-39) segun permiso de exportacion.
 
@@ -31,7 +31,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 | Rol / perfil | Responsabilidad |
 | --- | --- |
 | Capturador operaciones | Registrar capturas mensuales en periodos abiertos. |
-| Jefe / gestor operaciones | Cerrar/reabrir periodos, ajustar pesos, revisar consolidado y auditoria. |
+| Jefe / gestor operaciones | Cerrar/reabrir periodos, ajustar metas, revisar consolidado y auditoria. |
 | Direccion / consulta | Ver dashboard y exportar reportes (segun permiso export). |
 | Administrador | Asignar permisos operations.view, capture, manage, export en Admin usuarios. |
 
@@ -58,10 +58,11 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 2. Cree un periodo nuevo o cierre/reabra existentes.
 3. Solo periodos abiertos permiten nuevas capturas.
 
-### Ajustar pesos del score
+### Ajustar metas por indicador
 
-1. En Ajustes → **Pesos**, modifique los porcentajes.
-2. Guarde; afecta el calculo del dashboard global.
+1. En Ajustes → **Metas**, modifique la columna **Meta (%)** y **Critico (%)** de cada FT-OP.
+2. Indique el motivo del cambio y guarde.
+3. Los valores se reflejan de inmediato en la ficha de captura y en el calculo de cumplimiento.
 
 ### Revisar auditoria
 

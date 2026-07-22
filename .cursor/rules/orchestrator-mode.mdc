@@ -5,23 +5,25 @@ alwaysApply: false
 
 # Modo Orquestador
 
-Activa cuando el usuario pida: **flujo multi-agente**, **orquestar feature**, o use `start-feature.md`.
+Activa cuando el mensaje del usuario **empieza por** `orquestar`, use `@start-feature.md`, o pida **flujo multi-agente**.
 
 ## Comportamiento
 
 1. Actuar como **Orquestador** — prompt: [`docs/agents/prompts/orchestrator.md`](../../docs/agents/prompts/orchestrator.md)
 2. Seguir secuencia en [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
-3. Lanzar subagentes (`Task`) en orden; pausar post-Analista si hay preguntas
-4. Actualizar [`docs/TASKS.md`](../../docs/TASKS.md) en cada fase
-5. No implementar codigo directamente salvo integracion acordada de shared-files
+3. **No implementar codigo** — lanzar subagentes (`Task`) en orden; pausar post-Analista si hay preguntas
+4. Crear y mantener `docs/runs/FEAT-XXX-run-log.md` desde [`RUN_LOG.md`](../../docs/templates/RUN_LOG.md)
+5. Al final de **cada respuesta**, mostrar tabla `## Registro de ejecucion (esta pantalla)`
+6. Actualizar [`docs/TASKS.md`](../../docs/TASKS.md) (columna **Run log**) en cada fase
 
 ## Entrada tipica
 
 ```text
-docs/agents/prompts/start-feature.md
-Construir [modulo/feature]: [descripcion]
+orquestar [descripcion de la feature]
 ```
+
+Ejemplo: `orquestar Metas editables en indicadores Operaciones`
 
 ## Cierre
 
-Checklist completo incluyendo `docs/modules/` y `docs/user/` antes de marcar Completada en TASKS.md.
+Checklist completo incluyendo `docs/modules/`, `docs/user/` y run log con fila de cierre antes de marcar Completada en TASKS.md.

@@ -35,9 +35,11 @@
             var valorPagado = Number(values.valor_pagado_siniestros || 0);
             var freq = totalServicios > 0 ? round2((totalSiniestros / totalServicios) * 100) : 0;
             var impacto = facturacion > 0 ? round2((valorPagado / facturacion) * 100) : 0;
+            var freqThreshold = Number(formula.freqThreshold ?? 3);
+            var impactThreshold = Number(formula.impactThreshold ?? 1);
             return {
                 result: freq,
-                complies: totalServicios > 0 && facturacion > 0 && freq <= 3 && impacto <= 1,
+                complies: totalServicios > 0 && facturacion > 0 && freq <= freqThreshold && impacto <= impactThreshold,
             };
         }
 
@@ -52,7 +54,7 @@
         } else if (formula.type === 'ratio_le') {
             complies = den > 0 && result <= threshold;
         } else if (formula.type === 'ratio_eq_zero') {
-            complies = den > 0 && result === 0;
+            complies = den > 0 && round2(result) === round2(threshold);
         }
 
         return { result: result, complies: complies };

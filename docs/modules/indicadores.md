@@ -11,7 +11,7 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 | Dashboard global | `operations.view` o `operations.manage` |
 | Captura | `operations.capture` o `operations.manage` |
 | Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
-| Ajustes (periodos, pesos, auditoria) | `operations.manage` |
+| Ajustes (periodos, metas, auditoria) | `operations.manage` |
 | Consolidado | `operations.manage` |
 | Export PDF/Excel | `operations.export` |
 
@@ -22,10 +22,10 @@ La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones inte
 | Seccion | Contenido |
 |---|---|
 | `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
-| `pesos` | Pesos del score global del dashboard |
+| `metas` | Meta (%) y umbral critico (%) por indicador; alimenta captura y cumplimiento |
 | `auditoria` | Log de cambios con filtros |
 
-Las rutas legacy `/admin/periodos`, `/admin/pesos` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas.
+Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/pesos` sigue aceptado por compatibilidad).
 
 ## Permisos Spatie
 
@@ -45,8 +45,8 @@ El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 
 ## Seeders
 
-- `IndicadorSeeder` — 9 indicadores FT-OP
-- `DashboardWeightSeeder` — pesos del score global
+- `IndicadorSeeder` — 9 indicadores FT-OP con `target_value` (meta) y `critical_value` (critico)
+- `DashboardWeightSeeder` — pesos internos del score global del dashboard (sin UI de ajuste)
 
 ## Configuracion
 
