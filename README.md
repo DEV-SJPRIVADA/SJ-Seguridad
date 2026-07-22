@@ -22,8 +22,10 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 - Gestion inicial de usuarios en `admin/users`
 - Roles y permisos sembrados desde configuracion
 - Modulo de requisiciones de personal con dashboard, solicitud, seguimiento, gestion y parametros
-- Modulo compartido de suministros con flujo solicitante, revision de calidad, gestion de compras y catalogo
+- Modulo compartido de suministros con flujo solicitante, aprobacion Calidad, insumos aprobados y catalogo
 - Modulo de documentos de Calidad con publicacion de archivos/enlaces y biblioteca por area
+- Indicadores de Operaciones (captura, dashboard, ajustes, consolidado, exportaciones)
+- Matriz comercial (dashboard, clientes, servicios)
 
 ## Inicio rapido local
 
@@ -70,15 +72,22 @@ El usuario administrador inicial queda con rol `super-admin`, activo y sin cambi
 
 ## Documentacion del proyecto
 
-La documentacion viva del sistema se mantiene en [`docs/INDEX.md`](c:/laragon/www/SJSEGURIDAD/docs/INDEX.md).
+La documentacion viva del sistema se mantiene en [`docs/INDEX.md`](docs/INDEX.md).
+
+**Guia de documentacion (IA, desarrollador, usuario):** [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md).
+
+**Features y modulos nuevos** usan el workflow multi-agente (chat maestro + Orquestador). Ver [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md) y [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md). Consultas y fixes pequenos van por carril rapido sin ese flujo.
 
 Documentos principales:
 
+- [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md)
 - [`docs/PROJECT_CONTEXT.md`](c:/laragon/www/SJSEGURIDAD/docs/PROJECT_CONTEXT.md)
 - [`docs/ARCHITECTURE.md`](c:/laragon/www/SJSEGURIDAD/docs/ARCHITECTURE.md)
 - [`docs/ACCESS_CONTROL.md`](c:/laragon/www/SJSEGURIDAD/docs/ACCESS_CONTROL.md)
 - [`docs/LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md)
 - [`docs/PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
+- [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md)
+- [`docs/user/`](docs/user/) — guias de usuario por modulo
 - [`docs/modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
 - [`docs/modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`docs/modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)

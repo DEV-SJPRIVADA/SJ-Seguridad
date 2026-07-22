@@ -28,7 +28,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
+use App\Services\Access\RequisitionAccessService;
 use App\Services\Requisitions\CommercialClientBridge;
+use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
@@ -36,6 +38,11 @@ use Illuminate\Support\Str;
 class RequisitionController extends Controller
 {
     use HasRequisitionTabs, ValidatesModule;
+
+    public function __construct(
+        private readonly RequisitionAccessService $requisitionAccess,
+        private readonly PersonalRequisitionChangeLogger $changeLogger,
+    ) {}
     /**
      * @var array<string, array{label: string, model: class-string<\Illuminate\Database\Eloquent\Model>}>
      */
@@ -54,16 +61,7 @@ class RequisitionController extends Controller
     public function dashboard(Request $request, string $module): View
     {
         $this->abortIfUnknownModule($module);
-        
-        $user = auth()->user();
-        $canManageAll = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana');
-        abort_unless($user?->can('requisitions.tab.dashboard') || $canManageAll, 403);
 
-        $this->authorizeBoardAccess($module);
-
-        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
-
-        // Filtros
         $filters = [
             'client_id' => $request->input('client_id'),
             'position_id' => $request->input('position_id'),
@@ -74,7 +72,7 @@ class RequisitionController extends Controller
         ];
 
         $query = PersonalRequisition::query()
-            ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
+            ->where('requesting_area_key', $module)
             ->when($filters['client_id'], fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['position_id'], fn($q) => $q->where('position_id', $filters['position_id']))
             ->when($filters['city_id'], fn($q) => $q->where('city_id', $filters['city_id']))
@@ -133,7 +131,6 @@ class RequisitionController extends Controller
     public function create(string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeRequestCreation($module);
 
         return view('modules.requisitions.create', [
             'moduleKey' => $module,
@@ -150,7 +147,6 @@ class RequisitionController extends Controller
     public function searchClients(Request $request, string $module): JsonResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeBoardAccess($module);
 
         $q = trim($request->string('q')->toString());
 
@@ -187,7 +183,6 @@ class RequisitionController extends Controller
     public function store(StorePersonalRequisitionRequest $request, string $module): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeRequestCreation($module);
 
         $requisitions = DB::transaction(function () use ($request, $module): array {
             $quantity = $request->integer('quantity', 1);
@@ -280,22 +275,22 @@ class RequisitionController extends Controller
         }
 
         return redirect()
-            ->route('requisitions.dashboard', ['module' => $module])
+            ->to($request->user()->defaultRequisitionBoardUrl($module))
             ->with('status', 'requisition-created');
     }
 
     public function manage(Request $request, string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement($module);
 
         $search = trim($request->string('q')->toString());
         $status = $request->string('status')->toString();
 
-        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
-
         $requisitions = PersonalRequisition::query()
-            ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
+            ->when(
+                ! $this->requisitionAccess->usesGlobalManagementScope(auth()->user(), $module),
+                fn ($query) => $query->where('requesting_area_key', $module)
+            )
             ->with(['client', 'position', 'requester', 'city'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
@@ -326,7 +321,6 @@ class RequisitionController extends Controller
     public function trackingExport(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeTracking($module);
 
         $user = auth()->user();
         $search = trim($request->string('q')->toString());
@@ -334,12 +328,10 @@ class RequisitionController extends Controller
         $clientId = $request->integer('client_id');
         $cityId = $request->integer('city_id');
         $mineOnly = $request->boolean('mine_only');
-        $isManager = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana') || $user?->can('manage.requisitions');
 
         $requisitions = PersonalRequisition::query()
             ->with(['client', 'position', 'requester', 'city'])
-            ->when(! $isManager, fn ($query) => $query->where('requesting_area_key', $user?->area_key))
-            ->when($isManager, fn ($query) => $query->where('requesting_area_key', $module))
+            ->where('requesting_area_key', $this->trackingAreaScope($user))
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('code', 'like', "%{$search}%")
@@ -371,21 +363,21 @@ class RequisitionController extends Controller
             ['key' => fn($r) => $r->status_changed_at?->format('Y-m-d H:i') ?? 'Sin cambios', 'label' => 'Últ. actualización'],
         ];
 
-        return (new BaseExport($requisitions, $columns, 'seguimiento_requisiciones_' . now()->format('Y-m-d') . '.xlsx', 'Seguimiento de Requisiciones'))->download();
+        return (new BaseExport($requisitions, $columns, 'mis_requisiciones_' . now()->format('Y-m-d') . '.xlsx', 'Mis requisiciones'))->download();
     }
 
     public function exportExcel(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement($module);
 
         $search = trim($request->string('q')->toString());
         $status = $request->string('status')->toString();
 
-        $isHR = auth()->user()?->can('manage.area.gestion_humana') || auth()->user()?->can('manage.requisitions');
-
         $requisitions = PersonalRequisition::query()
-            ->when(! $isHR, fn ($q) => $q->where('requesting_area_key', $module))
+            ->when(
+                ! $this->requisitionAccess->usesGlobalManagementScope(auth()->user(), $module),
+                fn ($query) => $query->where('requesting_area_key', $module)
+            )
             ->with(['client', 'position', 'city', 'requester'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
@@ -422,7 +414,6 @@ class RequisitionController extends Controller
     public function tracking(Request $request, string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeTracking($module);
 
         $user = auth()->user();
         $search = trim($request->string('q')->toString());
@@ -430,12 +421,10 @@ class RequisitionController extends Controller
         $clientId = $request->integer('client_id');
         $cityId = $request->integer('city_id');
         $mineOnly = $request->boolean('mine_only');
-        $isManager = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana') || $user?->can('manage.requisitions');
 
         $requisitions = PersonalRequisition::query()
             ->with(['client', 'position', 'requester', 'city'])
-            ->when(! $isManager, fn ($query) => $query->where('requesting_area_key', $user?->area_key))
-            ->when($isManager, fn ($query) => $query->where('requesting_area_key', $module))
+            ->where('requesting_area_key', $this->trackingAreaScope($user))
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('code', 'like', "%{$search}%")
@@ -474,10 +463,7 @@ class RequisitionController extends Controller
     public function print(string $module, PersonalRequisition $requisition): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeBoardAccess($module); // Permitir a cualquier usuario que pueda ver el tablero
-        
-        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
-        abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
+        abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
 
         return view('modules.requisitions.print', [
             'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'contractType', 'uniform']),
@@ -489,16 +475,14 @@ class RequisitionController extends Controller
     public function edit(string $module, PersonalRequisition $requisition): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement($module);
-        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
-        abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
+        abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
 
         return view('modules.requisitions.edit', [
             'areaOptions' => config('access.areas'),
             'catalogs' => $this->catalogs(),
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
-            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author']),
+            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author', 'changeLogs.author']),
             'sexOptions' => $this->sexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
@@ -510,15 +494,13 @@ class RequisitionController extends Controller
     public function update(UpdatePersonalRequisitionRequest $request, string $module, PersonalRequisition $requisition): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeManagement($module);
-        $isHR = \Illuminate\Support\Facades\Auth::user()?->can('manage.area.gestion_humana') || \Illuminate\Support\Facades\Auth::user()?->can('manage.requisitions');
-        abort_unless($isHR || $requisition->requesting_area_key === $module, 404);
+        abort_unless($this->requisitionAccess->canAccessRequisitionRecord($request->user(), $module, $requisition->requesting_area_key), 404);
 
         $oldStatus = $requisition->status;
         $newStatus = $request->string('status')->toString();
 
         DB::transaction(function () use ($request, $requisition, $oldStatus, $newStatus): void {
-            $requisition->update([
+            $updateData = [
                 'managed_by' => $request->user()->id,
                 'position_id' => $request->integer('position_id'),
                 'sex' => $request->string('sex')->toString(),
@@ -551,7 +533,11 @@ class RequisitionController extends Controller
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
                 'closed_at' => in_array($newStatus, [PersonalRequisition::STATUS_CONTRATADO, PersonalRequisition::STATUS_CANCELADA], true) ? now() : null,
-            ]);
+            ];
+
+            $this->changeLogger->logUpdate($requisition, $updateData, $request->user()->id);
+
+            $requisition->update($updateData);
 
             if ($oldStatus !== $newStatus) {
                 $requisition->statusLogs()->create([
@@ -586,7 +572,6 @@ class RequisitionController extends Controller
     public function parameters(string $module): View
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement($module);
 
         $catalogs = collect(self::PARAMETER_TYPES)
             ->map(function (array $definition, string $type): array {
@@ -611,7 +596,6 @@ class RequisitionController extends Controller
     public function storeParameter(StoreRequisitionParameterRequest $request, string $module, string $type): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement($module);
 
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
@@ -633,7 +617,6 @@ class RequisitionController extends Controller
     public function updateParameter(StoreRequisitionParameterRequest $request, string $module, string $type, int $parameterId): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement($module);
 
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
@@ -653,7 +636,6 @@ class RequisitionController extends Controller
     public function destroyParameter(string $module, string $type, int $parameterId): RedirectResponse
     {
         $this->abortIfUnknownModule($module);
-        $this->authorizeParameterManagement($module);
 
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
@@ -665,62 +647,9 @@ class RequisitionController extends Controller
             ->with('status', 'requisition-parameter-deleted');
     }
 
-    private function authorizeBoardAccess(string $module): void
+    private function trackingAreaScope(?\App\Models\User $user): string
     {
-        $user = auth()->user();
-
-        abort_unless(
-            $user?->can("view.board.{$module}.requisiciones")
-            || $user?->can("view.area.{$module}")
-            || $user?->can("manage.area.{$module}")
-            || $user?->can('manage.requisitions')
-            || $user?->can('manage.requisition.parameters')
-            || $user?->can('manage.users')
-            || $user?->can('manage.area.gestion_humana'),
-            403
-        );
-    }
-
-    private function authorizeRequestCreation(string $module): void
-    {
-        $this->authorizeBoardAccess($module);
-
-        $user = auth()->user();
-        $canManageAll = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana');
-        
-        // Ahora permitimos si tiene el permiso explícito o si gestiona todo o si está en el tablero
-        $canViewBoard = $user?->can("view.board.{$module}.requisiciones");
-        
-        abort_unless($user?->can('requisitions.tab.solicitar') || $canViewBoard || $canManageAll, 403);
-    }
-
-    private function authorizeManagement(string $module): void
-    {
-        $user = auth()->user();
-        $canManageAll = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana');
-        
-        abort_unless($user?->can('requisitions.tab.gestion') || $user?->can('manage.requisitions') || $canManageAll, 403);
-    }
-
-    private function authorizeTracking(string $module): void
-    {
-        $user = auth()->user();
-        $canManageAll = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana') || $user?->can('manage.requisitions');
-        $canTrack = $user?->can('requisitions.tab.seguimiento') || $user?->can('requisitions.tab.solicitar') || $user?->can("view.board.{$module}.requisiciones");
-
-        abort_unless($canTrack || $canManageAll, 403);
-
-        if (! $canManageAll) {
-            abort_unless($user?->hasAssignedArea() && $user->area_key === $module, 403);
-        }
-    }
-
-    private function authorizeParameterManagement(string $module): void
-    {
-        $user = auth()->user();
-        $canManageAll = $user?->can('manage.users') || $user?->can('manage.area.gestion_humana');
-
-        abort_unless($user?->can('manage.requisition.parameters') || $canManageAll, 403);
+        return (string) $user?->area_key;
     }
 
     /**

@@ -8,7 +8,7 @@ use App\Models\Period;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
-class IndicatorMotherService
+class IndicatorConsolidadoService
 {
     public function getMonthlyData(Indicator $indicator, int $year, int $month, ?Collection $users = null): array
     {

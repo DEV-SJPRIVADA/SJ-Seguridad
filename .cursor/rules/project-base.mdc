@@ -1,0 +1,29 @@
+---
+description: Reglas base del proyecto SJ Seguridad — seguridad, docs y convenciones
+alwaysApply: true
+---
+
+# Bases del proyecto
+
+Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
+
+## No negociable
+
+- Seguridad primero: auth, permisos, usuarios inactivos, contrasena temporal.
+- No registro publico salvo instruccion expresa.
+- Documentacion viva en `docs/` en la misma entrega.
+- Modulos desacoplados: rutas, controladores, vistas, permisos por modulo/area.
+
+## Documentacion doble (features completas)
+
+- Guia maestra: [`docs/DOCUMENTATION.md`](../../docs/DOCUMENTATION.md)
+- Tecnica: `docs/modules/{modulo}.md`
+- Usuario: `docs/user/{modulo}.md` (Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios)
+
+## Export Excel
+
+Usar `App\Exports\BaseExport` y `<x-export-excel>`. No reintroducir `excelHtml5`.
+
+## Workflow multi-agente
+
+Ver [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md). Carril rapido para consultas y fixes pequenos.

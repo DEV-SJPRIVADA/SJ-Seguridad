@@ -39,7 +39,7 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.board.operaciones.requisiciones');
+        $user->givePermissionTo('requisitions.tab.solicitar');
 
         CommercialClient::query()->create([
             'nit' => '901360444-1',
@@ -63,7 +63,10 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('manage.requisition.parameters');
+        $user->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.gestion_humana.requisiciones',
+        ]);
 
         $this->actingAs($user)
             ->post(route('requisitions.parameters.store', ['module' => 'gestion_humana', 'type' => 'clients']), [
@@ -85,11 +88,11 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.board.operaciones.requisiciones');
+        $user->givePermissionTo('requisitions.tab.solicitar');
 
         $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $this->validPayload());
 
-        $response->assertRedirect(route('requisitions.dashboard', ['module' => 'operaciones']));
+        $response->assertRedirect(route('requisitions.create', ['module' => 'operaciones']));
         $this->assertDatabaseHas('personal_requisitions', [
             'requested_by' => $user->id,
             'requesting_area_key' => 'operaciones',
@@ -108,7 +111,7 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.board.operaciones.requisiciones');
+        $user->givePermissionTo('requisitions.tab.solicitar');
 
         $internalType = RequisitionClientType::query()
             ->whereRaw('LOWER(name) = ?', ['interno'])
@@ -120,7 +123,7 @@ class RequisitionModuleTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
 
-        $response->assertRedirect(route('requisitions.dashboard', ['module' => 'operaciones']));
+        $response->assertRedirect(route('requisitions.create', ['module' => 'operaciones']));
 
         $internalClientId = RequisitionClient::query()
             ->where('name', CommercialClientBridge::INTERNAL_REQUISITION_CLIENT_NAME)
@@ -149,7 +152,7 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.board.operaciones.requisiciones');
+        $user->givePermissionTo('requisitions.tab.solicitar');
 
         $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $this->validPayload());
 
@@ -171,7 +174,10 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $manager->assignRole('usuario');
-        $manager->givePermissionTo('manage.area.gestion_humana');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
 
         $recruiter = RequisitionRecruiter::query()->create([
             'name' => 'Ana Seleccion',
@@ -201,22 +207,24 @@ class RequisitionModuleTest extends TestCase
         ]);
     }
 
-    public function test_user_with_explicit_board_permission_can_create_requisition_for_a_different_area(): void
+    public function test_user_cannot_create_requisition_outside_base_area_even_with_foreign_board(): void
     {
         $user = User::factory()->create([
             'area_key' => 'operaciones',
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.board.gestion_humana.requisiciones');
+        $user->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.solicitar',
+        ]);
 
         $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'gestion_humana']), $this->validPayload());
 
-        $response->assertRedirect(route('requisitions.dashboard', ['module' => 'gestion_humana']));
-        $this->assertDatabaseHas('personal_requisitions', [
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('personal_requisitions', [
             'requested_by' => $user->id,
             'requesting_area_key' => 'gestion_humana',
-            'status' => PersonalRequisition::STATUS_SOLICITADA,
         ]);
     }
 
@@ -227,7 +235,7 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.board.operaciones.requisiciones');
+        $user->givePermissionTo('requisitions.tab.solicitar');
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
@@ -241,7 +249,6 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $requester->assignRole('usuario');
-        $requester->givePermissionTo('view.board.operaciones.requisiciones');
         $requester->givePermissionTo('requisitions.tab.seguimiento');
 
         $sameAreaUser = User::factory()->create([
@@ -275,7 +282,6 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $requester->assignRole('usuario');
-        $requester->givePermissionTo('view.board.operaciones.requisiciones');
         $requester->givePermissionTo('requisitions.tab.seguimiento');
 
         $sameAreaUser = User::factory()->create([
@@ -337,7 +343,10 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $manager->assignRole('usuario');
-        $manager->givePermissionTo('manage.area.gestion_humana');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
 
         $older = PersonalRequisition::create(array_merge(
             $this->requisitionAttributes($requester, 'REQ-2026-0100', 'operaciones', 'Perfil A'),
@@ -360,6 +369,102 @@ class RequisitionModuleTest extends TestCase
             ->assertDontSee($older->code);
     }
 
+    public function test_gestion_update_logs_field_changes_without_status_change(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0501',
+            'operaciones',
+            'Perfil inicial'
+        ));
+
+        $response = $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_SOLICITADA,
+                'quantity' => 5,
+                'human_resources_observation' => 'Se ajusta cantidad por nueva necesidad.',
+            ]
+        ));
+
+        $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+
+        $this->assertDatabaseHas('personal_requisition_change_logs', [
+            'personal_requisition_id' => $requisition->id,
+            'field_key' => 'quantity',
+            'old_value' => '1',
+            'new_value' => '5',
+            'changed_by' => $manager->id,
+        ]);
+        $this->assertDatabaseHas('personal_requisition_change_logs', [
+            'personal_requisition_id' => $requisition->id,
+            'field_key' => 'human_resources_observation',
+            'old_value' => null,
+            'new_value' => 'Se ajusta cantidad por nueva necesidad.',
+            'changed_by' => $manager->id,
+        ]);
+        $this->assertDatabaseCount('personal_requisition_status_logs', 0);
+    }
+
+    public function test_edit_view_shows_change_log_history(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'name' => 'Analista GH',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0502',
+            'operaciones',
+            'Perfil inicial'
+        ));
+
+        $requisition->changeLogs()->create([
+            'change_batch' => (string) \Illuminate\Support\Str::uuid(),
+            'field_key' => 'quantity',
+            'field_label' => 'Cantidad',
+            'old_value' => '1',
+            'new_value' => '3',
+            'changed_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Historial de cambios')
+            ->assertSee('Cantidad')
+            ->assertSee('Analista GH');
+    }
+
     public function test_gestion_humana_user_can_update_status_and_create_status_log(): void
     {
         $requester = User::factory()->create([
@@ -373,7 +478,10 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $manager->assignRole('usuario');
-        $manager->givePermissionTo('manage.area.gestion_humana');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
 
         $requisition = PersonalRequisition::create([
             'code' => 'REQ-2026-0001',
@@ -439,7 +547,10 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $manager->assignRole('usuario');
-        $manager->givePermissionTo('manage.area.gestion_humana');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
 
         $requisition = PersonalRequisition::create($this->requisitionAttributes(
             $requester,
@@ -484,7 +595,10 @@ class RequisitionModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $manager->assignRole('usuario');
-        $manager->givePermissionTo('manage.area.gestion_humana');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
 
         $requisition = PersonalRequisition::create($this->requisitionAttributes(
             $requester,
@@ -508,6 +622,74 @@ class RequisitionModuleTest extends TestCase
         ));
 
         Mail::assertNotQueued(PersonalRequisitionStatusChangedMail::class);
+    }
+
+    public function test_manage_lists_all_areas_for_gestion_users(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $operacionesReq = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0501', 'operaciones', 'Perfil ops'));
+        $comercialReq = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0502', 'comercial', 'Perfil comercial'));
+
+        $response = $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'gestion_humana']));
+
+        $response->assertOk();
+        $response->assertSee($operacionesReq->code);
+        $response->assertSee($comercialReq->code);
+    }
+
+    public function test_personnel_admin_sees_operaciones_base_tabs_and_gestion_only_in_gh(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->syncPermissions([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.solicitar',
+            'requisitions.tab.seguimiento',
+            'requisitions.tab.gestion',
+        ]);
+
+        $operacionesTabs = $user->requisitionBoardTabsFor('operaciones');
+        $ghTabs = $user->requisitionBoardTabsFor('gestion_humana');
+
+        $this->assertTrue($operacionesTabs->contains('solicitar'));
+        $this->assertTrue($operacionesTabs->contains('seguimiento'));
+        $this->assertFalse($operacionesTabs->contains('gestion'));
+        $this->assertFalse($operacionesTabs->contains('dashboard'));
+
+        $this->assertTrue($ghTabs->contains('gestion'));
+        $this->assertFalse($ghTabs->contains('solicitar'));
+        $this->assertFalse($ghTabs->contains('seguimiento'));
+
+        $this->actingAs($user)
+            ->get(route('requisitions.create', ['module' => 'operaciones']))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('requisitions.manage', ['module' => 'gestion_humana']))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('requisitions.create', ['module' => 'gestion_humana']))
+            ->assertForbidden();
     }
 
     private function commercialClient(): CommercialClient

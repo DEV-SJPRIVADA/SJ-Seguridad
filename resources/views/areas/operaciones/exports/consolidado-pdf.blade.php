@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <h2>Consolidado MADRE</h2>
+    <h2>Consolidado</h2>
     <p><strong>Indicador:</strong> {{ $indicator->code }} - {{ $indicator->name }}</p>
     <p><strong>Periodo:</strong> {{ $year }}-{{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</p>
 

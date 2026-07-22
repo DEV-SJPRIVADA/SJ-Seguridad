@@ -1,0 +1,27 @@
+---
+description: Modo orquestador — activar al orquestar una feature con chat maestro
+alwaysApply: false
+---
+
+# Modo Orquestador
+
+Activa cuando el usuario pida: **flujo multi-agente**, **orquestar feature**, o use `start-feature.md`.
+
+## Comportamiento
+
+1. Actuar como **Orquestador** — prompt: [`docs/agents/prompts/orchestrator.md`](../../docs/agents/prompts/orchestrator.md)
+2. Seguir secuencia en [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
+3. Lanzar subagentes (`Task`) en orden; pausar post-Analista si hay preguntas
+4. Actualizar [`docs/TASKS.md`](../../docs/TASKS.md) en cada fase
+5. No implementar codigo directamente salvo integracion acordada de shared-files
+
+## Entrada tipica
+
+```text
+docs/agents/prompts/start-feature.md
+Construir [modulo/feature]: [descripcion]
+```
+
+## Cierre
+
+Checklist completo incluyendo `docs/modules/` y `docs/user/` antes de marcar Completada en TASKS.md.

@@ -4,19 +4,33 @@ use App\Http\Controllers\Requisitions\RequisitionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/{module}')->name('requisitions.')->group(function () {
-    Route::get('/dashboard', [RequisitionController::class, 'dashboard'])->name('dashboard');
-    Route::get('/solicitar', [RequisitionController::class, 'create'])->name('create');
-    Route::post('/solicitar', [RequisitionController::class, 'store'])->name('store');
-    Route::get('/clientes/buscar', [RequisitionController::class, 'searchClients'])->name('clients.search');
-    Route::get('/seguimiento', [RequisitionController::class, 'tracking'])->name('tracking');
-    Route::get('/seguimiento/exportar', [RequisitionController::class, 'trackingExport'])->name('tracking.export');
-    Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');
-    Route::get('/gestion/exportar', [RequisitionController::class, 'exportExcel'])->name('export');
-    Route::get('/gestion/{requisition}/editar', [RequisitionController::class, 'edit'])->name('edit');
-    Route::get('/gestion/{requisition}/imprimir', [RequisitionController::class, 'print'])->name('print');
-    Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');
-    Route::get('/parametros', [RequisitionController::class, 'parameters'])->name('parameters');
-    Route::post('/parametros/{type}', [RequisitionController::class, 'storeParameter'])->name('parameters.store');
-    Route::patch('/parametros/{type}/{parameterId}', [RequisitionController::class, 'updateParameter'])->name('parameters.update');
-    Route::delete('/parametros/{type}/{parameterId}', [RequisitionController::class, 'destroyParameter'])->name('parameters.destroy');
+    Route::middleware('requisition.tab:dashboard')->group(function () {
+        Route::get('/dashboard', [RequisitionController::class, 'dashboard'])->name('dashboard');
+    });
+
+    Route::middleware('requisition.tab:solicitar')->group(function () {
+        Route::get('/solicitar', [RequisitionController::class, 'create'])->name('create');
+        Route::post('/solicitar', [RequisitionController::class, 'store'])->name('store');
+        Route::get('/clientes/buscar', [RequisitionController::class, 'searchClients'])->name('clients.search');
+    });
+
+    Route::middleware('requisition.tab:seguimiento')->group(function () {
+        Route::get('/seguimiento', [RequisitionController::class, 'tracking'])->name('tracking');
+        Route::get('/seguimiento/exportar', [RequisitionController::class, 'trackingExport'])->name('tracking.export');
+    });
+
+    Route::middleware('requisition.tab:gestion')->group(function () {
+        Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');
+        Route::get('/gestion/exportar', [RequisitionController::class, 'exportExcel'])->name('export');
+        Route::get('/gestion/{requisition}/editar', [RequisitionController::class, 'edit'])->name('edit');
+        Route::get('/gestion/{requisition}/imprimir', [RequisitionController::class, 'print'])->name('print');
+        Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');
+    });
+
+    Route::middleware('requisition.tab:parametros')->group(function () {
+        Route::get('/parametros', [RequisitionController::class, 'parameters'])->name('parameters');
+        Route::post('/parametros/{type}', [RequisitionController::class, 'storeParameter'])->name('parameters.store');
+        Route::patch('/parametros/{type}/{parameterId}', [RequisitionController::class, 'updateParameter'])->name('parameters.update');
+        Route::delete('/parametros/{type}/{parameterId}', [RequisitionController::class, 'destroyParameter'])->name('parameters.destroy');
+    });
 });

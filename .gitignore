@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Excel maestro comercial (no versionar; copia local o de red)
+/docs/MT-CO-01 Matriz de clientes.xlsx

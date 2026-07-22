@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="page-section">
-        <div class="app-container">
+        <div class="app-container indicadores-board">
             <div class="panel">
                 <div class="panel__header">
                     <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap;">

@@ -14,7 +14,7 @@ use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureService;
-use App\Services\Indicadores\IndicatorMotherService;
+use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
 use App\Services\Indicadores\YearRangeService;
 use App\Support\IndicadorNavigation;
@@ -29,7 +29,7 @@ class IndicadorController extends Controller
 {
     public function __construct(
         private readonly OperationsDashboardService $dashboardService,
-        private readonly IndicatorMotherService $motherService,
+        private readonly IndicatorConsolidadoService $consolidadoService,
         private readonly AuditLogService $auditLogService,
         private readonly YearRangeService $yearRangeService,
         private readonly IndicatorReportExporter $reportExporter,
@@ -124,16 +124,55 @@ class IndicadorController extends Controller
             ->with('status', 'Captura guardada correctamente para el mes seleccionado.');
     }
 
-    public function periods(): View
+    public function ajustes(Request $request): View
     {
-        $periods = Period::query()->orderByDesc('year')->orderByDesc('month')->paginate(24);
+        $section = (string) $request->query('section', 'periodos');
 
-        return view('areas.operaciones.periodos.index', [
+        if (! in_array($section, ['periodos', 'pesos', 'auditoria'], true)) {
+            $section = 'periodos';
+        }
+
+        $data = [
             'subTabs' => IndicadorNavigation::subTabs(),
-            'periods' => $periods,
+            'section' => $section,
             'years' => $this->yearRangeService->years(),
             'months' => config('indicators.months'),
-        ]);
+        ];
+
+        if ($section === 'periodos') {
+            $data['periods'] = Period::query()
+                ->orderByDesc('year')
+                ->orderByDesc('month')
+                ->paginate(24)
+                ->withQueryString();
+        }
+
+        if ($section === 'pesos') {
+            $data['indicators'] = Indicator::query()
+                ->orderBy('code')
+                ->with('dashboardWeight')
+                ->get();
+        }
+
+        if ($section === 'auditoria') {
+            $data['logs'] = AuditLog::query()
+                ->with('user')
+                ->when($request->filled('event_type'), fn ($query) => $query->where('event_type', $request->string('event_type')))
+                ->when($request->filled('action'), fn ($query) => $query->where('action', $request->string('action')))
+                ->orderByDesc('created_at')
+                ->paginate(30)
+                ->withQueryString();
+
+            $data['eventTypes'] = AuditLog::query()->select('event_type')->distinct()->orderBy('event_type')->pluck('event_type');
+            $data['actions'] = AuditLog::query()->select('action')->distinct()->orderBy('action')->pluck('action');
+        }
+
+        return view('areas.operaciones.ajustes.index', $data);
+    }
+
+    public function periods(): RedirectResponse
+    {
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'periodos']);
     }
 
     public function storePeriod(Request $request): RedirectResponse
@@ -237,17 +276,9 @@ class IndicadorController extends Controller
         return back()->with('status', 'Periodo reabierto correctamente.');
     }
 
-    public function weights(): View
+    public function weights(): RedirectResponse
     {
-        $indicators = Indicator::query()
-            ->orderBy('code')
-            ->with('dashboardWeight')
-            ->get();
-
-        return view('areas.operaciones.configuracion.pesos', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'indicators' => $indicators,
-        ]);
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'pesos']);
     }
 
     public function updateWeights(Request $request): RedirectResponse
@@ -288,36 +319,36 @@ class IndicadorController extends Controller
         return back()->with('status', 'Pesos actualizados.');
     }
 
-    public function mother(): View
+    public function consolidado(): View
     {
         $indicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
 
-        return view('areas.operaciones.madre.index', [
+        return view('areas.operaciones.consolidado.index', [
             'subTabs' => IndicadorNavigation::subTabs(),
             'indicators' => $indicators,
         ]);
     }
 
-    public function motherShow(Request $request, Indicator $indicator): View
+    public function consolidadoShow(Request $request, Indicator $indicator): View
     {
         abort_unless($indicator->is_active, 404);
 
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
 
-        $monthly = $this->motherService->getMonthlyData($indicator, $year, $month);
+        $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month);
         $quarterly = $indicator->code === 'FT-OP-08'
-            ? $this->motherService->getQuarterlyDataFtOp08($year)
+            ? $this->consolidadoService->getQuarterlyDataFtOp08($year)
             : null;
 
         $this->auditLogService->logEvent(
             eventType: 'admin_action',
-            action: 'mother_view',
-            reason: 'Consulta consolidado MADRE',
+            action: 'consolidado_view',
+            reason: 'Consulta consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]
         );
 
-        return view('areas.operaciones.madre.show', [
+        return view('areas.operaciones.consolidado.show', [
             'subTabs' => IndicadorNavigation::subTabs(),
             'indicator' => $indicator,
             'year' => $year,
@@ -329,25 +360,13 @@ class IndicadorController extends Controller
         ]);
     }
 
-    public function auditLog(Request $request): View
+    public function auditLog(Request $request): RedirectResponse
     {
-        $logs = AuditLog::query()
-            ->with('user')
-            ->when($request->filled('event_type'), fn ($query) => $query->where('event_type', $request->string('event_type')))
-            ->when($request->filled('action'), fn ($query) => $query->where('action', $request->string('action')))
-            ->orderByDesc('created_at')
-            ->paginate(30)
-            ->withQueryString();
-
-        $eventTypes = AuditLog::query()->select('event_type')->distinct()->orderBy('event_type')->pluck('event_type');
-        $actions = AuditLog::query()->select('action')->distinct()->orderBy('action')->pluck('action');
-
-        return view('areas.operaciones.auditoria.index', [
-            'subTabs' => IndicadorNavigation::subTabs(),
-            'logs' => $logs,
-            'eventTypes' => $eventTypes,
-            'actions' => $actions,
-        ]);
+        return redirect()->route('indicadores.admin.ajustes', array_filter([
+            'section' => 'auditoria',
+            'event_type' => $request->query('event_type'),
+            'action' => $request->query('action'),
+        ]));
     }
 
     public function saveSummary(Request $request): RedirectResponse
@@ -455,36 +474,36 @@ class IndicadorController extends Controller
         ));
     }
 
-    public function exportMotherExcel(Request $request, Indicator $indicator)
+    public function exportConsolidadoExcel(Request $request, Indicator $indicator)
     {
         abort_unless($indicator->is_active, 404);
-        $report = $this->buildMotherReport($request, $indicator);
+        $report = $this->buildConsolidadoReport($request, $indicator);
 
         $this->auditLogService->logEvent(
             eventType: 'export',
-            action: 'mother_excel',
-            reason: 'Exporte Excel consolidado MADRE',
+            action: 'consolidado_excel',
+            reason: 'Exporte Excel consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
-        return $this->reportExporter->motherExcelResponse($report);
+        return $this->reportExporter->consolidadoExcelResponse($report);
     }
 
-    public function exportMotherPdf(Request $request, Indicator $indicator)
+    public function exportConsolidadoPdf(Request $request, Indicator $indicator)
     {
         abort_unless($indicator->is_active, 404);
-        $report = $this->buildMotherReport($request, $indicator);
+        $report = $this->buildConsolidadoReport($request, $indicator);
 
         $this->auditLogService->logEvent(
             eventType: 'export',
-            action: 'mother_pdf',
-            reason: 'Exporte PDF consolidado MADRE',
+            action: 'consolidado_pdf',
+            reason: 'Exporte PDF consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
-        $pdf = Pdf::loadView('areas.operaciones.exports.mother-pdf', $report)->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('areas.operaciones.exports.consolidado-pdf', $report)->setPaper('a4', 'landscape');
 
-        return $pdf->download(sprintf('madre-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
+        return $pdf->download(sprintf('consolidado-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
     }
 
     /**
@@ -521,7 +540,7 @@ class IndicadorController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function buildMotherReport(Request $request, Indicator $indicator): array
+    private function buildConsolidadoReport(Request $request, Indicator $indicator): array
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
@@ -530,7 +549,7 @@ class IndicadorController extends Controller
             'indicator' => $indicator,
             'year' => $year,
             'month' => $month,
-            'monthly' => $this->motherService->getMonthlyData($indicator, $year, $month),
+            'monthly' => $this->consolidadoService->getMonthlyData($indicator, $year, $month),
         ];
     }
 

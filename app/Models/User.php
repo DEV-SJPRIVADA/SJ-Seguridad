@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\QualityDocument;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\RequisitionAccessService;
+use App\Services\Access\SupplyAccessService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -93,36 +95,17 @@ class User extends Authenticatable
      */
     public function requisitionBoardTabsFor(string $moduleKey): Collection
     {
-        $tabs = collect([]);
-        $canManageAll = $this->can('manage.users') || $this->can('manage.area.gestion_humana');
-        $canViewBoard = $this->can("view.board.{$moduleKey}.requisiciones");
-        $canTrackModule = $canManageAll || ($this->hasAssignedArea() && $this->area_key === $moduleKey);
+        return collect(app(RequisitionAccessService::class)->visibleTabsFor($this, $moduleKey));
+    }
 
-        if ($this->can('requisitions.tab.dashboard') || $canManageAll) {
-            $tabs->push('dashboard');
-        }
+    public function canAccessRequisitionTab(string $moduleKey, string $tab): bool
+    {
+        return app(RequisitionAccessService::class)->canAccessTab($this, $moduleKey, $tab);
+    }
 
-        // El tab Solicitar se muestra si:
-        // - El usuario tiene permiso explícito 'requisitions.tab.solicitar' O
-        // - Tiene permiso genérico de ver el tablero de requisiciones de ese módulo O
-        // - El usuario puede gestionar usuarios o el área de gestión humana
-        if ($this->can('requisitions.tab.solicitar') || $canViewBoard || $canManageAll) {
-            $tabs->push('solicitar');
-        }
-
-        if ($canTrackModule && ($this->can('requisitions.tab.seguimiento') || $this->can('requisitions.tab.solicitar') || $canViewBoard || $canManageAll)) {
-            $tabs->push('seguimiento');
-        }
-
-        if ($this->can('requisitions.tab.gestion') || $this->can('manage.requisitions') || $canManageAll) {
-            $tabs->push('gestion');
-        }
-
-        if ($this->can('manage.requisition.parameters') || $canManageAll) {
-            $tabs->push('parametros');
-        }
-
-        return $tabs->unique()->values();
+    public function canViewRequisitionsBoardFor(string $areaKey): bool
+    {
+        return app(RequisitionAccessService::class)->canViewRequisitionsBoard($this, $areaKey);
     }
 
     public function defaultRequisitionBoardUrl(string $moduleKey): string
@@ -145,33 +128,17 @@ class User extends Authenticatable
      */
     public function supplyBoardTabsFor(string $moduleKey): Collection
     {
-        $tabs = collect([]);
-
-        // Acceso granular por pestaña
-        if ($this->can("supply.tab.my_requests") || $this->can("view.board.{$moduleKey}.suministros")) {
-            $tabs->push('mis_solicitudes');
-        }
-
-        if ($this->can("supply.tab.quality") || $this->can('approve.supply.quality') || $this->can('manage.users')) {
-            $tabs->push('aprobacion_insumos');
-            $tabs->push('insumos_aprobados');
-        }
-
-        if ($this->can("supply.tab.catalog") || $this->can('manage.supply.catalog') || $this->can('manage.users')) {
-            $tabs->push('catalogo');
-        }
-
-        return $tabs->unique()->values();
+        return collect(app(SupplyAccessService::class)->visibleTabsFor($this, $moduleKey));
     }
 
     public function canAccessSupplyTab(string $moduleKey, string $tab): bool
     {
-        return match ($tab) {
-            'my_requests' => $this->can('supply.tab.my_requests') || $this->can("view.board.{$moduleKey}.suministros"),
-            'quality' => $this->can('supply.tab.quality') || $this->can('approve.supply.quality') || $this->can('manage.users'),
-            'catalog' => $this->can('supply.tab.catalog') || $this->can('manage.supply.catalog') || $this->can('manage.users'),
-            default => false,
-        };
+        return app(SupplyAccessService::class)->canAccessTab($this, $moduleKey, $tab);
+    }
+
+    public function canViewSupplyBoardFor(string $areaKey): bool
+    {
+        return app(SupplyAccessService::class)->canViewSupplyBoard($this, $areaKey);
     }
 
     public function defaultSupplyBoardUrl(string $moduleKey): string
@@ -236,24 +203,16 @@ class User extends Authenticatable
      */
     public function indicadorBoardTabsFor(): Collection
     {
-        $tabs = collect([]);
+        $allowed = collect([
+            'dashboard' => $this->can('operations.view') || $this->can('operations.manage'),
+            'captura' => $this->can('operations.capture') || $this->can('operations.manage'),
+            'consolidado' => $this->can('operations.manage'),
+            'ajustes' => $this->can('operations.manage'),
+        ])->filter()->keys();
 
-        if ($this->can('operations.view') || $this->can('operations.manage')) {
-            $tabs->push('dashboard');
-        }
-
-        if ($this->can('operations.capture') || $this->can('operations.manage')) {
-            $tabs->push('captura');
-        }
-
-        if ($this->can('operations.manage')) {
-            $tabs->push('periodos');
-            $tabs->push('pesos');
-            $tabs->push('madre');
-            $tabs->push('auditoria');
-        }
-
-        return $tabs->unique()->values();
+        return collect(array_keys(config('access.indicador_tabs', [])))
+            ->filter(fn (string $key) => $allowed->contains($key))
+            ->values();
     }
 
     public function canAccessIndicadorTab(string $tab): bool
@@ -274,10 +233,8 @@ class User extends Authenticatable
         return match ($firstTab) {
             'dashboard' => route('indicadores.dashboard'),
             'captura' => route('indicadores.index'),
-            'periodos' => route('indicadores.admin.periods.index'),
-            'pesos' => route('indicadores.admin.weights'),
-            'madre' => route('indicadores.admin.mother.index'),
-            'auditoria' => route('indicadores.admin.audit.index'),
+            'ajustes' => route('indicadores.admin.ajustes'),
+            'consolidado' => route('indicadores.admin.consolidado.index'),
             default => route('dashboard', ['module' => 'operaciones']),
         };
     }

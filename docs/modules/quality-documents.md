@@ -121,3 +121,8 @@ Visibilidad por area: `access.areas`
 - Categorias o etiquetas de documentos.
 - Notificaciones por correo al publicar.
 - Versionado historico de revisiones.
+
+## Referencias
+
+- Guia de usuario: [`docs/user/quality-documents.md`](../user/quality-documents.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

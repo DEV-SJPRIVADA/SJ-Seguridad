@@ -30,7 +30,7 @@
                     'sites' => $sites,
                     'allSites' => $allSites,
                     'roles' => $roles,
-                    'permissionGroups' => $permissionGroups,
+                    'permissionForm' => $permissionForm,
                     'buttonLabel' => 'Guardar usuario',
                     'method' => 'POST',
                     'selectedPermissions' => old('permissions', []),

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Requisitions;
 
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Models\PersonalRequisition;
+use App\Services\Access\RequisitionAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,11 @@ class StorePersonalRequisitionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $user = $this->user();
+        $module = (string) $this->route('module');
+
+        return $user !== null
+            && app(RequisitionAccessService::class)->canAccessTab($user, $module, 'solicitar');
     }
 
     /**

@@ -49,12 +49,26 @@ class IndicadorModuleTest extends TestCase
         $this->actingAs($user)->get(route('indicadores.index'))->assertOk();
     }
 
-    public function test_operations_manage_user_can_access_periodos(): void
+    public function test_operations_manage_user_can_access_ajustes(): void
     {
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.manage']);
 
-        $this->actingAs($user)->get(route('indicadores.admin.periods.index'))->assertOk();
+        $this->actingAs($user)
+            ->get(route('indicadores.admin.ajustes'))
+            ->assertOk()
+            ->assertSee('Ajustes de indicadores')
+            ->assertSee('Periodos de captura');
+    }
+
+    public function test_legacy_periodos_route_redirects_to_ajustes(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.admin.periods.index'))
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'periodos']));
     }
 
     public function test_dashboard_redirects_to_indicadores_when_board_selected(): void
@@ -68,7 +82,7 @@ class IndicadorModuleTest extends TestCase
             ->assertRedirect(route('indicadores.dashboard'));
     }
 
-    public function test_operations_manage_user_can_access_mother_show(): void
+    public function test_operations_manage_user_can_access_consolidado_show(): void
     {
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.manage']);
@@ -76,7 +90,7 @@ class IndicadorModuleTest extends TestCase
         $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
 
         $this->actingAs($user)
-            ->get(route('indicadores.admin.mother.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
+            ->get(route('indicadores.admin.consolidado.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
             ->assertOk()
             ->assertSee('Consolidado — FT-OP-01');
     }

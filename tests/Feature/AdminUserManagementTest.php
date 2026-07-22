@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\Admin\UserPermissionFormBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -61,7 +62,42 @@ class AdminUserManagementTest extends TestCase
         $response->assertSee('Administracion');
         $response->assertSee('Usuarios');
         $response->assertSee('Nuevo usuario');
-        $response->assertSee('Selecciona un usuario para revisar areas y permisos. Desde el panel derecho puedes entrar a editar.');
+    }
+
+    public function test_admin_user_form_uses_three_permission_sections_without_presets_or_preview(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.create'));
+
+        $response->assertOk();
+        $response->assertSee('En su area asignada');
+        $response->assertSee('Funcionalidades transversales');
+        $response->assertSee('Activa visualizacion de otras areas');
+        $response->assertSee('Solicitar requisiciones de personal');
+        $response->assertSee('Suministros — Calidad (aprobacion)');
+        $response->assertSee('Suministros — Compras (catalogo)');
+        $response->assertSee('Compras');
+        $response->assertSee('Gestion humana');
+        $response->assertDontSee('Ver Suministros (Gestion humana)');
+        $response->assertSee('Ver Suministros (Compras)');
+        $response->assertDontSee('Plantilla de perfil');
+        $response->assertDontSee('Vista previa del menu');
+        $response->assertDontSee('value="manage.requisitions"', false);
+    }
+
+    public function test_permission_form_builder_lists_global_requisition_actions_once(): void
+    {
+        $form = app(UserPermissionFormBuilder::class)->build();
+        $requisitionGroup = collect($form['sections']['global']['groups'] ?? [])
+            ->firstWhere('key', 'requisitions');
+
+        $this->assertNotNull($requisitionGroup);
+        $names = collect($requisitionGroup['permissions'])->pluck('name')->all();
+        $this->assertContains('requisitions.tab.gestion', $names);
+        $this->assertContains('manage.requisition.parameters', $names);
+        $this->assertCount(3, $names);
     }
 
     public function test_user_with_board_permission_sees_its_module_and_tab(): void
@@ -92,7 +128,7 @@ class AdminUserManagementTest extends TestCase
         ]));
     }
 
-    public function test_user_with_area_permission_gets_default_dashboard_tab(): void
+    public function test_user_with_area_permission_gets_default_documents_board(): void
     {
         $user = User::factory()->create();
         $user->assignRole('usuario');
@@ -100,10 +136,102 @@ class AdminUserManagementTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
-        $response->assertRedirect(route('dashboard', [
-            'module' => 'gestion_humana',
-            'board' => 'dashboard',
+        $response->assertRedirect(route('quality-documents.library.index', ['module' => 'gestion_humana']));
+    }
+
+    public function test_admin_user_index_lists_only_active_users_by_default(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $activeUser = User::factory()->create([
+            'name' => 'Usuario Activo Visible',
+            'must_change_password' => false,
+            'is_active' => true,
+        ]);
+        $activeUser->assignRole('usuario');
+
+        $inactiveUser = User::factory()->create([
+            'name' => 'Usuario Inactivo Oculto',
+            'must_change_password' => false,
+            'is_active' => false,
+        ]);
+        $inactiveUser->assignRole('usuario');
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index'));
+
+        $response->assertOk();
+        $response->assertSee('Usuario Activo Visible');
+        $response->assertDontSee('Usuario Inactivo Oculto');
+    }
+
+    public function test_admin_user_index_can_include_inactive_users_with_checkbox_filter(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $inactiveUser = User::factory()->create([
+            'name' => 'Usuario Inactivo Visible',
+            'must_change_password' => false,
+            'is_active' => false,
+        ]);
+        $inactiveUser->assignRole('usuario');
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', [
+            'include_inactive' => '1',
         ]));
+
+        $response->assertOk();
+        $response->assertSee('Mostrar usuarios inactivos');
+        $response->assertSee('Usuario Inactivo Visible');
+    }
+
+    public function test_permission_validator_warns_when_compras_catalog_lacks_supply_board(): void
+    {
+        $warnings = app(\App\Services\Admin\UserPermissionValidator::class)->warnings('compras', [
+            'supply.tab.catalog',
+        ]);
+
+        $this->assertContains('Marco acciones de catalogo de Suministros (Compras), pero no habilito ver Suministros en el menu de ninguna area.', $warnings);
+    }
+
+    public function test_admin_user_index_shows_access_summary_for_super_admin(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', ['selected' => $admin->id]));
+
+        $response->assertOk();
+        $response->assertSee('El rol super-admin otorga acceso total al sistema');
+    }
+
+    public function test_admin_user_index_shows_flat_assigned_permissions_without_section_groups(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $user->assignRole('usuario');
+        $user->syncPermissions([
+            'requisitions.tab.solicitar',
+            'requisitions.tab.gestion',
+            'view.board.gestion_humana.requisiciones',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', ['selected' => $user->id]));
+
+        $response->assertOk();
+        $response->assertSee('Permisos asignados');
+        $response->assertSee('Solicitar requisiciones de personal');
+        $response->assertSee('Requisiciones: Gestion de Solicitudes');
+        $response->assertSee('Ver Requisiciones (Gestion humana)');
+        $response->assertDontSee('Transversales');
+        $response->assertDontSee('Otras areas');
+        $response->assertDontSee('En su area');
     }
 
     public function test_admin_can_update_user_permissions_without_setting_new_password(): void

@@ -87,3 +87,39 @@ Cada modulo debe tener un archivo `docs/modules/<modulo>.md` con:
 - vistas
 - tablas implicadas
 - riesgos y pendientes
+
+## Procedimiento multi-agente (features y modulos)
+
+Roles: Analista → Arquitecto → Orquestador → Agente Feature → Revisor → Documentador.
+
+1. Registrar feature en [`docs/TASKS.md`](c:/laragon/www/SJSEGURIDAD/docs/TASKS.md) (Orquestador).
+2. Analista cierra vacios; pausa si hay preguntas al usuario.
+3. Arquitecto entrega Feature Brief en `docs/briefs/FEAT-XXX.md`.
+4. Orquestador genera plan y Task Cards; Agente Feature implementa vertical slice por tarea.
+5. Revisor emite reporte en `docs/reviews/FEAT-XXX.md`.
+6. Documentador actualiza `docs/modules/{modulo}.md` y crea/actualiza `docs/user/{modulo}.md`.
+7. Orquestador ejecuta checklist de [`AGENT_WORKFLOW.md`](c:/laragon/www/SJSEGURIDAD/docs/AGENT_WORKFLOW.md) e integra.
+
+Modo recomendado: chat maestro en Agent mode con [`docs/agents/prompts/start-feature.md`](c:/laragon/www/SJSEGURIDAD/docs/agents/prompts/start-feature.md).
+
+## Carril rapido
+
+No usar flujo multi-agente cuando:
+
+- Es consulta sobre codigo o documentacion → Ask mode.
+- Es fix pequeno en 1–3 archivos sin permisos, migraciones ni rutas nuevas → Agent mode con alcance explicito.
+
+Ver [`docs/agents/prompts/fast-lane.md`](c:/laragon/www/SJSEGURIDAD/docs/agents/prompts/fast-lane.md).
+
+## Convencion doble documentacion
+
+Ver guia completa en [`docs/DOCUMENTATION.md`](c:/laragon/www/SJSEGURIDAD/docs/DOCUMENTATION.md).
+
+| Tipo | Ubicacion | Audiencia | Plantilla |
+| --- | --- | --- | --- |
+| Tecnica | `docs/modules/<modulo>.md` | IAs y desarrolladores | `docs/templates/TECHNICAL_MODULE_DOC.md` |
+| Usuario | `docs/user/<modulo>.md` | Usuarios finales, capacitacion | `docs/templates/USER_MODULE_DOC.md` |
+
+Orden obligatorio doc usuario: Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios.
+
+Matriz de modulos documentados: [`docs/DOCUMENTATION.md#matriz-modulo-tecnico--usuario`](c:/laragon/www/SJSEGURIDAD/docs/DOCUMENTATION.md).

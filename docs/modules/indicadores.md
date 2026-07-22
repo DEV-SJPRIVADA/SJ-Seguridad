@@ -1,6 +1,6 @@
 # Modulo Indicadores (Operaciones)
 
-Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, MADRE, periodos, pesos y auditoria.
+Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, consolidado, ajustes y auditoria.
 
 ## Rutas
 
@@ -11,16 +11,27 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 | Dashboard global | `operations.view` o `operations.manage` |
 | Captura | `operations.capture` o `operations.manage` |
 | Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
-| Admin (periodos, pesos, MADRE, auditoria) | `operations.manage` |
+| Ajustes (periodos, pesos, auditoria) | `operations.manage` |
+| Consolidado | `operations.manage` |
 | Export PDF/Excel | `operations.export` |
 
-Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, periodos, pesos, madre, auditoria. Sin pestañas de jefes ni documentos internos.
+Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, consolidado, ajustes. El orden en config define el orden de subtabs via `App\Support\IndicadorNavigation`. Sin pestañas de jefes ni documentos internos.
+
+La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones internas via query `?section=`:
+
+| Seccion | Contenido |
+|---|---|
+| `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
+| `pesos` | Pesos del score global del dashboard |
+| `auditoria` | Log de cambios con filtros |
+
+Las rutas legacy `/admin/periodos`, `/admin/pesos` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas.
 
 ## Permisos Spatie
 
 - `operations.view` — ver dashboards
 - `operations.capture` — capturar indicadores (propios del usuario autenticado)
-- `operations.manage` — administracion completa (periodos, pesos, MADRE, auditoria)
+- `operations.manage` — administracion completa (ajustes, consolidado)
 - `operations.export` — exportaciones
 
 El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
@@ -48,9 +59,11 @@ Vistas en `resources/views/areas/operaciones/` con layout `<x-app-layout>`, pane
 
 Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros).
 
+Los tableros usan la clase contenedora `indicadores-board` para tablas compactas, filtros acotados y botones al ancho de su contenido.
+
 El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
 
-MADRE consolida capturas de usuarios con permiso `operations.capture` o `operations.manage`.
+El consolidado agrega capturas de usuarios con permiso `operations.capture` o `operations.manage`.
 
 ## Exportaciones
 
@@ -61,8 +74,8 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 | `indicadores.export.dashboard.pdf` | PDF dashboard ejecutivo |
 | `indicadores.export.leader.excel` | Excel captura por usuario (`user_id`, `year`, `month`; default auth) |
 | `indicadores.export.leader.pdf` | PDF captura por usuario |
-| `indicadores.export.mother.excel` | Excel consolidado MADRE |
-| `indicadores.export.mother.pdf` | PDF consolidado MADRE |
+| `indicadores.export.consolidado.excel` | Excel consolidado |
+| `indicadores.export.consolidado.pdf` | PDF consolidado |
 
 Requiere permiso `operations.export`.
 
@@ -75,3 +88,8 @@ php artisan db:seed --class=DashboardWeightSeeder
 ```
 
 (Tambien incluidos en `DatabaseSeeder`.)
+
+## Referencias
+
+- Guia de usuario: [`docs/user/indicadores.md`](../user/indicadores.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

@@ -33,19 +33,30 @@
                         <div class="panel__header">
                             <p class="text-caption">Lista de usuarios</p>
                             <p class="panel-text">{{ $users->total() }} registros encontrados</p>
-                            <form method="GET" action="{{ route('admin.users.index') }}" class="search-bar block-spaced-sm">
-                                <input
-                                    type="text"
-                                    name="q"
-                                    value="{{ $filters['q'] ?? '' }}"
-                                    placeholder="Buscar por nombre o correo"
-                                    class="form-input"
-                                >
-                                <button type="submit" class="btn btn--secondary">
-                                    Buscar
-                                </button>
+                            <form method="GET" action="{{ route('admin.users.index') }}" class="users-list-toolbar block-spaced-sm">
+                                <div class="search-bar">
+                                    <input
+                                        type="text"
+                                        name="q"
+                                        value="{{ $filters['q'] ?? '' }}"
+                                        placeholder="Buscar por nombre o correo"
+                                        class="form-input"
+                                    >
+                                    <button type="submit" class="btn btn--secondary">
+                                        Buscar
+                                    </button>
+                                </div>
+                                <label class="users-filter-toggle">
+                                    <input
+                                        type="checkbox"
+                                        name="include_inactive"
+                                        value="1"
+                                        @checked($filters['include_inactive'] ?? false)
+                                        onchange="this.form.submit()"
+                                    >
+                                    <span>Mostrar usuarios inactivos</span>
+                                </label>
                             </form>
-                            
                         </div>
 
                         <div class="users-list">
@@ -53,6 +64,7 @@
                                 <a
                                     href="{{ route('admin.users.index', array_filter([
                                         'q' => $filters['q'] ?? null,
+                                        'include_inactive' => ($filters['include_inactive'] ?? false) ? '1' : null,
                                         'selected' => $user->id,
                                         'page' => $users->currentPage(),
                                     ])) }}"
@@ -87,42 +99,16 @@
                     <section class="users-content">
                         @if ($selectedUser)
                             @php
-                                $enabledAreas = collect($permissionGroups['areas'])
-                                    ->map(function (array $area) use ($selectedUser) {
-                                        $matches = collect($area['options'])
-                                            ->filter(fn (array $option) => $selectedUser->can($option['name']))
-                                            ->pluck('label')
-                                            ->values();
+                                $sections = $permissionForm['sections'] ?? [];
+                                $permissionLabels = collect($sections['assigned_area']['permissions'] ?? [])
+                                    ->merge(collect($sections['global']['groups'] ?? [])->flatMap(fn (array $group) => $group['permissions'] ?? []))
+                                    ->merge(collect($sections['other_areas']['areas'] ?? [])->flatMap(fn (array $area) => $area['permissions'] ?? []))
+                                    ->keyBy('name');
 
-                                        if ($matches->isEmpty()) {
-                                            return null;
-                                        }
-
-                                        return [
-                                            'label' => $area['label'],
-                                            'permissions' => $matches,
-                                        ];
-                                    })
-                                    ->filter()
-                                    ->values();
-
-                                $functionalPermissions = collect($permissionGroups['functional'])
-                                    ->map(function ($permissions, $category) use ($selectedUser) {
-                                        $matches = collect($permissions)
-                                            ->filter(fn (array $permission) => $selectedUser->can($permission['name']))
-                                            ->pluck('label')
-                                            ->values();
-
-                                        if ($matches->isEmpty()) {
-                                            return null;
-                                        }
-
-                                        return [
-                                            'category' => $category,
-                                            'permissions' => $matches,
-                                        ];
-                                    })
-                                    ->filter()
+                                $assignedPermissionLabels = $selectedUser->permissions
+                                    ->pluck('name')
+                                    ->map(fn (string $name) => $permissionLabels->get($name, ['label' => $name])['label'])
+                                    ->sort()
                                     ->values();
                             @endphp
 
@@ -176,39 +162,30 @@
                                         </div>
 
                                         <div class="card card--muted">
-                                            <h4 class="panel-title">Areas habilitadas</h4>
-
-                                            @if ($enabledAreas->isNotEmpty())
-                                                <div class="section-stack block-spaced-sm">
-                                                    @foreach ($enabledAreas as $area)
-                                                        <div class="card">
-                                                            <p class="text-caption">{{ $area['label'] }}</p>
-                                                            <p class="text-small block-spaced-sm">{{ $area['permissions']->implode(' | ') }}</p>
-                                                        </div>
+                                            <h4 class="panel-title">Permisos asignados</h4>
+                                            @if (! empty($accessSummary['notes'] ?? []))
+                                                <div class="user-access-notes block-spaced-sm">
+                                                    @foreach ($accessSummary['notes'] as $note)
+                                                        <p class="text-small text-muted" style="margin: 0 0 0.35rem;">{{ $note }}</p>
                                                     @endforeach
                                                 </div>
+                                            @endif
+                                            @if ($assignedPermissionLabels->isNotEmpty())
+                                                <ul class="user-permission-tags">
+                                                    @foreach ($assignedPermissionLabels as $label)
+                                                        <li class="user-permission-tag">{{ $label }}</li>
+                                                    @endforeach
+                                                </ul>
                                             @else
-                                                <p class="text-small text-muted block-spaced-sm">No tiene accesos de area asignados de forma efectiva.</p>
+                                                <p class="text-small text-muted block-spaced-sm">Este usuario no tiene permisos adicionales asignados.</p>
                                             @endif
                                         </div>
                                     </div>
 
                                     <div class="section-stack">
                                         <div class="card card--info">
-                                            <h4 class="panel-title">Permisos funcionales</h4>
-
-                                            @if ($functionalPermissions->isNotEmpty())
-                                                <div class="section-stack block-spaced-sm">
-                                                    @foreach ($functionalPermissions as $group)
-                                                        <div class="card">
-                                                            <p class="text-caption">{{ $group['category'] }}</p>
-                                                            <p class="text-small text-small--info block-spaced-sm">{{ $group['permissions']->implode(' | ') }}</p>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <p class="text-small text-small--info block-spaced-sm">No tiene permisos funcionales adicionales por fuera del rol.</p>
-                                            @endif
+                                            <h4 class="panel-title">Area base</h4>
+                                            <p class="text-small text-small--info block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin area asignada' }}</p>
                                         </div>
 
                                         <div class="card card--warning">

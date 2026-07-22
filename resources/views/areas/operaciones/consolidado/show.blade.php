@@ -4,40 +4,42 @@
     </x-slot>
 
     <div class="page-section">
-        <div class="app-container">
+        <div class="app-container indicadores-board">
             <div class="panel">
                 <div class="panel__header">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
+                    <div class="indicadores-panel-header">
                         <div>
                             <h3 class="panel-title">Consolidado — {{ $indicator->code }}</h3>
                             <p class="panel-text">{{ $indicator->name }}</p>
                         </div>
-                        @can('operations.export')
-                            <a href="{{ route('indicadores.export.mother.excel', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">Excel MADRE</a>
-                            <a href="{{ route('indicadores.export.mother.pdf', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">PDF MADRE</a>
-                        @endcan
-                        <form method="GET" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end;">
-                            <div>
-                                <label class="form-label">Año</label>
-                                <select name="year" onchange="this.form.submit()" class="supply-input supply-select">
-                                    @foreach ($years as $yearOption)
-                                        <option value="{{ $yearOption }}" @selected($year === (int) $yearOption)>{{ $yearOption }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label">Mes</label>
-                                <select name="month" onchange="this.form.submit()" class="supply-input supply-select">
-                                    @foreach ($months as $monthNumber => $monthName)
-                                        <option value="{{ $monthNumber }}" @selected($month === (int) $monthNumber)>{{ $monthName }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </form>
+                        <div class="indicadores-filter-bar">
+                            @can('operations.export')
+                                <a href="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">Excel</a>
+                                <a href="{{ route('indicadores.export.consolidado.pdf', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">PDF</a>
+                            @endcan
+                            <form method="GET" class="indicadores-inline-form" style="margin:0;">
+                                <div class="indicadores-field indicadores-field--xs">
+                                    <label class="form-label">Ano</label>
+                                    <select name="year" onchange="this.form.submit()" class="supply-input supply-select">
+                                        @foreach ($years as $yearOption)
+                                            <option value="{{ $yearOption }}" @selected($year === (int) $yearOption)>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="indicadores-field indicadores-field--sm">
+                                    <label class="form-label">Mes</label>
+                                    <select name="month" onchange="this.form.submit()" class="supply-input supply-select">
+                                        @foreach ($months as $monthNumber => $monthName)
+                                            <option value="{{ $monthNumber }}" @selected($month === (int) $monthNumber)>{{ $monthName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
                 <div class="panel__body">
-                    <div class="dashboard-stat-grid" style="margin-bottom:1.5rem;">
+                    <div class="dashboard-stat-grid" style="margin-bottom:1rem;">
                         <div class="card kpi-card">
                             <p class="text-caption">Consolidado</p>
                             <p class="kpi-value">
@@ -54,7 +56,8 @@
                         </div>
                     </div>
 
-                    <table class="supply-table">
+                    <div class="indicadores-table-wrap">
+                    <table class="supply-table indicadores-table">
                         <thead>
                             <tr>
                                 <th>Usuario</th>
@@ -74,6 +77,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -8,15 +8,22 @@ use Illuminate\Console\Command;
 class ImportMtCo01MatrixCommand extends Command
 {
     protected $signature = 'comercial:import-mt-co-01
-                            {--path= : Ruta al xlsx (default docs/MT-CO-01 Matriz de clientes.xlsx)}
+                            {path : Ruta absoluta al archivo .xlsx MT-CO-01}
                             {--fresh : Vaciar clientes/servicios comerciales antes de importar}';
 
     protected $description = 'Importa la matriz MT-CO-01 (Excel) a commercial_clients / commercial_services';
 
     public function handle(MtCo01Importer $importer): int
     {
-        $path = $this->option('path') ?: base_path('docs/MT-CO-01 Matriz de clientes.xlsx');
+        $path = $this->argument('path');
         $fresh = (bool) $this->option('fresh');
+
+        if (! is_file($path)) {
+            $this->error('No se encontro el archivo: '.$path);
+            $this->line('El Excel MT-CO-01 no se versiona en el repositorio; use una copia local o de red.');
+
+            return self::FAILURE;
+        }
 
         $this->info('Importando: '.$path.($fresh ? ' (fresh)' : ''));
 

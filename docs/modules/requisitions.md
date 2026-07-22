@@ -6,24 +6,26 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 
 ## Alcance actual
 
-- Tablero interno de `Requisiciones` disponible por area segun permiso `view.board.{area}.requisiciones`
+- Tablero `Requisiciones` visible por `view.board.{area}.requisiciones` o por funcionalidades de **area base** en el area del usuario
 - Subtableros internos:
   - `Dashboard`
   - `Solicitar`
-  - `Seguimiento`
+  - `Mis requisiciones` (permiso `requisitions.tab.seguimiento`)
   - `Gestion`
   - `Parametros`
-- Creacion de requisiciones sobre el modulo autorizado, incluso si el `area_key` del usuario es diferente
-- Edicion solo para gestion humana o usuarios con permiso operativo equivalente
+- Solicitar y Mis requisiciones operan siempre en `users.area_key`
+- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** muestra solicitudes de todas las areas.
 - Historial de cambios de estado
+- Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
 - Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
 - Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
 
 ## Reglas de negocio actuales
 
-- El usuario puede solicitar en cualquier modulo de requisiciones que tenga autorizado por permiso explicito
-- El tablero `Seguimiento` es solo lectura para usuarios solicitantes y muestra requisiciones del area propia del usuario
+- El usuario solo puede solicitar en su `area_key` con permiso `requisitions.tab.solicitar`
+- **Mis requisiciones** es solo lectura y muestra requisiciones del **area base** del usuario (`users.area_key`).
+- **Gestión** lista **todas** las solicitudes de **todas** las areas (vista transversal para validadores GH).
 - El filtro `Solo mis solicitudes` permite reducir la vista del area a lo creado por el usuario autenticado
 - `leader_name` y `requesting_area_key` se toman del usuario autenticado
 - `Cliente` se busca en la matriz comercial (`commercial_clients`) cuando el tipo de cliente **no** es *Interno*; para *Interno* (personal administrativo) se asigna automaticamente `Cliente interno SJ Seguridad` en `requisition_clients`
@@ -59,6 +61,14 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Destinatario: email del usuario `requested_by` (si no hay email, no se envia)
 - Contenido: codigo, cargo, cliente, estado anterior → nuevo, observacion GH; CTA a Seguimiento del area solicitante con `q`
 - No notifica al catalogo de Parametros ni al fallback GH
+
+### Trazabilidad en edicion (gestion)
+- Disparo: `RequisitionController::update` en cada guardado con cambios en campos editables
+- Servicio: `App\Services\Requisitions\PersonalRequisitionChangeLogger`
+- Tabla: `personal_requisition_change_logs` (agrupado por `change_batch` por cada guardado)
+- Registra: fecha/hora, campo (etiqueta legible), valor anterior, valor nuevo, usuario (`changed_by`)
+- UI: panel **Historial de cambios** en `resources/views/modules/requisitions/edit.blade.php`
+- El **Historial de estados** sigue siendo independiente y solo registra transiciones de estado
 
 ### Compartido
 - Ambos mailables usan cola (`ShouldQueue`)
@@ -101,7 +111,9 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
   - `cancelada`: Solicitud descartada.
 - **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
 - **Formulario Solicitar**: secciones numeradas (motivo, cargo, servicio, perfil, administrativo); cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas motivos envian 1); barra lateral con checklist y acciones destacadas al pie.
+- **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con historial de estados, historial de cambios de campos y guia operativa.
 - **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
+- **Seguimiento**: mismo panel de filtros que Gestion (busqueda, pills de estado, cliente, ciudad, alcance mis/todas); resumen de resultados y exportacion Excel en la cabecera del panel.
 - **Dashboard Compacto**: indicadores KPI en una sola fila.
 - **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).
 
@@ -130,8 +142,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
-- `manage.requisitions`
 - `manage.requisition.parameters`
+- `manage.requisitions` (legacy; no asignar en Admin; equivalente practico a `requisitions.tab.gestion` + tablero visible)
 - `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
 - `manage.users`
 
@@ -139,6 +151,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 
 - `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`)
 - `personal_requisition_status_logs`
+- `personal_requisition_change_logs` (trazabilidad de campos editados en gestion)
 - `requisition_positions`
 - `requisition_request_reasons`
 - `requisition_clients` (tabla interna de enlace; se alimenta automaticamente desde matriz comercial al crear/editar; **no** se administra en Parametros)
@@ -174,3 +187,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
 - Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
 - Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.
+
+## Referencias
+
+- Guia de usuario: [`docs/user/requisitions.md`](../user/requisitions.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)
