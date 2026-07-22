@@ -19,6 +19,7 @@ Route::middleware(['password.changed'])
 
         Route::middleware(['can:operations.export'])->group(function (): void {
             Route::get('/exportar/pdf', [IndicadorController::class, 'exportDashboardPdf'])->name('export.dashboard.pdf');
+            Route::get('/exportar/informe-gestion.pptx', [IndicadorController::class, 'exportManagementPptx'])->name('export.management.pptx');
             Route::get('/exportar/captura/{indicator:code}/excel', [IndicadorController::class, 'exportLeaderExcel'])->name('export.leader.excel');
             Route::get('/exportar/captura/{indicator:code}/pdf', [IndicadorController::class, 'exportLeaderPdf'])->name('export.leader.pdf');
             Route::get('/exportar/consolidado/{indicator:code}/excel', [IndicadorController::class, 'exportConsolidadoExcel'])->name('export.consolidado.excel');

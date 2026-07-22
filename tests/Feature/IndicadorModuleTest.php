@@ -19,6 +19,7 @@ class IndicadorModuleTest extends TestCase
         PermissionCatalog::sync();
         $this->seed(\Database\Seeders\IndicadorSeeder::class);
         $this->seed(\Database\Seeders\DashboardWeightSeeder::class);
+        $this->seed(\Database\Seeders\IndicadorDemoDataSeeder::class);
     }
 
     public function test_guest_cannot_access_indicadores_dashboard(): void
@@ -111,6 +112,54 @@ class IndicadorModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    public function test_operations_export_user_can_download_management_pptx(): void
+    {
+        $template = storage_path('app/'.config('indicators.management_report.template'));
+        $this->assertFileExists($template, 'La plantilla FO-GI-39 debe existir en storage para exportar PPTX.');
+
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.management.pptx', [
+            'year' => now()->year,
+            'month' => now()->month,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader(
+            'content-type',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        );
+    }
+
+    public function test_management_pptx_uses_demo_capture_values_in_chart(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.management.pptx', [
+            'year' => (int) config('indicators.base_year', now()->year),
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+
+        $file = $response->baseResponse->getFile();
+        $this->assertNotNull($file);
+
+        $zip = new \ZipArchive;
+        $zip->open($file->getPathname());
+        $chart = $zip->getFromName('ppt/charts/chart1.xml');
+        $zip->close();
+
+        $this->assertNotFalse($chart);
+        $this->assertStringNotContainsString('<c:v>737</c:v>', (string) $chart);
+        $this->assertStringNotContainsString('formulaRef', (string) $chart);
+        $this->assertStringNotContainsString('externalData', (string) $chart);
+        $this->assertDoesNotMatchRegularExpression('/<c:extLst>\s*<\/c:extLst>/', (string) $chart);
+        $this->assertStringContainsString('<c:v>684</c:v>', (string) $chart);
     }
 
     private function operationsViewer(): User

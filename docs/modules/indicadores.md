@@ -76,8 +76,26 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 | `indicadores.export.leader.pdf` | PDF captura por usuario |
 | `indicadores.export.consolidado.excel` | Excel consolidado |
 | `indicadores.export.consolidado.pdf` | PDF consolidado |
+| `indicadores.export.management.pptx` | Informe de gestion FO-GI-39 (PowerPoint) |
 
 Requiere permiso `operations.export`.
+
+## Informe de gestion FO-GI-39 (PowerPoint)
+
+Plantilla sanitizada: `storage/app/templates/operaciones/FO-GI-39-v7.template.pptx`
+
+Servicios:
+
+- `ManagementReportDataBuilder` — KPIs, narrativa y series mensuales por FT-OP.
+- `ManagementReportPptxArchive` — extrae/reempaqueta la plantilla PPTX en disco temporal.
+- `ManagementReportChartInjector` — inyecta graficos desde `chart-prototype/` cuando la plantilla no los trae.
+- `ManagementReportChartSanitizer` — elimina referencias Excel/extensiones invalidas del XML de graficos.
+- `ManagementReportChartUpdater` — actualiza caches mensuales del grafico.
+- `ManagementReportPptxExporter` — orquesta placeholders, graficos y descarga del informe.
+
+Ruta: `GET indicadores.export.management.pptx?year=&month=`. Boton **Informe PPTX** en dashboard de indicadores.
+
+Documentacion de placeholders: `storage/app/templates/operaciones/README.md`. Mapeo en `config/indicators.php` → `management_report`. Regenerar plantilla: `python tools/sanitize_pptx_template.py`. Prototipo de graficos: `python tools/extract_chart_prototype.py`.
 
 ## Despliegue
 
@@ -85,9 +103,12 @@ Requiere permiso `operations.export`.
 php artisan migrate
 php artisan db:seed --class=IndicadorSeeder
 php artisan db:seed --class=DashboardWeightSeeder
+php artisan indicadores:seed-demo --force
 ```
 
-(Tambien incluidos en `DatabaseSeeder`.)
+Datos demo: capturas para los 9 FT-OP (meses 1–12 del anio base) con usuario `operaciones.demo@sjseguridad.test` / `password`. Reabre periodos cerrados del anio base. Si la plantilla PPTX no trae graficos, el export los inyecta desde `storage/app/templates/operaciones/chart-prototype/`.
+
+(Tambien incluidos en `DatabaseSeeder` los seeders de catalogo; el demo es opcional via comando.)
 
 ## Referencias
 

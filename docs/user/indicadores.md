@@ -12,7 +12,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 - **Captura:** registrar valores mensuales de indicadores asignados a su usuario.
 - **Ajustes:** administrar periodos, pesos del score y consultar auditoria (gestores).
 - **Consolidado:** vista consolidada de capturas del equipo (gestores).
-- **Exportaciones:** PDF y Excel de dashboard y capturas (permiso de exportacion).
+- **Exportaciones:** PDF, Excel y PowerPoint (informe FO-GI-39) segun permiso de exportacion.
 
 ## Definiciones
 
@@ -50,7 +50,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 1. Abra **Dashboard** en Indicadores.
 2. Filtre por periodo si hay selector.
 3. Revise KPIs y tabla resumen.
-4. Exporte a PDF si tiene permiso de exportacion.
+4. Exporte a PDF o descargue el **Informe PPTX** (FO-GI-39) si tiene permiso de exportacion.
 
 ### Administrar periodos (Ajustes)
 
@@ -79,3 +79,4 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
+| 1.1 | 2026-07-22 | FEAT-002 | Exportacion informe de gestion FO-GI-39 en PowerPoint desde dashboard |
