@@ -60,7 +60,8 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 
 ### Ajustar metas por indicador
 
-1. En Ajustes → **Metas**, modifique la columna **Meta (%)** y **Critico (%)** de cada FT-OP.
+1. En Ajustes → **Metas**, seleccione el **Operador** (`>=`, `<=`, `==`) y modifique **Meta (%)** y **Critico (%)** de cada FT-OP.
+2. **FT-OP-03 (Compuesto):** no tiene operador unico; **Meta** limita la frecuencia (A) y **Critico** el impacto economico (B). El semaforo exige cumplir ambos.
 2. Indique el motivo del cambio y guarde.
 3. Los valores se reflejan de inmediato en la ficha de captura y en el calculo de cumplimiento.
 

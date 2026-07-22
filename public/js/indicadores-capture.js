@@ -48,8 +48,11 @@
         var result = den > 0 ? round2((num / den) * 100) : 0;
         var threshold = Number(formula.threshold || 0);
         var complies = false;
+        var operator = formula.operator || null;
 
-        if (formula.type === 'ratio_ge') {
+        if (formula.type === 'ratio') {
+            complies = den > 0 && compareByOperator(result, threshold, operator || '>=');
+        } else if (formula.type === 'ratio_ge') {
             complies = den > 0 && result >= threshold;
         } else if (formula.type === 'ratio_le') {
             complies = den > 0 && result <= threshold;
@@ -58,6 +61,17 @@
         }
 
         return { result: result, complies: complies };
+    }
+
+    function compareByOperator(result, threshold, operator) {
+        if (operator === '<=') {
+            return result <= threshold;
+        }
+        if (operator === '==') {
+            return round2(result) === round2(threshold);
+        }
+
+        return result >= threshold;
     }
 
     function readFormValues(root) {

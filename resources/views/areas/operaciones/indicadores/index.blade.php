@@ -26,7 +26,7 @@
                                     <tr>
                                         <td><span class="indicadores-code">{{ $indicator->code }}</span></td>
                                         <td class="indicadores-cell-wrap">{{ $indicator->name }}</td>
-                                        <td>{{ $indicator->target_operator }} {{ number_format((float) $indicator->target_value, 2) }}%</td>
+                                        <td>{{ $indicator->metaLabel() }}</td>
                                         <td>
                                             <a href="{{ route('indicadores.show', $indicator) }}" class="btn btn--secondary btn--sm">Capturar</a>
                                         </td>

@@ -22,7 +22,7 @@ La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones inte
 | Seccion | Contenido |
 |---|---|
 | `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
-| `metas` | Meta (%) y umbral critico (%) por indicador; alimenta captura y cumplimiento |
+| `metas` | Operador (`>=`, `<=`, `==`), meta (%) y critico (%) por indicador; alimenta listado, captura y cumplimiento |
 | `auditoria` | Log de cambios con filtros |
 
 Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/pesos` sigue aceptado por compatibilidad).

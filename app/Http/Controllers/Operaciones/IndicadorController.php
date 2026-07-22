@@ -292,6 +292,8 @@ class IndicadorController extends Controller
     public function updateMetas(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'operators' => ['required', 'array'],
+            'operators.*' => ['required', Rule::in(['>=', '<=', '=='])],
             'metas' => ['required', 'array'],
             'metas.*' => ['required', 'numeric', 'min:0', 'max:999.99'],
             'critical' => ['required', 'array'],
@@ -302,7 +304,7 @@ class IndicadorController extends Controller
         DB::transaction(function () use ($validated): void {
             $before = Indicator::query()
                 ->orderBy('code')
-                ->get(['id', 'code', 'target_value', 'critical_value'])
+                ->get(['id', 'code', 'target_operator', 'target_value', 'critical_value'])
                 ->keyBy('id')
                 ->toArray();
 
@@ -310,6 +312,8 @@ class IndicadorController extends Controller
                 $indicator = Indicator::query()->findOrFail((int) $indicatorId);
 
                 $indicator->update([
+                    'target_operator' => $validated['operators'][$indicatorId]
+                        ?? $validated['operators'][(string) $indicatorId],
                     'target_value' => $meta,
                     'critical_value' => $validated['critical'][$indicatorId]
                         ?? $validated['critical'][(string) $indicatorId],
@@ -318,7 +322,7 @@ class IndicadorController extends Controller
 
             $after = Indicator::query()
                 ->orderBy('code')
-                ->get(['id', 'code', 'target_value', 'critical_value'])
+                ->get(['id', 'code', 'target_operator', 'target_value', 'critical_value'])
                 ->keyBy('id')
                 ->toArray();
 

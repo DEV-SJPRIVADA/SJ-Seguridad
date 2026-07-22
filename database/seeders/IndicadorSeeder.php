@@ -37,7 +37,7 @@ class IndicadorSeeder extends Seeder
                 'name' => 'Siniestralidad',
                 'unit' => 'percentage',
                 'target_value' => 3,
-                'target_operator' => '==',
+                'target_operator' => '<=',
                 'frequency' => 'monthly',
                 'formula_description' => 'Cumple cuando frecuencia operativa <= 3 e impacto economico <= 1',
                 'required_fields' => [

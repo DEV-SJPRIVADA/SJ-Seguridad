@@ -314,10 +314,6 @@ class OperationsDashboardService
 
     private function metaLabel(Indicator $indicator): string
     {
-        if ($indicator->code === 'FT-OP-03') {
-            return 'A<='.(float) $indicator->target_value.'% y B<='.(float) ($indicator->critical_value ?? 1).'%';
-        }
-
-        return $indicator->target_operator.' '.$indicator->target_value.'%';
+        return $indicator->metaLabel();
     }
 }

@@ -47,4 +47,35 @@ class Indicator extends Model
     {
         return $this->hasMany(IndicatorCapture::class);
     }
+
+    public function usesCompositeTarget(): bool
+    {
+        return $this->code === 'FT-OP-03';
+    }
+
+    public function metaLabel(): string
+    {
+        if ($this->usesCompositeTarget()) {
+            return sprintf(
+                'A ≤ %s%% · B ≤ %s%%',
+                number_format((float) $this->target_value, 2),
+                number_format((float) ($this->critical_value ?? 0), 2)
+            );
+        }
+
+        return sprintf(
+            '%s %s%%',
+            $this->target_operator ?? '>=',
+            number_format((float) $this->target_value, 2)
+        );
+    }
+
+    public function compositeTargetHint(): string
+    {
+        return sprintf(
+            'Freq. ≤ %s%% · Impacto ≤ %s%%',
+            number_format((float) $this->target_value, 2),
+            number_format((float) ($this->critical_value ?? 0), 2)
+        );
+    }
 }

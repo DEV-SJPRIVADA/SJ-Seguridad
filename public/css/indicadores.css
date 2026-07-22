@@ -489,9 +489,22 @@
 .indicadores-table--periods td:nth-child(2) { width: 7rem; }
 
 .indicadores-table--metas th:nth-child(2),
+.indicadores-table--metas td:nth-child(2) { width: 5.5rem; }
 .indicadores-table--metas th:nth-child(3),
-.indicadores-table--metas td:nth-child(2),
-.indicadores-table--metas td:nth-child(3) { width: 7rem; }
+.indicadores-table--metas th:nth-child(4),
+.indicadores-table--metas td:nth-child(3),
+.indicadores-table--metas td:nth-child(4) { width: 7rem; }
+
+.indicadores-input-operator {
+    min-width: 4.5rem;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+}
+
+.indicadores-meta-hint {
+    font-size: 0.8125rem;
+    color: var(--color-muted, #64748b);
+}
 
 .indicadores-table--audit th:nth-child(1),
 .indicadores-table--audit td:nth-child(1) { width: 9rem; }
