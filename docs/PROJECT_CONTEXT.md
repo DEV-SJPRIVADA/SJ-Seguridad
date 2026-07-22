@@ -24,7 +24,7 @@
 - **Requisiciones de personal:** dashboard, solicitar, seguimiento, gestion, parametros; notificaciones por correo al crear y al cambiar estado
 - **Suministros:** mis solicitudes, aprobacion Calidad, insumos aprobados (FO-AD-44), catalogo; sedes; notificacion a Calidad al crear
 - **Documentos de Calidad:** biblioteca por area, mis documentos, administracion centralizada
-- **Indicadores (Operaciones):** captura FT-OP, dashboard, ajustes (periodos, pesos, auditoria), consolidado MADRE, export PDF/Excel
+- **Indicadores (Operaciones):** captura FT-OP, dashboard, ajustes (periodos, pesos, auditoria), consolidado, export PDF/Excel
 - **Comercial:** dashboard KPI, matriz clientes (NIT), servicios por portafolio; importacion MT-CO-01
 - Modulos base configurados en navegacion: gestion humana, operaciones, programacion, juridico, comercial, calidad, admin y financiero, compras
 - Correo local: Laragon Mailpit (`MAIL_MAILER=smtp`, puerto `1025`; ver `docs/LOCAL_SETUP.md`)

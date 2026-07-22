@@ -88,7 +88,7 @@
                             @foreach ($dashboard['kpis'] as $kpi)
                                 <tr>
                                     <td>
-                                        <a href="{{ $kpi['mother_url'] }}" class="btn btn--secondary btn--sm">{{ $kpi['indicator']->code }}</a>
+                                        <a href="{{ $kpi['consolidado_url'] }}" class="btn btn--secondary btn--sm">{{ $kpi['indicator']->code }}</a>
                                     </td>
                                     <td style="text-align:left;">{{ $kpi['indicator']->name }}</td>
                                     <td>{{ $kpi['result'] !== null ? number_format((float) $kpi['result'], 2).'%' : '-' }}</td>

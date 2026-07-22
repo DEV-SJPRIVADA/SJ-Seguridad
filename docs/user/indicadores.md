@@ -11,7 +11,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 - **Dashboard:** ver indicadores globales y resumen del periodo.
 - **Captura:** registrar valores mensuales de indicadores asignados a su usuario.
 - **Ajustes:** administrar periodos, pesos del score y consultar auditoria (gestores).
-- **Consolidado (MADRE):** vista consolidada de capturas del equipo (gestores).
+- **Consolidado:** vista consolidada de capturas del equipo (gestores).
 - **Exportaciones:** PDF y Excel de dashboard y capturas (permiso de exportacion).
 
 ## Definiciones
@@ -22,7 +22,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 | Periodo | Mes/anio de captura; puede estar abierto o cerrado. |
 | Captura | Registro mensual de valores de un indicador por usuario. |
 | Dashboard | Tablero ejecutivo con KPIs y score ponderado. |
-| MADRE | Consolidado de capturas de usuarios con permiso de captura o gestion. |
+| Consolidado | Vista agregada de capturas de usuarios con permiso de captura o gestion. |
 | Plan de mejora | Accion registrada cuando un indicador esta en rojo. |
 | Peso | Porcentaje de contribucion de cada indicador al score global. |
 
@@ -31,7 +31,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 | Rol / perfil | Responsabilidad |
 | --- | --- |
 | Capturador operaciones | Registrar capturas mensuales en periodos abiertos. |
-| Jefe / gestor operaciones | Cerrar/reabrir periodos, ajustar pesos, revisar MADRE y auditoria. |
+| Jefe / gestor operaciones | Cerrar/reabrir periodos, ajustar pesos, revisar consolidado y auditoria. |
 | Direccion / consulta | Ver dashboard y exportar reportes (segun permiso export). |
 | Administrador | Asignar permisos operations.view, capture, manage, export en Admin usuarios. |
 
@@ -68,7 +68,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 1. En Ajustes → **Auditoria**, filtre por usuario, indicador o fecha.
 2. Consulte historial de cambios.
 
-### Consolidado MADRE
+### Consolidado
 
 1. Abra la pestaña **Consolidado**.
 2. Seleccione indicador y periodo.

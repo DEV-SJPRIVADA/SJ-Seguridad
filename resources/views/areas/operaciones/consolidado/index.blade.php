@@ -12,7 +12,7 @@
                 </div>
                 <div class="panel__body">
                     <div class="indicadores-table-wrap">
-                        <table class="supply-table js-datatable indicadores-table indicadores-table--mother" data-no-excel>
+                        <table class="supply-table js-datatable indicadores-table indicadores-table--consolidado" data-no-excel>
                             <thead>
                                 <tr>
                                     <th>Codigo</th>
@@ -26,7 +26,7 @@
                                         <td><span class="indicadores-code">{{ $indicator->code }}</span></td>
                                         <td class="indicadores-cell-wrap">{{ $indicator->name }}</td>
                                         <td>
-                                            <a href="{{ route('indicadores.admin.mother.show', $indicator) }}" class="btn btn--secondary btn--sm">Ver consolidado</a>
+                                            <a href="{{ route('indicadores.admin.consolidado.show', $indicator) }}" class="btn btn--secondary btn--sm">Ver consolidado</a>
                                         </td>
                                     </tr>
                                 @endforeach

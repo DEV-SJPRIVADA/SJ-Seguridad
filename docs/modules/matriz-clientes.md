@@ -35,18 +35,19 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 
 ## Importacion desde Excel
 
-Comando:
+El archivo **MT-CO-01 Matriz de clientes.xlsx** no se versiona en el repositorio (datos sensibles / copia maestra fuera de Git). Guardelo en una ruta local o de red accesible al servidor.
+
+Comando (ruta **obligatoria**):
 
 ```powershell
-php artisan comercial:import-mt-co-01
+php artisan comercial:import-mt-co-01 "C:\ruta\MT-CO-01 Matriz de clientes.xlsx"
 ```
 
 Opciones:
 
-- `--path=...` ruta alternativa al xlsx
 - `--fresh` elimina clientes/servicios comerciales y vuelve a cargar (destructivo)
 
-Por defecto lee [`docs/MT-CO-01 Matriz de clientes.xlsx`](../MT-CO-01%20Matriz%20de%20clientes.xlsx) e importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
+Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 
 - Cliente: upsert por NIT normalizado
 - Servicio: upsert por cliente + portafolio + numero de contrato
@@ -100,7 +101,7 @@ Al crear o editar una requisicion de personal, el cliente se elige desde esta ma
 
 ## Fuente documental
 
-Excel de referencia: [`docs/MT-CO-01 Matriz de clientes.xlsx`](../MT-CO-01%20Matriz%20de%20clientes.xlsx).
+Formato de negocio MT-CO-01 (Excel maestro). El archivo **no** vive en el repo; solicitar copia al area Comercial o usar exportaciones desde el sistema.
 
 ## Referencias
 

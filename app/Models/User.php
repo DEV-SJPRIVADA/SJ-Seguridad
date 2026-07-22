@@ -203,22 +203,16 @@ class User extends Authenticatable
      */
     public function indicadorBoardTabsFor(): Collection
     {
-        $tabs = collect([]);
+        $allowed = collect([
+            'dashboard' => $this->can('operations.view') || $this->can('operations.manage'),
+            'captura' => $this->can('operations.capture') || $this->can('operations.manage'),
+            'consolidado' => $this->can('operations.manage'),
+            'ajustes' => $this->can('operations.manage'),
+        ])->filter()->keys();
 
-        if ($this->can('operations.view') || $this->can('operations.manage')) {
-            $tabs->push('dashboard');
-        }
-
-        if ($this->can('operations.capture') || $this->can('operations.manage')) {
-            $tabs->push('captura');
-        }
-
-        if ($this->can('operations.manage')) {
-            $tabs->push('ajustes');
-            $tabs->push('madre');
-        }
-
-        return $tabs->unique()->values();
+        return collect(array_keys(config('access.indicador_tabs', [])))
+            ->filter(fn (string $key) => $allowed->contains($key))
+            ->values();
     }
 
     public function canAccessIndicadorTab(string $tab): bool
@@ -240,7 +234,7 @@ class User extends Authenticatable
             'dashboard' => route('indicadores.dashboard'),
             'captura' => route('indicadores.index'),
             'ajustes' => route('indicadores.admin.ajustes'),
-            'madre' => route('indicadores.admin.mother.index'),
+            'consolidado' => route('indicadores.admin.consolidado.index'),
             default => route('dashboard', ['module' => 'operaciones']),
         };
     }

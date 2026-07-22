@@ -57,19 +57,19 @@ return [
 
     'boards' => [
         'dashboard' => 'Dashboard',
-        'requisiciones' => 'Requisiciones',
-        'suministros' => 'Suministros',
-        'documentos' => 'Documentos',
         'indicadores' => 'Indicadores',
+        'requisiciones' => 'Requisiciones',             
         'matriz_clientes' => 'Clientes',
         'servicios_comerciales' => 'Servicios',
+        'suministros' => 'Suministros', 
+        'documentos' => 'Documentos',
     ],
 
     'indicador_tabs' => [
         'dashboard' => 'Dashboard',
         'captura' => 'Captura',
-        'ajustes' => 'Ajustes',
-        'madre' => 'Consolidado',
+        'consolidado' => 'Consolidado',
+        'ajustes' => 'Ajustes',     
     ],
 
     'requisition_tabs' => [

@@ -478,10 +478,10 @@
 .indicadores-table--capture th:nth-child(4),
 .indicadores-table--capture td:nth-child(4) { width: 8rem; }
 
-.indicadores-table--mother th:nth-child(1),
-.indicadores-table--mother td:nth-child(1) { width: 7rem; }
-.indicadores-table--mother th:nth-child(3),
-.indicadores-table--mother td:nth-child(3) { width: 10rem; }
+.indicadores-table--consolidado th:nth-child(1),
+.indicadores-table--consolidado td:nth-child(1) { width: 7rem; }
+.indicadores-table--consolidado th:nth-child(3),
+.indicadores-table--consolidado td:nth-child(3) { width: 10rem; }
 
 .indicadores-table--periods th:nth-child(1),
 .indicadores-table--periods td:nth-child(1) { width: 10rem; }

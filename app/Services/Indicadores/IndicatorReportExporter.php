@@ -73,18 +73,18 @@ class IndicatorReportExporter
         return $this->streamDownload($spreadsheet, $filename);
     }
 
-    public function motherExcelResponse(array $report): StreamedResponse
+    public function consolidadoExcelResponse(array $report): StreamedResponse
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('MADRE');
+        $sheet->setTitle('Consolidado');
 
         $indicator = $report['indicator'];
         $year = $report['year'];
         $month = $report['month'];
         $monthly = $report['monthly'];
 
-        $this->writeHeaderBlock($sheet, 'Consolidado MADRE', [
+        $this->writeHeaderBlock($sheet, 'Consolidado', [
             'Indicador' => $indicator->code.' - '.$indicator->name,
             'Periodo' => sprintf('%d-%02d', $year, $month),
         ]);
@@ -121,7 +121,7 @@ class IndicatorReportExporter
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        $filename = sprintf('madre-%s-%d-%02d.xlsx', $indicator->code, $year, $month);
+        $filename = sprintf('consolidado-%s-%d-%02d.xlsx', $indicator->code, $year, $month);
 
         return $this->streamDownload($spreadsheet, $filename);
     }

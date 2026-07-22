@@ -14,7 +14,7 @@ use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureService;
-use App\Services\Indicadores\IndicatorMotherService;
+use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
 use App\Services\Indicadores\YearRangeService;
 use App\Support\IndicadorNavigation;
@@ -29,7 +29,7 @@ class IndicadorController extends Controller
 {
     public function __construct(
         private readonly OperationsDashboardService $dashboardService,
-        private readonly IndicatorMotherService $motherService,
+        private readonly IndicatorConsolidadoService $consolidadoService,
         private readonly AuditLogService $auditLogService,
         private readonly YearRangeService $yearRangeService,
         private readonly IndicatorReportExporter $reportExporter,
@@ -319,36 +319,36 @@ class IndicadorController extends Controller
         return back()->with('status', 'Pesos actualizados.');
     }
 
-    public function mother(): View
+    public function consolidado(): View
     {
         $indicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
 
-        return view('areas.operaciones.madre.index', [
+        return view('areas.operaciones.consolidado.index', [
             'subTabs' => IndicadorNavigation::subTabs(),
             'indicators' => $indicators,
         ]);
     }
 
-    public function motherShow(Request $request, Indicator $indicator): View
+    public function consolidadoShow(Request $request, Indicator $indicator): View
     {
         abort_unless($indicator->is_active, 404);
 
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
 
-        $monthly = $this->motherService->getMonthlyData($indicator, $year, $month);
+        $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month);
         $quarterly = $indicator->code === 'FT-OP-08'
-            ? $this->motherService->getQuarterlyDataFtOp08($year)
+            ? $this->consolidadoService->getQuarterlyDataFtOp08($year)
             : null;
 
         $this->auditLogService->logEvent(
             eventType: 'admin_action',
-            action: 'mother_view',
-            reason: 'Consulta consolidado MADRE',
+            action: 'consolidado_view',
+            reason: 'Consulta consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]
         );
 
-        return view('areas.operaciones.madre.show', [
+        return view('areas.operaciones.consolidado.show', [
             'subTabs' => IndicadorNavigation::subTabs(),
             'indicator' => $indicator,
             'year' => $year,
@@ -474,36 +474,36 @@ class IndicadorController extends Controller
         ));
     }
 
-    public function exportMotherExcel(Request $request, Indicator $indicator)
+    public function exportConsolidadoExcel(Request $request, Indicator $indicator)
     {
         abort_unless($indicator->is_active, 404);
-        $report = $this->buildMotherReport($request, $indicator);
+        $report = $this->buildConsolidadoReport($request, $indicator);
 
         $this->auditLogService->logEvent(
             eventType: 'export',
-            action: 'mother_excel',
-            reason: 'Exporte Excel consolidado MADRE',
+            action: 'consolidado_excel',
+            reason: 'Exporte Excel consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
-        return $this->reportExporter->motherExcelResponse($report);
+        return $this->reportExporter->consolidadoExcelResponse($report);
     }
 
-    public function exportMotherPdf(Request $request, Indicator $indicator)
+    public function exportConsolidadoPdf(Request $request, Indicator $indicator)
     {
         abort_unless($indicator->is_active, 404);
-        $report = $this->buildMotherReport($request, $indicator);
+        $report = $this->buildConsolidadoReport($request, $indicator);
 
         $this->auditLogService->logEvent(
             eventType: 'export',
-            action: 'mother_pdf',
-            reason: 'Exporte PDF consolidado MADRE',
+            action: 'consolidado_pdf',
+            reason: 'Exporte PDF consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
-        $pdf = Pdf::loadView('areas.operaciones.exports.mother-pdf', $report)->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('areas.operaciones.exports.consolidado-pdf', $report)->setPaper('a4', 'landscape');
 
-        return $pdf->download(sprintf('madre-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
+        return $pdf->download(sprintf('consolidado-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
     }
 
     /**
@@ -540,7 +540,7 @@ class IndicadorController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function buildMotherReport(Request $request, Indicator $indicator): array
+    private function buildConsolidadoReport(Request $request, Indicator $indicator): array
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
@@ -549,7 +549,7 @@ class IndicadorController extends Controller
             'indicator' => $indicator,
             'year' => $year,
             'month' => $month,
-            'monthly' => $this->motherService->getMonthlyData($indicator, $year, $month),
+            'monthly' => $this->consolidadoService->getMonthlyData($indicator, $year, $month),
         ];
     }
 

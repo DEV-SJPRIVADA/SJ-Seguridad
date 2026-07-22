@@ -24,7 +24,7 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 - Modulo de requisiciones de personal con dashboard, solicitud, seguimiento, gestion y parametros
 - Modulo compartido de suministros con flujo solicitante, aprobacion Calidad, insumos aprobados y catalogo
 - Modulo de documentos de Calidad con publicacion de archivos/enlaces y biblioteca por area
-- Indicadores de Operaciones (captura, dashboard, ajustes, MADRE, exportaciones)
+- Indicadores de Operaciones (captura, dashboard, ajustes, consolidado, exportaciones)
 - Matriz comercial (dashboard, clientes, servicios)
 
 ## Inicio rapido local

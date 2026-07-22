@@ -68,10 +68,17 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 
 ### Importacion masiva (soporte TI)
 
-La carga inicial desde Excel MT-CO-01 la ejecuta soporte con comando de consola; no es una accion de usuario final en pantalla.
+La carga desde Excel MT-CO-01 la ejecuta soporte con comando de consola y una copia del archivo **fuera del repositorio**:
+
+```powershell
+php artisan comercial:import-mt-co-01 "C:\ruta\MT-CO-01 Matriz de clientes.xlsx"
+```
+
+No es una accion de usuario final en pantalla.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
+| 1.1 | 2026-07-22 | Documentacion | Excel MT-CO-01 fuera del repo; import con ruta explicita |

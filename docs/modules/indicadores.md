@@ -1,6 +1,6 @@
 # Modulo Indicadores (Operaciones)
 
-Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, consolidado (MADRE), ajustes y auditoria.
+Board **Indicadores** exclusivo del area `operaciones`. Integra captura KPI FT-OP-01…09 por usuario autenticado, dashboards, consolidado, ajustes y auditoria.
 
 ## Rutas
 
@@ -12,10 +12,10 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 | Captura | `operations.capture` o `operations.manage` |
 | Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
 | Ajustes (periodos, pesos, auditoria) | `operations.manage` |
-| Consolidado (MADRE) | `operations.manage` |
+| Consolidado | `operations.manage` |
 | Export PDF/Excel | `operations.export` |
 
-Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, ajustes, madre (Consolidado). Sin pestañas de jefes ni documentos internos.
+Tabs de navegacion (`config/access.php` → `indicador_tabs`): dashboard, captura, consolidado, ajustes. El orden en config define el orden de subtabs via `App\Support\IndicadorNavigation`. Sin pestañas de jefes ni documentos internos.
 
 La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones internas via query `?section=`:
 
@@ -63,7 +63,7 @@ Los tableros usan la clase contenedora `indicadores-board` para tablas compactas
 
 El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
 
-MADRE consolida capturas de usuarios con permiso `operations.capture` o `operations.manage`.
+El consolidado agrega capturas de usuarios con permiso `operations.capture` o `operations.manage`.
 
 ## Exportaciones
 
@@ -74,8 +74,8 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 | `indicadores.export.dashboard.pdf` | PDF dashboard ejecutivo |
 | `indicadores.export.leader.excel` | Excel captura por usuario (`user_id`, `year`, `month`; default auth) |
 | `indicadores.export.leader.pdf` | PDF captura por usuario |
-| `indicadores.export.mother.excel` | Excel consolidado MADRE |
-| `indicadores.export.mother.pdf` | PDF consolidado MADRE |
+| `indicadores.export.consolidado.excel` | Excel consolidado |
+| `indicadores.export.consolidado.pdf` | PDF consolidado |
 
 Requiere permiso `operations.export`.
 

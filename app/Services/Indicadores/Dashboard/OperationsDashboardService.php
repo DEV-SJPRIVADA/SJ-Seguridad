@@ -7,12 +7,12 @@ use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
-use App\Services\Indicadores\IndicatorMotherService;
+use App\Services\Indicadores\IndicatorConsolidadoService;
 use Illuminate\Support\Collection;
 
 class OperationsDashboardService
 {
-    public function __construct(private readonly IndicatorMotherService $motherService)
+    public function __construct(private readonly IndicatorConsolidadoService $consolidadoService)
     {
     }
 
@@ -32,7 +32,7 @@ class OperationsDashboardService
         $criticalRows = [];
 
         foreach ($indicators as $indicator) {
-            $monthly = $this->motherService->getMonthlyData($indicator, $year, $month, $users);
+            $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month, $users);
             $result = $this->resultForIndicator($indicator, $monthly['consolidated']);
             $normalized = $this->normalizeIndicator($indicator, $monthly['consolidated'], $result);
             $weight = (float) ($weights[$indicator->id]->weight ?? 0);
@@ -50,7 +50,7 @@ class OperationsDashboardService
                 'meta' => $this->metaLabel($indicator),
                 'semaforo' => $this->semaforoByNormalized($normalized),
                 'has_improvements' => $hasImprovements,
-                'mother_url' => route('indicadores.admin.mother.show', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]),
+                'consolidado_url' => route('indicadores.admin.consolidado.show', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]),
                 'normalized' => $normalized,
                 'weight' => $weight,
                 'zones_red' => $zonesRed,
@@ -64,7 +64,7 @@ class OperationsDashboardService
                 'zones_red' => $zonesRed,
                 'deviation' => $deviation,
                 'criticality' => $criticality,
-                'mother_url' => route('indicadores.admin.mother.show', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]),
+                'consolidado_url' => route('indicadores.admin.consolidado.show', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]),
             ];
         }
 
