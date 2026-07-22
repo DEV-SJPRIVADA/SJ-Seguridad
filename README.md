@@ -72,6 +72,8 @@ El usuario administrador inicial queda con rol `super-admin`, activo y sin cambi
 
 La documentacion viva del sistema se mantiene en [`docs/INDEX.md`](c:/laragon/www/SJSEGURIDAD/docs/INDEX.md).
 
+**Features y modulos nuevos** usan el workflow multi-agente (chat maestro + Orquestador). Ver [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md) y [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md). Consultas y fixes pequenos van por carril rapido sin ese flujo.
+
 Documentos principales:
 
 - [`docs/PROJECT_CONTEXT.md`](c:/laragon/www/SJSEGURIDAD/docs/PROJECT_CONTEXT.md)
@@ -79,6 +81,8 @@ Documentos principales:
 - [`docs/ACCESS_CONTROL.md`](c:/laragon/www/SJSEGURIDAD/docs/ACCESS_CONTROL.md)
 - [`docs/LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md)
 - [`docs/PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
+- [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md)
+- [`docs/user/`](docs/user/) — guias de usuario por modulo
 - [`docs/modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
 - [`docs/modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`docs/modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)

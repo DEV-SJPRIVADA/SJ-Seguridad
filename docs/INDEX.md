@@ -5,11 +5,33 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 ## Orden recomendado de lectura
 
 1. [`PROJECT_CONTEXT.md`](c:/laragon/www/SJSEGURIDAD/docs/PROJECT_CONTEXT.md)
-2. [`ARCHITECTURE.md`](c:/laragon/www/SJSEGURIDAD/docs/ARCHITECTURE.md)
-3. [`ACCESS_CONTROL.md`](c:/laragon/www/SJSEGURIDAD/docs/ACCESS_CONTROL.md)
-4. [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md)
-5. [`PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
-6. Modulos en [`docs/modules`](c:/laragon/www/SJSEGURIDAD/docs/modules)
+2. [`AGENT_WORKFLOW.md`](c:/laragon/www/SJSEGURIDAD/docs/AGENT_WORKFLOW.md) — workflow multi-agente e IAs
+3. [`ARCHITECTURE.md`](c:/laragon/www/SJSEGURIDAD/docs/ARCHITECTURE.md)
+4. [`ACCESS_CONTROL.md`](c:/laragon/www/SJSEGURIDAD/docs/ACCESS_CONTROL.md)
+5. [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md)
+6. [`PROCEDURES.md`](c:/laragon/www/SJSEGURIDAD/docs/PROCEDURES.md)
+7. Modulos en [`docs/modules`](c:/laragon/www/SJSEGURIDAD/docs/modules)
+8. Guias de usuario en [`docs/user`](c:/laragon/www/SJSEGURIDAD/docs/user)
+
+## Workflow multi-agente
+
+- Flujo y roles: [`AGENT_WORKFLOW.md`](c:/laragon/www/SJSEGURIDAD/docs/AGENT_WORKFLOW.md)
+- Tablero de tareas: [`TASKS.md`](c:/laragon/www/SJSEGURIDAD/docs/TASKS.md)
+- Prompts: [`docs/agents/prompts/`](c:/laragon/www/SJSEGURIDAD/docs/agents/prompts/)
+- Plantillas: [`docs/templates/`](c:/laragon/www/SJSEGURIDAD/docs/templates/)
+- Feature briefs: [`docs/briefs/`](c:/laragon/www/SJSEGURIDAD/docs/briefs/)
+- Review reports: [`docs/reviews/`](c:/laragon/www/SJSEGURIDAD/docs/reviews/)
+
+## Documentacion de usuario
+
+Guias operativas por modulo en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Par tecnico / usuario:
+
+| Modulo | Doc tecnica | Doc usuario |
+| --- | --- | --- |
+| Admin usuarios | [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md) | [`user/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/user/admin-users.md) |
+| Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | pendiente |
+| Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | pendiente |
+| Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | pendiente |
 
 ## Modulos documentados
 

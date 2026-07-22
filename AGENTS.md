@@ -12,7 +12,7 @@
 - Cuando se agregue una nueva area del negocio, actualizar `config/access.php`, seeders, permisos, navegacion y pruebas relacionadas.
 - Toda modificacion funcional debe actualizar la documentacion viva en `docs/` dentro de la misma entrega.
 - La documentacion debe permitir que cualquier IA entienda el proyecto, sus modulos, sus dependencias, sus permisos y su estado actual sin depender del historial de chat.
-- Si el cambio afecta un modulo existente, actualizar su archivo en `docs/modules/`. Si crea un modulo nuevo, crear su documento correspondiente.
+- Si el cambio afecta un modulo existente, actualizar su archivo en `docs/modules/` y, si aplica visible al usuario, en `docs/user/`. Si crea un modulo nuevo, crear ambos documentos correspondientes.
 
 ## Seguridad obligatoria
 - No habilitar registro publico salvo instruccion expresa del usuario.
@@ -52,3 +52,11 @@
 - Verificar pruebas de seguridad y acceso al tocar autenticacion, usuarios o permisos.
 - Si un cambio afecta varias capas, documentarlo en el cierre del trabajo.
 - Verificar en cada cierre que `README.md`, `docs/INDEX.md` y el documento del modulo afectado sigan alineados con el codigo real.
+
+## Trabajo con agentes
+- Workflow multi-agente: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
+- **Feature o modulo nuevo:** flujo completo (Analista → Arquitecto → Orquestador → Feature → Revisor → Documentador). Modo recomendado: chat maestro en Agent mode con [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md).
+- **Consulta o fix pequeno:** carril rapido (Ask/Agent directo); no exige Feature Brief ni entrada en `docs/TASKS.md`. Ver [`docs/agents/prompts/fast-lane.md`](docs/agents/prompts/fast-lane.md).
+- Un Agente Feature = un modulo + Feature Brief + Task Card. No editar archivos compartidos (`config/access.php`, `routes/web.php`, layouts) sin flag `shared-files` en `docs/TASKS.md`.
+- Cierre de feature: doc tecnica en `docs/modules/{modulo}.md` y doc usuario en `docs/user/{modulo}.md` (Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios), generadas por el Documentador.
+- El Orquestador es dueno de `docs/TASKS.md` en features nuevas.

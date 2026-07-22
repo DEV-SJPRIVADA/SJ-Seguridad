@@ -1,0 +1,21 @@
+---
+description: Ownership por modulo — respetar scope al editar rutas y vistas
+alwaysApply: false
+---
+
+# Ownership por modulo
+
+Antes de editar, confirmar modulo y archivos permitidos en Task Card o Feature Brief.
+
+| Modulo | Rutas exclusivas | Vistas |
+| --- | --- | --- |
+| requisitions | `routes/modules/requisitions.php` | `resources/views/modules/requisitions/` |
+| supplies | `routes/modules/supplies.php` | `resources/views/modules/suministros/` |
+| quality-documents | `routes/modules/quality-documents.php` | `resources/views/modules/quality-documents/` |
+| operaciones | `routes/areas/operaciones.php` | `resources/views/areas/operaciones/` |
+| comercial | `routes/areas/comercial.php` | `resources/views/areas/comercial/` |
+| admin-users | `routes/web.php` (grupo admin) | `resources/views/admin/` |
+
+Tabla completa: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
+
+No mezclar cambios de modulos distintos en una sola tarea sin Orquestador.

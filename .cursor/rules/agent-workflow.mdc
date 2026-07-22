@@ -1,0 +1,29 @@
+---
+description: Resumen workflow multi-agente — roles, modos y carril rapido
+alwaysApply: true
+---
+
+# Workflow multi-agente
+
+Documentacion completa: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
+
+## Roles
+
+Analista → Arquitecto → Orquestador → Agente Feature → Revisor → Documentador
+
+- **Vertical slice** por modulo; no dividir Backend/Frontend/BD.
+- **Orquestador** no codea; lanza Task en secuencia (modo orquestado).
+- **Documentador** produce doc tecnica + doc usuario.
+
+## Modos
+
+| Situacion | Accion |
+| --- | --- |
+| Feature / modulo nuevo | Agent mode + `docs/agents/prompts/start-feature.md` |
+| Consulta | Ask mode o `fast-lane.md` |
+| Fix pequeno (1–3 archivos, sin permisos/migraciones) | Agent mode + alcance explicito |
+
+## Reglas
+
+- Sin Feature Brief + Task Card + ID en `docs/TASKS.md` → no implementar feature.
+- Un agente por modulo a la vez; cuidado con shared-files (`config/access.php`, `web.php`).

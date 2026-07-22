@@ -74,3 +74,19 @@
 - La gestion inicial de usuarios vive aislada en `admin/users`.
 - La navegacion de modulos y tableros autorizados se resuelve desde configuracion central y se comparte al layout base.
 - El crecimiento por areas debe mantener rutas, permisos, vistas y validaciones desacopladas.
+
+## Ownership por modulo
+
+Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Workflow: [`AGENT_WORKFLOW.md`](c:/laragon/www/SJSEGURIDAD/docs/AGENT_WORKFLOW.md).
+
+| Modulo / area | Rutas | Controladores | Vistas | Doc tecnica | Doc usuario |
+| --- | --- | --- | --- | --- | --- |
+| requisitions | `routes/modules/requisitions.php` | `RequisitionController`, catalogos | `resources/views/modules/requisitions/` | `docs/modules/requisitions.md` | pendiente |
+| supplies | `routes/modules/supplies.php` | `Supply*Controller` | `resources/views/modules/suministros/` | `docs/modules/suministros.md` | pendiente |
+| quality-documents | `routes/modules/quality-documents.php` | `QualityDocument*` | `resources/views/modules/quality-documents/` | `docs/modules/quality-documents.md` | pendiente |
+| operaciones | `routes/areas/operaciones.php` | `App\Http\Controllers\Operaciones\` | `resources/views/areas/operaciones/` | `docs/modules/indicadores.md` (parcial) | pendiente |
+| comercial | `routes/areas/comercial.php` | `App\Http\Controllers\Comercial\` | `resources/views/areas/comercial/` | `docs/modules/matriz-clientes.md` | pendiente |
+| admin-users | `routes/web.php` (grupo admin) | `Admin\UserController` | `resources/views/admin/` | `docs/modules/admin-users.md` | `docs/user/admin-users.md` |
+| branding | — | — | layouts, components | `docs/modules/branding.md` | — |
+
+Archivos compartidos (un solo agente por tarea): `config/access.php`, `routes/web.php` (require), layouts, `resources/css/app.css`, seeders globales.
