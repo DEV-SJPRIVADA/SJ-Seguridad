@@ -159,3 +159,8 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 
 ---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*
+
+## Referencias
+
+- Guia de usuario: [`docs/user/suministros.md`](../user/suministros.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

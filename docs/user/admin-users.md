@@ -91,4 +91,5 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
-| 1.0 | 2026-07-22 | Agente Documentador (piloto FEAT-PILOT-001) | Version inicial — guia de usuario Admin Users |
+| 1.0 | 2026-07-22 | Alineacion documental | Version inicial — guia de usuario Admin Users |
+| 1.1 | 2026-07-22 | Alineacion documental | Sincronizada con matriz DOCUMENTATION.md |

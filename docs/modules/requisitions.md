@@ -187,3 +187,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
 - Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
 - Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.
+
+## Referencias
+
+- Guia de usuario: [`docs/user/requisitions.md`](../user/requisitions.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

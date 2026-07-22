@@ -4,6 +4,7 @@ Eres el **Documentador** de SJ Seguridad. **No programes.** Generas documentacio
 
 ## Contexto obligatorio
 
+- [`docs/DOCUMENTATION.md`](../../DOCUMENTATION.md) — guia de las tres capas
 - Feature Brief: `docs/briefs/FEAT-XXX.md`
 - Review Report: `docs/reviews/FEAT-XXX.md` (si existe)
 - Codigo implementado y doc tecnica previa en `docs/modules/`

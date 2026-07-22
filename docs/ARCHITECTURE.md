@@ -81,11 +81,11 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 
 | Modulo / area | Rutas | Controladores | Vistas | Doc tecnica | Doc usuario |
 | --- | --- | --- | --- | --- | --- |
-| requisitions | `routes/modules/requisitions.php` | `RequisitionController`, catalogos | `resources/views/modules/requisitions/` | `docs/modules/requisitions.md` | pendiente |
-| supplies | `routes/modules/supplies.php` | `Supply*Controller` | `resources/views/modules/suministros/` | `docs/modules/suministros.md` | pendiente |
-| quality-documents | `routes/modules/quality-documents.php` | `QualityDocument*` | `resources/views/modules/quality-documents/` | `docs/modules/quality-documents.md` | pendiente |
-| operaciones | `routes/areas/operaciones.php` | `App\Http\Controllers\Operaciones\` | `resources/views/areas/operaciones/` | `docs/modules/indicadores.md` (parcial) | pendiente |
-| comercial | `routes/areas/comercial.php` | `App\Http\Controllers\Comercial\` | `resources/views/areas/comercial/` | `docs/modules/matriz-clientes.md` | pendiente |
+| requisitions | `routes/modules/requisitions.php` | `RequisitionController`, catalogos | `resources/views/modules/requisitions/` | `docs/modules/requisitions.md` | `docs/user/requisitions.md` |
+| supplies | `routes/modules/supplies.php` | `Supply*Controller` | `resources/views/modules/suministros/` | `docs/modules/suministros.md` | `docs/user/suministros.md` |
+| quality-documents | `routes/modules/quality-documents.php` | `QualityDocument*` | `resources/views/modules/quality-documents/` | `docs/modules/quality-documents.md` | `docs/user/quality-documents.md` |
+| operaciones / indicadores | `routes/areas/operaciones.php` | `Operaciones\IndicadorController` | `resources/views/areas/operaciones/` | `docs/modules/indicadores.md` | `docs/user/indicadores.md` |
+| comercial | `routes/areas/comercial.php` | `Comercial\*Controller` | `resources/views/areas/comercial/` | `docs/modules/matriz-clientes.md` | `docs/user/matriz-clientes.md` |
 | admin-users | `routes/web.php` (grupo admin) | `Admin\UserController` | `resources/views/admin/` | `docs/modules/admin-users.md` | `docs/user/admin-users.md` |
 | branding | — | — | layouts, components | `docs/modules/branding.md` | — |
 

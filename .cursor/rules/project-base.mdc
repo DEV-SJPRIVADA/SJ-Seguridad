@@ -16,6 +16,7 @@ Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
 
 ## Documentacion doble (features completas)
 
+- Guia maestra: [`docs/DOCUMENTATION.md`](../../docs/DOCUMENTATION.md)
 - Tecnica: `docs/modules/{modulo}.md`
 - Usuario: `docs/user/{modulo}.md` (Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios)
 

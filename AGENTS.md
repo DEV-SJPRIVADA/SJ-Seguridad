@@ -54,6 +54,7 @@
 - Verificar en cada cierre que `README.md`, `docs/INDEX.md` y el documento del modulo afectado sigan alineados con el codigo real.
 
 ## Trabajo con agentes
+- Guia de documentacion (IA, desarrollador, usuario): [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md).
 - Workflow multi-agente: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 - **Feature o modulo nuevo:** flujo completo (Analista → Arquitecto → Orquestador → Feature → Revisor → Documentador). Modo recomendado: chat maestro en Agent mode con [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md).
 - **Consulta o fix pequeno:** carril rapido (Ask/Agent directo); no exige Feature Brief ni entrada en `docs/TASKS.md`. Ver [`docs/agents/prompts/fast-lane.md`](docs/agents/prompts/fast-lane.md).

@@ -88,3 +88,8 @@ php artisan db:seed --class=DashboardWeightSeeder
 ```
 
 (Tambien incluidos en `DatabaseSeeder`.)
+
+## Referencias
+
+- Guia de usuario: [`docs/user/indicadores.md`](../user/indicadores.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

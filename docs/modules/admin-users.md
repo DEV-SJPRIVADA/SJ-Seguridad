@@ -46,4 +46,9 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Tablero `view.board.gestion_humana.suministros` migrado a `view.board.compras.suministros`
 - Suministros: aprobacion = Calidad; catalogo = Compras
 - El motor Spatie no cambia; solo la presentacion en Admin
+
+## Referencias
+
+- Guia de usuario: [`docs/user/admin-users.md`](../user/admin-users.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)
 - Gestión/Parametros de requisiciones se asignan en transversales; tablero GH en **Activa visualizacion de otras areas → Gestion humana**

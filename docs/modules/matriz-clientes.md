@@ -101,3 +101,8 @@ Al crear o editar una requisicion de personal, el cliente se elige desde esta ma
 ## Fuente documental
 
 Excel de referencia: [`docs/MT-CO-01 Matriz de clientes.xlsx`](../MT-CO-01%20Matriz%20de%20clientes.xlsx).
+
+## Referencias
+
+- Guia de usuario: [`docs/user/matriz-clientes.md`](../user/matriz-clientes.md)
+- Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

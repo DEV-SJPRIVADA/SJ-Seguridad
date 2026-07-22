@@ -113,9 +113,13 @@ Ver [`docs/agents/prompts/fast-lane.md`](c:/laragon/www/SJSEGURIDAD/docs/agents/
 
 ## Convencion doble documentacion
 
+Ver guia completa en [`docs/DOCUMENTATION.md`](c:/laragon/www/SJSEGURIDAD/docs/DOCUMENTATION.md).
+
 | Tipo | Ubicacion | Audiencia | Plantilla |
 | --- | --- | --- | --- |
 | Tecnica | `docs/modules/<modulo>.md` | IAs y desarrolladores | `docs/templates/TECHNICAL_MODULE_DOC.md` |
 | Usuario | `docs/user/<modulo>.md` | Usuarios finales, capacitacion | `docs/templates/USER_MODULE_DOC.md` |
 
 Orden obligatorio doc usuario: Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios.
+
+Matriz de modulos documentados: [`docs/DOCUMENTATION.md#matriz-modulo-tecnico--usuario`](c:/laragon/www/SJSEGURIDAD/docs/DOCUMENTATION.md).
