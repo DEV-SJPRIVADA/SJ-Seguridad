@@ -21,9 +21,14 @@
                             <p class="panel-text">Consolidado mensual de indicadores FT-OP por usuario.</p>
                         </div>
                         @can('operations.export')
-                            <a href="{{ route('indicadores.export.dashboard.pdf', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
-                                Exportar PDF
-                            </a>
+                            <div class="indicadores-filter-bar" style="margin:0;">
+                                <a href="{{ route('indicadores.export.dashboard.pdf', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
+                                    Exportar PDF
+                                </a>
+                                <a href="{{ route('indicadores.export.management.pptx', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
+                                    Informe PPTX
+                                </a>
+                            </div>
                         @endcan
                     </div>
                 </div>

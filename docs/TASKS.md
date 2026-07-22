@@ -26,6 +26,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Fecha cierre |
 | --- | --- | --- | --- | --- |
+| FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | 2026-07-22 |
 | FEAT-PILOT-001 | Doc usuario admin-users (piloto workflow) | orquestado | Si | 2026-07-22 |
 | DOC-ALIGN-001 | Alineacion documentacion IA/dev/usuario (7 modulos) | manual | Si | 2026-07-22 |
 

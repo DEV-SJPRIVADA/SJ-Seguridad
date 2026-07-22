@@ -16,6 +16,8 @@ use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
+use App\Services\Indicadores\ManagementReport\ManagementReportDataBuilder;
+use App\Services\Indicadores\ManagementReport\ManagementReportPptxExporter;
 use App\Services\Indicadores\YearRangeService;
 use App\Support\IndicadorNavigation;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -34,6 +36,8 @@ class IndicadorController extends Controller
         private readonly YearRangeService $yearRangeService,
         private readonly IndicatorReportExporter $reportExporter,
         private readonly IndicatorCaptureService $captureService,
+        private readonly ManagementReportDataBuilder $managementReportDataBuilder,
+        private readonly ManagementReportPptxExporter $managementReportPptxExporter,
     ) {
     }
 
@@ -424,6 +428,22 @@ class IndicadorController extends Controller
             ->setPaper('a4', 'landscape');
 
         return $pdf->download('dashboard-ejecutivo-'.$year.'-'.$month.'.pdf');
+    }
+
+    public function exportManagementPptx(Request $request)
+    {
+        $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
+        $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
+        $report = $this->managementReportDataBuilder->build($year, $month);
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_pptx',
+            reason: 'Exporte informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return $this->managementReportPptxExporter->downloadResponse($report);
     }
 
     public function exportLeaderExcel(Request $request, Indicator $indicator)
