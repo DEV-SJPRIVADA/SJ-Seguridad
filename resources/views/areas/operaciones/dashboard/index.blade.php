@@ -119,8 +119,9 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Usuario</th>
-                                            <th>Score</th>
-                                            <th>En rojo</th>
+                                            <th>Indicadores gestionados</th>
+                                            <th>% gestionado</th>
+                                            <th>Mejoras ingresadas</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -128,11 +129,12 @@
                                             <tr>
                                                 <td>{{ $index + 1 }}</td>
                                                 <td>{{ $row['user']->name }}</td>
-                                                <td>{{ number_format($row['score'], 2) }}%</td>
-                                                <td>{{ $row['red_count'] }}</td>
+                                                <td>{{ $row['indicators_managed'] }}</td>
+                                                <td>{{ $row['management_percentage'] }}%</td>
+                                                <td>{{ $row['improvements_count'] }}</td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="4">No hay usuarios de captura registrados.</td></tr>
+                                            <tr><td colspan="5">No hay usuarios con capturas registradas en este periodo.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>

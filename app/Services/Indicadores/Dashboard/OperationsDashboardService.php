@@ -65,7 +65,7 @@ class OperationsDashboardService
 
         $globalScore = round($weightedAccumulator, 2);
 
-        $zoneRanking = $this->zoneRanking($year, $month, $indicators, $weights, $users);
+        $zoneRanking = $this->zoneRanking($year, $month, $indicators, $users);
         $criticalIndicators = $this->buildCriticalIndicators($year, $month, $indicators, $users);
         $trends = $withTrends ? $this->trends($year, $month) : ['months' => [], 'global' => [], 'indicators' => []];
 
@@ -117,42 +117,52 @@ class OperationsDashboardService
         return $this->captureAccessService->capturableUsers();
     }
 
-    private function zoneRanking(int $year, int $month, Collection $indicators, Collection $weights, Collection $users): array
+    private function zoneRanking(int $year, int $month, Collection $indicators, Collection $users): array
     {
         $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
         if (! $period) {
-            return $users->map(fn (User $user) => ['user' => $user, 'score' => 0.0, 'red_count' => 0])->all();
+            return [];
         }
 
         $captures = IndicatorCapture::query()
+            ->with(['user', 'improvement'])
             ->where('period_id', $period->id)
             ->whereIn('indicator_id', $indicators->pluck('id'))
             ->whereIn('user_id', $users->pluck('id'))
-            ->get()
-            ->keyBy(fn (IndicatorCapture $capture) => $capture->indicator_id.'-'.$capture->user_id);
+            ->get();
 
         $ranking = [];
-        foreach ($users as $user) {
-            $score = 0.0;
-            $red = 0;
-            foreach ($indicators as $indicator) {
-                /** @var IndicatorCapture|null $capture */
-                $capture = $captures->get($indicator->id.'-'.$user->id);
-                if (! $capture) {
-                    continue;
-                }
+        $totalIndicators = $indicators->count();
 
-                $normalized = $this->normalizeCapture($indicator, $capture);
-                $weight = (float) ($weights[$indicator->id]->weight ?? 0);
-                $score += ($normalized * $weight) / 100;
-                if (! $capture->complies) {
-                    $red++;
-                }
+        foreach ($captures->groupBy('user_id') as $userCaptures) {
+            /** @var IndicatorCapture $firstCapture */
+            $firstCapture = $userCaptures->first();
+            $user = $firstCapture->user;
+            if (! $user) {
+                continue;
             }
-            $ranking[] = ['user' => $user, 'score' => round($score, 2), 'red_count' => $red];
+
+            $indicatorsManaged = $userCaptures->count();
+            $managementPercentage = $totalIndicators > 0
+                ? round(($indicatorsManaged / $totalIndicators) * 100)
+                : 0;
+
+            $ranking[] = [
+                'user' => $user,
+                'indicators_managed' => $indicatorsManaged,
+                'management_percentage' => $managementPercentage,
+                'improvements_count' => $userCaptures->filter(fn (IndicatorCapture $capture) => $capture->improvement !== null)->count(),
+            ];
         }
 
-        return collect($ranking)->sortByDesc('score')->values()->all();
+        return collect($ranking)
+            ->sortBy([
+                fn (array $row) => -$row['indicators_managed'],
+                fn (array $row) => -$row['improvements_count'],
+                fn (array $row) => $row['user']->name,
+            ])
+            ->values()
+            ->all();
     }
 
     private function trends(int $year, int $month): array

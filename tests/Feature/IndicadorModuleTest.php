@@ -405,6 +405,135 @@ class IndicadorModuleTest extends TestCase
         $this->assertFalse($calculator->isCriticalResult($indicator, 0.0));
     }
 
+    public function test_dashboard_user_ranking_lists_captures_only(): void
+    {
+        $year = (int) config('indicators.base_year', now()->year);
+        $month = 7;
+        $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
+
+        $leaderA = User::factory()->create([
+            'name' => 'Ranking Alpha',
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $leaderA->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $leaderB = User::factory()->create([
+            'name' => 'Ranking Beta',
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $leaderB->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $inactiveCapturer = User::factory()->create([
+            'name' => 'Sin Capturas Mes',
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $inactiveCapturer->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $indicatorOne = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicatorTwo = \App\Models\Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
+
+        $captureAOne = \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicatorOne->id,
+                'user_id' => $leaderA->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_personal' => 100, 'personal_capacitado' => 90],
+                'numerator' => 90,
+                'denominator' => 100,
+                'result_percentage' => 90,
+                'complies' => true,
+                'created_by_user_id' => $leaderA->id,
+                'updated_by_user_id' => $leaderA->id,
+            ]
+        );
+
+        \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicatorTwo->id,
+                'user_id' => $leaderA->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_servicios' => 100, 'no_conformes' => 5],
+                'numerator' => 5,
+                'denominator' => 100,
+                'result_percentage' => 5,
+                'complies' => true,
+                'created_by_user_id' => $leaderA->id,
+                'updated_by_user_id' => $leaderA->id,
+            ]
+        );
+
+        $captureBOne = \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicatorOne->id,
+                'user_id' => $leaderB->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_personal' => 100, 'personal_capacitado' => 80],
+                'numerator' => 80,
+                'denominator' => 100,
+                'result_percentage' => 80,
+                'complies' => true,
+                'created_by_user_id' => $leaderB->id,
+                'updated_by_user_id' => $leaderB->id,
+            ]
+        );
+
+        \App\Models\Improvement::query()->create([
+            'indicator_capture_id' => $captureAOne->id,
+            'indicator_id' => $indicatorOne->id,
+            'user_id' => $leaderA->id,
+            'period_id' => $period->id,
+            'analysis' => 'Analisis alpha',
+            'action_taken' => 'Accion alpha',
+            'action_defined' => 'Plan alpha',
+            'integrated_analysis_block' => 'Bloque alpha',
+            'created_by_user_id' => $leaderA->id,
+        ]);
+
+        \App\Models\Improvement::query()->create([
+            'indicator_capture_id' => $captureBOne->id,
+            'indicator_id' => $indicatorOne->id,
+            'user_id' => $leaderB->id,
+            'period_id' => $period->id,
+            'analysis' => 'Analisis beta',
+            'action_taken' => 'Accion beta',
+            'action_defined' => 'Plan beta',
+            'integrated_analysis_block' => 'Bloque beta',
+            'created_by_user_id' => $leaderB->id,
+        ]);
+
+        $viewer = $this->operationsViewer();
+
+        $response = $this->actingAs($viewer)
+            ->get(route('indicadores.dashboard', ['year' => $year, 'month' => $month]));
+
+        $response->assertOk()
+            ->assertSee('Ranking de usuarios')
+            ->assertSee('Indicadores gestionados')
+            ->assertSee('% gestionado')
+            ->assertSee('Mejoras ingresadas')
+            ->assertSee('Ranking Alpha')
+            ->assertSee('Ranking Beta')
+            ->assertDontSee('Sin Capturas Mes');
+
+        $alphaPos = strpos($response->getContent(), 'Ranking Alpha');
+        $betaPos = strpos($response->getContent(), 'Ranking Beta');
+        $this->assertNotFalse($alphaPos);
+        $this->assertNotFalse($betaPos);
+        $this->assertLessThan($betaPos, $alphaPos);
+    }
+
     public function test_dashboard_shows_critical_indicators_table_with_user_rows(): void
     {
         $year = (int) config('indicators.base_year', now()->year);

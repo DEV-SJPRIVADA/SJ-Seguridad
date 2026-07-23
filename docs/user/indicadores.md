@@ -50,8 +50,9 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 1. Abra **Dashboard** en Indicadores.
 2. Filtre por periodo si hay selector.
 3. Revise KPIs y tabla resumen (incluye resultado del mes anterior junto al del periodo seleccionado).
-4. Revise **Indicadores criticos**: solo aparecen usuarios cuyo resultado supera el umbral critico configurado en Metas.
-5. Exporte a PDF o descargue el **Informe PPTX** (FO-GI-39) si tiene permiso de exportacion.
+4. Revise **Ranking de usuarios**: posicion, nombre, indicadores gestionados en el mes, porcentaje gestionado sobre el total FT-OP activos, y mejoras registradas (solo quienes capturaron datos en el periodo).
+5. Revise **Indicadores criticos**: solo aparecen usuarios cuyo resultado supera el umbral critico configurado en Metas.
+6. Exporte a PDF o descargue el **Informe PPTX** (FO-GI-39) si tiene permiso de exportacion.
 
 ### Administrar periodos (Ajustes)
 

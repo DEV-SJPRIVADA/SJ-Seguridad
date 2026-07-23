@@ -66,6 +66,8 @@ El dashboard global muestra KPIs del mes en tabla (`supply-table`) con columnas 
 
 La seccion **Indicadores criticos** lista solo capturas en umbral critico por usuario (columnas Usuario, Indicador, Valor critico). La regla usa `critical_value` y el operador del indicador: con `>=` cuando el resultado cae por debajo del critico; con `<=` o `==` cuando lo supera.
 
+**Ranking de usuarios:** solo usuarios con al menos una captura en el periodo. Columnas: posicion, Usuario, cantidad de indicadores gestionados (capturas del mes), **% gestionado** (capturas del usuario sobre total de indicadores activos FT-OP, redondeado) y cantidad de mejoras ingresadas (registros `Improvement` ligados a esas capturas). Orden: mas indicadores gestionados primero; empate por mejoras y nombre.
+
 El consolidado agrega capturas de usuarios del area Operaciones con permiso `operations.capture` o `operations.manage` (gestion en Ajustes → Capturadores).
 
 ## Exportaciones
