@@ -70,7 +70,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 
 1. Abra **Ajustes** → seccion **Capturadores**.
 2. Revise usuarios activos del area **Operaciones**.
-3. Pulse **Activar** o **Inactivar** segun corresponda (sin motivo adicional).
+3. Use el **interruptor (toggle)** en la columna Captura para activar o inactivar el permiso (sin motivo adicional).
 4. Los administradores de indicadores permanecen siempre habilitados.
 
 ### Revisar auditoria

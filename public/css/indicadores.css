@@ -419,16 +419,29 @@
     width: 100% !important;
 }
 
-.indicadores-capturador-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    align-items: center;
+.indicadores-table__col-captura {
+    width: 6rem;
+    text-align: center;
+    vertical-align: middle;
 }
 
-.indicadores-capturador-form .supply-input {
-    min-width: 12rem;
-    max-width: 16rem;
+.indicadores-capturador-toggle-form {
+    display: inline-flex;
+    justify-content: center;
+    margin: 0;
+}
+
+.indicadores-capturador-toggle {
+    margin: 0 auto;
+}
+
+.indicadores-capturador-toggle--locked {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.indicadores-capturador-toggle--locked .toggle-slider {
+    cursor: not-allowed;
 }
 
 .indicadores-inline-form,

@@ -24,7 +24,7 @@ La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones inte
 | `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
 | `metas` | Operador (`>=`, `<=`, `==`), meta (%) y critico (%) por indicador; alimenta listado, captura y cumplimiento |
 | `auditoria` | Log de cambios con filtros |
-| `capturadores` | Usuarios activos del area Operaciones; toggle Activar/Inactivar permiso `operations.capture` (sin motivo en UI) |
+| `capturadores` | Usuarios activos del area Operaciones; toggle `operations.capture` (mismo estilo que permisos en admin) |
 
 Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas`, `/admin/capturadores` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/capturadores/{user}` activa captura; `PATCH /admin/pesos` sigue aceptado por compatibilidad).
 

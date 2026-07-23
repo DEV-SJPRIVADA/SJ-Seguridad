@@ -88,8 +88,7 @@ class IndicadorModuleTest extends TestCase
             ->assertOk()
             ->assertSee('Capturadores de indicadores')
             ->assertSee('Zona Operaciones Test')
-            ->assertSee('Activar')
-            ->assertSee('Inactivo');
+            ->assertSee('toggle-switch');
     }
 
     public function test_operations_manage_user_can_enable_capture_for_operaciones_user(): void

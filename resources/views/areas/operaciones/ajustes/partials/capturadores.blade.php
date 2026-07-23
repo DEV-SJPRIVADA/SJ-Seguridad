@@ -16,8 +16,7 @@
                     <th>Usuario</th>
                     <th>Correo</th>
                     <th>Rol</th>
-                    <th>Captura activa</th>
-                    <th>Accion</th>
+                    <th class="indicadores-table__col-captura">Captura</th>
                 </tr>
             </thead>
             <tbody>
@@ -36,33 +35,34 @@
                                 <span class="text-small text-muted">Capturador</span>
                             @endif
                         </td>
-                        <td>
-                            @if ($captureEnabled)
-                                <span class="status-pill status-pill--req-contratado">Activo</span>
-                            @else
-                                <span class="status-pill status-pill--req-cancelada">Inactivo</span>
-                            @endif
-                        </td>
-                        <td>
+                        <td class="indicadores-table__col-captura">
                             @if ($isManager)
-                                <span class="text-small text-muted">Siempre activo</span>
+                                <label class="toggle-switch indicadores-capturador-toggle indicadores-capturador-toggle--locked"
+                                       title="Siempre activo">
+                                    <input type="checkbox" checked disabled aria-label="Captura siempre activa para {{ $operacionesUser->name }}">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             @else
                                 <form method="POST"
                                       action="{{ route('indicadores.admin.capturadores.update', $operacionesUser) }}"
-                                      class="indicadores-inline-form">
+                                      class="indicadores-capturador-toggle-form">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="enabled" value="{{ $captureEnabled ? '0' : '1' }}">
-                                    <button type="submit" class="btn btn--secondary btn--sm">
-                                        {{ $captureEnabled ? 'Inactivar' : 'Activar' }}
-                                    </button>
+                                    <input type="hidden" name="enabled" value="{{ $captureEnabled ? '1' : '0' }}">
+                                    <label class="toggle-switch indicadores-capturador-toggle">
+                                        <input type="checkbox"
+                                               @checked($captureEnabled)
+                                               aria-label="Captura activa para {{ $operacionesUser->name }}"
+                                               onchange="this.form.querySelector('[name=enabled]').value = this.checked ? '1' : '0'; this.form.submit();">
+                                        <span class="toggle-slider"></span>
+                                    </label>
                                 </form>
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">No hay usuarios activos asignados al area Operaciones.</td>
+                        <td colspan="4">No hay usuarios activos asignados al area Operaciones.</td>
                     </tr>
                 @endforelse
             </tbody>
