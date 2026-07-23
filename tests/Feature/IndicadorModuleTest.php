@@ -39,7 +39,11 @@ class IndicadorModuleTest extends TestCase
     {
         $user = $this->operationsViewer();
 
-        $this->actingAs($user)->get(route('indicadores.dashboard'))->assertOk();
+        $this->actingAs($user)
+            ->get(route('indicadores.dashboard'))
+            ->assertOk()
+            ->assertSee('KPIs del mes')
+            ->assertSee('Mes anterior');
     }
 
     public function test_operations_capture_user_can_access_captura_list(): void

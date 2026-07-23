@@ -26,6 +26,8 @@ class OperationsDashboardService
         $indicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
         $weights = DashboardWeight::query()->get()->keyBy('indicator_id');
         $users = $this->capturableUsers();
+        [$previousYear, $previousMonth] = $this->previousPeriod($year, $month);
+        $previousPeriodLabel = config('indicators.months')[$previousMonth] ?? (string) $previousMonth;
 
         $kpis = [];
         $weightedAccumulator = 0.0;
@@ -33,7 +35,9 @@ class OperationsDashboardService
 
         foreach ($indicators as $indicator) {
             $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month, $users);
+            $previousMonthly = $this->consolidadoService->getMonthlyData($indicator, $previousYear, $previousMonth, $users);
             $result = $this->resultForIndicator($indicator, $monthly['consolidated']);
+            $previousResult = $this->resultForIndicator($indicator, $previousMonthly['consolidated']);
             $normalized = $this->normalizeIndicator($indicator, $monthly['consolidated'], $result);
             $weight = (float) ($weights[$indicator->id]->weight ?? 0);
             $weightedAccumulator += ($normalized * $weight) / 100;
@@ -47,6 +51,7 @@ class OperationsDashboardService
             $kpis[] = [
                 'indicator' => $indicator,
                 'result' => $result,
+                'previous_result' => $previousResult,
                 'meta' => $this->metaLabel($indicator),
                 'semaforo' => $this->semaforoByNormalized($normalized),
                 'has_improvements' => $hasImprovements,
@@ -76,6 +81,11 @@ class OperationsDashboardService
 
         return [
             'kpis' => $kpis,
+            'previous_period' => [
+                'year' => $previousYear,
+                'month' => $previousMonth,
+                'label' => $previousPeriodLabel,
+            ],
             'global_score' => $globalScore,
             'global_state' => $this->globalState($globalScore),
             'zone_ranking' => $zoneRanking,
@@ -315,5 +325,15 @@ class OperationsDashboardService
     private function metaLabel(Indicator $indicator): string
     {
         return $indicator->metaLabel();
+    }
+
+    /**
+     * @return array{0: int, 1: int}
+     */
+    private function previousPeriod(int $year, int $month): array
+    {
+        $date = \Carbon\Carbon::create($year, $month, 1)->subMonth();
+
+        return [(int) $date->year, (int) $date->month];
     }
 }

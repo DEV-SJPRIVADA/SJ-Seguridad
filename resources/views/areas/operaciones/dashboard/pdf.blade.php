@@ -24,6 +24,7 @@
             <tr>
                 <th>Codigo</th>
                 <th>Indicador</th>
+                <th>Mes anterior ({{ config('indicators.months')[$dashboard['previous_period']['month'] ?? 0] ?? '' }})</th>
                 <th>Resultado</th>
                 <th>Meta</th>
                 <th>Estado</th>
@@ -34,6 +35,7 @@
                 <tr>
                     <td>{{ $kpi['indicator']->code }}</td>
                     <td>{{ $kpi['indicator']->name }}</td>
+                    <td>{{ $kpi['previous_result'] !== null ? number_format((float) $kpi['previous_result'], 2).'%' : '-' }}</td>
                     <td>{{ $kpi['result'] !== null ? number_format((float) $kpi['result'], 2).'%' : '-' }}</td>
                     <td>{{ $kpi['meta'] }}</td>
                     <td>{{ $kpi['semaforo'] }}</td>

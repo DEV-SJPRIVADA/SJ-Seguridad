@@ -86,10 +86,24 @@
     margin: 0;
 }
 
-.indicadores-kpi-table tbody td:nth-child(2) {
+.indicadores-kpi-table tbody td.indicadores-kpi-name {
     text-align: left !important;
     white-space: normal;
     max-width: 320px;
+}
+
+.indicadores-kpi-table .indicadores-code-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    min-width: 5.75rem;
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
+}
+
+.indicadores-kpi-table td.indicadores-kpi-code {
+    white-space: nowrap;
 }
 
 .indicadores-kpi-table .kpi-value {
@@ -516,13 +530,15 @@
 .indicadores-table--audit td:nth-child(4) { width: 7rem; }
 
 .indicadores-kpi-table th:nth-child(1),
-.indicadores-kpi-table td:nth-child(1) { width: 6.5rem; }
+.indicadores-kpi-table td:nth-child(1) { width: 6.25rem; }
 .indicadores-kpi-table th:nth-child(3),
 .indicadores-kpi-table td:nth-child(3) { width: 6.5rem; }
 .indicadores-kpi-table th:nth-child(4),
-.indicadores-kpi-table td:nth-child(4) { width: 6rem; }
+.indicadores-kpi-table td:nth-child(4) { width: 6.5rem; }
 .indicadores-kpi-table th:nth-child(5),
-.indicadores-kpi-table td:nth-child(5) { width: 7rem; }
+.indicadores-kpi-table td:nth-child(5) { width: 6rem; }
+.indicadores-kpi-table th:nth-child(6),
+.indicadores-kpi-table td:nth-child(6) { width: 7rem; }
 
 .indicadores-cell-wrap {
     text-align: left !important;

@@ -84,6 +84,7 @@
                             <tr>
                                 <th>Codigo</th>
                                 <th>Indicador</th>
+                                <th>Mes anterior ({{ $dashboard['previous_period']['label'] ?? '' }})</th>
                                 <th>Resultado</th>
                                 <th>Meta</th>
                                 <th>Estado</th>
@@ -92,10 +93,11 @@
                         <tbody>
                             @foreach ($dashboard['kpis'] as $kpi)
                                 <tr>
-                                    <td>
-                                        <a href="{{ $kpi['consolidado_url'] }}" class="btn btn--secondary btn--sm">{{ $kpi['indicator']->code }}</a>
+                                    <td class="indicadores-kpi-code">
+                                        <a href="{{ $kpi['consolidado_url'] }}" class="btn btn--secondary btn--sm indicadores-code-link">{{ $kpi['indicator']->code }}</a>
                                     </td>
-                                    <td style="text-align:left;">{{ $kpi['indicator']->name }}</td>
+                                    <td class="indicadores-kpi-name">{{ $kpi['indicator']->name }}</td>
+                                    <td>{{ $kpi['previous_result'] !== null ? number_format((float) $kpi['previous_result'], 2).'%' : '-' }}</td>
                                     <td>{{ $kpi['result'] !== null ? number_format((float) $kpi['result'], 2).'%' : '-' }}</td>
                                     <td>{{ $kpi['meta'] }}</td>
                                     <td>

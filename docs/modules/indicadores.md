@@ -61,7 +61,7 @@ Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS 
 
 Los tableros usan la clase contenedora `indicadores-board` para tablas compactas, filtros acotados y botones al ancho de su contenido.
 
-El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
+El dashboard global muestra KPIs del mes en tabla (`supply-table`) con columnas Codigo, Indicador, resultado del mes anterior, Resultado, Meta y Estado.
 
 El consolidado agrega capturas de usuarios con permiso `operations.capture` o `operations.manage`.
 
