@@ -2,12 +2,12 @@
 
 Prompts fijos para el workflow multi-agente. Ver [`docs/AGENT_WORKFLOW.md`](../AGENT_WORKFLOW.md).
 
-**Inicio rapido (Agent mode):** `orquestar [descripcion de la feature]` — no requiere pegar prompts ni arrobas.
+**Inicio rapido (Agent mode):** `AgentSj [descripcion de la feature]` — no requiere pegar prompts ni arrobas.
 
 | Archivo | Rol |
 | --- | --- |
-| [`start-feature.md`](prompts/start-feature.md) | Entrada chat maestro — inicia Orquestador (equivale a `orquestar`) |
-| [`orchestrator.md`](prompts/orchestrator.md) | Orquestador / PM |
+| [`start-feature.md`](prompts/start-feature.md) | Entrada chat maestro — inicia AgentSj (equivale a `AgentSj`) |
+| [`orchestrator.md`](prompts/orchestrator.md) | AgentSj / PM |
 | [`analyst.md`](prompts/analyst.md) | Analista |
 | [`architect.md`](prompts/architect.md) | Arquitecto |
 | [`feature-developer.md`](prompts/feature-developer.md) | Agente Feature |

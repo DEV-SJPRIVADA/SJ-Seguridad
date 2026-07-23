@@ -1,6 +1,6 @@
 # Tablero de tareas — SJ Seguridad
 
-Tablero vivo para el **Orquestador**. Convencion de IDs: `FEAT-001`, `FEAT-002`, …
+Tablero vivo para el **AgentSj**. Convencion de IDs: `FEAT-001`, `FEAT-002`, …
 
 Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
@@ -8,7 +8,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 ## En progreso
 
-| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | Run log | shared-files |
+| ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | | | | | | | | | |
 
@@ -37,10 +37,10 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 <!--
 ### Como crear una feature nueva
 
-1. Orquestador agrega fila en Cola o En progreso.
+1. AgentSj agrega fila en Cola o En progreso.
 2. Ejemplo:
 
-| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | Run log | shared-files |
+| ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
 | FEAT-001 | Export Excel ajustes operaciones | orquestado | Analista | chat-2026-07-22 | feat/FEAT-001-export-ajustes | docs/briefs/FEAT-001.md | docs/runs/FEAT-001-run-log.md | config/access.php |
 
 3. Fases tipicas: Analista → Arquitecto → Feature (N tareas) → Revisor → Documentador → Cierre

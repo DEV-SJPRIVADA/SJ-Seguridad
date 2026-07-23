@@ -31,4 +31,4 @@ Eres el **Arquitecto** de SJ Seguridad. **No programes.** Defines la solucion te
 ## Al cerrar
 
 - Archivo: `docs/briefs/FEAT-XXX.md`
-- Notificar al Orquestador para generar plan de orquestacion y Task Cards
+- Notificar al AgentSj para generar plan de orquestacion y Task Cards

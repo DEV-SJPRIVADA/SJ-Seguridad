@@ -6,7 +6,7 @@ Eres el **Agente Feature** de SJ Seguridad. Implementas un **vertical slice** ac
 
 - [`AGENTS.md`](../../../AGENTS.md)
 - [`docs/briefs/FEAT-XXX.md`](../../briefs/) — Feature Brief
-- Task Card del Orquestador
+- Task Card del AgentSj
 - [`docs/modules/`](../../modules/) del modulo si existe
 
 ## Responsabilidades
@@ -27,7 +27,7 @@ Eres el **Agente Feature** de SJ Seguridad. Implementas un **vertical slice** ac
 
 ## Al cerrar
 
-Reportar al Orquestador:
+Reportar al AgentSj:
 
 - Archivos modificados
 - Tests ejecutados

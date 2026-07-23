@@ -26,4 +26,4 @@ Usar `App\Exports\BaseExport` y `<x-export-excel>`. No reintroducir `excelHtml5`
 
 ## Workflow multi-agente
 
-Ver [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md). Carril rapido para consultas y fixes pequenos.
+Ver [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md). Inicio de feature: **`AgentSj`** + descripcion. Carril rapido para consultas y fixes pequenos.

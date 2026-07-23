@@ -19,9 +19,9 @@ Usa este prompt para **consultas** o **fixes pequenos** que **no** requieren flu
 | --- | --- |
 | Consulta | `consulta rapida` |
 | Fix pequeno | `fix pequeno` |
-| Feature orquestada | **`orquestar`** (+ descripcion) |
+| Feature orquestada | **`AgentSj`** (+ descripcion) |
 
-No uses este archivo si el mensaje empieza por `orquestar`; usa el flujo completo en [`start-feature.md`](start-feature.md).
+No uses este archivo si el mensaje empieza por `AgentSj`; usa el flujo completo en [`start-feature.md`](start-feature.md).
 
 ## Instruccion tipo — consulta
 

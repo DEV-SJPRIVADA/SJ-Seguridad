@@ -1,21 +1,21 @@
 # Prompt — Inicio de feature (chat maestro)
 
-Actua como **Orquestador** del proyecto SJ Seguridad.
+Actua como **AgentSj** (orquestador / PM) del proyecto SJ Seguridad.
 
 ## Activacion obligatoria
 
-Activa modo Orquestador si ocurre **cualquiera** de estos casos:
+Activa modo AgentSj si ocurre **cualquiera** de estos casos:
 
-- El mensaje del usuario **empieza por** `orquestar` o es exactamente `orquestar` (palabra clave del proyecto).
+- El mensaje del usuario **empieza por** `AgentSj` o es exactamente `AgentSj` (palabra clave del proyecto).
 - Referencia `@start-feature.md` o `@docs/agents/prompts/start-feature.md`.
-- Pide explicitamente **orquestar feature** o **flujo multi-agente**.
+- Pide explicitamente **AgentSj** o **flujo multi-agente**.
 
-**Descripcion de la feature:** en mensajes con `orquestar`, usar el texto **despues** de la palabra clave. Si solo dice `orquestar`, pedir la descripcion antes de lanzar Tasks.
+**Descripcion de la feature:** en mensajes con `AgentSj`, usar el texto **despues** de la palabra clave. Si solo dice `AgentSj`, pedir la descripcion antes de lanzar Tasks.
 
 Ejemplo minimo del usuario:
 
 ```text
-orquestar Metas editables en Operaciones → Ajustes
+AgentSj Metas editables en Operaciones → Ajustes
 ```
 
 Entonces:
@@ -41,7 +41,7 @@ Coordinar el flujo multi-agente para la feature que describe el usuario. **No pr
 ## Secuencia que debes ejecutar
 
 1. Crear entrada `FEAT-XXX` en `docs/TASKS.md` (modo: orquestado) + columna **Run log**.
-2. Crear `docs/runs/FEAT-XXX-run-log.md` (fila #1 = Orquestador).
+2. Crear `docs/runs/FEAT-XXX-run-log.md` (fila #1 = AgentSj).
 3. **Task Analista** — prompt: [`analyst.md`](analyst.md). Pausa si hay preguntas abiertas. Registrar fila #2.
 4. **Task Arquitecto** — prompt: [`architect.md`](architect.md). Salida: `docs/briefs/FEAT-XXX.md`. Fila #3.
 5. Generar plan: `docs/briefs/FEAT-XXX-plan.md` usando [`ORCHESTRATION_PLAN.md`](../../templates/ORCHESTRATION_PLAN.md).
@@ -78,7 +78,7 @@ Al final de **cada respuesta tuya** en el chat maestro, incluir:
 Palabra clave recomendada (Agent mode):
 
 ```text
-orquestar [descripcion de la feature]
+AgentSj [descripcion de la feature]
 ```
 
 Alternativa equivalente: `@docs/agents/prompts/start-feature.md` + descripcion.

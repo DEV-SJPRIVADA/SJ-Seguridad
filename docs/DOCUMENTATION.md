@@ -86,8 +86,8 @@ Al cerrar una feature (paso **Documentador**):
 3. Actualizar **doc usuario** si cambia comportamiento visible.
 4. Si es modulo nuevo: crear ambos archivos y actualizar `INDEX.md`, `ARCHITECTURE.md` (ownership), `PROJECT_CONTEXT.md` (alcance).
 5. Incrementar fila en **Control de cambios** del doc usuario.
-6. Orquestador valida checklist en [`AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md).
-7. Orquestador cierra fila final en `docs/runs/FEAT-XXX-run-log.md`.
+6. AgentSj valida checklist en [`AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md).
+7. AgentSj cierra fila final en `docs/runs/FEAT-XXX-run-log.md`.
 
 ### Carril rapido
 
@@ -102,7 +102,7 @@ Fixes que **no** cambian comportamiento visible para el usuario **no** requieren
 | Definir reglas de negocio nuevas | Usuario / Analista |
 | Redactar doc usuario (primera version) | Documentador (revision humana recomendada) |
 | Mantener doc tecnica alineada al codigo | Agente Feature + Documentador |
-| Validar checklist de cierre | Orquestador + usuario |
+| Validar checklist de cierre | AgentSj + usuario |
 
 ---
 

@@ -11,7 +11,7 @@
 | Titulo | |
 | Modo | orquestado / manual |
 | Modulo | |
-| Chat Orquestador | |
+| Chat AgentSj | |
 | Brief | `docs/briefs/FEAT-XXX.md` |
 | Plan | `docs/briefs/FEAT-XXX-plan.md` |
 | Inicio | YYYY-MM-DD |
@@ -21,13 +21,13 @@
 
 | # | Fecha | Prompt / trigger | Agente | Que hizo (1 linea) | Artefactos | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | | `orquestar` + descripcion (o `@start-feature.md`) | Orquestador | Creo FEAT-XXX en TASKS.md y run log | `docs/TASKS.md`, `docs/runs/FEAT-XXX-run-log.md` | OK |
+| 1 | | `AgentSj` + descripcion (o `@start-feature.md`) | AgentSj | Creo FEAT-XXX en TASKS.md y run log | `docs/TASKS.md`, `docs/runs/FEAT-XXX-run-log.md` | OK |
 | 2 | | Task automatico | Analista | | | |
 | 3 | | Task automatico | Arquitecto | | | |
 | 4 | | Task automatico | Feature | | | |
 | 5 | | Task automatico | Revisor | | | |
 | 6 | | Task automatico | Documentador | | | |
-| 7 | | Checklist cierre | Orquestador | Movio a Completadas | `docs/TASKS.md` | OK |
+| 7 | | Checklist cierre | AgentSj | Movio a Completadas | `docs/TASKS.md` | OK |
 
 ### Estados validos
 
@@ -39,9 +39,9 @@
 | Skip | No aplica en este feature (ej. piloto sin Analista) |
 | Reintento | Correccion tras review |
 
-## Tabla para el chat (copiar al final de cada respuesta del Orquestador)
+## Tabla para el chat (copiar al final de cada respuesta de AgentSj)
 
-Al cerrar **cada turno**, el Orquestador muestra solo las filas nuevas o actualizadas desde el ultimo mensaje:
+Al cerrar **cada turno**, AgentSj muestra solo las filas nuevas o actualizadas desde el ultimo mensaje:
 
 | # | Agente | Que hizo | Artefactos | Estado |
 | --- | --- | --- | --- | --- |

@@ -1,6 +1,6 @@
 # Task Card — FEAT-XXX / Tarea N
 
-> Emitida por el Orquestador al Agente Feature. Una tarjeta = un alcance acotado.
+> Emitida por el AgentSj al Agente Feature. Una tarjeta = un alcance acotado.
 
 ## Identificacion
 
@@ -22,7 +22,7 @@ Solo editar:
 
 -
 
-## Archivos prohibidos (salvo autorizacion Orquestador)
+## Archivos prohibidos (salvo autorizacion AgentSj)
 
 - `config/access.php` (si no esta en shared-files de esta tarea)
 - `routes/web.php` (salvo require acordado)
@@ -42,7 +42,7 @@ Solo editar:
 
 ## Al cerrar
 
-Reportar al Orquestador:
+Reportar al AgentSj:
 
 - Archivos modificados
 - Pendientes para siguiente tarea

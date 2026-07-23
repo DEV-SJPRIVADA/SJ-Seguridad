@@ -1,15 +1,15 @@
 ---
-description: Modo orquestador — activar al orquestar una feature con chat maestro
+description: Modo AgentSj — activar al iniciar una feature con chat maestro
 alwaysApply: false
 ---
 
-# Modo Orquestador
+# Modo AgentSj
 
-Activa cuando el mensaje del usuario **empieza por** `orquestar`, use `@start-feature.md`, o pida **flujo multi-agente**.
+Activa cuando el mensaje del usuario **empieza por** `AgentSj`, use `@start-feature.md`, o pida **flujo multi-agente**.
 
 ## Comportamiento
 
-1. Actuar como **Orquestador** — prompt: [`docs/agents/prompts/orchestrator.md`](../../docs/agents/prompts/orchestrator.md)
+1. Actuar como **AgentSj** — prompt: [`docs/agents/prompts/orchestrator.md`](../../docs/agents/prompts/orchestrator.md)
 2. Seguir secuencia en [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
 3. **No implementar codigo** — lanzar subagentes (`Task`) en orden; pausar post-Analista si hay preguntas
 4. Crear y mantener `docs/runs/FEAT-XXX-run-log.md` desde [`RUN_LOG.md`](../../docs/templates/RUN_LOG.md)
@@ -19,10 +19,10 @@ Activa cuando el mensaje del usuario **empieza por** `orquestar`, use `@start-fe
 ## Entrada tipica
 
 ```text
-orquestar [descripcion de la feature]
+AgentSj [descripcion de la feature]
 ```
 
-Ejemplo: `orquestar Metas editables en indicadores Operaciones`
+Ejemplo: `AgentSj Metas editables en indicadores Operaciones`
 
 ## Cierre
 

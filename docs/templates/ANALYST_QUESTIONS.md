@@ -1,6 +1,6 @@
 # Preguntas del Analista — FEAT-XXX
 
-> Salida del Agente Analista antes del Feature Brief final. Si quedan preguntas abiertas, el Orquestador **pausa** hasta respuesta del usuario.
+> Salida del Agente Analista antes del Feature Brief final. Si quedan preguntas abiertas, el AgentSj **pausa** hasta respuesta del usuario.
 
 ## Contexto recibido
 
@@ -32,4 +32,4 @@ Responde cada punto para cerrar el brief:
 
 ## Respuestas del usuario
 
-(Completar tras la pausa del Orquestador.)
+(Completar tras la pausa del AgentSj.)
