@@ -263,6 +263,84 @@ class IndicatorMetricCalculator
         };
     }
 
+    public function isCriticalResult(Indicator $indicator, float $result): bool
+    {
+        $critical = (float) ($indicator->critical_value ?? 0);
+        $operator = (string) ($indicator->target_operator ?? '>=');
+
+        return match ($operator) {
+            '>=' => $result < $critical,
+            '<=' => $result > $critical,
+            '==' => $result > $critical,
+            default => false,
+        };
+    }
+
+    public function isCriticalCapture(Indicator $indicator, ?\App\Models\IndicatorCapture $capture): bool
+    {
+        if ($capture === null || $capture->result_percentage === null) {
+            return false;
+        }
+
+        if ($indicator->code === 'FT-OP-03') {
+            return $this->isCriticalFtOp03Capture($indicator, $capture);
+        }
+
+        return $this->isCriticalResult($indicator, (float) $capture->result_percentage);
+    }
+
+    /**
+     * Valor medido que debe mostrarse en la tabla de indicadores criticos.
+     */
+    public function criticalDisplayValue(Indicator $indicator, \App\Models\IndicatorCapture $capture): ?float
+    {
+        if ($indicator->code === 'FT-OP-03') {
+            $data = $capture->input_data ?? [];
+            $servicios = (float) ($data['total_servicios'] ?? 0);
+            $siniestros = (float) ($data['total_siniestros'] ?? 0);
+            $fact = (float) ($data['facturacion_mensual'] ?? 0);
+            $pag = (float) ($data['valor_pagado_siniestros'] ?? 0);
+            $freq = $servicios > 0 ? round(($siniestros / $servicios) * 100, 2) : null;
+            $impact = $fact > 0 ? round(($pag / $fact) * 100, 2) : null;
+            $freqThreshold = (float) $indicator->target_value;
+            $impactThreshold = (float) ($indicator->critical_value ?? 1);
+            $freqCritical = $freq !== null && $servicios > 0 && $freq > $freqThreshold;
+            $impactCritical = $impact !== null && $fact > 0 && $impact > $impactThreshold;
+
+            if ($impactCritical) {
+                return $impact;
+            }
+
+            if ($freqCritical) {
+                return $freq;
+            }
+
+            return null;
+        }
+
+        return (float) $capture->result_percentage;
+    }
+
+    private function isCriticalFtOp03Capture(Indicator $indicator, \App\Models\IndicatorCapture $capture): bool
+    {
+        $data = $capture->input_data ?? [];
+        $servicios = (float) ($data['total_servicios'] ?? 0);
+        $siniestros = (float) ($data['total_siniestros'] ?? 0);
+        $fact = (float) ($data['facturacion_mensual'] ?? 0);
+        $pag = (float) ($data['valor_pagado_siniestros'] ?? 0);
+
+        if ($servicios <= 0 && $fact <= 0) {
+            return false;
+        }
+
+        $freq = $servicios > 0 ? round(($siniestros / $servicios) * 100, 2) : 0.0;
+        $impact = $fact > 0 ? round(($pag / $fact) * 100, 2) : 0.0;
+        $freqThreshold = (float) $indicator->target_value;
+        $impactThreshold = (float) ($indicator->critical_value ?? 1);
+
+        return ($servicios > 0 && $freq > $freqThreshold) || ($fact > 0 && $impact > $impactThreshold);
+    }
+
     private function calculateFtOp03(array $form, Indicator $indicator): array
     {
         $totalServicios = (float) ($form['total_servicios'] ?? 0);

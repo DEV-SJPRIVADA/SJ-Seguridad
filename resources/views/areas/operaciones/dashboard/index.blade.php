@@ -147,19 +147,21 @@
                                 <table class="supply-table indicadores-table">
                                     <thead>
                                         <tr>
+                                            <th>Usuario</th>
                                             <th>Indicador</th>
-                                            <th>Resultado</th>
-                                            <th>Usuarios rojo</th>
+                                            <th>Valor critico</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (array_slice($dashboard['critical_ranking'], 0, 8) as $row)
+                                        @forelse ($dashboard['critical_indicators'] as $row)
                                             <tr>
-                                                <td>{{ $row['indicator']->code }}</td>
-                                                <td>{{ $row['result'] !== null ? number_format((float) $row['result'], 2).'%' : '-' }}</td>
-                                                <td>{{ $row['zones_red'] }}</td>
+                                                <td>{{ $row['user']->name }}</td>
+                                                <td>{{ $row['indicator']->code }} — {{ $row['indicator']->name }}</td>
+                                                <td>{{ number_format((float) $row['critical_value'], 2) }}%</td>
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr><td colspan="3">No hay indicadores en estado critico para este periodo.</td></tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                                 </div>

@@ -63,6 +63,8 @@ Los tableros usan la clase contenedora `indicadores-board` para tablas compactas
 
 El dashboard global muestra KPIs del mes en tabla (`supply-table`) con columnas Codigo, Indicador, resultado del mes anterior, Resultado, Meta y Estado.
 
+La seccion **Indicadores criticos** lista solo capturas en umbral critico por usuario (columnas Usuario, Indicador, Valor critico). La regla usa `critical_value` y el operador del indicador: con `>=` cuando el resultado cae por debajo del critico; con `<=` o `==` cuando lo supera.
+
 El consolidado agrega capturas de usuarios con permiso `operations.capture` o `operations.manage`.
 
 ## Exportaciones

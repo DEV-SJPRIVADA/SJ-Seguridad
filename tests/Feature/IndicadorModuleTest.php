@@ -306,6 +306,63 @@ class IndicadorModuleTest extends TestCase
         $this->assertStringContainsString('<c:v>684</c:v>', (string) $chart);
     }
 
+    public function test_critical_result_detects_below_threshold_for_gte_operator(): void
+    {
+        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
+
+        $this->assertTrue($calculator->isCriticalResult($indicator, 50.0));
+        $this->assertFalse($calculator->isCriticalResult($indicator, 85.0));
+    }
+
+    public function test_critical_result_detects_above_threshold_for_equals_operator(): void
+    {
+        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-06')->firstOrFail();
+        $indicator->update(['target_operator' => '==', 'target_value' => 0, 'critical_value' => 3]);
+
+        $this->assertTrue($calculator->isCriticalResult($indicator, 5.0));
+        $this->assertFalse($calculator->isCriticalResult($indicator, 0.0));
+    }
+
+    public function test_dashboard_shows_critical_indicators_table_with_user_rows(): void
+    {
+        $year = (int) config('indicators.base_year', now()->year);
+        $month = 7;
+        $captureUser = User::query()->where('email', 'operaciones.demo@sjseguridad.test')->firstOrFail();
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
+        $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
+
+        \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicator->id,
+                'user_id' => $captureUser->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_personal' => 100, 'personal_capacitado' => 50],
+                'numerator' => 50,
+                'denominator' => 100,
+                'result_percentage' => 50,
+                'complies' => false,
+                'created_by_user_id' => $captureUser->id,
+                'updated_by_user_id' => $captureUser->id,
+            ]
+        );
+
+        $viewer = $this->operationsViewer();
+
+        $this->actingAs($viewer)
+            ->get(route('indicadores.dashboard', ['year' => $year, 'month' => $month]))
+            ->assertOk()
+            ->assertSee('Indicadores criticos')
+            ->assertSee('Operaciones Demo')
+            ->assertSee('FT-OP-01')
+            ->assertSee('50.00%');
+    }
+
     private function operationsViewer(): User
     {
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
