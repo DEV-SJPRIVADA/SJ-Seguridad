@@ -42,8 +42,8 @@
                         </div>
                         <div class="panel__body">
                             <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item"><strong>Interno:</strong> personal administrativo; no requiere cliente de matriz.</li>
-                                <li class="req-form-guide__item"><strong>Externo:</strong> debe elegir cliente por nombre o NIT.</li>
+                                <li class="req-form-guide__item">Interno:personal administrativo; no requiere cliente de matriz.</li>
+                                <li class="req-form-guide__item">Externo: debe elegir cliente por nombre o NIT.</li>
                                 <li class="req-form-guide__item">Motivo alineado con la necesidad real del servicio.</li>
                                 <li class="req-form-guide__item">Reemplazo: incluir datos del colaborador saliente.</li>
                                 <li class="req-form-guide__item">Cargo o servicio nuevo: puede indicar cantidad de plazas.</li>
@@ -60,7 +60,7 @@
                         <div class="panel__body">
                             <p class="panel-text" style="margin: 0; line-height: 1.55;">
                                 Gestion humana recibe la solicitud, asigna reclutador y actualiza el estado.
-                                Puedes consultar el estado desde <strong>Mis requisiciones</strong> de tu area.
+                                Puedes consultar el estado desde Mis requisiciones de tu area.
                             </p>
                         </div>
                     </div>

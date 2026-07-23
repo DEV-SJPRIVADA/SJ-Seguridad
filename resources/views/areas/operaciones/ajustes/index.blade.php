@@ -22,7 +22,7 @@
                         </a>
                         <a href="{{ route('indicadores.admin.ajustes', ['section' => 'auditoria']) }}"
                            class="indicadores-section-tab {{ $section === 'auditoria' ? 'indicadores-section-tab--active' : '' }}">
-                            Auditoria
+                            Logs
                         </a>
                     </nav>
 

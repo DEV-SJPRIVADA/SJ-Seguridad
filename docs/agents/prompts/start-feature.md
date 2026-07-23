@@ -78,7 +78,9 @@ Al final de **cada respuesta tuya** en el chat maestro, incluir:
 Palabra clave recomendada (Agent mode):
 
 ```text
-AgentSj [descripcion de la feature]
+@agent-sj [descripcion de la feature]
 ```
 
-Alternativa equivalente: `@docs/agents/prompts/start-feature.md` + descripcion.
+Alternativas: `AgentSj [descripcion]` o `@docs/agents/prompts/start-feature.md` + descripcion.
+
+Skill: [`.cursor/skills/agent-sj/SKILL.md`](../../.cursor/skills/agent-sj/SKILL.md)

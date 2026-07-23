@@ -98,9 +98,12 @@ Estados: `OK`, `Pausa`, `Blocker`, `Skip`, `Reintento`.
 
 | Forma | Ejemplo |
 | --- | --- |
-| **Palabra clave** (recomendada) | `AgentSj Export PDF consolidado` |
+| **Skill** (recomendada) | `@agent-sj Export PDF consolidado` |
+| Palabra clave | `AgentSj Export PDF consolidado` |
 | Arroba prompt | `@docs/agents/prompts/start-feature.md` + descripcion |
 | Explicito | "flujo multi-agente" / "AgentSj" |
+
+Skill del proyecto: [`.cursor/skills/agent-sj/SKILL.md`](../.cursor/skills/agent-sj/SKILL.md)
 
 Cualquiera de las anteriores **obliga** modo AgentSj: no implementar directo; crear TASKS + run log; lanzar `Task` en secuencia.
 

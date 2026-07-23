@@ -9,9 +9,11 @@ Documentacion completa: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
 
 ## Palabra clave — `AgentSj`
 
-Si el mensaje del usuario **empieza por** `AgentSj` (sin importar mayusculas) o es **exactamente** `AgentSj`:
+**Invocacion recomendada:** `@agent-sj` + descripcion (skill en [`.cursor/skills/agent-sj/SKILL.md`](../skills/agent-sj/SKILL.md)).
 
-1. Aplicar [`docs/agents/prompts/start-feature.md`](../../docs/agents/prompts/start-feature.md) — **modo AgentSj obligatorio**.
+Si el mensaje del usuario **empieza por** `AgentSj` (sin importar mayusculas), es **exactamente** `AgentSj`, o invoca **`@agent-sj`**:
+
+1. **Leer y aplicar** el skill [`agent-sj`](../skills/agent-sj/SKILL.md) y [`docs/agents/prompts/start-feature.md`](../../docs/agents/prompts/start-feature.md) — **modo AgentSj obligatorio**.
 2. **No implementar codigo** ni documentacion de modulo directamente.
 3. Crear `FEAT-XXX` en `docs/TASKS.md` + `docs/runs/FEAT-XXX-run-log.md`.
 4. Lanzar subagentes (`Task`) en secuencia segun `AGENT_WORKFLOW.md`.
@@ -19,9 +21,9 @@ Si el mensaje del usuario **empieza por** `AgentSj` (sin importar mayusculas) o 
 
 **Descripcion de la feature:** texto despues de la palabra clave en la misma linea. Si el mensaje es solo `AgentSj`, pedir la descripcion antes de continuar.
 
-**Ejemplo:** `AgentSj Export Excel consolidado indicadores`
+**Ejemplo:** `@agent-sj Export Excel consolidado indicadores`
 
-Equivalente a `@start-feature.md` + descripcion. No requiere arrobas ni prompts largos.
+Equivalente a `AgentSj …` o `@start-feature.md` + descripcion.
 
 ## Roles
 
@@ -35,13 +37,13 @@ Analista → Arquitecto → AgentSj → Agente Feature → Revisor → Documenta
 
 | Situacion | Accion |
 | --- | --- |
-| Feature / modulo nuevo | Agent mode + **`AgentSj`** + descripcion (o `@start-feature.md`) |
+| Feature / modulo nuevo | Agent mode + **`@agent-sj`** o **`AgentSj`** + descripcion |
 | Consulta | Ask mode o palabra clave `consulta rapida` |
 | Fix pequeno (1–3 archivos, sin permisos/migraciones) | Agent mode + `fix pequeno` |
 
 ## Reglas
 
-- `AgentSj` o `@start-feature.md` → modo AgentSj; crear `FEAT-XXX` + run log.
+- `@agent-sj`, `AgentSj` o `@start-feature.md` → modo AgentSj; crear `FEAT-XXX` + run log.
 - Sin Feature Brief + Task Card + ID en `docs/TASKS.md` → no implementar feature.
 - AgentSj: tabla **Registro de ejecucion (esta pantalla)** al final de cada respuesta.
 - Un agente por modulo a la vez; cuidado con shared-files (`config/access.php`, `web.php`).
