@@ -7,6 +7,7 @@ use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorMetricCalculator;
 use Illuminate\Support\Collection;
@@ -16,6 +17,7 @@ class OperationsDashboardService
     public function __construct(
         private readonly IndicatorConsolidadoService $consolidadoService,
         private readonly IndicatorMetricCalculator $metricCalculator,
+        private readonly IndicatorCaptureAccessService $captureAccessService,
     ) {
     }
 
@@ -112,10 +114,7 @@ class OperationsDashboardService
      */
     private function capturableUsers(): Collection
     {
-        return User::permission(['operations.capture', 'operations.manage'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return $this->captureAccessService->capturableUsers();
     }
 
     private function zoneRanking(int $year, int $month, Collection $indicators, Collection $weights, Collection $users): array

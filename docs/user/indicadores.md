@@ -10,7 +10,7 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 
 - **Dashboard:** ver indicadores globales y resumen del periodo.
 - **Captura:** registrar valores mensuales de indicadores asignados a su usuario.
-- **Ajustes:** administrar periodos, metas por indicador y consultar auditoria (gestores).
+- **Ajustes:** administrar periodos, metas, capturadores del area y consultar auditoria (gestores).
 - **Consolidado:** vista consolidada de capturas del equipo (gestores).
 - **Exportaciones:** PDF, Excel y PowerPoint (informe FO-GI-39) segun permiso de exportacion.
 
@@ -66,6 +66,13 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 2. Indique el motivo del cambio y guarde.
 3. Los valores se reflejan de inmediato en la ficha de captura y en el calculo de cumplimiento.
 
+### Administrar capturadores (Ajustes)
+
+1. Abra **Ajustes** → seccion **Capturadores**.
+2. Revise usuarios activos del area **Operaciones**.
+3. Pulse **Activar** o **Inactivar** segun corresponda (sin motivo adicional).
+4. Los administradores de indicadores permanecen siempre habilitados.
+
 ### Revisar auditoria
 
 1. En Ajustes → **Auditoria**, filtre por usuario, indicador o fecha.
@@ -82,4 +89,4 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
-| 1.1 | 2026-07-22 | FEAT-002 | Exportacion informe de gestion FO-GI-39 en PowerPoint desde dashboard |
+| 1.1 | 2026-07-23 | FEAT-003 | Seccion Capturadores en Ajustes para habilitar captura FT-OP |

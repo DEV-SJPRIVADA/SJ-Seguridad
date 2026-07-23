@@ -63,7 +63,87 @@ class IndicadorModuleTest extends TestCase
             ->get(route('indicadores.admin.ajustes'))
             ->assertOk()
             ->assertSee('Ajustes de indicadores')
-            ->assertSee('Periodos de captura');
+            ->assertSee('Periodos de captura')
+            ->assertSee('Capturadores');
+    }
+
+    public function test_operations_manage_user_can_access_capturadores_section(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $captureUser = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+            'name' => 'Zona Operaciones Test',
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('indicadores.admin.ajustes', ['section' => 'capturadores']))
+            ->assertOk()
+            ->assertSee('Capturadores de indicadores')
+            ->assertSee('Zona Operaciones Test')
+            ->assertSee('Activar')
+            ->assertSee('Inactivo');
+    }
+
+    public function test_operations_manage_user_can_enable_capture_for_operaciones_user(): void
+    {
+        PermissionCatalog::sync();
+
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $captureUser = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.update', $captureUser), [
+                'enabled' => true,
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $captureUser->refresh();
+        $this->assertTrue($captureUser->can('operations.capture'));
+        $this->assertTrue($captureUser->can('operations.view'));
+    }
+
+    public function test_operations_manage_user_can_disable_capture_for_operaciones_user(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $captureUser = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $captureUser->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.update', $captureUser), [
+                'enabled' => false,
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $captureUser->refresh();
+        $this->assertFalse($captureUser->can('operations.capture'));
     }
 
     public function test_legacy_periodos_route_redirects_to_ajustes(): void
@@ -331,6 +411,7 @@ class IndicadorModuleTest extends TestCase
         $year = (int) config('indicators.base_year', now()->year);
         $month = 7;
         $captureUser = User::query()->where('email', 'operaciones.demo@sjseguridad.test')->firstOrFail();
+        $captureUser->update(['area_key' => 'operaciones']);
         $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
         $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
         $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();

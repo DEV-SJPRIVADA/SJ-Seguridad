@@ -21,11 +21,16 @@ class IndicadorDemoDataSeeder extends Seeder
             ['email' => 'operaciones.demo@sjseguridad.test'],
             [
                 'name' => 'Operaciones Demo',
+                'area_key' => 'operaciones',
                 'password' => bcrypt('password'),
                 'is_active' => true,
                 'must_change_password' => false,
             ]
         );
+
+        if ($user->area_key !== 'operaciones') {
+            $user->update(['area_key' => 'operaciones']);
+        }
 
         if (! $user->hasPermissionTo('operations.capture')) {
             $user->givePermissionTo(['operations.capture', 'operations.view']);

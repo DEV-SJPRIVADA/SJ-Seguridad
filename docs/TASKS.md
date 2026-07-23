@@ -26,6 +26,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-003 | Capturadores en Ajustes indicadores | orquestado | Si | [`docs/runs/FEAT-003-run-log.md`](runs/FEAT-003-run-log.md) | 2026-07-23 |
 | FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | — | 2026-07-22 |
 | FEAT-PILOT-001 | Doc usuario admin-users (piloto workflow) | orquestado | Si | [`docs/runs/FEAT-PILOT-001-run-log.md`](runs/FEAT-PILOT-001-run-log.md) | 2026-07-22 |
 | DOC-ALIGN-001 | Alineacion documentacion IA/dev/usuario (7 modulos) | manual | Si | — | 2026-07-22 |

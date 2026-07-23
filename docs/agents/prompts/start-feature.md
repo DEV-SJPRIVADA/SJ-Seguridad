@@ -70,7 +70,7 @@ Al final de **cada respuesta tuya** en el chat maestro, incluir:
 
 - Un Agente Feature = vertical slice por modulo; no dividir Backend/Frontend/BD.
 - Detectar conflictos en shared-files antes de lanzar Tasks en paralelo.
-- Pausar post-Analista y post-Brief para confirmacion del usuario si hay dudas.
+- Pausar post-Analista y post-Brief para confirmacion del usuario si hay dudas o **supuestos de UX/reglas de negocio sin validar** (ej. campos extra, motivos obligatorios).
 - Actualizar `docs/TASKS.md` en cada cambio de fase.
 
 ## Entrada del usuario

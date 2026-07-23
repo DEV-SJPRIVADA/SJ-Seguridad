@@ -39,6 +39,9 @@ Route::middleware(['password.changed'])
             Route::get('/pesos', [IndicadorController::class, 'weights'])->name('weights');
             Route::patch('/pesos', [IndicadorController::class, 'updateMetas'])->name('weights.update');
 
+            Route::patch('/capturadores/{user}', [IndicadorController::class, 'updateCapturador'])->name('capturadores.update');
+            Route::get('/capturadores', [IndicadorController::class, 'capturadores'])->name('capturadores');
+
             Route::get('/consolidado', [IndicadorController::class, 'consolidado'])->name('consolidado.index');
             Route::get('/consolidado/{indicator:code}', [IndicadorController::class, 'consolidadoShow'])->name('consolidado.show');
 

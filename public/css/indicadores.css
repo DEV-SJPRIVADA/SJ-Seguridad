@@ -419,6 +419,18 @@
     width: 100% !important;
 }
 
+.indicadores-capturador-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.indicadores-capturador-form .supply-input {
+    min-width: 12rem;
+    max-width: 16rem;
+}
+
 .indicadores-inline-form,
 .indicadores-form-compact {
     margin-bottom: 1rem;

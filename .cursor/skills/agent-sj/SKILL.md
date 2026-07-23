@@ -25,6 +25,20 @@ Este skill aplica cuando el usuario:
 
 **Modo requerido:** Agent mode (no Ask). Si el alcance es fix pequeno (1–3 archivos, sin permisos/migraciones), redirigir a [`docs/agents/prompts/fast-lane.md`](../../docs/agents/prompts/fast-lane.md).
 
+## Regla de oro: preguntar, no asumir
+
+Antes de implementar o lanzar al Agente Feature, **validar con el usuario** cualquier decision de UX, negocio o datos que no este escrita de forma explicita en la solicitud.
+
+| Hacer | No hacer |
+| --- | --- |
+| Pausar y preguntar si falta un campo, permiso, etiqueta o flujo | Inventar campos obligatorios (ej. motivo de cambio, comentarios, confirmaciones extra) |
+| Listar supuestos y pedir confirmacion en 1–2 preguntas concretas | Copiar patrones de otras pantallas (metas, periodos) sin que el usuario lo pida |
+| Lanzar Task Analista si hay ambiguedad | Cerrar la feature asumiendo “best practice” del agente |
+
+**Ejemplo:** si piden activar/inactivar capturadores, confirmar si requieren motivo, auditoria visible o solo toggle — **no agregar motivo** salvo que el usuario lo confirme.
+
+Tras la respuesta del usuario, actualizar brief/run log y recien entonces implementar.
+
 ## Gates obligatorios (no saltar)
 
 Antes de editar `app/`, `resources/`, `routes/`, `database/`, `config/access.php` o docs de modulo:
@@ -58,7 +72,7 @@ Validacion opcional: `bash .cursor/skills/agent-sj/scripts/validate-preflight.sh
 | 7 | Task Documentador | [`documenter.md`](../../docs/agents/prompts/documenter.md) | `docs/modules/`, `docs/user/` |
 | 8 | Checklist cierre | AgentSj | TASKS → Completadas |
 
-- **Pausa** post-Analista si hay preguntas abiertas.
+- **Pausa** post-Analista si hay preguntas abiertas o **supuestos sin confirmar del usuario**.
 - **Blocker** del Revisor → volver a Feature.
 - Un Agente Feature = un vertical slice; no dividir Backend/Frontend/BD.
 - Conflictos en shared-files (`config/access.php`, `routes/web.php`, layouts) → secuencial, flag `shared-files` en TASKS.

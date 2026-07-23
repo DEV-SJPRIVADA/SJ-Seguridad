@@ -24,8 +24,9 @@ La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones inte
 | `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
 | `metas` | Operador (`>=`, `<=`, `==`), meta (%) y critico (%) por indicador; alimenta listado, captura y cumplimiento |
 | `auditoria` | Log de cambios con filtros |
+| `capturadores` | Usuarios activos del area Operaciones; toggle Activar/Inactivar permiso `operations.capture` (sin motivo en UI) |
 
-Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/pesos` sigue aceptado por compatibilidad).
+Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas`, `/admin/capturadores` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/capturadores/{user}` activa captura; `PATCH /admin/pesos` sigue aceptado por compatibilidad).
 
 ## Permisos Spatie
 
@@ -65,7 +66,7 @@ El dashboard global muestra KPIs del mes en tabla (`supply-table`) con columnas 
 
 La seccion **Indicadores criticos** lista solo capturas en umbral critico por usuario (columnas Usuario, Indicador, Valor critico). La regla usa `critical_value` y el operador del indicador: con `>=` cuando el resultado cae por debajo del critico; con `<=` o `==` cuando lo supera.
 
-El consolidado agrega capturas de usuarios con permiso `operations.capture` o `operations.manage`.
+El consolidado agrega capturas de usuarios del area Operaciones con permiso `operations.capture` o `operations.manage` (gestion en Ajustes → Capturadores).
 
 ## Exportaciones
 

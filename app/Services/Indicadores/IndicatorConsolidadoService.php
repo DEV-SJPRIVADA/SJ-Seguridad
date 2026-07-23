@@ -10,6 +10,10 @@ use Illuminate\Support\Collection;
 
 class IndicatorConsolidadoService
 {
+    public function __construct(private readonly IndicatorCaptureAccessService $captureAccessService)
+    {
+    }
+
     public function getMonthlyData(Indicator $indicator, int $year, int $month, ?Collection $users = null): array
     {
         $users = $users ?: $this->capturableUsers();
@@ -122,10 +126,7 @@ class IndicatorConsolidadoService
      */
     private function capturableUsers(): Collection
     {
-        return User::permission(['operations.capture', 'operations.manage'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return $this->captureAccessService->capturableUsers();
     }
 
     private function buildConsolidated(Indicator $indicator, Collection $captures): array
