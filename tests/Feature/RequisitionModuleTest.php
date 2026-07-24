@@ -97,11 +97,110 @@ class RequisitionModuleTest extends TestCase
             'requested_by' => $user->id,
             'requesting_area_key' => 'operaciones',
             'status' => PersonalRequisition::STATUS_SOLICITADA,
+            'service_structure' => 'Turno 6x2, descanso dominical y posta fija en porteria.',
         ]);
         $this->assertDatabaseHas('personal_requisition_status_logs', [
             'to_status' => PersonalRequisition::STATUS_SOLICITADA,
             'changed_by' => $user->id,
         ]);
+    }
+
+    public function test_create_requires_service_structure(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $payload = $this->validPayload();
+        unset($payload['service_structure']);
+
+        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
+
+        $response->assertSessionHasErrors(['service_structure']);
+        $this->assertDatabaseMissing('personal_requisitions', [
+            'requested_by' => $user->id,
+        ]);
+    }
+
+    public function test_create_form_shows_service_structure_field(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $this->actingAs($user)
+            ->get(route('requisitions.create', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSee('Estructura del servicio', false)
+            ->assertSee('name="service_structure"', false)
+            ->assertSee('Horarios, descansos y condiciones del puesto a tener en cuenta.', false);
+    }
+
+    public function test_gestion_can_update_service_structure(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0601',
+            'operaciones',
+            'Perfil estructura servicio'
+        ));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+
+        $updatedStructure = 'Turno 12x36, descanso intermedio y cobertura en dos postas.';
+
+        $response = $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_EN_GESTION,
+                'service_structure' => $updatedStructure,
+                'human_resources_observation' => 'Actualiza estructura del servicio.',
+            ]
+        ));
+
+        $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+        $this->assertDatabaseHas('personal_requisitions', [
+            'id' => $requisition->id,
+            'service_structure' => $updatedStructure,
+        ]);
+        $this->assertDatabaseHas('personal_requisition_change_logs', [
+            'personal_requisition_id' => $requisition->id,
+            'field_key' => 'service_structure',
+            'field_label' => 'Estructura del servicio',
+            'new_value' => $updatedStructure,
+            'changed_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Estructura del servicio', false)
+            ->assertSee($updatedStructure, false);
     }
 
     public function test_user_can_create_internal_requisition_without_commercial_client(): void
@@ -722,6 +821,7 @@ class RequisitionModuleTest extends TestCase
             'programming_type_id' => RequisitionProgrammingType::query()->firstOrFail()->id,
             'required_profile' => 'Control de ingreso, verificacion de herramientas y vigilancia perimetral.',
             'uniform_id' => RequisitionUniform::query()->firstOrFail()->id,
+            'service_structure' => 'Turno 6x2, descanso dominical y posta fija en porteria.',
             'cost_center' => 'CC-001',
             'requester_observation' => 'Observacion inicial del solicitante.',
         ];
@@ -749,6 +849,7 @@ class RequisitionModuleTest extends TestCase
             'programming_type_id' => RequisitionProgrammingType::query()->firstOrFail()->id,
             'uniform_id' => RequisitionUniform::query()->firstOrFail()->id,
             'required_profile' => $profile,
+            'service_structure' => 'Horarios, descansos y condiciones del puesto a tener en cuenta.',
             'cost_center' => 'CC-TRACK',
             'status' => PersonalRequisition::STATUS_SOLICITADA,
             'status_changed_at' => now(),

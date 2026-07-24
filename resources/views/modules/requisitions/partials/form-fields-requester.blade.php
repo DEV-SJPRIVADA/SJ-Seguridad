@@ -215,6 +215,13 @@
                 </select>
                 <x-input-error :messages="$errors->get('uniform_id')" />
             </div>
+
+            <div class="form-field form-field--full">
+                <x-input-label for="service_structure" value="Estructura del servicio *" />
+                <textarea id="service_structure" name="service_structure" class="form-textarea" rows="3" required placeholder="Horarios, descansos y condiciones del puesto a tener en cuenta.">{{ old('service_structure') }}</textarea>
+                <p class="req-form__hint">Horarios, descansos y condiciones del puesto a tener en cuenta.</p>
+                <x-input-error :messages="$errors->get('service_structure')" />
+            </div>
         </div>
     </section>
 

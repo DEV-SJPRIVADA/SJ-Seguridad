@@ -46,6 +46,7 @@ class PersonalRequisition extends Model
         'programming_type_id',
         'required_profile',
         'uniform_id',
+        'service_structure',
         'cost_center',
         'requester_observation',
         'human_resources_observation',

@@ -34,6 +34,7 @@ class PersonalRequisitionChangeLogger
         'programming_type_id' => 'Tipo de programacion',
         'required_profile' => 'Perfil requerido',
         'uniform_id' => 'Uniforme requerido',
+        'service_structure' => 'Estructura del servicio',
         'contract_type_id' => 'Tipo de contrato',
         'contract_duration' => 'Duracion del contrato',
         'base_salary' => 'Salario base',

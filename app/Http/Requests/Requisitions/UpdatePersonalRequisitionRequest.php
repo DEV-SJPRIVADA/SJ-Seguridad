@@ -56,7 +56,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],
             'required_profile' => ['required', 'string'],
             'uniform_id' => ['required', 'integer', Rule::exists('requisition_uniforms', 'id')],
-            
+            'service_structure' => ['required', 'string'],
+
             // Campos de GH condicionales: Solo obligatorios si el estado es 'contratado'
             'contract_type_id' => [$isHired ? 'required' : 'nullable', 'integer', Rule::exists('requisition_contract_types', 'id')],
             'contract_duration' => [$isHired ? 'required' : 'nullable', 'string', 'max:255'],

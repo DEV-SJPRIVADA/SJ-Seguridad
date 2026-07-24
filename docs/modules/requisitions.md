@@ -35,6 +35,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Existen dos observaciones:
   - `requester_observation`
   - `human_resources_observation`
+- `service_structure` (**Estructura del servicio**): texto obligatorio al crear y al guardar en edicion; captura horarios, descansos y condiciones del puesto. Visible/editable en Solicitar y Gestion; incluido en export Excel; **no** en impresion ni correos
 - Los estados permitidos en V1 son:
   - `solicitada`
   - `en_gestion`
@@ -67,8 +68,13 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Servicio: `App\Services\Requisitions\PersonalRequisitionChangeLogger`
 - Tabla: `personal_requisition_change_logs` (agrupado por `change_batch` por cada guardado)
 - Registra: fecha/hora, campo (etiqueta legible), valor anterior, valor nuevo, usuario (`changed_by`)
+- Incluye `service_structure` con etiqueta legible **Estructura del servicio** cuando GH lo modifica
 - UI: panel **Historial de cambios** en `resources/views/modules/requisitions/edit.blade.php`
 - El **Historial de estados** sigue siendo independiente y solo registra transiciones de estado
+
+### Export Excel
+- Gestion y Mis requisiciones / seguimiento usan `App\Exports\BaseExport` con columnas configurables en `RequisitionController`
+- Incluyen la columna **Estructura del servicio** (`service_structure`; vacio se muestra como `—`)
 
 ### Compartido
 - Ambos mailables usan cola (`ShouldQueue`)
@@ -94,13 +100,17 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 12. Tipo de programacion
 13. Perfil requerido
 14. Dotacion requerida
-15. Centro de costo
-16. Observaciones del solicitante
+15. **Estructura del servicio** (`service_structure`; obligatorio; seccion 4, debajo de perfil/dotacion)
+16. Centro de costo
+17. Observaciones del solicitante
+
+### Campos visibles y editables tambien para Gestión Humana (GH)
+- Mismos campos del solicitante en el formulario de edicion (incluido **Estructura del servicio**), mas:
 
 ### Campos exclusivos para Gestión Humana (GH)
-17. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
-18. **Seguimiento**: Encargado de selección (`recruiter_id`).
-19. **Cierre**: Fecha de contratación, Observaciones de GH.
+18. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
+19. **Seguimiento**: Encargado de selección (`recruiter_id`).
+20. **Cierre**: Fecha de contratación, Observaciones de GH.
 
 ## Identificación Visual y UI
 
@@ -147,9 +157,15 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
 - `manage.users`
 
+## Validacion (Form Requests)
+
+- `StorePersonalRequisitionRequest` / `UpdatePersonalRequisitionRequest`: `service_structure` → `required|string` (ademas de las reglas existentes del modulo)
+- HTML `required` en textarea de Solicitar (`form-fields-requester`) y Gestion (`form-fields`)
+- Registros legacy con `NULL` en BD: al reabrir en Gestion el campo es obligatorio al guardar
+
 ## Tablas implicadas
 
-- `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`)
+- `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`, `service_structure` text nullable)
 - `personal_requisition_status_logs`
 - `personal_requisition_change_logs` (trazabilidad de campos editados en gestion)
 - `requisition_positions`
@@ -187,6 +203,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
 - Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
 - Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.
+- **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, export Excel Gestion y Mis requisiciones, label en `PersonalRequisitionChangeLogger`.
 
 ## Referencias
 

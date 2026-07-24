@@ -45,6 +45,7 @@ class StorePersonalRequisitionRequest extends FormRequest
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],
             'required_profile' => ['required', 'string'],
             'uniform_id' => ['required', 'integer', Rule::exists('requisition_uniforms', 'id')],
+            'service_structure' => ['required', 'string'],
             'contract_type_id' => ['nullable', 'integer', Rule::exists('requisition_contract_types', 'id')],
             'contract_duration' => ['nullable', 'string', 'max:255'],
             'base_salary' => ['nullable', 'numeric', 'min:0'],

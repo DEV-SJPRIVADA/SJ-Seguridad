@@ -26,6 +26,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-005 | Campo Estructura del servicio en requisiciones | orquestado | Si | [`docs/runs/FEAT-005-run-log.md`](runs/FEAT-005-run-log.md) | 2026-07-24 |
 | FEAT-004 | Ranking dashboard indicadores operaciones | orquestado | Si | [`docs/runs/FEAT-004-run-log.md`](runs/FEAT-004-run-log.md) | 2026-07-23 |
 | FEAT-003 | Capturadores en Ajustes indicadores | orquestado | Si | [`docs/runs/FEAT-003-run-log.md`](runs/FEAT-003-run-log.md) | 2026-07-23 |
 | FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | — | 2026-07-22 |
