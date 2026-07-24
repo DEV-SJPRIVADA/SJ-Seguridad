@@ -27,6 +27,7 @@ class RequisitionParameterSeeder extends Seeder
         $this->seedCatalog(RequisitionRequestReason::class, [
             'Cargo nuevo',
             'Reemplazo',
+            'Movimiento interno',
             'Servicio nuevo',
         ]);
 

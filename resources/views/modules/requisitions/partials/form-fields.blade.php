@@ -2,8 +2,10 @@
     $leaderName = old('leader_name', $requisition?->leader_name ?? auth()->user()->name);
     $reasonsByName = $catalogs['reasons']->keyBy(fn ($reason) => strtolower($reason->name));
     $reasonReemplazo = $reasonsByName->get('reemplazo')?->id;
+    $reasonMovimientoInterno = $reasonsByName->get('movimiento interno')?->id;
+    $replacementReasonIds = array_values(array_filter([$reasonReemplazo, $reasonMovimientoInterno]));
     $selectedReasonId = (string) old('request_reason_id', $requisition?->request_reason_id);
-    $showReplacementInitially = $selectedReasonId !== '' && (int) $selectedReasonId === (int) $reasonReemplazo;
+    $showReplacementInitially = in_array((int) $selectedReasonId, $replacementReasonIds, true);
     $clientTypesByName = $catalogs['clientTypes']->keyBy(fn ($type) => strtolower($type->name));
     $internalClientTypeId = $clientTypesByName->get('interno')?->id;
     $selectedClientTypeId = (string) old('client_type_id', $requisition?->client_type_id);
@@ -45,7 +47,7 @@
             <span class="req-form__section-step">1</span>
             <div>
                 <h4 class="req-form__section-title">Motivo de la solicitud</h4>
-                <p class="req-form__section-desc">Motivo registrado por el solicitante y datos de reemplazo si aplica.</p>
+                <p class="req-form__section-desc">Motivo registrado por el solicitante y datos de persona (cedula/nombre) si es reemplazo o movimiento interno.</p>
             </div>
         </header>
 
@@ -57,7 +59,7 @@
                     name="request_reason_id"
                     class="form-select"
                     required
-                    data-replacement-id="{{ $reasonReemplazo }}"
+                    data-replacement-ids="{{ implode(',', $replacementReasonIds) }}"
                 >
                     <option value="">Selecciona un motivo</option>
                     @foreach ($catalogs['reasons'] as $item)
@@ -405,8 +407,10 @@
                 return;
             }
 
-            const replacementReasonId = reasonSelect.dataset.replacementId || '';
-            const isReplacement = reasonSelect.value !== '' && reasonSelect.value === replacementReasonId;
+            const replacementReasonIds = (reasonSelect.dataset.replacementIds || '')
+                .split(',')
+                .filter(Boolean);
+            const isReplacement = reasonSelect.value !== '' && replacementReasonIds.includes(reasonSelect.value);
 
             replacementGroup.hidden = !isReplacement;
 

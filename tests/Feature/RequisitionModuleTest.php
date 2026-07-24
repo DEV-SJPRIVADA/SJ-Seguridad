@@ -142,6 +142,82 @@ class RequisitionModuleTest extends TestCase
             ->assertSee('Horarios, descansos y condiciones del puesto a tener en cuenta.', false);
     }
 
+    public function test_movimiento_interno_requires_replacement_person_fields(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $movimientoInterno = RequisitionRequestReason::query()->firstOrCreate(
+            ['name' => 'Movimiento interno'],
+            ['is_active' => true, 'sort_order' => 10]
+        );
+
+        $payload = $this->validPayload();
+        $payload['request_reason_id'] = $movimientoInterno->id;
+        $payload['quantity'] = 1;
+        unset($payload['replacement_document'], $payload['replacement_name']);
+
+        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
+
+        $response->assertSessionHasErrors(['replacement_document', 'replacement_name']);
+    }
+
+    public function test_movimiento_interno_persists_replacement_person_fields(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $movimientoInterno = RequisitionRequestReason::query()->firstOrCreate(
+            ['name' => 'Movimiento interno'],
+            ['is_active' => true, 'sort_order' => 10]
+        );
+
+        $payload = $this->validPayload();
+        $payload['request_reason_id'] = $movimientoInterno->id;
+        $payload['quantity'] = 1;
+        $payload['replacement_document'] = '1098765432';
+        $payload['replacement_name'] = 'Ana Movimiento';
+
+        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('personal_requisitions', [
+            'requested_by' => $user->id,
+            'request_reason_id' => $movimientoInterno->id,
+            'replacement_document' => '1098765432',
+            'replacement_name' => 'Ana Movimiento',
+        ]);
+    }
+
+    public function test_create_form_includes_movimiento_interno_in_replacement_reason_ids(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $movimientoInterno = RequisitionRequestReason::query()->firstOrCreate(
+            ['name' => 'Movimiento interno'],
+            ['is_active' => true, 'sort_order' => 10]
+        );
+
+        $this->actingAs($user)
+            ->get(route('requisitions.create', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSee('data-replacement-ids=', false)
+            ->assertSee((string) $movimientoInterno->id, false);
+    }
+
     public function test_gestion_can_update_service_structure(): void
     {
         $requester = User::factory()->create([

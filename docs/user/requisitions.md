@@ -50,6 +50,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 3. Complete las secciones del formulario: motivo, cargo, datos del servicio, perfil requerido, dotacion y observaciones.
 4. En la seccion de perfil y dotacion, complete **Estructura del servicio** con horarios, descansos y condiciones del puesto. Es obligatorio; no podra enviar la solicitud si queda vacio.
 5. Si el motivo es *Cargo nuevo* o *Servicio nuevo*, indique la **cantidad** de personas; en otros motivos el sistema registra una persona por solicitud.
+6. Si el motivo es *Reemplazo* o *Movimiento interno*, complete **cedula** y **nombre completo** de la persona involucrada.
 6. Seleccione **Cliente** buscando en la matriz comercial (minimo 2 caracteres), salvo tipo de cliente *Interno*.
 7. Revise el checklist lateral y envíe la solicitud.
 8. Recibira notificacion por correo cuando GH cambie el estado.

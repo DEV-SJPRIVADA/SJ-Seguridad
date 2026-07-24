@@ -188,7 +188,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 
 ## Deuda / pendientes (fuera del corte Mailpit)
 
-- Motivo “Reemplazo” acoplado a `request_reason_id = 2` (frágil si cambia el seeder).
+- Motivo “Reemplazo” o “Movimiento interno” exige cedula y nombre (IDs resueltos por nombre de catalogo, no hardcode).
 - `PersonalRequisitionPolicy` registrada pero no usada en el controller.
 - Cobertura de tests acotada (sin factory dedicada; sin print/dashboard/parametros ampliados).
 - Campo legacy `recruiter_name` convive con `recruiter_id`.
