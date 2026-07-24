@@ -105,7 +105,7 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="sex" value="Sexo *" />
+                <x-input-label for="sex" value="Genero *" />
                 <select id="sex" name="sex" class="form-select" required>
                     <option value="">Selecciona una opcion</option>
                     @foreach ($sexOptions as $sexKey => $sexLabel)

@@ -12,6 +12,7 @@ class PersonalRequisition extends Model
     use HasFactory;
 
     public const STATUS_SOLICITADA = 'solicitada';
+    public const STATUS_APROBADA = 'aprobada';
     public const STATUS_EN_GESTION = 'en_gestion';
     public const STATUS_CONTRATADO = 'contratado';
     public const STATUS_CANCELADA = 'cancelada';
@@ -75,6 +76,7 @@ class PersonalRequisition extends Model
     {
         return [
             self::STATUS_SOLICITADA => 'Solicitada',
+            self::STATUS_APROBADA => 'Aprobada',
             self::STATUS_EN_GESTION => 'En gestion',
             self::STATUS_CONTRATADO => 'Contratado',
             self::STATUS_CANCELADA => 'Cancelada',
