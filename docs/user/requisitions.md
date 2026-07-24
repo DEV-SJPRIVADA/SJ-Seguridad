@@ -11,7 +11,7 @@ Aplica al tablero **Requisiciones** disponible en las areas autorizadas (princip
 El usuario puede, segun su perfil:
 
 - **Solicitar** nuevas requisiciones en su area, con el campo obligatorio **Estructura del servicio**
-- Consultar **Mis requisiciones** (seguimiento de lo solicitado) y exportar a Excel (incluye la columna Estructura del servicio)
+- Consultar **Mis requisiciones** (seguimiento de lo solicitado) y exportar a Excel con el detalle completo de la solicitud
 - Ver el **Dashboard** de indicadores del modulo
 - **Gestionar** solicitudes de todas las areas (solo Gestion Humana), incluyendo editar la Estructura del servicio
 - Administrar **Parametros** (catalogos: cargos, motivos, ciudades, correos de notificacion, etc.)
@@ -59,16 +59,17 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 
 1. Abra **Mis requisiciones** (o Seguimiento segun etiqueta en su instalacion).
 2. Use filtros de busqueda, estado, cliente o ciudad.
-3. Exporte a Excel si tiene la opcion disponible; el archivo incluye la columna **Estructura del servicio**.
+3. Opcional: indique **Fecha inicio** y **Fecha fin** (fecha de solicitud) y pulse **Buscar** para acotar la lista.
+4. Exporte a Excel si tiene la opcion disponible; el archivo trae todos los campos de la requisicion segun los filtros activos.
 
 ### Gestionar requisiciones (Gestion Humana)
 
 1. Abra la pestaña **Gestion**.
-2. Filtre por estado, area o busqueda.
+2. Filtre por estado, busqueda y rango de **Fecha inicio / Fecha fin** (fecha de solicitud); pulse **Buscar**.
 3. Edite una fila para completar compensacion, encargado de seleccion y observaciones de GH.
 4. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.
 5. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
-6. Exporte a Excel desde Gestion cuando lo necesite; la exportacion incluye la columna **Estructura del servicio**.
+6. Exporte a Excel; incluye todos los campos de la requisicion (incluida compensacion) segun los filtros activos.
 7. Imprima la ficha si necesita documento fisico.
 
 ### Administrar parametros
@@ -81,4 +82,4 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
-| 1.1 | 2026-07-24 | Documentador (FEAT-005) | Campo Estructura del servicio en Solicitar y Gestion; export Excel; historial de cambios |
+| 1.2 | 2026-07-24 | AgentSj / Feature | Export Excel completo + rango fechas en Gestion y Seguimiento | FEAT-006 |

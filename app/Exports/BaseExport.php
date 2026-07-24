@@ -82,7 +82,16 @@ class BaseExport
 
     private function columnLetter(int $index): string
     {
-        return chr(ord('A') + $index);
+        $letter = '';
+        $index++;
+
+        while ($index > 0) {
+            $index--;
+            $letter = chr(ord('A') + ($index % 26)).$letter;
+            $index = intdiv($index, 26);
+        }
+
+        return $letter;
     }
 
     private function extractValue($dataRow, array $column): mixed

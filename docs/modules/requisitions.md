@@ -73,8 +73,9 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - El **Historial de estados** sigue siendo independiente y solo registra transiciones de estado
 
 ### Export Excel
-- Gestion y Mis requisiciones / seguimiento usan `App\Exports\BaseExport` con columnas configurables en `RequisitionController`
-- Incluyen la columna **Estructura del servicio** (`service_structure`; vacio se muestra como `—`)
+- Gestion y Mis requisiciones / seguimiento usan `App\Exports\PersonalRequisitionFullExport` (sobre `BaseExport`) con **todas las columnas operativas** de `personal_requisitions`, incluyendo compensacion; relaciones (cargo, cliente, motivo, etc.) se exportan como **nombres legibles**
+- Filtros del export = mismos que la vista: busqueda (`q`), estado, **fecha inicio / fecha fin** sobre `request_date` (opcionales; sin fechas exporta todo el universo filtrado por el resto). En seguimiento tambien aplican cliente, ciudad y solo mis solicitudes
+- Filtros de fecha en panel de Gestion y Seguimiento; al pulsar Buscar filtran la tabla y el Excel
 
 ### Compartido
 - Ambos mailables usan cola (`ShouldQueue`)
@@ -203,7 +204,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
 - Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
 - Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.
-- **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, export Excel Gestion y Mis requisiciones, label en `PersonalRequisitionChangeLogger`.
+- **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, label en `PersonalRequisitionChangeLogger`.
+- **FEAT-006 (2026-07-24):** export Excel completo (`PersonalRequisitionFullExport`) en Gestion y Seguimiento; filtros `date_from`/`date_to` sobre `request_date` en panel (tabla + export).
 
 ## Referencias
 

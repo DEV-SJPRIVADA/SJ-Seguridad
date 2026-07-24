@@ -828,6 +828,51 @@ class RequisitionModuleTest extends TestCase
         $response->assertSee($comercialReq->code);
     }
 
+    public function test_manage_filters_by_request_date_range(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        PersonalRequisition::create(array_merge($this->requisitionAttributes($requester, 'REQ-2026-DATE-OLD', 'operaciones', 'Perfil'), [
+            'request_date' => '2026-01-15',
+        ]));
+        PersonalRequisition::create(array_merge($this->requisitionAttributes($requester, 'REQ-2026-DATE-NEW', 'operaciones', 'Perfil'), [
+            'request_date' => '2026-06-20',
+        ]));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', [
+                'module' => 'operaciones',
+                'date_from' => '2026-06-01',
+                'date_to' => '2026-06-30',
+            ]))
+            ->assertOk()
+            ->assertSee('REQ-2026-DATE-NEW')
+            ->assertDontSee('REQ-2026-DATE-OLD');
+    }
+
+    public function test_gestion_export_uses_full_export_columns(): void
+    {
+        $labels = collect(\App\Exports\PersonalRequisitionFullExport::columns())->pluck('label');
+
+        $this->assertTrue($labels->contains('Salario base'));
+        $this->assertTrue($labels->contains('Estructura del servicio'));
+        $this->assertGreaterThan(35, $labels->count());
+    }
+
     public function test_personnel_admin_sees_operaciones_base_tabs_and_gestion_only_in_gh(): void
     {
         $user = User::factory()->create([
