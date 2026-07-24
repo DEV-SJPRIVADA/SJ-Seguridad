@@ -12,7 +12,7 @@ El usuario puede, segun su perfil:
 
 - **Solicitar** nuevas requisiciones en su area, con el campo obligatorio **Estructura del servicio**
 - Consultar **Mis requisiciones** (seguimiento de lo solicitado) y exportar a Excel con el detalle completo de la solicitud
-- Ver el **Dashboard** de indicadores del modulo
+- Ver el **Dashboard** consolidado (todas las areas) con KPIs: Total, Solicitadas, En gestion, Contratadas y Canceladas
 - **Gestionar** solicitudes de todas las areas (solo Gestion Humana), incluyendo editar la Estructura del servicio
 - Administrar **Parametros** (catalogos: cargos, motivos, ciudades, correos de notificacion, etc.)
 

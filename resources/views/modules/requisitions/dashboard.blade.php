@@ -119,6 +119,9 @@
             
             {{-- SECCIÓN DE FILTROS --}}
             <form method="GET" action="{{ route('requisitions.dashboard', ['module' => $moduleKey]) }}" class="dashboard-filters">
+                @if ($dashboardGlobalScope ?? false)
+                    <p class="text-small text-muted" style="margin:0 0 0.75rem;">Vista consolidada: incluye requisiciones solicitadas por <strong>todas las areas</strong>.</p>
+                @endif
                 <div class="filter-grid">
                     <div class="form-field">
                         <label class="form-label">Cliente</label>
@@ -203,6 +206,12 @@
                     <p class="text-caption">Contratadas</p>
                     <p class="kpi-value" style="color: var(--color-success);">{{ $stats['contratado'] }}</p>
                     <p class="text-small text-muted">Procesos finalizados</p>
+                </article>
+
+                <article class="card kpi-card" style="border-left: 5px solid #be123c;">
+                    <p class="text-caption">Canceladas</p>
+                    <p class="kpi-value" style="color: #be123c;">{{ $stats['cancelada'] }}</p>
+                    <p class="text-small text-muted">Solicitudes descartadas</p>
                 </article>
             </div>
 

@@ -73,7 +73,10 @@ class RequisitionController extends Controller
         ];
 
         $query = PersonalRequisition::query()
-            ->where('requesting_area_key', $module)
+            ->when(
+                ! $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
+                fn ($builder) => $builder->where('requesting_area_key', $module)
+            )
             ->when($filters['client_id'], fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['position_id'], fn($q) => $q->where('position_id', $filters['position_id']))
             ->when($filters['city_id'], fn($q) => $q->where('city_id', $filters['city_id']))
@@ -108,6 +111,7 @@ class RequisitionController extends Controller
                 'contratado' => $statsByStatus->get(PersonalRequisition::STATUS_CONTRATADO, 0),
                 'cancelada' => $statsByStatus->get(PersonalRequisition::STATUS_CANCELADA, 0),
             ],
+            'dashboardGlobalScope' => $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
             'chartData' => [
                 'status' => [
                     'labels' => collect(PersonalRequisition::statuses())->values(),

@@ -828,6 +828,60 @@ class RequisitionModuleTest extends TestCase
         $response->assertSee($comercialReq->code);
     }
 
+    public function test_dashboard_in_gestion_humana_aggregates_all_areas_and_shows_canceladas_kpi(): void
+    {
+        $operacionesRequester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $operacionesRequester->assignRole('usuario');
+
+        $comercialRequester = User::factory()->create([
+            'area_key' => 'comercial',
+            'must_change_password' => false,
+        ]);
+        $comercialRequester->assignRole('usuario');
+
+        $viewer = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.dashboard',
+        ]);
+
+        PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($operacionesRequester, 'REQ-2026-DASH-OP', 'operaciones', 'Perfil OP'),
+            ['status' => PersonalRequisition::STATUS_SOLICITADA]
+        ));
+        PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($comercialRequester, 'REQ-2026-DASH-COM', 'comercial', 'Perfil COM'),
+            ['status' => PersonalRequisition::STATUS_CANCELADA]
+        ));
+        PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($viewer, 'REQ-2026-DASH-GH', 'gestion_humana', 'Perfil GH'),
+            ['status' => PersonalRequisition::STATUS_EN_GESTION]
+        ));
+
+        $response = $this->actingAs($viewer)->get(route('requisitions.dashboard', [
+            'module' => 'gestion_humana',
+            'year' => now()->year,
+        ]));
+
+        $response->assertOk()
+            ->assertSee('Canceladas', false)
+            ->assertSee('todas las areas', false)
+            ->assertViewHas('dashboardGlobalScope', true)
+            ->assertViewHas('stats', function (array $stats): bool {
+                return (int) $stats['total'] >= 3
+                    && (int) $stats['cancelada'] >= 1
+                    && (int) $stats['solicitada'] >= 1
+                    && (int) $stats['en_gestion'] >= 1;
+            });
+    }
+
     public function test_manage_filters_by_request_date_range(): void
     {
         $requester = User::factory()->create([

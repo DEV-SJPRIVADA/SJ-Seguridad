@@ -125,6 +125,17 @@ class RequisitionAccessService
     }
 
     /**
+     * Dashboard consolidado de requisiciones: todas las areas solicitantes.
+     * Aplica a quien puede ver el tab Dashboard (tipicamente Gestion Humana)
+     * o a operadores de Gestion.
+     */
+    public function usesGlobalDashboardScope(User $user, string $module): bool
+    {
+        return $this->canAccessTab($user, $module, 'dashboard')
+            || $this->usesGlobalManagementScope($user, $module);
+    }
+
+    /**
      * @return array<int, string>
      */
     public function visibleTabsFor(User $user, string $moduleKey): array

@@ -14,7 +14,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `Gestion`
   - `Parametros`
 - Solicitar y Mis requisiciones operan siempre en `users.area_key`
-- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** muestra solicitudes de todas las areas.
+- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** y **Dashboard** (con `requisitions.tab.dashboard`) muestran solicitudes de **todas las areas**.
 - Historial de cambios de estado
 - Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
@@ -125,7 +125,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 - **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con historial de estados, historial de cambios de campos y guia operativa.
 - **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
 - **Seguimiento**: mismo panel de filtros que Gestion (busqueda, pills de estado, cliente, ciudad, alcance mis/todas); resumen de resultados y exportacion Excel en la cabecera del panel.
-- **Dashboard Compacto**: indicadores KPI en una sola fila.
+- **Dashboard Compacto**: indicadores KPI en una sola fila (Total, Solicitadas, En gestion, Contratadas, Canceladas); alcance consolidado de todas las areas via `usesGlobalDashboardScope`.
 - **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).
 
 ## Rutas
