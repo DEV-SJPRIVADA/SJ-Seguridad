@@ -106,7 +106,7 @@
         }
         
         .dashboard-filters, .dashboard-stat-grid {
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .dashboard-scroll-area {
@@ -119,9 +119,7 @@
             
             {{-- SECCIÓN DE FILTROS --}}
             <form method="GET" action="{{ route('requisitions.dashboard', ['module' => $moduleKey]) }}" class="dashboard-filters">
-                @if ($dashboardGlobalScope ?? false)
-                    <p class="text-small text-muted" style="margin:0 0 0.75rem;">Vista consolidada: incluye requisiciones solicitadas por <strong>todas las areas</strong>.</p>
-                @endif
+
                 <div class="filter-grid">
                     <div class="form-field">
                         <label class="form-label">Cliente</label>
