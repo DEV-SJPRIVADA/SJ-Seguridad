@@ -17,6 +17,7 @@
 - Las vistas autenticadas comparten ahora una estructura comun:
   barra superior, panel lateral izquierdo para modulos autorizados y menu horizontal para tableros del modulo activo
 - **Estandar visual de pills:** areas (`.sidebar-link`), tableros y pestanas (`.module-tab`) comparten el mismo estilo; padding contenedor ↔ botones `0.2rem` (ver `docs/modules/branding.md` y `.cursor/rules/nav-chrome-ui.mdc`).
+- **Graficos (estandar):** **ApexCharts** via npm/Vite. Defaults compartidos en `resources/js/charts/apex-defaults.js`. Entries: `comercial-dashboard-charts.js`, `requisitions-dashboard-charts.js`, `indicadores-capture.js`. Sin Chart.js ni ECharts en runtime. Captura Operaciones: entry Vite `resources/js/indicadores-capture.js`; `public/js/indicadores-capture.js` es stub deprecado.
 - En pantallas <= 1024px la navegacion se compacta: selector nativo de procesos; **Tableros del area** (Dashboard, Requisiciones, Suministros…) y, debajo, subtabs del modulo activo (`module-subnav`, p. ej. Solicitar/Gestion) con scroll horizontal.
 - El `dashboard` funciona como pantalla neutra: no carga un modulo por defecto y muestra el area de trabajo vacia hasta que el usuario seleccione un modulo autorizado
 

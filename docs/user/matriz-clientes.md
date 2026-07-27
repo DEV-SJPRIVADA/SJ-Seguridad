@@ -8,7 +8,7 @@ Gestionar la cartera de clientes y servicios comerciales (matriz MT-CO-01), cons
 
 Modulo del area **Comercial**. Incluye:
 
-- **Dashboard:** indicadores de clientes y servicios (altas, vigencias, portafolios).
+- **Dashboard:** indicadores de clientes y servicios (altas, vigencias, portafolios) con graficos interactivos unificados (ApexCharts).
 - **Clientes:** maestro de clientes por NIT.
 - **Servicios:** contratos y portafolios vinculados a cada cliente.
 
@@ -41,7 +41,7 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 1. Entre al area **Comercial**.
 2. Abra **Dashboard**.
 3. Use filtros de portafolio, ciudad, anio/mes segun necesite.
-4. Revise KPIs y graficos de clientes nuevos y vigencias.
+4. Revise KPIs y graficos de clientes nuevos y vigencias (misma libreria de graficos que el resto de tableros).
 
 ### Registrar un cliente
 
@@ -84,3 +84,4 @@ No es una accion de usuario final en pantalla.
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-07-22 | Documentacion | Excel MT-CO-01 fuera del repo; import con ruta explicita |
 | 1.2 | 2026-07-27 | FEAT-007 | Vencimiento opcional por documento del checklist; badges de vigencia incluyen documentos |
+| 1.3 | 2026-07-27 | FEAT-010 | Dashboard comercial con graficos ApexCharts unificados (sin Chart.js) |

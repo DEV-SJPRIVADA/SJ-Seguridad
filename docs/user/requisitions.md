@@ -12,7 +12,7 @@ El usuario puede, segun su perfil:
 
 - **Solicitar** nuevas requisiciones en su area, con el campo obligatorio **Estructura del servicio**
 - Consultar **Mis requisiciones** (seguimiento de lo solicitado) y exportar a Excel con el detalle completo de la solicitud
-- Ver el **Dashboard** consolidado (todas las areas) con KPIs: Total, Solicitadas, En gestion, Contratadas y Canceladas
+- Ver el **Dashboard** consolidado (todas las areas) con KPIs: Total, Solicitadas, En gestion, Contratadas y Canceladas, y graficos interactivos unificados (ApexCharts)
 - **Gestionar** solicitudes de todas las areas (solo Gestion Humana), incluyendo editar la Estructura del servicio
 - Administrar **Parametros** (catalogos: cargos, motivos, ciudades, correos de notificacion, etc.)
 
@@ -55,6 +55,13 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 7. Revise el checklist lateral y envíe la solicitud.
 8. Recibira notificacion por correo cuando GH cambie el estado.
 
+### Consultar el dashboard
+
+1. Abra la pestaña **Dashboard** del tablero Requisiciones.
+2. Revise los KPIs (Total, Solicitadas, En gestion, Contratadas, Canceladas).
+3. Use los filtros disponibles; la pantalla se actualiza al cambiarlos.
+4. Revise los graficos de tendencia, estado, ciudad y cliente.
+
 ### Consultar mis requisiciones
 
 1. Abra **Mis requisiciones** (o Seguimiento segun etiqueta en su instalacion).
@@ -83,3 +90,4 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.2 | 2026-07-24 | AgentSj / Feature | Export Excel completo + rango fechas en Gestion y Seguimiento | FEAT-006 |
+| 1.3 | 2026-07-27 | FEAT-010 | Dashboard con graficos ApexCharts unificados; seccion Consultar el dashboard |

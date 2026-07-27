@@ -9,7 +9,7 @@ Registrar, consultar y consolidar indicadores de desempeno (KPI) del area de Ope
 Modulo exclusivo del area **Operaciones**. Segun permisos:
 
 - **Dashboard:** ver indicadores globales y resumen del periodo.
-- **Captura:** registrar valores mensuales de indicadores asignados a su usuario.
+- **Captura:** registrar valores mensuales de indicadores asignados a su usuario; graficos interactivos unificados (ApexCharts) en la ficha del indicador.
 - **Ajustes:** administrar periodos, metas, capturadores del area y consultar auditoria (gestores).
 - **Consolidado:** vista consolidada de capturas del equipo (gestores).
 - **Exportaciones:** PDF, Excel y PowerPoint (informe FO-GI-39) segun permiso de exportacion.
@@ -42,8 +42,9 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 1. Entre al area Operaciones → tablero **Indicadores** → **Captura**.
 2. Seleccione el indicador de la lista.
 3. Elija anio y mes (periodo debe estar abierto).
-4. Complete los campos del formulario y guarde.
-5. Si el indicador esta en rojo, registre plan de mejora si se solicita.
+4. Revise los graficos del indicador (barras y lineas) segun el periodo; reflejan valores y cumplimiento.
+5. Complete los campos del formulario y guarde.
+6. Si el indicador esta en rojo, registre plan de mejora si se solicita.
 
 ### Consultar el dashboard
 
@@ -91,3 +92,4 @@ Modulo exclusivo del area **Operaciones**. Segun permisos:
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-07-23 | FEAT-003 | Seccion Capturadores en Ajustes para habilitar captura FT-OP |
+| 1.2 | 2026-07-27 | FEAT-010 | Graficos de captura unificados en ApexCharts (sin ECharts) |

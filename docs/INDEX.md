@@ -62,7 +62,8 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 
 - `Laravel 13` + `PHP 8.3` (minimo requerido)
 - Desarrollo local: `Laragon 8.6+`, `MySQL 8`, `Node.js` + Vite, `Alpine.js` (layout) + JS vanilla por modulo
-- Captura de Indicadores: Controllers + Blade + `public/js/indicadores-capture.js` (sin Livewire)
+- Captura de Indicadores: Controllers + Blade + Vite `resources/js/indicadores-capture.js` (ApexCharts; stub deprecado en `public/js/indicadores-capture.js`; sin Livewire)
+- Graficos (estandar): **ApexCharts** via npm/Vite (`resources/js/charts/apex-defaults.js`); dashboards Comercial/GH y captura Operaciones. Sin Chart.js ni ECharts
 - Correo local: Laragon Mailpit (`smtp` `127.0.0.1:1025`); ver [`LOCAL_SETUP.md`](c:/laragon/www/SJSEGURIDAD/docs/LOCAL_SETUP.md)
 
 ## Regla de mantenimiento

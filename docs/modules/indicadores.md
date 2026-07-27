@@ -58,7 +58,7 @@ El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 
 Vistas en `resources/views/areas/operaciones/` con layout `<x-app-layout>`, paneles corporativos y subtabs via `App\Support\IndicadorNavigation`.
 
-Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros).
+Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + **ApexCharts** via Vite (`resources/js/indicadores-capture.js`; metrics/modales + charts FT-OP-01/03 mixed bar/line). Estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros). El archivo `public/js/indicadores-capture.js` esta deprecado (stub con `console.warn`; no carga ECharts). **FEAT-010:** Chart.js/ECharts retirados del runtime; estandar ApexCharts compartido con Comercial y GH.
 
 Los tableros usan la clase contenedora `indicadores-board` para tablas compactas, filtros acotados y botones al ancho de su contenido.
 

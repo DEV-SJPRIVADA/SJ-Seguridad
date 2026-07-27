@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Indicator;
 use App\Models\User;
 use App\Support\PermissionCatalog;
+use Database\Seeders\IndicadorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +18,7 @@ class IndicadorCapturePageTest extends TestCase
         parent::setUp();
 
         PermissionCatalog::sync();
-        $this->seed(\Database\Seeders\IndicadorSeeder::class);
+        $this->seed(IndicadorSeeder::class);
     }
 
     public function test_capture_page_renders_vanilla_form_and_scripts(): void
@@ -36,9 +37,12 @@ class IndicadorCapturePageTest extends TestCase
         $response->assertOk();
         $response->assertSee('js-open-improvement-modal', false);
         $response->assertSee('name="form[total_personal]"', false);
-        $response->assertSee('indicadores-capture.js', false);
+        $response->assertSee('indicadores-capture', false);
+        $response->assertSee('ft-op-01-chart', false);
         $response->assertSee('class="indicadores-form ftop01-sheet"', false);
         $response->assertSee($user->name, false);
+        $response->assertDontSee('cdn.jsdelivr.net/npm/echarts', false);
+        $response->assertDontSee('ensureEcharts', false);
         $response->assertDontSee('wire:model', false);
         $response->assertDontSee('livewire.js', false);
         $response->assertDontSee('@livewire', false);
@@ -60,7 +64,9 @@ class IndicadorCapturePageTest extends TestCase
         $response->assertOk();
         $response->assertSee('js-open-classification-modal', false);
         $response->assertSee('ft-op-03-chart-finance', false);
+        $response->assertSee('indicadores-capture', false);
         $response->assertSee('class="indicadores-form ftop03-sheet"', false);
+        $response->assertDontSee('cdn.jsdelivr.net/npm/echarts', false);
     }
 
     public function test_store_ft_op_03_with_classification(): void

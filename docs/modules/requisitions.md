@@ -14,7 +14,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `Gestion`
   - `Parametros`
 - Solicitar y Mis requisiciones operan siempre en `users.area_key`
-- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** y **Dashboard** (con `requisitions.tab.dashboard`) muestran solicitudes de **todas las areas**.
+- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** y **Dashboard** (con `requisitions.tab.dashboard`) muestran solicitudes de **todas las areas**. El dashboard renderiza KPIs y graficos **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js`; datos en `#requisitions-chart-data`).
 - Historial de cambios de estado
 - Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
@@ -206,6 +206,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.
 - **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, label en `PersonalRequisitionChangeLogger`.
 - **FEAT-006 (2026-07-24):** export Excel completo (`PersonalRequisitionFullExport`) en Gestion y Seguimiento; filtros `date_from`/`date_to` sobre `request_date` en panel (tabla + export).
+- **FEAT-010 (2026-07-27):** dashboard GH migra a **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js` + `apex-defaults.js`); Chart.js retirado.
 
 ## Referencias
 

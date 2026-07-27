@@ -26,6 +26,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-010 | Unificar graficos ApexCharts (GH + Operaciones; quitar Chart.js/ECharts) | orquestado | Si | [`docs/runs/FEAT-010-run-log.md`](runs/FEAT-010-run-log.md) | 2026-07-27 |
 | FEAT-007 | Checklist documental: fecha vencimiento por documento | orquestado | Si | [`docs/runs/FEAT-007-run-log.md`](runs/FEAT-007-run-log.md) | 2026-07-27 |
 | FEAT-006 | Export Excel Gestion: todos los campos + rango fechas | orquestado | Si | [`docs/runs/FEAT-006-run-log.md`](runs/FEAT-006-run-log.md) | 2026-07-24 |
 | FEAT-005 | Campo Estructura del servicio en requisiciones | orquestado | Si | [`docs/runs/FEAT-005-run-log.md`](runs/FEAT-005-run-log.md) | 2026-07-24 |
