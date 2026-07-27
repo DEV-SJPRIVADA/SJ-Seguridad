@@ -24,6 +24,10 @@ Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
 
 Usar `App\Exports\BaseExport` y `<x-export-excel>`. No reintroducir `excelHtml5`.
 
+## Navegacion chrome (areas / tableros / pestanas)
+
+Mismo estilo pill para sidebar (`.sidebar-link`), tableros y pestanas (`.module-tab`). Padding contenedor ↔ botones: `0.2rem`. Detalle: [`.cursor/rules/nav-chrome-ui.mdc`](nav-chrome-ui.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).
+
 ## Workflow multi-agente
 
 Ver [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md). Inicio de feature: **`@agent-sj`** o **`AgentSj`** + descripcion (skill `.cursor/skills/agent-sj/`). Carril rapido para consultas y fixes pequenos.

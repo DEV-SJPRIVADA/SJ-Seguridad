@@ -26,6 +26,7 @@
 - Los roles base son `super-admin`, `administrador` y `usuario` (los antiguos `coordinador` y `consulta` fueron migrados a `usuario`).
 - Los permisos del sistema y por area viven en `config/access.php`.
 - La gestion inicial de usuarios esta en el modulo `admin/users`.
+- **Navegacion chrome:** areas (sidebar `.sidebar-link`), tableros y pestanas (`.module-tab`) comparten el mismo estilo pill; padding del contenedor a los botones `0.2rem`. Ver `.cursor/rules/nav-chrome-ui.mdc` y `docs/modules/branding.md`.
 
 ## Estructura y Arquitectura Modular (Híbrida)
 - **Módulos Compartidos:** Funcionalidades usadas por múltiples áreas (ej. Requisiciones). Se ubican en:

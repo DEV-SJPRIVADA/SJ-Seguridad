@@ -61,7 +61,7 @@
             font-size: 0.65rem !important;
         }
         .dashboard-stat-grid {
-            margin-bottom: 1rem !important; /* Reducido de 2rem */
+            margin-bottom: 0.5rem !important;
             gap: 0.75rem !important;
         }
 
@@ -105,8 +105,12 @@
             overflow: visible;
         }
         
-        .dashboard-filters, .dashboard-stat-grid {
+        .dashboard-filters {
             margin-bottom: 0.5rem;
+        }
+
+        .dashboard-stat-grid.bottom-spaced {
+            margin-bottom: 0.5rem !important;
         }
 
         .dashboard-scroll-area {
