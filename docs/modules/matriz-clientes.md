@@ -23,8 +23,10 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
   - `commercial_services` (N:1 con cliente; portafolio, contrato, checklist, vigencia, contacto operativo)
 - Portafolios: `seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`
 - Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`
-- Checklist documental por servicio (estados, sin adjuntos)
-- Badge de vencimiento (30/60 dias)
+- Checklist documental por servicio (estados + vencimiento opcional por documento; sin adjuntos)
+- Badge de vencimiento (30/60 dias) sobre contrato **o** documentos con `tracks_expiry`
+- Por documento: toggle **Tiene vencimiento** + fecha (`*_tracks_expiry`, `*_expires_on`); fecha requerida solo si estado OK y toggle activo
+- Filtros `vigencia=expiring|expired` consideran contrato y documentos
 
 ## Fuera de V1
 
@@ -54,6 +56,7 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 - Catalogos sector/tipo se crean si no existen
 - Implementacion: `App\Services\Comercial\MtCo01Importer` + `comercial:import-mt-co-01`
 - Al importar/guardar se descartan duraciones > 600 meses y fechas de contrato anteriores a 1980 (artefactos de Excel); al editar un servicio con datos corruptos, el guardado los normaliza automaticamente
+- Si el Excel trae columnas de vencimiento documental reconocidas (ej. `vencimiento rut`, `fecha vencimiento fo-co-02`, `vencimiento contrato documental`), se asigna `*_tracks_expiry=true` y `*_expires_on`. No confundir con `fecha de terminacion contrato` (`contract_end`). Sin columna reconocida, no se inventan fechas.
 
 ## Rutas
 

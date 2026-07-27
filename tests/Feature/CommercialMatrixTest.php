@@ -238,6 +238,82 @@ class CommercialMatrixTest extends TestCase
         $this->assertSame(1, $client->fresh()->activeServices()->count());
     }
 
+    public function test_service_store_requires_expires_when_ok_and_tracks_expiry(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111222',
+            'name' => 'Cliente Expiry Required',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.store'), [
+                'commercial_client_id' => $client->id,
+                'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+                'contract_number' => 'SJ-DOC-REQ',
+                'doc_rut' => CommercialService::DOC_OK,
+                'doc_rut_tracks_expiry' => '1',
+            ])
+            ->assertSessionHasErrors(['doc_rut_expires_on']);
+    }
+
+    public function test_service_store_allows_ok_without_expires_when_not_tracking(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111223',
+            'name' => 'Cliente Sin Tracking',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.store'), [
+                'commercial_client_id' => $client->id,
+                'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+                'contract_number' => 'SJ-DOC-OK',
+                'doc_rut' => CommercialService::DOC_OK,
+            ])
+            ->assertRedirect(route('comercial.matriz.services.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('commercial_services', [
+            'commercial_client_id' => $client->id,
+            'contract_number' => 'SJ-DOC-OK',
+            'doc_rut' => CommercialService::DOC_OK,
+            'doc_rut_tracks_expiry' => false,
+            'doc_rut_expires_on' => null,
+        ]);
+    }
+
+    public function test_is_expired_true_when_document_expired_even_if_contract_ok(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111224',
+            'name' => 'Cliente Doc Vencido',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $service = CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-DOC-EXPIRED',
+            'contract_end' => now()->addMonths(6)->toDateString(),
+            'doc_rut' => CommercialService::DOC_OK,
+            'doc_rut_tracks_expiry' => true,
+            'doc_rut_expires_on' => now()->subDay()->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->assertTrue($service->isExpired());
+        $this->assertFalse($service->isExpiringSoon(30));
+    }
+
     private function matrizManager(): User
     {
         $user = User::factory()->create([

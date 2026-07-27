@@ -29,7 +29,6 @@ class CommercialDashboardController extends Controller
 
         $referenceMonth = $filters['month'] ?? (int) now()->month;
         $referenceDate = Carbon::create($filters['year'], $referenceMonth, 1)->startOfDay();
-        $in30 = $referenceDate->copy()->addDays(30);
 
         // Clientes activos: con al menos un servicio vigente en la fecha de referencia
         $activeClients = $this->activeClientsQuery($filters, $referenceDate)->count();
@@ -48,19 +47,12 @@ class CommercialDashboardController extends Controller
 
         $expiringSoon = $services
             ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
-            ->filter(function (CommercialService $service) use ($referenceDate, $in30): bool {
-                if (! $service->contract_end instanceof Carbon) {
-                    return false;
-                }
-
-                return $service->contract_end->gte($referenceDate) && $service->contract_end->lte($in30);
-            });
+            ->filter(fn (CommercialService $service): bool => $service->isExpiringSoon(30, $referenceDate)
+                && ! $service->isExpired($referenceDate));
 
         $expired = $services
             ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
-            ->filter(function (CommercialService $service) use ($referenceDate): bool {
-                return $service->contract_end instanceof Carbon && $service->contract_end->lt($referenceDate);
-            });
+            ->filter(fn (CommercialService $service): bool => $service->isExpired($referenceDate));
 
         $newClients = $this->newClientsQuery($filters)->count();
 

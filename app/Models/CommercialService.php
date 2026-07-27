@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class CommercialService extends Model
 {
@@ -36,25 +38,52 @@ class CommercialService extends Model
         'contract_end',
         'duration_months',
         'doc_economic_proposal',
+        'doc_economic_proposal_tracks_expiry',
+        'doc_economic_proposal_expires_on',
         'doc_fo_co_02',
+        'doc_fo_co_02_tracks_expiry',
+        'doc_fo_co_02_expires_on',
         'doc_laft_or_queries',
+        'doc_laft_or_queries_tracks_expiry',
+        'doc_laft_or_queries_expires_on',
         'doc_rut',
+        'doc_rut_tracks_expiry',
+        'doc_rut_expires_on',
         'doc_financials',
+        'doc_financials_tracks_expiry',
+        'doc_financials_expires_on',
         'doc_legal_rep_id',
+        'doc_legal_rep_id_tracks_expiry',
+        'doc_legal_rep_id_expires_on',
         'doc_chamber',
+        'doc_chamber_tracks_expiry',
+        'doc_chamber_expires_on',
         'doc_preinstall',
+        'doc_preinstall_tracks_expiry',
+        'doc_preinstall_expires_on',
         'doc_contract',
+        'doc_contract_tracks_expiry',
+        'doc_contract_expires_on',
         'doc_annex_2',
+        'doc_annex_2_tracks_expiry',
+        'doc_annex_2_expires_on',
         'created_by',
         'updated_by',
     ];
 
     protected function casts(): array
     {
-        return [
+        $casts = [
             'contract_start' => 'date',
             'contract_end' => 'date',
         ];
+
+        foreach (self::documentExpiryFields() as $meta) {
+            $casts[$meta['tracks']] = 'boolean';
+            $casts[$meta['expires']] = 'date';
+        }
+
+        return $casts;
     }
 
     public static function portfolios(): array
@@ -94,6 +123,40 @@ class CommercialService extends Model
         ];
     }
 
+    /**
+     * Map document field => expiry column names.
+     *
+     * @return array<string, array{tracks: string, expires: string}>
+     */
+    public static function documentExpiryFields(): array
+    {
+        $map = [];
+
+        foreach (array_keys(self::documentFields()) as $field) {
+            $map[$field] = [
+                'tracks' => "{$field}_tracks_expiry",
+                'expires' => "{$field}_expires_on",
+            ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Statuses that allow enabling document expiry tracking.
+     *
+     * @return list<string>
+     */
+    public static function documentStatusesWithExpiry(): array
+    {
+        return [
+            self::DOC_OK,
+            self::DOC_X,
+            self::DOC_PENDING,
+            self::DOC_INCOMPLETE,
+        ];
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(CommercialClient::class, 'commercial_client_id');
@@ -114,29 +177,125 @@ class CommercialService extends Model
         return $this->belongsTo(CommercialServiceType::class, 'commercial_service_type_id');
     }
 
-    public function isExpiringSoon(int $days = 60): bool
+    /**
+     * @return Collection<int, Carbon>
+     */
+    public function trackedDocumentExpiryDates(): Collection
     {
-        if (! $this->contract_end instanceof Carbon) {
-            return false;
+        $dates = collect();
+
+        foreach (self::documentExpiryFields() as $meta) {
+            if (! $this->{$meta['tracks']}) {
+                continue;
+            }
+
+            $expires = $this->{$meta['expires']};
+            if ($expires instanceof Carbon) {
+                $dates->push($expires->copy()->startOfDay());
+            }
         }
 
-        if ($this->portfolio === self::PORTFOLIO_INACTIVOS) {
-            return false;
-        }
-
-        return $this->contract_end->lte(now()->addDays($days)) && $this->contract_end->gte(now()->startOfDay());
+        return $dates;
     }
 
-    public function isExpired(): bool
+    public function earliestDocumentExpiry(): ?Carbon
     {
-        if (! $this->contract_end instanceof Carbon) {
-            return false;
+        $dates = $this->trackedDocumentExpiryDates();
+
+        if ($dates->isEmpty()) {
+            return null;
         }
 
+        return $dates->sortBy(fn (Carbon $date) => $date->timestamp)->first();
+    }
+
+    public function hasDocumentExpiringSoon(int $days = 60, ?Carbon $asOf = null): bool
+    {
+        $asOf = ($asOf ?? now())->copy()->startOfDay();
+        $limit = $asOf->copy()->addDays($days);
+
+        return $this->trackedDocumentExpiryDates()
+            ->contains(fn (Carbon $date) => $date->gte($asOf) && $date->lte($limit));
+    }
+
+    public function isExpiringSoon(int $days = 60, ?Carbon $asOf = null): bool
+    {
         if ($this->portfolio === self::PORTFOLIO_INACTIVOS) {
             return false;
         }
 
-        return $this->contract_end->lt(now()->startOfDay());
+        $asOf = ($asOf ?? now())->copy()->startOfDay();
+        $limit = $asOf->copy()->addDays($days);
+
+        if ($this->contract_end instanceof Carbon) {
+            $contractEnd = $this->contract_end->copy()->startOfDay();
+            if ($contractEnd->lte($limit) && $contractEnd->gte($asOf)) {
+                return true;
+            }
+        }
+
+        return $this->hasDocumentExpiringSoon($days, $asOf);
+    }
+
+    public function isExpired(?Carbon $asOf = null): bool
+    {
+        if ($this->portfolio === self::PORTFOLIO_INACTIVOS) {
+            return false;
+        }
+
+        $asOf = ($asOf ?? now())->copy()->startOfDay();
+
+        if ($this->contract_end instanceof Carbon && $this->contract_end->copy()->startOfDay()->lt($asOf)) {
+            return true;
+        }
+
+        return $this->trackedDocumentExpiryDates()
+            ->contains(fn (Carbon $date) => $date->lt($asOf));
+    }
+
+    public function scopeFilterByVigencia(Builder $query, string $vigencia, ?Carbon $asOf = null, int $days = 30): Builder
+    {
+        if (! in_array($vigencia, ['expiring', 'expired'], true)) {
+            return $query;
+        }
+
+        $today = ($asOf ?? now())->copy()->startOfDay();
+        $inDays = $today->copy()->addDays($days);
+
+        return $query
+            ->where('portfolio', '!=', self::PORTFOLIO_INACTIVOS)
+            ->where(function (Builder $outer) use ($vigencia, $today, $inDays): void {
+                if ($vigencia === 'expired') {
+                    $outer->where(function (Builder $q) use ($today): void {
+                        $q->whereNotNull('contract_end')
+                            ->whereDate('contract_end', '<', $today);
+                    });
+
+                    foreach (self::documentExpiryFields() as $meta) {
+                        $outer->orWhere(function (Builder $q) use ($meta, $today): void {
+                            $q->where($meta['tracks'], true)
+                                ->whereNotNull($meta['expires'])
+                                ->whereDate($meta['expires'], '<', $today);
+                        });
+                    }
+
+                    return;
+                }
+
+                $outer->where(function (Builder $q) use ($today, $inDays): void {
+                    $q->whereNotNull('contract_end')
+                        ->whereDate('contract_end', '>=', $today)
+                        ->whereDate('contract_end', '<=', $inDays);
+                });
+
+                foreach (self::documentExpiryFields() as $meta) {
+                    $outer->orWhere(function (Builder $q) use ($meta, $today, $inDays): void {
+                        $q->where($meta['tracks'], true)
+                            ->whereNotNull($meta['expires'])
+                            ->whereDate($meta['expires'], '>=', $today)
+                            ->whereDate($meta['expires'], '<=', $inDays);
+                    });
+                }
+            });
     }
 }

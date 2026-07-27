@@ -144,17 +144,85 @@
     </div>
 
     <h4 class="panel-title" style="font-size:1rem;">Checklist documental</h4>
-    <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
+    <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
         @foreach ($documentFields as $field => $label)
-            <div class="form-field">
+            @php
+                $tracksKey = $field.'_tracks_expiry';
+                $expiresKey = $field.'_expires_on';
+                $statusValue = old($field, $service->{$field});
+                $tracksValue = (bool) old($tracksKey, $service->{$tracksKey});
+                $expiresValue = old($expiresKey, optional($service->{$expiresKey})->format('Y-m-d'));
+                $showTracks = in_array($statusValue, ['ok', 'x', 'pending', 'incomplete'], true);
+            @endphp
+            <div class="form-field js-doc-expiry" data-doc-field="{{ $field }}">
                 <x-input-label :for="$field" :value="$label" />
-                <select id="{{ $field }}" name="{{ $field }}" class="form-select">
+                <select id="{{ $field }}" name="{{ $field }}" class="form-select js-doc-status">
                     <option value="">—</option>
                     @foreach ($documentStatuses as $statusKey => $statusLabel)
-                        <option value="{{ $statusKey }}" @selected(old($field, $service->{$field}) === $statusKey)>{{ $statusLabel }}</option>
+                        <option value="{{ $statusKey }}" @selected($statusValue === $statusKey)>{{ $statusLabel }}</option>
                     @endforeach
                 </select>
+
+                <div class="js-doc-tracks-wrap" style="margin-top:0.5rem; {{ $showTracks ? '' : 'display:none;' }}">
+                    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.875rem;">
+                        <input
+                            type="checkbox"
+                            name="{{ $tracksKey }}"
+                            value="1"
+                            class="js-doc-tracks"
+                            @checked($tracksValue)
+                        >
+                        Tiene vencimiento
+                    </label>
+                </div>
+
+                <div class="js-doc-expires-wrap" style="margin-top:0.5rem; {{ $showTracks && $tracksValue ? '' : 'display:none;' }}">
+                    <x-input-label :for="$expiresKey" value="Fecha de vencimiento" />
+                    <x-text-input
+                        :id="$expiresKey"
+                        :name="$expiresKey"
+                        type="date"
+                        class="form-input"
+                        :value="$expiresValue"
+                    />
+                    <x-input-error :messages="$errors->get($expiresKey)" />
+                </div>
             </div>
         @endforeach
     </div>
 </div>
+
+<script>
+(function () {
+    var trackable = ['ok', 'x', 'pending', 'incomplete'];
+
+    function syncDocExpiry(block) {
+        var status = block.querySelector('.js-doc-status');
+        var tracksWrap = block.querySelector('.js-doc-tracks-wrap');
+        var expiresWrap = block.querySelector('.js-doc-expires-wrap');
+        var tracks = block.querySelector('.js-doc-tracks');
+        if (!status || !tracksWrap || !expiresWrap || !tracks) {
+            return;
+        }
+
+        var showTracks = trackable.indexOf(status.value) !== -1;
+        tracksWrap.style.display = showTracks ? '' : 'none';
+        if (!showTracks) {
+            tracks.checked = false;
+        }
+        expiresWrap.style.display = (showTracks && tracks.checked) ? '' : 'none';
+    }
+
+    document.querySelectorAll('.js-doc-expiry').forEach(function (block) {
+        var status = block.querySelector('.js-doc-status');
+        var tracks = block.querySelector('.js-doc-tracks');
+        if (status) {
+            status.addEventListener('change', function () { syncDocExpiry(block); });
+        }
+        if (tracks) {
+            tracks.addEventListener('change', function () { syncDocExpiry(block); });
+        }
+        syncDocExpiry(block);
+    });
+})();
+</script>
