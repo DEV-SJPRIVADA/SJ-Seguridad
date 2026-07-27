@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Requisitions;
 
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
+use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
 use App\Models\PersonalRequisition;
 use App\Services\Access\RequisitionAccessService;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +12,7 @@ use Illuminate\Validation\Rule;
 class UpdatePersonalRequisitionRequest extends FormRequest
 {
     use ResolvesCommercialClient;
+    use ResolvesReplacementPersonFields;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -46,8 +48,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'position_id' => ['required', 'integer', Rule::exists('requisition_positions', 'id')],
             'sex' => ['required', 'string', Rule::in(['masculino', 'femenino', 'indiferente'])],
             'quantity' => ['required', 'integer', 'min:1', 'max:999'],
-            'replacement_document' => ['required_if:request_reason_id,2', 'nullable', 'string', 'max:50'],
-            'replacement_name' => ['required_if:request_reason_id,2', 'nullable', 'string', 'max:255'],
+            'replacement_document' => $this->replacementDocumentRules(),
+            'replacement_name' => $this->replacementNameRules(),
             'operating_area_key' => ['required', 'string', Rule::in(array_keys(config('access.areas', [])))],
             'request_reason_id' => ['required', 'integer', Rule::exists('requisition_request_reasons', 'id')],
             ...$this->commercialClientRules(),
@@ -56,7 +58,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'programming_type_id' => ['required', 'integer', Rule::exists('requisition_programming_types', 'id')],
             'required_profile' => ['required', 'string'],
             'uniform_id' => ['required', 'integer', Rule::exists('requisition_uniforms', 'id')],
-            
+            'service_structure' => ['required', 'string'],
+
             // Campos de GH condicionales: Solo obligatorios si el estado es 'contratado'
             'contract_type_id' => [$isHired ? 'required' : 'nullable', 'integer', Rule::exists('requisition_contract_types', 'id')],
             'contract_duration' => [$isHired ? 'required' : 'nullable', 'string', 'max:255'],

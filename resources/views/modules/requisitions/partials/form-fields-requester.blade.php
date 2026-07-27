@@ -3,11 +3,13 @@
     $reasonsByName = $catalogs['reasons']->keyBy(fn ($reason) => strtolower($reason->name));
     $reasonCargoNuevo = $reasonsByName->get('cargo nuevo')?->id;
     $reasonReemplazo = $reasonsByName->get('reemplazo')?->id;
+    $reasonMovimientoInterno = $reasonsByName->get('movimiento interno')?->id;
     $reasonServicioNuevo = $reasonsByName->get('servicio nuevo')?->id;
     $quantityReasonIds = array_values(array_filter([$reasonCargoNuevo, $reasonServicioNuevo]));
+    $replacementReasonIds = array_values(array_filter([$reasonReemplazo, $reasonMovimientoInterno]));
     $selectedReasonId = (string) old('request_reason_id', '');
     $showQuantityInitially = in_array((int) $selectedReasonId, $quantityReasonIds, true);
-    $showReplacementInitially = $selectedReasonId !== '' && (int) $selectedReasonId === (int) $reasonReemplazo;
+    $showReplacementInitially = in_array((int) $selectedReasonId, $replacementReasonIds, true);
     $quantityValue = old('quantity', 1);
     $clientTypesByName = $catalogs['clientTypes']->keyBy(fn ($type) => strtolower($type->name));
     $internalClientTypeId = $clientTypesByName->get('interno')?->id;
@@ -33,7 +35,7 @@
             <span class="req-form__section-step">1</span>
             <div>
                 <h4 class="req-form__section-title">Motivo de la solicitud</h4>
-                <p class="req-form__section-desc">Indica si es cargo nuevo, reemplazo o servicio nuevo.</p>
+                <p class="req-form__section-desc">Indica el motivo. En reemplazo o movimiento interno se pedira cedula y nombre.</p>
             </div>
         </header>
 
@@ -45,7 +47,7 @@
                     name="request_reason_id"
                     class="form-select"
                     required
-                    data-replacement-id="{{ $reasonReemplazo }}"
+                    data-replacement-ids="{{ implode(',', $replacementReasonIds) }}"
                     data-quantity-ids="{{ implode(',', $quantityReasonIds) }}"
                 >
                     <option value="">Selecciona un motivo</option>
@@ -94,7 +96,7 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="sex" value="Sexo *" />
+                <x-input-label for="sex" value="Genero *" />
                 <select id="sex" name="sex" class="form-select" required>
                     <option value="">Selecciona una opcion</option>
                     @foreach ($sexOptions as $sexKey => $sexLabel)
@@ -215,6 +217,13 @@
                 </select>
                 <x-input-error :messages="$errors->get('uniform_id')" />
             </div>
+
+            <div class="form-field form-field--full">
+                <x-input-label for="service_structure" value="Estructura del servicio *" />
+                <textarea id="service_structure" name="service_structure" class="form-textarea" rows="3" required placeholder="Horarios, descansos y condiciones del puesto a tener en cuenta.">{{ old('service_structure') }}</textarea>
+                <p class="req-form__hint">Horarios, descansos y condiciones del puesto a tener en cuenta.</p>
+                <x-input-error :messages="$errors->get('service_structure')" />
+            </div>
         </div>
     </section>
 
@@ -262,7 +271,9 @@
             return;
         }
 
-        const replacementReasonId = reasonSelect.dataset.replacementId || '';
+        const replacementReasonIds = (reasonSelect.dataset.replacementIds || '')
+            .split(',')
+            .filter(Boolean);
         const quantityReasonIds = (reasonSelect.dataset.quantityIds || '')
             .split(',')
             .filter(Boolean);
@@ -347,7 +358,7 @@
 
         function toggleReasonDependentFields() {
             const reasonId = reasonSelect.value;
-            const isReplacement = reasonId !== '' && reasonId === replacementReasonId;
+            const isReplacement = reasonId !== '' && replacementReasonIds.includes(reasonId);
             const showQuantity = quantityReasonIds.includes(reasonId);
 
             if (replacementGroup) {

@@ -90,15 +90,15 @@ Cada modulo debe tener un archivo `docs/modules/<modulo>.md` con:
 
 ## Procedimiento multi-agente (features y modulos)
 
-Roles: Analista → Arquitecto → Orquestador → Agente Feature → Revisor → Documentador.
+Roles: Analista → Arquitecto → AgentSj → Agente Feature → Revisor → Documentador.
 
-1. Registrar feature en [`docs/TASKS.md`](c:/laragon/www/SJSEGURIDAD/docs/TASKS.md) (Orquestador).
+1. Registrar feature en [`docs/TASKS.md`](c:/laragon/www/SJSEGURIDAD/docs/TASKS.md) (AgentSj).
 2. Analista cierra vacios; pausa si hay preguntas al usuario.
 3. Arquitecto entrega Feature Brief en `docs/briefs/FEAT-XXX.md`.
-4. Orquestador genera plan y Task Cards; Agente Feature implementa vertical slice por tarea.
+4. AgentSj genera plan y Task Cards; Agente Feature implementa vertical slice por tarea.
 5. Revisor emite reporte en `docs/reviews/FEAT-XXX.md`.
 6. Documentador actualiza `docs/modules/{modulo}.md` y crea/actualiza `docs/user/{modulo}.md`.
-7. Orquestador ejecuta checklist de [`AGENT_WORKFLOW.md`](c:/laragon/www/SJSEGURIDAD/docs/AGENT_WORKFLOW.md) e integra.
+7. AgentSj ejecuta checklist de [`AGENT_WORKFLOW.md`](c:/laragon/www/SJSEGURIDAD/docs/AGENT_WORKFLOW.md) e integra.
 
 Modo recomendado: chat maestro en Agent mode con [`docs/agents/prompts/start-feature.md`](c:/laragon/www/SJSEGURIDAD/docs/agents/prompts/start-feature.md).
 

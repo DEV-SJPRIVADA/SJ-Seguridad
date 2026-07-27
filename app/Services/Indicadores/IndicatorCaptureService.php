@@ -391,6 +391,8 @@ class IndicatorCaptureService
             $numerator = (float) ($capture?->numerator ?? 0);
             $result = (float) ($capture?->result_percentage ?? 0);
 
+            $complies = $this->calculator->compliesForCapture($indicator, $capture);
+
             $rows[] = [
                 'month_number' => $m,
                 'month' => $monthNames[$m],
@@ -399,8 +401,8 @@ class IndicatorCaptureService
                 'result_percentage' => $result,
                 'analysis' => $analysis,
                 'has_capture' => (bool) $capture,
-                'complies' => (bool) ($capture?->complies ?? false),
-                'improvement' => $capture ? ! (bool) ($capture->complies ?? false) : false,
+                'complies' => $complies,
+                'improvement' => $capture ? ! $complies : false,
             ];
 
             $denominators[] = $denominator;

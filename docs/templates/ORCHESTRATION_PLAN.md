@@ -1,6 +1,6 @@
 # Plan de orquestacion — FEAT-XXX
 
-> Generado por el Orquestador tras aprobar el Feature Brief. Guardar como `docs/briefs/FEAT-XXX-plan.md`.
+> Generado por el AgentSj tras aprobar el Feature Brief. Guardar como `docs/briefs/FEAT-XXX-plan.md`.
 
 ## Resumen
 
@@ -10,6 +10,7 @@
 | Modo | orquestado / manual |
 | Rama Git | feat/FEAT-XXX-slug |
 | Modulo principal | |
+| Run log | `docs/runs/FEAT-XXX-run-log.md` |
 | shared-files | |
 
 ## Secuencia de tareas
@@ -23,7 +24,7 @@
 | 5 | Feature | Tarea 3: (ej. vistas + JS) | 4 | |
 | 6 | Revisor | Review del diff completo | 5 | |
 | 7 | Documentador | docs/modules + docs/user | 6 | |
-| 8 | Orquestador | Checklist cierre | 7 | |
+| 8 | AgentSj | Checklist cierre | 7 | |
 
 ## Paralelismo
 

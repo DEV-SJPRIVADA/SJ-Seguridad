@@ -14,7 +14,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `Gestion`
   - `Parametros`
 - Solicitar y Mis requisiciones operan siempre en `users.area_key`
-- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** muestra solicitudes de todas las areas.
+- Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** y **Dashboard** (con `requisitions.tab.dashboard`) muestran solicitudes de **todas las areas**. El dashboard renderiza KPIs y graficos **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js`; datos en `#requisitions-chart-data`).
 - Historial de cambios de estado
 - Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
@@ -35,6 +35,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Existen dos observaciones:
   - `requester_observation`
   - `human_resources_observation`
+- `service_structure` (**Estructura del servicio**): texto obligatorio al crear y al guardar en edicion; captura horarios, descansos y condiciones del puesto. Visible/editable en Solicitar y Gestion; incluido en export Excel; **no** en impresion ni correos
 - Los estados permitidos en V1 son:
   - `solicitada`
   - `en_gestion`
@@ -67,8 +68,14 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Servicio: `App\Services\Requisitions\PersonalRequisitionChangeLogger`
 - Tabla: `personal_requisition_change_logs` (agrupado por `change_batch` por cada guardado)
 - Registra: fecha/hora, campo (etiqueta legible), valor anterior, valor nuevo, usuario (`changed_by`)
+- Incluye `service_structure` con etiqueta legible **Estructura del servicio** cuando GH lo modifica
 - UI: panel **Historial de cambios** en `resources/views/modules/requisitions/edit.blade.php`
 - El **Historial de estados** sigue siendo independiente y solo registra transiciones de estado
+
+### Export Excel
+- Gestion y Mis requisiciones / seguimiento usan `App\Exports\PersonalRequisitionFullExport` (sobre `BaseExport`) con **todas las columnas operativas** de `personal_requisitions`, incluyendo compensacion; relaciones (cargo, cliente, motivo, etc.) se exportan como **nombres legibles**
+- Filtros del export = mismos que la vista: busqueda (`q`), estado, **fecha inicio / fecha fin** sobre `request_date` (opcionales; sin fechas exporta todo el universo filtrado por el resto). En seguimiento tambien aplican cliente, ciudad y solo mis solicitudes
+- Filtros de fecha en panel de Gestion y Seguimiento; al pulsar Buscar filtran la tabla y el Excel
 
 ### Compartido
 - Ambos mailables usan cola (`ShouldQueue`)
@@ -94,13 +101,17 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 12. Tipo de programacion
 13. Perfil requerido
 14. Dotacion requerida
-15. Centro de costo
-16. Observaciones del solicitante
+15. **Estructura del servicio** (`service_structure`; obligatorio; seccion 4, debajo de perfil/dotacion)
+16. Centro de costo
+17. Observaciones del solicitante
+
+### Campos visibles y editables tambien para Gestión Humana (GH)
+- Mismos campos del solicitante en el formulario de edicion (incluido **Estructura del servicio**), mas:
 
 ### Campos exclusivos para Gestión Humana (GH)
-17. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
-18. **Seguimiento**: Encargado de selección (`recruiter_id`).
-19. **Cierre**: Fecha de contratación, Observaciones de GH.
+18. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
+19. **Seguimiento**: Encargado de selección (`recruiter_id`).
+20. **Cierre**: Fecha de contratación, Observaciones de GH.
 
 ## Identificación Visual y UI
 
@@ -114,7 +125,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 - **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con historial de estados, historial de cambios de campos y guia operativa.
 - **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
 - **Seguimiento**: mismo panel de filtros que Gestion (busqueda, pills de estado, cliente, ciudad, alcance mis/todas); resumen de resultados y exportacion Excel en la cabecera del panel.
-- **Dashboard Compacto**: indicadores KPI en una sola fila.
+- **Dashboard Compacto**: indicadores KPI en una sola fila (Total, Solicitadas, En gestion, Contratadas, Canceladas); alcance consolidado de todas las areas via `usesGlobalDashboardScope`.
 - **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).
 
 ## Rutas
@@ -147,9 +158,15 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
 - `manage.users`
 
+## Validacion (Form Requests)
+
+- `StorePersonalRequisitionRequest` / `UpdatePersonalRequisitionRequest`: `service_structure` → `required|string` (ademas de las reglas existentes del modulo)
+- HTML `required` en textarea de Solicitar (`form-fields-requester`) y Gestion (`form-fields`)
+- Registros legacy con `NULL` en BD: al reabrir en Gestion el campo es obligatorio al guardar
+
 ## Tablas implicadas
 
-- `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`)
+- `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`, `service_structure` text nullable)
 - `personal_requisition_status_logs`
 - `personal_requisition_change_logs` (trazabilidad de campos editados en gestion)
 - `requisition_positions`
@@ -172,7 +189,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 
 ## Deuda / pendientes (fuera del corte Mailpit)
 
-- Motivo “Reemplazo” acoplado a `request_reason_id = 2` (frágil si cambia el seeder).
+- Motivo “Reemplazo” o “Movimiento interno” exige cedula y nombre (IDs resueltos por nombre de catalogo, no hardcode).
 - `PersonalRequisitionPolicy` registrada pero no usada en el controller.
 - Cobertura de tests acotada (sin factory dedicada; sin print/dashboard/parametros ampliados).
 - Campo legacy `recruiter_name` convive con `recruiter_id`.
@@ -187,6 +204,9 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Correo al solicitante cuando GH cambia el estado (`PersonalRequisitionStatusChangedMail`).
 - Campo **Cliente** en Solicitar/Gestion: buscador sobre `commercial_clients` (`commercial-client-picker.blade.php`, `comercial-client-picker.js`); puente `CommercialClientBridge` resuelve `client_id` en `requisition_clients` por nombre al validar (`ResolvesCommercialClient`).
 - Eliminado el tablero **Clientes** en Parametros de requisiciones; la fuente maestra es Comercial → Clientes.
+- **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, label en `PersonalRequisitionChangeLogger`.
+- **FEAT-006 (2026-07-24):** export Excel completo (`PersonalRequisitionFullExport`) en Gestion y Seguimiento; filtros `date_from`/`date_to` sobre `request_date` en panel (tabla + export).
+- **FEAT-010 (2026-07-27):** dashboard GH migra a **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js` + `apex-defaults.js`); Chart.js retirado.
 
 ## Referencias
 

@@ -7,13 +7,18 @@ use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
+use App\Services\Indicadores\IndicatorMetricCalculator;
 use Illuminate\Support\Collection;
 
 class OperationsDashboardService
 {
-    public function __construct(private readonly IndicatorConsolidadoService $consolidadoService)
-    {
+    public function __construct(
+        private readonly IndicatorConsolidadoService $consolidadoService,
+        private readonly IndicatorMetricCalculator $metricCalculator,
+        private readonly IndicatorCaptureAccessService $captureAccessService,
+    ) {
     }
 
     public function build(int $year, int $month): array
@@ -26,14 +31,17 @@ class OperationsDashboardService
         $indicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
         $weights = DashboardWeight::query()->get()->keyBy('indicator_id');
         $users = $this->capturableUsers();
+        [$previousYear, $previousMonth] = $this->previousPeriod($year, $month);
+        $previousPeriodLabel = config('indicators.months')[$previousMonth] ?? (string) $previousMonth;
 
         $kpis = [];
         $weightedAccumulator = 0.0;
-        $criticalRows = [];
 
         foreach ($indicators as $indicator) {
             $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month, $users);
+            $previousMonthly = $this->consolidadoService->getMonthlyData($indicator, $previousYear, $previousMonth, $users);
             $result = $this->resultForIndicator($indicator, $monthly['consolidated']);
+            $previousResult = $this->resultForIndicator($indicator, $previousMonthly['consolidated']);
             $normalized = $this->normalizeIndicator($indicator, $monthly['consolidated'], $result);
             $weight = (float) ($weights[$indicator->id]->weight ?? 0);
             $weightedAccumulator += ($normalized * $weight) / 100;
@@ -41,12 +49,10 @@ class OperationsDashboardService
             $zonesRed = collect($monthly['rows'])->filter(fn ($row) => $row['semaforo'] === 'ROJO')->count();
             $hasImprovements = collect($monthly['rows'])->contains(fn ($row) => $row['semaforo'] === 'ROJO' && $row['has_improvement']);
 
-            $deviation = $this->deviationForIndicator($indicator, $monthly['consolidated']);
-            $criticality = $deviation + ($zonesRed * 10);
-
             $kpis[] = [
                 'indicator' => $indicator,
                 'result' => $result,
+                'previous_result' => $previousResult,
                 'meta' => $this->metaLabel($indicator),
                 'semaforo' => $this->semaforoByNormalized($normalized),
                 'has_improvements' => $hasImprovements,
@@ -54,32 +60,26 @@ class OperationsDashboardService
                 'normalized' => $normalized,
                 'weight' => $weight,
                 'zones_red' => $zonesRed,
-                'criticality' => $criticality,
-            ];
-
-            $criticalRows[] = [
-                'indicator' => $indicator,
-                'result' => $result,
-                'meta' => $this->metaLabel($indicator),
-                'zones_red' => $zonesRed,
-                'deviation' => $deviation,
-                'criticality' => $criticality,
-                'consolidado_url' => route('indicadores.admin.consolidado.show', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]),
             ];
         }
 
         $globalScore = round($weightedAccumulator, 2);
 
-        $zoneRanking = $this->zoneRanking($year, $month, $indicators, $weights, $users);
-        $criticalRanking = collect($criticalRows)->sortByDesc('criticality')->values()->all();
+        $zoneRanking = $this->zoneRanking($year, $month, $indicators, $users);
+        $criticalIndicators = $this->buildCriticalIndicators($year, $month, $indicators, $users);
         $trends = $withTrends ? $this->trends($year, $month) : ['months' => [], 'global' => [], 'indicators' => []];
 
         return [
             'kpis' => $kpis,
+            'previous_period' => [
+                'year' => $previousYear,
+                'month' => $previousMonth,
+                'label' => $previousPeriodLabel,
+            ],
             'global_score' => $globalScore,
             'global_state' => $this->globalState($globalScore),
             'zone_ranking' => $zoneRanking,
-            'critical_ranking' => $criticalRanking,
+            'critical_indicators' => $criticalIndicators,
             'trends' => $trends,
         ];
     }
@@ -114,48 +114,55 @@ class OperationsDashboardService
      */
     private function capturableUsers(): Collection
     {
-        return User::permission(['operations.capture', 'operations.manage'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        return $this->captureAccessService->capturableUsers();
     }
 
-    private function zoneRanking(int $year, int $month, Collection $indicators, Collection $weights, Collection $users): array
+    private function zoneRanking(int $year, int $month, Collection $indicators, Collection $users): array
     {
         $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
         if (! $period) {
-            return $users->map(fn (User $user) => ['user' => $user, 'score' => 0.0, 'red_count' => 0])->all();
+            return [];
         }
 
         $captures = IndicatorCapture::query()
+            ->with(['user', 'improvement'])
             ->where('period_id', $period->id)
             ->whereIn('indicator_id', $indicators->pluck('id'))
             ->whereIn('user_id', $users->pluck('id'))
-            ->get()
-            ->keyBy(fn (IndicatorCapture $capture) => $capture->indicator_id.'-'.$capture->user_id);
+            ->get();
 
         $ranking = [];
-        foreach ($users as $user) {
-            $score = 0.0;
-            $red = 0;
-            foreach ($indicators as $indicator) {
-                /** @var IndicatorCapture|null $capture */
-                $capture = $captures->get($indicator->id.'-'.$user->id);
-                if (! $capture) {
-                    continue;
-                }
+        $totalIndicators = $indicators->count();
 
-                $normalized = $this->normalizeCapture($indicator, $capture);
-                $weight = (float) ($weights[$indicator->id]->weight ?? 0);
-                $score += ($normalized * $weight) / 100;
-                if (! $capture->complies) {
-                    $red++;
-                }
+        foreach ($captures->groupBy('user_id') as $userCaptures) {
+            /** @var IndicatorCapture $firstCapture */
+            $firstCapture = $userCaptures->first();
+            $user = $firstCapture->user;
+            if (! $user) {
+                continue;
             }
-            $ranking[] = ['user' => $user, 'score' => round($score, 2), 'red_count' => $red];
+
+            $indicatorsManaged = $userCaptures->count();
+            $managementPercentage = $totalIndicators > 0
+                ? round(($indicatorsManaged / $totalIndicators) * 100)
+                : 0;
+
+            $ranking[] = [
+                'user' => $user,
+                'indicators_managed' => $indicatorsManaged,
+                'management_percentage' => $managementPercentage,
+                'improvements_count' => $userCaptures->filter(fn (IndicatorCapture $capture) => $capture->improvement !== null)->count(),
+            ];
         }
 
-        return collect($ranking)->sortByDesc('score')->values()->all();
+        return collect($ranking)
+            ->sortBy([
+                fn (array $row) => -$row['indicators_managed'],
+                fn (array $row) => -$row['improvements_count'],
+                fn (array $row) => $row['user']->name,
+            ])
+            ->values()
+            ->all();
     }
 
     private function trends(int $year, int $month): array
@@ -292,32 +299,66 @@ class OperationsDashboardService
         return 'CRITICO';
     }
 
-    private function deviationForIndicator(Indicator $indicator, array $consolidated): float
-    {
-        if ($indicator->code === 'FT-OP-03') {
-            $a = (float) ($consolidated['a']['result_percentage'] ?? 0);
-            $b = (float) ($consolidated['b']['result_percentage'] ?? 0);
-
-            return max(0, $a - 3) + max(0, $b - 1);
-        }
-
-        $result = (float) ($consolidated['result_percentage'] ?? 0);
-        $meta = (float) $indicator->target_value;
-
-        return match ($indicator->target_operator) {
-            '>=' => max(0, $meta - $result),
-            '<=' => max(0, $result - $meta),
-            '==' => $meta == 0 ? ($result > 0 ? $result : 0) : ($result == $meta ? 0 : abs($result - $meta)),
-            default => 0,
-        };
-    }
-
     private function metaLabel(Indicator $indicator): string
     {
-        if ($indicator->code === 'FT-OP-03') {
-            return 'A<=3% y B<=1%';
+        return $indicator->metaLabel();
+    }
+
+    /**
+     * @return list<array{user: User, indicator: Indicator, critical_value: float}>
+     */
+    private function buildCriticalIndicators(int $year, int $month, Collection $indicators, Collection $users): array
+    {
+        $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
+        if (! $period) {
+            return [];
         }
 
-        return $indicator->target_operator.' '.$indicator->target_value.'%';
+        $captures = IndicatorCapture::query()
+            ->with('user')
+            ->where('period_id', $period->id)
+            ->whereIn('indicator_id', $indicators->pluck('id'))
+            ->whereIn('user_id', $users->pluck('id'))
+            ->get()
+            ->groupBy('indicator_id');
+
+        $entries = [];
+
+        foreach ($indicators as $indicator) {
+            foreach ($captures->get($indicator->id, collect()) as $capture) {
+                if (! $this->metricCalculator->isCriticalCapture($indicator, $capture)) {
+                    continue;
+                }
+
+                $displayValue = $this->metricCalculator->criticalDisplayValue($indicator, $capture);
+                if ($displayValue === null) {
+                    continue;
+                }
+
+                $entries[] = [
+                    'user' => $capture->user,
+                    'indicator' => $indicator,
+                    'critical_value' => $displayValue,
+                ];
+            }
+        }
+
+        return collect($entries)
+            ->sortBy([
+                fn (array $row) => $row['user']->name,
+                fn (array $row) => $row['indicator']->code,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array{0: int, 1: int}
+     */
+    private function previousPeriod(int $year, int $month): array
+    {
+        $date = \Carbon\Carbon::create($year, $month, 1)->subMonth();
+
+        return [(int) $date->year, (int) $date->month];
     }
 }

@@ -1,6 +1,6 @@
 # Tablero de tareas — SJ Seguridad
 
-Tablero vivo para el **Orquestador**. Convencion de IDs: `FEAT-001`, `FEAT-002`, …
+Tablero vivo para el **AgentSj**. Convencion de IDs: `FEAT-001`, `FEAT-002`, …
 
 Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
@@ -8,9 +8,9 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 ## En progreso
 
-| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | shared-files |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | |
+| ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | |
 
 ---
 
@@ -24,11 +24,17 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 ## Completadas (ultimas 10)
 
-| ID | Feature | Modo | Validado | Fecha cierre |
-| --- | --- | --- | --- | --- |
-| FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | 2026-07-22 |
-| FEAT-PILOT-001 | Doc usuario admin-users (piloto workflow) | orquestado | Si | 2026-07-22 |
-| DOC-ALIGN-001 | Alineacion documentacion IA/dev/usuario (7 modulos) | manual | Si | 2026-07-22 |
+| ID | Feature | Modo | Validado | Run log | Fecha cierre |
+| --- | --- | --- | --- | --- | --- |
+| FEAT-010 | Unificar graficos ApexCharts (GH + Operaciones; quitar Chart.js/ECharts) | orquestado | Si | [`docs/runs/FEAT-010-run-log.md`](runs/FEAT-010-run-log.md) | 2026-07-27 |
+| FEAT-007 | Checklist documental: fecha vencimiento por documento | orquestado | Si | [`docs/runs/FEAT-007-run-log.md`](runs/FEAT-007-run-log.md) | 2026-07-27 |
+| FEAT-006 | Export Excel Gestion: todos los campos + rango fechas | orquestado | Si | [`docs/runs/FEAT-006-run-log.md`](runs/FEAT-006-run-log.md) | 2026-07-24 |
+| FEAT-005 | Campo Estructura del servicio en requisiciones | orquestado | Si | [`docs/runs/FEAT-005-run-log.md`](runs/FEAT-005-run-log.md) | 2026-07-24 |
+| FEAT-004 | Ranking dashboard indicadores operaciones | orquestado | Si | [`docs/runs/FEAT-004-run-log.md`](runs/FEAT-004-run-log.md) | 2026-07-23 |
+| FEAT-003 | Capturadores en Ajustes indicadores | orquestado | Si | [`docs/runs/FEAT-003-run-log.md`](runs/FEAT-003-run-log.md) | 2026-07-23 |
+| FEAT-002 | Export informe gestion FO-GI-39 (PPTX) | directo | Si | — | 2026-07-22 |
+| FEAT-PILOT-001 | Doc usuario admin-users (piloto workflow) | orquestado | Si | [`docs/runs/FEAT-PILOT-001-run-log.md`](runs/FEAT-PILOT-001-run-log.md) | 2026-07-22 |
+| DOC-ALIGN-001 | Alineacion documentacion IA/dev/usuario (7 modulos) | manual | Si | — | 2026-07-22 |
 
 ---
 
@@ -37,11 +43,11 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 <!--
 ### Como crear una feature nueva
 
-1. Orquestador agrega fila en Cola o En progreso.
+1. AgentSj agrega fila en Cola o En progreso.
 2. Ejemplo:
 
-| ID | Feature | Modo | Fase actual | Orquestador chat | Rama | Brief | shared-files |
-| FEAT-001 | Export Excel ajustes operaciones | orquestado | Analista | chat-2026-07-22 | feat/FEAT-001-export-ajustes | docs/briefs/FEAT-001.md | config/access.php |
+| ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
+| FEAT-001 | Export Excel ajustes operaciones | orquestado | Analista | chat-2026-07-22 | feat/FEAT-001-export-ajustes | docs/briefs/FEAT-001.md | docs/runs/FEAT-001-run-log.md | config/access.php |
 
 3. Fases tipicas: Analista → Arquitecto → Feature (N tareas) → Revisor → Documentador → Cierre
 4. Al completar: mover a Completadas y limpiar En progreso.

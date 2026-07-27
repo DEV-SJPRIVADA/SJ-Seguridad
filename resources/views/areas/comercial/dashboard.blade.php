@@ -6,7 +6,8 @@
         </div>
     </x-slot>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="application/json" id="comercial-chart-data">@json($chartData)</script>
+    @vite(['resources/js/comercial-dashboard-charts.js'])
 
     <style>
         .dashboard-filters {
@@ -138,9 +139,11 @@
             max-width: 100%;
             overflow: hidden;
         }
-        .chart-container canvas {
-            max-width: 100% !important;
-            max-height: 100% !important;
+        .chart-container > div {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
         }
         .dashboard-scroll-area {
             max-width: 100%;
@@ -369,7 +372,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="trendChart"></canvas>
+                                <div id="trendChart"></div>
                             </div>
                         </div>
                     </div>
@@ -380,7 +383,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="portfolioChart"></canvas>
+                                <div id="portfolioChart"></div>
                             </div>
                         </div>
                     </div>
@@ -393,7 +396,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="cityChart"></canvas>
+                                <div id="cityChart"></div>
                             </div>
                         </div>
                     </div>
@@ -404,7 +407,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="serviceTypeChart"></canvas>
+                                <div id="serviceTypeChart"></div>
                             </div>
                         </div>
                     </div>
@@ -412,95 +415,4 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const filterForm = document.querySelector('.dashboard-filters');
-            if (filterForm) {
-                filterForm.querySelectorAll('select').forEach(function (input) {
-                    input.addEventListener('change', function () {
-                        filterForm.submit();
-                    });
-                });
-            }
-
-            const data = @json($chartData);
-            const chartDefaults = {
-                responsive: true,
-                maintainAspectRatio: false,
-                resizeDelay: 120,
-                animation: false,
-            };
-
-            new Chart(document.getElementById('trendChart'), {
-                type: 'line',
-                data: {
-                    labels: data.trend.labels,
-                    datasets: [{
-                        label: 'Servicios',
-                        data: data.trend.data,
-                        borderColor: '#1984c7',
-                        backgroundColor: 'rgba(25, 132, 199, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    ...chartDefaults,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            new Chart(document.getElementById('portfolioChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: data.portfolio.labels,
-                    datasets: [{
-                        data: data.portfolio.data,
-                        backgroundColor: ['#0369a1', '#15803d', '#92400e', '#64748b'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    ...chartDefaults,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
-
-            new Chart(document.getElementById('cityChart'), {
-                type: 'bar',
-                data: {
-                    labels: data.cities.labels,
-                    datasets: [{
-                        label: 'Servicios',
-                        data: data.cities.data,
-                        backgroundColor: '#20214f',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    ...chartDefaults,
-                    indexAxis: 'y',
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            new Chart(document.getElementById('serviceTypeChart'), {
-                type: 'bar',
-                data: {
-                    labels: data.serviceTypes.labels,
-                    datasets: [{
-                        label: 'Servicios',
-                        data: data.serviceTypes.data,
-                        backgroundColor: '#1984c7',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    ...chartDefaults,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        });
-    </script>
 </x-app-layout>

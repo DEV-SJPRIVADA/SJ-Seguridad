@@ -84,6 +84,7 @@
                             <tr>
                                 <th>Codigo</th>
                                 <th>Indicador</th>
+                                <th>Mes anterior ({{ $dashboard['previous_period']['label'] ?? '' }})</th>
                                 <th>Resultado</th>
                                 <th>Meta</th>
                                 <th>Estado</th>
@@ -92,10 +93,11 @@
                         <tbody>
                             @foreach ($dashboard['kpis'] as $kpi)
                                 <tr>
-                                    <td>
-                                        <a href="{{ $kpi['consolidado_url'] }}" class="btn btn--secondary btn--sm">{{ $kpi['indicator']->code }}</a>
+                                    <td class="indicadores-kpi-code">
+                                        <a href="{{ $kpi['consolidado_url'] }}" class="btn btn--secondary btn--sm indicadores-code-link">{{ $kpi['indicator']->code }}</a>
                                     </td>
-                                    <td style="text-align:left;">{{ $kpi['indicator']->name }}</td>
+                                    <td class="indicadores-kpi-name">{{ $kpi['indicator']->name }}</td>
+                                    <td>{{ $kpi['previous_result'] !== null ? number_format((float) $kpi['previous_result'], 2).'%' : '-' }}</td>
                                     <td>{{ $kpi['result'] !== null ? number_format((float) $kpi['result'], 2).'%' : '-' }}</td>
                                     <td>{{ $kpi['meta'] }}</td>
                                     <td>
@@ -117,8 +119,9 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Usuario</th>
-                                            <th>Score</th>
-                                            <th>En rojo</th>
+                                            <th>Indicadores gestionados</th>
+                                            <th>% gestionado</th>
+                                            <th>Mejoras ingresadas</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -126,11 +129,12 @@
                                             <tr>
                                                 <td>{{ $index + 1 }}</td>
                                                 <td>{{ $row['user']->name }}</td>
-                                                <td>{{ number_format($row['score'], 2) }}%</td>
-                                                <td>{{ $row['red_count'] }}</td>
+                                                <td>{{ $row['indicators_managed'] }}</td>
+                                                <td>{{ $row['management_percentage'] }}%</td>
+                                                <td>{{ $row['improvements_count'] }}</td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="4">No hay usuarios de captura registrados.</td></tr>
+                                            <tr><td colspan="5">No hay usuarios con capturas registradas en este periodo.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -145,19 +149,21 @@
                                 <table class="supply-table indicadores-table">
                                     <thead>
                                         <tr>
+                                            <th>Usuario</th>
                                             <th>Indicador</th>
-                                            <th>Resultado</th>
-                                            <th>Usuarios rojo</th>
+                                            <th>Valor critico</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach (array_slice($dashboard['critical_ranking'], 0, 8) as $row)
+                                        @forelse ($dashboard['critical_indicators'] as $row)
                                             <tr>
-                                                <td>{{ $row['indicator']->code }}</td>
-                                                <td>{{ $row['result'] !== null ? number_format((float) $row['result'], 2).'%' : '-' }}</td>
-                                                <td>{{ $row['zones_red'] }}</td>
+                                                <td>{{ $row['user']->name }}</td>
+                                                <td>{{ $row['indicator']->code }} — {{ $row['indicator']->name }}</td>
+                                                <td>{{ number_format((float) $row['critical_value'], 2) }}%</td>
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr><td colspan="3">No hay indicadores en estado critico para este periodo.</td></tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                                 </div>

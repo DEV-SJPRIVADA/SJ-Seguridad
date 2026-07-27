@@ -134,10 +134,6 @@ class ManagementReportDataBuilder
 
     private function metaLabel(Indicator $indicator): string
     {
-        if ($indicator->code === 'FT-OP-03') {
-            return 'A<=3% y B<=1%';
-        }
-
-        return $indicator->target_operator.' '.$indicator->target_value.'%';
+        return $indicator->metaLabel();
     }
 }

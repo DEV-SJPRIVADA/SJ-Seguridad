@@ -76,7 +76,7 @@ La documentacion viva del sistema se mantiene en [`docs/INDEX.md`](docs/INDEX.md
 
 **Guia de documentacion (IA, desarrollador, usuario):** [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md).
 
-**Features y modulos nuevos** usan el workflow multi-agente (chat maestro + Orquestador). Ver [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md) y [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md). Consultas y fixes pequenos van por carril rapido sin ese flujo.
+**Features y modulos nuevos** usan el workflow multi-agente (chat maestro + **AgentSj**). Inicio: `AgentSj [descripcion]`. Ver [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md) y [`docs/agents/prompts/start-feature.md`](docs/agents/prompts/start-feature.md). Consultas y fixes pequenos van por carril rapido sin ese flujo.
 
 Documentos principales:
 

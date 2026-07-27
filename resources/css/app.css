@@ -97,7 +97,8 @@ a {
     gap: 0.5rem;
 }
 
-.sidebar-link {
+.sidebar-link,
+.module-tab {
     display: block;
     padding: 0.42rem 0.85rem;
     border: 1px solid var(--color-border);
@@ -110,12 +111,14 @@ a {
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.sidebar-link:hover {
+.sidebar-link:hover,
+.module-tab:hover {
     color: var(--color-text);
     border-color: var(--color-border-strong);
 }
 
-.sidebar-link--active {
+.sidebar-link--active,
+.module-tab--active {
     color: #fff;
     background: var(--color-primary);
     border-color: var(--color-primary);
@@ -125,6 +128,11 @@ a {
     display: block;
     font-size: inherit;
     font-weight: inherit;
+}
+
+.module-tab {
+    display: inline-flex;
+    align-items: center;
 }
 
 .app-workspace {
@@ -152,7 +160,7 @@ a {
     align-items: center;
     justify-content: flex-start;
     gap: 1.5rem;
-    padding: 0.55rem 0;
+    padding: 0.2rem 0;
 }
 
 .module-strip__label {
@@ -203,38 +211,14 @@ a {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    padding: 0.55rem 0;
+    padding: 0.2rem 0;
 }
 
 .requisition-subtabs__inner {
     display: flex;
     align-items: center;
-    min-height: 56px;
-    padding: 0.55rem 1rem;
-}
-
-.module-tab {
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    padding: 0.42rem 0.85rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: #fff;
-    color: var(--color-text-soft);
-    font-size: 0.78rem;
-    font-weight: 700;
-}
-
-.module-tab:hover {
-    color: var(--color-text);
-    border-color: var(--color-border-strong);
-}
-
-.module-tab--active {
-    color: #fff;
-    background: var(--color-primary);
-    border-color: var(--color-primary);
+    min-height: 0;
+    padding: 0.2rem 0;
 }
 
 .app-main {
@@ -2559,7 +2543,7 @@ table.dataTable thead td {
         flex-direction: column;
         align-items: stretch;
         gap: 0.35rem;
-        padding: 0.5rem 0;
+        padding: 0.2rem 0;
     }
 
     .module-strip__label {
@@ -2605,7 +2589,7 @@ table.dataTable thead td {
         flex-direction: column;
         align-items: stretch;
         gap: 0.35rem;
-        padding: 0.5rem 0;
+        padding: 0.2rem 0;
         min-height: 0;
     }
 

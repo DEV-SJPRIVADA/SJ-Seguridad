@@ -18,4 +18,4 @@ Antes de editar, confirmar modulo y archivos permitidos en Task Card o Feature B
 
 Tabla completa: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
 
-No mezclar cambios de modulos distintos en una sola tarea sin Orquestador.
+No mezclar cambios de modulos distintos en una sola tarea sin AgentSj.

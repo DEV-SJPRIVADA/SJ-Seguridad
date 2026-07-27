@@ -8,13 +8,17 @@
             || ($filters['status'] ?? '') !== ''
             || ($filters['client_id'] ?? null)
             || ($filters['city_id'] ?? null)
-            || ($filters['mine_only'] ?? false);
+            || ($filters['mine_only'] ?? false)
+            || ($filters['date_from'] ?? null)
+            || ($filters['date_to'] ?? null);
 
         $trackingQuery = fn (array $overrides = []) => array_filter([
             'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
             'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
             'client_id' => array_key_exists('client_id', $overrides) ? $overrides['client_id'] : ($filters['client_id'] ?: null),
             'city_id' => array_key_exists('city_id', $overrides) ? $overrides['city_id'] : ($filters['city_id'] ?: null),
+            'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
+            'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
             'mine_only' => array_key_exists('mine_only', $overrides)
                 ? ($overrides['mine_only'] ? '1' : null)
                 : (($filters['mine_only'] ?? false) ? '1' : null),
@@ -55,6 +59,12 @@
                                 @if ($filters['mine_only'] ?? false)
                                     <input type="hidden" name="mine_only" value="1">
                                 @endif
+                                @if ($filters['date_from'] ?? null)
+                                    <input type="hidden" name="date_from" value="{{ $filters['date_from'] }}">
+                                @endif
+                                @if ($filters['date_to'] ?? null)
+                                    <input type="hidden" name="date_to" value="{{ $filters['date_to'] }}">
+                                @endif
 
                                 <label class="req-manage-filters__label" for="tracking-search-input">Buscar</label>
                                 <div class="req-manage-filters__search-group">
@@ -67,6 +77,17 @@
                                         placeholder="Codigo, solicitante, cargo, cliente..."
                                     >
                                     <button type="submit" class="btn btn--primary">Buscar</button>
+                                </div>
+
+                                <div class="req-manage-filters__row" style="margin-top:0.75rem;">
+                                    <div class="req-manage-filters__field">
+                                        <label class="req-manage-filters__label" for="tracking-date-from">Fecha inicio</label>
+                                        <input type="date" id="tracking-date-from" name="date_from" class="form-input" value="{{ $filters['date_from'] ?? '' }}">
+                                    </div>
+                                    <div class="req-manage-filters__field">
+                                        <label class="req-manage-filters__label" for="tracking-date-to">Fecha fin</label>
+                                        <input type="date" id="tracking-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
+                                    </div>
                                 </div>
                             </form>
 
@@ -94,6 +115,12 @@
                                 @endif
                                 @if ($filters['status'] ?? '')
                                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                @endif
+                                @if ($filters['date_from'] ?? null)
+                                    <input type="hidden" name="date_from" value="{{ $filters['date_from'] }}">
+                                @endif
+                                @if ($filters['date_to'] ?? null)
+                                    <input type="hidden" name="date_to" value="{{ $filters['date_to'] }}">
                                 @endif
 
                                 <div class="req-manage-filters__field">

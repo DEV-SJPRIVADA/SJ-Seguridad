@@ -69,8 +69,22 @@
                 <td colspan="3" class="border border-gray-600 t-body">{{ ucfirst((string) ($indicator->unit ?? 'Porcentaje')) }}</td>
                 <td class="border border-gray-600 t-body">{{ number_format((float) $indicator->target_value, 0) }}%</td>
                 <td colspan="3" class="border border-gray-600 t-body">{{ ucfirst($indicator->frequency ?? 'Mensual') }}</td>
-                <td colspan="2" class="border border-gray-600 t-body">{{ ($indicator->target_operator ?? '>=') === '<=' ? 'Decreciente' : 'Creciente' }}</td>
+                <td colspan="2" class="border border-gray-600 t-body">
+                    @php
+                        $tendency = match ($indicator->target_operator ?? '>=') {
+                            '<=' => 'Decreciente',
+                            '==' => 'Objetivo exacto',
+                            default => 'Creciente',
+                        };
+                    @endphp
+                    {{ $tendency }}
+                </td>
                 <td colspan="5" class="border border-gray-600 t-body">FO-GI-06 Control de No Conformidades / Reporte clientes</td>
+            </tr>
+            <tr style="height:26px;" class="bg-gray-100 text-center">
+                <td colspan="3" class="border border-gray-600 t-head">CRITICO</td>
+                <td class="border border-gray-600 t-body">{{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
+                <td colspan="10" class="border border-gray-600 t-body"></td>
             </tr>
             <tr style="height:26px;" class="bg-gray-100">
                 <td colspan="14" class="border border-gray-600 text-center t-head">FORMULA</td>
@@ -127,6 +141,10 @@
             <tr style="height:26px;" class="text-center">
                 <td class="border border-gray-600 t-head">META</td>
                 @for ($i = 0; $i < 13; $i++) <td class="border border-gray-600 t-body">{{ number_format((float)$indicator->target_value,0) }}%</td> @endfor
+            </tr>
+            <tr style="height:26px;" class="text-center">
+                <td class="border border-gray-600 t-head">CRITICO</td>
+                @for ($i = 0; $i < 13; $i++) <td class="border border-gray-600 t-body">{{ number_format((float)($indicator->critical_value ?? 0),0) }}%</td> @endfor
             </tr>
         </table>
 

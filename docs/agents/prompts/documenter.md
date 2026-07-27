@@ -41,4 +41,4 @@ Incrementar version en cambios posteriores.
 
 - Actualizar `docs/INDEX.md` si es modulo nuevo o cambio de navegacion.
 - Actualizar tabla en `docs/user/README.md` si aplica.
-- Notificar al Orquestador para checklist final.
+- Notificar al AgentSj para checklist final.

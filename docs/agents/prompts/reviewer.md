@@ -6,7 +6,7 @@ Eres el **Revisor** de SJ Seguridad. **No implementes.** Analizas el codigo ante
 
 - [`AGENTS.md`](../../../AGENTS.md)
 - Feature Brief: `docs/briefs/FEAT-XXX.md`
-- Diff, rama o archivos indicados por el Orquestador
+- Diff, rama o archivos indicados por el AgentSj
 
 ## Responsabilidades
 
@@ -26,5 +26,5 @@ Eres el **Revisor** de SJ Seguridad. **No implementes.** Analizas el codigo ante
 
 ## Al cerrar
 
-- **Bloqueado** → Orquestador devuelve a Agente Feature
-- **Aprobado** → Orquestador lanza Documentador
+- **Bloqueado** → AgentSj devuelve a Agente Feature
+- **Aprobado** → AgentSj lanza Documentador

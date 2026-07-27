@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Requisitions;
 
-use App\Exports\BaseExport;
+use App\Exports\PersonalRequisitionFullExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
@@ -31,6 +31,7 @@ use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Requisitions\CommercialClientBridge;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
+use App\Services\Requisitions\PersonalRequisitionFilterBag;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
@@ -72,7 +73,10 @@ class RequisitionController extends Controller
         ];
 
         $query = PersonalRequisition::query()
-            ->where('requesting_area_key', $module)
+            ->when(
+                ! $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
+                fn ($builder) => $builder->where('requesting_area_key', $module)
+            )
             ->when($filters['client_id'], fn($q) => $q->where('client_id', $filters['client_id']))
             ->when($filters['position_id'], fn($q) => $q->where('position_id', $filters['position_id']))
             ->when($filters['city_id'], fn($q) => $q->where('city_id', $filters['city_id']))
@@ -107,6 +111,7 @@ class RequisitionController extends Controller
                 'contratado' => $statsByStatus->get(PersonalRequisition::STATUS_CONTRATADO, 0),
                 'cancelada' => $statsByStatus->get(PersonalRequisition::STATUS_CANCELADA, 0),
             ],
+            'dashboardGlobalScope' => $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
             'chartData' => [
                 'status' => [
                     'labels' => collect(PersonalRequisition::statuses())->values(),
@@ -224,6 +229,7 @@ class RequisitionController extends Controller
                     'programming_type_id' => $request->integer('programming_type_id'),
                     'required_profile' => $request->string('required_profile')->toString(),
                     'uniform_id' => $request->integer('uniform_id'),
+                    'service_structure' => $request->string('service_structure')->toString(),
                     'contract_type_id' => $request->filled('contract_type_id') ? $request->integer('contract_type_id') : null,
                     'contract_duration' => $request->input('contract_duration'),
                     'base_salary' => $request->input('base_salary'),
@@ -283,8 +289,7 @@ class RequisitionController extends Controller
     {
         $this->abortIfUnknownModule($module);
 
-        $search = trim($request->string('q')->toString());
-        $status = $request->string('status')->toString();
+        $filters = PersonalRequisitionFilterBag::fromManageRequest($request);
 
         $requisitions = PersonalRequisition::query()
             ->when(
@@ -292,24 +297,13 @@ class RequisitionController extends Controller
                 fn ($query) => $query->where('requesting_area_key', $module)
             )
             ->with(['client', 'position', 'requester', 'city'])
-            ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($inner) use ($search): void {
-                    $inner->where('code', 'like', "%{$search}%")
-                        ->orWhere('leader_name', 'like', "%{$search}%")
-                        ->orWhere('required_profile', 'like', "%{$search}%")
-                        ->orWhere('replacement_name', 'like', "%{$search}%")
-                        ->orWhereHas('position', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('client', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('city', fn($q) => $q->where('name', 'like', "%{$search}%"));
-                });
-            })
-            ->when($status !== '', fn ($query) => $query->where('status', $status))
+            ->tap(fn ($query) => $filters->applyCommonFilters($query))
             ->orderByDesc('request_date')
             ->orderByDesc('id')
             ->get();
 
         return view('modules.requisitions.manage', [
-            'filters' => ['q' => $search, 'status' => $status],
+            'filters' => $filters->toViewArray(),
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'requisitions' => $requisitions,
@@ -323,92 +317,46 @@ class RequisitionController extends Controller
         $this->abortIfUnknownModule($module);
 
         $user = auth()->user();
-        $search = trim($request->string('q')->toString());
-        $status = $request->string('status')->toString();
-        $clientId = $request->integer('client_id');
-        $cityId = $request->integer('city_id');
-        $mineOnly = $request->boolean('mine_only');
+        $filters = PersonalRequisitionFilterBag::fromTrackingRequest($request);
 
         $requisitions = PersonalRequisition::query()
-            ->with(['client', 'position', 'requester', 'city'])
+            ->with(PersonalRequisitionFullExport::relationNames())
             ->where('requesting_area_key', $this->trackingAreaScope($user))
-            ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($inner) use ($search): void {
-                    $inner->where('code', 'like', "%{$search}%")
-                        ->orWhere('leader_name', 'like', "%{$search}%")
-                        ->orWhere('required_profile', 'like', "%{$search}%")
-                        ->orWhereHas('requester', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('position', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('client', fn ($q) => $q->where('name', 'like', "%{$search}%"));
-                });
-            })
-            ->when($status !== '', fn ($query) => $query->where('status', $status))
-            ->when($clientId > 0, fn ($query) => $query->where('client_id', $clientId))
-            ->when($cityId > 0, fn ($query) => $query->where('city_id', $cityId))
-            ->when($mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
-            ->latest()
+            ->tap(fn ($query) => $filters->applyCommonFilters($query, includeRequesterInSearch: true))
+            ->when($filters->mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
+            ->orderByDesc('request_date')
+            ->orderByDesc('id')
             ->get();
 
-        $statusLabels = PersonalRequisition::statuses();
-
-        $columns = [
-            ['key' => 'code', 'label' => 'Código'],
-            ['key' => fn($r) => $r->request_date?->format('Y-m-d'), 'label' => 'Fecha'],
-            ['key' => fn($r) => $r->requester?->name ?? $r->leader_name, 'label' => 'Solicitante'],
-            ['key' => fn($r) => $r->position?->name ?? '—', 'label' => 'Cargo'],
-            ['key' => fn($r) => $r->client?->name ?? '—', 'label' => 'Cliente'],
-            ['key' => fn($r) => $r->city?->name ?? '—', 'label' => 'Ciudad'],
-            ['key' => 'quantity', 'label' => 'Cantidad'],
-            ['key' => fn($r) => $statusLabels[$r->status] ?? $r->status, 'label' => 'Estado'],
-            ['key' => fn($r) => $r->status_changed_at?->format('Y-m-d H:i') ?? 'Sin cambios', 'label' => 'Últ. actualización'],
-        ];
-
-        return (new BaseExport($requisitions, $columns, 'mis_requisiciones_' . now()->format('Y-m-d') . '.xlsx', 'Mis requisiciones'))->download();
+        return PersonalRequisitionFullExport::download(
+            $requisitions,
+            'mis_requisiciones_'.now()->format('Y-m-d').'.xlsx',
+            'Mis requisiciones'
+        );
     }
 
     public function exportExcel(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $this->abortIfUnknownModule($module);
 
-        $search = trim($request->string('q')->toString());
-        $status = $request->string('status')->toString();
+        $filters = PersonalRequisitionFilterBag::fromManageRequest($request);
 
         $requisitions = PersonalRequisition::query()
             ->when(
                 ! $this->requisitionAccess->usesGlobalManagementScope(auth()->user(), $module),
                 fn ($query) => $query->where('requesting_area_key', $module)
             )
-            ->with(['client', 'position', 'city', 'requester'])
-            ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($inner) use ($search): void {
-                    $inner->where('code', 'like', "%{$search}%")
-                        ->orWhere('leader_name', 'like', "%{$search}%")
-                        ->orWhere('required_profile', 'like', "%{$search}%")
-                        ->orWhere('replacement_name', 'like', "%{$search}%")
-                        ->orWhereHas('position', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('client', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('city', fn($q) => $q->where('name', 'like', "%{$search}%"));
-                });
-            })
-            ->when($status !== '', fn ($query) => $query->where('status', $status))
+            ->with(PersonalRequisitionFullExport::relationNames())
+            ->tap(fn ($query) => $filters->applyCommonFilters($query))
             ->orderByDesc('request_date')
             ->orderByDesc('id')
             ->get();
 
-        $statusLabels = PersonalRequisition::statuses();
-
-        $columns = [
-            ['key' => 'code', 'label' => 'Código'],
-            ['key' => fn($r) => $r->request_date?->format('Y-m-d'), 'label' => 'Fecha'],
-            ['key' => 'leader_name', 'label' => 'Líder'],
-            ['key' => fn($r) => $r->position?->name ?? '—', 'label' => 'Cargo'],
-            ['key' => fn($r) => $r->client?->name ?? '—', 'label' => 'Cliente'],
-            ['key' => fn($r) => $r->city?->name ?? '—', 'label' => 'Ciudad'],
-            ['key' => fn($r) => $r->replacement_name ?? 'N/A', 'label' => 'Reemplaza a'],
-            ['key' => fn($r) => $statusLabels[$r->status] ?? $r->status, 'label' => 'Estado'],
-        ];
-
-        return (new BaseExport($requisitions, $columns, 'requisiciones_' . now()->format('Y-m-d') . '.xlsx', 'Gestión de Requisiciones'))->download();
+        return PersonalRequisitionFullExport::download(
+            $requisitions,
+            'requisiciones_'.now()->format('Y-m-d').'.xlsx',
+            'Gestion de Requisiciones'
+        );
     }
 
     public function tracking(Request $request, string $module): View
@@ -416,42 +364,20 @@ class RequisitionController extends Controller
         $this->abortIfUnknownModule($module);
 
         $user = auth()->user();
-        $search = trim($request->string('q')->toString());
-        $status = $request->string('status')->toString();
-        $clientId = $request->integer('client_id');
-        $cityId = $request->integer('city_id');
-        $mineOnly = $request->boolean('mine_only');
+        $filters = PersonalRequisitionFilterBag::fromTrackingRequest($request);
 
         $requisitions = PersonalRequisition::query()
             ->with(['client', 'position', 'requester', 'city'])
             ->where('requesting_area_key', $this->trackingAreaScope($user))
-            ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($inner) use ($search): void {
-                    $inner->where('code', 'like', "%{$search}%")
-                        ->orWhere('leader_name', 'like', "%{$search}%")
-                        ->orWhere('required_profile', 'like', "%{$search}%")
-                        ->orWhereHas('requester', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('position', fn ($q) => $q->where('name', 'like', "%{$search}%"))
-                        ->orWhereHas('client', fn ($q) => $q->where('name', 'like', "%{$search}%"));
-                });
-            })
-            ->when($status !== '', fn ($query) => $query->where('status', $status))
-            ->when($clientId > 0, fn ($query) => $query->where('client_id', $clientId))
-            ->when($cityId > 0, fn ($query) => $query->where('city_id', $cityId))
-            ->when($mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
+            ->tap(fn ($query) => $filters->applyCommonFilters($query, includeRequesterInSearch: true))
+            ->when($filters->mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
             ->latest()
             ->paginate(12)
             ->withQueryString();
 
         return view('modules.requisitions.tracking', [
             'catalogs' => $this->catalogs(),
-            'filters' => [
-                'q' => $search,
-                'status' => $status,
-                'client_id' => $clientId > 0 ? $clientId : null,
-                'city_id' => $cityId > 0 ? $cityId : null,
-                'mine_only' => $mineOnly,
-            ],
+            'filters' => $filters->toViewArray(),
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'requisitions' => $requisitions,
@@ -515,6 +441,7 @@ class RequisitionController extends Controller
                 'programming_type_id' => $request->integer('programming_type_id'),
                 'required_profile' => $request->string('required_profile')->toString(),
                 'uniform_id' => $request->integer('uniform_id'),
+                'service_structure' => $request->string('service_structure')->toString(),
                 'contract_type_id' => $request->filled('contract_type_id') ? $request->integer('contract_type_id') : null,
                 'contract_duration' => $request->input('contract_duration'),
                 'base_salary' => $request->input('base_salary'),

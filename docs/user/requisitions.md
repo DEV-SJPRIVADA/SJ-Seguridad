@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Permitir solicitar, dar seguimiento y gestionar la contratacion de personal por area, desde la necesidad inicial hasta el cierre por Gestion Humana.
+Permitir solicitar, dar seguimiento y gestionar la contratacion de personal por area, desde la necesidad inicial hasta el cierre por Gestion Humana, incluyendo la captura de la **Estructura del servicio** (horarios, descansos y condiciones del puesto).
 
 ## Alcance
 
@@ -10,10 +10,10 @@ Aplica al tablero **Requisiciones** disponible en las areas autorizadas (princip
 
 El usuario puede, segun su perfil:
 
-- **Solicitar** nuevas requisiciones en su area
-- Consultar **Mis requisiciones** (seguimiento de lo solicitado)
-- Ver el **Dashboard** de indicadores del modulo
-- **Gestionar** solicitudes de todas las areas (solo Gestion Humana)
+- **Solicitar** nuevas requisiciones en su area, con el campo obligatorio **Estructura del servicio**
+- Consultar **Mis requisiciones** (seguimiento de lo solicitado) y exportar a Excel con el detalle completo de la solicitud
+- Ver el **Dashboard** consolidado (todas las areas) con KPIs: Total, Solicitadas, En gestion, Contratadas y Canceladas, y graficos interactivos unificados (ApexCharts)
+- **Gestionar** solicitudes de todas las areas (solo Gestion Humana), incluyendo editar la Estructura del servicio
 - Administrar **Parametros** (catalogos: cargos, motivos, ciudades, correos de notificacion, etc.)
 
 La matriz de **Clientes** se administra en Comercial, no en Parametros de requisiciones.
@@ -24,6 +24,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | --- | --- |
 | Requisicion | Solicitud de contratacion de una o mas personas para un cargo. |
 | Area solicitante | Departamento del usuario que crea la solicitud. |
+| Estructura del servicio | Descripcion de horarios, descansos y condiciones del puesto a tener en cuenta al cubrir la vacante. |
 | Estado solicitada | Requisicion recien creada, pendiente de accion de GH. |
 | Estado en gestion | Gestion Humana esta trabajando la solicitud. |
 | Estado contratado | Proceso cerrado con contratacion exitosa. |
@@ -35,8 +36,8 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 
 | Rol / perfil | Responsabilidad |
 | --- | --- |
-| Solicitante de area | Crear requisiciones en su area; consultar mis requisiciones. |
-| Gestion Humana | Gestionar todas las requisiciones; completar compensacion y cierre; cambiar estados. |
+| Solicitante de area | Crear requisiciones en su area (incluye llenar Estructura del servicio); consultar mis requisiciones. |
+| Gestion Humana | Gestionar todas las requisiciones; revisar o corregir Estructura del servicio; completar compensacion y cierre; cambiar estados. |
 | Administrador | Parametros, permisos de usuarios, correos de notificacion. |
 | Coordinador / lider de area | Solicitar segun necesidades del servicio (permiso solicitar). |
 
@@ -46,25 +47,37 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 
 1. Entre al tablero **Requisiciones** de su area.
 2. Abra la pestaña **Solicitar**.
-3. Complete las secciones del formulario: motivo, cargo, datos del servicio, perfil requerido y observaciones.
-4. Si el motivo es *Cargo nuevo* o *Servicio nuevo*, indique la **cantidad** de personas; en otros motivos el sistema registra una persona por solicitud.
-5. Seleccione **Cliente** buscando en la matriz comercial (minimo 2 caracteres), salvo tipo de cliente *Interno*.
-6. Revise el checklist lateral y envíe la solicitud.
-7. Recibira notificacion por correo cuando GH cambie el estado.
+3. Complete las secciones del formulario: motivo, cargo, datos del servicio, perfil requerido, dotacion y observaciones.
+4. En la seccion de perfil y dotacion, complete **Estructura del servicio** con horarios, descansos y condiciones del puesto. Es obligatorio; no podra enviar la solicitud si queda vacio.
+5. Si el motivo es *Cargo nuevo* o *Servicio nuevo*, indique la **cantidad** de personas; en otros motivos el sistema registra una persona por solicitud.
+6. Si el motivo es *Reemplazo* o *Movimiento interno*, complete **cedula** y **nombre completo** de la persona involucrada.
+6. Seleccione **Cliente** buscando en la matriz comercial (minimo 2 caracteres), salvo tipo de cliente *Interno*.
+7. Revise el checklist lateral y envíe la solicitud.
+8. Recibira notificacion por correo cuando GH cambie el estado.
+
+### Consultar el dashboard
+
+1. Abra la pestaña **Dashboard** del tablero Requisiciones.
+2. Revise los KPIs (Total, Solicitadas, En gestion, Contratadas, Canceladas).
+3. Use los filtros disponibles; la pantalla se actualiza al cambiarlos.
+4. Revise los graficos de tendencia, estado, ciudad y cliente.
 
 ### Consultar mis requisiciones
 
 1. Abra **Mis requisiciones** (o Seguimiento segun etiqueta en su instalacion).
 2. Use filtros de busqueda, estado, cliente o ciudad.
-3. Exporte a Excel si tiene la opcion disponible en su pantalla.
+3. Opcional: indique **Fecha inicio** y **Fecha fin** (fecha de solicitud) y pulse **Buscar** para acotar la lista.
+4. Exporte a Excel si tiene la opcion disponible; el archivo trae todos los campos de la requisicion segun los filtros activos.
 
 ### Gestionar requisiciones (Gestion Humana)
 
 1. Abra la pestaña **Gestion**.
-2. Filtre por estado, area o busqueda.
+2. Filtre por estado, busqueda y rango de **Fecha inicio / Fecha fin** (fecha de solicitud); pulse **Buscar**.
 3. Edite una fila para completar compensacion, encargado de seleccion y observaciones de GH.
-4. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
-5. Imprima la ficha si necesita documento fisico.
+4. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.
+5. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
+6. Exporte a Excel; incluye todos los campos de la requisicion (incluida compensacion) segun los filtros activos.
+7. Imprima la ficha si necesita documento fisico.
 
 ### Administrar parametros
 
@@ -76,3 +89,5 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
+| 1.2 | 2026-07-24 | AgentSj / Feature | Export Excel completo + rango fechas en Gestion y Seguimiento | FEAT-006 |
+| 1.3 | 2026-07-27 | FEAT-010 | Dashboard con graficos ApexCharts unificados; seccion Consultar el dashboard |

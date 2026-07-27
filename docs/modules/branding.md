@@ -31,6 +31,21 @@ Extraida visualmente de la imagen corporativa compartida por el usuario y tomada
 - Si una nueva pantalla necesita una variacion adicional, primero debe incorporarse como token reutilizable y documentarse en este archivo.
 - La tabla de permisos, navegacion, botones principales y elementos de marca deben priorizar `--brand-navy` y `--brand-blue` como colores base.
 
+## Estandar de navegacion (areas, tableros, pestanas)
+
+Los tres niveles de navegacion autenticada usan **el mismo look de pill**:
+
+| Nivel | Clase | Contenedor |
+| --- | --- | --- |
+| Areas / Procesos (sidebar) | `.sidebar-link` | `.app-sidebar__nav` |
+| Tableros del area | `.module-tab` | `.module-strip__inner` |
+| Pestanas del modulo | `.module-tab` | `.module-subnav__inner` / `.requisition-subtabs__inner` |
+
+- Estilos compartidos en `resources/css/app.css` (selectores `.sidebar-link, .module-tab`).
+- Padding entre botones y contenedor de franja: **`0.2rem`**.
+- No crear otra familia visual para tableros/subnavs; reutilizar estas clases.
+- Regla Cursor: [`.cursor/rules/nav-chrome-ui.mdc`](../../.cursor/rules/nav-chrome-ui.mdc).
+
 ## Regla de mantenimiento
 
 Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero en el componente `application-logo` para evitar inconsistencias entre pantallas.

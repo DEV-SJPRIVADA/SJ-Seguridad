@@ -3,8 +3,8 @@
         @include('modules.requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="application/json" id="requisitions-chart-data">@json($chartData)</script>
+    @vite(['resources/js/requisitions-dashboard-charts.js'])
 
     <style>
         .dashboard-filters {
@@ -38,7 +38,16 @@
         .chart-container {
             position: relative;
             height: 300px;
+            max-height: 300px;
             width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .chart-container > div {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
         }
         .kpi-card {
             padding: 0.75rem 1rem !important; /* Más compacto */
@@ -61,7 +70,7 @@
             font-size: 0.65rem !important;
         }
         .dashboard-stat-grid {
-            margin-bottom: 1rem !important; /* Reducido de 2rem */
+            margin-bottom: 0.5rem !important;
             gap: 0.75rem !important;
         }
 
@@ -105,8 +114,12 @@
             overflow: visible;
         }
         
-        .dashboard-filters, .dashboard-stat-grid {
-            margin-bottom: 1rem;
+        .dashboard-filters {
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-stat-grid.bottom-spaced {
+            margin-bottom: 0.5rem !important;
         }
 
         .dashboard-scroll-area {
@@ -119,6 +132,7 @@
             
             {{-- SECCIÓN DE FILTROS --}}
             <form method="GET" action="{{ route('requisitions.dashboard', ['module' => $moduleKey]) }}" class="dashboard-filters">
+
                 <div class="filter-grid">
                     <div class="form-field">
                         <label class="form-label">Cliente</label>
@@ -204,6 +218,12 @@
                     <p class="kpi-value" style="color: var(--color-success);">{{ $stats['contratado'] }}</p>
                     <p class="text-small text-muted">Procesos finalizados</p>
                 </article>
+
+                <article class="card kpi-card" style="border-left: 5px solid #be123c;">
+                    <p class="text-caption">Canceladas</p>
+                    <p class="kpi-value" style="color: #be123c;">{{ $stats['cancelada'] }}</p>
+                    <p class="text-small text-muted">Solicitudes descartadas</p>
+                </article>
             </div>
 
             {{-- ÁREA DE GRÁFICOS CON SCROLL --}}
@@ -216,7 +236,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="trendChart"></canvas>
+                                <div id="trendChart"></div>
                             </div>
                         </div>
                     </div>
@@ -228,7 +248,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="statusChart"></canvas>
+                                <div id="statusChart"></div>
                             </div>
                         </div>
                     </div>
@@ -242,7 +262,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="cityChart"></canvas>
+                                <div id="cityChart"></div>
                             </div>
                         </div>
                     </div>
@@ -254,7 +274,7 @@
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
-                                <canvas id="clientChart"></canvas>
+                                <div id="clientChart"></div>
                             </div>
                         </div>
                     </div>
@@ -263,103 +283,4 @@
 
         </div>
     </div>
-
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-submit form on change
-            const filterForm = document.querySelector('.dashboard-filters');
-            const inputs = filterForm.querySelectorAll('select');
-            
-            inputs.forEach(input => {
-                input.addEventListener('change', () => {
-                    filterForm.submit();
-                });
-            });
-
-            const data = @json($chartData);
-
-            // 1. Gráfico de Tendencia (Líneas)
-            new Chart(document.getElementById('trendChart'), {
-                type: 'line',
-                data: {
-                    labels: data.trend.labels,
-                    datasets: [{
-                        label: 'Solicitudes',
-                        data: data.trend.data,
-                        borderColor: '#1984c7',
-                        backgroundColor: 'rgba(25, 132, 199, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            // 2. Gráfico de Estado (Doughnut)
-            new Chart(document.getElementById('statusChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: data.status.labels,
-                    datasets: [{
-                        data: data.status.data,
-                        backgroundColor: ['#0369a1', '#92400e', '#15803d', '#be123c', '#64748b'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom' } 
-                    }
-                }
-            });
-
-            // 3. Gráfico de Ciudades (Barras Horizontales)
-            new Chart(document.getElementById('cityChart'), {
-                type: 'bar',
-                data: {
-                    labels: data.cities.labels,
-                    datasets: [{
-                        label: 'Solicitudes',
-                        data: data.cities.data,
-                        backgroundColor: '#20214f',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            // 4. Gráfico de Clientes (Barras)
-            new Chart(document.getElementById('clientChart'), {
-                type: 'bar',
-                data: {
-                    labels: data.clients.labels,
-                    datasets: [{
-                        label: 'Solicitudes',
-                        data: data.clients.data,
-                        backgroundColor: '#1984c7',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        });
-    </script>
 </x-app-layout>

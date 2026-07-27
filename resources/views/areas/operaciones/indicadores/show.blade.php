@@ -66,8 +66,5 @@
         </div>
     </div>
 
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-        <script src="{{ asset('js/indicadores-capture.js') }}"></script>
-    @endpush
+    @vite(['resources/js/indicadores-capture.js'])
 </x-app-layout>

@@ -86,10 +86,24 @@
     margin: 0;
 }
 
-.indicadores-kpi-table tbody td:nth-child(2) {
+.indicadores-kpi-table tbody td.indicadores-kpi-name {
     text-align: left !important;
     white-space: normal;
     max-width: 320px;
+}
+
+.indicadores-kpi-table .indicadores-code-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    min-width: 5.75rem;
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
+}
+
+.indicadores-kpi-table td.indicadores-kpi-code {
+    white-space: nowrap;
 }
 
 .indicadores-kpi-table .kpi-value {
@@ -405,6 +419,31 @@
     width: 100% !important;
 }
 
+.indicadores-table__col-captura {
+    width: 6rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.indicadores-capturador-toggle-form {
+    display: inline-flex;
+    justify-content: center;
+    margin: 0;
+}
+
+.indicadores-capturador-toggle {
+    margin: 0 auto;
+}
+
+.indicadores-capturador-toggle--locked {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.indicadores-capturador-toggle--locked .toggle-slider {
+    cursor: not-allowed;
+}
+
 .indicadores-inline-form,
 .indicadores-form-compact {
     margin-bottom: 1rem;
@@ -488,8 +527,23 @@
 .indicadores-table--periods th:nth-child(2),
 .indicadores-table--periods td:nth-child(2) { width: 7rem; }
 
-.indicadores-table--weights th:nth-child(2),
-.indicadores-table--weights td:nth-child(2) { width: 7rem; }
+.indicadores-table--metas th:nth-child(2),
+.indicadores-table--metas td:nth-child(2) { width: 5.5rem; }
+.indicadores-table--metas th:nth-child(3),
+.indicadores-table--metas th:nth-child(4),
+.indicadores-table--metas td:nth-child(3),
+.indicadores-table--metas td:nth-child(4) { width: 7rem; }
+
+.indicadores-input-operator {
+    min-width: 4.5rem;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+}
+
+.indicadores-meta-hint {
+    font-size: 0.8125rem;
+    color: var(--color-muted, #64748b);
+}
 
 .indicadores-table--audit th:nth-child(1),
 .indicadores-table--audit td:nth-child(1) { width: 9rem; }
@@ -501,13 +555,15 @@
 .indicadores-table--audit td:nth-child(4) { width: 7rem; }
 
 .indicadores-kpi-table th:nth-child(1),
-.indicadores-kpi-table td:nth-child(1) { width: 6.5rem; }
+.indicadores-kpi-table td:nth-child(1) { width: 6.25rem; }
 .indicadores-kpi-table th:nth-child(3),
 .indicadores-kpi-table td:nth-child(3) { width: 6.5rem; }
 .indicadores-kpi-table th:nth-child(4),
-.indicadores-kpi-table td:nth-child(4) { width: 6rem; }
+.indicadores-kpi-table td:nth-child(4) { width: 6.5rem; }
 .indicadores-kpi-table th:nth-child(5),
-.indicadores-kpi-table td:nth-child(5) { width: 7rem; }
+.indicadores-kpi-table td:nth-child(5) { width: 6rem; }
+.indicadores-kpi-table th:nth-child(6),
+.indicadores-kpi-table td:nth-child(6) { width: 7rem; }
 
 .indicadores-cell-wrap {
     text-align: left !important;

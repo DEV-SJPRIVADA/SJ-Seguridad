@@ -4,7 +4,17 @@
     </x-slot>
 
     @php
-        $hasActiveFilters = ($filters['q'] ?? '') !== '' || ($filters['status'] ?? '') !== '';
+        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+            || ($filters['status'] ?? '') !== ''
+            || ($filters['date_from'] ?? null)
+            || ($filters['date_to'] ?? null);
+
+        $manageQuery = fn (array $overrides = []) => array_filter([
+            'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
+            'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
+            'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
+            'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
+        ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
     <div class="page-section">
@@ -45,22 +55,29 @@
                                     >
                                     <button type="submit" class="btn btn--primary">Buscar</button>
                                 </div>
+
+                                <div class="req-manage-filters__row" style="margin-top:0.75rem;">
+                                    <div class="req-manage-filters__field">
+                                        <label class="req-manage-filters__label" for="manage-date-from">Fecha inicio</label>
+                                        <input type="date" id="manage-date-from" name="date_from" class="form-input" value="{{ $filters['date_from'] ?? '' }}">
+                                    </div>
+                                    <div class="req-manage-filters__field">
+                                        <label class="req-manage-filters__label" for="manage-date-to">Fecha fin</label>
+                                        <input type="date" id="manage-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
+                                    </div>
+                                </div>
                             </form>
 
                             <div class="req-manage-filters__status-col">
                                 <p class="req-manage-filters__status-label">Estado</p>
                                 <div class="req-manage-filters__pills">
                                     <a
-                                        href="{{ route('requisitions.manage', array_filter(['module' => $moduleKey, 'q' => $filters['q'] ?: null])) }}"
+                                        href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => null])]) }}"
                                         class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
                                     >Todos</a>
                                     @foreach ($statusLabels as $statusKey => $statusLabel)
                                         <a
-                                            href="{{ route('requisitions.manage', array_filter([
-                                                'module' => $moduleKey,
-                                                'q' => $filters['q'] ?: null,
-                                                'status' => $statusKey,
-                                            ])) }}"
+                                            href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => $statusKey])]) }}"
                                             class="req-manage-filters__pill status-pill--req-{{ $statusKey }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
                                         >{{ $statusLabel }}</a>
                                     @endforeach
@@ -77,6 +94,13 @@
                             @if ($filters['q'] ?? '')
                                 · Busqueda servidor: <strong>{{ $filters['q'] }}</strong>
                             @endif
+                            @if (($filters['date_from'] ?? null) || ($filters['date_to'] ?? null))
+                                · Fecha solicitud:
+                                <strong>{{ $filters['date_from'] ?? '…' }}</strong>
+                                —
+                                <strong>{{ $filters['date_to'] ?? '…' }}</strong>
+                            @endif
+                            · El Excel exporta el detalle completo segun estos filtros
                             · Use la busqueda de la tabla para filtrar filas visibles
                         </p>
                     </div>

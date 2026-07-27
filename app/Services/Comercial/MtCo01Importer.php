@@ -69,6 +69,29 @@ class MtCo01Importer
         'fecha de terminacion contrato' => 'contract_end',
         'duracion (meses)' => 'duration_months',
         'duracion meses' => 'duration_months',
+        // Fechas de vencimiento documental (no confundir con contract_end)
+        'vencimiento p economica' => 'doc_economic_proposal_expires_on',
+        'fecha vencimiento p economica' => 'doc_economic_proposal_expires_on',
+        'vencimiento fo-co-02' => 'doc_fo_co_02_expires_on',
+        'fecha vencimiento fo-co-02' => 'doc_fo_co_02_expires_on',
+        'vencimiento laft' => 'doc_laft_or_queries_expires_on',
+        'fecha vencimiento laft' => 'doc_laft_or_queries_expires_on',
+        'vencimiento rut' => 'doc_rut_expires_on',
+        'fecha vencimiento rut' => 'doc_rut_expires_on',
+        'vencimiento ee.ff' => 'doc_financials_expires_on',
+        'fecha vencimiento ee.ff' => 'doc_financials_expires_on',
+        'vencimiento eeff' => 'doc_financials_expires_on',
+        'fecha vencimiento eeff' => 'doc_financials_expires_on',
+        'vencimiento cc rl' => 'doc_legal_rep_id_expires_on',
+        'fecha vencimiento cc rl' => 'doc_legal_rep_id_expires_on',
+        'vencimiento camara comercio' => 'doc_chamber_expires_on',
+        'fecha vencimiento camara comercio' => 'doc_chamber_expires_on',
+        'vencimiento preinst' => 'doc_preinstall_expires_on',
+        'fecha vencimiento preinst' => 'doc_preinstall_expires_on',
+        'vencimiento contrato documental' => 'doc_contract_expires_on',
+        'fecha vencimiento contrato documental' => 'doc_contract_expires_on',
+        'vencimiento anexo 2' => 'doc_annex_2_expires_on',
+        'fecha vencimiento anexo 2' => 'doc_annex_2_expires_on',
     ];
 
     /**
@@ -192,6 +215,27 @@ class MtCo01Importer
 
                 $wasNewService = ! $service->exists;
 
+                $docPayload = [
+                    'doc_economic_proposal' => $this->mapDocStatus($raw['doc_economic_proposal'] ?? null),
+                    'doc_fo_co_02' => $this->mapDocStatus($raw['doc_fo_co_02'] ?? null),
+                    'doc_laft_or_queries' => $this->mapDocStatus($raw['doc_laft_or_queries'] ?? null),
+                    'doc_rut' => $this->mapDocStatus($raw['doc_rut'] ?? null),
+                    'doc_financials' => $this->mapDocStatus($raw['doc_financials'] ?? null),
+                    'doc_legal_rep_id' => $this->mapDocStatus($raw['doc_legal_rep_id'] ?? null),
+                    'doc_chamber' => $this->mapDocStatus($raw['doc_chamber'] ?? null),
+                    'doc_preinstall' => $this->mapDocStatus($raw['doc_preinstall'] ?? null),
+                    'doc_contract' => $this->mapDocStatus($raw['doc_contract'] ?? null),
+                    'doc_annex_2' => $this->mapDocStatus($raw['doc_annex_2'] ?? null),
+                ];
+
+                foreach (CommercialService::documentExpiryFields() as $docField => $meta) {
+                    $expiresOn = $this->parseDate($raw[$meta['expires']] ?? null);
+                    if ($expiresOn !== null) {
+                        $docPayload[$meta['tracks']] = true;
+                        $docPayload[$meta['expires']] = $expiresOn;
+                    }
+                }
+
                 $service->fill([
                     'portfolio' => $portfolio,
                     'contract_number' => $contractNumber,
@@ -207,16 +251,7 @@ class MtCo01Importer
                     'contract_start' => $this->parseDate($raw['contract_start'] ?? null),
                     'contract_end' => $this->parseDate($raw['contract_end'] ?? null),
                     'duration_months' => $this->parseDuration($raw['duration_months'] ?? null),
-                    'doc_economic_proposal' => $this->mapDocStatus($raw['doc_economic_proposal'] ?? null),
-                    'doc_fo_co_02' => $this->mapDocStatus($raw['doc_fo_co_02'] ?? null),
-                    'doc_laft_or_queries' => $this->mapDocStatus($raw['doc_laft_or_queries'] ?? null),
-                    'doc_rut' => $this->mapDocStatus($raw['doc_rut'] ?? null),
-                    'doc_financials' => $this->mapDocStatus($raw['doc_financials'] ?? null),
-                    'doc_legal_rep_id' => $this->mapDocStatus($raw['doc_legal_rep_id'] ?? null),
-                    'doc_chamber' => $this->mapDocStatus($raw['doc_chamber'] ?? null),
-                    'doc_preinstall' => $this->mapDocStatus($raw['doc_preinstall'] ?? null),
-                    'doc_contract' => $this->mapDocStatus($raw['doc_contract'] ?? null),
-                    'doc_annex_2' => $this->mapDocStatus($raw['doc_annex_2'] ?? null),
+                    ...$docPayload,
                 ]);
                 $service->commercial_client_id = $client->id;
                 $service->save();

@@ -67,7 +67,7 @@ return [
 
     'indicador_tabs' => [
         'dashboard' => 'Dashboard',
-        'captura' => 'Captura',
+        'captura' => 'Listado de Indicadores',
         'consolidado' => 'Consolidado',
         'ajustes' => 'Ajustes',     
     ],

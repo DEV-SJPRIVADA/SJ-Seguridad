@@ -77,8 +77,22 @@
                 <td colspan="2" class="border border-gray-600 t-body">{{ ucfirst((string) ($indicator->unit ?? 'Porcentaje')) }}</td>
                 <td class="border border-gray-600 t-body">{{ number_format((float) $indicator->target_value, 0) }}%</td>
                 <td colspan="3" class="border border-gray-600 t-body">{{ ucfirst($indicator->frequency ?? 'Mensual') }}</td>
-                <td colspan="2" class="border border-gray-600 t-body">{{ ($indicator->target_operator ?? '>=') === '<=' ? 'Decreciente' : 'Creciente' }}</td>
+                <td colspan="2" class="border border-gray-600 t-body">
+                    @php
+                        $tendency = match ($indicator->target_operator ?? '>=') {
+                            '<=' => 'Decreciente',
+                            '==' => 'Objetivo exacto',
+                            default => 'Creciente',
+                        };
+                    @endphp
+                    {{ $tendency }}
+                </td>
                 <td colspan="4" class="border border-gray-600 t-body">Base de datos del indicador</td>
+            </tr>
+            <tr style="height:26px;" class="bg-gray-100 text-center">
+                <td colspan="2" class="border border-gray-600 t-head">CRITICO</td>
+                <td class="border border-gray-600 t-body">{{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
+                <td colspan="9" class="border border-gray-600 t-body"></td>
             </tr>
             <tr style="height:26px;" class="bg-gray-100">
                 <td colspan="12" class="border border-gray-600 text-center t-head">FORMULA</td>
@@ -138,7 +152,12 @@
             </tr>
             <tr style="height:26px;" class="text-center">
                 @for ($i = 0; $i < 12; $i++)
-                    <td class="border border-gray-600 t-head">{{ $indicator->target_operator === '<=' ? '<=' : '>=' }} {{ number_format((float) $indicator->target_value, 0) }}%</td>
+                    <td class="border border-gray-600 t-head">{{ $indicator->target_operator }} {{ number_format((float) $indicator->target_value, 0) }}%</td>
+                @endfor
+            </tr>
+            <tr style="height:26px;" class="text-center">
+                @for ($i = 0; $i < 12; $i++)
+                    <td class="border border-gray-600 t-head">CRITICO {{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
                 @endfor
             </tr>
         </table>

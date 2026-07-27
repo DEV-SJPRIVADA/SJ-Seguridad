@@ -11,7 +11,7 @@ Prefijo: `/operaciones/indicadores` — nombre de ruta: `indicadores.*`
 | Dashboard global | `operations.view` o `operations.manage` |
 | Captura | `operations.capture` o `operations.manage` |
 | Guardar captura (`POST .../captura/{code}`) | `operations.capture` o `operations.manage` |
-| Ajustes (periodos, pesos, auditoria) | `operations.manage` |
+| Ajustes (periodos, metas, auditoria) | `operations.manage` |
 | Consolidado | `operations.manage` |
 | Export PDF/Excel | `operations.export` |
 
@@ -22,10 +22,11 @@ La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones inte
 | Seccion | Contenido |
 |---|---|
 | `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
-| `pesos` | Pesos del score global del dashboard |
+| `metas` | Operador (`>=`, `<=`, `==`), meta (%) y critico (%) por indicador; alimenta listado, captura y cumplimiento |
 | `auditoria` | Log de cambios con filtros |
+| `capturadores` | Usuarios activos del area Operaciones; toggle `operations.capture` (mismo estilo que permisos en admin) |
 
-Las rutas legacy `/admin/periodos`, `/admin/pesos` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas.
+Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas`, `/admin/capturadores` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/capturadores/{user}` activa captura; `PATCH /admin/pesos` sigue aceptado por compatibilidad).
 
 ## Permisos Spatie
 
@@ -45,8 +46,8 @@ El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 
 ## Seeders
 
-- `IndicadorSeeder` — 9 indicadores FT-OP
-- `DashboardWeightSeeder` — pesos del score global
+- `IndicadorSeeder` — 9 indicadores FT-OP con `target_value` (meta) y `critical_value` (critico)
+- `DashboardWeightSeeder` — pesos internos del score global del dashboard (sin UI de ajuste)
 
 ## Configuracion
 
@@ -57,13 +58,17 @@ El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 
 Vistas en `resources/views/areas/operaciones/` con layout `<x-app-layout>`, paneles corporativos y subtabs via `App\Support\IndicadorNavigation`.
 
-Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + JS vanilla (`public/js/indicadores-capture.js`), estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros).
+Captura mensual: `IndicadorController` + `IndicatorCaptureService` + Blade + **ApexCharts** via Vite (`resources/js/indicadores-capture.js`; metrics/modales + charts FT-OP-01/03 mixed bar/line). Estilos en `public/css/indicadores.css`. Persistencia via `POST indicadores.capture.store`. El usuario de captura es el autenticado (readonly en filtros). El archivo `public/js/indicadores-capture.js` esta deprecado (stub con `console.warn`; no carga ECharts). **FEAT-010:** Chart.js/ECharts retirados del runtime; estandar ApexCharts compartido con Comercial y GH.
 
 Los tableros usan la clase contenedora `indicadores-board` para tablas compactas, filtros acotados y botones al ancho de su contenido.
 
-El dashboard global muestra KPIs del mes en tabla (`supply-table`) para evitar solapamiento de texto en tarjetas pequenas.
+El dashboard global muestra KPIs del mes en tabla (`supply-table`) con columnas Codigo, Indicador, resultado del mes anterior, Resultado, Meta y Estado.
 
-El consolidado agrega capturas de usuarios con permiso `operations.capture` o `operations.manage`.
+La seccion **Indicadores criticos** lista solo capturas en umbral critico por usuario (columnas Usuario, Indicador, Valor critico). La regla usa `critical_value` y el operador del indicador: con `>=` cuando el resultado cae por debajo del critico; con `<=` o `==` cuando lo supera.
+
+**Ranking de usuarios:** solo usuarios con al menos una captura en el periodo. Columnas: posicion, Usuario, cantidad de indicadores gestionados (capturas del mes), **% gestionado** (capturas del usuario sobre total de indicadores activos FT-OP, redondeado) y cantidad de mejoras ingresadas (registros `Improvement` ligados a esas capturas). Orden: mas indicadores gestionados primero; empate por mejoras y nombre.
+
+El consolidado agrega capturas de usuarios del area Operaciones con permiso `operations.capture` o `operations.manage` (gestion en Ajustes → Capturadores).
 
 ## Exportaciones
 

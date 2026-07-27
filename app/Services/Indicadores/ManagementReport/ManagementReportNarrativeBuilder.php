@@ -58,18 +58,18 @@ class ManagementReportNarrativeBuilder
 
     private function readingPhrase(Indicator $indicator, float $result): string
     {
+        if ($indicator->usesCompositeTarget()) {
+            return $result <= (float) $indicator->target_value
+                ? 'La operacion se mantiene dentro de los limites de siniestralidad definidos.'
+                : 'Se requiere seguimiento a la siniestralidad operativa y su impacto economico.';
+        }
+
         $complies = match ($indicator->target_operator) {
             '>=' => $result >= (float) $indicator->target_value,
             '<=' => $result <= (float) $indicator->target_value,
             '==' => round($result, 2) === round((float) $indicator->target_value, 2),
             default => false,
         };
-
-        if ($indicator->code === 'FT-OP-03') {
-            return $complies
-                ? 'La operacion se mantiene dentro de los limites de siniestralidad definidos.'
-                : 'Se requiere seguimiento a la siniestralidad operativa y su impacto economico.';
-        }
 
         return $complies
             ? 'El indicador cumple la meta del periodo.'

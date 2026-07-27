@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Operaciones\StoreIndicatorCaptureRequest;
 use App\Models\AuditLog;
 use App\Models\DashboardSummary;
-use App\Models\DashboardWeight;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
 use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
@@ -38,6 +38,7 @@ class IndicadorController extends Controller
         private readonly IndicatorCaptureService $captureService,
         private readonly ManagementReportDataBuilder $managementReportDataBuilder,
         private readonly ManagementReportPptxExporter $managementReportPptxExporter,
+        private readonly IndicatorCaptureAccessService $captureAccessService,
     ) {
     }
 
@@ -132,7 +133,7 @@ class IndicadorController extends Controller
     {
         $section = (string) $request->query('section', 'periodos');
 
-        if (! in_array($section, ['periodos', 'pesos', 'auditoria'], true)) {
+        if (! in_array($section, ['periodos', 'metas', 'auditoria', 'capturadores'], true)) {
             $section = 'periodos';
         }
 
@@ -151,10 +152,10 @@ class IndicadorController extends Controller
                 ->withQueryString();
         }
 
-        if ($section === 'pesos') {
+        if ($section === 'metas') {
             $data['indicators'] = Indicator::query()
+                ->where('is_active', true)
                 ->orderBy('code')
-                ->with('dashboardWeight')
                 ->get();
         }
 
@@ -171,7 +172,57 @@ class IndicadorController extends Controller
             $data['actions'] = AuditLog::query()->select('action')->distinct()->orderBy('action')->pluck('action');
         }
 
+        if ($section === 'capturadores') {
+            $data['operacionesUsers'] = $this->captureAccessService->operacionesAreaUsers();
+            $data['captureAccessService'] = $this->captureAccessService;
+        }
+
         return view('areas.operaciones.ajustes.index', $data);
+    }
+
+    public function updateCapturador(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'enabled' => ['required', 'boolean'],
+        ]);
+
+        $before = [
+            'operations.capture' => $user->can('operations.capture'),
+            'operations.manage' => $user->can('operations.manage'),
+        ];
+
+        try {
+            $this->captureAccessService->setCaptureEnabled($user, (bool) $validated['enabled']);
+        } catch (\InvalidArgumentException $exception) {
+            return back()->withErrors(['capturador' => $exception->getMessage()]);
+        }
+
+        $user->refresh();
+
+        $this->auditLogService->logModelChange(
+            eventType: 'admin_action',
+            action: $validated['enabled'] ? 'capture_user_enable' : 'capture_user_disable',
+            model: $user,
+            before: $before,
+            after: [
+                'operations.capture' => $user->can('operations.capture'),
+                'operations.manage' => $user->can('operations.manage'),
+            ],
+            reason: $validated['enabled']
+                ? 'Activacion de captura desde Ajustes → Capturadores'
+                : 'Inactivacion de captura desde Ajustes → Capturadores'
+        );
+
+        return redirect()
+            ->route('indicadores.admin.ajustes', ['section' => 'capturadores'])
+            ->with('status', $validated['enabled']
+                ? 'Captura de indicadores activada para '.$user->name.'.'
+                : 'Captura de indicadores desactivada para '.$user->name.'.');
+    }
+
+    public function capturadores(): RedirectResponse
+    {
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'capturadores']);
     }
 
     public function periods(): RedirectResponse
@@ -280,38 +331,57 @@ class IndicadorController extends Controller
         return back()->with('status', 'Periodo reabierto correctamente.');
     }
 
-    public function weights(): RedirectResponse
+    public function metas(): RedirectResponse
     {
-        return redirect()->route('indicadores.admin.ajustes', ['section' => 'pesos']);
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'metas']);
     }
 
-    public function updateWeights(Request $request): RedirectResponse
+    public function weights(): RedirectResponse
+    {
+        return redirect()->route('indicadores.admin.ajustes', ['section' => 'metas']);
+    }
+
+    public function updateMetas(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'weights' => ['required', 'array'],
-            'weights.*' => ['required', 'numeric', 'min:0', 'max:100'],
+            'operators' => ['required', 'array'],
+            'operators.*' => ['required', Rule::in(['>=', '<=', '=='])],
+            'metas' => ['required', 'array'],
+            'metas.*' => ['required', 'numeric', 'min:0', 'max:999.99'],
+            'critical' => ['required', 'array'],
+            'critical.*' => ['required', 'numeric', 'min:0', 'max:999.99'],
             'reason' => ['required', 'string', 'max:1000'],
         ]);
 
         DB::transaction(function () use ($validated): void {
-            $before = DashboardWeight::query()->with('indicator')->get()->toArray();
+            $before = Indicator::query()
+                ->orderBy('code')
+                ->get(['id', 'code', 'target_operator', 'target_value', 'critical_value'])
+                ->keyBy('id')
+                ->toArray();
 
-            foreach ($validated['weights'] as $indicatorId => $weight) {
-                DashboardWeight::query()->updateOrCreate(
-                    ['indicator_id' => (int) $indicatorId],
-                    [
-                        'weight' => $weight,
-                        'updated_by_user_id' => auth()->id(),
-                    ]
-                );
+            foreach ($validated['metas'] as $indicatorId => $meta) {
+                $indicator = Indicator::query()->findOrFail((int) $indicatorId);
+
+                $indicator->update([
+                    'target_operator' => $validated['operators'][$indicatorId]
+                        ?? $validated['operators'][(string) $indicatorId],
+                    'target_value' => $meta,
+                    'critical_value' => $validated['critical'][$indicatorId]
+                        ?? $validated['critical'][(string) $indicatorId],
+                ]);
             }
 
-            $afterCollection = DashboardWeight::query()->with('indicator')->get();
-            $after = $afterCollection->toArray();
-            $auditModel = $afterCollection->first() ?? DashboardWeight::query()->firstOrFail();
+            $after = Indicator::query()
+                ->orderBy('code')
+                ->get(['id', 'code', 'target_operator', 'target_value', 'critical_value'])
+                ->keyBy('id')
+                ->toArray();
+
+            $auditModel = Indicator::query()->orderBy('code')->firstOrFail();
 
             $this->auditLogService->logModelChange(
-                eventType: 'dashboard_weights',
+                eventType: 'indicator_targets',
                 action: 'update',
                 model: $auditModel,
                 before: $before,
@@ -320,7 +390,9 @@ class IndicadorController extends Controller
             );
         });
 
-        return back()->with('status', 'Pesos actualizados.');
+        return redirect()
+            ->route('indicadores.admin.ajustes', ['section' => 'metas'])
+            ->with('status', 'Metas actualizadas.');
     }
 
     public function consolidado(): View

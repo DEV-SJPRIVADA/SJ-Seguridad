@@ -39,7 +39,11 @@ class IndicadorModuleTest extends TestCase
     {
         $user = $this->operationsViewer();
 
-        $this->actingAs($user)->get(route('indicadores.dashboard'))->assertOk();
+        $this->actingAs($user)
+            ->get(route('indicadores.dashboard'))
+            ->assertOk()
+            ->assertSee('KPIs del mes')
+            ->assertSee('Mes anterior');
     }
 
     public function test_operations_capture_user_can_access_captura_list(): void
@@ -59,7 +63,86 @@ class IndicadorModuleTest extends TestCase
             ->get(route('indicadores.admin.ajustes'))
             ->assertOk()
             ->assertSee('Ajustes de indicadores')
-            ->assertSee('Periodos de captura');
+            ->assertSee('Periodos de captura')
+            ->assertSee('Capturadores');
+    }
+
+    public function test_operations_manage_user_can_access_capturadores_section(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $captureUser = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+            'name' => 'Zona Operaciones Test',
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('indicadores.admin.ajustes', ['section' => 'capturadores']))
+            ->assertOk()
+            ->assertSee('Capturadores de indicadores')
+            ->assertSee('Zona Operaciones Test')
+            ->assertSee('toggle-switch');
+    }
+
+    public function test_operations_manage_user_can_enable_capture_for_operaciones_user(): void
+    {
+        PermissionCatalog::sync();
+
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $captureUser = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.update', $captureUser), [
+                'enabled' => true,
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $captureUser->refresh();
+        $this->assertTrue($captureUser->can('operations.capture'));
+        $this->assertTrue($captureUser->can('operations.view'));
+    }
+
+    public function test_operations_manage_user_can_disable_capture_for_operaciones_user(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $captureUser = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $captureUser->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.update', $captureUser), [
+                'enabled' => false,
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $captureUser->refresh();
+        $this->assertFalse($captureUser->can('operations.capture'));
     }
 
     public function test_legacy_periodos_route_redirects_to_ajustes(): void
@@ -70,6 +153,146 @@ class IndicadorModuleTest extends TestCase
         $this->actingAs($user)
             ->get(route('indicadores.admin.periods.index'))
             ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'periodos']));
+    }
+
+    public function test_legacy_pesos_route_redirects_to_metas(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.admin.weights'))
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'metas']));
+    }
+
+    public function test_operations_manage_user_can_update_metas(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $allIndicators = \App\Models\Indicator::query()->where('is_active', true)->orderBy('code')->get();
+
+        $payload = [
+            'reason' => 'Ajuste anual de metas',
+        ];
+
+        foreach ($allIndicators as $item) {
+            $payload['operators'][$item->id] = $item->id === $indicator->id ? '<=' : $item->target_operator;
+            $payload['metas'][$item->id] = $item->id === $indicator->id ? 95 : (float) $item->target_value;
+            $payload['critical'][$item->id] = $item->id === $indicator->id ? 85 : (float) ($item->critical_value ?? 0);
+        }
+
+        $this->actingAs($user)
+            ->patch(route('indicadores.admin.metas.update'), $payload)
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'metas']));
+
+        $indicator->refresh();
+        $this->assertSame('<=', $indicator->target_operator);
+        $this->assertSame('95.00', $indicator->target_value);
+        $this->assertSame('85.00', $indicator->critical_value);
+    }
+
+    public function test_capture_compliance_uses_updated_operator(): void
+    {
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $indicator->update([
+            'target_operator' => '<=',
+            'target_value' => 90,
+        ]);
+
+        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
+
+        $compliesAt89 = $calculator->calculate($indicator, [
+            'supervisiones_programadas' => 100,
+            'supervisiones_realizadas' => 89,
+        ]);
+
+        $failsAt91 = $calculator->calculate($indicator, [
+            'supervisiones_programadas' => 100,
+            'supervisiones_realizadas' => 91,
+        ]);
+
+        $this->assertTrue($compliesAt89['complies']);
+        $this->assertFalse($failsAt91['complies']);
+    }
+
+    public function test_capture_list_shows_updated_operator(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.capture']);
+
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
+        $indicator->update(['target_operator' => '<=', 'target_value' => 12.5]);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.index'))
+            ->assertOk()
+            ->assertSee('<= 12.50%');
+    }
+
+    public function test_sheet_rows_recalculate_complies_after_operator_change(): void
+    {
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.capture']);
+
+        $period = \App\Models\Period::query()->firstOrCreate(
+            ['year' => 2026, 'month' => 3],
+            ['status' => \App\Models\Period::STATUS_OPEN]
+        );
+
+        \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicator->id,
+                'user_id' => $user->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => [
+                    'supervisiones_programadas' => 100,
+                    'supervisiones_realizadas' => 95,
+                ],
+                'numerator' => 95,
+                'denominator' => 100,
+                'result_percentage' => 95,
+                'complies' => true,
+                'analysis_text' => 'Test',
+                'created_by_user_id' => $user->id,
+                'updated_by_user_id' => $user->id,
+            ]
+        );
+
+        $indicator->update(['target_operator' => '<=', 'target_value' => 90]);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 3]))
+            ->assertOk()
+            ->assertSee('bg-red-100', false);
+    }
+
+    public function test_ft_op_03_meta_label_is_composite(): void
+    {
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
+
+        $this->assertTrue($indicator->usesCompositeTarget());
+        $this->assertStringContainsString('A ≤', $indicator->metaLabel());
+        $this->assertStringContainsString('B ≤', $indicator->metaLabel());
+    }
+
+    public function test_capture_form_reflects_updated_meta(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.capture']);
+
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $indicator->update(['target_value' => 88, 'critical_value' => 75]);
+
+        $this->actingAs($user)
+            ->get(route('indicadores.show', ['indicator' => $indicator->code]))
+            ->assertOk()
+            ->assertSee('88%')
+            ->assertSee('75%');
     }
 
     public function test_dashboard_redirects_to_indicadores_when_board_selected(): void
@@ -160,6 +383,193 @@ class IndicadorModuleTest extends TestCase
         $this->assertStringNotContainsString('externalData', (string) $chart);
         $this->assertDoesNotMatchRegularExpression('/<c:extLst>\s*<\/c:extLst>/', (string) $chart);
         $this->assertStringContainsString('<c:v>684</c:v>', (string) $chart);
+    }
+
+    public function test_critical_result_detects_below_threshold_for_gte_operator(): void
+    {
+        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
+
+        $this->assertTrue($calculator->isCriticalResult($indicator, 50.0));
+        $this->assertFalse($calculator->isCriticalResult($indicator, 85.0));
+    }
+
+    public function test_critical_result_detects_above_threshold_for_equals_operator(): void
+    {
+        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-06')->firstOrFail();
+        $indicator->update(['target_operator' => '==', 'target_value' => 0, 'critical_value' => 3]);
+
+        $this->assertTrue($calculator->isCriticalResult($indicator, 5.0));
+        $this->assertFalse($calculator->isCriticalResult($indicator, 0.0));
+    }
+
+    public function test_dashboard_user_ranking_lists_captures_only(): void
+    {
+        $year = (int) config('indicators.base_year', now()->year);
+        $month = 7;
+        $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
+
+        $leaderA = User::factory()->create([
+            'name' => 'Ranking Alpha',
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $leaderA->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $leaderB = User::factory()->create([
+            'name' => 'Ranking Beta',
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $leaderB->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $inactiveCapturer = User::factory()->create([
+            'name' => 'Sin Capturas Mes',
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $inactiveCapturer->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $indicatorOne = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicatorTwo = \App\Models\Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
+
+        $captureAOne = \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicatorOne->id,
+                'user_id' => $leaderA->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_personal' => 100, 'personal_capacitado' => 90],
+                'numerator' => 90,
+                'denominator' => 100,
+                'result_percentage' => 90,
+                'complies' => true,
+                'created_by_user_id' => $leaderA->id,
+                'updated_by_user_id' => $leaderA->id,
+            ]
+        );
+
+        \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicatorTwo->id,
+                'user_id' => $leaderA->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_servicios' => 100, 'no_conformes' => 5],
+                'numerator' => 5,
+                'denominator' => 100,
+                'result_percentage' => 5,
+                'complies' => true,
+                'created_by_user_id' => $leaderA->id,
+                'updated_by_user_id' => $leaderA->id,
+            ]
+        );
+
+        $captureBOne = \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicatorOne->id,
+                'user_id' => $leaderB->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_personal' => 100, 'personal_capacitado' => 80],
+                'numerator' => 80,
+                'denominator' => 100,
+                'result_percentage' => 80,
+                'complies' => true,
+                'created_by_user_id' => $leaderB->id,
+                'updated_by_user_id' => $leaderB->id,
+            ]
+        );
+
+        \App\Models\Improvement::query()->create([
+            'indicator_capture_id' => $captureAOne->id,
+            'indicator_id' => $indicatorOne->id,
+            'user_id' => $leaderA->id,
+            'period_id' => $period->id,
+            'analysis' => 'Analisis alpha',
+            'action_taken' => 'Accion alpha',
+            'action_defined' => 'Plan alpha',
+            'integrated_analysis_block' => 'Bloque alpha',
+            'created_by_user_id' => $leaderA->id,
+        ]);
+
+        \App\Models\Improvement::query()->create([
+            'indicator_capture_id' => $captureBOne->id,
+            'indicator_id' => $indicatorOne->id,
+            'user_id' => $leaderB->id,
+            'period_id' => $period->id,
+            'analysis' => 'Analisis beta',
+            'action_taken' => 'Accion beta',
+            'action_defined' => 'Plan beta',
+            'integrated_analysis_block' => 'Bloque beta',
+            'created_by_user_id' => $leaderB->id,
+        ]);
+
+        $viewer = $this->operationsViewer();
+
+        $response = $this->actingAs($viewer)
+            ->get(route('indicadores.dashboard', ['year' => $year, 'month' => $month]));
+
+        $response->assertOk()
+            ->assertSee('Ranking de usuarios')
+            ->assertSee('Indicadores gestionados')
+            ->assertSee('% gestionado')
+            ->assertSee('Mejoras ingresadas')
+            ->assertSee('Ranking Alpha')
+            ->assertSee('Ranking Beta')
+            ->assertDontSee('Sin Capturas Mes');
+
+        $alphaPos = strpos($response->getContent(), 'Ranking Alpha');
+        $betaPos = strpos($response->getContent(), 'Ranking Beta');
+        $this->assertNotFalse($alphaPos);
+        $this->assertNotFalse($betaPos);
+        $this->assertLessThan($betaPos, $alphaPos);
+    }
+
+    public function test_dashboard_shows_critical_indicators_table_with_user_rows(): void
+    {
+        $year = (int) config('indicators.base_year', now()->year);
+        $month = 7;
+        $captureUser = User::query()->where('email', 'operaciones.demo@sjseguridad.test')->firstOrFail();
+        $captureUser->update(['area_key' => 'operaciones']);
+        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
+        $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
+
+        \App\Models\IndicatorCapture::query()->updateOrCreate(
+            [
+                'indicator_id' => $indicator->id,
+                'user_id' => $captureUser->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'input_data' => ['total_personal' => 100, 'personal_capacitado' => 50],
+                'numerator' => 50,
+                'denominator' => 100,
+                'result_percentage' => 50,
+                'complies' => false,
+                'created_by_user_id' => $captureUser->id,
+                'updated_by_user_id' => $captureUser->id,
+            ]
+        );
+
+        $viewer = $this->operationsViewer();
+
+        $this->actingAs($viewer)
+            ->get(route('indicadores.dashboard', ['year' => $year, 'month' => $month]))
+            ->assertOk()
+            ->assertSee('Indicadores criticos')
+            ->assertSee('Operaciones Demo')
+            ->assertSee('FT-OP-01')
+            ->assertSee('50.00%');
     }
 
     private function operationsViewer(): User

@@ -94,15 +94,15 @@ class IndicatorMetricCalculator
     public function calculate(Indicator $indicator, array $form): array
     {
         return match ($indicator->code) {
-            'FT-OP-01' => $this->ratioGe($form, 'total_personal', 'personal_capacitado', (float) $indicator->target_value),
-            'FT-OP-02' => $this->ratioLe($form, 'total_servicios', 'no_conformes', (float) $indicator->target_value),
-            'FT-OP-03' => $this->calculateFtOp03($form),
-            'FT-OP-04' => $this->ratioGe($form, 'supervisiones_programadas', 'supervisiones_realizadas', 90.0),
-            'FT-OP-05' => $this->ratioGe($form, 'visitas_programadas', 'visitas_realizadas', 100.0),
-            'FT-OP-06' => $this->ratioEqZero($form, 'total_clientes_cadena', 'eventos_indeseables'),
-            'FT-OP-07' => $this->ratioGe($form, 'analisis_programados', 'analisis_realizados', 100.0),
-            'FT-OP-08' => $this->ratioGe($form, 'inventarios_programados', 'inventarios_realizados', 100.0),
-            'FT-OP-09' => $this->ratioGe($form, 'armas_programadas', 'armas_inspeccionadas', 100.0),
+            'FT-OP-01' => $this->ratioByOperator($form, 'total_personal', 'personal_capacitado', $indicator),
+            'FT-OP-02' => $this->ratioByOperator($form, 'total_servicios', 'no_conformes', $indicator),
+            'FT-OP-03' => $this->calculateFtOp03($form, $indicator),
+            'FT-OP-04' => $this->ratioByOperator($form, 'supervisiones_programadas', 'supervisiones_realizadas', $indicator),
+            'FT-OP-05' => $this->ratioByOperator($form, 'visitas_programadas', 'visitas_realizadas', $indicator),
+            'FT-OP-06' => $this->ratioByOperator($form, 'total_clientes_cadena', 'eventos_indeseables', $indicator),
+            'FT-OP-07' => $this->ratioByOperator($form, 'analisis_programados', 'analisis_realizados', $indicator),
+            'FT-OP-08' => $this->ratioByOperator($form, 'inventarios_programados', 'inventarios_realizados', $indicator),
+            'FT-OP-09' => $this->ratioByOperator($form, 'armas_programadas', 'armas_inspeccionadas', $indicator),
             default => [
                 'numerator' => 0.0,
                 'denominator' => 0.0,
@@ -111,6 +111,20 @@ class IndicatorMetricCalculator
                 'errors' => ['Indicador no implementado.'],
             ],
         };
+    }
+
+    public function compliesForCapture(Indicator $indicator, ?\App\Models\IndicatorCapture $capture): bool
+    {
+        if ($capture === null) {
+            return false;
+        }
+
+        $form = array_merge(
+            $this->defaultForm($indicator->code),
+            $capture->input_data ?? []
+        );
+
+        return (bool) $this->calculate($indicator, $form)['complies'];
     }
 
     /**
@@ -169,17 +183,46 @@ class IndicatorMetricCalculator
      */
     public function clientFormula(string $code, Indicator $indicator): array
     {
+        if ($code === 'FT-OP-03') {
+            return [
+                'type' => 'ft_op_03',
+                'den' => 'total_servicios',
+                'num' => 'total_siniestros',
+                'freqThreshold' => (float) $indicator->target_value,
+                'impactThreshold' => (float) ($indicator->critical_value ?? 1),
+            ];
+        }
+
+        $fields = $this->ratioFieldKeys($code);
+
+        if ($fields === null) {
+            return ['type' => 'none', 'den' => '', 'num' => ''];
+        }
+
+        return [
+            'type' => 'ratio',
+            'den' => $fields[0],
+            'num' => $fields[1],
+            'threshold' => (float) $indicator->target_value,
+            'operator' => (string) ($indicator->target_operator ?? '>='),
+        ];
+    }
+
+    /**
+     * @return array{0: string, 1: string}|null
+     */
+    private function ratioFieldKeys(string $code): ?array
+    {
         return match ($code) {
-            'FT-OP-01' => ['type' => 'ratio_ge', 'den' => 'total_personal', 'num' => 'personal_capacitado', 'threshold' => (float) $indicator->target_value],
-            'FT-OP-02' => ['type' => 'ratio_le', 'den' => 'total_servicios', 'num' => 'no_conformes', 'threshold' => (float) $indicator->target_value],
-            'FT-OP-03' => ['type' => 'ft_op_03', 'den' => 'total_servicios', 'num' => 'total_siniestros'],
-            'FT-OP-04' => ['type' => 'ratio_ge', 'den' => 'supervisiones_programadas', 'num' => 'supervisiones_realizadas', 'threshold' => 90.0],
-            'FT-OP-05' => ['type' => 'ratio_ge', 'den' => 'visitas_programadas', 'num' => 'visitas_realizadas', 'threshold' => 100.0],
-            'FT-OP-06' => ['type' => 'ratio_eq_zero', 'den' => 'total_clientes_cadena', 'num' => 'eventos_indeseables'],
-            'FT-OP-07' => ['type' => 'ratio_ge', 'den' => 'analisis_programados', 'num' => 'analisis_realizados', 'threshold' => 100.0],
-            'FT-OP-08' => ['type' => 'ratio_ge', 'den' => 'inventarios_programados', 'num' => 'inventarios_realizados', 'threshold' => 100.0],
-            'FT-OP-09' => ['type' => 'ratio_ge', 'den' => 'armas_programadas', 'num' => 'armas_inspeccionadas', 'threshold' => 100.0],
-            default => ['type' => 'none', 'den' => '', 'num' => ''],
+            'FT-OP-01' => ['total_personal', 'personal_capacitado'],
+            'FT-OP-02' => ['total_servicios', 'no_conformes'],
+            'FT-OP-04' => ['supervisiones_programadas', 'supervisiones_realizadas'],
+            'FT-OP-05' => ['visitas_programadas', 'visitas_realizadas'],
+            'FT-OP-06' => ['total_clientes_cadena', 'eventos_indeseables'],
+            'FT-OP-07' => ['analisis_programados', 'analisis_realizados'],
+            'FT-OP-08' => ['inventarios_programados', 'inventarios_realizados'],
+            'FT-OP-09' => ['armas_programadas', 'armas_inspeccionadas'],
+            default => null,
         };
     }
 
@@ -187,76 +230,118 @@ class IndicatorMetricCalculator
      * @param  array<string, mixed>  $form
      * @return array{numerator: float, denominator: float, result_percentage: float, complies: bool, errors: list<string>}
      */
-    private function ratioGe(array $form, string $denKey, string $numKey, float $threshold): array
+    private function ratioByOperator(array $form, string $denKey, string $numKey, Indicator $indicator): array
     {
         $den = (float) ($form[$denKey] ?? 0);
         $num = (float) ($form[$numKey] ?? 0);
         $errors = [];
+
         if ($den <= 0) {
             $errors[] = "{$denKey} no puede ser 0.";
         }
+
         $result = $den > 0 ? round(($num / $den) * 100, 2) : 0.0;
+        $threshold = (float) $indicator->target_value;
+        $operator = (string) ($indicator->target_operator ?? '>=');
 
         return [
             'numerator' => $num,
             'denominator' => $den,
             'result_percentage' => $result,
-            'complies' => $den > 0 && $result >= $threshold,
+            'complies' => $den > 0 && $this->compareByOperator($result, $threshold, $operator),
             'errors' => $errors,
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $form
-     * @return array{numerator: float, denominator: float, result_percentage: float, complies: bool, errors: list<string>}
-     */
-    private function ratioLe(array $form, string $denKey, string $numKey, float $threshold): array
+    public function compareByOperator(float $result, float $threshold, string $operator): bool
     {
-        $den = (float) ($form[$denKey] ?? 0);
-        $num = (float) ($form[$numKey] ?? 0);
-        $errors = [];
-        if ($den <= 0) {
-            $errors[] = "{$denKey} no puede ser 0.";
-        }
-        $result = $den > 0 ? round(($num / $den) * 100, 2) : 0.0;
-
-        return [
-            'numerator' => $num,
-            'denominator' => $den,
-            'result_percentage' => $result,
-            'complies' => $den > 0 && $result <= $threshold,
-            'errors' => $errors,
-        ];
+        return match ($operator) {
+            '>=' => $result >= $threshold,
+            '<=' => $result <= $threshold,
+            '==' => round($result, 2) === round($threshold, 2),
+            default => false,
+        };
     }
 
-    /**
-     * @param  array<string, mixed>  $form
-     * @return array{numerator: float, denominator: float, result_percentage: float, complies: bool, errors: list<string>}
-     */
-    private function ratioEqZero(array $form, string $denKey, string $numKey): array
+    public function isCriticalResult(Indicator $indicator, float $result): bool
     {
-        $den = (float) ($form[$denKey] ?? 0);
-        $num = (float) ($form[$numKey] ?? 0);
-        $errors = [];
-        if ($den <= 0) {
-            $errors[] = "{$denKey} no puede ser 0.";
-        }
-        $result = $den > 0 ? round(($num / $den) * 100, 2) : 0.0;
+        $critical = (float) ($indicator->critical_value ?? 0);
+        $operator = (string) ($indicator->target_operator ?? '>=');
 
-        return [
-            'numerator' => $num,
-            'denominator' => $den,
-            'result_percentage' => $result,
-            'complies' => $den > 0 && $result == 0.0,
-            'errors' => $errors,
-        ];
+        return match ($operator) {
+            '>=' => $result < $critical,
+            '<=' => $result > $critical,
+            '==' => $result > $critical,
+            default => false,
+        };
+    }
+
+    public function isCriticalCapture(Indicator $indicator, ?\App\Models\IndicatorCapture $capture): bool
+    {
+        if ($capture === null || $capture->result_percentage === null) {
+            return false;
+        }
+
+        if ($indicator->code === 'FT-OP-03') {
+            return $this->isCriticalFtOp03Capture($indicator, $capture);
+        }
+
+        return $this->isCriticalResult($indicator, (float) $capture->result_percentage);
     }
 
     /**
-     * @param  array<string, mixed>  $form
-     * @return array{numerator: float, denominator: float, result_percentage: float, complies: bool, errors: list<string>}
+     * Valor medido que debe mostrarse en la tabla de indicadores criticos.
      */
-    private function calculateFtOp03(array $form): array
+    public function criticalDisplayValue(Indicator $indicator, \App\Models\IndicatorCapture $capture): ?float
+    {
+        if ($indicator->code === 'FT-OP-03') {
+            $data = $capture->input_data ?? [];
+            $servicios = (float) ($data['total_servicios'] ?? 0);
+            $siniestros = (float) ($data['total_siniestros'] ?? 0);
+            $fact = (float) ($data['facturacion_mensual'] ?? 0);
+            $pag = (float) ($data['valor_pagado_siniestros'] ?? 0);
+            $freq = $servicios > 0 ? round(($siniestros / $servicios) * 100, 2) : null;
+            $impact = $fact > 0 ? round(($pag / $fact) * 100, 2) : null;
+            $freqThreshold = (float) $indicator->target_value;
+            $impactThreshold = (float) ($indicator->critical_value ?? 1);
+            $freqCritical = $freq !== null && $servicios > 0 && $freq > $freqThreshold;
+            $impactCritical = $impact !== null && $fact > 0 && $impact > $impactThreshold;
+
+            if ($impactCritical) {
+                return $impact;
+            }
+
+            if ($freqCritical) {
+                return $freq;
+            }
+
+            return null;
+        }
+
+        return (float) $capture->result_percentage;
+    }
+
+    private function isCriticalFtOp03Capture(Indicator $indicator, \App\Models\IndicatorCapture $capture): bool
+    {
+        $data = $capture->input_data ?? [];
+        $servicios = (float) ($data['total_servicios'] ?? 0);
+        $siniestros = (float) ($data['total_siniestros'] ?? 0);
+        $fact = (float) ($data['facturacion_mensual'] ?? 0);
+        $pag = (float) ($data['valor_pagado_siniestros'] ?? 0);
+
+        if ($servicios <= 0 && $fact <= 0) {
+            return false;
+        }
+
+        $freq = $servicios > 0 ? round(($siniestros / $servicios) * 100, 2) : 0.0;
+        $impact = $fact > 0 ? round(($pag / $fact) * 100, 2) : 0.0;
+        $freqThreshold = (float) $indicator->target_value;
+        $impactThreshold = (float) ($indicator->critical_value ?? 1);
+
+        return ($servicios > 0 && $freq > $freqThreshold) || ($fact > 0 && $impact > $impactThreshold);
+    }
+
+    private function calculateFtOp03(array $form, Indicator $indicator): array
     {
         $totalServicios = (float) ($form['total_servicios'] ?? 0);
         $totalSiniestros = (float) ($form['total_siniestros'] ?? 0);
@@ -276,10 +361,13 @@ class IndicatorMetricCalculator
             $errors[] = 'La suma por tipo debe ser igual a total_siniestros.';
         }
 
+        $freqThreshold = (float) $indicator->target_value;
+        $impactThreshold = (float) ($indicator->critical_value ?? 1);
+
         $freq = $totalServicios > 0 ? round(($totalSiniestros / $totalServicios) * 100, 2) : 0.0;
         $impacto = $facturacion > 0 ? round(($valorPagado / $facturacion) * 100, 2) : 0.0;
-        $cumpleA = $totalServicios > 0 && $freq <= 3;
-        $cumpleB = $facturacion > 0 && $impacto <= 1;
+        $cumpleA = $totalServicios > 0 && $freq <= $freqThreshold;
+        $cumpleB = $facturacion > 0 && $impacto <= $impactThreshold;
 
         return [
             'numerator' => $totalSiniestros + $valorPagado,

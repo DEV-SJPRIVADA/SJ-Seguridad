@@ -10,7 +10,7 @@ Referencias obligatorias: [`AGENTS.md`](../AGENTS.md), [`docs/DOCUMENTATION.md`]
 | --- | --- | --- |
 | **Analista** | No | Pregunta y cuestiona hasta cerrar vacios; produce borrador de brief o lista de preguntas |
 | **Arquitecto** | No | Valida brief; define rutas, permisos, esquema BD; entrega Feature Brief final |
-| **Orquestador** | No | Parte trabajo, lanza subagentes Task, detecta conflictos, valida checklist; no implementa ni documenta |
+| **AgentSj** | No | Parte trabajo, lanza subagentes Task, detecta conflictos, valida checklist; no implementa ni documenta |
 | **Agente Feature** | Si | Vertical slice completo de UN modulo/paso por Task Card |
 | **Revisor** | No | Seguridad, duplicacion, consistencia con AGENTS.md |
 | **Documentador** | No | Doc tecnica (`docs/modules/`) + doc usuario (`docs/user/`) tras revision aprobada |
@@ -22,11 +22,12 @@ No existen agentes permanentes de Backend, Frontend ni BD. Migracion, modelo, co
 ### Modo A — Orquestado (recomendado para features)
 
 1. Abrir **un chat maestro** en **Agent mode**.
-2. Pegar [`docs/agents/prompts/start-feature.md`](agents/prompts/start-feature.md) + descripcion de la feature.
-3. El Orquestador lanza subagentes (`Task`) en secuencia.
+2. Escribir **`AgentSj`** + descripcion de la feature (forma recomendada). Alternativa: [`start-feature.md`](agents/prompts/start-feature.md) + descripcion.
+3. AgentSj lanza subagentes (`Task`) en secuencia.
 4. Pausa post-Analista y post-Brief si hay preguntas abiertas al usuario.
 5. Documentador actualiza docs tecnicas y de usuario.
-6. Orquestador ejecuta checklist de cierre e integracion.
+6. AgentSj ejecuta checklist de cierre e integracion.
+7. Run log persistente en `docs/runs/FEAT-XXX-run-log.md` + tabla resumida al final de cada respuesta de AgentSj.
 
 ### Modo B — Manual (multi-chat)
 
@@ -36,34 +37,77 @@ Prompts en [`docs/agents/prompts/`](agents/prompts/).
 
 ## Carril rapido (excepciones)
 
-**No** pasa por Analista, Orquestador ni `TASKS.md` cuando:
+**No** pasa por Analista, AgentSj ni `TASKS.md` cuando:
 
 - Es **consulta** → Ask mode directo (opcional: [`fast-lane.md`](agents/prompts/fast-lane.md)).
 - Es **fix pequeno** acotado a 1–3 archivos, sin permisos, migraciones ni rutas nuevas → Agent mode con alcance explicito.
 
-Palabras clave: `"consulta rapida"` o `"fix pequeno"`.
+Palabras clave del carril rapido: `"consulta rapida"` o `"fix pequeno"`.
+
+Palabra clave del flujo orquestado: **`AgentSj`** (+ descripcion en la misma linea).
 
 **Siempre** flujo completo cuando:
 
-- Toca archivos compartidos o crea algo nuevo (permiso, ruta, tabla, modulo).
-- Dos agentes podrian trabajar en paralelo sin scope definido.
+- El mensaje empieza por **`AgentSj`**
+- Toca archivos compartidos o crea algo nuevo (permiso, ruta, tabla, modulo)
+- Dos agentes podrian trabajar en paralelo sin scope definido
 
 ## Secuencia orquestada (chat maestro)
 
 ```text
-0. Usuario → start-feature.md + descripcion
-1. Orquestador crea FEAT-00X en TASKS.md (modo: orquestado)
-2. Task Analista → ANALYST_QUESTIONS o borrador brief
+0. Usuario → AgentSj [descripcion]  (o start-feature.md + descripcion)
+1. AgentSj crea FEAT-00X en TASKS.md (modo: orquestado) + docs/runs/FEAT-00X-run-log.md
+2. Task Analista → ANALYST_QUESTIONS o borrador brief → fila en run log
    └─ PAUSA si hay preguntas → usuario responde
-3. Task Arquitecto → docs/briefs/FEAT-00X.md (final)
-4. Orquestador → docs/briefs/FEAT-00X-plan.md (ORCHESTRATION_PLAN)
+3. Task Arquitecto → docs/briefs/FEAT-00X.md (final) → fila en run log
+4. AgentSj → docs/briefs/FEAT-00X-plan.md (ORCHESTRATION_PLAN)
 5. Por cada tarea (secuencial salvo modulos independientes):
-   Task Feature → implementa → actualiza TASKS.md fase
-6. Task Revisor → docs/reviews/FEAT-00X.md
+   Task Feature → implementa → actualiza TASKS.md fase → fila en run log
+6. Task Revisor → docs/reviews/FEAT-00X.md → fila en run log
 7. Si blockers → Task Feature corrige → vuelta a 6
-8. Task Documentador → docs/modules/{modulo}.md + docs/user/{modulo}.md
-9. Orquestador checklist → TASKS.md Completadas → integracion
+8. Task Documentador → docs/modules/{modulo}.md + docs/user/{modulo}.md → fila en run log
+9. AgentSj checklist → TASKS.md Completadas → fila cierre en run log
 ```
+
+## Registro de ejecucion (run log)
+
+Cada feature orquestada tiene trazabilidad **por paso** sin depender del chat.
+
+| Donde | Que muestra |
+| --- | --- |
+| **Chat** (cada respuesta AgentSj) | Tabla corta `## Registro de ejecucion (esta pantalla)` |
+| **`docs/runs/FEAT-XXX-run-log.md`** | Historial completo con prompt, fecha, agente, artefactos, estado |
+| **`docs/TASKS.md`** | Columna **Run log** con enlace al archivo |
+
+Plantilla: [`docs/templates/RUN_LOG.md`](templates/RUN_LOG.md). Ejemplo: [`docs/runs/FEAT-PILOT-001-run-log.md`](runs/FEAT-PILOT-001-run-log.md).
+
+### Tabla en el chat (formato)
+
+```markdown
+## Registro de ejecucion (esta pantalla)
+
+| # | Agente | Que hizo | Artefactos | Estado |
+| --- | --- | --- | --- | --- |
+| 1 | AgentSj | Creo FEAT-003 y run log | docs/TASKS.md, docs/runs/FEAT-003-run-log.md | OK |
+| 2 | Analista | 2 preguntas abiertas sobre alcance | docs/briefs/FEAT-003-analyst.md | Pausa |
+```
+
+Estados: `OK`, `Pausa`, `Blocker`, `Skip`, `Reintento`.
+
+### Activacion
+
+| Forma | Ejemplo |
+| --- | --- |
+| **Skill** (recomendada) | `@agent-sj Export PDF consolidado` |
+| Palabra clave | `AgentSj Export PDF consolidado` |
+| Arroba prompt | `@docs/agents/prompts/start-feature.md` + descripcion |
+| Explicito | "flujo multi-agente" / "AgentSj" |
+
+Skill del proyecto: [`.cursor/skills/agent-sj/SKILL.md`](../.cursor/skills/agent-sj/SKILL.md)
+
+Cualquiera de las anteriores **obliga** modo AgentSj: no implementar directo; crear TASKS + run log; lanzar `Task` en secuencia.
+
+La regla `AgentSj` esta en [`.cursor/rules/agent-workflow.mdc`](../.cursor/rules/agent-workflow.mdc) (`alwaysApply: true`).
 
 ### Reglas de oro
 
@@ -72,7 +116,7 @@ Palabras clave: `"consulta rapida"` o `"fix pequeno"`.
 
 ## Agente Documentador
 
-Corre **despues del Revisor** y **antes del cierre** del Orquestador.
+Corre **despues del Revisor** y **antes del cierre** de AgentSj.
 
 **Entradas:** Feature Brief, codigo implementado, Review Report.
 
@@ -125,7 +169,7 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 - Dos agentes editando `config/access.php` o `web.php` al mismo tiempo.
 - Implementar sin brief aprobado.
 
-## Checklist Orquestador (cierre)
+## Checklist AgentSj (cierre)
 
 - [ ] Feature Brief cumplido
 - [ ] `config/access.php` actualizado si aplica
@@ -135,6 +179,7 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 - [ ] `docs/INDEX.md` si modulo nuevo o cambio de navegacion
 - [ ] `README.md` si cambio stack o modulos base
 - [ ] Revisor sin hallazgos bloqueantes
+- [ ] Run log `docs/runs/FEAT-XXX-run-log.md` completo con fila de cierre
 - [ ] `php artisan test` relevante pasa
 - [ ] Sin solapamiento con otra tarea En progreso en mismos archivos
 
@@ -143,9 +188,14 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 **Feature nueva:**
 
 ```text
-Agent mode → pegar docs/agents/prompts/start-feature.md
-"Construir modulo [X]: [descripcion breve]"
+Agent mode → AgentSj [descripcion breve de la feature]
 ```
+
+Ejemplo: `AgentSj Modulo reportes operaciones con export Excel`
+
+Alternativa: `@docs/agents/prompts/start-feature.md` + descripcion.
+
+Al final de cada respuesta de AgentSj veras la tabla **Registro de ejecucion (esta pantalla)**. Historial completo en `docs/runs/FEAT-XXX-run-log.md`.
 
 **Consulta / fix pequeno:**
 
@@ -157,8 +207,8 @@ Ask/Agent mode → fast-lane.md o "fix pequeno en [archivo]"
 
 Para validar el flujo sin codigo nuevo, usar una feature de documentacion:
 
-1. Orquestador crea `FEAT-PILOT-001` en `TASKS.md`.
+1. AgentSj crea `FEAT-PILOT-001` en `TASKS.md`.
 2. Documentador genera `docs/user/admin-users.md` desde codigo y doc tecnica existente.
-3. Orquestador valida checklist y cierra tarea piloto.
+3. AgentSj valida checklist y cierra tarea piloto.
 
 Ver entrada correspondiente en [`docs/TASKS.md`](TASKS.md).

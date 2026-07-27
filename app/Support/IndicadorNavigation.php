@@ -46,7 +46,9 @@ class IndicadorNavigation
                 'patterns' => [
                     'indicadores.admin.ajustes',
                     'indicadores.admin.periods.*',
+                    'indicadores.admin.metas*',
                     'indicadores.admin.weights*',
+                    'indicadores.admin.capturadores*',
                     'indicadores.admin.audit.*',
                 ],
                 'visible' => $user->can('operations.manage'),
