@@ -85,7 +85,20 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 ### Administrar parametros
 
 1. Acceda a **Parametros** (permiso correspondiente).
-2. Mantenga catalogos: cargos, motivos, ciudades, tipos de programacion, uniformes, correos de notificacion.
+2. Mantenga catalogos: cargos, motivos, ciudades, tipos de programacion, uniformes, **Correos de notificacion** y **Tipos de notificacion** (asignar correos por tipo de aviso).
+
+### Tipos de notificacion (solo Gestion humana → Parametros)
+
+1. Mantenga el catalogo de direcciones en **Correos de notificacion**.
+2. Abra **Tipos de notificacion**.
+3. Para **Nueva requisicion** y **Autorizacion requisicion cargo nuevo**, marque los correos que deben recibir cada aviso y guarde.
+
+### Autorizar requisiciones cargo nuevo (Gerencia)
+
+1. Ingrese con usuario que tenga permiso **Autorizar cargo nuevo (gerencia)** (rol administrador).
+2. Abra **Requisiciones → Gestion humana → Autorizacion gerencia**.
+3. Revise la lista (solo pendientes). Abra **Revisar**, **Autorizar** o **Rechazar** (comentario obligatorio al rechazar).
+4. Tras autorizar, la solicitud pasa a **Solicitada** y Gestion humana puede continuar. Si rechaza, queda **Cancelada**.
 
 ### Activar encargados de seleccion (solo Gestion humana)
 

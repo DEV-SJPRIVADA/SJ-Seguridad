@@ -20,6 +20,7 @@ trait HasRequisitionTabs
                     'solicitar' => route('requisitions.create', ['module' => $module]),
                     'seguimiento' => route('requisitions.tracking', ['module' => $module]),
                     'gestion' => route('requisitions.manage', ['module' => $module]),
+                    'autorizacion_gerencia' => route('requisitions.management-approval.index', ['module' => $module]),
                     'parametros' => route('requisitions.parameters', ['module' => $module]),
                 ];
 

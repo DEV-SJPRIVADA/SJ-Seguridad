@@ -16,6 +16,7 @@ return [
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
         'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
         'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de seleccion',
+        'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -78,6 +79,7 @@ return [
         'solicitar' => 'Solicitar',
         'seguimiento' => 'Mis requisiciones',
         'gestion' => 'Gestion',
+        'autorizacion_gerencia' => 'Autorizacion gerencia',
         'parametros' => 'Parametros',
     ],
 
@@ -148,6 +150,7 @@ return [
                     'requisitions.tab.dashboard',
                     'manage.requisition.parameters',
                     'requisitions.selection_officer',
+                    'requisitions.approve.management',
                 ],
             ],
             'supplies_calidad' => [

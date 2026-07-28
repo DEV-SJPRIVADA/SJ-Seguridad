@@ -12,6 +12,7 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `Solicitar`
   - `Mis requisiciones` (permiso `requisitions.tab.seguimiento`)
   - `Gestion`
+  - `Autorizacion gerencia` (permiso `requisitions.approve.management`)
   - `Parametros`
 - Solicitar y Mis requisiciones operan siempre en `users.area_key`
 - Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** y **Dashboard** (con `requisitions.tab.dashboard`) muestran solicitudes de **todas las areas**. El dashboard renderiza KPIs y graficos **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js`; datos en `#requisitions-chart-data`).
@@ -19,7 +20,8 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 - Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
 - Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
 - **Encargados de seleccion** (solo tablero GH → Parametros): usuarios reales de Gestion humana habilitados con toggles; ya no existe catalogo `requisition_recruiters`
-- Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
+- Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`) segun tipo **Nueva requisicion** en Parametros
+- Aviso a gerencia en motivo **Cargo nuevo** (`PersonalRequisitionManagementApprovalMail`, envio sincrono) segun tipo **Autorizacion requisicion cargo nuevo**
 - Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
 
 ## Reglas de negocio actuales
@@ -37,11 +39,13 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `requester_observation`
   - `human_resources_observation`
 - `service_structure` (**Estructura del servicio**): texto obligatorio al crear y al guardar en edicion; captura horarios, descansos y condiciones del puesto. Visible/editable en Solicitar y Gestion; incluido en export Excel; **no** en impresion ni correos
-- Los estados permitidos en V1 son:
+- Los estados permitidos incluyen:
+  - `pendiente_autorizacion_gerencia` (solo al crear con motivo **Cargo nuevo**)
   - `solicitada`
   - `en_gestion`
   - `contratado`
   - `cancelada`
+- Motivo **Cargo nuevo**: la requisicion queda pendiente hasta que gerencia autorice en la pestaña **Autorizacion gerencia**; GH no edita hasta pasar a `solicitada`
 - Al cerrar como `contratado`, es obligatorio `hiring_date` y los campos de compensacion marcados como requeridos en la validacion de update
 - Despues de creada, la requisicion ya no se modifica desde el flujo del solicitante; solo gestion humana puede hacerlo
 - Usuarios con `manage.users` o `manage.area.gestion_humana` pueden crear solicitudes en cualquier modulo sin necesidad de tener `area_key` coincidente
@@ -78,11 +82,23 @@ Post-despliegue: GH debe reactivar encargados en toggles; trazabilidad previa so
 
 ### Al crear (Gestion Humana / catalogo)
 - Disparo: `RequisitionController::store` tras crear el lote
-- Clase: `App\Mail\PersonalRequisitionNotification`
+- Clase: `App\Mail\PersonalRequisitionNotification` (cola)
 - Vista: `resources/views/emails/requisitions/requested.blade.php`
-- Destinatarios: filas activas de `requisition_notification_emails` (Parametros → Correos de notificacion; el valor se guarda en `name`)
-- Fallback si no hay activos: `desarrollo.tic@sjsp.com.co`
-- CTA: Gestion Humana con filtro `q` = codigo
+- Destinatarios: `RequisitionNotificationRecipientService::emailsForType('new_requisition')` — pivot `req_notif_type_email` + Parametros → **Tipos de notificacion**
+- Fallback si el tipo no tiene correos: `desarrollo.tic@sjsp.com.co`
+
+### Autorizacion gerencia (cargo nuevo)
+- Disparo: mismo `store` si motivo normalizado es **cargo nuevo** (`RequisitionRequestReasonCatalog`)
+- Estado inicial: `pendiente_autorizacion_gerencia`
+- Clase: `App\Mail\PersonalRequisitionManagementApprovalMail` (sincrono)
+- Destinatarios: `emailsForType('management_approval_cargo_nuevo')`
+- CTA: `requisitions.management-approval.show` (login → detalle)
+
+### Bandeja gerencia (enfoque A)
+- Sin tabla auxiliar: listado = `personal_requisitions` con `status = pendiente_autorizacion_gerencia`
+- Rutas: `RequisitionManagementApprovalController` — index, show, decide
+- Permiso: `requisitions.approve.management`
+- Aprobar → `solicitada`; rechazar → `cancelada` + correo al solicitante si aplica
 
 ### Al cambiar de estado (solicitante)
 - Disparo: `RequisitionController::update` **solo si** el estado cambio (`old !== new`)
@@ -240,6 +256,7 @@ Tabla eliminada (FEAT-011): `requisition_recruiters`.
 - **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, label en `PersonalRequisitionChangeLogger`.
 - **FEAT-006 (2026-07-24):** export Excel completo (`PersonalRequisitionFullExport`) en Gestion y Seguimiento; filtros `date_from`/`date_to` sobre `request_date` en panel (tabla + export).
 - **FEAT-010 (2026-07-27):** dashboard GH migra a **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js` + `apex-defaults.js`); Chart.js retirado.
+- **FEAT-012 (2026-07-28):** autorizacion gerencia para motivo cargo nuevo (`pendiente_autorizacion_gerencia`); pestaña Autorizacion gerencia; tipos de notificacion en Parametros (`new_requisition`, `management_approval_cargo_nuevo`).
 - **FEAT-011 (2026-07-28):** encargados de seleccion = usuarios GH + permiso `requisitions.selection_officer` (toggles en Parametros); `recruiter_id` referencia `users`; migracion elimina `requisition_recruiters`; export/impresion/historial usan `displayRecruiterName()`.
 
 ## Referencias

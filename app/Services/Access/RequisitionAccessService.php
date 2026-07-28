@@ -15,6 +15,7 @@ class RequisitionAccessService
         'solicitar' => 'requisitions.tab.solicitar',
         'seguimiento' => 'requisitions.tab.seguimiento',
         'gestion' => 'requisitions.tab.gestion',
+        'autorizacion_gerencia' => 'requisitions.approve.management',
         'parametros' => 'manage.requisition.parameters',
     ];
 

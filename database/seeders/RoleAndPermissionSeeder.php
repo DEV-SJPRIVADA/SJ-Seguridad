@@ -8,7 +8,6 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 class RoleAndPermissionSeeder extends Seeder
 {
@@ -22,7 +21,7 @@ class RoleAndPermissionSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
         $roles = [
             'super-admin' => $allPermissions,
-            'administrador' => ['view.dashboard', 'manage.users', 'manage.requisition.parameters'],
+            'administrador' => ['view.dashboard', 'manage.users', 'manage.requisition.parameters', 'requisitions.approve.management'],
             'usuario' => ['view.dashboard'],
         ];
 

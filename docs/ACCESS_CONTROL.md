@@ -23,9 +23,12 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
+- `requisitions.approve.management`
 - `requisitions.selection_officer`
 
 `manage.requisitions` permanece en codigo por compatibilidad con asignaciones legacy, pero **no aparece en Admin**. Usar `requisitions.tab.gestion` + tablero visible en alcance.
+
+**Autorizacion gerencia (`requisitions.approve.management`):** pestaña **Autorizacion gerencia** en Requisiciones; aprueba o rechaza solicitudes con motivo **Cargo nuevo** (`pendiente_autorizacion_gerencia` → `solicitada` o `cancelada`). Rol `administrador` lo incluye por seeder. Correo de aviso configurable en Parametros → tipos de notificacion.
 
 **Encargado de seleccion (`requisitions.selection_officer`):** define quien puede aparecer en el select **Reclutador** al gestionar requisiciones. No se asigna por defecto a roles base. La via operativa es el toggle en **Requisiciones → Gestion humana → Parametros → Encargados de seleccion** (permiso `manage.requisition.parameters`). El permiso figura en Admin bajo **Requisiciones — Gestion humana** para visibilidad; la asignacion manual alli es excepcional (p. ej. super-admin). Servicio: `RequisitionSelectionOfficerAccessService`. Tras la migracion `2026_07_28_112704_requisition_recruiter_id_references_users_drop_catalog`, ejecutar `php artisan migrate` y reactivar toggles en GH.
 

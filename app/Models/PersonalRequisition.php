@@ -21,6 +21,8 @@ class PersonalRequisition extends Model
 
     public const STATUS_CANCELADA = 'cancelada';
 
+    public const STATUS_PENDIENTE_AUTORIZACION_GERENCIA = 'pendiente_autorizacion_gerencia';
+
     protected $fillable = [
         'code',
         'requested_by',
@@ -80,6 +82,7 @@ class PersonalRequisition extends Model
     public static function statuses(): array
     {
         return [
+            self::STATUS_PENDIENTE_AUTORIZACION_GERENCIA => 'Pendiente autorizacion gerencia',
             self::STATUS_SOLICITADA => 'Solicitada',
             self::STATUS_APROBADA => 'Aprobada',
             self::STATUS_EN_GESTION => 'En gestion',

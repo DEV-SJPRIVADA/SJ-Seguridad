@@ -31,6 +31,10 @@ class UpdatePersonalRequisitionRequest extends FormRequest
         }
 
         if ($requisition instanceof PersonalRequisition) {
+            if ($requisition->status === PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA) {
+                return false;
+            }
+
             return $access->canAccessRequisitionRecord($user, $module, $requisition->requesting_area_key);
         }
 
@@ -87,5 +91,25 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'hiring_date' => [$isHired ? 'required' : 'nullable', 'date'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $requisition = $this->route('requisition');
+
+            if (! $requisition instanceof PersonalRequisition) {
+                return;
+            }
+
+            if ($requisition->status === PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA) {
+                $validator->errors()->add('status', 'La requisicion debe ser autorizada por gerencia antes de gestionarla.');
+            }
+
+            if ($requisition->status === PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA
+                && $this->input('status') === PersonalRequisition::STATUS_EN_GESTION) {
+                $validator->errors()->add('status', 'No puede pasar a en gestion sin autorizacion de gerencia.');
+            }
+        });
     }
 }

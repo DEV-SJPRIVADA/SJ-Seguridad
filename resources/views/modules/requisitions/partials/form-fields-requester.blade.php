@@ -13,8 +13,15 @@
     $quantityValue = old('quantity', 1);
     $clientTypesByName = $catalogs['clientTypes']->keyBy(fn ($type) => strtolower($type->name));
     $internalClientTypeId = $clientTypesByName->get('interno')?->id;
+    $commercialClientTypeIds = $catalogs['clientTypes']
+        ->filter(fn ($type) => in_array(strtolower($type->name), ['externo', 'grupo'], true))
+        ->pluck('id')
+        ->map(fn ($id) => (int) $id)
+        ->values()
+        ->all();
     $selectedClientTypeId = (string) old('client_type_id', '');
     $isInternalClientInitially = $selectedClientTypeId !== '' && (int) $selectedClientTypeId === (int) $internalClientTypeId;
+    $requiresCommercialClientInitially = $selectedClientTypeId !== '' && in_array((int) $selectedClientTypeId, $commercialClientTypeIds, true);
 @endphp
 
 <div class="req-form">
@@ -146,6 +153,7 @@
                     class="form-select"
                     required
                     data-internal-id="{{ $internalClientTypeId }}"
+                    data-commercial-client-ids="{{ implode(',', $commercialClientTypeIds) }}"
                 >
                     <option value="">Selecciona un tipo</option>
                     @foreach ($catalogs['clientTypes'] as $item)
@@ -159,11 +167,11 @@
                 <p class="req-form__hint" style="margin:0;">Personal administrativo interno: no requiere cliente de la matriz comercial.</p>
             </div>
 
-            <div id="js-client-group" class="form-field req-form__field-span" @if($isInternalClientInitially) hidden @endif>
+            <div id="js-client-group" class="form-field req-form__field-span" @unless($requiresCommercialClientInitially) hidden @endunless>
                 @include('modules.requisitions.partials.commercial-client-picker', [
                     'clientSearchUrl' => $clientSearchUrl,
                     'selectedCommercialClient' => $selectedCommercialClient ?? null,
-                    'clientRequired' => ! $isInternalClientInitially,
+                    'clientRequired' => $requiresCommercialClientInitially,
                 ])
             </div>
 
@@ -334,11 +342,16 @@
             }
 
             const internalTypeId = clientTypeSelect.dataset.internalId || '';
-            const isInternal = clientTypeSelect.value !== '' && clientTypeSelect.value === internalTypeId;
+            const commercialIds = (clientTypeSelect.dataset.commercialClientIds || '')
+                .split(',')
+                .filter(Boolean);
+            const selected = clientTypeSelect.value;
+            const isInternal = selected !== '' && selected === internalTypeId;
+            const requiresCommercial = selected !== '' && commercialIds.includes(selected);
             const hiddenId = document.querySelector('#js-client-group .js-client-picker-id');
 
             if (clientGroup) {
-                clientGroup.hidden = isInternal;
+                clientGroup.hidden = !requiresCommercial;
             }
 
             if (internalNotice) {
@@ -346,12 +359,12 @@
             }
 
             if (hiddenId) {
-                if (isInternal) {
+                if (requiresCommercial) {
+                    hiddenId.setAttribute('required', 'required');
+                } else {
                     hiddenId.removeAttribute('required');
                     hiddenId.value = '';
                     resetClientPicker();
-                } else {
-                    hiddenId.setAttribute('required', 'required');
                 }
             }
         }

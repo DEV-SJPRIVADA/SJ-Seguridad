@@ -11,6 +11,9 @@ class CommercialClientBridge
 {
     public const INTERNAL_REQUISITION_CLIENT_NAME = 'Cliente interno SJ Seguridad';
 
+    /** @var list<string> */
+    public const COMMERCIAL_CLIENT_TYPE_NAMES = ['externo', 'grupo'];
+
     public static function isInternalClientType(?int $clientTypeId): bool
     {
         if (! $clientTypeId) {
@@ -20,6 +23,17 @@ class CommercialClientBridge
         $name = RequisitionClientType::query()->whereKey($clientTypeId)->value('name');
 
         return strtolower(trim((string) $name)) === 'interno';
+    }
+
+    public static function requiresCommercialClientSelection(?int $clientTypeId): bool
+    {
+        if (! $clientTypeId) {
+            return false;
+        }
+
+        $name = RequisitionClientType::query()->whereKey($clientTypeId)->value('name');
+
+        return in_array(strtolower(trim((string) $name)), self::COMMERCIAL_CLIENT_TYPE_NAMES, true);
     }
 
     public static function resolveInternalClientId(): int

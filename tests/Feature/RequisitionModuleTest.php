@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exports\PersonalRequisitionFullExport;
+use App\Mail\PersonalRequisitionManagementApprovalMail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
@@ -11,6 +12,7 @@ use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
 use App\Models\RequisitionNotificationEmail;
+use App\Models\RequisitionNotificationType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
@@ -94,7 +96,11 @@ class RequisitionModuleTest extends TestCase
         $user->assignRole('usuario');
         $user->givePermissionTo('requisitions.tab.solicitar');
 
-        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $this->validPayload());
+        $reason = RequisitionRequestReason::query()->whereRaw('LOWER(name) = ?', ['reemplazo'])->firstOrFail();
+        $payload = $this->validPayload();
+        $payload['request_reason_id'] = $reason->id;
+
+        $response = $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
 
         $response->assertRedirect(route('requisitions.create', ['module' => 'operaciones']));
         $this->assertDatabaseHas('personal_requisitions', [
@@ -316,15 +322,63 @@ class RequisitionModuleTest extends TestCase
         ]);
     }
 
-    public function test_store_queues_notification_to_active_emails(): void
+    public function test_externo_client_type_requires_commercial_client(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $externoType = RequisitionClientType::query()
+            ->whereRaw('LOWER(name) = ?', ['externo'])
+            ->firstOrFail();
+
+        $payload = $this->validPayload();
+        $payload['client_type_id'] = $externoType->id;
+        unset($payload['commercial_client_id']);
+
+        $this->actingAs($user)
+            ->post(route('requisitions.store', ['module' => 'operaciones']), $payload)
+            ->assertSessionHasErrors('commercial_client_id');
+    }
+
+    public function test_grupo_client_type_requires_commercial_client(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $grupoType = RequisitionClientType::query()->firstOrCreate(
+            ['name' => 'Grupo'],
+            ['is_active' => true, 'sort_order' => 99]
+        );
+
+        $payload = $this->validPayload();
+        $payload['client_type_id'] = $grupoType->id;
+        unset($payload['commercial_client_id']);
+
+        $this->actingAs($user)
+            ->post(route('requisitions.store', ['module' => 'operaciones']), $payload)
+            ->assertSessionHasErrors('commercial_client_id');
+    }
+
+    public function test_store_sends_notification_to_type_assigned_emails(): void
     {
         Mail::fake();
 
-        RequisitionNotificationEmail::query()->create([
+        $email = RequisitionNotificationEmail::query()->create([
             'name' => 'gh.notify@example.com',
             'is_active' => true,
             'sort_order' => 1,
         ]);
+
+        $newType = RequisitionNotificationType::query()->where('slug', RequisitionNotificationType::SLUG_NEW_REQUISITION)->firstOrFail();
+        $newType->notificationEmails()->sync([$email->id]);
 
         $user = User::factory()->create([
             'area_key' => 'operaciones',
@@ -333,11 +387,129 @@ class RequisitionModuleTest extends TestCase
         $user->assignRole('usuario');
         $user->givePermissionTo('requisitions.tab.solicitar');
 
-        $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $this->validPayload());
+        $reason = RequisitionRequestReason::query()->whereRaw('LOWER(name) = ?', ['reemplazo'])->firstOrFail();
+
+        $payload = $this->validPayload();
+        $payload['request_reason_id'] = $reason->id;
+
+        $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
 
         Mail::assertQueued(PersonalRequisitionNotification::class, function (PersonalRequisitionNotification $mail) {
             return $mail->hasTo('gh.notify@example.com') && $mail->totalQuantity === 3;
         });
+    }
+
+    public function test_cargo_nuevo_creates_pending_status_and_sends_management_mail(): void
+    {
+        Mail::fake();
+        PermissionCatalog::sync();
+
+        $ghEmail = RequisitionNotificationEmail::query()->create([
+            'name' => 'gerencia@example.com',
+            'is_active' => true,
+        ]);
+        $newType = RequisitionNotificationType::query()->where('slug', RequisitionNotificationType::SLUG_NEW_REQUISITION)->firstOrFail();
+        $mgmtType = RequisitionNotificationType::query()->where('slug', RequisitionNotificationType::SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO)->firstOrFail();
+        $newType->notificationEmails()->sync([$ghEmail->id]);
+        $mgmtType->notificationEmails()->sync([$ghEmail->id]);
+
+        $user = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('requisitions.tab.solicitar');
+
+        $cargoNuevo = RequisitionRequestReason::query()->whereRaw('LOWER(name) = ?', ['cargo nuevo'])->firstOrFail();
+        $payload = $this->validPayload();
+        $payload['request_reason_id'] = $cargoNuevo->id;
+        $payload['quantity'] = 1;
+
+        $this->actingAs($user)->post(route('requisitions.store', ['module' => 'operaciones']), $payload);
+
+        $this->assertDatabaseHas('personal_requisitions', [
+            'requested_by' => $user->id,
+            'status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA,
+        ]);
+
+        Mail::assertQueued(PersonalRequisitionNotification::class);
+        Mail::assertSent(PersonalRequisitionManagementApprovalMail::class, fn ($mail) => $mail->hasTo('gerencia@example.com'));
+    }
+
+    public function test_management_approval_flow(): void
+    {
+        PermissionCatalog::sync();
+
+        $approver = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $approver->assignRole('administrador');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0801', 'operaciones', 'Nuevo puesto'),
+            ['status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA]
+        ));
+
+        $this->actingAs($approver)
+            ->get(route('requisitions.management-approval.index', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertSee($requisition->code);
+
+        $this->actingAs($approver)
+            ->post(route('requisitions.management-approval.decide', [
+                'module' => 'gestion_humana',
+                'requisition' => $requisition,
+            ]), [
+                'action' => 'approve',
+            ])
+            ->assertRedirect(route('requisitions.management-approval.index', ['module' => 'gestion_humana']));
+
+        $this->assertDatabaseHas('personal_requisitions', [
+            'id' => $requisition->id,
+            'status' => PersonalRequisition::STATUS_SOLICITADA,
+        ]);
+
+        $this->actingAs($approver)
+            ->get(route('requisitions.management-approval.index', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertSee('No hay requisiciones pendientes de autorizacion');
+    }
+
+    public function test_gestion_cannot_edit_pending_management_approval_requisition(): void
+    {
+        PermissionCatalog::sync();
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0802', 'operaciones', 'Pendiente'),
+            ['status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA]
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertForbidden();
     }
 
     public function test_gestion_humana_can_persist_recruiter_id(): void
@@ -1400,7 +1572,7 @@ class RequisitionModuleTest extends TestCase
             'request_reason_id' => RequisitionRequestReason::query()->firstOrFail()->id,
             'commercial_client_id' => $this->commercialClient()->id,
             'city_id' => RequisitionCity::query()->firstOrFail()->id,
-            'client_type_id' => RequisitionClientType::query()->firstOrFail()->id,
+            'client_type_id' => RequisitionClientType::query()->whereRaw('LOWER(name) = ?', ['externo'])->firstOrFail()->id,
             'programming_type_id' => RequisitionProgrammingType::query()->firstOrFail()->id,
             'required_profile' => 'Control de ingreso, verificacion de herramientas y vigilancia perimetral.',
             'uniform_id' => RequisitionUniform::query()->firstOrFail()->id,

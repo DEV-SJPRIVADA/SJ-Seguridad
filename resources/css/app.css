@@ -914,6 +914,129 @@ a {
     grid-column: 1 / -1;
 }
 
+/* Autorizacion gerencia — detalle (estilo carta / correo) */
+.req-approval-letter {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0.5rem 0 2rem;
+    color: #1a1a1a;
+}
+
+.req-approval-letter__title {
+    margin: 0 0 1.25rem;
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #111;
+    letter-spacing: -0.02em;
+}
+
+.req-approval-letter__lead {
+    margin: 0 0 1.75rem;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: #333;
+}
+
+.req-approval-letter__panel {
+    margin: 0 0 1.75rem;
+    padding: 1.15rem 1.25rem 1.15rem 1.35rem;
+    background: #f7f7f7;
+    border-left: 5px solid #111;
+    border-radius: 0 6px 6px 0;
+}
+
+.req-approval-letter__panel p {
+    margin: 0 0 0.65rem;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.req-approval-letter__panel p:last-child {
+    margin-bottom: 0;
+}
+
+.req-approval-letter__panel strong {
+    font-weight: 700;
+    color: #111;
+}
+
+.req-approval-letter__panel--muted {
+    margin-top: 1rem;
+    background: #fafafa;
+    border-left-color: #64748b;
+}
+
+.req-approval-letter__section-label {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.req-approval-letter__form {
+    margin-top: 0.5rem;
+}
+
+.req-approval-letter__form .form-field {
+    margin-bottom: 1.25rem;
+}
+
+.req-approval-letter__form .form-textarea {
+    border-color: #d4d4d4;
+    background: #fff;
+}
+
+.req-approval-letter__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem;
+}
+
+.req-approval-letter__actions .btn--primary {
+    min-width: 14rem;
+}
+
+.req-approval-letter__alt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.req-approval-letter__back {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #475569;
+    text-decoration: none;
+}
+
+.req-approval-letter__back:hover {
+    color: #111;
+    text-decoration: underline;
+}
+
+.req-approval-letter__hint {
+    margin: 1.5rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #64748b;
+}
+
+.req-approval-letter__signoff {
+    margin: 2rem 0 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: #333;
+}
+
 .req-form-guide__list {
     margin: 0;
     padding: 0;
@@ -1282,6 +1405,11 @@ table.dataTable thead td {
 .status-pill--req-solicitada {
     background: #e0f2fe;
     color: #0369a1;
+}
+
+.status-pill--req-pendiente_autorizacion_gerencia {
+    background: #f3e8ff;
+    color: #7e22ce;
 }
 
 .status-pill--req-en_gestion {

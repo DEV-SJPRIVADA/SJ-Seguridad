@@ -106,6 +106,15 @@
                             <span class="item-count">{{ count($gestionHumanaUsers ?? []) }} usuarios GH</span>
                         </div>
                     @endif
+                    @if ($showNotificationTypes ?? false)
+                        <div class="parameter-card" onclick="showParameterSection('notification-types')">
+                            <div style="background: var(--brand-blue-pale); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            </div>
+                            <h4>Tipos de notificacion</h4>
+                            <span class="item-count">{{ count($notificationTypes ?? []) }} tipos</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -214,6 +223,16 @@
                             'moduleKey' => $moduleKey,
                             'gestionHumanaUsers' => $gestionHumanaUsers,
                             'selectionOfficerAccess' => $selectionOfficerAccess,
+                        ])
+                    </section>
+                @endif
+
+                @if ($showNotificationTypes ?? false)
+                    <section id="section-notification-types" class="parameter-section">
+                        @include('modules.requisitions.partials.notification-types', [
+                            'moduleKey' => $moduleKey,
+                            'notificationTypes' => $notificationTypes,
+                            'notificationEmailOptions' => $notificationEmailOptions,
                         ])
                     </section>
                 @endif

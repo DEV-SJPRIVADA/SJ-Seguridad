@@ -6,8 +6,10 @@ use App\Exports\PersonalRequisitionFullExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
+use App\Http\Requests\Requisitions\SyncRequisitionNotificationTypeRequest;
 use App\Http\Requests\Requisitions\UpdatePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\UpdateRequisitionSelectionOfficerRequest;
+use App\Mail\PersonalRequisitionManagementApprovalMail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
@@ -17,6 +19,7 @@ use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
 use App\Models\RequisitionContractType;
 use App\Models\RequisitionNotificationEmail;
+use App\Models\RequisitionNotificationType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
@@ -26,6 +29,8 @@ use App\Services\Access\RequisitionAccessService;
 use App\Services\Requisitions\CommercialClientBridge;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
+use App\Services\Requisitions\RequisitionNotificationRecipientService;
+use App\Services\Requisitions\RequisitionRequestReasonCatalog;
 use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
 use App\Traits\HasRequisitionTabs;
 use App\Traits\ValidatesModule;
@@ -50,6 +55,7 @@ class RequisitionController extends Controller
         private readonly RequisitionAccessService $requisitionAccess,
         private readonly PersonalRequisitionChangeLogger $changeLogger,
         private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
+        private readonly RequisitionNotificationRecipientService $notificationRecipients,
     ) {}
 
     /**
@@ -199,6 +205,10 @@ class RequisitionController extends Controller
         $requisitions = DB::transaction(function () use ($request, $module): array {
             $quantity = $request->integer('quantity', 1);
             $created = [];
+            $isCargoNuevo = RequisitionRequestReasonCatalog::isCargoNuevoReasonId($request->integer('request_reason_id'));
+            $initialStatus = $isCargoNuevo
+                ? PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA
+                : PersonalRequisition::STATUS_SOLICITADA;
 
             // Obtener el numero base para el codigo una sola vez
             $year = now()->format('Y');
@@ -249,15 +259,17 @@ class RequisitionController extends Controller
                     'cost_center' => $request->input('cost_center'),
                     'recruiter_id' => $request->filled('recruiter_id') ? $request->integer('recruiter_id') : null,
                     'requester_observation' => $request->input('requester_observation'),
-                    'status' => PersonalRequisition::STATUS_SOLICITADA,
+                    'status' => $initialStatus,
                     'status_changed_at' => now(),
                 ]);
 
                 $requisition->statusLogs()->create([
                     'from_status' => null,
-                    'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+                    'to_status' => $initialStatus,
                     'changed_by' => $request->user()->id,
-                    'comment' => 'Solicitud creada ('.($i + 1).'/'.$quantity.') desde el tablero de requisiciones.',
+                    'comment' => $isCargoNuevo
+                        ? 'Solicitud cargo nuevo ('.($i + 1).'/'.$quantity.') — pendiente autorizacion gerencia.'
+                        : 'Solicitud creada ('.($i + 1).'/'.$quantity.') desde el tablero de requisiciones.',
                 ]);
 
                 $created[] = $requisition;
@@ -268,19 +280,24 @@ class RequisitionController extends Controller
 
         // Envío de notificaciones por correo (Un solo correo consolidado por solicitud)
         try {
-            $notificationEmails = RequisitionNotificationEmail::where('is_active', true)->pluck('name')->toArray();
-
-            // Si no hay correos parametrizados, usamos el correo base de desarrollo
-            if (empty($notificationEmails)) {
-                $notificationEmails = ['desarrollo.tic@sjsp.com.co'];
-            }
-
-            // Enviamos un solo correo informando de la solicitud completa
             if (! empty($requisitions)) {
                 $mainRequisition = $requisitions[0];
                 $totalCount = count($requisitions);
+                $isCargoNuevo = RequisitionRequestReasonCatalog::isCargoNuevoReasonId($mainRequisition->request_reason_id);
 
-                Mail::to($notificationEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
+                $newRequisitionEmails = $this->notificationRecipients->emailsForType(
+                    RequisitionNotificationType::SLUG_NEW_REQUISITION
+                );
+
+                Mail::to($newRequisitionEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
+
+                if ($isCargoNuevo) {
+                    $managementEmails = $this->notificationRecipients->emailsForType(
+                        RequisitionNotificationType::SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO
+                    );
+
+                    Mail::to($managementEmails)->send(new PersonalRequisitionManagementApprovalMail($mainRequisition, $totalCount));
+                }
             }
         } catch (\Exception $e) {
             // Logueamos el error pero permitimos que la app continúe para no bloquear al usuario
@@ -409,6 +426,11 @@ class RequisitionController extends Controller
     {
         $this->abortIfUnknownModule($module);
         abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
+        abort_if(
+            $requisition->status === PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA,
+            403,
+            'Esta requisicion esta pendiente de autorizacion de gerencia.'
+        );
 
         return view('modules.requisitions.edit', [
             'areaOptions' => config('access.areas'),
@@ -528,7 +550,27 @@ class RequisitionController extends Controller
                 ? $this->selectionOfficerAccess->gestionHumanaAreaUsers()
                 : collect(),
             'selectionOfficerAccess' => $this->selectionOfficerAccess,
+            'notificationTypes' => $this->notificationRecipients->typesWithAssignedEmailIds(),
+            'notificationEmailOptions' => RequisitionNotificationEmail::query()->orderBy('name')->get(),
+            'showNotificationTypes' => $module === RequisitionSelectionOfficerAccessService::AREA_KEY,
         ]);
+    }
+
+    public function syncNotificationTypeEmails(SyncRequisitionNotificationTypeRequest $request, string $module): RedirectResponse
+    {
+        $this->abortIfUnknownModule($module);
+        abort_unless($module === RequisitionSelectionOfficerAccessService::AREA_KEY, 404);
+
+        $emailIds = array_map('intval', $request->input('email_ids', []));
+
+        $this->notificationRecipients->syncTypeEmails(
+            $request->string('type_slug')->toString(),
+            $emailIds
+        );
+
+        return redirect()
+            ->route('requisitions.parameters', ['module' => $module])
+            ->with('status', 'Asignacion de correos actualizada.');
     }
 
     public function updateSelectionOfficer(
