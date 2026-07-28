@@ -120,6 +120,7 @@
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
                                     <th>Reemplaza a</th>
+                                    <th>Reclutador</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -135,6 +136,13 @@
                                         <td>{{ $requisition->city?->name }}</td>
                                         <td>{{ $requisition->replacement_name ?? 'N/A' }}</td>
                                         <td>
+                                            @if ($requisition->recruiter_id || filled($requisition->recruiter_name))
+                                                {{ $requisition->displayRecruiterName() }}
+                                            @else
+                                                sin asignar
+                                            @endif
+                                        </td>
+                                        <td>
                                             <span class="status-pill status-pill--req-{{ $requisition->status }}">
                                                 {{ $statusLabels[$requisition->status] ?? $requisition->status }}
                                             </span>
@@ -148,7 +156,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9">No hay requisiciones con los filtros seleccionados.</td>
+                                        <td colspan="10">No hay requisiciones con los filtros seleccionados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

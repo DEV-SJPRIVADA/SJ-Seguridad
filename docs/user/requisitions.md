@@ -75,11 +75,12 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 
 1. Abra la pestaña **Gestion**.
 2. Filtre por estado, busqueda y rango de **Fecha inicio / Fecha fin** (fecha de solicitud); pulse **Buscar**.
-3. Edite una fila para completar compensacion, **Reclutador** (encargado de seleccion) y observaciones de GH.
-4. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.
-5. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
-6. Exporte a Excel; incluye todos los campos de la requisicion (incluida compensacion) segun los filtros activos.
-7. Imprima la ficha si necesita documento fisico.
+3. En la tabla, la columna **Reclutador** (despues de **Reemplaza a**) muestra el encargado asignado o **sin asignar** si aun no hay reclutador.
+4. Edite una fila para completar compensacion, **Reclutador** (encargado de seleccion) y observaciones de GH.
+5. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.
+6. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
+7. Exporte a Excel; incluye todos los campos de la requisicion (incluida compensacion) segun los filtros activos.
+8. Imprima la ficha si necesita documento fisico.
 
 ### Administrar parametros
 

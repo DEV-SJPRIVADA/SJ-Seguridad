@@ -389,6 +389,48 @@ class RequisitionModuleTest extends TestCase
         ]);
     }
 
+    public function test_manage_view_shows_recruiter_column(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $recruiter = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+            'name' => 'Reclutador Visible',
+        ]);
+        $recruiter->assignRole('usuario');
+        $recruiter->givePermissionTo('requisitions.selection_officer');
+
+        $withoutRecruiter = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0302', 'operaciones', 'Sin reclutador'));
+        $withRecruiter = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0303', 'operaciones', 'Con reclutador'),
+            ['recruiter_id' => $recruiter->id]
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSee('Reclutador')
+            ->assertSee('sin asignar')
+            ->assertSee($withoutRecruiter->code)
+            ->assertSee('Reclutador Visible')
+            ->assertSee($withRecruiter->code);
+    }
+
     public function test_user_cannot_create_requisition_outside_base_area_even_with_foreign_board(): void
     {
         $user = User::factory()->create([

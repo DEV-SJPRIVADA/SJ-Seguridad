@@ -303,7 +303,7 @@ class RequisitionController extends Controller
                 ! $this->requisitionAccess->usesGlobalManagementScope(auth()->user(), $module),
                 fn ($query) => $query->where('requesting_area_key', $module)
             )
-            ->with(['client', 'position', 'requester', 'city'])
+            ->with(['client', 'position', 'requester', 'city', 'recruiter'])
             ->tap(fn ($query) => $filters->applyCommonFilters($query))
             ->orderByDesc('request_date')
             ->orderByDesc('id')
