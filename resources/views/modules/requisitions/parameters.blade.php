@@ -97,6 +97,15 @@
                             <span class="item-count">{{ count($catalog['items']) }} registrados</span>
                         </div>
                     @endforeach
+                    @if ($showSelectionOfficers ?? false)
+                        <div class="parameter-card" onclick="showParameterSection('selection-officers')">
+                            <div style="background: var(--brand-blue-pale); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            </div>
+                            <h4>Encargados de seleccion</h4>
+                            <span class="item-count">{{ count($gestionHumanaUsers ?? []) }} usuarios GH</span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -198,6 +207,16 @@
                         </div>
                     </section>
                 @endforeach
+
+                @if ($showSelectionOfficers ?? false)
+                    <section id="section-selection-officers" class="parameter-section">
+                        @include('modules.requisitions.partials.selection-officers', [
+                            'moduleKey' => $moduleKey,
+                            'gestionHumanaUsers' => $gestionHumanaUsers,
+                            'selectionOfficerAccess' => $selectionOfficerAccess,
+                        ])
+                    </section>
+                @endif
             </div>
 
         </div>

@@ -12,9 +12,13 @@ class PersonalRequisition extends Model
     use HasFactory;
 
     public const STATUS_SOLICITADA = 'solicitada';
+
     public const STATUS_APROBADA = 'aprobada';
+
     public const STATUS_EN_GESTION = 'en_gestion';
+
     public const STATUS_CONTRATADO = 'contratado';
+
     public const STATUS_CANCELADA = 'cancelada';
 
     protected $fillable = [
@@ -111,7 +115,14 @@ class PersonalRequisition extends Model
 
     public function recruiter(): BelongsTo
     {
-        return $this->belongsTo(RequisitionRecruiter::class, 'recruiter_id');
+        return $this->belongsTo(User::class, 'recruiter_id');
+    }
+
+    public function displayRecruiterName(): string
+    {
+        return $this->recruiter?->name
+            ?? ($this->recruiter_name !== null && $this->recruiter_name !== '' ? $this->recruiter_name : null)
+            ?? '—';
     }
 
     public function city(): BelongsTo

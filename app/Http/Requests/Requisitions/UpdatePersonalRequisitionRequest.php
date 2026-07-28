@@ -5,7 +5,9 @@ namespace App\Http\Requests\Requisitions;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
 use App\Models\PersonalRequisition;
+use App\Rules\Requisitions\ValidRequisitionRecruiterUser;
 use App\Services\Access\RequisitionAccessService;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -38,11 +40,13 @@ class UpdatePersonalRequisitionRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $isHired = $this->input('status') === PersonalRequisition::STATUS_CONTRATADO;
+        $requisition = $this->route('requisition');
+        $existingRecruiterId = $requisition instanceof PersonalRequisition ? $requisition->recruiter_id : null;
 
         return [
             'position_id' => ['required', 'integer', Rule::exists('requisition_positions', 'id')],
@@ -71,11 +75,15 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'other_allowances' => ['nullable', 'string', 'max:500'],
             'leasing_contract' => ['nullable', 'string', 'max:255'],
             'cost_center' => ['required', 'string', 'max:255'],
-            
+
             'requester_observation' => ['nullable', 'string'],
             'human_resources_observation' => ['nullable', 'string'],
-            'recruiter_id' => ['nullable', 'integer', Rule::exists('requisition_recruiters', 'id')],
-            'recruiter_name' => ['nullable', 'string', 'max:255'],
+            'recruiter_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id'),
+                new ValidRequisitionRecruiterUser($existingRecruiterId !== null ? (int) $existingRecruiterId : null),
+            ],
             'hiring_date' => [$isHired ? 'required' : 'nullable', 'date'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];

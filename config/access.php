@@ -15,7 +15,8 @@ return [
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
         'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
-        
+        'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de seleccion',
+
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
         'supply.tab.quality' => 'Suministros: Acceso a Aprobacion Insumos',
@@ -58,10 +59,10 @@ return [
     'boards' => [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
-        'requisiciones' => 'Requisiciones',             
+        'requisiciones' => 'Requisiciones',
         'matriz_clientes' => 'Clientes',
         'servicios_comerciales' => 'Servicios',
-        'suministros' => 'Suministros', 
+        'suministros' => 'Suministros',
         'documentos' => 'Documentos',
     ],
 
@@ -69,7 +70,7 @@ return [
         'dashboard' => 'Dashboard',
         'captura' => 'Listado de Indicadores',
         'consolidado' => 'Consolidado',
-        'ajustes' => 'Ajustes',     
+        'ajustes' => 'Ajustes',
     ],
 
     'requisition_tabs' => [
@@ -146,6 +147,7 @@ return [
                     'requisitions.tab.gestion',
                     'requisitions.tab.dashboard',
                     'manage.requisition.parameters',
+                    'requisitions.selection_officer',
                 ],
             ],
             'supplies_calidad' => [

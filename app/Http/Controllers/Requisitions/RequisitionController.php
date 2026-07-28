@@ -7,34 +7,40 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
 use App\Http\Requests\Requisitions\UpdatePersonalRequisitionRequest;
+use App\Http\Requests\Requisitions\UpdateRequisitionSelectionOfficerRequest;
+use App\Mail\PersonalRequisitionNotification;
+use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
+use App\Models\RequisitionContractType;
+use App\Models\RequisitionNotificationEmail;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
-use App\Models\RequisitionContractType;
 use App\Models\RequisitionUniform;
-use App\Models\RequisitionRecruiter;
-use App\Models\RequisitionNotificationEmail;
+use App\Models\User;
+use App\Services\Access\RequisitionAccessService;
+use App\Services\Requisitions\CommercialClientBridge;
+use App\Services\Requisitions\PersonalRequisitionChangeLogger;
+use App\Services\Requisitions\PersonalRequisitionFilterBag;
+use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
+use App\Traits\HasRequisitionTabs;
+use App\Traits\ValidatesModule;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PersonalRequisitionNotification;
-use App\Mail\PersonalRequisitionStatusChangedMail;
-use App\Services\Access\RequisitionAccessService;
-use App\Services\Requisitions\CommercialClientBridge;
-use App\Services\Requisitions\PersonalRequisitionChangeLogger;
-use App\Services\Requisitions\PersonalRequisitionFilterBag;
-use App\Traits\HasRequisitionTabs;
-use App\Traits\ValidatesModule;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RequisitionController extends Controller
 {
@@ -43,9 +49,11 @@ class RequisitionController extends Controller
     public function __construct(
         private readonly RequisitionAccessService $requisitionAccess,
         private readonly PersonalRequisitionChangeLogger $changeLogger,
+        private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
     ) {}
+
     /**
-     * @var array<string, array{label: string, model: class-string<\Illuminate\Database\Eloquent\Model>}>
+     * @var array<string, array{label: string, model: class-string<Model>}>
      */
     private const PARAMETER_TYPES = [
         'positions' => ['label' => 'Cargos solicitados', 'model' => RequisitionPosition::class],
@@ -55,7 +63,6 @@ class RequisitionController extends Controller
         'programming-types' => ['label' => 'Tipos de programacion', 'model' => RequisitionProgrammingType::class],
         'uniforms' => ['label' => 'Dotación requerida', 'model' => RequisitionUniform::class],
         'contract-types' => ['label' => 'Tipos de contrato', 'model' => RequisitionContractType::class],
-        'recruiters' => ['label' => 'Encargados de selección', 'model' => RequisitionRecruiter::class],
         'emails' => ['label' => 'Correos de notificación', 'model' => RequisitionNotificationEmail::class],
     ];
 
@@ -77,20 +84,20 @@ class RequisitionController extends Controller
                 ! $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
                 fn ($builder) => $builder->where('requesting_area_key', $module)
             )
-            ->when($filters['client_id'], fn($q) => $q->where('client_id', $filters['client_id']))
-            ->when($filters['position_id'], fn($q) => $q->where('position_id', $filters['position_id']))
-            ->when($filters['city_id'], fn($q) => $q->where('city_id', $filters['city_id']))
-            ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
-            ->when($filters['year'], fn($q) => $q->whereYear('request_date', $filters['year']))
-            ->when($filters['month'], fn($q) => $q->whereMonth('request_date', $filters['month']));
+            ->when($filters['client_id'], fn ($q) => $q->where('client_id', $filters['client_id']))
+            ->when($filters['position_id'], fn ($q) => $q->where('position_id', $filters['position_id']))
+            ->when($filters['city_id'], fn ($q) => $q->where('city_id', $filters['city_id']))
+            ->when($filters['status'], fn ($q) => $q->where('status', $filters['status']))
+            ->when($filters['year'], fn ($q) => $q->whereYear('request_date', $filters['year']))
+            ->when($filters['month'], fn ($q) => $q->whereMonth('request_date', $filters['month']));
 
         $requisitions = $query->get();
 
         // Datos para Gráficos
         $statsByStatus = $requisitions->groupBy('status')->map->count();
-        $statsByMonth = $requisitions->groupBy(fn($r) => \Carbon\Carbon::parse($r->request_date)->format('n'))
+        $statsByMonth = $requisitions->groupBy(fn ($r) => Carbon::parse($r->request_date)->format('n'))
             ->map->count();
-        
+
         $statsByCity = $requisitions->groupBy('city_id')->map->count()->sortDesc()->take(5);
         $cityNames = RequisitionCity::whereIn('id', $statsByCity->keys())->pluck('name', 'id');
 
@@ -115,21 +122,21 @@ class RequisitionController extends Controller
             'chartData' => [
                 'status' => [
                     'labels' => collect(PersonalRequisition::statuses())->values(),
-                    'data' => collect(PersonalRequisition::statuses())->keys()->map(fn($k) => $statsByStatus->get($k, 0)),
+                    'data' => collect(PersonalRequisition::statuses())->keys()->map(fn ($k) => $statsByStatus->get($k, 0)),
                 ],
                 'trend' => [
                     'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                    'data' => collect(range(1, 12))->map(fn($m) => $statsByMonth->get($m, 0)),
+                    'data' => collect(range(1, 12))->map(fn ($m) => $statsByMonth->get($m, 0)),
                 ],
                 'cities' => [
-                    'labels' => $statsByCity->keys()->map(fn($id) => $cityNames[$id] ?? 'Desconocida'),
+                    'labels' => $statsByCity->keys()->map(fn ($id) => $cityNames[$id] ?? 'Desconocida'),
                     'data' => $statsByCity->values(),
                 ],
                 'clients' => [
-                    'labels' => $statsByClient->keys()->map(fn($id) => $clientNames[$id] ?? 'Desconocido'),
+                    'labels' => $statsByClient->keys()->map(fn ($id) => $clientNames[$id] ?? 'Desconocido'),
                     'data' => $statsByClient->values(),
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -192,7 +199,7 @@ class RequisitionController extends Controller
         $requisitions = DB::transaction(function () use ($request, $module): array {
             $quantity = $request->integer('quantity', 1);
             $created = [];
-            
+
             // Obtener el numero base para el codigo una sola vez
             $year = now()->format('Y');
             $lastCode = PersonalRequisition::query()
@@ -250,7 +257,7 @@ class RequisitionController extends Controller
                     'from_status' => null,
                     'to_status' => PersonalRequisition::STATUS_SOLICITADA,
                     'changed_by' => $request->user()->id,
-                    'comment' => 'Solicitud creada (' . ($i + 1) . '/' . $quantity . ') desde el tablero de requisiciones.',
+                    'comment' => 'Solicitud creada ('.($i + 1).'/'.$quantity.') desde el tablero de requisiciones.',
                 ]);
 
                 $created[] = $requisition;
@@ -262,22 +269,22 @@ class RequisitionController extends Controller
         // Envío de notificaciones por correo (Un solo correo consolidado por solicitud)
         try {
             $notificationEmails = RequisitionNotificationEmail::where('is_active', true)->pluck('name')->toArray();
-            
+
             // Si no hay correos parametrizados, usamos el correo base de desarrollo
             if (empty($notificationEmails)) {
                 $notificationEmails = ['desarrollo.tic@sjsp.com.co'];
             }
 
             // Enviamos un solo correo informando de la solicitud completa
-            if (!empty($requisitions)) {
+            if (! empty($requisitions)) {
                 $mainRequisition = $requisitions[0];
                 $totalCount = count($requisitions);
-                
+
                 Mail::to($notificationEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
             }
         } catch (\Exception $e) {
             // Logueamos el error pero permitimos que la app continúe para no bloquear al usuario
-            \Illuminate\Support\Facades\Log::error("Error enviando correos de requisición: " . $e->getMessage());
+            Log::error('Error enviando correos de requisición: '.$e->getMessage());
         }
 
         return redirect()
@@ -312,7 +319,7 @@ class RequisitionController extends Controller
         ]);
     }
 
-    public function trackingExport(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function trackingExport(Request $request, string $module): StreamedResponse
     {
         $this->abortIfUnknownModule($module);
 
@@ -335,7 +342,7 @@ class RequisitionController extends Controller
         );
     }
 
-    public function exportExcel(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function exportExcel(Request $request, string $module): StreamedResponse
     {
         $this->abortIfUnknownModule($module);
 
@@ -405,7 +412,7 @@ class RequisitionController extends Controller
 
         return view('modules.requisitions.edit', [
             'areaOptions' => config('access.areas'),
-            'catalogs' => $this->catalogs(),
+            'catalogs' => $this->catalogs($requisition),
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author', 'changeLogs.author']),
@@ -455,7 +462,6 @@ class RequisitionController extends Controller
                 'cost_center' => $request->input('cost_center'),
                 'requester_observation' => $request->input('requester_observation'),
                 'human_resources_observation' => $request->input('human_resources_observation'),
-                'recruiter_name' => $request->input('recruiter_name'),
                 'hiring_date' => $request->input('hiring_date'),
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
@@ -517,7 +523,35 @@ class RequisitionController extends Controller
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'subTabs' => $this->getRequisitionSubTabs($module, 'parametros'),
+            'showSelectionOfficers' => $module === RequisitionSelectionOfficerAccessService::AREA_KEY,
+            'gestionHumanaUsers' => $module === RequisitionSelectionOfficerAccessService::AREA_KEY
+                ? $this->selectionOfficerAccess->gestionHumanaAreaUsers()
+                : collect(),
+            'selectionOfficerAccess' => $this->selectionOfficerAccess,
         ]);
+    }
+
+    public function updateSelectionOfficer(
+        UpdateRequisitionSelectionOfficerRequest $request,
+        string $module,
+        User $user
+    ): RedirectResponse {
+        $this->abortIfUnknownModule($module);
+        abort_unless($module === RequisitionSelectionOfficerAccessService::AREA_KEY, 404);
+
+        try {
+            $this->selectionOfficerAccess->setSelectionOfficerEnabled($user, $request->boolean('enabled'));
+        } catch (\InvalidArgumentException $exception) {
+            return back()->withErrors(['selection_officer' => $exception->getMessage()]);
+        }
+
+        $user->refresh();
+
+        return redirect()
+            ->route('requisitions.parameters', ['module' => $module])
+            ->with('status', $request->boolean('enabled')
+                ? 'Encargado de seleccion activado para '.$user->name.'.'
+                : 'Encargado de seleccion desactivado para '.$user->name.'.');
     }
 
     public function storeParameter(StoreRequisitionParameterRequest $request, string $module, string $type): RedirectResponse
@@ -551,8 +585,8 @@ class RequisitionController extends Controller
         $record = $definition['model']::query()->findOrFail($parameterId);
 
         $record->update([
-            'name'       => Str::of($request->string('name')->toString())->trim()->squish()->toString(),
-            'is_active'  => $request->boolean('is_active'),
+            'name' => Str::of($request->string('name')->toString())->trim()->squish()->toString(),
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         return redirect()
@@ -574,15 +608,15 @@ class RequisitionController extends Controller
             ->with('status', 'requisition-parameter-deleted');
     }
 
-    private function trackingAreaScope(?\App\Models\User $user): string
+    private function trackingAreaScope(?User $user): string
     {
         return (string) $user?->area_key;
     }
 
     /**
-     * @return array<string, \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>>
+     * @return array<string, Collection<int, Model>>
      */
-    private function catalogs(): array
+    private function catalogs(?PersonalRequisition $requisition = null): array
     {
         return [
             'positions' => RequisitionPosition::query()->where('is_active', true)->orderBy('name')->get(),
@@ -593,7 +627,7 @@ class RequisitionController extends Controller
             'programmingTypes' => RequisitionProgrammingType::query()->where('is_active', true)->orderBy('name')->get(),
             'uniforms' => RequisitionUniform::query()->where('is_active', true)->orderBy('name')->get(),
             'contractTypes' => RequisitionContractType::query()->where('is_active', true)->orderBy('name')->get(),
-            'recruiters' => RequisitionRecruiter::query()->where('is_active', true)->orderBy('name')->get(),
+            'recruiters' => $this->selectionOfficerAccess->recruitersForSelect($requisition?->recruiter_id),
         ];
     }
 

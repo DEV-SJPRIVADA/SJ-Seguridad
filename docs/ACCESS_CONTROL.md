@@ -23,8 +23,11 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
+- `requisitions.selection_officer`
 
 `manage.requisitions` permanece en codigo por compatibilidad con asignaciones legacy, pero **no aparece en Admin**. Usar `requisitions.tab.gestion` + tablero visible en alcance.
+
+**Encargado de seleccion (`requisitions.selection_officer`):** define quien puede aparecer en el select **Reclutador** al gestionar requisiciones. No se asigna por defecto a roles base. La via operativa es el toggle en **Requisiciones → Gestion humana → Parametros → Encargados de seleccion** (permiso `manage.requisition.parameters`). El permiso figura en Admin bajo **Requisiciones — Gestion humana** para visibilidad; la asignacion manual alli es excepcional (p. ej. super-admin). Servicio: `RequisitionSelectionOfficerAccessService`. Tras la migracion `2026_07_28_112704_requisition_recruiter_id_references_users_drop_catalog`, ejecutar `php artisan migrate` y reactivar toggles en GH.
 
 Permisos del modulo de suministros:
 
@@ -100,7 +103,7 @@ Operan en `{area_key}` del usuario (sin exigir `view.board` en el area base):
 
 Requieren permiso funcional **y** `view.board.{module}.{board}`:
 
-- `requisitions.tab.gestion`, `requisitions.tab.dashboard`, `manage.requisition.parameters`
+- `requisitions.tab.gestion`, `requisitions.tab.dashboard`, `manage.requisition.parameters`, `requisitions.selection_officer` (select Reclutador; toggle en Parametros GH)
 - `supply.tab.quality`, `supply.tab.catalog`, etc.
 
 `view.area.*` y `manage.area.*` no sustituyen `view.board.*` para requisiciones o suministros. Documentos sigue usando `view.area.*`.

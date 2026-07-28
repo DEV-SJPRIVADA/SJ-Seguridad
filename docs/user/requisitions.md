@@ -15,6 +15,7 @@ El usuario puede, segun su perfil:
 - Ver el **Dashboard** consolidado (todas las areas) con KPIs: Total, Solicitadas, En gestion, Contratadas y Canceladas, y graficos interactivos unificados (ApexCharts)
 - **Gestionar** solicitudes de todas las areas (solo Gestion Humana), incluyendo editar la Estructura del servicio
 - Administrar **Parametros** (catalogos: cargos, motivos, ciudades, correos de notificacion, etc.)
+- En **Gestion humana** → **Parametros**, activar **encargados de seleccion** (usuarios del area) para que aparezcan como **Reclutador** al gestionar solicitudes
 
 La matriz de **Clientes** se administra en Comercial, no en Parametros de requisiciones.
 
@@ -30,6 +31,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | Estado contratado | Proceso cerrado con contratacion exitosa. |
 | Estado cancelada | Solicitud descartada. |
 | Gestion Humana (GH) | Equipo que valida, completa datos de compensacion y cierra procesos. |
+| Encargado de seleccion / Reclutador | Persona de GH responsable del proceso de seleccion en una requisicion; se elige en Gestion desde usuarios habilitados en Parametros. |
 | Cliente | Empresa o entidad para la cual se solicita el personal (desde matriz comercial). |
 
 ## Responsabilidades
@@ -38,7 +40,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | --- | --- |
 | Solicitante de area | Crear requisiciones en su area (incluye llenar Estructura del servicio); consultar mis requisiciones. |
 | Gestion Humana | Gestionar todas las requisiciones; revisar o corregir Estructura del servicio; completar compensacion y cierre; cambiar estados. |
-| Administrador | Parametros, permisos de usuarios, correos de notificacion. |
+| Administrador | Parametros, permisos de usuarios, correos de notificacion; en GH, toggles de encargados de seleccion. |
 | Coordinador / lider de area | Solicitar segun necesidades del servicio (permiso solicitar). |
 
 ## Desarrollo
@@ -73,7 +75,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 
 1. Abra la pestaña **Gestion**.
 2. Filtre por estado, busqueda y rango de **Fecha inicio / Fecha fin** (fecha de solicitud); pulse **Buscar**.
-3. Edite una fila para completar compensacion, encargado de seleccion y observaciones de GH.
+3. Edite una fila para completar compensacion, **Reclutador** (encargado de seleccion) y observaciones de GH.
 4. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.
 5. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
 6. Exporte a Excel; incluye todos los campos de la requisicion (incluida compensacion) segun los filtros activos.
@@ -82,7 +84,23 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 ### Administrar parametros
 
 1. Acceda a **Parametros** (permiso correspondiente).
-2. Mantenga catalogos: cargos, motivos, ciudades, tipos de programacion, uniformes, encargados de seleccion, correos de notificacion.
+2. Mantenga catalogos: cargos, motivos, ciudades, tipos de programacion, uniformes, correos de notificacion.
+
+### Activar encargados de seleccion (solo Gestion humana)
+
+Esta seccion aparece **unicamente** en el tablero **Requisiciones** del area **Gestion humana**, pestaña **Parametros**.
+
+1. Entre a **Requisiciones** → **Gestion humana** → **Parametros**.
+2. Abra la tarjeta **Encargados de seleccion**.
+3. Revise la tabla de usuarios activos del area Gestion humana (nombre y correo).
+4. Use el **interruptor (toggle)** en la columna **Encargado** para activar o desactivar a cada persona.
+5. Solo los usuarios con toggle **activo** aparecen en la lista **Reclutador** al editar requisiciones en **Gestion** (cualquier area solicitante).
+
+**Despues de una actualizacion del sistema:** si antes los encargados se registraban en un catalogo aparte, las asignaciones antiguas pueden quedar vacias hasta que GH vuelva a activar toggles y reasigne Reclutador donde corresponda. Las requisiciones que ya tenian nombre guardado en texto pueden seguir mostrando ese nombre hasta que se elija un usuario en el select.
+
+**Al desactivar un toggle:** esa persona ya no se ofrece para **nuevas** asignaciones, pero las requisiciones donde ya figuraba como Reclutador siguen mostrando su nombre en detalle, historial, exportacion e impresion.
+
+**Nota:** el permiso relacionado puede verse en Administracion de usuarios, pero la forma oficial de habilitar encargados es el toggle en Parametros de Gestion humana (salvo ajustes puntuales por super-administrador).
 
 ## Control de cambios
 
@@ -91,3 +109,4 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.2 | 2026-07-24 | AgentSj / Feature | Export Excel completo + rango fechas en Gestion y Seguimiento | FEAT-006 |
 | 1.3 | 2026-07-27 | FEAT-010 | Dashboard con graficos ApexCharts unificados; seccion Consultar el dashboard |
+| 1.4 | 2026-07-28 | FEAT-011 | Encargados de seleccion por toggles en Parametros GH; Reclutador desde usuarios habilitados; checklist post-actualizacion |

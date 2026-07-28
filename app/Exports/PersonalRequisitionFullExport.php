@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\PersonalRequisition;
 use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PersonalRequisitionFullExport
 {
@@ -75,7 +76,7 @@ class PersonalRequisitionFullExport
             ['key' => 'non_statutory_bonus', 'label' => 'Prima extralegal'],
             ['key' => 'other_allowances', 'label' => 'Otros auxilios'],
             ['key' => 'leasing_contract', 'label' => 'Contrato leasing'],
-            ['key' => fn ($r) => $r->recruiter?->name ?? $r->recruiter_name ?? '—', 'label' => 'Encargado seleccion'],
+            ['key' => fn ($r) => $r->displayRecruiterName(), 'label' => 'Encargado seleccion'],
             ['key' => 'recruiter_name', 'label' => 'Nombre reclutador (texto)'],
             ['key' => fn ($r) => $r->hiring_date?->format('Y-m-d'), 'label' => 'Fecha contratacion'],
             ['key' => 'human_resources_observation', 'label' => 'Observaciones GH'],
@@ -91,7 +92,7 @@ class PersonalRequisitionFullExport
     /**
      * @param  Collection<int, PersonalRequisition>  $requisitions
      */
-    public static function download(Collection $requisitions, string $fileName, string $title): \Symfony\Component\HttpFoundation\StreamedResponse
+    public static function download(Collection $requisitions, string $fileName, string $title): StreamedResponse
     {
         return (new BaseExport($requisitions, self::columns(), $fileName, $title))->download();
     }

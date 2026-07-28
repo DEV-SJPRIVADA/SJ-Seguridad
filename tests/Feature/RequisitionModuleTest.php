@@ -2,23 +2,27 @@
 
 namespace Tests\Feature;
 
+use App\Exports\PersonalRequisitionFullExport;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
 use App\Models\PersonalRequisition;
-use App\Services\Requisitions\CommercialClientBridge;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
 use App\Models\RequisitionNotificationEmail;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
-use App\Models\RequisitionRecruiter;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
+use App\Services\Requisitions\CommercialClientBridge;
+use App\Support\PermissionCatalog;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class RequisitionModuleTest extends TestCase
@@ -29,7 +33,7 @@ class RequisitionModuleTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     public function test_user_can_search_commercial_clients_for_requisition_form(): void
@@ -354,10 +358,13 @@ class RequisitionModuleTest extends TestCase
             'requisitions.tab.gestion',
         ]);
 
-        $recruiter = RequisitionRecruiter::query()->create([
+        $recruiter = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
             'name' => 'Ana Seleccion',
-            'is_active' => true,
         ]);
+        $recruiter->assignRole('usuario');
+        $recruiter->givePermissionTo('requisitions.selection_officer');
 
         $requisition = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0301', 'operaciones', 'Perfil con reclutador'));
         $requisition->statusLogs()->create([
@@ -624,7 +631,7 @@ class RequisitionModuleTest extends TestCase
         ));
 
         $requisition->changeLogs()->create([
-            'change_batch' => (string) \Illuminate\Support\Str::uuid(),
+            'change_batch' => (string) Str::uuid(),
             'field_key' => 'quantity',
             'field_label' => 'Cantidad',
             'old_value' => '1',
@@ -920,7 +927,7 @@ class RequisitionModuleTest extends TestCase
 
     public function test_gestion_export_uses_full_export_columns(): void
     {
-        $labels = collect(\App\Exports\PersonalRequisitionFullExport::columns())->pluck('label');
+        $labels = collect(PersonalRequisitionFullExport::columns())->pluck('label');
 
         $this->assertTrue($labels->contains('Salario base'));
         $this->assertTrue($labels->contains('Estructura del servicio'));
@@ -964,6 +971,365 @@ class RequisitionModuleTest extends TestCase
         $this->actingAs($user)
             ->get(route('requisitions.create', ['module' => 'gestion_humana']))
             ->assertForbidden();
+    }
+
+    public function test_recruiter_schema_uses_users_and_drops_recruiters_catalog(): void
+    {
+        $this->assertFalse(Schema::hasTable('requisition_recruiters'));
+
+        $foreignKeys = collect(Schema::getForeignKeys('personal_requisitions'))
+            ->filter(fn (array $fk): bool => in_array('recruiter_id', $fk['columns'] ?? [], true));
+
+        $this->assertCount(1, $foreignKeys);
+        $this->assertSame('users', $foreignKeys->first()['foreign_table'] ?? null);
+    }
+
+    public function test_selection_officer_toggle_grants_and_revokes_permission(): void
+    {
+        PermissionCatalog::sync();
+
+        $admin = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $admin->assignRole('usuario');
+        $admin->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.gestion_humana.requisiciones',
+        ]);
+
+        $officer = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $officer->assignRole('usuario');
+
+        $this->actingAs($admin)
+            ->patch(route('requisitions.selection-officers.update', ['module' => 'gestion_humana', 'user' => $officer]), [
+                'enabled' => true,
+            ])
+            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana']));
+
+        $officer->refresh();
+        $this->assertTrue($officer->can('requisitions.selection_officer'));
+
+        $this->actingAs($admin)
+            ->patch(route('requisitions.selection-officers.update', ['module' => 'gestion_humana', 'user' => $officer]), [
+                'enabled' => false,
+            ])
+            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana']));
+
+        $officer->refresh();
+        $this->assertFalse($officer->can('requisitions.selection_officer'));
+
+        $operacionesUser = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $operacionesUser->assignRole('usuario');
+
+        $this->actingAs($admin)
+            ->from(route('requisitions.parameters', ['module' => 'gestion_humana']))
+            ->patch(route('requisitions.selection-officers.update', ['module' => 'gestion_humana', 'user' => $operacionesUser]), [
+                'enabled' => true,
+            ])
+            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana']))
+            ->assertSessionHasErrors('selection_officer');
+    }
+
+    public function test_gestion_humana_parameters_includes_selection_officers_section(): void
+    {
+        $ghAdmin = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+            'name' => 'Admin Parametros GH',
+        ]);
+        $ghAdmin->assignRole('usuario');
+        $ghAdmin->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.gestion_humana.requisiciones',
+        ]);
+
+        $this->actingAs($ghAdmin)
+            ->get(route('requisitions.parameters', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertSee('Encargados de seleccion', false)
+            ->assertSee('toggle-switch', false);
+
+        $opsAdmin = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $opsAdmin->assignRole('usuario');
+        $opsAdmin->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.operaciones.requisiciones',
+        ]);
+
+        $this->actingAs($opsAdmin)
+            ->get(route('requisitions.parameters', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertDontSee('Encargados de seleccion', false);
+    }
+
+    public function test_recruiter_select_only_enabled_gh_users(): void
+    {
+        PermissionCatalog::sync();
+
+        $enabled = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'name' => 'Reclutador Habilitado',
+            'must_change_password' => false,
+        ]);
+        $enabled->assignRole('usuario');
+        $enabled->givePermissionTo('requisitions.selection_officer');
+
+        User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'name' => 'GH Sin Permiso',
+            'must_change_password' => false,
+        ])->assignRole('usuario');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-SEL-01',
+            'operaciones',
+            'Perfil select reclutador'
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Reclutador Habilitado', false)
+            ->assertDontSee('GH Sin Permiso', false);
+    }
+
+    public function test_assigned_recruiter_visible_after_toggle_off(): void
+    {
+        PermissionCatalog::sync();
+
+        $recruiter = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'name' => 'Encargado Asignado',
+            'must_change_password' => false,
+        ]);
+        $recruiter->assignRole('usuario');
+        $recruiter->givePermissionTo('requisitions.selection_officer');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-SEL-02', 'operaciones', 'Perfil asignado'),
+            ['recruiter_id' => $recruiter->id]
+        ));
+
+        $admin = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $admin->assignRole('usuario');
+        $admin->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+            'view.board.operaciones.requisiciones',
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('requisitions.selection-officers.update', ['module' => 'gestion_humana', 'user' => $recruiter]), [
+                'enabled' => false,
+            ])
+            ->assertRedirect();
+
+        $recruiter->refresh();
+        $this->assertFalse($recruiter->can('requisitions.selection_officer'));
+
+        $requisition->refresh()->load('recruiter');
+        $this->assertSame('Encargado Asignado', $requisition->displayRecruiterName());
+
+        $manager = $admin;
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Encargado Asignado', false);
+    }
+
+    public function test_update_rejects_recruiter_id_without_permission(): void
+    {
+        PermissionCatalog::sync();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $notOfficer = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $notOfficer->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-SEL-03',
+            'operaciones',
+            'Perfil rechazo reclutador'
+        ));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_EN_GESTION,
+                'recruiter_id' => $notOfficer->id,
+            ]
+        ))->assertSessionHasErrors('recruiter_id');
+    }
+
+    public function test_change_logger_resolves_recruiter_id_to_user_name(): void
+    {
+        PermissionCatalog::sync();
+
+        $recruiter = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'name' => 'Logger Reclutador',
+            'must_change_password' => false,
+        ]);
+        $recruiter->assignRole('usuario');
+        $recruiter->givePermissionTo('requisitions.selection_officer');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-SEL-04',
+            'operaciones',
+            'Perfil logger'
+        ));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
+            $this->validPayload(),
+            [
+                'status' => PersonalRequisition::STATUS_EN_GESTION,
+                'recruiter_id' => $recruiter->id,
+            ]
+        ))->assertRedirect();
+
+        $this->assertDatabaseHas('personal_requisition_change_logs', [
+            'personal_requisition_id' => $requisition->id,
+            'field_key' => 'recruiter_id',
+            'new_value' => 'Logger Reclutador',
+        ]);
+    }
+
+    public function test_parameters_recruiters_crud_routes_return_404(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.gestion_humana.requisiciones',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('requisitions.parameters.store', ['module' => 'gestion_humana', 'type' => 'recruiters']), [
+                'name' => 'Legacy',
+                'is_active' => 1,
+            ])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->patch(route('requisitions.parameters.update', ['module' => 'gestion_humana', 'type' => 'recruiters', 'parameterId' => 1]), [
+                'name' => 'Legacy',
+                'is_active' => 1,
+            ])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->delete(route('requisitions.parameters.destroy', ['module' => 'gestion_humana', 'type' => 'recruiters', 'parameterId' => 1]))
+            ->assertNotFound();
+    }
+
+    public function test_selection_officer_patch_returns_404_outside_gestion_humana_module(): void
+    {
+        $admin = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $admin->assignRole('usuario');
+        $admin->givePermissionTo([
+            'manage.requisition.parameters',
+            'view.board.operaciones.requisiciones',
+        ]);
+
+        $target = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $target->assignRole('usuario');
+
+        $this->actingAs($admin)
+            ->patch(route('requisitions.selection-officers.update', ['module' => 'operaciones', 'user' => $target]), [
+                'enabled' => true,
+            ])
+            ->assertNotFound();
     }
 
     private function commercialClient(): CommercialClient

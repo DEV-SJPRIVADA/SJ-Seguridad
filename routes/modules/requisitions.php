@@ -29,6 +29,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/
 
     Route::middleware('requisition.tab:parametros')->group(function () {
         Route::get('/parametros', [RequisitionController::class, 'parameters'])->name('parameters');
+        Route::patch('/parametros/encargados-seleccion/{user}', [RequisitionController::class, 'updateSelectionOfficer'])->name('selection-officers.update');
         Route::post('/parametros/{type}', [RequisitionController::class, 'storeParameter'])->name('parameters.store');
         Route::patch('/parametros/{type}/{parameterId}', [RequisitionController::class, 'updateParameter'])->name('parameters.update');
         Route::delete('/parametros/{type}/{parameterId}', [RequisitionController::class, 'destroyParameter'])->name('parameters.destroy');
