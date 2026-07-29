@@ -67,6 +67,13 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 
 1. En Clientes o Servicios use **Exportar Excel** si esta disponible en la pantalla.
 
+### Correo de documentacion por vencer o vencida
+
+1. El sistema envia un **correo diario** (digest) a las direcciones configuradas en **Administracion → Configuracion de notificaciones**, tipo **Comercial — Documentacion comercial (por vencer o vencida)**.
+2. Al recibirlo, abra el enlace al **Checklist documental** y revise los clientes listados (NIT, fecha de vencimiento).
+3. Actualice estados de documentos, **fecha de vencimiento** y **dias de anticipacion** en el checklist segun corresponda.
+4. El aviso se envia **una vez** cuando el cliente entra en ventana «por vencer» y **una vez** cuando pasa a «vencida» (misma fecha de vencimiento); no hay recordatorios diarios repetidos mientras sigue en ventana.
+
 ### Importacion masiva (soporte TI)
 
 La carga desde Excel MT-CO-01 la ejecuta soporte con comando de consola y una copia del archivo **fuera del repositorio**:

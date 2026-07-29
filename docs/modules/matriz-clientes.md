@@ -27,13 +27,14 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - Checklist documental por **cliente** (estados por documento; vencimiento y dias de anticipacion unicos por NIT; sin adjuntos)
 - Badge de vencimiento documental del cliente en pantalla checklist; filtros compactos (`req-manage-filters`) con `q`, `city`, `doc_vigencia=expiring|expired`; selects/pills de estado por documento con color (OK verde, Pendiente rojo, Incompleto naranja, N/A amarillo, X rojo intenso)
 - Filtros `vigencia=expiring|expired` en servicios consideran contrato del servicio **o** vencimiento documental del **cliente**
+- **Notificacion correo (FEAT-015):** comando diario `comercial:send-documentation-notification-digest` (06:00 `America/Bogota`) envia **digest** a destinatarios del tipo `comercial` / `documentation_expiring` en Admin → Configuracion de notificaciones; misma regla que checklist «Por vencer» / vencida; dedupe en `commercial_client_documentation_notification_logs` (una vez por ciclo `expiring` y una vez `expired` por fecha de vencimiento)
 
 ## Fuera de V1
 
 - BORRADOR SVC / facturacion / consecutivos
 - Sync automatico con `requisition_clients` al crear/editar requisiciones (`CommercialClientBridge`)
 - Adjuntos PDF / documentos Calidad
-- Notificaciones de vencimiento
+- Historial de envios de correo en admin
 
 ## Importacion desde Excel
 
@@ -72,6 +73,15 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 - `GET /checklist-documental` checklist documental (FEAT-014)
 - `GET /checklist-documental/exportar` export Excel checklist
 - `PATCH /{client}/checklist-documental` actualizar estados + vencimiento/dias
+
+### Job / CLI (documentacion comercial)
+
+- `php artisan comercial:send-documentation-notification-digest` — digest diario (scheduler 06:00 Bogota)
+- Opciones: `--date=Y-m-d`, `--dry-run`
+- Destinatarios: `NotificationConfigService` → tipo `comercial` / `documentation_expiring` (`config/notifications.php`)
+
+### Clientes — prefijo (continuacion)
+
 - `GET|POST /crear` alta
 - `GET /{client}` ficha (servicios relacionados, solo lectura/enlaces)
 - `GET|PATCH /{client}/editar`

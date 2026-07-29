@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('requisition_notification_types')) {
+        if (! Schema::hasTable('requisition_notification_types') && ! Schema::hasTable('notification_types')) {
             Schema::create('requisition_notification_types', function (Blueprint $table): void {
                 $table->id();
                 $table->string('slug')->unique();
@@ -21,9 +21,11 @@ return new class extends Migration
         }
 
         if (! Schema::hasTable('req_notif_type_email') && ! Schema::hasTable('notification_type_email')) {
-            $typesTable = Schema::hasTable('requisition_notification_types')
-                ? 'requisition_notification_types'
-                : (Schema::hasTable('notification_types') ? 'notification_types' : null);
+            $typesTable = Schema::hasTable('notification_types')
+                ? 'notification_types'
+                : (Schema::hasTable('requisition_notification_types')
+                    ? 'requisition_notification_types'
+                    : null);
             $emailsTable = Schema::hasTable('requisition_notification_emails')
                 ? 'requisition_notification_emails'
                 : (Schema::hasTable('notification_emails') ? 'notification_emails' : null);

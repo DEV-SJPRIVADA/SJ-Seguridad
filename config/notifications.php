@@ -3,6 +3,7 @@
 return [
     'modules' => [
         'requisitions' => 'Requisiciones de personal',
+        'comercial' => 'Comercial',
     ],
 
     'fallback_recipient' => 'desarrollo.tic@sjsp.com.co',
@@ -14,6 +15,9 @@ return [
     'admin_configurable' => [
         'requisitions' => [
             'new_requisition',
+        ],
+        'comercial' => [
+            'documentation_expiring',
         ],
     ],
 ];
