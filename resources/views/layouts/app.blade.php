@@ -481,19 +481,19 @@
                 padding: 0 !important;
             }
 
-            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) {
+            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) {
                 display: grid !important;
                 gap: 1rem !important;
                 grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
                 margin-bottom: 2rem !important;
             }
 
-            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) .card {
+            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) .card {
                 padding: 1.25rem !important;
                 height: 100% !important;
             }
 
-            /* Comercial: 6 KPIs siempre en una fila (se compactan); wrap solo en celular */
+            /* Comercial matriz: KPIs compactos en una fila */
             .dashboard-stat-grid.dashboard-stat-grid--matriz-kpis {
                 display: flex !important;
                 flex-wrap: nowrap !important;
@@ -529,11 +529,50 @@
                 line-height: 1.2 !important;
             }
 
+            /* Requisiciones: texto completo; una fila si cabe, si no envuelve tarjetas */
+            .dashboard-stat-grid.dashboard-stat-grid--requisition-kpis {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: stretch !important;
+                gap: 0.65rem !important;
+                margin-bottom: 1rem !important;
+                width: 100% !important;
+            }
+
+            .dashboard-stat-grid--requisition-kpis > .req-dashboard-kpi {
+                flex: 1 1 calc(20% - 0.65rem) !important;
+                min-width: 9.5rem !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .dashboard-stat-grid--requisition-kpis .text-caption {
+                font-size: 0.68rem !important;
+                line-height: 1.35 !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
+                margin-bottom: 0.2rem !important;
+            }
+
+            .dashboard-stat-grid--requisition-kpis .kpi-value {
+                font-size: clamp(1.15rem, 1.2vw, 1.55rem) !important;
+            }
+
+            .dashboard-stat-grid--requisition-kpis .text-small {
+                font-size: 0.62rem !important;
+                line-height: 1.35 !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
+                margin: 0.15rem 0 0 !important;
+            }
+
             @media (max-width: 1024px) {
-                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) {
+                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) {
                     grid-template-columns: 1fr !important;
                 }
-                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis) .card {
+                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) .card {
                     text-align: center !important;
                 }
                 .dashboard-hero__header {
@@ -557,6 +596,12 @@
 
                 .dashboard-stat-grid--matriz-kpis .text-caption {
                     white-space: normal !important;
+                }
+
+                .dashboard-stat-grid--requisition-kpis > .req-dashboard-kpi {
+                    flex: 1 1 calc(50% - 0.35rem) !important;
+                    min-width: calc(50% - 0.35rem) !important;
+                    max-width: calc(50% - 0.35rem) !important;
                 }
             }
 
