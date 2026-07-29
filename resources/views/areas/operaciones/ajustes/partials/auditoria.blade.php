@@ -43,7 +43,7 @@
             <tbody>
                 @foreach ($logs as $log)
                     <tr>
-                        <td>{{ $log->created_at?->format('Y-m-d H:i') }}</td>
+                        <td><x-date-table :value="$log->created_at" datetime /></td>
                         <td>{{ $log->user?->name ?? 'Sistema' }}</td>
                         <td>{{ $log->event_type }}</td>
                         <td>{{ $log->action }}</td>

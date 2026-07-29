@@ -32,7 +32,7 @@
                                 @forelse ($requisitions as $requisition)
                                     <tr>
                                         <td>{{ $requisition->code }}</td>
-                                        <td>{{ $requisition->request_date?->format('Y-m-d') }}</td>
+                                        <td><x-date-table :value="$requisition->request_date" /></td>
                                         <td>{{ $requisition->requester?->name }}</td>
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ config('access.areas.' . $requisition->requesting_area_key) ?? $requisition->requesting_area_key }}</td>

@@ -11,6 +11,7 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
+use App\Support\DisplayDate;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -56,8 +57,8 @@ class CommercialServiceController extends Controller
             ['key' => 'contract_number', 'label' => 'Contrato'],
             ['key' => fn ($s) => $s->serviceType?->name ?? '—', 'label' => 'Tipo servicio'],
             ['key' => 'advisor_name', 'label' => 'Asesor'],
-            ['key' => fn ($s) => $s->contract_start?->format('Y-m-d') ?? '—', 'label' => 'Inicio'],
-            ['key' => fn ($s) => $s->contract_end?->format('Y-m-d') ?? '—', 'label' => 'Fin'],
+            ['key' => fn ($s) => DisplayDate::date($s->contract_start), 'label' => 'Inicio'],
+            ['key' => fn ($s) => DisplayDate::date($s->contract_end), 'label' => 'Fin'],
             ['key' => fn ($s) => $s->isExpired() ? 'Vencido' : ($s->isExpiringSoon(30) ? '≤30 dias' : ($s->isExpiringSoon(60) ? '≤60 dias' : '—')), 'label' => 'Vigencia'],
         ];
 

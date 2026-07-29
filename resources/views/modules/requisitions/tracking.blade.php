@@ -200,7 +200,7 @@
                                 @forelse ($requisitions as $requisition)
                                     <tr>
                                         <td>{{ $requisition->code }}</td>
-                                        <td>{{ $requisition->request_date?->format('Y-m-d') }}</td>
+                                        <td><x-date-table :value="$requisition->request_date" /></td>
                                         <td>
                                             {{ $requisition->requester?->name ?? $requisition->leader_name }}
                                             @if ($requisition->requested_by === auth()->id())
@@ -216,7 +216,7 @@
                                                 {{ $statusLabels[$requisition->status] ?? $requisition->status }}
                                             </span>
                                         </td>
-                                        <td>{{ $requisition->status_changed_at?->format('Y-m-d H:i') ?? 'Sin cambios' }}</td>
+                                        <td><x-date-table :value="$requisition->status_changed_at" datetime empty="Sin cambios" /></td>
                                         <td class="table-actions">
                                             <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary btn--sm">
                                                 Ver detalle

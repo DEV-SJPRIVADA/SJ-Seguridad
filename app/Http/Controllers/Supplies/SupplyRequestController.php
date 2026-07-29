@@ -10,6 +10,7 @@ use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
+use App\Support\DisplayDate;
 use App\Traits\HasSupplyTabs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupplyRequestController extends Controller
 {
@@ -37,7 +39,7 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-    public function exportExcel(string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function exportExcel(string $module): StreamedResponse
     {
         $requests = SupplyRequest::where('user_id', auth()->id())
             ->where('area_key', $module)
@@ -47,12 +49,12 @@ class SupplyRequestController extends Controller
 
         $columns = [
             ['key' => 'id', 'label' => 'ID'],
-            ['key' => fn($r) => $r->created_at->format('Y-m-d'), 'label' => 'Fecha'],
-            ['key' => fn($r) => $r->statusLabel(), 'label' => 'Estado'],
-            ['key' => fn($r) => $r->items->count() . ' productos', 'label' => 'Items'],
+            ['key' => fn ($r) => DisplayDate::date($r->created_at), 'label' => 'Fecha'],
+            ['key' => fn ($r) => $r->statusLabel(), 'label' => 'Estado'],
+            ['key' => fn ($r) => $r->items->count().' productos', 'label' => 'Items'],
         ];
 
-        return (new BaseExport($requests, $columns, 'mis_solicitudes_' . now()->format('Y-m-d') . '.xlsx', 'Mis Solicitudes de Insumos'))->download();
+        return (new BaseExport($requests, $columns, 'mis_solicitudes_'.now()->format('Y-m-d').'.xlsx', 'Mis Solicitudes de Insumos'))->download();
     }
 
     public function show(string $module, SupplyRequest $supplyRequest)
@@ -155,7 +157,7 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-    public function approvalExport(string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function approvalExport(string $module): StreamedResponse
     {
         $requests = SupplyRequest::where('area_key', $module)
             ->where('status', 'pendiente_calidad')
@@ -165,15 +167,15 @@ class SupplyRequestController extends Controller
 
         $columns = [
             ['key' => 'id', 'label' => 'ID'],
-            ['key' => fn($r) => $r->created_at->format('Y-m-d H:i'), 'label' => 'Fecha'],
-            ['key' => fn($r) => $r->user->name, 'label' => 'Solicitante'],
-            ['key' => fn($r) => config("access.areas.{$r->area_key}"), 'label' => 'Área'],
+            ['key' => fn ($r) => DisplayDate::dateTime($r->created_at), 'label' => 'Fecha'],
+            ['key' => fn ($r) => $r->user->name, 'label' => 'Solicitante'],
+            ['key' => fn ($r) => config("access.areas.{$r->area_key}"), 'label' => 'Área'],
             ['key' => 'site_utilization', 'label' => 'Sede'],
-            ['key' => fn($r) => $r->items->count() . ' productos', 'label' => 'Items'],
-            ['key' => fn($r) => $r->statusLabel(), 'label' => 'Estado'],
+            ['key' => fn ($r) => $r->items->count().' productos', 'label' => 'Items'],
+            ['key' => fn ($r) => $r->statusLabel(), 'label' => 'Estado'],
         ];
 
-        return (new BaseExport($requests, $columns, 'aprobacion_insumos_' . now()->format('Y-m-d') . '.xlsx', 'Aprobación de Insumos'))->download();
+        return (new BaseExport($requests, $columns, 'aprobacion_insumos_'.now()->format('Y-m-d').'.xlsx', 'Aprobación de Insumos'))->download();
     }
 
     public function approvalEdit(string $module, SupplyRequest $supplyRequest)
@@ -280,7 +282,7 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-    public function approvedExportAll(Request $request, string $module): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function approvedExportAll(Request $request, string $module): StreamedResponse
     {
         $filters = $request->validate([
             'sede_id' => ['nullable', 'integer', 'exists:supply_sites,id'],
@@ -315,15 +317,15 @@ class SupplyRequestController extends Controller
 
         $columns = [
             ['key' => 'id', 'label' => 'ID'],
-            ['key' => fn($r) => $r->created_at->format('Y-m-d H:i'), 'label' => 'Fecha'],
-            ['key' => fn($r) => $r->user->name, 'label' => 'Solicitante'],
-            ['key' => fn($r) => config("access.areas.{$r->area_key}"), 'label' => 'Área'],
+            ['key' => fn ($r) => DisplayDate::dateTime($r->created_at), 'label' => 'Fecha'],
+            ['key' => fn ($r) => $r->user->name, 'label' => 'Solicitante'],
+            ['key' => fn ($r) => config("access.areas.{$r->area_key}"), 'label' => 'Área'],
             ['key' => 'site_utilization', 'label' => 'Sede'],
             ['key' => 'approved_items_count', 'label' => 'Ítems aprobados'],
-            ['key' => fn($r) => $r->exported_at ? 'Exportada' : 'Pendiente', 'label' => 'Exportación'],
+            ['key' => fn ($r) => $r->exported_at ? 'Exportada' : 'Pendiente', 'label' => 'Exportación'],
         ];
 
-        return (new BaseExport($requests, $columns, 'insumos_aprobados_' . now()->format('Y-m-d') . '.xlsx', 'Insumos Aprobados'))->download();
+        return (new BaseExport($requests, $columns, 'insumos_aprobados_'.now()->format('Y-m-d').'.xlsx', 'Insumos Aprobados'))->download();
     }
 
     public function approvedExport(string $module, SupplyRequest $supplyRequest, SupplyPurchaseReportExporter $exporter)

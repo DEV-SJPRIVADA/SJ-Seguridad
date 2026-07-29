@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Comercial;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Comercial\StoreCommercialClientRequest;
 use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
-use App\Exports\BaseExport;
+use App\Support\DisplayDate;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialClientController extends Controller
 {
@@ -21,33 +24,9 @@ class CommercialClientController extends Controller
 
         $q = trim($request->string('q')->toString());
         $city = trim($request->string('city')->toString());
+        $status = $this->resolveClientStatusFilter($request);
 
-        $clients = CommercialClient::query()
-            ->withCount([
-                'services',
-                'activeServices',
-            ])
-            ->with([
-                'services' => fn ($query) => $query
-                    ->select([
-                        'id',
-                        'commercial_client_id',
-                        'commercial_service_type_id',
-                        'portfolio',
-                        'contract_start',
-                        'contract_end',
-                    ])
-                    ->with('serviceType:id,name'),
-            ])
-            ->when($q !== '', function ($query) use ($q): void {
-                $query->where(function ($inner) use ($q): void {
-                    $inner->where('nit', 'like', "%{$q}%")
-                        ->orWhere('name', 'like', "%{$q}%")
-                        ->orWhere('legal_rep_name', 'like', "%{$q}%");
-                });
-            })
-            ->when($city !== '', fn ($query) => $query->where('city', 'like', "%{$city}%"))
-            ->orderBy('name')
+        $clients = $this->clientListQuery($q, $city, $status)
             ->get();
 
         $clients->transform(function (CommercialClient $client): CommercialClient {
@@ -80,11 +59,11 @@ class CommercialClientController extends Controller
             );
             $client->setAttribute(
                 'contract_start_display',
-                optional($servicesForDates->pluck('contract_start')->filter()->sort()->first())->format('Y-m-d')
+                DisplayDate::date($servicesForDates->pluck('contract_start')->filter()->sort()->first())
             );
             $client->setAttribute(
                 'contract_end_display',
-                optional($servicesForDates->pluck('contract_end')->filter()->sort()->last())->format('Y-m-d')
+                DisplayDate::date($servicesForDates->pluck('contract_end')->filter()->sort()->last())
             );
 
             return $client;
@@ -92,34 +71,21 @@ class CommercialClientController extends Controller
 
         return view('areas.comercial.matriz-clientes.clients.index', [
             'clients' => $clients,
-            'filters' => ['q' => $q, 'city' => $city],
+            'filters' => ['q' => $q, 'city' => $city, 'status' => $status],
+            'statusLabels' => self::clientStatusFilterLabels(),
             'canManage' => $this->canManage(),
         ]);
     }
 
-    public function exportExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function exportExcel(Request $request): StreamedResponse
     {
         $this->authorizeView();
 
         $q = trim($request->string('q')->toString());
         $city = trim($request->string('city')->toString());
+        $status = $this->resolveClientStatusFilter($request);
 
-        $clients = CommercialClient::query()
-            ->withCount(['services', 'activeServices'])
-            ->with([
-                'services' => fn ($query) => $query
-                    ->select(['id', 'commercial_client_id', 'commercial_service_type_id', 'portfolio', 'contract_start', 'contract_end'])
-                    ->with('serviceType:id,name'),
-            ])
-            ->when($q !== '', function ($query) use ($q): void {
-                $query->where(function ($inner) use ($q): void {
-                    $inner->where('nit', 'like', "%{$q}%")
-                        ->orWhere('name', 'like', "%{$q}%")
-                        ->orWhere('legal_rep_name', 'like', "%{$q}%");
-                });
-            })
-            ->when($city !== '', fn ($query) => $query->where('city', 'like', "%{$city}%"))
-            ->orderBy('name')
+        $clients = $this->clientListQuery($q, $city, $status)
             ->get();
 
         $portfolioLabels = CommercialService::portfolios();
@@ -137,9 +103,9 @@ class CommercialClientController extends Controller
                 ->map(fn (string $p) => $portfolioLabels[$p] ?? $p)->sort()->values()->all());
 
             $client->setAttribute('contract_start_display',
-                optional($servicesForDates->pluck('contract_start')->filter()->sort()->first())?->format('Y-m-d'));
+                DisplayDate::date($servicesForDates->pluck('contract_start')->filter()->sort()->first()));
             $client->setAttribute('contract_end_display',
-                optional($servicesForDates->pluck('contract_end')->filter()->sort()->last())?->format('Y-m-d'));
+                DisplayDate::date($servicesForDates->pluck('contract_end')->filter()->sort()->last()));
 
             return $client;
         });
@@ -148,15 +114,15 @@ class CommercialClientController extends Controller
             ['key' => 'nit', 'label' => 'NIT'],
             ['key' => 'name', 'label' => 'Cliente'],
             ['key' => 'city', 'label' => 'Ciudad'],
-            ['key' => fn($c) => implode(', ', $c->portfolio_labels ?? []), 'label' => 'Portafolios'],
-            ['key' => fn($c) => implode(', ', $c->service_type_labels ?? []), 'label' => 'Tipos de servicio'],
+            ['key' => fn ($c) => implode(', ', $c->portfolio_labels ?? []), 'label' => 'Portafolios'],
+            ['key' => fn ($c) => implode(', ', $c->service_type_labels ?? []), 'label' => 'Tipos de servicio'],
             ['key' => 'contract_start_display', 'label' => 'Inicio contrato'],
             ['key' => 'contract_end_display', 'label' => 'Fin contrato'],
             ['key' => 'services_count', 'label' => 'Servicios'],
-            ['key' => 'active_services_count', 'label' => 'Activos'],
+            ['key' => fn ($c) => ($c->vigente_operational_services_count ?? 0) > 0 ? 'Activo' : 'Inactivo', 'label' => 'Estado'],
         ];
 
-        return (new BaseExport($clients, $columns, 'clientes_' . now()->format('Y-m-d') . '.xlsx', 'Clientes - SJ Seguridad'))->download();
+        return (new BaseExport($clients, $columns, 'clientes_'.now()->format('Y-m-d').'.xlsx', 'Clientes - SJ Seguridad'))->download();
     }
 
     public function search(Request $request): JsonResponse
@@ -200,7 +166,7 @@ class CommercialClientController extends Controller
         $this->authorizeManage();
 
         return view('areas.comercial.matriz-clientes.clients.create', [
-            'client' => new CommercialClient(),
+            'client' => new CommercialClient,
         ]);
     }
 
@@ -231,7 +197,7 @@ class CommercialClientController extends Controller
                 $portfolio !== '' && array_key_exists($portfolio, CommercialService::portfolios()),
                 fn ($query) => $query->where('portfolio', $portfolio)
             )
-            ->orderByRaw("CASE WHEN portfolio = ? THEN 1 ELSE 0 END", [CommercialService::PORTFOLIO_INACTIVOS])
+            ->orderByRaw('CASE WHEN portfolio = ? THEN 1 ELSE 0 END', [CommercialService::PORTFOLIO_INACTIVOS])
             ->orderByDesc('contract_end')
             ->orderBy('contract_number')
             ->get();
@@ -266,6 +232,60 @@ class CommercialClientController extends Controller
         return redirect()
             ->route('comercial.matriz.clients.show', $client)
             ->with('status', 'Cliente actualizado.');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function clientStatusFilterLabels(): array
+    {
+        return [
+            'active' => 'Activo',
+            'inactive' => 'Inactivo',
+        ];
+    }
+
+    private function resolveClientStatusFilter(Request $request): string
+    {
+        $status = trim($request->string('status')->toString());
+
+        return array_key_exists($status, self::clientStatusFilterLabels()) ? $status : '';
+    }
+
+    /**
+     * @return Builder<CommercialClient>
+     */
+    private function clientListQuery(string $q, string $city, string $status): Builder
+    {
+        return CommercialClient::query()
+            ->withCount([
+                'services',
+                'activeServices',
+                'vigenteOperationalServices',
+            ])
+            ->with([
+                'services' => fn ($query) => $query
+                    ->select([
+                        'id',
+                        'commercial_client_id',
+                        'commercial_service_type_id',
+                        'portfolio',
+                        'contract_start',
+                        'contract_end',
+                    ])
+                    ->with('serviceType:id,name'),
+            ])
+            ->when($q !== '', function ($query) use ($q): void {
+                $query->where(function ($inner) use ($q): void {
+                    $inner->where('nit', 'like', "%{$q}%")
+                        ->orWhere('name', 'like', "%{$q}%")
+                        ->orWhere('legal_rep_name', 'like', "%{$q}%");
+                });
+            })
+            ->when($city !== '', fn ($query) => $query->where('city', 'like', "%{$city}%"))
+            ->when($status === 'active', fn ($query) => $query->whereHas('vigenteOperationalServices'))
+            ->when($status === 'inactive', fn ($query) => $query->whereDoesntHave('vigenteOperationalServices'))
+            ->orderBy('name');
     }
 
     private function authorizeView(): void

@@ -116,7 +116,7 @@
                                                     value="{{ optional($client->documentation_expires_on)->format('Y-m-d') }}"
                                                 >
                                             @else
-                                                {{ optional($client->documentation_expires_on)->format('Y-m-d') ?: '—' }}
+                                                <x-date-table :value="$client->documentation_expires_on" />
                                             @endif
                                         </td>
                                         <td>

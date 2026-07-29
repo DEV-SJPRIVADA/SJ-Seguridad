@@ -62,7 +62,7 @@
                             @forelse ($requests as $request)
                                 <tr>
                                     <td>#{{ $request->id }}</td>
-                                    <td>{{ $request->created_at->format('Y-m-d H:i') }}</td>
+                                    <td><x-date-table :value="$request->created_at" datetime /></td>
                                     <td>{{ $request->user->name }}</td>
                                     <td>{{ config("access.areas.{$request->area_key}") }}</td>
                                     <td>{{ $request->site_utilization ?? '—' }}</td>

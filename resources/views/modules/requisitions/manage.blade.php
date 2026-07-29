@@ -133,7 +133,7 @@
                                 @forelse ($requisitions as $requisition)
                                     <tr>
                                         <td>{{ $requisition->code }}</td>
-                                        <td>{{ $requisition->request_date?->format('Y-m-d') }}</td>
+                                        <td><x-date-table :value="$requisition->request_date" /></td>
                                         <td>{{ $requisition->leader_name }}</td>
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ $requisition->client?->name }}</td>

@@ -31,6 +31,12 @@ Extraida visualmente de la imagen corporativa compartida por el usuario y tomada
 - Si una nueva pantalla necesita una variacion adicional, primero debe incorporarse como token reutilizable y documentarse en este archivo.
 - La tabla de permisos, navegacion, botones principales y elementos de marca deben priorizar `--brand-navy` y `--brand-blue` como colores base.
 
+## Formato de fechas en tablas
+
+- **Visualizacion** en tablas, listados DataTables y exportaciones Excel orientadas al usuario: **`dd/mm/yy`** (`App\Support\DisplayDate`, componente Blade `<x-date-table />`).
+- **Formularios** (`input type="date"`) y persistencia/API siguen en **ISO `Y-m-d`**.
+- Con hora en columna de tabla: **`dd/mm/yy HH:mm`** (`<x-date-table datetime />` o `DisplayDate::dateTime()`).
+
 ## Estandar de navegacion (areas, tableros, pestanas)
 
 Los tres niveles de navegacion autenticada usan **el mismo look de pill**:

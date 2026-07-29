@@ -44,7 +44,7 @@
                                             <td>{{ $document->processLabel() ?? '—' }}</td>
                                             <td>{{ $document->documentTypeLabel() ?? '—' }}</td>
                                             <td>{{ $document->isFile() ? 'Archivo' : 'Enlace' }}</td>
-                                            <td>{{ $document->created_at->format('d/m/Y') }}</td>
+                                            <td><x-date-table :value="$document->created_at" /></td>
                                             <td class="table-actions">
                                                 @if ($document->isFile())
                                                     <a href="{{ route('quality-documents.library.download', ['module' => $module, 'qualityDocument' => $document->id]) }}" class="btn btn--secondary btn--sm">

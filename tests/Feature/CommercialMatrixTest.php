@@ -70,6 +70,56 @@ class CommercialMatrixTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_clients_index_filters_by_active_status(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
+        $activeClient = CommercialClient::query()->create([
+            'nit' => '900111222',
+            'name' => 'Cliente Activo SA',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+        $activeClient->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-ACT-1',
+            'contract_end' => now()->addYear(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $inactiveClient = CommercialClient::query()->create([
+            'nit' => '900333444',
+            'name' => 'Cliente Inactivo SA',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+        $inactiveClient->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-EXP-1',
+            'contract_end' => now()->subDay(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.index', ['status' => 'active']))
+            ->assertOk()
+            ->assertSee('Cliente Activo SA', false)
+            ->assertDontSee('Cliente Inactivo SA', false);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.index', ['status' => 'inactive']))
+            ->assertOk()
+            ->assertSee('Cliente Inactivo SA', false)
+            ->assertDontSee('Cliente Activo SA', false);
+    }
+
     public function test_manager_can_create_client_and_independent_services(): void
     {
         $user = $this->matrizManager();

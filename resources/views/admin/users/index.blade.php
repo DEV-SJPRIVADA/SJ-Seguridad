@@ -158,7 +158,7 @@
                                                 </div>
                                                 <div class="card">
                                                     <p class="text-caption">Ultimo acceso</p>
-                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->last_login_at?->format('Y-m-d H:i') ?? 'Sin acceso registrado' }}</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm"><x-date-table :value="$selectedUser->last_login_at" datetime empty="Sin acceso registrado" /></p>
                                                 </div>
                                                 <div class="card">
                                                     <p class="text-caption">Creado por</p>

@@ -70,8 +70,8 @@
                                         <td>{{ $service->contract_number ?: '—' }}</td>
                                         <td>{{ $service->serviceType?->name ?: '—' }}</td>
                                         <td>{{ $service->advisor_name ?: '—' }}</td>
-                                        <td>{{ $service->contract_start?->format('Y-m-d') ?: '—' }}</td>
-                                        <td>{{ $service->contract_end?->format('Y-m-d') ?: '—' }}</td>
+                                        <td><x-date-table :value="$service->contract_start" /></td>
+                                        <td><x-date-table :value="$service->contract_end" /></td>
                                         <td>
                                             @if ($service->isExpired())
                                                 <span class="status-pill status-pill--req-cancelada">Vencido</span>

@@ -8,6 +8,7 @@ use App\Http\Requests\Comercial\UpdateCommercialClientChecklistRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialClientDocumentItem;
 use App\Support\CommercialDocumentCatalog;
+use App\Support\DisplayDate;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -56,7 +57,7 @@ class CommercialClientChecklistController extends Controller
                 'nit' => $client->nit,
                 'name' => $client->name,
                 'city' => $client->city,
-                'documentation_expires_on' => $client->documentation_expires_on?->format('Y-m-d') ?? '—',
+                'documentation_expires_on' => DisplayDate::date($client->documentation_expires_on),
                 'alert_days_before' => $client->alert_days_before ?? CommercialDocumentCatalog::DEFAULT_ALERT_DAYS,
             ];
 

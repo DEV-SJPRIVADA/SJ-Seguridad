@@ -122,7 +122,7 @@
             </tr>
             <tr>
                 <td class="text-center" style="font-weight: bold; font-size: 11pt;">{{ $requisition->code }}</td>
-                <td class="text-center">{{ $requisition->request_date?->format('d/m/Y') }}</td>
+                <td class="text-center"><x-date-table :value="$requisition->request_date" /></td>
                 <td></td>
             </tr>
         </table>

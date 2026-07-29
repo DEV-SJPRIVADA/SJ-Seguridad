@@ -59,7 +59,7 @@
                                         <td>{{ $document->activityStatusLabel() ?? '—' }}</td>
                                         <td>{{ $document->storageTypeLabel() ?? '—' }}</td>
                                         <td>{{ $document->current_version ?? '—' }}</td>
-                                        <td>{{ $document->last_updated_at?->format('d/m/Y') ?? '—' }}</td>
+                                        <td><x-date-table :value="$document->last_updated_at" /></td>
                                         <td>
                                             @forelse ($document->areas as $area)
                                                 <span class="status-pill status-pill--info">{{ config("access.areas.{$area->area_key}") }}</span>

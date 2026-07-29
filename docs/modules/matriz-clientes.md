@@ -16,7 +16,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
   - `matriz_clientes` (etiqueta: **Clientes**)
   - `servicios_comerciales` (etiqueta: **Servicios**)
 - Dashboard: filtros portafolio/ciudad (stock); año/mes para **clientes nuevos** (`created_at`) y tendencia de altas (`contract_start`); KPIs (total clientes, clientes nuevos, activos, por vencer ≤30, vencidos, inactivos) y **ApexCharts** via Vite (`resources/js/comercial-dashboard-charts.js` + defaults `resources/js/charts/apex-defaults.js`). **FEAT-010:** Chart.js retirado; misma libreria que GH y Operaciones.
-- Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, inicio/fin contrato, conteos
+- Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, conteos, estado (**Activo** = al menos un servicio operativo con contrato no vencido: portafolio ≠ `inactivos` y `contract_end` nulo o ≥ hoy); filtros GET `q`, `city`, `status=active|inactive` (pills + export Excel con mismos query params)
 - Listado servicios: cliente, NIT, portafolio, contrato, tipo, asesor, vigencia, acciones; filtros `vigencia=expiring|expired`
 - Modelo:
   - `commercial_clients` (NIT unico, datos maestros; **vencimiento documentacion** `documentation_expires_on` + `alert_days_before`)

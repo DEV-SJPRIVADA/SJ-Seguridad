@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PersonalRequisition;
+use App\Support\DisplayDate;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -46,7 +47,7 @@ class PersonalRequisitionFullExport
         return [
             ['key' => 'id', 'label' => 'ID'],
             ['key' => 'code', 'label' => 'Codigo'],
-            ['key' => fn ($r) => $r->request_date?->format('Y-m-d'), 'label' => 'Fecha solicitud'],
+            ['key' => fn ($r) => DisplayDate::date($r->request_date), 'label' => 'Fecha solicitud'],
             ['key' => 'leader_name', 'label' => 'Lider solicitante'],
             ['key' => fn ($r) => $r->requester?->name ?? '—', 'label' => 'Usuario solicitante'],
             ['key' => fn ($r) => $r->requester?->email ?? '—', 'label' => 'Correo solicitante'],
@@ -78,14 +79,14 @@ class PersonalRequisitionFullExport
             ['key' => 'leasing_contract', 'label' => 'Contrato leasing'],
             ['key' => fn ($r) => $r->displayRecruiterName(), 'label' => 'Encargado seleccion'],
             ['key' => 'recruiter_name', 'label' => 'Nombre reclutador (texto)'],
-            ['key' => fn ($r) => $r->hiring_date?->format('Y-m-d'), 'label' => 'Fecha contratacion'],
+            ['key' => fn ($r) => DisplayDate::date($r->hiring_date), 'label' => 'Fecha contratacion'],
             ['key' => 'human_resources_observation', 'label' => 'Observaciones GH'],
             ['key' => fn ($r) => $statusLabels[$r->status] ?? $r->status, 'label' => 'Estado'],
             ['key' => fn ($r) => $r->manager?->name ?? '—', 'label' => 'Gestionado por'],
-            ['key' => fn ($r) => $r->status_changed_at?->format('Y-m-d H:i'), 'label' => 'Cambio estado'],
-            ['key' => fn ($r) => $r->closed_at?->format('Y-m-d H:i'), 'label' => 'Cierre'],
-            ['key' => fn ($r) => $r->created_at?->format('Y-m-d H:i'), 'label' => 'Creado'],
-            ['key' => fn ($r) => $r->updated_at?->format('Y-m-d H:i'), 'label' => 'Actualizado'],
+            ['key' => fn ($r) => DisplayDate::dateTime($r->status_changed_at), 'label' => 'Cambio estado'],
+            ['key' => fn ($r) => DisplayDate::dateTime($r->closed_at), 'label' => 'Cierre'],
+            ['key' => fn ($r) => DisplayDate::dateTime($r->created_at), 'label' => 'Creado'],
+            ['key' => fn ($r) => DisplayDate::dateTime($r->updated_at), 'label' => 'Actualizado'],
         ];
     }
 
