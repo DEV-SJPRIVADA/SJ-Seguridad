@@ -19,14 +19,14 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, inicio/fin contrato, conteos
 - Listado servicios: cliente, NIT, portafolio, contrato, tipo, asesor, vigencia, acciones; filtros `vigencia=expiring|expired`
 - Modelo:
-  - `commercial_clients` (NIT unico, datos maestros)
-  - `commercial_services` (N:1 con cliente; portafolio, contrato, checklist, vigencia, contacto operativo)
+  - `commercial_clients` (NIT unico, datos maestros; **vencimiento documentacion** `documentation_expires_on` + `alert_days_before`)
+  - `commercial_client_document_items` (estado por documento, 10 filas por cliente)
+  - `commercial_services` (N:1 con cliente; portafolio, contrato, vigencia, contacto operativo — **sin** checklist)
 - Portafolios: `seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`
 - Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`
-- Checklist documental por servicio (estados + vencimiento opcional por documento; sin adjuntos)
-- Badge de vencimiento (30/60 dias) sobre contrato **o** documentos con `tracks_expiry`
-- Por documento: toggle **Tiene vencimiento** + fecha (`*_tracks_expiry`, `*_expires_on`); fecha requerida solo si estado OK y toggle activo
-- Filtros `vigencia=expiring|expired` consideran contrato y documentos
+- Checklist documental por **cliente** (estados por documento; vencimiento y dias de anticipacion unicos por NIT; sin adjuntos)
+- Badge de vencimiento documental del cliente en pantalla checklist; filtros `doc_vigencia=expiring|expired`
+- Filtros `vigencia=expiring|expired` en servicios consideran contrato del servicio **o** vencimiento documental del **cliente**
 
 ## Fuera de V1
 
@@ -69,6 +69,9 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 ### Clientes — prefijo `comercial/clientes`
 
 - `GET /` listado
+- `GET /checklist-documental` checklist documental (FEAT-014)
+- `GET /checklist-documental/exportar` export Excel checklist
+- `PATCH /{client}/checklist-documental` actualizar estados + vencimiento/dias
 - `GET|POST /crear` alta
 - `GET /{client}` ficha (servicios relacionados, solo lectura/enlaces)
 - `GET|PATCH /{client}/editar`

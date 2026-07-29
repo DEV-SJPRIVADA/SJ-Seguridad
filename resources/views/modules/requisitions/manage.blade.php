@@ -8,102 +8,69 @@
             || ($filters['status'] ?? '') !== ''
             || ($filters['date_from'] ?? null)
             || ($filters['date_to'] ?? null);
-
-        $manageQuery = fn (array $overrides = []) => array_filter([
-            'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
-            'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
-            'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
-            'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
-        ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
     <div class="page-section">
         <div class="app-container">
             <div class="panel">
-                <div class="panel__header">
-                    <h3 class="panel-title">Gestion de requisiciones</h3>
-                    <p class="panel-text">Seguimiento centralizado para actualizacion de datos y cambios de estado.</p>
+                <div class="panel__header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                    <div>
+                        <h3 class="panel-title">Gestion de requisiciones</h3>
+                        <p class="panel-text">Seguimiento centralizado para actualizacion de datos y cambios de estado.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                        <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
+                        @if ($hasActiveFilters)
+                            <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary">Limpiar filtros</a>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="panel__body">
-                    <div class="req-manage-filters">
-                        <div class="req-manage-filters__head">
-                            <h4 class="req-manage-filters__title">Filtros</h4>
-                            <div class="req-manage-filters__actions">
-                                <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
-                                @if ($hasActiveFilters)
-                                    <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                @endif
-                            </div>
-                        </div>
+                    <form method="GET" class="permission-filter-bar permission-filter-bar--manage bottom-spaced">
+                        <input
+                            type="search"
+                            name="q"
+                            class="form-input permission-filter-bar__search"
+                            value="{{ $filters['q'] }}"
+                            placeholder="Codigo, lider, cargo..."
+                        >
+                        <input
+                            type="date"
+                            name="date_from"
+                            class="form-input permission-filter-bar__select"
+                            value="{{ $filters['date_from'] ?? '' }}"
+                            title="Fecha inicio"
+                            aria-label="Fecha inicio"
+                        >
+                        <input
+                            type="date"
+                            name="date_to"
+                            class="form-input permission-filter-bar__select"
+                            value="{{ $filters['date_to'] ?? '' }}"
+                            title="Fecha fin"
+                            aria-label="Fecha fin"
+                        >
+                        <select name="status" class="form-select permission-filter-bar__select">
+                            <option value="">Estado: todos</option>
+                            @foreach ($statusLabels as $statusKey => $statusLabel)
+                                <option value="{{ $statusKey }}" @selected(($filters['status'] ?? '') === $statusKey)>{{ $statusLabel }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn--secondary permission-filter-bar__submit">Filtrar</button>
+                    </form>
 
-                        <div class="req-manage-filters__toolbar">
-                            <form method="GET" id="manage-filters-form" class="req-manage-filters__search-col">
-                                @if ($filters['status'] ?? '')
-                                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
-                                @endif
-
-                                <label class="req-manage-filters__label" for="manage-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group">
-                                    <input
-                                        id="manage-search-input"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="Codigo, lider, cargo..."
-                                    >
-                                    <button type="submit" class="btn btn--primary">Buscar</button>
-                                </div>
-
-                                <div class="req-manage-filters__row" style="margin-top:0.75rem;">
-                                    <div class="req-manage-filters__field">
-                                        <label class="req-manage-filters__label" for="manage-date-from">Fecha inicio</label>
-                                        <input type="date" id="manage-date-from" name="date_from" class="form-input" value="{{ $filters['date_from'] ?? '' }}">
-                                    </div>
-                                    <div class="req-manage-filters__field">
-                                        <label class="req-manage-filters__label" for="manage-date-to">Fecha fin</label>
-                                        <input type="date" id="manage-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
-                                    </div>
-                                </div>
-                            </form>
-
-                            <div class="req-manage-filters__status-col">
-                                <p class="req-manage-filters__status-label">Estado</p>
-                                <div class="req-manage-filters__pills">
-                                    <a
-                                        href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => null])]) }}"
-                                        class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
-                                    >Todos</a>
-                                    @foreach ($statusLabels as $statusKey => $statusLabel)
-                                        <a
-                                            href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => $statusKey])]) }}"
-                                            class="req-manage-filters__pill status-pill--req-{{ $statusKey }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
-                                        >{{ $statusLabel }}</a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        <p class="req-manage-filters__meta">
-                            <strong>{{ number_format($requisitions->count()) }}</strong>
-                            {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}
-                            @if ($filters['status'] ?? '')
-                                · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
-                            @endif
-                            @if ($filters['q'] ?? '')
-                                · Busqueda servidor: <strong>{{ $filters['q'] }}</strong>
-                            @endif
-                            @if (($filters['date_from'] ?? null) || ($filters['date_to'] ?? null))
-                                · Fecha solicitud:
-                                <strong>{{ $filters['date_from'] ?? '…' }}</strong>
-                                —
-                                <strong>{{ $filters['date_to'] ?? '…' }}</strong>
-                            @endif
-                            · El Excel exporta el detalle completo segun estos filtros
-                            · Use la busqueda de la tabla para filtrar filas visibles
-                        </p>
-                    </div>
+                    <p class="panel-text bottom-spaced" style="margin-top:0;">
+                        <strong>{{ number_format($requisitions->count()) }}</strong>
+                        {{ $requisitions->count() === 1 ? 'requisicion' : 'requisiciones' }}
+                        @if ($filters['status'] ?? '')
+                            · {{ $statusLabels[$filters['status']] ?? $filters['status'] }}
+                        @endif
+                        @if (($filters['date_from'] ?? null) || ($filters['date_to'] ?? null))
+                            · {{ $filters['date_from'] ?? '…' }} — {{ $filters['date_to'] ?? '…' }}
+                        @endif
+                        · Excel segun filtros · busqueda de tabla para filas visibles
+                    </p>
 
                     <div class="data-table-wrap">
                         <table

@@ -140,6 +140,7 @@ class CommercialDashboardController extends Controller
     private function stockServicesQuery(array $filters): Builder
     {
         return CommercialService::query()
+            ->with('client')
             ->when(
                 $filters['portfolio'] !== '' && array_key_exists($filters['portfolio'], CommercialService::portfolios()),
                 fn ($query) => $query->where('portfolio', $filters['portfolio'])

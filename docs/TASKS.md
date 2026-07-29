@@ -10,7 +10,8 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | |
+| FEAT-013 | Configuracion global de notificaciones (Super Admin) | orquestado | Feature T1-T3 implementado | 2026-07-29 | — | [`docs/briefs/FEAT-013.md`](briefs/FEAT-013.md) | [`docs/runs/FEAT-013-run-log.md`](runs/FEAT-013-run-log.md) | `config/access.php`, rutas admin |
+| FEAT-014 | Checklist documental por cliente + vista seguimiento tablero Clientes | orquestado | Feature T1–T4 (implementado) | 2026-07-29 checklist cliente | — | [`docs/briefs/FEAT-014.md`](briefs/FEAT-014.md) | [`docs/runs/FEAT-014-run-log.md`](runs/FEAT-014-run-log.md) | rutas comercial, dashboard, import, vistas servicio |
 
 ---
 

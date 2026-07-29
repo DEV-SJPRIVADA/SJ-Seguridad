@@ -7,6 +7,7 @@ use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
 use App\Models\User;
 use App\Support\PermissionCatalog;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +19,7 @@ class CommercialMatrixTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
     }
 
@@ -89,7 +90,6 @@ class CommercialMatrixTest extends TestCase
             'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
             'contract_number' => 'SJ2021-SF133',
             'advisor_name' => 'TATIANA',
-            'doc_contract' => CommercialService::DOC_OK,
         ])->assertRedirect(route('comercial.matriz.services.index'));
 
         $this->actingAs($user)->post(route('comercial.matriz.services.store'), [
@@ -238,28 +238,89 @@ class CommercialMatrixTest extends TestCase
         $this->assertSame(1, $client->fresh()->activeServices()->count());
     }
 
-    public function test_service_store_requires_expires_when_ok_and_tracks_expiry(): void
+    public function test_checklist_index_forbidden_without_permission(): void
     {
-        $user = $this->matrizManager();
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.checklist.index'))
+            ->assertForbidden();
+    }
+
+    public function test_checklist_index_ok_with_view_permission(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.checklist.index'))
+            ->assertOk()
+            ->assertSee('Checklist documental');
+    }
+
+    public function test_checklist_update_requires_manage(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
         $client = CommercialClient::query()->create([
-            'nit' => '900111222',
-            'name' => 'Cliente Expiry Required',
+            'nit' => '900111225',
+            'name' => 'Cliente Checklist View',
             'created_by' => $user->id,
             'updated_by' => $user->id,
         ]);
 
         $this->actingAs($user)
-            ->post(route('comercial.matriz.services.store'), [
-                'commercial_client_id' => $client->id,
-                'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
-                'contract_number' => 'SJ-DOC-REQ',
-                'doc_rut' => CommercialService::DOC_OK,
-                'doc_rut_tracks_expiry' => '1',
+            ->patch(route('comercial.matriz.clients.checklist.update', $client), [
+                'documents' => ['doc_rut' => CommercialService::DOC_OK],
             ])
-            ->assertSessionHasErrors(['doc_rut_expires_on']);
+            ->assertForbidden();
     }
 
-    public function test_service_store_allows_ok_without_expires_when_not_tracking(): void
+    public function test_checklist_update_persists_status_and_client_expiry(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111226',
+            'name' => 'Cliente Checklist Manage',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $expires = now()->addDays(10)->toDateString();
+
+        $this->actingAs($user)
+            ->patch(route('comercial.matriz.clients.checklist.update', $client), [
+                'documentation_expires_on' => $expires,
+                'alert_days_before' => 15,
+                'documents' => ['doc_rut' => CommercialService::DOC_OK],
+            ])
+            ->assertRedirect(route('comercial.matriz.clients.checklist.index'));
+
+        $client->refresh();
+        $this->assertSame($expires, $client->documentation_expires_on?->toDateString());
+        $this->assertSame(15, $client->alert_days_before);
+
+        $this->assertDatabaseHas('commercial_client_document_items', [
+            'commercial_client_id' => $client->id,
+            'document_key' => 'doc_rut',
+            'status' => CommercialService::DOC_OK,
+        ]);
+    }
+
+    public function test_service_store_does_not_require_document_fields(): void
     {
         $user = $this->matrizManager();
         $client = CommercialClient::query()->create([
@@ -274,7 +335,6 @@ class CommercialMatrixTest extends TestCase
                 'commercial_client_id' => $client->id,
                 'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
                 'contract_number' => 'SJ-DOC-OK',
-                'doc_rut' => CommercialService::DOC_OK,
             ])
             ->assertRedirect(route('comercial.matriz.services.index'))
             ->assertSessionHasNoErrors();
@@ -282,18 +342,17 @@ class CommercialMatrixTest extends TestCase
         $this->assertDatabaseHas('commercial_services', [
             'commercial_client_id' => $client->id,
             'contract_number' => 'SJ-DOC-OK',
-            'doc_rut' => CommercialService::DOC_OK,
-            'doc_rut_tracks_expiry' => false,
-            'doc_rut_expires_on' => null,
         ]);
     }
 
-    public function test_is_expired_true_when_document_expired_even_if_contract_ok(): void
+    public function test_is_expired_true_when_client_documentation_expired_even_if_contract_ok(): void
     {
         $user = $this->matrizManager();
         $client = CommercialClient::query()->create([
             'nit' => '900111224',
             'name' => 'Cliente Doc Vencido',
+            'documentation_expires_on' => now()->subDay()->toDateString(),
+            'alert_days_before' => 30,
             'created_by' => $user->id,
             'updated_by' => $user->id,
         ]);
@@ -303,15 +362,41 @@ class CommercialMatrixTest extends TestCase
             'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
             'contract_number' => 'SJ-DOC-EXPIRED',
             'contract_end' => now()->addMonths(6)->toDateString(),
-            'doc_rut' => CommercialService::DOC_OK,
-            'doc_rut_tracks_expiry' => true,
-            'doc_rut_expires_on' => now()->subDay()->toDateString(),
             'created_by' => $user->id,
             'updated_by' => $user->id,
         ]);
 
+        $service->load('client');
+
         $this->assertTrue($service->isExpired());
         $this->assertFalse($service->isExpiringSoon(30));
+    }
+
+    public function test_services_vigencia_filter_uses_client_documentation(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111227',
+            'name' => 'Cliente Por Vencer',
+            'documentation_expires_on' => now()->addDays(5)->toDateString(),
+            'alert_days_before' => 30,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-EXP-SOON',
+            'contract_end' => now()->addYear()->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index', ['vigencia' => 'expiring']))
+            ->assertOk()
+            ->assertSee('SJ-EXP-SOON');
     }
 
     private function matrizManager(): User

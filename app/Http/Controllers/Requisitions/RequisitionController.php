@@ -6,30 +6,28 @@ use App\Exports\PersonalRequisitionFullExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Requisitions\StorePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\StoreRequisitionParameterRequest;
-use App\Http\Requests\Requisitions\SyncRequisitionNotificationTypeRequest;
 use App\Http\Requests\Requisitions\UpdatePersonalRequisitionRequest;
 use App\Http\Requests\Requisitions\UpdateRequisitionSelectionOfficerRequest;
 use App\Mail\PersonalRequisitionManagementApprovalMail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
+use App\Models\NotificationType;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
 use App\Models\RequisitionContractType;
-use App\Models\RequisitionNotificationEmail;
-use App\Models\RequisitionNotificationType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
 use App\Services\Access\RequisitionAccessService;
+use App\Services\Notifications\NotificationConfigService;
 use App\Services\Requisitions\CommercialClientBridge;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
-use App\Services\Requisitions\RequisitionNotificationRecipientService;
 use App\Services\Requisitions\RequisitionRequestReasonCatalog;
 use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
 use App\Traits\HasRequisitionTabs;
@@ -55,7 +53,7 @@ class RequisitionController extends Controller
         private readonly RequisitionAccessService $requisitionAccess,
         private readonly PersonalRequisitionChangeLogger $changeLogger,
         private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
-        private readonly RequisitionNotificationRecipientService $notificationRecipients,
+        private readonly NotificationConfigService $notificationConfig,
     ) {}
 
     /**
@@ -69,7 +67,6 @@ class RequisitionController extends Controller
         'programming-types' => ['label' => 'Tipos de programacion', 'model' => RequisitionProgrammingType::class],
         'uniforms' => ['label' => 'Dotación requerida', 'model' => RequisitionUniform::class],
         'contract-types' => ['label' => 'Tipos de contrato', 'model' => RequisitionContractType::class],
-        'emails' => ['label' => 'Correos de notificación', 'model' => RequisitionNotificationEmail::class],
     ];
 
     public function dashboard(Request $request, string $module): View
@@ -285,15 +282,17 @@ class RequisitionController extends Controller
                 $totalCount = count($requisitions);
                 $isCargoNuevo = RequisitionRequestReasonCatalog::isCargoNuevoReasonId($mainRequisition->request_reason_id);
 
-                $newRequisitionEmails = $this->notificationRecipients->emailsForType(
-                    RequisitionNotificationType::SLUG_NEW_REQUISITION
+                $newRequisitionEmails = $this->notificationConfig->recipientEmails(
+                    NotificationType::MODULE_REQUISITIONS,
+                    NotificationType::SLUG_NEW_REQUISITION
                 );
 
                 Mail::to($newRequisitionEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
 
                 if ($isCargoNuevo) {
-                    $managementEmails = $this->notificationRecipients->emailsForType(
-                        RequisitionNotificationType::SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO
+                    $managementEmails = $this->notificationConfig->recipientEmails(
+                        NotificationType::MODULE_REQUISITIONS,
+                        NotificationType::SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO
                     );
 
                     Mail::to($managementEmails)->send(new PersonalRequisitionManagementApprovalMail($mainRequisition, $totalCount));
@@ -550,27 +549,7 @@ class RequisitionController extends Controller
                 ? $this->selectionOfficerAccess->gestionHumanaAreaUsers()
                 : collect(),
             'selectionOfficerAccess' => $this->selectionOfficerAccess,
-            'notificationTypes' => $this->notificationRecipients->typesWithAssignedEmailIds(),
-            'notificationEmailOptions' => RequisitionNotificationEmail::query()->orderBy('name')->get(),
-            'showNotificationTypes' => $module === RequisitionSelectionOfficerAccessService::AREA_KEY,
         ]);
-    }
-
-    public function syncNotificationTypeEmails(SyncRequisitionNotificationTypeRequest $request, string $module): RedirectResponse
-    {
-        $this->abortIfUnknownModule($module);
-        abort_unless($module === RequisitionSelectionOfficerAccessService::AREA_KEY, 404);
-
-        $emailIds = array_map('intval', $request->input('email_ids', []));
-
-        $this->notificationRecipients->syncTypeEmails(
-            $request->string('type_slug')->toString(),
-            $emailIds
-        );
-
-        return redirect()
-            ->route('requisitions.parameters', ['module' => $module])
-            ->with('status', 'Asignacion de correos actualizada.');
     }
 
     public function updateSelectionOfficer(

@@ -7,12 +7,12 @@ use App\Mail\PersonalRequisitionManagementApprovalMail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
+use App\Models\NotificationEmail;
+use App\Models\NotificationType;
 use App\Models\PersonalRequisition;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
-use App\Models\RequisitionNotificationEmail;
-use App\Models\RequisitionNotificationType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
@@ -371,13 +371,16 @@ class RequisitionModuleTest extends TestCase
     {
         Mail::fake();
 
-        $email = RequisitionNotificationEmail::query()->create([
+        $email = NotificationEmail::query()->create([
             'name' => 'gh.notify@example.com',
             'is_active' => true,
             'sort_order' => 1,
         ]);
 
-        $newType = RequisitionNotificationType::query()->where('slug', RequisitionNotificationType::SLUG_NEW_REQUISITION)->firstOrFail();
+        $newType = NotificationType::query()
+            ->where('module', NotificationType::MODULE_REQUISITIONS)
+            ->where('slug', NotificationType::SLUG_NEW_REQUISITION)
+            ->firstOrFail();
         $newType->notificationEmails()->sync([$email->id]);
 
         $user = User::factory()->create([
@@ -404,12 +407,18 @@ class RequisitionModuleTest extends TestCase
         Mail::fake();
         PermissionCatalog::sync();
 
-        $ghEmail = RequisitionNotificationEmail::query()->create([
+        $ghEmail = NotificationEmail::query()->create([
             'name' => 'gerencia@example.com',
             'is_active' => true,
         ]);
-        $newType = RequisitionNotificationType::query()->where('slug', RequisitionNotificationType::SLUG_NEW_REQUISITION)->firstOrFail();
-        $mgmtType = RequisitionNotificationType::query()->where('slug', RequisitionNotificationType::SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO)->firstOrFail();
+        $newType = NotificationType::query()
+            ->where('module', NotificationType::MODULE_REQUISITIONS)
+            ->where('slug', NotificationType::SLUG_NEW_REQUISITION)
+            ->firstOrFail();
+        $mgmtType = NotificationType::query()
+            ->where('module', NotificationType::MODULE_REQUISITIONS)
+            ->where('slug', NotificationType::SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO)
+            ->firstOrFail();
         $newType->notificationEmails()->sync([$ghEmail->id]);
         $mgmtType->notificationEmails()->sync([$ghEmail->id]);
 

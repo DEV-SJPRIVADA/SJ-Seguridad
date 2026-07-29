@@ -9,21 +9,34 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('requisition_notification_types', function (Blueprint $table): void {
-            $table->id();
-            $table->string('slug')->unique();
-            $table->string('label');
-            $table->string('description')->nullable();
-            $table->unsignedSmallInteger('sort_order')->default(0);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('requisition_notification_types')) {
+            Schema::create('requisition_notification_types', function (Blueprint $table): void {
+                $table->id();
+                $table->string('slug')->unique();
+                $table->string('label');
+                $table->string('description')->nullable();
+                $table->unsignedSmallInteger('sort_order')->default(0);
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('req_notif_type_email', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('notification_type_id')->constrained('requisition_notification_types')->cascadeOnDelete();
-            $table->foreignId('notification_email_id')->constrained('requisition_notification_emails')->cascadeOnDelete();
-            $table->unique(['notification_type_id', 'notification_email_id'], 'req_notif_type_email_unique');
-        });
+        if (! Schema::hasTable('req_notif_type_email') && ! Schema::hasTable('notification_type_email')) {
+            $typesTable = Schema::hasTable('requisition_notification_types')
+                ? 'requisition_notification_types'
+                : (Schema::hasTable('notification_types') ? 'notification_types' : null);
+            $emailsTable = Schema::hasTable('requisition_notification_emails')
+                ? 'requisition_notification_emails'
+                : (Schema::hasTable('notification_emails') ? 'notification_emails' : null);
+
+            if ($typesTable !== null && $emailsTable !== null) {
+                Schema::create('req_notif_type_email', function (Blueprint $table) use ($typesTable, $emailsTable): void {
+                    $table->id();
+                    $table->foreignId('notification_type_id')->constrained($typesTable)->cascadeOnDelete();
+                    $table->foreignId('notification_email_id')->constrained($emailsTable)->cascadeOnDelete();
+                    $table->unique(['notification_type_id', 'notification_email_id'], 'req_notif_type_email_unique');
+                });
+            }
+        }
 
         $now = now();
         $types = [
@@ -45,22 +58,29 @@ return new class extends Migration
             ],
         ];
 
-        DB::table('requisition_notification_types')->insert($types);
+        DB::table('requisition_notification_types')->insertOrIgnore($types);
 
         $newRequisitionTypeId = DB::table('requisition_notification_types')
             ->where('slug', 'new_requisition')
             ->value('id');
 
         if ($newRequisitionTypeId) {
-            $emailIds = DB::table('requisition_notification_emails')
-                ->where('is_active', true)
-                ->pluck('id');
+            $emailTable = Schema::hasTable('notification_emails')
+                ? 'notification_emails'
+                : 'requisition_notification_emails';
+            $pivotTable = Schema::hasTable('notification_type_email')
+                ? 'notification_type_email'
+                : 'req_notif_type_email';
 
-            foreach ($emailIds as $emailId) {
-                DB::table('req_notif_type_email')->insert([
-                    'notification_type_id' => $newRequisitionTypeId,
-                    'notification_email_id' => $emailId,
-                ]);
+            if (Schema::hasTable($emailTable) && Schema::hasTable($pivotTable)) {
+                $emailIds = DB::table($emailTable)->where('is_active', true)->pluck('id');
+
+                foreach ($emailIds as $emailId) {
+                    DB::table($pivotTable)->insertOrIgnore([
+                        'notification_type_id' => $newRequisitionTypeId,
+                        'notification_email_id' => $emailId,
+                    ]);
+                }
             }
         }
     }

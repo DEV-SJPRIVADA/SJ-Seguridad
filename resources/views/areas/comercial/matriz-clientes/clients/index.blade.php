@@ -27,6 +27,10 @@
                 </div>
 
                 <div class="panel__body">
+                    <div class="bottom-spaced" style="padding: 0.2rem;">
+                        <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary">Checklist documental</a>
+                    </div>
+
                     <form method="GET" class="permission-filter-bar bottom-spaced">
                         <input type="search" name="q" class="form-input permission-filter-bar__search" value="{{ $filters['q'] }}" placeholder="NIT, nombre o representante">
                         <input type="search" name="city" class="form-input permission-filter-bar__select" value="{{ $filters['city'] }}" placeholder="Ciudad">

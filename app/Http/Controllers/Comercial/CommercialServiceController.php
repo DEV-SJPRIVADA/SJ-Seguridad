@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Comercial;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Comercial\StoreCommercialServiceRequest;
 use App\Http\Requests\Comercial\UpdateCommercialServiceRequest;
@@ -10,10 +11,11 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
-use App\Exports\BaseExport;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialServiceController extends Controller
 {
@@ -35,7 +37,7 @@ class CommercialServiceController extends Controller
         ]);
     }
 
-    public function exportExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function exportExcel(Request $request): StreamedResponse
     {
         $this->authorizeView();
 
@@ -48,18 +50,18 @@ class CommercialServiceController extends Controller
         $portfolios = CommercialService::portfolios();
 
         $columns = [
-            ['key' => fn($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
-            ['key' => fn($s) => $s->client?->nit ?? '—', 'label' => 'NIT'],
-            ['key' => fn($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
+            ['key' => fn ($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
+            ['key' => fn ($s) => $s->client?->nit ?? '—', 'label' => 'NIT'],
+            ['key' => fn ($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
             ['key' => 'contract_number', 'label' => 'Contrato'],
-            ['key' => fn($s) => $s->serviceType?->name ?? '—', 'label' => 'Tipo servicio'],
+            ['key' => fn ($s) => $s->serviceType?->name ?? '—', 'label' => 'Tipo servicio'],
             ['key' => 'advisor_name', 'label' => 'Asesor'],
-            ['key' => fn($s) => $s->contract_start?->format('Y-m-d') ?? '—', 'label' => 'Inicio'],
-            ['key' => fn($s) => $s->contract_end?->format('Y-m-d') ?? '—', 'label' => 'Fin'],
-            ['key' => fn($s) => $s->isExpired() ? 'Vencido' : ($s->isExpiringSoon(30) ? '≤30 dias' : ($s->isExpiringSoon(60) ? '≤60 dias' : '—')), 'label' => 'Vigencia'],
+            ['key' => fn ($s) => $s->contract_start?->format('Y-m-d') ?? '—', 'label' => 'Inicio'],
+            ['key' => fn ($s) => $s->contract_end?->format('Y-m-d') ?? '—', 'label' => 'Fin'],
+            ['key' => fn ($s) => $s->isExpired() ? 'Vencido' : ($s->isExpiringSoon(30) ? '≤30 dias' : ($s->isExpiringSoon(60) ? '≤60 dias' : '—')), 'label' => 'Vigencia'],
         ];
 
-        return (new BaseExport($services, $columns, 'servicios_' . now()->format('Y-m-d') . '.xlsx', 'Servicios - SJ Seguridad'))->download();
+        return (new BaseExport($services, $columns, 'servicios_'.now()->format('Y-m-d').'.xlsx', 'Servicios - SJ Seguridad'))->download();
     }
 
     public function create(Request $request): View
@@ -145,7 +147,7 @@ class CommercialServiceController extends Controller
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\CommercialService>
+     * @return Builder<CommercialService>
      */
     private function filteredServicesQuery(string $q, string $portfolio, string $vigencia)
     {
@@ -178,8 +180,6 @@ class CommercialServiceController extends Controller
     {
         return [
             'portfolios' => CommercialService::portfolios(),
-            'documentStatuses' => CommercialService::documentStatuses(),
-            'documentFields' => CommercialService::documentFields(),
             'sectors' => CommercialSector::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
             'clientTypes' => CommercialClientType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
             'serviceTypes' => CommercialServiceType::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),

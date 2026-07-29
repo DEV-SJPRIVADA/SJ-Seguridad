@@ -9,6 +9,7 @@ return [
     'system_permissions' => [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
+        'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
@@ -141,6 +142,7 @@ return [
                 'permissions' => [
                     'view.dashboard',
                     'manage.users',
+                    'manage.notifications',
                 ],
             ],
             'requisitions' => [
@@ -265,8 +267,7 @@ return [
     'navigation' => [
         'administracion' => [
             'label' => 'Administracion',
-            'permission' => 'manage.users',
-            'patterns' => ['admin.users.*'],
+            'patterns' => ['admin.users.*', 'admin.notifications.*'],
             'items' => [
                 [
                     'label' => 'Usuarios',
@@ -279,6 +280,12 @@ return [
                     'route' => 'admin.users.create',
                     'permission' => 'manage.users',
                     'patterns' => ['admin.users.create'],
+                ],
+                [
+                    'label' => 'Configuracion de notificaciones',
+                    'route' => 'admin.notifications.index',
+                    'permission' => 'manage.notifications',
+                    'patterns' => ['admin.notifications.*'],
                 ],
             ],
         ],
