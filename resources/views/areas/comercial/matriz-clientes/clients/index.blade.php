@@ -47,7 +47,7 @@
                         </div>
 
                         <div class="req-manage-filters__toolbar comercial-clients-filters__toolbar">
-                            <form method="GET" class="comercial-clients-filters__form req-manage-filters__search-col ">
+                            <form method="GET" class="comercial-clients-filters__form req-manage-filters__search-col">
                                 @if ($filters['status'] ?? '')
                                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                                 @endif
@@ -146,7 +146,7 @@
                                         </td>
                                         <td>{{ $client->services_count }}</td>
                                         <td>
-                                            @if ($client->active_services_count > 0)
+                                            @if ($client->vigente_operational_services_count > 0)
                                                 <span class="status-pill status-pill--success">Activo</span>
                                             @else
                                                 <span class="status-pill status-pill--danger">Inactivo</span>

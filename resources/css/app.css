@@ -441,13 +441,7 @@ a {
 }
 
 .comercial-clients-filters__toolbar {
-    gap: 0.5rem !important;
-}
-
-@media (min-width: 1280px) {
-    .comercial-clients-filters__toolbar {
-        gap: 0.5rem 1rem !important;
-    }
+    gap: 3rem !important;
 }
 
 .comercial-clients-filters__status-col {
