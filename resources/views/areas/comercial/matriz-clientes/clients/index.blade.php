@@ -48,10 +48,8 @@
                                     <th>Ciudad</th>
                                     <th>Portafolio</th>
                                     <th>Tipos de servicio</th>
-                                    <th>Inicio contrato</th>
-                                    <th>Fin contrato</th>
                                     <th>Servicios</th>
-                                    <th>Activos</th>
+                                    <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -83,17 +81,21 @@
                                                 —
                                             @endif
                                         </td>
-                                        <td>{{ $client->contract_start_display ?: '—' }}</td>
-                                        <td>{{ $client->contract_end_display ?: '—' }}</td>
                                         <td>{{ $client->services_count }}</td>
-                                        <td>{{ $client->active_services_count }}</td>
+                                        <td>
+                                            @if ($client->active_services_count > 0)
+                                                <span class="status-pill status-pill--success">Activo</span>
+                                            @else
+                                                <span class="status-pill status-pill--danger">Inactivo</span>
+                                            @endif
+                                        </td>
                                         <td class="table-actions">
                                             <a href="{{ route('comercial.matriz.clients.show', $client) }}" class="btn btn--secondary btn--sm">Abrir</a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10">No hay clientes registrados.</td>
+                                        <td colspan="8">No hay clientes registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
