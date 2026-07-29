@@ -69,13 +69,12 @@
                         @if (($filters['date_from'] ?? null) || ($filters['date_to'] ?? null))
                             · {{ $filters['date_from'] ?? '…' }} — {{ $filters['date_to'] ?? '…' }}
                         @endif
-                        · Excel segun filtros · busqueda de tabla para filas visibles
+                        · Export Excel con el boton superior segun filtros
                     </p>
 
                     <div class="data-table-wrap">
                         <table
                             class="data-table js-datatable"
-                            data-no-excel
                             data-order='[[1, "desc"]]'
                         >
                             <thead>

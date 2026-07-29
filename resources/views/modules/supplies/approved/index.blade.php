@@ -45,7 +45,7 @@
                         <a href="{{ route('supplies.approved.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">Limpiar</a>
                     </form>
 
-                    <table class="supply-table js-datatable" data-no-excel>
+                    <table class="supply-table js-datatable">
                         <thead>
                             <tr>
                                 <th>ID</th>

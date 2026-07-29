@@ -16,7 +16,7 @@
 
                 <div class="panel__body">
                     <div class="block-spaced">
-                        <table class="supply-table js-datatable" data-no-excel>
+                        <table class="supply-table js-datatable">
                             <thead>
                                 <tr>
                                     <th>ID</th>

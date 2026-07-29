@@ -16,7 +16,7 @@
                     @endif
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable" data-no-excel data-order='[[1, "desc"]]'>
+                        <table class="data-table js-datatable" data-order='[[1, "desc"]]'>
                             <thead>
                                 <tr>
                                     <th>Codigo</th>

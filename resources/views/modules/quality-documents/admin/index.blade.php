@@ -23,7 +23,7 @@
 
                 <div class="panel__body">
                     <div class="block-spaced data-table-wrap">
-                        <table class="supply-table js-datatable" data-no-excel>
+                        <table class="supply-table js-datatable">
                             <thead>
                                 <tr>
                                     <th>Codigo</th>

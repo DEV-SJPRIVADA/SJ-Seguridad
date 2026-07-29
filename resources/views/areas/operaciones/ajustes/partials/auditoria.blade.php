@@ -30,7 +30,7 @@
     </form>
 
     <div class="indicadores-table-wrap" style="margin-top:1rem;">
-        <table class="supply-table js-datatable indicadores-table indicadores-table--audit" data-no-excel data-server-pagination>
+        <table class="supply-table js-datatable indicadores-table indicadores-table--audit" data-server-pagination>
             <thead>
                 <tr>
                     <th>Fecha</th>

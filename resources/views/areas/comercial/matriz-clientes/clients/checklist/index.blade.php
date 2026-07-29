@@ -54,7 +54,7 @@
                     @endif
 
                     <div class="data-table-wrap" style="overflow-x:auto;">
-                        <table class="data-table js-datatable" data-no-excel style="width:100%; min-width:1100px;">
+                        <table class="data-table js-datatable" style="width:100%; min-width:1100px;">
                             <thead>
                                 <tr>
                                     <th style="min-width:7rem;">NIT</th>

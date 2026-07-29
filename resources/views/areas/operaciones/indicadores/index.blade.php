@@ -12,7 +12,7 @@
                 </div>
                 <div class="panel__body">
                     <div class="indicadores-table-wrap">
-                        <table class="supply-table js-datatable indicadores-table indicadores-table--capture" data-no-excel>
+                        <table class="supply-table js-datatable indicadores-table indicadores-table--capture">
                             <thead>
                                 <tr>
                                     <th>Codigo</th>

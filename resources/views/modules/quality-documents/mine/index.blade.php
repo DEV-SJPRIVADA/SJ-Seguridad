@@ -19,7 +19,7 @@
                         <p class="panel-text text-muted">No tienes documentos asignados en este momento.</p>
                     @else
                         <div class="block-spaced">
-                            <table class="supply-table js-datatable" data-no-excel>
+                            <table class="supply-table js-datatable">
                                 <thead>
                                     <tr>
                                         <th>Codigo</th>

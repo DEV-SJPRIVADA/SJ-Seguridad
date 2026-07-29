@@ -14,11 +14,7 @@
         <!-- jQuery y DataTables CDN -->
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-        <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -74,13 +70,6 @@
                         var config = {
                             language: {
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-                                buttons: {
-                                    copyTitle: 'Copiado al portapapeles',
-                                    copySuccess: {
-                                        _: '%d filas copiadas',
-                                        1: '1 fila copiada'
-                                    }
-                                }
                             },
                             dom: 'lfrtip',
                             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
@@ -100,18 +89,6 @@
                             config.info = false;
                             config.searching = false;
                             config.dom = 'rt';
-                        }
-
-                        if (!$(this).is('[data-no-excel]')) {
-                            config.dom = 'lBfrtip';
-                            config.buttons = [
-                                {
-                                    extend: 'excelHtml5',
-                                    text: '<i class="fas fa-file-excel"></i> Exportar a Excel',
-                                    className: 'btn btn--secondary btn--sm',
-                                    titleAttr: 'Exportar tabla a Excel'
-                                }
-                            ];
                         }
 
                         $(this).DataTable(config);
@@ -469,39 +446,6 @@
                 color: #475569 !important;
             }
 
-            /* DataTables Buttons Premium Styles */
-            .dt-buttons {
-                margin-bottom: 15px !important;
-                display: flex !important;
-                gap: 8px !important;
-            }
-            .dt-button {
-                background: #ffffff !important;
-                border: 1px solid var(--color-border-strong, #cbd5e1) !important;
-                border-radius: 12px !important;
-                color: #334155 !important;
-                padding: 8px 16px !important;
-                font-size: 0.85rem !important;
-                font-weight: 700 !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                gap: 8px !important;
-                transition: all 0.2s ease !important;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-                cursor: pointer !important;
-            }
-            .dt-button:hover {
-                background: #f8fafc !important;
-                border-color: var(--color-border-strong) !important;
-                transform: translateY(-1px) !important;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            }
-            .dt-button.buttons-excel {
-                color: #15803d !important; /* Verde Excel */
-            }
-            .dt-button.buttons-excel:hover {
-                background: #f0fdf4 !important;
-            }
             div.dataTables_wrapper .dataTables_filter input {
                 border: 1.5px solid #e2e8f0 !important;
                 border-radius: 10px !important;

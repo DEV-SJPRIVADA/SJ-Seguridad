@@ -172,7 +172,7 @@
                     </style>
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable" data-no-excel style="width:100%">
+                        <table class="data-table js-datatable" style="width:100%">
                             <thead>
                                 <tr>
                                     <th>Cliente</th>
