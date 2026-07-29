@@ -1,24 +1,26 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
-            <h2 class="panel-title" style="margin:0;">Clientes</h2>
-            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — maestro de clientes (NIT)</p>
+        <div class="app-container comercial-clients-page__workspace-header">
+            <div class="panel-heading-row">
+                <h2 class="panel-title panel-title--page">Clientes</h2>
+                <p class="panel-text">Comercial — maestro de clientes (NIT)</p>
+            </div>
         </div>
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section comercial-clients-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success bottom-spaced">{{ session('status') }}</div>
             @endif
 
             <div class="panel">
-                <div class="panel__header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-                    <div>
+                <div class="panel__header panel__header--compact panel__header--split">
+                    <div class="panel-heading-row panel-heading-row--wrap">
                         <h3 class="panel-title">Listado de clientes</h3>
                         <p class="panel-text">Busque por NIT, nombre o ciudad. Cada cliente puede tener varios servicios.</p>
                     </div>
-                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <div class="panel__header-actions">
                         <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
                         @if ($canManage)
                             <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary">Nuevo cliente</a>
