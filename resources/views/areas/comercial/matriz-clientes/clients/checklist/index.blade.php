@@ -1,40 +1,80 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
-            <h2 class="panel-title" style="margin:0;">Checklist documental</h2>
-            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — matriz por cliente (NIT)</p>
+        <div class="app-container comercial-checklist-page__workspace-header">
+            <div class="panel-heading-row">
+                <h2 class="panel-title panel-title--page">Checklist documental</h2>
+                <p class="panel-text">Comercial — matriz por cliente (NIT)</p>
+            </div>
         </div>
     </x-slot>
 
-    <div class="page-section">
+    @php
+        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+            || ($filters['city'] ?? '') !== ''
+            || ($filters['doc_vigencia'] ?? '') !== '';
+    @endphp
+
+    <div class="page-section comercial-checklist-page">
         <div class="app-container">
             @if (session('status'))
-                <div class="alert alert--success bottom-spaced">{{ session('status') }}</div>
+                <div class="alert alert--success comercial-checklist-page__alert">{{ session('status') }}</div>
             @endif
 
-            <div class="panel">
-                <div class="panel__header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-                    <div>
-                        <h3 class="panel-title">Matriz documental</h3>
-                        <p class="panel-text">Una fila por cliente; columnas por documento. Vencimiento y dias al final.</p>
-                    </div>
-                    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                        <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary">Volver a clientes</a>
-                        <x-export-excel route="{{ route('comercial.matriz.clients.checklist.export', request()->query()) }}" />
-                    </div>
-                </div>
+            <div class="panel comercial-checklist-panel">
+                <div class="panel__body panel__body--compact">
+                    <div class="req-manage-filters comercial-checklist-filters">
+                        <div class="req-manage-filters__head">
+                            <div class="panel-heading-row panel-heading-row--wrap">
+                                <h3 class="panel-title">Matriz documental</h3>
+                                <p class="panel-text">Una fila por cliente · columnas por documento</p>
+                            </div>
+                            <div class="req-manage-filters__actions comercial-checklist-filters__actions">
+                                <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Volver a clientes</a>
+                                <x-export-excel route="{{ route('comercial.matriz.clients.checklist.export', request()->query()) }}" />
+                                @if ($hasActiveFilters)
+                                    <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                @endif
+                            </div>
+                        </div>
 
-                <div class="panel__body">
-                    <form method="GET" class="permission-filter-bar bottom-spaced">
-                        <input type="search" name="q" class="form-input permission-filter-bar__search" value="{{ $filters['q'] }}" placeholder="NIT, nombre o representante">
-                        <input type="search" name="city" class="form-input permission-filter-bar__select" value="{{ $filters['city'] }}" placeholder="Ciudad">
-                        <select name="doc_vigencia" class="form-select permission-filter-bar__select">
-                            <option value="">Documentacion: todas</option>
-                            <option value="expiring" @selected($filters['doc_vigencia'] === 'expiring')>Por vencer</option>
-                            <option value="expired" @selected($filters['doc_vigencia'] === 'expired')>Vencida</option>
-                        </select>
-                        <button type="submit" class="btn btn--secondary">Filtrar</button>
-                    </form>
+                        <form method="GET" class="comercial-checklist-filters__form">
+                            <label class="req-manage-filters__label" for="checklist-search-input">Buscar</label>
+                            <div class="req-manage-filters__search-group comercial-checklist-filters__search-group">
+                                <input
+                                    id="checklist-search-input"
+                                    type="search"
+                                    name="q"
+                                    class="form-input"
+                                    value="{{ $filters['q'] }}"
+                                    placeholder="NIT, nombre o representante"
+                                >
+                                <input
+                                    id="checklist-city-input"
+                                    type="search"
+                                    name="city"
+                                    class="form-input comercial-checklist-filters__city"
+                                    value="{{ $filters['city'] }}"
+                                    placeholder="Ciudad"
+                                >
+                                <select id="checklist-doc-vigencia" name="doc_vigencia" class="form-select comercial-checklist-filters__vigencia">
+                                    <option value="">Toda documentación</option>
+                                    <option value="expiring" @selected($filters['doc_vigencia'] === 'expiring')>Por vencer</option>
+                                    <option value="expired" @selected($filters['doc_vigencia'] === 'expired')>Vencida</option>
+                                </select>
+                                <button type="submit" class="btn btn--primary">Buscar</button>
+                            </div>
+                        </form>
+
+                        <p class="req-manage-filters__meta comercial-checklist-filters__meta">
+                            <strong>{{ number_format($clients->count()) }}</strong>
+                            {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}
+                            @if ($filters['doc_vigencia'] === 'expiring')
+                                · Documentación <strong>por vencer</strong>
+                            @elseif ($filters['doc_vigencia'] === 'expired')
+                                · Documentación <strong>vencida</strong>
+                            @endif
+                        </p>
+                    </div>
 
                     @if ($canManage)
                         @foreach ($clients as $client)
@@ -42,7 +82,7 @@
                                 id="checklist-form-{{ $client->id }}"
                                 method="POST"
                                 action="{{ route('comercial.matriz.clients.checklist.update', $client) }}"
-                                style="display:none;"
+                                class="comercial-checklist-page__patch-form"
                             >
                                 @csrf
                                 @method('PATCH')
@@ -53,20 +93,20 @@
                         @endforeach
                     @endif
 
-                    <div class="data-table-wrap" style="overflow-x:auto;">
-                        <table class="data-table js-datatable" style="width:100%; min-width:1100px;">
+                    <div class="data-table-wrap comercial-checklist-page__table-wrap">
+                        <table class="data-table js-datatable comercial-checklist-table" style="width:100%; min-width:1100px;">
                             <thead>
                                 <tr>
-                                    <th style="min-width:7rem;">NIT</th>
-                                    <th style="min-width:10rem;">Cliente</th>
-                                    <th style="min-width:6rem;">Ciudad</th>
+                                    <th>NIT</th>
+                                    <th>Cliente</th>
+                                    <th>Ciudad</th>
                                     @foreach ($documentFields as $label)
-                                        <th style="min-width:5.5rem; font-size:0.75rem;">{{ $label }}</th>
+                                        <th class="comercial-checklist-table__doc-th">{{ $label }}</th>
                                     @endforeach
-                                    <th style="min-width:8.5rem;">Vencimiento</th>
-                                    <th style="min-width:4.5rem;" title="Dias de anticipacion">Dias</th>
+                                    <th>Vencimiento</th>
+                                    <th title="Días de anticipación">Días</th>
                                     @if ($canManage)
-                                        <th style="min-width:5rem;">Accion</th>
+                                        <th>Acción</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -80,28 +120,35 @@
                                     <tr>
                                         <td>{{ $client->nit }}</td>
                                         <td>
-                                            <div>{{ $client->name }}</div>
+                                            <div class="comercial-checklist-table__client-name">{{ $client->name }}</div>
                                             @if ($docLabel)
-                                                <span class="status-pill {{ $docLabel === 'Doc. vencida' ? 'status-pill--danger' : 'status-pill--warning' }}" style="font-size:0.7rem; margin-top:0.25rem;">{{ $docLabel }}</span>
+                                                <span class="status-pill {{ $docLabel === 'Doc. vencida' ? 'status-pill--danger' : 'status-pill--warning' }} comercial-checklist-table__doc-badge">{{ $docLabel }}</span>
                                             @endif
                                         </td>
                                         <td>{{ $client->city ?: '—' }}</td>
                                         @foreach ($documentFields as $documentKey => $label)
-                                            <td>
+                                            @php
+                                                $docStatus = $itemsByKey->get($documentKey)?->status ?? '';
+                                            @endphp
+                                            <td class="comercial-checklist-table__doc-cell">
                                                 @if ($canManage)
                                                     <select
                                                         name="documents[{{ $documentKey }}]"
                                                         form="{{ $formId }}"
-                                                        class="form-select"
-                                                        style="font-size:0.75rem; padding:0.25rem 0.35rem; min-width:4.5rem;"
+                                                        class="form-select checklist-doc-select checklist-doc-select--{{ $docStatus !== '' ? $docStatus : 'empty' }}"
+                                                        data-checklist-doc-select
                                                     >
                                                         <option value="">—</option>
                                                         @foreach ($documentStatuses as $statusKey => $statusLabel)
-                                                            <option value="{{ $statusKey }}" @selected(($itemsByKey->get($documentKey)?->status) === $statusKey)>{{ $statusLabel }}</option>
+                                                            <option value="{{ $statusKey }}" @selected($docStatus === $statusKey)>{{ $statusLabel }}</option>
                                                         @endforeach
                                                     </select>
                                                 @else
-                                                    {{ \App\Support\CommercialDocumentCatalog::statusLabel($itemsByKey->get($documentKey)?->status) }}
+                                                    @if ($docStatus === '')
+                                                        —
+                                                    @else
+                                                        <span class="checklist-doc-pill checklist-doc-pill--{{ $docStatus }}">{{ \App\Support\CommercialDocumentCatalog::statusLabel($docStatus) }}</span>
+                                                    @endif
                                                 @endif
                                             </td>
                                         @endforeach
@@ -111,8 +158,7 @@
                                                     type="date"
                                                     name="documentation_expires_on"
                                                     form="{{ $formId }}"
-                                                    class="form-input"
-                                                    style="font-size:0.8rem; padding:0.25rem 0.35rem; min-width:8rem;"
+                                                    class="form-input comercial-checklist-table__date-input"
                                                     value="{{ optional($client->documentation_expires_on)->format('Y-m-d') }}"
                                                 >
                                             @else
@@ -125,10 +171,9 @@
                                                     type="number"
                                                     name="alert_days_before"
                                                     form="{{ $formId }}"
-                                                    class="form-input"
+                                                    class="form-input comercial-checklist-table__days-input"
                                                     min="0"
                                                     max="3650"
-                                                    style="font-size:0.8rem; padding:0.25rem 0.35rem; width:4rem;"
                                                     value="{{ $client->alert_days_before ?? 30 }}"
                                                 >
                                             @else
@@ -136,7 +181,7 @@
                                             @endif
                                         </td>
                                         @if ($canManage)
-                                            <td>
+                                            <td class="table-actions">
                                                 <button type="submit" form="{{ $formId }}" class="btn btn--primary btn--sm">Guardar</button>
                                             </td>
                                         @endif
@@ -153,4 +198,15 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.querySelectorAll('[data-checklist-doc-select]').forEach(function (select) {
+                select.addEventListener('change', function () {
+                    var value = select.value || 'empty';
+                    select.className = 'form-select checklist-doc-select checklist-doc-select--' + value;
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

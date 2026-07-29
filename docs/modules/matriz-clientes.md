@@ -25,7 +25,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - Portafolios: `seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`
 - Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`
 - Checklist documental por **cliente** (estados por documento; vencimiento y dias de anticipacion unicos por NIT; sin adjuntos)
-- Badge de vencimiento documental del cliente en pantalla checklist; filtros `doc_vigencia=expiring|expired`
+- Badge de vencimiento documental del cliente en pantalla checklist; filtros compactos (`req-manage-filters`) con `q`, `city`, `doc_vigencia=expiring|expired`; selects/pills de estado por documento con color (OK verde, Pendiente rojo, Incompleto naranja, N/A amarillo, X rojo intenso)
 - Filtros `vigencia=expiring|expired` en servicios consideran contrato del servicio **o** vencimiento documental del **cliente**
 
 ## Fuera de V1
