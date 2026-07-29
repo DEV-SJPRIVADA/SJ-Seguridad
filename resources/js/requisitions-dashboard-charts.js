@@ -6,6 +6,9 @@ import {
     sharedChart,
 } from './charts/apex-defaults';
 
+/** @type {ApexCharts[]} */
+const chartInstances = [];
+
 function readChartData() {
     const el = document.getElementById('requisitions-chart-data');
     if (!el) {
@@ -19,13 +22,21 @@ function readChartData() {
     }
 }
 
+function mountChart(el, options) {
+    const chart = new ApexCharts(el, options);
+    chart.render();
+    chartInstances.push(chart);
+
+    return chart;
+}
+
 function renderTrend(data) {
     const el = document.querySelector('#trendChart');
     if (!el) {
-        return;
+        return null;
     }
 
-    new ApexCharts(el, {
+    return mountChart(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'area', height: '100%' },
         series: [{ name: 'Solicitudes', data: data.trend.data }],
@@ -46,38 +57,47 @@ function renderTrend(data) {
         },
         legend: { show: false },
         tooltip: { y: { formatter: (v) => String(v) } },
-    }).render();
+    });
 }
 
 function renderStatus(data) {
     const el = document.querySelector('#statusChart');
     if (!el) {
-        return;
+        return null;
     }
 
-    new ApexCharts(el, {
+    return mountChart(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'donut', height: '100%' },
         series: data.status.data.map(Number),
         labels: data.status.labels,
         colors: STATUS_DONUT_COLORS,
-        legend: { position: 'bottom', fontSize: '12px' },
+        legend: {
+            position: 'bottom',
+            horizontalAlign: 'center',
+            fontSize: '10px',
+            itemMargin: { horizontal: 6, vertical: 2 },
+            height: 52,
+            offsetY: 0,
+        },
         stroke: { width: 0 },
         plotOptions: {
             pie: {
-                donut: { size: '55%' },
+                donut: {
+                    size: '62%',
+                },
             },
         },
-    }).render();
+    });
 }
 
 function renderCities(data) {
     const el = document.querySelector('#cityChart');
     if (!el) {
-        return;
+        return null;
     }
 
-    new ApexCharts(el, {
+    return mountChart(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'bar', height: '100%' },
         series: [{ name: 'Solicitudes', data: data.cities.data }],
@@ -99,16 +119,16 @@ function renderCities(data) {
             labels: { style: { fontSize: '11px' } },
         },
         legend: { show: false },
-    }).render();
+    });
 }
 
 function renderClients(data) {
     const el = document.querySelector('#clientChart');
     if (!el) {
-        return;
+        return null;
     }
 
-    new ApexCharts(el, {
+    return mountChart(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'bar', height: '100%' },
         series: [{ name: 'Solicitudes', data: data.clients.data }],
@@ -122,7 +142,11 @@ function renderClients(data) {
         colors: [BRAND_BLUE],
         xaxis: {
             categories: data.clients.labels,
-            labels: { style: { fontSize: '11px' } },
+            labels: {
+                style: { fontSize: '11px' },
+                trim: true,
+                maxHeight: 48,
+            },
         },
         yaxis: {
             labels: { style: { fontSize: '11px' } },
@@ -130,7 +154,7 @@ function renderClients(data) {
             forceNiceScale: true,
         },
         legend: { show: false },
-    }).render();
+    });
 }
 
 function bindAutoSubmitFilters() {
@@ -146,8 +170,22 @@ function bindAutoSubmitFilters() {
     });
 }
 
+function bindChartResize() {
+    let resizeTimer;
+
+    window.addEventListener('resize', () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(() => {
+            chartInstances.forEach((chart) => {
+                chart.resize();
+            });
+        }, 120);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     bindAutoSubmitFilters();
+    bindChartResize();
 
     const data = readChartData();
     if (!data) {

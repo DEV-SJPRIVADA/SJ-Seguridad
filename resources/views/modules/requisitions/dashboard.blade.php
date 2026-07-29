@@ -35,20 +35,6 @@
             padding: 0.5rem 0.75rem !important;
             font-size: 0.85rem !important;
         }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            max-height: 300px;
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-        }
-        .chart-container > div {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-        }
         .dashboard-stat-grid {
             margin-bottom: 0.5rem !important;
             gap: 0.75rem !important;
@@ -56,6 +42,9 @@
 
         /* Responsividad para móviles */
         @media (max-width: 768px) {
+            .req-dashboard-charts .form-panels {
+                grid-template-columns: 1fr !important;
+            }
             .form-panels {
                 grid-template-columns: 1fr !important;
                 width: 100% !important;
@@ -67,10 +56,6 @@
                 width: 100% !important;
                 margin-left: 0 !important;
                 margin-right: 0 !important;
-            }
-            .chart-container {
-                height: 220px !important;
-                width: 100% !important;
             }
             .dashboard-scroll-area {
                 max-height: none !important;
@@ -199,7 +184,7 @@
             </div>
 
             {{-- ÁREA DE GRÁFICOS CON SCROLL --}}
-            <div class="dashboard-scroll-area">
+            <div class="dashboard-scroll-area req-dashboard-charts">
                 <div class="form-panels">
                     {{-- Tendencia Mensual --}}
                     <div class="panel">

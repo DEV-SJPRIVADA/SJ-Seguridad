@@ -1808,7 +1808,73 @@ table.dataTable thead td {
     --req-kpi-accent: #be123c;
 }
 
+/* Dashboard requisiciones — gráficos uniformes */
+.req-dashboard-charts {
+    --req-chart-height: clamp(240px, 28vw, 300px);
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.req-dashboard-charts .form-panels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+    width: 100%;
+}
+
+.req-dashboard-charts .form-panels > .panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100%;
+    overflow: hidden;
+}
+
+.req-dashboard-charts .panel__header {
+    flex-shrink: 0;
+}
+
+.req-dashboard-charts .panel__body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.req-dashboard-charts .chart-container {
+    position: relative;
+    flex: 0 0 var(--req-chart-height);
+    width: 100%;
+    height: var(--req-chart-height);
+    min-height: var(--req-chart-height);
+    max-height: var(--req-chart-height);
+    overflow: hidden;
+}
+
+.req-dashboard-charts .chart-container > div {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: var(--req-chart-height);
+    max-width: 100%;
+    max-height: var(--req-chart-height);
+}
+
+@media (max-width: 900px) {
+    .req-dashboard-charts {
+        --req-chart-height: clamp(220px, 42vw, 280px);
+    }
+
+    .req-dashboard-charts .form-panels {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 640px) {
+    .req-dashboard-charts {
+        --req-chart-height: clamp(200px, 52vw, 260px);
+    }
+
     .dashboard-stat-grid.dashboard-stat-grid--requisition-kpis > .req-dashboard-kpi {
         flex: 1 1 calc(50% - 0.4rem);
         min-width: calc(50% - 0.4rem);
