@@ -19,7 +19,7 @@
                         <p class="panel-text text-muted">No tienes documentos asignados en este momento.</p>
                     @else
                         <div class="block-spaced">
-                            <table class="supply-table js-datatable" data-no-excel>
+                            <table class="supply-table js-datatable">
                                 <thead>
                                     <tr>
                                         <th>Codigo</th>
@@ -44,7 +44,7 @@
                                             <td>{{ $document->processLabel() ?? '—' }}</td>
                                             <td>{{ $document->documentTypeLabel() ?? '—' }}</td>
                                             <td>{{ $document->isFile() ? 'Archivo' : 'Enlace' }}</td>
-                                            <td>{{ $document->created_at->format('d/m/Y') }}</td>
+                                            <td><x-date-table :value="$document->created_at" /></td>
                                             <td class="table-actions">
                                                 @if ($document->isFile())
                                                     <a href="{{ route('quality-documents.mine.download', ['module' => $module, 'qualityDocument' => $document->id]) }}" class="btn btn--secondary btn--sm">

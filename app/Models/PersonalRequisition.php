@@ -12,10 +12,16 @@ class PersonalRequisition extends Model
     use HasFactory;
 
     public const STATUS_SOLICITADA = 'solicitada';
+
     public const STATUS_APROBADA = 'aprobada';
+
     public const STATUS_EN_GESTION = 'en_gestion';
+
     public const STATUS_CONTRATADO = 'contratado';
+
     public const STATUS_CANCELADA = 'cancelada';
+
+    public const STATUS_PENDIENTE_AUTORIZACION_GERENCIA = 'pendiente_autorizacion_gerencia';
 
     protected $fillable = [
         'code',
@@ -76,6 +82,7 @@ class PersonalRequisition extends Model
     public static function statuses(): array
     {
         return [
+            self::STATUS_PENDIENTE_AUTORIZACION_GERENCIA => 'Pendiente autorizacion gerencia',
             self::STATUS_SOLICITADA => 'Solicitada',
             self::STATUS_APROBADA => 'Aprobada',
             self::STATUS_EN_GESTION => 'En gestion',
@@ -111,7 +118,14 @@ class PersonalRequisition extends Model
 
     public function recruiter(): BelongsTo
     {
-        return $this->belongsTo(RequisitionRecruiter::class, 'recruiter_id');
+        return $this->belongsTo(User::class, 'recruiter_id');
+    }
+
+    public function displayRecruiterName(): string
+    {
+        return $this->recruiter?->name
+            ?? ($this->recruiter_name !== null && $this->recruiter_name !== '' ? $this->recruiter_name : null)
+            ?? '—';
     }
 
     public function city(): BelongsTo

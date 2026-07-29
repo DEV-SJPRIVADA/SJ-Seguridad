@@ -10,7 +10,8 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | |
+| FEAT-013 | Configuracion global de notificaciones (Super Admin) | orquestado | Feature T1-T3 implementado | 2026-07-29 | — | [`docs/briefs/FEAT-013.md`](briefs/FEAT-013.md) | [`docs/runs/FEAT-013-run-log.md`](runs/FEAT-013-run-log.md) | `config/access.php`, rutas admin |
+| FEAT-014 | Checklist documental por cliente + vista seguimiento tablero Clientes | orquestado | Feature T1–T4 (implementado) | 2026-07-29 checklist cliente | — | [`docs/briefs/FEAT-014.md`](briefs/FEAT-014.md) | [`docs/runs/FEAT-014-run-log.md`](runs/FEAT-014-run-log.md) | rutas comercial, dashboard, import, vistas servicio |
 
 ---
 
@@ -26,6 +27,8 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-012 | Autorizacion gerencia cargo nuevo (enfoque A) | orquestado | Si | [`docs/runs/FEAT-012-run-log.md`](runs/FEAT-012-run-log.md) | 2026-07-28 |
+| FEAT-011 | Encargados seleccion: usuarios GH activables (Reclutador) | orquestado | Si | [`docs/runs/FEAT-011-run-log.md`](runs/FEAT-011-run-log.md) | 2026-07-28 |
 | FEAT-010 | Unificar graficos ApexCharts (GH + Operaciones; quitar Chart.js/ECharts) | orquestado | Si | [`docs/runs/FEAT-010-run-log.md`](runs/FEAT-010-run-log.md) | 2026-07-27 |
 | FEAT-007 | Checklist documental: fecha vencimiento por documento | orquestado | Si | [`docs/runs/FEAT-007-run-log.md`](runs/FEAT-007-run-log.md) | 2026-07-27 |
 | FEAT-006 | Export Excel Gestion: todos los campos + rango fechas | orquestado | Si | [`docs/runs/FEAT-006-run-log.md`](runs/FEAT-006-run-log.md) | 2026-07-24 |

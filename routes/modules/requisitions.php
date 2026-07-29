@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Requisitions\RequisitionController;
+use App\Http\Controllers\Requisitions\RequisitionManagementApprovalController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/{module}')->name('requisitions.')->group(function () {
@@ -27,8 +28,15 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/
         Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');
     });
 
+    Route::middleware('requisition.tab:autorizacion_gerencia')->group(function () {
+        Route::get('/autorizacion-gerencia', [RequisitionManagementApprovalController::class, 'index'])->name('management-approval.index');
+        Route::get('/autorizacion-gerencia/{requisition}', [RequisitionManagementApprovalController::class, 'show'])->name('management-approval.show');
+        Route::post('/autorizacion-gerencia/{requisition}', [RequisitionManagementApprovalController::class, 'decide'])->name('management-approval.decide');
+    });
+
     Route::middleware('requisition.tab:parametros')->group(function () {
         Route::get('/parametros', [RequisitionController::class, 'parameters'])->name('parameters');
+        Route::patch('/parametros/encargados-seleccion/{user}', [RequisitionController::class, 'updateSelectionOfficer'])->name('selection-officers.update');
         Route::post('/parametros/{type}', [RequisitionController::class, 'storeParameter'])->name('parameters.store');
         Route::patch('/parametros/{type}/{parameterId}', [RequisitionController::class, 'updateParameter'])->name('parameters.update');
         Route::delete('/parametros/{type}/{parameterId}', [RequisitionController::class, 'destroyParameter'])->name('parameters.destroy');

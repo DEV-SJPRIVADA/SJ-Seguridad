@@ -53,7 +53,7 @@
     <p class="indicadores-subpanel__text">Control de apertura y cierre mensual.</p>
 
     <div class="indicadores-table-wrap">
-        <table class="supply-table js-datatable indicadores-table indicadores-table--periods" data-no-excel data-server-pagination>
+        <table class="supply-table js-datatable indicadores-table indicadores-table--periods" data-server-pagination>
             <thead>
                 <tr>
                     <th>Periodo</th>

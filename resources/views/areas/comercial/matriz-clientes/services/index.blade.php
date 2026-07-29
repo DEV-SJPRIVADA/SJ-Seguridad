@@ -172,7 +172,7 @@
                     </style>
 
                     <div class="data-table-wrap">
-                        <table class="data-table js-datatable" data-no-excel style="width:100%">
+                        <table class="data-table js-datatable" style="width:100%">
                             <thead>
                                 <tr>
                                     <th>Cliente</th>
@@ -202,8 +202,8 @@
                                         <td>{{ $service->contract_number ?: '—' }}</td>
                                         <td>{{ $service->serviceType?->name ?: '—' }}</td>
                                         <td>{{ $service->advisor_name ?: '—' }}</td>
-                                        <td>{{ $service->contract_start?->format('Y-m-d') ?: '—' }}</td>
-                                        <td>{{ $service->contract_end?->format('Y-m-d') ?: '—' }}</td>
+                                        <td><x-date-table :value="$service->contract_start" /></td>
+                                        <td><x-date-table :value="$service->contract_end" /></td>
                                         <td>
                                             @if ($service->isExpired())
                                                 <span class="status-pill status-pill--req-cancelada">Vencido</span>

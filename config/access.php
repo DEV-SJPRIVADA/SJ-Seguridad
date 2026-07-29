@@ -9,13 +9,16 @@ return [
     'system_permissions' => [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
+        'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
         'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
-        
+        'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de seleccion',
+        'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
+
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
         'supply.tab.quality' => 'Suministros: Acceso a Aprobacion Insumos',
@@ -58,10 +61,10 @@ return [
     'boards' => [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
-        'requisiciones' => 'Requisiciones',             
+        'requisiciones' => 'Requisiciones',
         'matriz_clientes' => 'Clientes',
         'servicios_comerciales' => 'Servicios',
-        'suministros' => 'Suministros', 
+        'suministros' => 'Suministros',
         'documentos' => 'Documentos',
     ],
 
@@ -69,7 +72,7 @@ return [
         'dashboard' => 'Dashboard',
         'captura' => 'Listado de Indicadores',
         'consolidado' => 'Consolidado',
-        'ajustes' => 'Ajustes',     
+        'ajustes' => 'Ajustes',
     ],
 
     'requisition_tabs' => [
@@ -77,6 +80,7 @@ return [
         'solicitar' => 'Solicitar',
         'seguimiento' => 'Mis requisiciones',
         'gestion' => 'Gestion',
+        'autorizacion_gerencia' => 'Autorizacion gerencia',
         'parametros' => 'Parametros',
     ],
 
@@ -138,6 +142,7 @@ return [
                 'permissions' => [
                     'view.dashboard',
                     'manage.users',
+                    'manage.notifications',
                 ],
             ],
             'requisitions' => [
@@ -146,6 +151,8 @@ return [
                     'requisitions.tab.gestion',
                     'requisitions.tab.dashboard',
                     'manage.requisition.parameters',
+                    'requisitions.selection_officer',
+                    'requisitions.approve.management',
                 ],
             ],
             'supplies_calidad' => [
@@ -260,20 +267,19 @@ return [
     'navigation' => [
         'administracion' => [
             'label' => 'Administracion',
-            'permission' => 'manage.users',
-            'patterns' => ['admin.users.*'],
+            'patterns' => ['admin.users.*', 'admin.notifications.*'],
             'items' => [
                 [
                     'label' => 'Usuarios',
                     'route' => 'admin.users.index',
                     'permission' => 'manage.users',
-                    'patterns' => ['admin.users.index', 'admin.users.edit'],
+                    'patterns' => ['admin.users.index', 'admin.users.edit', 'admin.users.create'],
                 ],
                 [
-                    'label' => 'Nuevo usuario',
-                    'route' => 'admin.users.create',
-                    'permission' => 'manage.users',
-                    'patterns' => ['admin.users.create'],
+                    'label' => 'Configuracion de notificaciones',
+                    'route' => 'admin.notifications.index',
+                    'permission' => 'manage.notifications',
+                    'patterns' => ['admin.notifications.*'],
                 ],
             ],
         ],

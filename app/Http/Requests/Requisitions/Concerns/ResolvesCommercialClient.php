@@ -18,6 +18,17 @@ trait ResolvesCommercialClient
             return;
         }
 
+        $clientTypeId = is_numeric($this->input('client_type_id')) ? (int) $this->input('client_type_id') : null;
+
+        if ($clientTypeId !== null && ! CommercialClientBridge::requiresCommercialClientSelection($clientTypeId)) {
+            $this->merge([
+                'commercial_client_id' => null,
+                'client_id' => CommercialClientBridge::resolveInternalClientId(),
+            ]);
+
+            return;
+        }
+
         if ($this->filled('commercial_client_id')) {
             $this->merge([
                 'client_id' => CommercialClientBridge::resolve($this->integer('commercial_client_id')),
@@ -39,7 +50,8 @@ trait ResolvesCommercialClient
      */
     protected function commercialClientRules(): array
     {
-        $requiresCommercialClient = ! $this->isInternalClientType();
+        $clientTypeId = is_numeric($this->input('client_type_id')) ? (int) $this->input('client_type_id') : null;
+        $requiresCommercialClient = CommercialClientBridge::requiresCommercialClientSelection($clientTypeId);
 
         return [
             'commercial_client_id' => [

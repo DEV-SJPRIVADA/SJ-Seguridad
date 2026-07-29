@@ -5,7 +5,9 @@ namespace App\Http\Requests\Requisitions;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
 use App\Models\PersonalRequisition;
+use App\Rules\Requisitions\ValidRequisitionRecruiterUser;
 use App\Services\Access\RequisitionAccessService;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,7 +31,7 @@ class StorePersonalRequisitionRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -60,8 +62,12 @@ class StorePersonalRequisitionRequest extends FormRequest
             'cost_center' => ['required', 'string', 'max:255'],
             'requester_observation' => ['nullable', 'string'],
             'human_resources_observation' => ['nullable', 'string'],
-            'recruiter_id' => ['nullable', 'integer', Rule::exists('requisition_recruiters', 'id')],
-            'recruiter_name' => ['nullable', 'string', 'max:255'],
+            'recruiter_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id'),
+                new ValidRequisitionRecruiterUser(null),
+            ],
             'hiring_date' => ['nullable', 'date'],
             'status' => ['nullable', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];

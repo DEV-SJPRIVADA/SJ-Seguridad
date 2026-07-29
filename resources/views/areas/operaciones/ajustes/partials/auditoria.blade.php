@@ -30,7 +30,7 @@
     </form>
 
     <div class="indicadores-table-wrap" style="margin-top:1rem;">
-        <table class="supply-table js-datatable indicadores-table indicadores-table--audit" data-no-excel data-server-pagination>
+        <table class="supply-table js-datatable indicadores-table indicadores-table--audit" data-server-pagination>
             <thead>
                 <tr>
                     <th>Fecha</th>
@@ -43,7 +43,7 @@
             <tbody>
                 @foreach ($logs as $log)
                     <tr>
-                        <td>{{ $log->created_at?->format('Y-m-d H:i') }}</td>
+                        <td><x-date-table :value="$log->created_at" datetime /></td>
                         <td>{{ $log->user?->name ?? 'Sistema' }}</td>
                         <td>{{ $log->event_type }}</td>
                         <td>{{ $log->action }}</td>

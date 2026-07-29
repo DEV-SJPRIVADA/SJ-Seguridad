@@ -7,6 +7,7 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
+use App\Support\CommercialDocumentCatalog;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -215,24 +216,20 @@ class MtCo01Importer
 
                 $wasNewService = ! $service->exists;
 
-                $docPayload = [
-                    'doc_economic_proposal' => $this->mapDocStatus($raw['doc_economic_proposal'] ?? null),
-                    'doc_fo_co_02' => $this->mapDocStatus($raw['doc_fo_co_02'] ?? null),
-                    'doc_laft_or_queries' => $this->mapDocStatus($raw['doc_laft_or_queries'] ?? null),
-                    'doc_rut' => $this->mapDocStatus($raw['doc_rut'] ?? null),
-                    'doc_financials' => $this->mapDocStatus($raw['doc_financials'] ?? null),
-                    'doc_legal_rep_id' => $this->mapDocStatus($raw['doc_legal_rep_id'] ?? null),
-                    'doc_chamber' => $this->mapDocStatus($raw['doc_chamber'] ?? null),
-                    'doc_preinstall' => $this->mapDocStatus($raw['doc_preinstall'] ?? null),
-                    'doc_contract' => $this->mapDocStatus($raw['doc_contract'] ?? null),
-                    'doc_annex_2' => $this->mapDocStatus($raw['doc_annex_2'] ?? null),
-                ];
+                $statusByKey = [];
+                foreach (CommercialDocumentCatalog::documentKeys() as $documentKey) {
+                    $mapped = $this->mapDocStatus($raw[$documentKey] ?? null);
+                    if ($mapped !== null) {
+                        $statusByKey[$documentKey] = $mapped;
+                    }
+                }
 
-                foreach (CommercialService::documentExpiryFields() as $docField => $meta) {
-                    $expiresOn = $this->parseDate($raw[$meta['expires']] ?? null);
+                $expiryDates = collect();
+                foreach (CommercialDocumentCatalog::documentKeys() as $documentKey) {
+                    $expiresKey = $documentKey.'_expires_on';
+                    $expiresOn = $this->parseDate($raw[$expiresKey] ?? null);
                     if ($expiresOn !== null) {
-                        $docPayload[$meta['tracks']] = true;
-                        $docPayload[$meta['expires']] = $expiresOn;
+                        $expiryDates->push($expiresOn);
                     }
                 }
 
@@ -251,10 +248,17 @@ class MtCo01Importer
                     'contract_start' => $this->parseDate($raw['contract_start'] ?? null),
                     'contract_end' => $this->parseDate($raw['contract_end'] ?? null),
                     'duration_months' => $this->parseDuration($raw['duration_months'] ?? null),
-                    ...$docPayload,
                 ]);
                 $service->commercial_client_id = $client->id;
                 $service->save();
+
+                $checklistService = app(CommercialClientChecklistService::class);
+                if ($statusByKey !== []) {
+                    $checklistService->applyImportedDocumentStatuses($client, $statusByKey, null);
+                }
+                if ($expiryDates->isNotEmpty()) {
+                    $checklistService->mergeClientDocumentationExpiry($client, $expiryDates);
+                }
 
                 if ($wasNewService) {
                     $stats['services']++;

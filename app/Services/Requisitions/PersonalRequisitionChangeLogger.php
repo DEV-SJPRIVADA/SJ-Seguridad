@@ -10,9 +10,10 @@ use App\Models\RequisitionClientType;
 use App\Models\RequisitionContractType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
-use App\Models\RequisitionRecruiter;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class PersonalRequisitionChangeLogger
@@ -63,7 +64,7 @@ class PersonalRequisitionChangeLogger
     ];
 
     /**
-     * @var array<string, class-string<\Illuminate\Database\Eloquent\Model>>
+     * @var array<string, class-string<Model>>
      */
     private const FK_MODELS = [
         'position_id' => RequisitionPosition::class,
@@ -74,7 +75,7 @@ class PersonalRequisitionChangeLogger
         'programming_type_id' => RequisitionProgrammingType::class,
         'uniform_id' => RequisitionUniform::class,
         'contract_type_id' => RequisitionContractType::class,
-        'recruiter_id' => RequisitionRecruiter::class,
+        'recruiter_id' => User::class,
     ];
 
     /**
@@ -210,7 +211,7 @@ class PersonalRequisitionChangeLogger
             return $this->fkLabelCache[$cacheKey] ?? '—';
         }
 
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
+        /** @var class-string<Model> $modelClass */
         $modelClass = self::FK_MODELS[$field];
         $label = $modelClass::query()->whereKey($id)->value('name');
 

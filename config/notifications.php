@@ -1,0 +1,19 @@
+<?php
+
+return [
+    'modules' => [
+        'requisitions' => 'Requisiciones de personal',
+    ],
+
+    'fallback_recipient' => 'desarrollo.tic@sjsp.com.co',
+
+    /*
+    | Tipos editables en Administracion → Configuracion de notificaciones (module => slugs).
+    | Excluidos aqui: autorizacion gerencia cargo nuevo, correo al solicitante por cambio de estado, etc.
+    */
+    'admin_configurable' => [
+        'requisitions' => [
+            'new_requisition',
+        ],
+    ],
+];

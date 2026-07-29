@@ -555,6 +555,57 @@ input:checked + .toggle-slider:before {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    width: 100%;
+}
+
+.users-filter-actions {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.users-filter-actions .users-filter-toggle {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.users-filter-actions .users-add-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.users-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.125rem;
+    height: 2.125rem;
+    min-width: 2.125rem;
+    min-height: 2.125rem;
+    padding: 0;
+    border: none;
+    text-decoration: none;
+    color: #fff;
+    background: var(--brand-blue, #1984c7);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(25, 132, 199, 0.35);
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.users-add-btn:hover {
+    color: #fff;
+    background: #1574b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(25, 132, 199, 0.4);
+}
+
+.users-add-btn__glyph {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .users-filter-toggle {

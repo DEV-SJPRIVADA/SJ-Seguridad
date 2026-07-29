@@ -122,7 +122,7 @@
             </tr>
             <tr>
                 <td class="text-center" style="font-weight: bold; font-size: 11pt;">{{ $requisition->code }}</td>
-                <td class="text-center">{{ $requisition->request_date?->format('d/m/Y') }}</td>
+                <td class="text-center"><x-date-table :value="$requisition->request_date" /></td>
                 <td></td>
             </tr>
         </table>
@@ -355,7 +355,7 @@
                     <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto;">Aprobación Gerencia (No se requiere en cambios de cargos OP sin afectación de salario)</div>
                 </td>
                 <td style="width: 33.3%;" class="text-center">
-                    <div class="signature-box">{{ $requisition->recruiter?->name ?? '_______________________' }}</div>
+                    <div class="signature-box">{{ ($name = $requisition->displayRecruiterName()) !== '—' ? $name : '_______________________' }}</div>
                     <div style="border-top: 1px solid #000; padding-top: 2px;">Dirección de Gestión Humana Recibió</div>
                 </td>
             </tr>

@@ -35,40 +35,6 @@
             padding: 0.5rem 0.75rem !important;
             font-size: 0.85rem !important;
         }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            max-height: 300px;
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-        }
-        .chart-container > div {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-        }
-        .kpi-card {
-            padding: 0.75rem 1rem !important; /* Más compacto */
-            transition: transform 0.2s;
-        }
-        .kpi-card .text-caption {
-            font-size: 0.7rem !important;
-            margin-bottom: 0 !important;
-        }
-        .kpi-card:hover {
-            transform: translateY(-3px);
-        }
-        .kpi-value {
-            font-size: 1.6rem; /* Reducido de 2.2rem */
-            font-weight: 800;
-            line-height: 1;
-            margin: 0.25rem 0;
-        }
-        .kpi-card .text-small {
-            font-size: 0.65rem !important;
-        }
         .dashboard-stat-grid {
             margin-bottom: 0.5rem !important;
             gap: 0.75rem !important;
@@ -76,6 +42,9 @@
 
         /* Responsividad para móviles */
         @media (max-width: 768px) {
+            .req-dashboard-charts .form-panels {
+                grid-template-columns: 1fr !important;
+            }
             .form-panels {
                 grid-template-columns: 1fr !important;
                 width: 100% !important;
@@ -87,13 +56,6 @@
                 width: 100% !important;
                 margin-left: 0 !important;
                 margin-right: 0 !important;
-            }
-            .chart-container {
-                height: 220px !important;
-                width: 100% !important;
-            }
-            .kpi-value {
-                font-size: 1.4rem;
             }
             .dashboard-scroll-area {
                 max-height: none !important;
@@ -194,40 +156,35 @@
             </form>
 
             {{-- KPIs --}}
-            <div class="dashboard-stat-grid bottom-spaced">
-                <article class="card kpi-card" style="border-left: 5px solid var(--color-primary);">
-                    <p class="text-caption">Total Solicitudes</p>
-                    <p class="kpi-value">{{ $stats['total'] }}</p>
-                    <p class="text-small text-muted">Bajo los filtros seleccionados</p>
+            <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis req-dashboard-kpis bottom-spaced">
+                <article class="req-dashboard-kpi req-dashboard-kpi--total">
+                    <span class="req-dashboard-kpi__label">Total solicitudes</span>
+                    <span class="req-dashboard-kpi__value">{{ number_format($stats['total']) }}</span>
                 </article>
 
-                <article class="card kpi-card" style="border-left: 5px solid var(--color-sky);">
-                    <p class="text-caption">Solicitadas</p>
-                    <p class="kpi-value" style="color: var(--color-sky);">{{ $stats['solicitada'] }}</p>
-                    <p class="text-small text-muted">Pendientes de inicio</p>
+                <article class="req-dashboard-kpi req-dashboard-kpi--solicitada">
+                    <span class="req-dashboard-kpi__label">Solicitadas</span>
+                    <span class="req-dashboard-kpi__value">{{ number_format($stats['solicitada']) }}</span>
                 </article>
 
-                <article class="card kpi-card" style="border-left: 5px solid var(--color-warning);">
-                    <p class="text-caption">En Gestión</p>
-                    <p class="kpi-value" style="color: var(--color-warning);">{{ $stats['en_gestion'] }}</p>
-                    <p class="text-small text-muted">Procesos activos</p>
+                <article class="req-dashboard-kpi req-dashboard-kpi--en-gestion">
+                    <span class="req-dashboard-kpi__label">En gestión</span>
+                    <span class="req-dashboard-kpi__value">{{ number_format($stats['en_gestion']) }}</span>
                 </article>
 
-                <article class="card kpi-card" style="border-left: 5px solid var(--color-success);">
-                    <p class="text-caption">Contratadas</p>
-                    <p class="kpi-value" style="color: var(--color-success);">{{ $stats['contratado'] }}</p>
-                    <p class="text-small text-muted">Procesos finalizados</p>
+                <article class="req-dashboard-kpi req-dashboard-kpi--contratado">
+                    <span class="req-dashboard-kpi__label">Contratadas</span>
+                    <span class="req-dashboard-kpi__value">{{ number_format($stats['contratado']) }}</span>
                 </article>
 
-                <article class="card kpi-card" style="border-left: 5px solid #be123c;">
-                    <p class="text-caption">Canceladas</p>
-                    <p class="kpi-value" style="color: #be123c;">{{ $stats['cancelada'] }}</p>
-                    <p class="text-small text-muted">Solicitudes descartadas</p>
+                <article class="req-dashboard-kpi req-dashboard-kpi--cancelada">
+                    <span class="req-dashboard-kpi__label">Canceladas</span>
+                    <span class="req-dashboard-kpi__value">{{ number_format($stats['cancelada']) }}</span>
                 </article>
             </div>
 
             {{-- ÁREA DE GRÁFICOS CON SCROLL --}}
-            <div class="dashboard-scroll-area">
+            <div class="dashboard-scroll-area req-dashboard-charts">
                 <div class="form-panels">
                     {{-- Tendencia Mensual --}}
                     <div class="panel">

@@ -42,6 +42,12 @@
                                 @if ($filters['status'] ?? '')
                                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                                 @endif
+                                @if ($filters['date_from'] ?? null)
+                                    <input type="hidden" name="date_from" value="{{ $filters['date_from'] }}">
+                                @endif
+                                @if ($filters['date_to'] ?? null)
+                                    <input type="hidden" name="date_to" value="{{ $filters['date_to'] }}">
+                                @endif
 
                                 <label class="req-manage-filters__label" for="manage-search-input">Buscar</label>
                                 <div class="req-manage-filters__search-group">
@@ -92,7 +98,7 @@
                                 · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
                             @endif
                             @if ($filters['q'] ?? '')
-                                · Busqueda servidor: <strong>{{ $filters['q'] }}</strong>
+                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
                             @if (($filters['date_from'] ?? null) || ($filters['date_to'] ?? null))
                                 · Fecha solicitud:
@@ -101,14 +107,12 @@
                                 <strong>{{ $filters['date_to'] ?? '…' }}</strong>
                             @endif
                             · El Excel exporta el detalle completo segun estos filtros
-                            · Use la busqueda de la tabla para filtrar filas visibles
                         </p>
                     </div>
 
                     <div class="data-table-wrap">
                         <table
                             class="data-table js-datatable"
-                            data-no-excel
                             data-order='[[1, "desc"]]'
                         >
                             <thead>
@@ -120,6 +124,7 @@
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
                                     <th>Reemplaza a</th>
+                                    <th>Reclutador</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -128,12 +133,19 @@
                                 @forelse ($requisitions as $requisition)
                                     <tr>
                                         <td>{{ $requisition->code }}</td>
-                                        <td>{{ $requisition->request_date?->format('Y-m-d') }}</td>
+                                        <td><x-date-table :value="$requisition->request_date" /></td>
                                         <td>{{ $requisition->leader_name }}</td>
                                         <td>{{ $requisition->position?->name }}</td>
                                         <td>{{ $requisition->client?->name }}</td>
                                         <td>{{ $requisition->city?->name }}</td>
                                         <td>{{ $requisition->replacement_name ?? 'N/A' }}</td>
+                                        <td>
+                                            @if ($requisition->recruiter_id || filled($requisition->recruiter_name))
+                                                {{ $requisition->displayRecruiterName() }}
+                                            @else
+                                                sin asignar
+                                            @endif
+                                        </td>
                                         <td>
                                             <span class="status-pill status-pill--req-{{ $requisition->status }}">
                                                 {{ $statusLabels[$requisition->status] ?? $requisition->status }}
@@ -148,7 +160,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9">No hay requisiciones con los filtros seleccionados.</td>
+                                        <td colspan="10">No hay requisiciones con los filtros seleccionados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

@@ -8,9 +8,12 @@ use App\Http\Requests\QualityDocuments\StoreQualityDocumentRequest;
 use App\Http\Requests\QualityDocuments\UpdateQualityDocumentRequest;
 use App\Models\QualityDocument;
 use App\Models\User;
+use App\Support\DisplayDate;
 use App\Traits\HasQualityDocumentTabs;
 use App\Traits\ValidatesModule;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -92,18 +95,18 @@ class QualityDocumentController extends Controller
         $columns = [
             ['key' => 'code', 'label' => 'Código'],
             ['key' => 'title', 'label' => 'Nombre'],
-            ['key' => fn($d) => $d->processLabel(), 'label' => 'Proceso'],
-            ['key' => fn($d) => $d->documentTypeLabel(), 'label' => 'Tipo'],
-            ['key' => fn($d) => $d->originLabel(), 'label' => 'Origen'],
-            ['key' => fn($d) => $d->documentStatusLabel(), 'label' => 'Estado doc.'],
-            ['key' => fn($d) => $d->activityStatusLabel(), 'label' => 'Estado act.'],
-            ['key' => fn($d) => $d->storageTypeLabel(), 'label' => 'Almacenamiento'],
+            ['key' => fn ($d) => $d->processLabel(), 'label' => 'Proceso'],
+            ['key' => fn ($d) => $d->documentTypeLabel(), 'label' => 'Tipo'],
+            ['key' => fn ($d) => $d->originLabel(), 'label' => 'Origen'],
+            ['key' => fn ($d) => $d->documentStatusLabel(), 'label' => 'Estado doc.'],
+            ['key' => fn ($d) => $d->activityStatusLabel(), 'label' => 'Estado act.'],
+            ['key' => fn ($d) => $d->storageTypeLabel(), 'label' => 'Almacenamiento'],
             ['key' => 'current_version', 'label' => 'Versión'],
-            ['key' => fn($d) => $d->last_updated_at?->format('d/m/Y') ?? '—', 'label' => 'Últ. actualización'],
-            ['key' => fn($d) => $d->is_active ? 'Activo' : 'Inactivo', 'label' => 'Activo'],
+            ['key' => fn ($d) => DisplayDate::date($d->last_updated_at), 'label' => 'Últ. actualización'],
+            ['key' => fn ($d) => $d->is_active ? 'Activo' : 'Inactivo', 'label' => 'Activo'],
         ];
 
-        return (new BaseExport($documents, $columns, 'documentos_calidad_' . now()->format('Y-m-d') . '.xlsx', 'Documentos de Calidad'))->download();
+        return (new BaseExport($documents, $columns, 'documentos_calidad_'.now()->format('Y-m-d').'.xlsx', 'Documentos de Calidad'))->download();
     }
 
     public function libraryExport(string $module): StreamedResponse
@@ -121,13 +124,13 @@ class QualityDocumentController extends Controller
         $columns = [
             ['key' => 'code', 'label' => 'Código'],
             ['key' => 'title', 'label' => 'Título'],
-            ['key' => fn($d) => $d->processLabel(), 'label' => 'Proceso'],
-            ['key' => fn($d) => $d->documentTypeLabel(), 'label' => 'Tipo documento'],
-            ['key' => fn($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
-            ['key' => fn($d) => $d->created_at->format('d/m/Y'), 'label' => 'Publicado'],
+            ['key' => fn ($d) => $d->processLabel(), 'label' => 'Proceso'],
+            ['key' => fn ($d) => $d->documentTypeLabel(), 'label' => 'Tipo documento'],
+            ['key' => fn ($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
+            ['key' => fn ($d) => DisplayDate::date($d->created_at), 'label' => 'Publicado'],
         ];
 
-        return (new BaseExport($documents, $columns, 'biblioteca_calidad_' . now()->format('Y-m-d') . '.xlsx', 'Biblioteca de Documentos'))->download();
+        return (new BaseExport($documents, $columns, 'biblioteca_calidad_'.now()->format('Y-m-d').'.xlsx', 'Biblioteca de Documentos'))->download();
     }
 
     public function mineExport(string $module): StreamedResponse
@@ -148,13 +151,13 @@ class QualityDocumentController extends Controller
         $columns = [
             ['key' => 'code', 'label' => 'Código'],
             ['key' => 'title', 'label' => 'Título'],
-            ['key' => fn($d) => $d->processLabel(), 'label' => 'Proceso'],
-            ['key' => fn($d) => $d->documentTypeLabel(), 'label' => 'Tipo documento'],
-            ['key' => fn($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
-            ['key' => fn($d) => $d->created_at->format('d/m/Y'), 'label' => 'Publicado'],
+            ['key' => fn ($d) => $d->processLabel(), 'label' => 'Proceso'],
+            ['key' => fn ($d) => $d->documentTypeLabel(), 'label' => 'Tipo documento'],
+            ['key' => fn ($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
+            ['key' => fn ($d) => DisplayDate::date($d->created_at), 'label' => 'Publicado'],
         ];
 
-        return (new BaseExport($documents, $columns, 'mis_documentos_' . now()->format('Y-m-d') . '.xlsx', 'Mis Documentos'))->download();
+        return (new BaseExport($documents, $columns, 'mis_documentos_'.now()->format('Y-m-d').'.xlsx', 'Mis Documentos'))->download();
     }
 
     public function create(string $module): View
@@ -403,7 +406,7 @@ class QualityDocumentController extends Controller
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     * @return Collection<int, User>
      */
     private function activeUsersList()
     {
@@ -413,7 +416,7 @@ class QualityDocumentController extends Controller
             ->get(['id', 'name', 'email', 'area_key']);
     }
 
-    private function storeUploadedFile(QualityDocument $document, \Illuminate\Http\UploadedFile $file): void
+    private function storeUploadedFile(QualityDocument $document, UploadedFile $file): void
     {
         $extension = strtolower($file->getClientOriginalExtension());
         $storedName = Str::uuid()->toString().'.'.$extension;

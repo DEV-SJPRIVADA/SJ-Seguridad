@@ -3,10 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\QualityDocument;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,7 +16,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
     protected string $guard_name = 'web';
@@ -91,7 +91,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     public function requisitionBoardTabsFor(string $moduleKey): Collection
     {
@@ -118,13 +118,14 @@ class User extends Authenticatable
             'solicitar' => route('requisitions.create', ['module' => $moduleKey]),
             'seguimiento' => route('requisitions.tracking', ['module' => $moduleKey]),
             'gestion' => route('requisitions.manage', ['module' => $moduleKey]),
+            'autorizacion_gerencia' => route('requisitions.management-approval.index', ['module' => $moduleKey]),
             'parametros' => route('requisitions.parameters', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     public function supplyBoardTabsFor(string $moduleKey): Collection
     {
@@ -156,7 +157,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     public function qualityDocumentBoardTabsFor(string $moduleKey): Collection
     {
@@ -199,7 +200,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     public function indicadorBoardTabsFor(): Collection
     {

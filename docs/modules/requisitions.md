@@ -12,13 +12,16 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `Solicitar`
   - `Mis requisiciones` (permiso `requisitions.tab.seguimiento`)
   - `Gestion`
+  - `Autorizacion gerencia` (permiso `requisitions.approve.management`)
   - `Parametros`
 - Solicitar y Mis requisiciones operan siempre en `users.area_key`
 - Gestión y Dashboard requieren tablero visible en alcance + permiso funcional. **Gestión** y **Dashboard** (con `requisitions.tab.dashboard`) muestran solicitudes de **todas las areas**. El dashboard renderiza KPIs y graficos **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js`; datos en `#requisitions-chart-data`).
 - Historial de cambios de estado
 - Historial de cambios de campos en edicion de gestion (fecha, usuario, valor anterior y nuevo)
-- Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato, encargados de seleccion y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
-- Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`)
+- Catalogos administrables: cargos, motivos, ciudades, tipos de cliente, tipos de programacion, uniformes, tipos de contrato y **correos de notificacion** (los clientes se gestionan en Comercial → Clientes)
+- **Encargados de seleccion** (solo tablero GH → Parametros): usuarios reales de Gestion humana habilitados con toggles; ya no existe catalogo `requisition_recruiters`
+- Notificacion por correo al **crear** una solicitud (`PersonalRequisitionNotification`, cola `ShouldQueue`) segun tipo **Nueva requisicion** en Parametros
+- Aviso a gerencia en motivo **Cargo nuevo** (`PersonalRequisitionManagementApprovalMail`, envio sincrono) segun tipo **Autorizacion requisicion cargo nuevo**
 - Notificacion por correo al **cambiar de estado** hacia el solicitante (`PersonalRequisitionStatusChangedMail`)
 
 ## Reglas de negocio actuales
@@ -36,24 +39,66 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `requester_observation`
   - `human_resources_observation`
 - `service_structure` (**Estructura del servicio**): texto obligatorio al crear y al guardar en edicion; captura horarios, descansos y condiciones del puesto. Visible/editable en Solicitar y Gestion; incluido en export Excel; **no** en impresion ni correos
-- Los estados permitidos en V1 son:
+- Los estados permitidos incluyen:
+  - `pendiente_autorizacion_gerencia` (solo al crear con motivo **Cargo nuevo**)
   - `solicitada`
   - `en_gestion`
   - `contratado`
   - `cancelada`
+- Motivo **Cargo nuevo**: la requisicion queda pendiente hasta que gerencia autorice en la pestaña **Autorizacion gerencia**; GH no edita hasta pasar a `solicitada`
 - Al cerrar como `contratado`, es obligatorio `hiring_date` y los campos de compensacion marcados como requeridos en la validacion de update
 - Despues de creada, la requisicion ya no se modifica desde el flujo del solicitante; solo gestion humana puede hacerlo
 - Usuarios con `manage.users` o `manage.area.gestion_humana` pueden crear solicitudes en cualquier modulo sin necesidad de tener `area_key` coincidente
+
+## Encargados de seleccion (Reclutador)
+
+Patron alineado con **Capturadores** en Indicadores (`IndicatorCaptureAccessService`).
+
+| Capa | Detalle |
+| --- | --- |
+| Servicio | `App\Services\Requisitions\RequisitionSelectionOfficerAccessService` |
+| Permiso Spatie | `requisitions.selection_officer` — otorgado/revocado solo por toggle en Parametros GH (no por roles base) |
+| Configuracion UI | `GET /requisitions/gestion_humana/parametros` + permiso `manage.requisition.parameters`; partial `resources/views/modules/requisitions/partials/selection-officers.blade.php` |
+| Toggle | `PATCH /requisitions/gestion_humana/parametros/encargados-seleccion/{user}` (`requisitions.selection-officers.update`); body `enabled` boolean; 404 si `{module} !== gestion_humana` |
+| Select en Gestion | `recruitersForSelect(?currentRecruiterId)` — usuarios GH activos con permiso; si la requisicion ya tiene `recruiter_id`, ese usuario sigue en la lista aunque el toggle este apagado |
+| Persistencia | `personal_requisitions.recruiter_id` → FK nullable `users.id`; el formulario **no** escribe `recruiter_name` |
+| Presentacion | `PersonalRequisition::displayRecruiterName()` — `recruiter.name`, si no texto legacy `recruiter_name`, si no «—» (vista, export, impresion, change logger con `User::class`) |
+| Validacion | `ValidRequisitionRecruiterUser` en Store/Update; `UpdateRequisitionSelectionOfficerRequest` en toggle |
+
+Listado de toggles: usuarios con `is_active = true` y `area_key = gestion_humana`, orden por `name`.
+
+El CRUD generico de parametros con `type=recruiters` fue retirado de `PARAMETER_TYPES` (store/update/destroy → 404).
+
+### Migracion `2026_07_28_112704_requisition_recruiter_id_references_users_drop_catalog`
+
+1. Elimina FK de `recruiter_id` hacia `requisition_recruiters`.
+2. Pone `recruiter_id = NULL` en todas las filas de `personal_requisitions` (sin emparejar catalogo antiguo).
+3. Crea FK nullable hacia `users.id` (`nullOnDelete`).
+4. Elimina tabla `requisition_recruiters` y modelo `RequisitionRecruiter`.
+
+Post-despliegue: GH debe reactivar encargados en toggles; trazabilidad previa solo via `recruiter_name` legacy en fila si existia.
 
 ## Notificaciones por correo
 
 ### Al crear (Gestion Humana / catalogo)
 - Disparo: `RequisitionController::store` tras crear el lote
-- Clase: `App\Mail\PersonalRequisitionNotification`
+- Clase: `App\Mail\PersonalRequisitionNotification` (cola)
 - Vista: `resources/views/emails/requisitions/requested.blade.php`
-- Destinatarios: filas activas de `requisition_notification_emails` (Parametros → Correos de notificacion; el valor se guarda en `name`)
-- Fallback si no hay activos: `desarrollo.tic@sjsp.com.co`
-- CTA: Gestion Humana con filtro `q` = codigo
+- Destinatarios: `RequisitionNotificationRecipientService::emailsForType('new_requisition')` — pivot `req_notif_type_email` + Parametros → **Tipos de notificacion**
+- Fallback si el tipo no tiene correos: `desarrollo.tic@sjsp.com.co`
+
+### Autorizacion gerencia (cargo nuevo)
+- Disparo: mismo `store` si motivo normalizado es **cargo nuevo** (`RequisitionRequestReasonCatalog`)
+- Estado inicial: `pendiente_autorizacion_gerencia`
+- Clase: `App\Mail\PersonalRequisitionManagementApprovalMail` (sincrono)
+- Destinatarios: `emailsForType('management_approval_cargo_nuevo')`
+- CTA: `requisitions.management-approval.show` (login → detalle)
+
+### Bandeja gerencia (enfoque A)
+- Sin tabla auxiliar: listado = `personal_requisitions` con `status = pendiente_autorizacion_gerencia`
+- Rutas: `RequisitionManagementApprovalController` — index, show, decide
+- Permiso: `requisitions.approve.management`
+- Aprobar → `solicitada`; rechazar → `cancelada` + correo al solicitante si aplica
 
 ### Al cambiar de estado (solicitante)
 - Disparo: `RequisitionController::update` **solo si** el estado cambio (`old !== new`)
@@ -110,7 +155,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 
 ### Campos exclusivos para Gestión Humana (GH)
 18. **Compensación**: Tipo de contrato, Duración, Salario Base, Auxilios (Transporte, Movilidad), Bonificaciones, Contrato de Arrendamiento.
-19. **Seguimiento**: Encargado de selección (`recruiter_id`).
+19. **Seguimiento**: Reclutador / encargado de seleccion (`recruiter_id` → usuario GH habilitado).
 20. **Cierre**: Fecha de contratación, Observaciones de GH.
 
 ## Identificación Visual y UI
@@ -142,9 +187,10 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `GET /requisitions/{module}/gestion/{requisition}/imprimir`
 - `PATCH /requisitions/{module}/gestion/{requisition}`
 - `GET /requisitions/{module}/parametros`
+- `PATCH /requisitions/gestion_humana/parametros/encargados-seleccion/{user}` — toggle encargado (`requisitions.selection-officers.update`)
 - `POST /requisitions/{module}/parametros/{type}`
 - `PATCH /requisitions/{module}/parametros/{type}/{parameterId}`
-- `DELETE /requisitions/{module}/parametros/{type}/{parameterId}`
+- `DELETE /requisitions/{module}/parametros/{type}/{parameterId}` (`type=recruiters` ya no existe → 404)
 
 ## Permisos relacionados
 
@@ -153,20 +199,22 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `requisitions.tab.solicitar`
 - `requisitions.tab.seguimiento`
 - `requisitions.tab.gestion`
-- `manage.requisition.parameters`
+- `manage.requisition.parameters` (Parametros GH, incl. toggles encargados)
+- `requisitions.selection_officer` (aparecer en select Reclutador; vía toggle en Parametros GH o asignacion directa por super-admin)
 - `manage.requisitions` (legacy; no asignar en Admin; equivalente practico a `requisitions.tab.gestion` + tablero visible)
 - `manage.area.gestion_humana` (Otorga visibilidad completa de campos y acceso a tablero GH)
 - `manage.users`
 
 ## Validacion (Form Requests)
 
-- `StorePersonalRequisitionRequest` / `UpdatePersonalRequisitionRequest`: `service_structure` → `required|string` (ademas de las reglas existentes del modulo)
+- `StorePersonalRequisitionRequest` / `UpdatePersonalRequisitionRequest`: `service_structure` → `required|string`; `recruiter_id` nullable, `exists:users,id`, regla `ValidRequisitionRecruiterUser` (habilitado o mismo ID ya guardado)
+- `UpdateRequisitionSelectionOfficerRequest`: `enabled` required boolean
 - HTML `required` en textarea de Solicitar (`form-fields-requester`) y Gestion (`form-fields`)
 - Registros legacy con `NULL` en BD: al reabrir en Gestion el campo es obligatorio al guardar
 
 ## Tablas implicadas
 
-- `personal_requisitions` (compensacion, `recruiter_id`, cierre con `hiring_date`, `service_structure` text nullable)
+- `personal_requisitions` (compensacion, `recruiter_id` FK → `users.id` nullable, `recruiter_name` legacy solo lectura, cierre con `hiring_date`, `service_structure` text nullable)
 - `personal_requisition_status_logs`
 - `personal_requisition_change_logs` (trazabilidad de campos editados en gestion)
 - `requisition_positions`
@@ -178,8 +226,9 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `requisition_programming_types`
 - `requisition_uniforms`
 - `requisition_contract_types`
-- `requisition_recruiters`
 - `requisition_notification_emails`
+
+Tabla eliminada (FEAT-011): `requisition_recruiters`.
 
 ## Riesgos
 
@@ -192,7 +241,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - Motivo “Reemplazo” o “Movimiento interno” exige cedula y nombre (IDs resueltos por nombre de catalogo, no hardcode).
 - `PersonalRequisitionPolicy` registrada pero no usada en el controller.
 - Cobertura de tests acotada (sin factory dedicada; sin print/dashboard/parametros ampliados).
-- Campo legacy `recruiter_name` convive con `recruiter_id`.
+- Columna legacy `recruiter_name` solo para lectura/presentacion cuando no hay `recruiter_id` (datos anteriores a FEAT-011).
 
 ## Correcciones aplicadas (Sprint final 2026-04 y mantenimiento 2026-07)
 
@@ -207,6 +256,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - **FEAT-005 (2026-07-24):** campo `service_structure` / **Estructura del servicio** en Solicitar y Gestion (seccion 4), validacion `required`, label en `PersonalRequisitionChangeLogger`.
 - **FEAT-006 (2026-07-24):** export Excel completo (`PersonalRequisitionFullExport`) en Gestion y Seguimiento; filtros `date_from`/`date_to` sobre `request_date` en panel (tabla + export).
 - **FEAT-010 (2026-07-27):** dashboard GH migra a **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js` + `apex-defaults.js`); Chart.js retirado.
+- **FEAT-012 (2026-07-28):** autorizacion gerencia para motivo cargo nuevo (`pendiente_autorizacion_gerencia`); pestaña Autorizacion gerencia; tipos de notificacion en Parametros (`new_requisition`, `management_approval_cargo_nuevo`).
+- **FEAT-011 (2026-07-28):** encargados de seleccion = usuarios GH + permiso `requisitions.selection_officer` (toggles en Parametros); `recruiter_id` referencia `users`; migracion elimina `requisition_recruiters`; export/impresion/historial usan `displayRecruiterName()`.
 
 ## Referencias
 

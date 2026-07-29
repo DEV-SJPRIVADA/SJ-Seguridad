@@ -23,7 +23,7 @@
 
                 <div class="panel__body">
                     <div class="block-spaced">
-                        <table class="supply-table js-datatable" data-no-excel>
+                        <table class="supply-table js-datatable">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -37,7 +37,7 @@
                                 @foreach ($requests as $request)
                                     <tr>
                                         <td class="text-center">#{{ $request->id }}</td>
-                                        <td class="text-center">{{ $request->created_at->format('Y-m-d') }}</td>
+                                        <td class="text-center"><x-date-table :value="$request->created_at" /></td>
                                         <td class="text-center">
                                             <span class="status-pill status-pill--req-{{ $request->status }}">
                                                 {{ $request->statusLabel() }}

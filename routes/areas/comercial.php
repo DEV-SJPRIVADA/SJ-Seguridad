@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Comercial\CommercialClientChecklistController;
 use App\Http\Controllers\Comercial\CommercialClientController;
 use App\Http\Controllers\Comercial\CommercialDashboardController;
 use App\Http\Controllers\Comercial\CommercialServiceController;
@@ -15,9 +16,12 @@ Route::middleware(['password.changed'])
     ->group(function (): void {
         Route::get('/', [CommercialClientController::class, 'index'])->name('index');
         Route::get('/exportar', [CommercialClientController::class, 'exportExcel'])->name('export');
+        Route::get('/checklist-documental', [CommercialClientChecklistController::class, 'index'])->name('checklist.index');
+        Route::get('/checklist-documental/exportar', [CommercialClientChecklistController::class, 'exportExcel'])->name('checklist.export');
         Route::get('/buscar', [CommercialClientController::class, 'search'])->name('search');
         Route::get('/crear', [CommercialClientController::class, 'create'])->name('create');
         Route::post('/', [CommercialClientController::class, 'store'])->name('store');
+        Route::patch('/{client}/checklist-documental', [CommercialClientChecklistController::class, 'update'])->name('checklist.update');
         Route::get('/{client}', [CommercialClientController::class, 'show'])->name('show');
         Route::get('/{client}/editar', [CommercialClientController::class, 'edit'])->name('edit');
         Route::patch('/{client}', [CommercialClientController::class, 'update'])->name('update');

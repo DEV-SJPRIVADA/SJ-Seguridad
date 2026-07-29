@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\NotificationConfigController;
 use App\Http\Controllers\Admin\SupplySiteController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RequisitionController;
+use App\Mail\PersonalRequisitionNotification;
+use App\Models\PersonalRequisition;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -180,6 +182,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
     });
 
+    Route::middleware(['password.changed', 'permission:manage.notifications'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('notificaciones', [NotificationConfigController::class, 'index'])->name('notifications.index');
+        Route::post('notificaciones/tipos/{notification_type}/correos', [NotificationConfigController::class, 'attachTypeEmail'])->name('notifications.types.emails.attach');
+        Route::delete('notificaciones/tipos/{notification_type}/correos/{notification_email}', [NotificationConfigController::class, 'detachTypeEmail'])->name('notifications.types.emails.detach');
+    });
+
     // Modulos del sistema
     require __DIR__.'/modules/requisitions.php';
     require __DIR__.'/modules/supplies.php';
@@ -190,13 +198,13 @@ Route::middleware(['auth', 'active'])->group(function () {
 
 if (app()->environment('local')) {
     Route::get('/mail-preview', function () {
-        $requisition = \App\Models\PersonalRequisition::with(['position', 'client', 'requester'])->latest()->first();
+        $requisition = PersonalRequisition::with(['position', 'client', 'requester'])->latest()->first();
 
         if (! $requisition) {
             return 'No hay requisiciones creadas para visualizar el correo.';
         }
 
-        return new \App\Mail\PersonalRequisitionNotification($requisition, 3);
+        return new PersonalRequisitionNotification($requisition, 3);
     })->middleware(['auth', 'permission:manage.users']);
 }
 
