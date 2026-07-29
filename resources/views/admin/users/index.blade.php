@@ -31,8 +31,10 @@
                 <div class="users-grid">
                     <aside class="users-sidebar">
                         <div class="panel__header">
-                            <p class="text-caption">Lista de usuarios</p>
-                            <p class="panel-text">{{ $users->total() }} registros encontrados</p>
+                            <div class="users-list-header">
+                                <p class="text-caption">Lista de usuarios</p>
+                                <p class="panel-text">{{ $users->total() }} registros encontrados</p>
+                            </div>
                             <form method="GET" action="{{ route('admin.users.index') }}" class="users-list-toolbar block-spaced-sm">
                                 <div class="search-bar">
                                     <input
@@ -46,16 +48,24 @@
                                         Buscar
                                     </button>
                                 </div>
-                                <label class="users-filter-toggle">
-                                    <input
-                                        type="checkbox"
-                                        name="include_inactive"
-                                        value="1"
-                                        @checked($filters['include_inactive'] ?? false)
-                                        onchange="this.form.submit()"
-                                    >
-                                    <span>Mostrar usuarios inactivos</span>
-                                </label>
+                                <div class="users-filter-actions">
+                                    <label class="users-filter-toggle">
+                                        <input
+                                            type="checkbox"
+                                            name="include_inactive"
+                                            value="1"
+                                            @checked($filters['include_inactive'] ?? false)
+                                            onchange="this.form.submit()"
+                                        >
+                                        <span>Mostrar usuarios inactivos</span>
+                                    </label>
+                                    <a
+                                        href="{{ route('admin.users.create') }}"
+                                        class="users-add-btn"
+                                        aria-label="Nuevo usuario"
+                                        title="Nuevo usuario"
+                                    ><span class="users-add-btn__glyph" aria-hidden="true">+</span></a>
+                                </div>
                             </form>
                         </div>
 

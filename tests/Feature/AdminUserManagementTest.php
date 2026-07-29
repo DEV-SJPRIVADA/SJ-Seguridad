@@ -61,7 +61,8 @@ class AdminUserManagementTest extends TestCase
         $response->assertSee('Procesos');
         $response->assertSee('Administracion');
         $response->assertSee('Usuarios');
-        $response->assertSee('Nuevo usuario');
+        $response->assertSee('aria-label="Nuevo usuario"', false);
+        $response->assertDontSee('>Nuevo usuario<', false);
     }
 
     public function test_admin_user_form_uses_three_permission_sections_without_presets_or_preview(): void

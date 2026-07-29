@@ -273,13 +273,7 @@ return [
                     'label' => 'Usuarios',
                     'route' => 'admin.users.index',
                     'permission' => 'manage.users',
-                    'patterns' => ['admin.users.index', 'admin.users.edit'],
-                ],
-                [
-                    'label' => 'Nuevo usuario',
-                    'route' => 'admin.users.create',
-                    'permission' => 'manage.users',
-                    'patterns' => ['admin.users.create'],
+                    'patterns' => ['admin.users.index', 'admin.users.edit', 'admin.users.create'],
                 ],
                 [
                     'label' => 'Configuracion de notificaciones',

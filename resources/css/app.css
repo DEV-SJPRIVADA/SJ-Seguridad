@@ -1909,6 +1909,72 @@ table.dataTable thead td {
     min-height: 0;
 }
 
+.users-list-header {
+    margin-bottom: 0.15rem;
+}
+
+.users-list-header .panel-text {
+    margin-bottom: 0;
+}
+
+.users-filter-actions {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 0.75rem;
+    margin-top: 0.65rem;
+}
+
+.users-filter-actions .users-filter-toggle {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.users-filter-actions .users-add-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.users-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.125rem;
+    height: 2.125rem;
+    min-width: 2.125rem;
+    min-height: 2.125rem;
+    padding: 0;
+    border: none;
+    text-decoration: none;
+    color: #fff;
+    background: var(--brand-blue);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(25, 132, 199, 0.35);
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.users-add-btn:hover {
+    color: #fff;
+    background: #1574b0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(25, 132, 199, 0.4);
+}
+
+.users-add-btn:focus {
+    outline: 2px solid rgba(25, 132, 199, 0.45);
+    outline-offset: 2px;
+}
+
+.users-add-btn__glyph {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
 .users-list {
     overflow-y: auto;
     padding-bottom: 0.75rem;
@@ -2624,6 +2690,13 @@ table.dataTable thead td {
     min-height: 40px;
     padding: 0.58rem 0.95rem;
     font-size: 0.78rem;
+}
+
+.admin-users-page .users-add-btn {
+    min-width: 2.125rem;
+    width: 2.125rem;
+    min-height: 2.125rem;
+    padding: 0;
 }
 
 .admin-users-page .form-input,
