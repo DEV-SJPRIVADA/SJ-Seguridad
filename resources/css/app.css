@@ -559,6 +559,13 @@ a {
 .comercial-checklist-page__table-wrap {
     margin-top: 0.5rem;
     overflow-x: auto;
+    transition: opacity 0.15s ease;
+}
+
+.comercial-checklist-page__table-wrap--booting {
+    opacity: 0;
+    min-height: 14rem;
+    pointer-events: none;
 }
 
 .comercial-checklist-table th,

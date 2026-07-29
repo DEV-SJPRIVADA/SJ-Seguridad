@@ -91,6 +91,10 @@
                             config.dom = 'rt';
                         }
 
+                        if ($(this).attr('data-dt-responsive') === 'false') {
+                            config.responsive = false;
+                        }
+
                         $(this).DataTable(config);
                     }
                 });

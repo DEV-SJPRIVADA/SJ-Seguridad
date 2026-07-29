@@ -93,8 +93,8 @@
                         @endforeach
                     @endif
 
-                    <div class="data-table-wrap comercial-checklist-page__table-wrap">
-                        <table class="data-table js-datatable comercial-checklist-table" style="width:100%; min-width:1100px;">
+                    <div class="data-table-wrap comercial-checklist-page__table-wrap comercial-checklist-page__table-wrap--booting">
+                        <table class="data-table js-datatable comercial-checklist-table" data-dt-responsive="false" style="width:100%; min-width:1100px;">
                             <thead>
                                 <tr>
                                     <th>NIT</th>
@@ -201,6 +201,33 @@
 
     @push('scripts')
         <script>
+            (function () {
+                var wrap = document.querySelector('.comercial-checklist-page__table-wrap');
+                if (!wrap) {
+                    return;
+                }
+
+                var table = wrap.querySelector('.js-datatable');
+                if (!table || typeof jQuery === 'undefined') {
+                    wrap.classList.remove('comercial-checklist-page__table-wrap--booting');
+
+                    return;
+                }
+
+                var $table = jQuery(table);
+
+                function revealChecklistTable() {
+                    wrap.classList.remove('comercial-checklist-page__table-wrap--booting');
+                }
+
+                if (jQuery.fn.DataTable.isDataTable(table)) {
+                    revealChecklistTable();
+                } else {
+                    $table.one('init.dt', revealChecklistTable);
+                    window.setTimeout(revealChecklistTable, 8000);
+                }
+            })();
+
             document.querySelectorAll('[data-checklist-doc-select]').forEach(function (select) {
                 select.addEventListener('change', function () {
                     var value = select.value || 'empty';
