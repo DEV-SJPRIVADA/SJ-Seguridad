@@ -146,7 +146,7 @@
                                         </td>
                                         <td>{{ $client->services_count }}</td>
                                         <td>
-                                            @if ($client->vigente_operational_services_count > 0)
+                                            @if ($client->active_operational_services_count > 0)
                                                 <span class="status-pill status-pill--success">Activo</span>
                                             @else
                                                 <span class="status-pill status-pill--danger">Inactivo</span>

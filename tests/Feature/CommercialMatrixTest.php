@@ -103,6 +103,7 @@ class CommercialMatrixTest extends TestCase
             'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
             'contract_number' => 'SJ-EXP-1',
             'contract_end' => now()->subDay(),
+            'is_active' => false,
             'created_by' => $user->id,
             'updated_by' => $user->id,
         ]);
@@ -118,6 +119,39 @@ class CommercialMatrixTest extends TestCase
             ->assertOk()
             ->assertSee('Cliente Inactivo SA', false)
             ->assertDontSee('Cliente Activo SA', false);
+    }
+
+    public function test_client_active_when_service_expired_but_still_active_flag(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
+        $client = CommercialClient::query()->create([
+            'nit' => '900333445',
+            'name' => 'Cliente Vencido Activo SA',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+        $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-VENC-ACT',
+            'contract_end' => now()->subDay(),
+            'is_active' => true,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.index', ['status' => 'active']))
+            ->assertOk()
+            ->assertSee('Cliente Vencido Activo SA', false);
+
+        $service = $client->services()->first();
+        $this->assertSame(CommercialService::ESTADO_VENCIDO, $service->serviceEstadoLabel());
     }
 
     public function test_manager_can_create_client_and_independent_services(): void
@@ -279,7 +313,8 @@ class CommercialMatrixTest extends TestCase
 
         $this->assertDatabaseHas('commercial_services', [
             'id' => $active->id,
-            'portfolio' => CommercialService::PORTFOLIO_INACTIVOS,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'is_active' => false,
         ]);
         $this->assertDatabaseHas('commercial_services', [
             'id' => $keep->id,
@@ -395,7 +430,148 @@ class CommercialMatrixTest extends TestCase
         ]);
     }
 
-    public function test_is_expired_true_when_client_documentation_expired_even_if_contract_ok(): void
+    public function test_manager_can_activate_service_after_inactivate(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '800040391',
+            'name' => 'Cliente Reactivar',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $service = $client->services()->create([
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-REACT',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.inactivate', $service))
+            ->assertRedirect(route('comercial.matriz.services.index'));
+
+        $this->assertDatabaseHas('commercial_services', [
+            'id' => $service->id,
+            'is_active' => false,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.activate', $service))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('commercial_services', [
+            'id' => $service->id,
+            'is_active' => true,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+        ]);
+    }
+
+    public function test_contract_vigencia_label_priority(): void
+    {
+        $user = $this->matrizManager();
+
+        $inactive = CommercialService::query()->create([
+            'commercial_client_id' => CommercialClient::query()->create([
+                'nit' => '900111228',
+                'name' => 'C1',
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ])->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'is_active' => false,
+            'contract_end' => now()->subDay()->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->assertSame(CommercialService::ESTADO_INACTIVO, $inactive->serviceEstadoLabel());
+
+        $expired = CommercialService::query()->create([
+            'commercial_client_id' => CommercialClient::query()->create([
+                'nit' => '900111229',
+                'name' => 'C2',
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ])->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_end' => now()->subDay()->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->assertSame(CommercialService::ESTADO_VENCIDO, $expired->serviceEstadoLabel());
+
+        $expiring = CommercialService::query()->create([
+            'commercial_client_id' => CommercialClient::query()->create([
+                'nit' => '900111230',
+                'name' => 'C3',
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ])->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_end' => now()->addDays(10)->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->assertSame(CommercialService::ESTADO_POR_VENCER, $expiring->serviceEstadoLabel());
+
+        $active = CommercialService::query()->create([
+            'commercial_client_id' => CommercialClient::query()->create([
+                'nit' => '900111231',
+                'name' => 'C4',
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ])->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_end' => now()->addDays(45)->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->assertSame(CommercialService::ESTADO_ACTIVO, $active->serviceEstadoLabel());
+    }
+
+    public function test_services_vigencia_filter_uses_contract_only(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111227',
+            'name' => 'Cliente Por Vencer',
+            'documentation_expires_on' => now()->addDays(5)->toDateString(),
+            'alert_days_before' => 30,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-EXP-SOON',
+            'contract_end' => now()->addDays(10)->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-DOC-ONLY',
+            'contract_end' => now()->addYear()->toDateString(),
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index', ['vigencia' => 'expiring']))
+            ->assertOk()
+            ->assertSee('SJ-EXP-SOON')
+            ->assertDontSee('SJ-DOC-ONLY');
+    }
+
+    public function test_is_expired_legacy_still_uses_documentation_for_dashboard(): void
     {
         $user = $this->matrizManager();
         $client = CommercialClient::query()->create([
@@ -420,33 +596,6 @@ class CommercialMatrixTest extends TestCase
 
         $this->assertTrue($service->isExpired());
         $this->assertFalse($service->isExpiringSoon(30));
-    }
-
-    public function test_services_vigencia_filter_uses_client_documentation(): void
-    {
-        $user = $this->matrizManager();
-        $client = CommercialClient::query()->create([
-            'nit' => '900111227',
-            'name' => 'Cliente Por Vencer',
-            'documentation_expires_on' => now()->addDays(5)->toDateString(),
-            'alert_days_before' => 30,
-            'created_by' => $user->id,
-            'updated_by' => $user->id,
-        ]);
-
-        CommercialService::query()->create([
-            'commercial_client_id' => $client->id,
-            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
-            'contract_number' => 'SJ-EXP-SOON',
-            'contract_end' => now()->addYear()->toDateString(),
-            'created_by' => $user->id,
-            'updated_by' => $user->id,
-        ]);
-
-        $this->actingAs($user)
-            ->get(route('comercial.matriz.services.index', ['vigencia' => 'expiring']))
-            ->assertOk()
-            ->assertSee('SJ-EXP-SOON');
     }
 
     private function matrizManager(): User

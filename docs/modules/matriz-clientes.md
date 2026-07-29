@@ -16,17 +16,19 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
   - `matriz_clientes` (etiqueta: **Clientes**)
   - `servicios_comerciales` (etiqueta: **Servicios**)
 - Dashboard: filtros portafolio/ciudad (stock); año/mes para **clientes nuevos** (`created_at`) y tendencia de altas (`contract_start`); KPIs (total clientes, clientes nuevos, activos, por vencer ≤30, vencidos, inactivos) y **ApexCharts** via Vite (`resources/js/comercial-dashboard-charts.js` + defaults `resources/js/charts/apex-defaults.js`). **FEAT-010:** Chart.js retirado; misma libreria que GH y Operaciones.
-- Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, conteos, estado (**Activo** = al menos un servicio operativo con contrato no vencido: portafolio ≠ `inactivos` y `contract_end` nulo o ≥ hoy); filtros GET `q`, `city`, `status=active|inactive` (pills + export Excel con mismos query params)
-- Listado servicios: cliente, NIT, portafolio, contrato, tipo, asesor, vigencia, acciones; filtros `vigencia=expiring|expired`
+- Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, conteos, **Estado** (**Activo** = al menos un servicio con `is_active = true`; **Inactivo** = todos los servicios con `is_active = false` o sin servicios); filtros GET `q`, `city`, `status=active|inactive`
+- Listado servicios (FEAT-016): columnas NIT, Cliente, Contrato, Tipo servicio, Portafolio, Asesor, Inicio, Fin, **Estado**, Acciones; estado del servicio = baja logica (`is_active`) + contrato; filtros `vigencia=expiring|expired` (30 dias, solo contrato activo)
 - Modelo:
   - `commercial_clients` (NIT unico, datos maestros; **vencimiento documentacion** `documentation_expires_on` + `alert_days_before`)
   - `commercial_client_document_items` (estado por documento, 10 filas por cliente)
-  - `commercial_services` (N:1 con cliente; portafolio, contrato, vigencia, contacto operativo — **sin** checklist)
+  - `commercial_services` (N:1 con cliente; portafolio, contrato, **`is_active`** baja logica, contacto operativo — **sin** checklist)
 - Portafolios: `seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`
 - Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`
 - Checklist documental por **cliente** (estados por documento; vencimiento y dias de anticipacion unicos por NIT; sin adjuntos)
 - Badge de vencimiento documental del cliente en pantalla checklist; filtros compactos (`req-manage-filters`) con `q`, `city`, `doc_vigencia=expiring|expired`; selects/pills de estado por documento con color (OK verde, Pendiente rojo, Incompleto naranja, N/A amarillo, X rojo intenso)
-- Filtros `vigencia=expiring|expired` en servicios consideran contrato del servicio **o** vencimiento documental del **cliente**
+- Filtros `vigencia=expiring|expired` en servicios: solo `contract_end` (excluye `is_active = false`)
+- **Estado servicio** (etiquetas): **Inactivo** (`is_active = false`) → **Vencido** → **Por vencer** (30 dias) → **Activo**. Inactivar/Activar no cambia portafolio.
+- **Estado cliente**: **Activo** si existe al menos un servicio con `is_active = true` (independiente de vencimiento de contrato).
 - **Notificacion correo (FEAT-015):** comando diario `comercial:send-documentation-notification-digest` (06:00 `America/Bogota`) envia **digest** a destinatarios del tipo `comercial` / `documentation_expiring` en Admin → Configuracion de notificaciones; misma regla que checklist «Por vencer» / vencida; dedupe en `commercial_client_documentation_notification_logs` (una vez por ciclo `expiring` y una vez `expired` por fecha de vencimiento)
 
 ## Fuera de V1
@@ -92,7 +94,8 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 - `GET|POST /crear` alta con **busqueda de cliente** por nombre/NIT (`commercial_client_id`)
 - Endpoint auxiliar: `GET /comercial/clientes/buscar?q=` (JSON)
 - `GET|PATCH /{service}/editar` (puede reasignar cliente)
-- `POST /{service}/inactivar`
+- `POST /{service}/inactivar` — `is_active = false` (no cambia portafolio)
+- `POST /{service}/activar` — `is_active = true`
 
 Nombres de ruta: `comercial.matriz.clients.*` y `comercial.matriz.services.*`.
 

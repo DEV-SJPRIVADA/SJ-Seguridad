@@ -38,4 +38,5 @@ Route::middleware(['password.changed'])
         Route::get('/{service}/editar', [CommercialServiceController::class, 'edit'])->name('edit');
         Route::patch('/{service}', [CommercialServiceController::class, 'update'])->name('update');
         Route::post('/{service}/inactivar', [CommercialServiceController::class, 'inactivate'])->name('inactivate');
+        Route::post('/{service}/activar', [CommercialServiceController::class, 'activate'])->name('activate');
     });

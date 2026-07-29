@@ -51,15 +51,15 @@ class CommercialServiceController extends Controller
         $portfolios = CommercialService::portfolios();
 
         $columns = [
-            ['key' => fn ($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
             ['key' => fn ($s) => $s->client?->nit ?? '—', 'label' => 'NIT'],
-            ['key' => fn ($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
+            ['key' => fn ($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
             ['key' => 'contract_number', 'label' => 'Contrato'],
             ['key' => fn ($s) => $s->serviceType?->name ?? '—', 'label' => 'Tipo servicio'],
+            ['key' => fn ($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
             ['key' => 'advisor_name', 'label' => 'Asesor'],
             ['key' => fn ($s) => DisplayDate::date($s->contract_start), 'label' => 'Inicio'],
             ['key' => fn ($s) => DisplayDate::date($s->contract_end), 'label' => 'Fin'],
-            ['key' => fn ($s) => $s->isExpired() ? 'Vencido' : ($s->isExpiringSoon(30) ? '≤30 dias' : ($s->isExpiringSoon(60) ? '≤60 dias' : '—')), 'label' => 'Vigencia'],
+            ['key' => fn ($s) => $s->serviceEstadoLabel(), 'label' => 'Estado'],
         ];
 
         return (new BaseExport($services, $columns, 'servicios_'.now()->format('Y-m-d').'.xlsx', 'Servicios - SJ Seguridad'))->download();
@@ -129,13 +129,27 @@ class CommercialServiceController extends Controller
         $this->authorizeManage();
 
         $service->update([
-            'portfolio' => CommercialService::PORTFOLIO_INACTIVOS,
+            'is_active' => false,
             'updated_by' => auth()->id(),
         ]);
 
         return redirect()
             ->route('comercial.matriz.services.index')
-            ->with('status', 'Servicio movido a Inactivos.');
+            ->with('status', 'Servicio inactivado.');
+    }
+
+    public function activate(CommercialService $service): RedirectResponse
+    {
+        $this->authorizeManage();
+
+        $service->update([
+            'is_active' => true,
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Servicio activado.');
     }
 
     private function resolveSelectedClient(?int $clientId): ?CommercialClient
@@ -169,7 +183,7 @@ class CommercialServiceController extends Controller
                 fn ($query) => $query->where('portfolio', $portfolio)
             )
             ->filterByVigencia($vigencia)
-            ->orderByRaw('CASE WHEN portfolio = ? THEN 1 ELSE 0 END', [CommercialService::PORTFOLIO_INACTIVOS])
+            ->orderBy('is_active')
             ->orderByDesc('contract_end')
             ->orderBy('contract_number');
     }

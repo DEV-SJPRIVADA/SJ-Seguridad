@@ -119,7 +119,7 @@ class CommercialClientController extends Controller
             ['key' => 'contract_start_display', 'label' => 'Inicio contrato'],
             ['key' => 'contract_end_display', 'label' => 'Fin contrato'],
             ['key' => 'services_count', 'label' => 'Servicios'],
-            ['key' => fn ($c) => ($c->vigente_operational_services_count ?? 0) > 0 ? 'Activo' : 'Inactivo', 'label' => 'Estado'],
+            ['key' => fn ($c) => ($c->active_operational_services_count ?? 0) > 0 ? 'Activo' : 'Inactivo', 'label' => 'Estado'],
         ];
 
         return (new BaseExport($clients, $columns, 'clientes_'.now()->format('Y-m-d').'.xlsx', 'Clientes - SJ Seguridad'))->download();
@@ -260,8 +260,7 @@ class CommercialClientController extends Controller
         return CommercialClient::query()
             ->withCount([
                 'services',
-                'activeServices',
-                'vigenteOperationalServices',
+                'activeOperationalServices',
             ])
             ->with([
                 'services' => fn ($query) => $query
@@ -283,8 +282,8 @@ class CommercialClientController extends Controller
                 });
             })
             ->when($city !== '', fn ($query) => $query->where('city', 'like', "%{$city}%"))
-            ->when($status === 'active', fn ($query) => $query->whereHas('vigenteOperationalServices'))
-            ->when($status === 'inactive', fn ($query) => $query->whereDoesntHave('vigenteOperationalServices'))
+            ->when($status === 'active', fn ($query) => $query->whereHas('activeOperationalServices'))
+            ->when($status === 'inactive', fn ($query) => $query->whereDoesntHave('activeOperationalServices'))
             ->orderBy('name');
     }
 

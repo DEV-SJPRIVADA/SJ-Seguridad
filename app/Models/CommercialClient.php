@@ -61,22 +61,36 @@ class CommercialClient extends Model
 
     public function activeServices(): HasMany
     {
-        return $this->services()->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS);
+        return $this->services()->where('is_active', true);
     }
 
     /**
-     * Servicios operativos (portafolio distinto de inactivos) con contrato no vencido.
+     * Servicios no dados de baja con el boton Inactivar (independiente del portafolio y del vencimiento).
+     */
+    public function activeOperationalServices(): HasMany
+    {
+        return $this->services()->where('is_active', true);
+    }
+
+    /**
+     * Servicios operativos con contrato no vencido (KPI / dashboard; no define estado del cliente).
      */
     public function vigenteOperationalServices(): HasMany
     {
         $today = now()->startOfDay();
 
         return $this->services()
+            ->where('is_active', true)
             ->where('portfolio', '!=', CommercialService::PORTFOLIO_INACTIVOS)
             ->where(function (Builder $query) use ($today): void {
                 $query->whereNull('contract_end')
                     ->orWhereDate('contract_end', '>=', $today);
             });
+    }
+
+    public function isClientActive(): bool
+    {
+        return $this->activeOperationalServices()->exists();
     }
 
     public function documentItems(): HasMany

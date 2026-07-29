@@ -59,12 +59,21 @@
                                     <th>Asesor</th>
                                     <th>Inicio</th>
                                     <th>Fin</th>
-                                    <th>Vigencia</th>
+                                    <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($services as $service)
+                                    @php
+                                        $estadoLabel = $service->serviceEstadoLabel();
+                                        $estadoPillClass = match ($estadoLabel) {
+                                            \App\Models\CommercialService::ESTADO_INACTIVO => 'status-pill--muted',
+                                            \App\Models\CommercialService::ESTADO_VENCIDO => 'status-pill--danger',
+                                            \App\Models\CommercialService::ESTADO_POR_VENCER => 'status-pill--warning',
+                                            default => 'status-pill--success',
+                                        };
+                                    @endphp
                                     <tr>
                                         <td>{{ $portfolios[$service->portfolio] ?? $service->portfolio }}</td>
                                         <td>{{ $service->contract_number ?: '—' }}</td>
@@ -73,21 +82,18 @@
                                         <td><x-date-table :value="$service->contract_start" /></td>
                                         <td><x-date-table :value="$service->contract_end" /></td>
                                         <td>
-                                            @if ($service->isExpired())
-                                                <span class="status-pill status-pill--req-cancelada">Vencido</span>
-                                            @elseif ($service->isExpiringSoon(30))
-                                                <span class="status-pill status-pill--req-en_gestion">≤30 dias</span>
-                                            @elseif ($service->isExpiringSoon(60))
-                                                <span class="status-pill status-pill--req-solicitada">≤60 dias</span>
-                                            @else
-                                                —
-                                            @endif
+                                            <span class="status-pill {{ $estadoPillClass }}">{{ $estadoLabel }}</span>
                                         </td>
                                         <td class="table-actions">
                                             @if ($canManage)
                                                 <a href="{{ route('comercial.matriz.services.edit', $service) }}" class="btn btn--secondary btn--sm">Editar</a>
-                                                @if ($service->portfolio !== \App\Models\CommercialService::PORTFOLIO_INACTIVOS)
-                                                    <form method="POST" action="{{ route('comercial.matriz.services.inactivate', $service) }}" style="display:inline;" onsubmit="return confirm('¿Mover este servicio a Inactivos?');">
+                                                @if (! $service->is_active)
+                                                    <form method="POST" action="{{ route('comercial.matriz.services.activate', $service) }}" style="display:inline;">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn--primary btn--sm">Activar</button>
+                                                    </form>
+                                                @else
+                                                    <form method="POST" action="{{ route('comercial.matriz.services.inactivate', $service) }}" style="display:inline;" onsubmit="return confirm('¿Inactivar este servicio?');">
                                                         @csrf
                                                         <button type="submit" class="btn btn--secondary btn--sm">Inactivar</button>
                                                     </form>
