@@ -12,6 +12,7 @@ use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
 use App\Support\DisplayDate;
+use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialServiceController extends Controller
 {
+    use HasGestionClientesTabs;
+
     public function index(Request $request): View
     {
         $this->authorizeView();
@@ -35,6 +38,7 @@ class CommercialServiceController extends Controller
             'portfolios' => CommercialService::portfolios(),
             'filters' => ['q' => $q, 'portfolio' => $portfolio, 'vigencia' => $vigencia],
             'canManage' => $this->canManage(),
+            'subTabs' => $this->getGestionClientesSubTabs('servicios'),
         ]);
     }
 

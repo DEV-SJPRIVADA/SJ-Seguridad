@@ -6,6 +6,7 @@ use App\Models\CommercialClient;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
 use App\Models\User;
+use App\Services\Navigation\NavigationResolver;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -348,7 +349,84 @@ class CommercialMatrixTest extends TestCase
         $this->actingAs($user)
             ->get(route('comercial.matriz.clients.checklist.index'))
             ->assertOk()
-            ->assertSee('Checklist documental');
+            ->assertSee('Checklist documental')
+            ->assertSee('Gestion Clientes', false)
+            ->assertSee('Clientes', false)
+            ->assertSee('Servicios', false);
+    }
+
+    public function test_gestion_clientes_board_redirects_to_first_visible_tab(): void
+    {
+        $clientsOnly = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $clientsOnly->assignRole('usuario');
+        $clientsOnly->givePermissionTo('view.board.comercial.gestion_clientes');
+        $clientsOnly->givePermissionTo('view.board.comercial.matriz_clientes');
+
+        $this->actingAs($clientsOnly)
+            ->get(route('dashboard', ['module' => 'comercial', 'board' => 'gestion_clientes']))
+            ->assertRedirect(route('comercial.matriz.clients.index'));
+
+        $servicesOnly = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $servicesOnly->assignRole('usuario');
+        $servicesOnly->givePermissionTo('view.board.comercial.gestion_clientes');
+        $servicesOnly->givePermissionTo('view.board.comercial.servicios_comerciales');
+
+        $this->actingAs($servicesOnly)
+            ->get(route('dashboard', ['module' => 'comercial', 'board' => 'gestion_clientes']))
+            ->assertRedirect(route('comercial.matriz.services.index'));
+    }
+
+    public function test_tab_subnav_respects_board_tab_permissions(): void
+    {
+        $clientsOnly = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $clientsOnly->assignRole('usuario');
+        $clientsOnly->givePermissionTo('view.board.comercial.matriz_clientes');
+
+        $this->actingAs($clientsOnly)
+            ->get(route('comercial.matriz.clients.index'))
+            ->assertOk()
+            ->assertSee('class="module-tab module-tab--active"', false)
+            ->assertDontSee('href="'.route('comercial.matriz.services.index').'"', false);
+
+        $servicesOnly = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $servicesOnly->assignRole('usuario');
+        $servicesOnly->givePermissionTo('view.board.comercial.servicios_comerciales');
+
+        $this->actingAs($servicesOnly)
+            ->get(route('comercial.matriz.services.index'))
+            ->assertOk()
+            ->assertSee('class="module-tab module-tab--active"', false)
+            ->assertDontSee('href="'.route('comercial.matriz.clients.index').'"', false);
+    }
+
+    public function test_navigation_shows_single_gestion_clientes_board(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
+        $nav = app(NavigationResolver::class)->resolve($user, 'comercial.matriz.clients.index');
+        $comercial = collect($nav['appNavigation'])->firstWhere('key', 'comercial');
+        $boardLabels = collect($comercial['items'] ?? [])->pluck('label');
+
+        $this->assertTrue($boardLabels->contains('Gestion Clientes'));
+        $this->assertFalse($boardLabels->contains('Clientes'));
+        $this->assertFalse($boardLabels->contains('Servicios'));
     }
 
     public function test_checklist_update_requires_manage(): void

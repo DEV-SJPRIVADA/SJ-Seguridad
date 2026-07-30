@@ -9,6 +9,7 @@ use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
 use App\Support\DisplayDate;
+use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialClientController extends Controller
 {
+    use HasGestionClientesTabs;
+
     public function index(Request $request): View
     {
         $this->authorizeView();
@@ -74,6 +77,7 @@ class CommercialClientController extends Controller
             'filters' => ['q' => $q, 'city' => $city, 'status' => $status],
             'statusLabels' => self::clientStatusFilterLabels(),
             'canManage' => $this->canManage(),
+            'subTabs' => $this->getGestionClientesSubTabs('clientes'),
         ]);
     }
 

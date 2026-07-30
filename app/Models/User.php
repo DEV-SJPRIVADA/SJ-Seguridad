@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\CommercialAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
 use Database\Factories\UserFactory;
@@ -237,6 +238,26 @@ class User extends Authenticatable
             'ajustes' => route('indicadores.admin.ajustes'),
             'consolidado' => route('indicadores.admin.consolidado.index'),
             default => route('dashboard', ['module' => 'operaciones']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function gestionClientesBoardTabsFor(): Collection
+    {
+        return collect(app(CommercialAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultGestionClientesBoardUrl(): string
+    {
+        $tabs = $this->gestionClientesBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'clientes' => route('comercial.matriz.clients.index'),
+            'servicios' => route('comercial.matriz.services.index'),
+            default => route('dashboard', ['module' => 'comercial']),
         };
     }
 }

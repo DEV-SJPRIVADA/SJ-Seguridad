@@ -53,15 +53,18 @@ Permisos del modulo de indicadores (area `operaciones`, board `indicadores`):
 
 Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Activa visualizacion de otras areas → Operaciones → Indicadores (funciones)**.
 
-Permisos de Matriz comercial (area `comercial`, boards `dashboard`, `matriz_clientes` y `servicios_comerciales`):
+Permisos de Matriz comercial (area `comercial`, boards sidebar `dashboard` y `gestion_clientes`):
 
 - `comercial.matriz.view`
 - `comercial.matriz.manage`
 - `view.board.comercial.dashboard` / `view.area.comercial` (tablero **Dashboard** KPI)
-- `view.board.comercial.matriz_clientes` (tablero **Clientes**)
-- `view.board.comercial.servicios_comerciales` (tablero **Servicios**)
+- `view.board.comercial.gestion_clientes` (tablero sidebar **Gestion Clientes**)
+- `view.board.comercial.matriz_clientes` (pestaña **Clientes** dentro de Gestion Clientes)
+- `view.board.comercial.servicios_comerciales` (pestaña **Servicios** dentro de Gestion Clientes)
 
-Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Activa visualizacion de otras areas → Comercial**.
+Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Activa visualizacion de otras areas → Comercial** (*Ver tableros* / *Matriz comercial*).
+
+Visibilidad de pestañas: `CommercialAccessService` — usuario con solo permiso de clientes ve pestaña Clientes; solo servicios ve Servicios; `comercial.matriz.*` ve ambas.
 
 ## Areas actuales
 
@@ -126,8 +129,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `suministros`
 - `documentos`
 - `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
-- `matriz_clientes` (etiqueta UI: **Clientes**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.matriz_clientes`)
-- `servicios_comerciales` (etiqueta UI: **Servicios**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.servicios_comerciales` / board clientes)
+- `gestion_clientes` (etiqueta UI: **Gestion Clientes**; solo en area `comercial`; sidebar por `view.board.comercial.gestion_clientes`, `comercial.matriz.*` o permisos legacy de pestaña; pestañas Clientes/Servicios con permisos `view.board.comercial.matriz_clientes` y `view.board.comercial.servicios_comerciales`)
 - En area `comercial`, el board `dashboard` redirige a `comercial/dashboard` (KPIs de matriz); acceso por `comercial.matriz.*`, `view.board.comercial.dashboard` o `view.area.comercial`
 
 Esto produce permisos como:

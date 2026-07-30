@@ -38,27 +38,16 @@ Route::get('/dashboard', function () {
                         ];
                     }
 
-                    if ($boardKey === 'matriz_clientes') {
+                    if ($boardKey === 'gestion_clientes') {
                         return [
                             'key' => $boardKey,
                             'label' => $boardLabel,
                             'can_view' => $key === 'comercial' && (
-                                $user->can('comercial.matriz.view')
+                                $user->can('view.board.comercial.gestion_clientes')
+                                || $user->can('comercial.matriz.view')
                                 || $user->can('comercial.matriz.manage')
                                 || $user->can('view.board.comercial.matriz_clientes')
-                            ),
-                        ];
-                    }
-
-                    if ($boardKey === 'servicios_comerciales') {
-                        return [
-                            'key' => $boardKey,
-                            'label' => $boardLabel,
-                            'can_view' => $key === 'comercial' && (
-                                $user->can('comercial.matriz.view')
-                                || $user->can('comercial.matriz.manage')
                                 || $user->can('view.board.comercial.servicios_comerciales')
-                                || $user->can('view.board.comercial.matriz_clientes')
                             ),
                         ];
                     }
@@ -121,6 +110,10 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultIndicadorBoardUrl());
         }
 
+        if ($defaultBoard === 'gestion_clientes') {
+            return redirect(auth()->user()->defaultGestionClientesBoardUrl());
+        }
+
         return redirect()->route('dashboard', array_filter([
             'module' => $defaultModule['key'],
             'board' => $defaultBoard,
@@ -151,6 +144,10 @@ Route::get('/dashboard', function () {
 
     if ($selectedModuleKey === 'comercial' && $selectedBoardKey === 'dashboard') {
         return redirect()->route('comercial.dashboard');
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'gestion_clientes') {
+        return redirect(auth()->user()->defaultGestionClientesBoardUrl());
     }
 
     if ($selectedModule && $selectedBoardKey === 'matriz_clientes') {

@@ -1,5 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
+        @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
         <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
             <h2 class="panel-title" style="margin:0;">Servicios</h2>
             <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — contratos y portafolios vinculados a clientes</p>

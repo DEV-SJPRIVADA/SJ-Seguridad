@@ -29,6 +29,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-017 | Comercial: tablero Gestion Clientes + pestañas Clientes/Servicios | orquestado | Si | [`docs/runs/FEAT-017-run-log.md`](runs/FEAT-017-run-log.md) | 2026-07-30 |
 | FEAT-012 | Autorizacion gerencia cargo nuevo (enfoque A) | orquestado | Si | [`docs/runs/FEAT-012-run-log.md`](runs/FEAT-012-run-log.md) | 2026-07-28 |
 | FEAT-011 | Encargados seleccion: usuarios GH activables (Reclutador) | orquestado | Si | [`docs/runs/FEAT-011-run-log.md`](runs/FEAT-011-run-log.md) | 2026-07-28 |
 | FEAT-010 | Unificar graficos ApexCharts (GH + Operaciones; quitar Chart.js/ECharts) | orquestado | Si | [`docs/runs/FEAT-010-run-log.md`](runs/FEAT-010-run-log.md) | 2026-07-27 |

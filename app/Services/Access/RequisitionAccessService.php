@@ -72,7 +72,7 @@ class RequisitionAccessService
         }
 
         foreach (array_keys(config('access.boards', [])) as $boardKey) {
-            if (in_array($boardKey, ['documentos', 'indicadores', 'matriz_clientes', 'servicios_comerciales'], true)) {
+            if (in_array($boardKey, ['documentos', 'indicadores', 'gestion_clientes'], true)) {
                 continue;
             }
 

@@ -62,8 +62,7 @@ return [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
         'requisiciones' => 'Requisiciones',
-        'matriz_clientes' => 'Clientes',
-        'servicios_comerciales' => 'Servicios',
+        'gestion_clientes' => 'Gestion Clientes',
         'suministros' => 'Suministros',
         'documentos' => 'Documentos',
     ],
@@ -73,6 +72,16 @@ return [
         'captura' => 'Listado de Indicadores',
         'consolidado' => 'Consolidado',
         'ajustes' => 'Ajustes',
+    ],
+
+    'gestion_clientes_tabs' => [
+        'clientes' => 'Clientes',
+        'servicios' => 'Servicios',
+    ],
+
+    'comercial_gestion_tab_board_keys' => [
+        'matriz_clientes',
+        'servicios_comerciales',
     ],
 
     'requisition_tabs' => [
@@ -230,8 +239,7 @@ return [
                         'label' => 'Ver tableros',
                         'permissions' => [
                             'view.board.comercial.dashboard',
-                            'view.board.comercial.matriz_clientes',
-                            'view.board.comercial.servicios_comerciales',
+                            'view.board.comercial.gestion_clientes',
                         ],
                     ],
                     'matriz' => [
@@ -239,6 +247,8 @@ return [
                         'permissions' => [
                             'comercial.matriz.view',
                             'comercial.matriz.manage',
+                            'view.board.comercial.matriz_clientes',
+                            'view.board.comercial.servicios_comerciales',
                         ],
                     ],
                 ],

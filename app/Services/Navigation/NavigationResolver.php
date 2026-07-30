@@ -4,9 +4,9 @@ namespace App\Services\Navigation;
 
 use App\Models\User;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\CommercialAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -16,6 +16,7 @@ class NavigationResolver
         private readonly RequisitionAccessService $requisitionAccess,
         private readonly SupplyAccessService $supplyAccess,
         private readonly BoardAccessService $boardAccess,
+        private readonly CommercialAccessService $commercialAccess,
     ) {}
 
     /**
@@ -130,42 +131,21 @@ class NavigationResolver
                             ];
                         }
 
-                        if ($boardKey === 'matriz_clientes') {
+                        if ($boardKey === 'gestion_clientes') {
                             if ($key !== 'comercial') {
                                 return null;
                             }
 
-                            if (! $user->can('comercial.matriz.view') && ! $user->can('comercial.matriz.manage') && ! $user->can('view.board.comercial.matriz_clientes')) {
+                            if (! $this->commercialAccess->canViewGestionClientesBoard($user)) {
                                 return null;
                             }
 
                             return [
                                 'label' => $boardLabel,
                                 'route' => 'comercial.matriz.clients.index',
-                                'url' => route('comercial.matriz.clients.index'),
-                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.clients.'),
-                            ];
-                        }
-
-                        if ($boardKey === 'servicios_comerciales') {
-                            if ($key !== 'comercial') {
-                                return null;
-                            }
-
-                            if (
-                                ! $user->can('comercial.matriz.view')
-                                && ! $user->can('comercial.matriz.manage')
-                                && ! $user->can('view.board.comercial.servicios_comerciales')
-                                && ! $user->can('view.board.comercial.matriz_clientes')
-                            ) {
-                                return null;
-                            }
-
-                            return [
-                                'label' => $boardLabel,
-                                'route' => 'comercial.matriz.services.index',
-                                'url' => route('comercial.matriz.services.index'),
-                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.services.'),
+                                'url' => $user->defaultGestionClientesBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.clients.')
+                                    || str_starts_with((string) $routeName, 'comercial.matriz.services.'),
                             ];
                         }
 
@@ -214,8 +194,10 @@ class NavigationResolver
                             $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
                             $boardKey === 'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
-                            $boardKey === 'matriz_clientes' => str_starts_with((string) $routeName, 'comercial.matriz.clients.') && $key === 'comercial',
-                            $boardKey === 'servicios_comerciales' => str_starts_with((string) $routeName, 'comercial.matriz.services.') && $key === 'comercial',
+                            $boardKey === 'gestion_clientes' => (
+                                str_starts_with((string) $routeName, 'comercial.matriz.clients.')
+                                || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                            ) && $key === 'comercial',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
