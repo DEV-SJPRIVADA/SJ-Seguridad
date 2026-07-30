@@ -171,6 +171,7 @@ class CommercialClientController extends Controller
 
         return view('areas.comercial.matriz-clientes.clients.create', [
             'client' => new CommercialClient,
+            'subTabs' => $this->getGestionClientesSubTabs('clientes'),
         ]);
     }
 
@@ -221,6 +222,7 @@ class CommercialClientController extends Controller
 
         return view('areas.comercial.matriz-clientes.clients.edit', [
             'client' => $client,
+            'subTabs' => $this->getGestionClientesSubTabs('clientes'),
         ]);
     }
 

@@ -81,6 +81,7 @@ class CommercialServiceController extends Controller
                 'commercial_client_id' => $preselectedClientId,
             ]),
             'selectedClient' => $this->resolveSelectedClient($preselectedClientId),
+            'subTabs' => $this->getGestionClientesSubTabs('servicios'),
             ...$this->formOptions(),
         ]);
     }
@@ -110,6 +111,7 @@ class CommercialServiceController extends Controller
         return view('areas.comercial.matriz-clientes.services.edit', [
             'service' => $service,
             'selectedClient' => $this->resolveSelectedClient($selectedClientId) ?? $service->client,
+            'subTabs' => $this->getGestionClientesSubTabs('servicios'),
             ...$this->formOptions(),
         ]);
     }

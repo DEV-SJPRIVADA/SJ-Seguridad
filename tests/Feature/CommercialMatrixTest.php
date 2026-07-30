@@ -413,6 +413,48 @@ class CommercialMatrixTest extends TestCase
             ->assertDontSee('href="'.route('comercial.matriz.clients.index').'"', false);
     }
 
+    public function test_create_and_edit_forms_show_gestion_clientes_subnav(): void
+    {
+        $user = $this->matrizManager();
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.create'))
+            ->assertOk()
+            ->assertSee('Gestion Clientes', false)
+            ->assertSee('href="'.route('comercial.matriz.clients.index').'"', false);
+
+        $client = CommercialClient::query()->create([
+            'nit' => '900999001',
+            'name' => 'Cliente Subnav',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.edit', $client))
+            ->assertOk()
+            ->assertSee('Gestion Clientes', false);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.create'))
+            ->assertOk()
+            ->assertSee('Gestion Clientes', false)
+            ->assertSee('href="'.route('comercial.matriz.services.index').'"', false);
+
+        $service = CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SUB-001',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.edit', $service))
+            ->assertOk()
+            ->assertSee('Gestion Clientes', false);
+    }
+
     public function test_navigation_shows_single_gestion_clientes_board(): void
     {
         $user = User::factory()->create([

@@ -1,5 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
+        @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
         <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
             <h2 class="panel-title" style="margin:0;">Nuevo servicio</h2>
             <p class="panel-text" style="margin:0.25rem 0 0;">Busque el cliente por nombre o NIT y agreguelo al servicio.</p>
