@@ -145,7 +145,8 @@ class NavigationResolver
                                 'route' => 'comercial.matriz.clients.index',
                                 'url' => $user->defaultGestionClientesBoardUrl(),
                                 'active' => str_starts_with((string) $routeName, 'comercial.matriz.clients.')
-                                    || str_starts_with((string) $routeName, 'comercial.matriz.services.'),
+                                    || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                                    || str_starts_with((string) $routeName, 'comercial.parameters.'),
                             ];
                         }
 
@@ -197,6 +198,7 @@ class NavigationResolver
                             $boardKey === 'gestion_clientes' => (
                                 str_starts_with((string) $routeName, 'comercial.matriz.clients.')
                                 || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                                || str_starts_with((string) $routeName, 'comercial.parameters.')
                             ) && $key === 'comercial',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
@@ -249,6 +251,7 @@ class NavigationResolver
                         $routeName === 'comercial.dashboard'
                         || str_starts_with((string) $routeName, 'comercial.matriz.clients.')
                         || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                        || str_starts_with((string) $routeName, 'comercial.parameters.')
                     ) && $key === 'comercial'
                 );
 

@@ -19,6 +19,7 @@ trait HasGestionClientesTabs
             $targetRoute = match ($tab) {
                 'clientes' => 'comercial.matriz.clients.index',
                 'servicios' => 'comercial.matriz.services.index',
+                'parametros' => 'comercial.parameters.index',
                 default => 'comercial.matriz.clients.index',
             };
 
@@ -27,6 +28,8 @@ trait HasGestionClientesTabs
                     || str_starts_with((string) $routeName, 'comercial.matriz.clients.'),
                 'servicios' => $activeTab === 'servicios'
                     || str_starts_with((string) $routeName, 'comercial.matriz.services.'),
+                'parametros' => $activeTab === 'parametros'
+                    || str_starts_with((string) $routeName, 'comercial.parameters.'),
                 default => $tab === $activeTab,
             };
 

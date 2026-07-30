@@ -15,6 +15,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
   - `dashboard` (etiqueta: **Dashboard**) — redirige a `comercial/dashboard`
   - `gestion_clientes` (etiqueta: **Gestion Clientes**) — pestañas **Clientes** y **Servicios** (`.module-tab`, partial `gestion-clientes-subnav`)
 - Pestañas del tablero Gestion Clientes (FEAT-017): rutas sin cambio (`comercial/clientes/*`, `comercial/servicios/*`); visibilidad por pestaña con permisos legacy `view.board.comercial.matriz_clientes` y `view.board.comercial.servicios_comerciales`
+- **Parametros (FEAT-018):** pestaña `comercial/parametros` — CRUD de sectores, tipos de cliente/servicio y portafolios (`commercial_portfolios` con `slug`); permiso `manage.commercial.parameters` o `comercial.matriz.manage`
 - Dashboard: filtros portafolio/ciudad (stock); año/mes para **clientes nuevos** (`created_at`) y tendencia de altas (`contract_start`); KPIs (total clientes, clientes nuevos, activos, por vencer ≤30, vencidos, inactivos) y **ApexCharts** via Vite (`resources/js/comercial-dashboard-charts.js` + defaults `resources/js/charts/apex-defaults.js`). **FEAT-010:** Chart.js retirado; misma libreria que GH y Operaciones.
 - Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, conteos, **Estado** (**Activo** = al menos un servicio con `is_active = true`; **Inactivo** = todos los servicios con `is_active = false` o sin servicios); filtros GET `q`, `city`, `status=active|inactive`
 - Listado servicios (FEAT-016): columnas NIT, Cliente, Contrato, Tipo servicio, Portafolio, Asesor, Inicio, Fin, **Estado**, Acciones; estado del servicio = baja logica (`is_active`) + contrato; filtros `vigencia=expiring|expired` (30 dias, solo contrato activo)
@@ -22,8 +23,8 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
   - `commercial_clients` (NIT unico, datos maestros; **vencimiento documentacion** `documentation_expires_on` + `alert_days_before`)
   - `commercial_client_document_items` (estado por documento, 10 filas por cliente)
   - `commercial_services` (N:1 con cliente; portafolio, contrato, **`is_active`** baja logica, contacto operativo — **sin** checklist)
-- Portafolios: `seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`
-- Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`
+- Portafolios: slugs en `commercial_portfolios` (`seg_fisica`, `monitoreo`, `ocasionales`, `inactivos` por defecto); columna `commercial_services.portfolio` sigue siendo slug string
+- Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`, `commercial_portfolios`
 - Checklist documental por **cliente** (estados por documento; vencimiento y dias de anticipacion unicos por NIT; sin adjuntos)
 - Badge de vencimiento documental del cliente en pantalla checklist; filtros compactos (`req-manage-filters`) con `q`, `city`, `doc_vigencia=expiring|expired`; selects/pills de estado por documento con color (OK verde, Pendiente rojo, Incompleto naranja, N/A amarillo, X rojo intenso)
 - Filtros `vigencia=expiring|expired` en servicios: solo `contract_end` (excluye `is_active = false`)
@@ -97,7 +98,12 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 - `POST /{service}/inactivar` — `is_active = false` (no cambia portafolio)
 - `POST /{service}/activar` — `is_active = true`
 
-Nombres de ruta: `comercial.matriz.clients.*` y `comercial.matriz.services.*`.
+### Parametros — prefijo `comercial/parametros`
+
+- `GET /` tablero de catalogos (`comercial.parameters.index`)
+- `POST|PATCH|DELETE /{type}/{id?}` CRUD por tipo: `sectors`, `client-types`, `service-types`, `portfolios`
+
+Nombres de ruta: `comercial.matriz.clients.*`, `comercial.matriz.services.*` y `comercial.parameters.*`.
 
 Desde la ficha del cliente, “Agregar servicio” abre el alta de servicios con el cliente preseleccionado (`?client={id}`).
 
@@ -109,6 +115,7 @@ Desde la ficha del cliente, “Agregar servicio” abre el alta de servicios con
 - `view.board.comercial.gestion_clientes` — muestra el tablero **Gestion Clientes** en sidebar (migracion: quien tenia `matriz_clientes` o `servicios_comerciales`)
 - `view.board.comercial.matriz_clientes` — pestaña **Clientes** dentro de Gestion Clientes
 - `view.board.comercial.servicios_comerciales` — pestaña **Servicios** dentro de Gestion Clientes
+- `manage.commercial.parameters` — pestaña **Parametros** (CRUD catalogos); tambien accesible con `comercial.matriz.manage`
 - Quien tenga `comercial.matriz.*` ve el tablero y ambas pestañas; con solo uno de los permisos de pestaña ve unicamente esa pestaña
 - Assignables en Admin usuarios → Alcance Comercial (*Ver tableros* / *Matriz comercial*)
 - `manage.users` puede administrar (bypass)

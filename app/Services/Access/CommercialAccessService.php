@@ -26,13 +26,19 @@ class CommercialAccessService
         }
 
         return $user->can('view.board.comercial.matriz_clientes')
-            || $user->can('view.board.comercial.servicios_comerciales');
+            || $user->can('view.board.comercial.servicios_comerciales')
+            || $user->can('manage.commercial.parameters');
     }
 
     public function canAccessTab(User $user, string $tab): bool
     {
         if ($this->isAdminBypass($user)) {
             return true;
+        }
+
+        if ($tab === 'parametros') {
+            return $user->can('manage.commercial.parameters')
+                || $user->can('comercial.matriz.manage');
         }
 
         if ($user->can('comercial.matriz.view') || $user->can('comercial.matriz.manage')) {

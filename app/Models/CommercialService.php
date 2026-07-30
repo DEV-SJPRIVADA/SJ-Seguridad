@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class CommercialService extends Model
 {
@@ -88,6 +89,29 @@ class CommercialService extends Model
     }
 
     public static function portfolios(): array
+    {
+        if (! Schema::hasTable('commercial_portfolios')) {
+            return self::fallbackPortfolios();
+        }
+
+        $fromDatabase = CommercialPortfolio::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->pluck('name', 'slug')
+            ->all();
+
+        if ($fromDatabase !== []) {
+            return $fromDatabase;
+        }
+
+        return self::fallbackPortfolios();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function fallbackPortfolios(): array
     {
         return [
             self::PORTFOLIO_SEG_FISICA => 'Seg. Fisica',

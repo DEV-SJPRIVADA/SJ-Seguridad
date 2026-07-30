@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\CommercialClient;
+use App\Models\CommercialPortfolio;
+use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
 use App\Models\User;
@@ -429,6 +431,24 @@ class CommercialMatrixTest extends TestCase
         $this->assertFalse($boardLabels->contains('Servicios'));
     }
 
+    public function test_navigation_keeps_comercial_active_on_parameters_route(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo(['comercial.matriz.manage', 'manage.commercial.parameters']);
+
+        $nav = app(NavigationResolver::class)->resolve($user, 'comercial.parameters.index');
+        $comercial = collect($nav['appNavigation'])->firstWhere('key', 'comercial');
+
+        $this->assertNotNull($comercial);
+        $this->assertTrue($comercial['active']);
+        $this->assertTrue(collect($comercial['items'])->contains('active', true));
+        $this->assertTrue($nav['currentModuleTabs']->isNotEmpty());
+    }
+
     public function test_checklist_update_requires_manage(): void
     {
         $user = User::factory()->create([
@@ -674,6 +694,152 @@ class CommercialMatrixTest extends TestCase
 
         $this->assertTrue($service->isExpired());
         $this->assertFalse($service->isExpiringSoon(30));
+    }
+
+    public function test_viewer_cannot_access_commercial_parameters(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.matriz.view');
+
+        $this->actingAs($user)
+            ->get(route('comercial.parameters.index'))
+            ->assertForbidden();
+    }
+
+    public function test_parameters_manager_can_access_and_crud_sector(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('manage.commercial.parameters');
+
+        $this->actingAs($user)
+            ->get(route('comercial.parameters.index'))
+            ->assertOk()
+            ->assertSee('Tablero de Parametros', false)
+            ->assertSee('Sectores', false);
+
+        $this->actingAs($user)
+            ->post(route('comercial.parameters.store', ['type' => 'sectors']), [
+                'name' => 'Sector Param Test',
+                'sort_order' => 99,
+                'is_active' => true,
+            ])
+            ->assertRedirect(route('comercial.parameters.index'));
+
+        $sector = CommercialSector::query()->where('name', 'Sector Param Test')->first();
+        $this->assertNotNull($sector);
+        $this->assertTrue($sector->is_active);
+        $this->assertSame(99, $sector->sort_order);
+
+        $this->actingAs($user)
+            ->patch(route('comercial.parameters.update', ['type' => 'sectors', 'parameterId' => $sector->id]), [
+                'name' => 'Sector Param Actualizado',
+                'sort_order' => 100,
+                'is_active' => false,
+            ])
+            ->assertRedirect(route('comercial.parameters.index'));
+
+        $sector->refresh();
+        $this->assertSame('Sector Param Actualizado', $sector->name);
+        $this->assertFalse($sector->is_active);
+
+        $this->actingAs($user)
+            ->delete(route('comercial.parameters.destroy', ['type' => 'sectors', 'parameterId' => $sector->id]))
+            ->assertRedirect(route('comercial.parameters.index'));
+
+        $this->assertDatabaseMissing('commercial_sectors', ['id' => $sector->id]);
+    }
+
+    public function test_portfolios_loaded_from_database_for_service_forms_and_dashboard(): void
+    {
+        $portfolios = CommercialService::portfolios();
+
+        $this->assertArrayHasKey(CommercialService::PORTFOLIO_SEG_FISICA, $portfolios);
+        $this->assertArrayHasKey(CommercialService::PORTFOLIO_MONITOREO, $portfolios);
+        $this->assertSame('Seg. Fisica', $portfolios[CommercialService::PORTFOLIO_SEG_FISICA]);
+
+        CommercialPortfolio::query()
+            ->where('slug', CommercialService::PORTFOLIO_SEG_FISICA)
+            ->update(['name' => 'Seguridad Fisica DB']);
+
+        $updated = CommercialService::portfolios();
+        $this->assertSame('Seguridad Fisica DB', $updated[CommercialService::PORTFOLIO_SEG_FISICA]);
+    }
+
+    public function test_portfolio_store_requires_slug(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('manage.commercial.parameters');
+
+        $this->actingAs($user)
+            ->post(route('comercial.parameters.store', ['type' => 'portfolios']), [
+                'name' => 'Portafolio Nuevo',
+                'sort_order' => 5,
+                'is_active' => true,
+            ])
+            ->assertSessionHasErrors('slug');
+
+        $this->actingAs($user)
+            ->post(route('comercial.parameters.store', ['type' => 'portfolios']), [
+                'slug' => 'nuevo_portafolio',
+                'name' => 'Portafolio Nuevo',
+                'sort_order' => 5,
+                'is_active' => true,
+            ])
+            ->assertRedirect(route('comercial.parameters.index'));
+
+        $this->assertDatabaseHas('commercial_portfolios', [
+            'slug' => 'nuevo_portafolio',
+            'name' => 'Portafolio Nuevo',
+        ]);
+    }
+
+    public function test_service_store_validates_portfolio_against_database(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900999888',
+            'name' => 'Cliente Portfolio DB',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.store'), [
+                'commercial_client_id' => $client->id,
+                'portfolio' => 'slug_inexistente',
+                'contract_number' => 'SJ-BAD-PORT',
+            ])
+            ->assertSessionHasErrors('portfolio');
+
+        $this->actingAs($user)
+            ->post(route('comercial.matriz.services.store'), [
+                'commercial_client_id' => $client->id,
+                'portfolio' => CommercialService::PORTFOLIO_MONITOREO,
+                'contract_number' => 'SJ-GOOD-PORT',
+            ])
+            ->assertRedirect(route('comercial.matriz.services.index'))
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_matriz_manager_can_access_parameters_tab(): void
+    {
+        $user = $this->matrizManager();
+
+        $this->actingAs($user)
+            ->get(route('comercial.parameters.index'))
+            ->assertOk();
     }
 
     private function matrizManager(): User

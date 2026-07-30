@@ -12,6 +12,7 @@ return [
         'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
+        'manage.commercial.parameters' => 'Administrar parametros comerciales',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
@@ -77,6 +78,7 @@ return [
     'gestion_clientes_tabs' => [
         'clientes' => 'Clientes',
         'servicios' => 'Servicios',
+        'parametros' => 'Parametros',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -247,6 +249,7 @@ return [
                         'permissions' => [
                             'comercial.matriz.view',
                             'comercial.matriz.manage',
+                            'manage.commercial.parameters',
                             'view.board.comercial.matriz_clientes',
                             'view.board.comercial.servicios_comerciales',
                         ],
