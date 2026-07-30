@@ -1,178 +1,127 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
-        <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
-            <h2 class="panel-title" style="margin:0;">Servicios</h2>
-            <p class="panel-text" style="margin:0.25rem 0 0;">Comercial — contratos y portafolios vinculados a clientes</p>
+        <div class="app-container comercial-services-page__workspace-header">
+            <div class="panel-heading-row">
+                <h2 class="panel-title panel-title--page">Servicios</h2>
+                <p class="panel-text">Comercial — contratos y portafolios vinculados a clientes</p>
+            </div>
         </div>
     </x-slot>
 
-    <div class="page-section">
+    @php
+        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+            || ($filters['portfolio'] ?? '') !== ''
+            || ($filters['vigencia'] ?? '') !== ''
+            || ($filters['status'] ?? '') !== '';
+
+        $servicesQuery = fn (array $overrides = []) => array_filter([
+            'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
+            'portfolio' => array_key_exists('portfolio', $overrides) ? $overrides['portfolio'] : ($filters['portfolio'] ?: null),
+            'vigencia' => array_key_exists('vigencia', $overrides) ? $overrides['vigencia'] : ($filters['vigencia'] ?: null),
+            'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $serviceStatusPillClass = fn (string $statusKey): string => match ($statusKey) {
+            'activo' => 'status-pill--success',
+            'por_vencer' => 'status-pill--warning',
+            'vencido' => 'status-pill--danger',
+            'inactivo' => 'status-pill--muted',
+            default => '',
+        };
+    @endphp
+
+    <div class="page-section comercial-services-page">
         <div class="app-container">
             @if (session('status'))
-                <div class="alert alert--success bottom-spaced">{{ session('status') }}</div>
+                <div class="alert alert--success comercial-services-page__alert">{{ session('status') }}</div>
             @endif
 
-            <div class="panel">
-                <div class="panel__header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
-                    <div>
-                        <h3 class="panel-title">Listado de servicios</h3>
-                        <p class="panel-text">Cada servicio pertenece a un cliente. Filtre por contrato, asesor, NIT o portafolio.</p>
-                    </div>
-                    <div style="display:flex;gap:0.5rem;align-items:center;">
-                        <x-export-excel route="{{ route('comercial.matriz.services.export', request()->query()) }}" />
-                        @if ($canManage)
-                            <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary">Nuevo servicio</a>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="panel__body">
-                    <form method="GET" class="services-filters bottom-spaced">
-                        <div class="services-filters__inner">
-                            <div class="services-filters__field services-filters__field--search">
-                                <svg class="services-filters__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                                <input type="search" name="q" class="services-filters__input" value="{{ $filters['q'] }}" placeholder="Buscar cliente, NIT, contrato o asesor">
+            <div class="panel comercial-services-panel">
+                <div class="panel__body panel__body--compact">
+                    <div class="req-manage-filters comercial-services-filters">
+                        <div class="req-manage-filters__head">
+                            <div class="panel-heading-row panel-heading-row--wrap">
+                                <h3 class="panel-title">Listado de servicios</h3>
+                                <p class="panel-text">Contrato, asesor, NIT o portafolio · cada servicio pertenece a un cliente</p>
                             </div>
-                            <div class="services-filters__field">
-                                <select name="portfolio" class="services-filters__select">
-                                    <option value="">Todos los portafolios</option>
-                                    @foreach ($portfolios as $key => $label)
-                                        <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
+                            <div class="req-manage-filters__actions comercial-services-filters__actions">
+                                <x-export-excel route="{{ route('comercial.matriz.services.export', request()->query()) }}" />
+                                @if ($hasActiveFilters)
+                                    <a href="{{ route('comercial.matriz.services.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                @endif
+                                @if ($canManage)
+                                    <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary btn--sm">Nuevo servicio</a>
+                                @endif
                             </div>
-                            <div class="services-filters__field">
-                                <select name="vigencia" class="services-filters__select">
-                                    <option value="">Toda vigencia</option>
-                                    <option value="expiring" @selected(($filters['vigencia'] ?? '') === 'expiring')>Por vencer (contrato, 30 días)</option>
-                                    <option value="expired" @selected(($filters['vigencia'] ?? '') === 'expired')>Vencido (contrato)</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="services-filters__btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                                Filtrar
-                            </button>
                         </div>
-                    </form>
-                    <style>
-                        .services-filters {
-                            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-                            padding: 1rem 1.25rem;
-                            border-radius: 14px;
-                            border: 1px solid #e2e8f0;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-                            transition: box-shadow 0.2s;
-                        }
-                        .services-filters:hover {
-                            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-                        }
-                        .services-filters__inner {
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 0.75rem;
-                            align-items: center;
-                        }
-                        .services-filters__field {
-                            flex: 0 1 auto;
-                            min-width: 0;
-                        }
-                        .services-filters__field--search {
-                            flex: 1 1 240px;
-                            position: relative;
-                        }
-                        .services-filters__icon {
-                            position: absolute;
-                            left: 12px;
-                            top: 50%;
-                            transform: translateY(-50%);
-                            width: 16px;
-                            height: 16px;
-                            color: #94a3b8;
-                            pointer-events: none;
-                        }
-                        .services-filters__input {
-                            width: 100%;
-                            min-height: 40px;
-                            padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-                            font-size: 0.85rem;
-                            border-radius: 10px;
-                            border: 1.5px solid #e2e8f0;
-                            background: #fff;
-                            color: #1e293b;
-                            transition: border-color 0.15s, box-shadow 0.15s;
-                            box-sizing: border-box;
-                        }
-                        .services-filters__input:focus {
-                            border-color: #2563eb;
-                            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-                            outline: none;
-                        }
-                        .services-filters__input::placeholder {
-                            color: #94a3b8;
-                        }
-                        .services-filters__select {
-                            min-height: 40px;
-                            padding: 0.5rem 2.25rem 0.5rem 0.85rem;
-                            font-size: 0.85rem;
-                            border-radius: 10px;
-                            border: 1.5px solid #e2e8f0;
-                            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 0.65rem center;
-                            background-size: 1rem;
-                            color: #1e293b;
-                            cursor: pointer;
-                            transition: border-color 0.15s, box-shadow 0.15s;
-                            appearance: none;
-                            min-width: 160px;
-                        }
-                        .services-filters__select:focus {
-                            border-color: #2563eb;
-                            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-                            outline: none;
-                        }
-                        .services-filters__select:hover {
-                            border-color: #94a3b8;
-                        }
-                        .services-filters__btn {
-                            min-height: 40px;
-                            padding: 0.5rem 1.1rem;
-                            font-size: 0.82rem;
-                            font-weight: 600;
-                            border-radius: 10px;
-                            border: 1.5px solid var(--color-primary, #20214f);
-                            background: var(--color-primary, #20214f);
-                            color: #fff;
-                            cursor: pointer;
-                            transition: all 0.15s;
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 0.45rem;
-                            white-space: nowrap;
-                        }
-                        .services-filters__btn:hover {
-                            background: #18194a;
-                            border-color: #18194a;
-                            box-shadow: 0 2px 8px rgba(32, 33, 79, 0.25);
-                        }
-                        @media (max-width: 640px) {
-                            .services-filters__inner {
-                                flex-direction: column;
-                                align-items: stretch;
-                            }
-                            .services-filters__field--search {
-                                flex: 1 1 auto;
-                            }
-                            .services-filters__select {
-                                width: 100%;
-                                min-width: 0;
-                            }
-                            .services-filters__btn {
-                                justify-content: center;
-                            }
-                        }
-                    </style>
 
-                    <div class="data-table-wrap">
+                        <div class="req-manage-filters__toolbar comercial-services-filters__toolbar">
+                            <form method="GET" class="comercial-services-filters__form comercial-services-filters__search-col req-manage-filters__search-col">
+                                @if ($filters['status'] ?? '')
+                                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                @endif
+                                <label class="req-manage-filters__label" for="services-search-input">Buscar</label>
+                                <div class="req-manage-filters__search-group comercial-services-filters__search-group">
+                                    <input
+                                        id="services-search-input"
+                                        type="search"
+                                        name="q"
+                                        class="form-input"
+                                        value="{{ $filters['q'] }}"
+                                        placeholder="Cliente, NIT, contrato o asesor"
+                                    >
+                                    <select name="portfolio" class="form-select">
+                                        <option value="">Todos los portafolios</option>
+                                        @foreach ($portfolios as $key => $label)
+                                            <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="vigencia" class="form-select form-select--wide">
+                                        <option value="">Toda vigencia</option>
+                                        <option value="expiring" @selected(($filters['vigencia'] ?? '') === 'expiring')>Por vencer (30 días)</option>
+                                        <option value="expired" @selected(($filters['vigencia'] ?? '') === 'expired')>Vencido (contrato)</option>
+                                    </select>
+                                    <button type="submit" class="btn btn--primary">Filtrar</button>
+                                </div>
+                            </form>
+
+                            <div class="req-manage-filters__status-col comercial-services-filters__status-col">
+                                <p class="req-manage-filters__status-label">Estado</p>
+                                <div class="req-manage-filters__pills">
+                                    <a
+                                        href="{{ route('comercial.matriz.services.index', $servicesQuery(['status' => null])) }}"
+                                        class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
+                                    >Todos</a>
+                                    @foreach ($statusLabels as $statusKey => $statusLabel)
+                                        <a
+                                            href="{{ route('comercial.matriz.services.index', $servicesQuery(['status' => $statusKey])) }}"
+                                            class="req-manage-filters__pill {{ $serviceStatusPillClass($statusKey) }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
+                                        >{{ $statusLabel }}</a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="req-manage-filters__meta comercial-services-filters__meta">
+                            <strong>{{ number_format($services->count()) }}</strong>
+                            {{ $services->count() === 1 ? 'servicio' : 'servicios' }}
+                            @if ($filters['q'] ?? '')
+                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                            @endif
+                            @if ($filters['portfolio'] ?? '')
+                                · Portafolio: <strong>{{ $portfolios[$filters['portfolio']] ?? $filters['portfolio'] }}</strong>
+                            @endif
+                            @if ($filters['vigencia'] ?? '')
+                                · Vigencia: <strong>{{ $filters['vigencia'] === 'expiring' ? 'Por vencer (30 días)' : 'Vencido' }}</strong>
+                            @endif
+                            @if ($filters['status'] ?? '')
+                                · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
+                            @endif
+                        </p>
+                    </div>
+
+                    <div class="data-table-wrap comercial-services-page__table-wrap">
                         <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
                             <thead>
                                 <tr>
@@ -242,8 +191,6 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- DataTables maneja paginacion y selector de filas -->
                 </div>
             </div>
         </div>

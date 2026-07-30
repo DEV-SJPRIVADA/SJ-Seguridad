@@ -254,4 +254,34 @@ class CommercialService extends Model
     {
         return $query->filterByContractEstado($vigencia, $asOf, $days);
     }
+
+    /**
+     * @param  'activo'|'por_vencer'|'vencido'|'inactivo'|''  $estado
+     */
+    public function scopeFilterByServiceEstado(Builder $query, string $estado, ?Carbon $asOf = null, int $days = self::CONTRACT_ESTADO_WINDOW_DAYS): Builder
+    {
+        if ($estado === '') {
+            return $query;
+        }
+
+        $today = ($asOf ?? now())->copy()->startOfDay();
+        $inDays = $today->copy()->addDays($days);
+
+        return match ($estado) {
+            'inactivo' => $query->where('is_active', false),
+            'vencido' => $query->where('is_active', true)
+                ->whereNotNull('contract_end')
+                ->whereDate('contract_end', '<', $today),
+            'por_vencer' => $query->where('is_active', true)
+                ->whereNotNull('contract_end')
+                ->whereDate('contract_end', '>=', $today)
+                ->whereDate('contract_end', '<=', $inDays),
+            'activo' => $query->where('is_active', true)
+                ->where(function (Builder $inner) use ($inDays): void {
+                    $inner->whereNull('contract_end')
+                        ->orWhereDate('contract_end', '>', $inDays);
+                }),
+            default => $query,
+        };
+    }
 }

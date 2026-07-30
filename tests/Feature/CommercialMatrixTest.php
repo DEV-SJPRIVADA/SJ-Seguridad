@@ -711,6 +711,66 @@ class CommercialMatrixTest extends TestCase
             ->assertDontSee('SJ-DOC-ONLY');
     }
 
+    public function test_services_index_filters_by_status(): void
+    {
+        $user = $this->matrizManager();
+        $client = CommercialClient::query()->create([
+            'nit' => '900111228',
+            'name' => 'Cliente Estados',
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-STATUS-ACTIVO',
+            'contract_end' => now()->addYear()->toDateString(),
+            'is_active' => true,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-STATUS-VENCIDO',
+            'contract_end' => now()->subDay()->toDateString(),
+            'is_active' => true,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        CommercialService::query()->create([
+            'commercial_client_id' => $client->id,
+            'portfolio' => CommercialService::PORTFOLIO_SEG_FISICA,
+            'contract_number' => 'SJ-STATUS-INACTIVO',
+            'contract_end' => now()->addYear()->toDateString(),
+            'is_active' => false,
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index', ['status' => 'activo']))
+            ->assertOk()
+            ->assertSee('SJ-STATUS-ACTIVO')
+            ->assertDontSee('SJ-STATUS-VENCIDO')
+            ->assertDontSee('SJ-STATUS-INACTIVO');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index', ['status' => 'vencido']))
+            ->assertOk()
+            ->assertSee('SJ-STATUS-VENCIDO')
+            ->assertDontSee('SJ-STATUS-ACTIVO');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index', ['status' => 'inactivo']))
+            ->assertOk()
+            ->assertSee('SJ-STATUS-INACTIVO')
+            ->assertDontSee('SJ-STATUS-ACTIVO');
+    }
+
     public function test_is_expired_legacy_still_uses_documentation_for_dashboard(): void
     {
         $user = $this->matrizManager();

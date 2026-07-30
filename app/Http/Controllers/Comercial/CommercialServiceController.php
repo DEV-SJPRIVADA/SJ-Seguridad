@@ -30,13 +30,15 @@ class CommercialServiceController extends Controller
         $q = trim($request->string('q')->toString());
         $portfolio = $request->string('portfolio')->toString();
         $vigencia = $request->string('vigencia')->toString();
+        $status = $this->resolveServiceStatusFilter($request);
 
-        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia)->get();
+        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia, $status)->get();
 
         return view('areas.comercial.matriz-clientes.services.index', [
             'services' => $services,
             'portfolios' => CommercialService::portfolios(),
-            'filters' => ['q' => $q, 'portfolio' => $portfolio, 'vigencia' => $vigencia],
+            'filters' => ['q' => $q, 'portfolio' => $portfolio, 'vigencia' => $vigencia, 'status' => $status],
+            'statusLabels' => self::serviceStatusFilterLabels(),
             'canManage' => $this->canManage(),
             'subTabs' => $this->getGestionClientesSubTabs('servicios'),
         ]);
@@ -49,8 +51,9 @@ class CommercialServiceController extends Controller
         $q = trim($request->string('q')->toString());
         $portfolio = $request->string('portfolio')->toString();
         $vigencia = $request->string('vigencia')->toString();
+        $status = $this->resolveServiceStatusFilter($request);
 
-        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia)->get();
+        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia, $status)->get();
 
         $portfolios = CommercialService::portfolios();
 
@@ -170,7 +173,7 @@ class CommercialServiceController extends Controller
     /**
      * @return Builder<CommercialService>
      */
-    private function filteredServicesQuery(string $q, string $portfolio, string $vigencia)
+    private function filteredServicesQuery(string $q, string $portfolio, string $vigencia, string $status = '')
     {
         return CommercialService::query()
             ->with(['client', 'serviceType'])
@@ -189,9 +192,30 @@ class CommercialServiceController extends Controller
                 fn ($query) => $query->where('portfolio', $portfolio)
             )
             ->filterByVigencia($vigencia)
+            ->filterByServiceEstado($status)
             ->orderBy('is_active')
             ->orderByDesc('contract_end')
             ->orderBy('contract_number');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function serviceStatusFilterLabels(): array
+    {
+        return [
+            'activo' => CommercialService::ESTADO_ACTIVO,
+            'por_vencer' => CommercialService::ESTADO_POR_VENCER,
+            'vencido' => CommercialService::ESTADO_VENCIDO,
+            'inactivo' => CommercialService::ESTADO_INACTIVO,
+        ];
+    }
+
+    private function resolveServiceStatusFilter(Request $request): string
+    {
+        $status = trim($request->string('status')->toString());
+
+        return array_key_exists($status, self::serviceStatusFilterLabels()) ? $status : '';
     }
 
     /**
