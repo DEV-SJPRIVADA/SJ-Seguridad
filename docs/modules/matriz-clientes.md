@@ -31,6 +31,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - **Estado servicio** (etiquetas): **Inactivo** (`is_active = false`) → **Vencido** → **Por vencer** (30 dias) → **Activo**. Inactivar/Activar no cambia portafolio.
 - **Estado cliente**: **Activo** si existe al menos un servicio con `is_active = true` (independiente de vencimiento de contrato).
 - **Notificacion correo (FEAT-015):** comando diario `comercial:send-documentation-notification-digest` (06:00 `America/Bogota`) envia **digest** a destinatarios del tipo `comercial` / `documentation_expiring` en Admin → Configuracion de notificaciones; misma regla que checklist «Por vencer» / vencida; dedupe en `commercial_client_documentation_notification_logs` (una vez por ciclo `expiring` y una vez `expired` por fecha de vencimiento)
+- **Notificacion correo (FEAT-019):** comando diario `comercial:send-service-contract-notification-digest` (06:00 `America/Bogota`) envia **digest** a destinatarios del tipo `comercial` / `service_contract_expiring`; misma regla que filtro servicios `vigencia=expiring` (30 dias, solo activos); dedupe en `commercial_service_contract_notification_logs` (una vez por servicio y `contract_end`)
 
 ## Fuera de V1
 
@@ -82,6 +83,12 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 - `php artisan comercial:send-documentation-notification-digest` — digest diario (scheduler 06:00 Bogota)
 - Opciones: `--date=Y-m-d`, `--dry-run`
 - Destinatarios: `NotificationConfigService` → tipo `comercial` / `documentation_expiring` (`config/notifications.php`)
+
+### Job / CLI (contratos de servicio)
+
+- `php artisan comercial:send-service-contract-notification-digest` — digest diario (scheduler 06:00 Bogota)
+- Opciones: `--date=Y-m-d`, `--dry-run`
+- Destinatarios: `NotificationConfigService` → tipo `comercial` / `service_contract_expiring` (`config/notifications.php`)
 
 ### Clientes — prefijo (continuacion)
 

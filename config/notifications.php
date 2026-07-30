@@ -18,6 +18,7 @@ return [
         ],
         'comercial' => [
             'documentation_expiring',
+            'service_contract_expiring',
         ],
     ],
 ];

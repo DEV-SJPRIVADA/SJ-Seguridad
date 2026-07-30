@@ -16,6 +16,8 @@ class NotificationType extends Model
 
     public const SLUG_DOCUMENTATION_EXPIRING = 'documentation_expiring';
 
+    public const SLUG_SERVICE_CONTRACT_EXPIRING = 'service_contract_expiring';
+
     public const SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO = 'management_approval_cargo_nuevo';
 
     protected $fillable = [

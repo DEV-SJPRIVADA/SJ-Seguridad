@@ -29,6 +29,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-019 | Notificacion contrato servicio por vencer (30 dias) | orquestado | Si | [`docs/runs/FEAT-019-run-log.md`](runs/FEAT-019-run-log.md) | 2026-07-30 |
 | FEAT-018 | Comercial: pestaña Parametros selectores servicios | orquestado | Si | [`docs/runs/FEAT-018-run-log.md`](runs/FEAT-018-run-log.md) | 2026-07-30 |
 | FEAT-017 | Comercial: tablero Gestion Clientes + pestañas Clientes/Servicios | orquestado | Si | [`docs/runs/FEAT-017-run-log.md`](runs/FEAT-017-run-log.md) | 2026-07-30 |
 | FEAT-012 | Autorizacion gerencia cargo nuevo (enfoque A) | orquestado | Si | [`docs/runs/FEAT-012-run-log.md`](runs/FEAT-012-run-log.md) | 2026-07-28 |
