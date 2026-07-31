@@ -10,9 +10,11 @@ use App\Models\CommercialClient;
 use App\Models\NotificationEmail;
 use App\Models\NotificationType;
 use App\Models\PersonalRequisition;
+use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
+use App\Models\RequisitionContractType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
@@ -1553,6 +1555,219 @@ class RequisitionModuleTest extends TestCase
                 'enabled' => true,
             ])
             ->assertNotFound();
+    }
+
+    public function test_update_requires_hired_document_and_name_when_status_contratado(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0001');
+
+        $payload = $this->hiredPayload();
+        unset($payload['hired_document'], $payload['hired_full_name']);
+
+        $this->actingAs($manager)
+            ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $payload)
+            ->assertSessionHasErrors(['hired_document', 'hired_full_name']);
+    }
+
+    public function test_update_hired_fields_nullable_when_status_not_contratado(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0002');
+
+        $payload = array_merge($this->validPayload(), ['status' => PersonalRequisition::STATUS_EN_GESTION]);
+
+        $this->actingAs($manager)
+            ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $payload)
+            ->assertSessionHasNoErrors(['hired_document', 'hired_full_name']);
+    }
+
+    public function test_update_creates_ficha_entry_on_first_hire(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0003');
+
+        $this->actingAs($manager)
+            ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload())
+            ->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+
+        $this->assertDatabaseHas('personal_requisitions', [
+            'id' => $requisition->id,
+            'hired_document' => '100200300',
+            'hired_full_name' => 'Contratado Prueba',
+        ]);
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '100200300',
+            'hired_full_name' => 'Contratado Prueba',
+            'moved_to_ficha_at' => null,
+            'created_by' => $manager->id,
+        ]);
+        $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
+    }
+
+    public function test_update_reuses_same_ficha_entry_on_resave(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0004');
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload());
+        $entryId = PersonalRequisitionFichaEntry::query()->where('personal_requisition_id', $requisition->id)->value('id');
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload([
+            'hired_full_name' => 'Contratado Prueba Actualizado',
+        ]));
+
+        $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'id' => $entryId,
+            'personal_requisition_id' => $requisition->id,
+            'hired_full_name' => 'Contratado Prueba Actualizado',
+        ]);
+    }
+
+    public function test_update_duplicate_hired_document_requires_confirmation(): void
+    {
+        [$manager, $requisitionB] = $this->createManagerAndRequisition('REQ-2026-HIRE-0006');
+        $requisitionA = PersonalRequisition::create($this->requisitionAttributes(
+            $manager,
+            'REQ-2026-HIRE-0005',
+            'operaciones',
+            'Perfil ya contratado'
+        ));
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisitionA->id,
+            'hired_document' => '999888777',
+            'hired_full_name' => 'Persona Original',
+        ]);
+
+        $response = $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisitionB]),
+            $this->hiredPayload(['hired_document' => '999888777'])
+        );
+
+        $response->assertSessionHasErrors('hired_document');
+        $this->assertStringStartsWith(
+            'DUPLICATE_HIRED_DOCUMENT:',
+            session('errors')->get('hired_document')[0]
+        );
+        $this->assertDatabaseMissing('personal_requisition_ficha_entries', [
+            'personal_requisition_id' => $requisitionB->id,
+        ]);
+    }
+
+    public function test_update_duplicate_hired_document_confirmed_reassigns_entry(): void
+    {
+        [$manager, $requisitionB] = $this->createManagerAndRequisition('REQ-2026-HIRE-0008');
+        $requisitionA = PersonalRequisition::create($this->requisitionAttributes(
+            $manager,
+            'REQ-2026-HIRE-0007',
+            'operaciones',
+            'Perfil ya contratado'
+        ));
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisitionA->id,
+            'hired_document' => '999888777',
+            'hired_full_name' => 'Persona Original',
+        ]);
+
+        $response = $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisitionB]),
+            $this->hiredPayload([
+                'hired_document' => '999888777',
+                'hired_full_name' => 'Persona Reasignada',
+                'confirm_duplicate_hired' => 1,
+            ])
+        );
+
+        $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisitionB]));
+        $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'id' => $entry->id,
+            'personal_requisition_id' => $requisitionB->id,
+            'hired_document' => '999888777',
+            'hired_full_name' => 'Persona Reasignada',
+        ]);
+    }
+
+    public function test_update_reverting_from_contratado_removes_pending_entry(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0009');
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload());
+
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', ['personal_requisition_id' => $requisition->id]);
+
+        $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+            array_merge($this->validPayload(), ['status' => PersonalRequisition::STATUS_EN_GESTION])
+        );
+
+        $this->assertDatabaseMissing('personal_requisition_ficha_entries', ['personal_requisition_id' => $requisition->id]);
+    }
+
+    public function test_update_reverting_from_contratado_keeps_entry_already_in_ficha(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0010');
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload());
+
+        $entry = PersonalRequisitionFichaEntry::query()->where('personal_requisition_id', $requisition->id)->firstOrFail();
+        $entry->update(['moved_to_ficha_at' => now(), 'moved_to_ficha_by' => $manager->id]);
+
+        $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+            array_merge($this->validPayload(), ['status' => PersonalRequisition::STATUS_EN_GESTION])
+        );
+
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'id' => $entry->id,
+            'personal_requisition_id' => $requisition->id,
+        ]);
+    }
+
+    /**
+     * @return array{0: User, 1: PersonalRequisition}
+     */
+    private function createManagerAndRequisition(string $code): array
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            $code,
+            'operaciones',
+            'Perfil para pruebas de contratacion'
+        ));
+
+        return [$manager, $requisition];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function hiredPayload(array $overrides = []): array
+    {
+        return array_merge($this->validPayload(), [
+            'status' => PersonalRequisition::STATUS_CONTRATADO,
+            'contract_type_id' => RequisitionContractType::query()->firstOrFail()->id,
+            'contract_duration' => '12 meses',
+            'base_salary' => 1500000,
+            'transport_allowance' => 162000,
+            'statutory_bonus' => 50000,
+            'hiring_date' => now()->toDateString(),
+            'hired_document' => '100200300',
+            'hired_full_name' => 'Contratado Prueba',
+        ], $overrides);
     }
 
     private function commercialClient(): CommercialClient

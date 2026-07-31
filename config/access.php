@@ -19,6 +19,8 @@ return [
         'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
         'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de seleccion',
         'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
+        'ficha_empleados.view' => 'Ficha empleados: Ver lista de espera y ficha',
+        'ficha_empleados.manage' => 'Ficha empleados: Agregar a ficha empleados',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -66,6 +68,7 @@ return [
         'gestion_clientes' => 'Gestion Clientes',
         'suministros' => 'Suministros',
         'documentos' => 'Documentos',
+        'ficha_empleados' => 'Ficha empleados',
     ],
 
     'indicador_tabs' => [
@@ -79,6 +82,10 @@ return [
         'clientes' => 'Clientes',
         'servicios' => 'Servicios',
         'parametros' => 'Parametros',
+    ],
+
+    'ficha_empleados_tabs' => [
+        'empleados' => 'Empleados',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -197,6 +204,14 @@ return [
                         'permissions' => [
                             'view.board.gestion_humana.requisiciones',
                             'view.board.gestion_humana.dashboard',
+                            'view.board.gestion_humana.ficha_empleados',
+                        ],
+                    ],
+                    'ficha_empleados' => [
+                        'label' => 'Ficha empleados',
+                        'permissions' => [
+                            'ficha_empleados.view',
+                            'ficha_empleados.manage',
                         ],
                     ],
                 ],

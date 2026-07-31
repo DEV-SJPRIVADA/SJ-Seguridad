@@ -10,6 +10,7 @@ Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
 ## No negociable
 
 - Seguridad primero: auth, permisos, usuarios inactivos, contrasena temporal.
+- **Proteccion de datos:** no `migrate:fresh`, `db:wipe`, TRUNCATE, DROP ni restaurar backups sin autorizacion explicita del usuario. Ver [`.cursor/rules/database-safety.mdc`](database-safety.mdc).
 - No registro publico salvo instruccion expresa.
 - Documentacion viva en `docs/` en la misma entrega.
 - Modulos desacoplados: rutas, controladores, vistas, permisos por modulo/area.

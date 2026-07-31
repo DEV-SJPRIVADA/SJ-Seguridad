@@ -191,6 +191,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/modules/quality-documents.php';
     require __DIR__.'/areas/operaciones.php';
     require __DIR__.'/areas/comercial.php';
+    require __DIR__.'/areas/gestion_humana.php';
 });
 
 if (app()->environment('local')) {

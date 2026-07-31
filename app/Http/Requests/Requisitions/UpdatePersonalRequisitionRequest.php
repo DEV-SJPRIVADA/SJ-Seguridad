@@ -5,6 +5,7 @@ namespace App\Http\Requests\Requisitions;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
 use App\Models\PersonalRequisition;
+use App\Rules\Requisitions\HiredDocumentNotDuplicated;
 use App\Rules\Requisitions\ValidRequisitionRecruiterUser;
 use App\Services\Access\RequisitionAccessService;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -51,6 +52,9 @@ class UpdatePersonalRequisitionRequest extends FormRequest
         $isHired = $this->input('status') === PersonalRequisition::STATUS_CONTRATADO;
         $requisition = $this->route('requisition');
         $existingRecruiterId = $requisition instanceof PersonalRequisition ? $requisition->recruiter_id : null;
+        $requisitionId = $requisition instanceof PersonalRequisition ? $requisition->id : null;
+        $confirmDuplicateHired = $this->boolean('confirm_duplicate_hired');
+        $confirmDuplicateHiredDocument = trim($this->string('confirm_duplicate_hired_document')->toString());
 
         return [
             'position_id' => ['required', 'integer', Rule::exists('requisition_positions', 'id')],
@@ -89,6 +93,15 @@ class UpdatePersonalRequisitionRequest extends FormRequest
                 new ValidRequisitionRecruiterUser($existingRecruiterId !== null ? (int) $existingRecruiterId : null),
             ],
             'hiring_date' => [$isHired ? 'required' : 'nullable', 'date'],
+            'hired_document' => [
+                $isHired ? 'required' : 'nullable',
+                'string',
+                'max:50',
+                ...($isHired ? [new HiredDocumentNotDuplicated($requisitionId, $confirmDuplicateHired, $confirmDuplicateHiredDocument ?: null)] : []),
+            ],
+            'hired_full_name' => [$isHired ? 'required' : 'nullable', 'string', 'max:255'],
+            'confirm_duplicate_hired' => ['nullable', 'boolean'],
+            'confirm_duplicate_hired_document' => ['nullable', 'string', 'max:50'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];
     }

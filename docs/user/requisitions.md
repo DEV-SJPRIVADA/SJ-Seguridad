@@ -33,6 +33,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | Gestion Humana (GH) | Equipo que valida, completa datos de compensacion y cierra procesos. |
 | Encargado de seleccion / Reclutador | Persona de GH responsable del proceso de seleccion en una requisicion; se elige en Gestion desde usuarios habilitados en Parametros. |
 | Cliente | Empresa o entidad para la cual se solicita el personal (desde matriz comercial). |
+| Cedula / Nombre del contratado | Datos de la persona contratada, capturados en Gestion al marcar **Contratado**; alimentan la lista de espera del tablero Ficha empleados. Distintos de "Cedula/Nombre a quien reemplaza". |
 
 ## Responsabilidades
 
@@ -78,7 +79,9 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 3. En la tabla, la columna **Reclutador** (despues de **Reemplaza a**) muestra el encargado asignado o **sin asignar** si aun no hay reclutador.
 4. Edite una fila para completar compensacion, **Reclutador** (encargado de seleccion) y observaciones de GH.
 5. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.
-6. Al marcar **Contratado**, complete fecha de contratacion y campos de compensacion obligatorios.
+6. Al marcar **Contratado**, complete fecha de contratacion, campos de compensacion obligatorios y, en la seccion **Cierre**, **Cedula persona contratada** y **Nombre completo persona contratada** (no confundir con **Cedula/Nombre a quien reemplaza** del motivo Reemplazo).
+   - Si la cedula ya esta registrada en otra requisicion, aparece una alerta de confirmacion con el codigo de esa requisicion; confirme solo si es la misma persona (el registro de la lista de espera se reasigna a la requisicion actual).
+   - Al guardar, la persona queda automaticamente en la lista de espera del tablero **Ficha empleados** (ver [guia de usuario de Ficha empleados](ficha-empleados.md)).
 7. Exporte a Excel; incluye todos los campos de la requisicion (incluida compensacion) segun los filtros activos.
 8. Imprima la ficha si necesita documento fisico.
 
@@ -124,3 +127,4 @@ Esta seccion aparece **unicamente** en el tablero **Requisiciones** del area **G
 | 1.2 | 2026-07-24 | AgentSj / Feature | Export Excel completo + rango fechas en Gestion y Seguimiento | FEAT-006 |
 | 1.3 | 2026-07-27 | FEAT-010 | Dashboard con graficos ApexCharts unificados; seccion Consultar el dashboard |
 | 1.4 | 2026-07-28 | FEAT-011 | Encargados de seleccion por toggles en Parametros GH; Reclutador desde usuarios habilitados; checklist post-actualizacion |
+| 1.5 | 2026-07-30 | FEAT-020 | Campos **Cedula/Nombre persona contratada** al marcar Contratado; alerta de confirmacion por cedula duplicada; enlace al tablero **Ficha empleados** |

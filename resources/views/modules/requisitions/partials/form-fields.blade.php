@@ -18,6 +18,12 @@
     $isInternalClientInitially = $selectedClientTypeId !== '' && (int) $selectedClientTypeId === (int) $internalClientTypeId;
     $requiresCommercialClientInitially = $selectedClientTypeId !== '' && in_array((int) $selectedClientTypeId, $commercialClientTypeIds, true);
     $currentStatus = old('status', $requisition?->status);
+    $showHiredFieldsInitially = $currentStatus === \App\Models\PersonalRequisition::STATUS_CONTRATADO;
+    $hiredDocumentErrors = collect($errors->get('hired_document'))
+        ->map(fn ($message) => str_starts_with($message, 'DUPLICATE_HIRED_DOCUMENT:')
+            ? trim(substr($message, strlen('DUPLICATE_HIRED_DOCUMENT:')))
+            : $message)
+        ->all();
 @endphp
 
 <div class="req-form">
@@ -358,6 +364,23 @@
                     <x-input-error :messages="$errors->get('hiring_date')" />
                 </div>
 
+                <div id="js-hired-group" class="form-grid form-grid--two req-form__field-span" @unless($showHiredFieldsInitially) hidden @endunless>
+                    <div class="form-field">
+                        <x-input-label for="hired_document" value="Cedula persona contratada" />
+                        <input id="hired_document" name="hired_document" type="text" class="form-input" value="{{ old('hired_document', $requisition?->hired_document) }}" placeholder="Documento de identidad">
+                        <x-input-error :messages="$hiredDocumentErrors" />
+                    </div>
+
+                    <div class="form-field">
+                        <x-input-label for="hired_full_name" value="Nombre completo persona contratada" />
+                        <input id="hired_full_name" name="hired_full_name" type="text" class="form-input" value="{{ old('hired_full_name', $requisition?->hired_full_name) }}" placeholder="Nombre del colaborador contratado">
+                        <x-input-error :messages="$errors->get('hired_full_name')" />
+                    </div>
+                </div>
+
+                <input type="hidden" id="confirm_duplicate_hired" name="confirm_duplicate_hired" value="{{ old('confirm_duplicate_hired', '0') }}">
+                <input type="hidden" id="confirm_duplicate_hired_document" name="confirm_duplicate_hired_document" value="{{ old('confirm_duplicate_hired_document', '') }}">
+
                 <div class="form-field form-field--full">
                     <x-input-label for="requester_observation" value="Observaciones del solicitante" />
                     <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
@@ -408,6 +431,12 @@
         const replacementFields = [
             document.getElementById('replacement_document'),
             document.getElementById('replacement_name'),
+        ];
+        const statusSelect = document.getElementById('status');
+        const hiredGroup = document.getElementById('js-hired-group');
+        const hiredFields = [
+            document.getElementById('hired_document'),
+            document.getElementById('hired_full_name'),
         ];
 
         function toggleReplacementFields() {
@@ -495,10 +524,59 @@
             }
         }
 
+        function toggleHiredFields() {
+            if (!statusSelect || !hiredGroup) {
+                return;
+            }
+
+            const isHired = statusSelect.value === 'contratado';
+            const confirmInput = document.getElementById('confirm_duplicate_hired');
+            const confirmDocumentInput = document.getElementById('confirm_duplicate_hired_document');
+
+            hiredGroup.hidden = !isHired;
+
+            hiredFields.forEach(function (field) {
+                if (field) {
+                    field.required = isHired;
+                    field.disabled = !isHired;
+                }
+            });
+
+            if (!isHired && confirmInput) {
+                confirmInput.value = '0';
+            }
+            if (!isHired && confirmDocumentInput) {
+                confirmDocumentInput.value = '';
+            }
+        }
+
+        function resetDuplicateHiredConfirmation() {
+            const confirmInput = document.getElementById('confirm_duplicate_hired');
+            const confirmDocumentInput = document.getElementById('confirm_duplicate_hired_document');
+
+            if (confirmInput) {
+                confirmInput.value = '0';
+            }
+            if (confirmDocumentInput) {
+                confirmDocumentInput.value = '';
+            }
+        }
+
         if (reasonSelect) {
             reasonSelect.addEventListener('change', toggleReplacementFields);
             toggleReplacementFields();
         }
+
+        if (statusSelect) {
+            statusSelect.addEventListener('change', toggleHiredFields);
+            toggleHiredFields();
+        }
+
+        hiredFields.forEach(function (field) {
+            if (field) {
+                field.addEventListener('input', resetDuplicateHiredConfirmation);
+            }
+        });
 
         if (clientTypeSelect) {
             clientTypeSelect.addEventListener('change', function () {

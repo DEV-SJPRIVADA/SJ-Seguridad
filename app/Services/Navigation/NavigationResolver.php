@@ -5,6 +5,7 @@ namespace App\Services\Navigation;
 use App\Models\User;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,7 @@ class NavigationResolver
         private readonly SupplyAccessService $supplyAccess,
         private readonly BoardAccessService $boardAccess,
         private readonly CommercialAccessService $commercialAccess,
+        private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
     ) {}
 
     /**
@@ -150,6 +152,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'ficha_empleados') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->fichaEmpleadosAccess->canViewFichaEmpleadosBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.ficha-empleados.employees.index',
+                                'url' => $user->defaultFichaEmpleadosBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -200,6 +219,7 @@ class NavigationResolver
                                 || str_starts_with((string) $routeName, 'comercial.matriz.services.')
                                 || str_starts_with((string) $routeName, 'comercial.parameters.')
                             ) && $key === 'comercial',
+                            $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
@@ -253,6 +273,8 @@ class NavigationResolver
                         || str_starts_with((string) $routeName, 'comercial.matriz.services.')
                         || str_starts_with((string) $routeName, 'comercial.parameters.')
                     ) && $key === 'comercial'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana'
                 );
 
                 return [

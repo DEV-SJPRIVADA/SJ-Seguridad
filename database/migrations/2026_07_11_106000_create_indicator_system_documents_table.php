@@ -25,7 +25,9 @@ return new class extends Migration
 
         Schema::create('indicator_system_document_versions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('indicator_system_document_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('indicator_system_document_id')
+                ->constrained('indicator_system_documents', indexName: 'isdoc_versions_doc_id_fk')
+                ->cascadeOnDelete();
             $table->unsignedInteger('version_number');
             $table->string('status', 20)->default('draft');
             $table->longText('content');
@@ -39,7 +41,7 @@ return new class extends Migration
         });
 
         Schema::table('indicator_system_documents', function (Blueprint $table) {
-            $table->foreign('current_version_id')
+            $table->foreign('current_version_id', 'isdoc_current_version_id_fk')
                 ->references('id')
                 ->on('indicator_system_document_versions')
                 ->nullOnDelete();
@@ -49,7 +51,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('indicator_system_documents', function (Blueprint $table) {
-            $table->dropForeign(['current_version_id']);
+            $table->dropForeign('isdoc_current_version_id_fk');
         });
 
         Schema::dropIfExists('indicator_system_document_versions');

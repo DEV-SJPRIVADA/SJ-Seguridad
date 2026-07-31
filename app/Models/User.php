@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
 use Database\Factories\UserFactory;
@@ -258,6 +259,25 @@ class User extends Authenticatable
             'clientes' => route('comercial.matriz.clients.index'),
             'servicios' => route('comercial.matriz.services.index'),
             default => route('dashboard', ['module' => 'comercial']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function fichaEmpleadosBoardTabsFor(): Collection
+    {
+        return collect(app(FichaEmpleadosAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultFichaEmpleadosBoardUrl(): string
+    {
+        $tabs = $this->fichaEmpleadosBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'empleados' => route('gestion-humana.ficha-empleados.employees.index'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }
 }

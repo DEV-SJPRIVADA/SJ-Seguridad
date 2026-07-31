@@ -133,4 +133,44 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const duplicateMessage = @json($errors->first('hired_document'));
+                const prefix = 'DUPLICATE_HIRED_DOCUMENT:';
+
+                if (!duplicateMessage || !duplicateMessage.startsWith(prefix) || typeof Swal === 'undefined') {
+                    return;
+                }
+
+                const form = document.querySelector('.req-form-layout__main form');
+                const confirmInput = document.getElementById('confirm_duplicate_hired');
+                const confirmDocumentInput = document.getElementById('confirm_duplicate_hired_document');
+                const hiredDocumentInput = document.getElementById('hired_document');
+
+                if (!form || !confirmInput) {
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cedula duplicada',
+                    text: duplicateMessage.slice(prefix.length).trim(),
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirmar y continuar',
+                    cancelButtonText: 'Cancelar',
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        confirmInput.value = '1';
+                        if (confirmDocumentInput && hiredDocumentInput) {
+                            confirmDocumentInput.value = hiredDocumentInput.value.trim();
+                        }
+                        form.submit();
+                    }
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

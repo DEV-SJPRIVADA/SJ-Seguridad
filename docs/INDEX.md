@@ -34,6 +34,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | --- | --- | --- |
 | Admin usuarios | [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md) | [`user/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/user/admin-users.md) |
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
+| Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
 | Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | [`user/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/user/quality-documents.md) |
 | Indicadores | [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md) | [`user/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/user/indicadores.md) |
@@ -45,6 +46,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
+- [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)

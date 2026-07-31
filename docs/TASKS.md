@@ -14,6 +14,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 | FEAT-014 | Checklist documental por cliente + vista seguimiento tablero Clientes | orquestado | Feature T1–T4 (implementado) | 2026-07-29 checklist cliente | — | [`docs/briefs/FEAT-014.md`](briefs/FEAT-014.md) | [`docs/runs/FEAT-014-run-log.md`](runs/FEAT-014-run-log.md) | rutas comercial, dashboard, import, vistas servicio |
 | FEAT-015 | Notificacion correo documentacion comercial por vencer | orquestado | Feature T1 implementado — Revisor | 2026-07-29 comercial doc por vencer | — | [`docs/briefs/FEAT-015.md`](briefs/FEAT-015.md) | [`docs/runs/FEAT-015-run-log.md`](runs/FEAT-015-run-log.md) | migracion tipo notificacion, `routes/console.php`, admin notificaciones |
 | FEAT-016 | Listado servicios: orden columnas y vigencia por contrato | orquestado | Feature T1 implementado — Revisor | 2026-07-29 servicios vigencia | — | [`docs/briefs/FEAT-016.md`](briefs/FEAT-016.md) | [`docs/runs/FEAT-016-run-log.md`](runs/FEAT-016-run-log.md) | export servicios, migracion is_inactive, activar |
+| FEAT-020 | Contratado: cedula/nombre + lista espera + tablero Ficha empleados | orquestado | Cierre (T1-T4 + review) | 2026-07-30 ficha empleados | — | [`docs/briefs/FEAT-020.md`](briefs/FEAT-020.md) | [`docs/runs/FEAT-020-run-log.md`](runs/FEAT-020-run-log.md) | `config/access.php`, rutas GH, migraciones, requisitions edit |
 
 ---
 

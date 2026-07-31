@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PersonalRequisition extends Model
 {
@@ -59,6 +60,8 @@ class PersonalRequisition extends Model
         'recruiter_id',
         'recruiter_name',
         'hiring_date',
+        'hired_document',
+        'hired_full_name',
         'status',
         'status_changed_at',
         'closed_at',
@@ -161,5 +164,10 @@ class PersonalRequisition extends Model
     public function changeLogs(): HasMany
     {
         return $this->hasMany(PersonalRequisitionChangeLog::class);
+    }
+
+    public function fichaEntry(): HasOne
+    {
+        return $this->hasOne(PersonalRequisitionFichaEntry::class);
     }
 }

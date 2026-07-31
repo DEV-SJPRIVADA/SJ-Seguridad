@@ -43,6 +43,7 @@ Analista → Arquitecto → AgentSj → Agente Feature → Revisor → Documenta
 
 ## Reglas
 
+- **Datos:** nunca `migrate:fresh`, `db:wipe`, TRUNCATE ni restaurar SQL sin OK del usuario ([`database-safety.mdc`](database-safety.mdc)).
 - `@agent-sj`, `AgentSj` o `@start-feature.md` → modo AgentSj; crear `FEAT-XXX` + run log.
 - Sin Feature Brief + Task Card + ID en `docs/TASKS.md` → no implementar feature.
 - AgentSj: tabla **Registro de ejecucion (esta pantalla)** al final de cada respuesta.
