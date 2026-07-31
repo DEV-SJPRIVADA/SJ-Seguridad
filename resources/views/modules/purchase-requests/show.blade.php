@@ -39,9 +39,15 @@
                                 label="Exportar Excel"
                                 class="btn btn--secondary btn--sm"
                             />
-                            <a href="{{ route('purchase-requests.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
-                                Volver al listado
-                            </a>
+                            @can('approve', $purchaseRequest)
+                                <a href="{{ route('purchase-requests.approval.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
+                                    Volver a pendientes
+                                </a>
+                            @else
+                                <a href="{{ route('purchase-requests.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
+                                    Volver al listado
+                                </a>
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -153,6 +159,8 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @include('modules.purchase-requests.partials.approval-form')
 
                     @if ($purchaseRequest->comentarios_compras)
                         <div class="block-spaced-lg">

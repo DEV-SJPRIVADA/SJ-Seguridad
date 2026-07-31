@@ -15,7 +15,9 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Pendientes autorización | `purchase.tab.approval` | `purchase-requests.approval.*` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
 
-Aprobación por correo (sin login): `/purchase-requests/aprobacion-correo/{id}` (URLs firmadas).
+**Autorización:** el director aprueba o rechaza desde **Pendientes autorización** (detalle de la solicitud en la plataforma). El correo solo notifica y enlaza al detalle autenticado.
+
+Enlaces legacy firmados (`/purchase-requests/aprobacion-correo/{id}`) redirigen al detalle en la plataforma; ya no resuelven la solicitud por POST.
 
 ## Roles
 

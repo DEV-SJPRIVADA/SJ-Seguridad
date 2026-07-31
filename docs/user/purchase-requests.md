@@ -7,7 +7,7 @@ Permitir a colaboradores solicitar compras, que un director autorice, y que Comp
 ## Flujo
 
 1. **Solicitante** crea solicitud (líneas + fotos) y elige **director** autorizador.
-2. **Director** recibe correo y autoriza/rechaza (app o enlace firmado).
+2. **Director** recibe correo de aviso, ingresa a la plataforma y autoriza o rechaza en **Pendientes de autorización** (detalle de la solicitud).
 3. Si aprueba → **Compras** ve la solicitud en **Bandeja compras**.
 4. **Compras** marca en curso / completado / rechazado.
 
@@ -24,6 +24,6 @@ Desde el detalle puede descargar PDF y Excel del formato FO-AD-44.
 | Perfil | Acción |
 |--------|--------|
 | Colaborador | Crear y consultar sus solicitudes |
-| Director | Autorizar solo las asignadas a él |
+| Director | Autorizar en la plataforma solo las asignadas a él |
 | Compras | Procesar solicitudes aprobadas e insumos aprobados |
 | Super-admin | Gestionar usuarios y permisos |

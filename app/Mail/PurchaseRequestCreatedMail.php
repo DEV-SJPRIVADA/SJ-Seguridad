@@ -11,7 +11,6 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\URL;
 
 class PurchaseRequestCreatedMail extends Mailable implements ShouldQueue
 {
@@ -36,11 +35,10 @@ class PurchaseRequestCreatedMail extends Mailable implements ShouldQueue
         return new Content(
             markdown: 'emails.purchase-requests.created',
             with: [
-                'approvalUrl' => URL::temporarySignedRoute(
-                    'purchase-requests.email-approval.show',
-                    now()->addDays(config('purchase-requests.email_approval_link_days', 7)),
-                    ['purchase_request' => $this->purchaseRequest->id, 'director' => $this->director->id],
-                ),
+                'approvalUrl' => route('purchase-requests.show', [
+                    'module' => $this->purchaseRequest->area_key,
+                    'purchase_request' => $this->purchaseRequest->id,
+                ]),
             ],
         );
     }

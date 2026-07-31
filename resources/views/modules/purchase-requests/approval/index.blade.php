@@ -40,8 +40,8 @@
                                             @endif
                                         </td>
                                         <td class="table-actions">
-                                            <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--secondary btn--sm">
-                                                Revisar
+                                            <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--primary btn--sm">
+                                                Autorizar
                                             </a>
                                         </td>
                                     </tr>

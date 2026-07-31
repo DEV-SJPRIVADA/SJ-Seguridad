@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\PurchaseRequest;
 use Illuminate\Support\Collection;
 
 trait HasPurchaseTabs
@@ -11,8 +12,9 @@ trait HasPurchaseTabs
         $user = auth()->user();
         $tabs = $user->purchaseBoardTabsFor($module);
         $routeName = request()->route()?->getName();
+        $approvalShowContext = $this->isPurchaseApprovalShowContext();
 
-        return $tabs->map(function ($tab) use ($module, $routeName) {
+        return $tabs->map(function ($tab) use ($module, $routeName, $approvalShowContext) {
             $targetRoute = match ($tab) {
                 'nueva' => 'purchase-requests.create',
                 'mis_solicitudes' => 'purchase-requests.index',
@@ -23,8 +25,10 @@ trait HasPurchaseTabs
 
             $active = match ($tab) {
                 'nueva' => in_array($routeName, ['purchase-requests.create'], true),
-                'mis_solicitudes' => in_array($routeName, ['purchase-requests.index', 'purchase-requests.show'], true),
-                'pendientes_aprobacion' => str_starts_with((string) $routeName, 'purchase-requests.approval.'),
+                'mis_solicitudes' => $routeName === 'purchase-requests.index'
+                    || ($routeName === 'purchase-requests.show' && ! $approvalShowContext),
+                'pendientes_aprobacion' => str_starts_with((string) $routeName, 'purchase-requests.approval.')
+                    || ($routeName === 'purchase-requests.show' && $approvalShowContext),
                 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.'),
                 default => false,
             };
@@ -35,5 +39,15 @@ trait HasPurchaseTabs
                 'active' => $active,
             ];
         });
+    }
+
+    protected function isPurchaseApprovalShowContext(): bool
+    {
+        $purchaseRequest = request()->route('purchase_request');
+        $user = auth()->user();
+
+        return $purchaseRequest instanceof PurchaseRequest
+            && $user !== null
+            && $user->can('approve', $purchaseRequest);
     }
 }

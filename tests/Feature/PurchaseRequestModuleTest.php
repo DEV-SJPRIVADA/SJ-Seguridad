@@ -145,10 +145,50 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertSee($purchaseRequest->fresh()->folio());
     }
 
-    public function test_email_approval_signed_route_works(): void
+    public function test_director_can_approve_from_show_page(): void
     {
-        Mail::fake();
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
 
+        $this->actingAs($director)
+            ->get(route('purchase-requests.show', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee('Aprobar solicitud');
+
+        $this->actingAs($director)->patch(route('purchase-requests.approval.update', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]), [
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+        ])->assertRedirect(route('purchase-requests.approval.index', ['module' => 'compras']));
+
+        $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
+    }
+
+    public function test_legacy_email_signed_link_redirects_to_platform_show(): void
+    {
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $url = URL::temporarySignedRoute(
+            'purchase-requests.email-approval.show',
+            now()->addHour(),
+            ['purchase_request' => $purchaseRequest->id, 'director' => $director->id],
+        );
+
+        $this->get($url)->assertRedirect(route('purchase-requests.show', [
+            'module' => 'operaciones',
+            'purchase_request' => $purchaseRequest->id,
+        ]));
+
+        $this->actingAs($director)
+            ->followingRedirects()
+            ->get($url)
+            ->assertOk()
+            ->assertSee('Autorizacion de solicitud');
+    }
+
+    public function test_legacy_email_approval_post_does_not_resolve_request(): void
+    {
         $requester = $this->purchaseRequester('operaciones');
         $director = $this->director();
         $purchaseRequest = $this->createPurchaseRequest($requester, $director);
@@ -162,9 +202,12 @@ class PurchaseRequestModuleTest extends TestCase
         $this->post($url, [
             'director' => $director->id,
             'estado' => PurchaseRequest::ESTADO_APROBADO,
-        ])->assertRedirect();
+        ])->assertRedirect(route('purchase-requests.show', [
+            'module' => 'operaciones',
+            'purchase_request' => $purchaseRequest->id,
+        ]))->assertSessionHas('warning');
 
-        $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
+        $this->assertSame(PurchaseRequest::ESTADO_PENDIENTE, $purchaseRequest->fresh()->estado);
     }
 
     public function test_supply_approval_appears_in_compras_queue(): void
