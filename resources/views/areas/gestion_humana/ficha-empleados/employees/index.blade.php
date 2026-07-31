@@ -19,6 +19,11 @@
             'fecha_desde' => array_key_exists('fecha_desde', $overrides) ? $overrides['fecha_desde'] : null,
             'fecha_hasta' => array_key_exists('fecha_hasta', $overrides) ? $overrides['fecha_hasta'] : null,
         ], fn ($value) => $value !== null && $value !== '');
+
+        $pendingActive = $currentEstado === 'pendientes';
+        $pendingHref = $pendingActive
+            ? route('gestion-humana.ficha-empleados.employees.index', array_filter(['q' => $filters['q'] ?: null]))
+            : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => 'pendientes']));
     @endphp
 
     <div class="page-section ficha-empleados-page">
@@ -87,21 +92,15 @@
                             </form>
 
                             <div class="req-manage-filters__status-col ficha-empleados-filters__status-col">
-                                <p class="req-manage-filters__status-label">Estado</p>
-                                <div class="req-manage-filters__pills ficha-empleados-filters__pills">
-                                    @foreach ($estadoPills as $estadoKey => $estadoLabel)
-                                        @php
-                                            $pillActive = $currentEstado === $estadoKey;
-                                            $pillHref = $pillActive
-                                                ? route('gestion-humana.ficha-empleados.employees.index', array_filter(['q' => $filters['q'] ?: null]))
-                                                : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => $estadoKey]));
-                                        @endphp
-                                        <a
-                                            href="{{ $pillHref }}"
-                                            class="req-manage-filters__pill status-pill--warning {{ $pillActive ? 'is-active' : '' }}"
-                                        >{{ $estadoLabel }}</a>
-                                    @endforeach
-                                </div>
+                                <a
+                                    href="{{ $pendingHref }}"
+                                    class="ficha-empleados-filters__pending-link {{ $pendingActive ? 'is-active' : '' }}"
+                                    title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
+                                    aria-label="Pendientes: {{ number_format($pendingCount) }}"
+                                >
+                                    <x-ri-pass-pending-fill :size="24" />
+                                    <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
+                                </a>
                             </div>
                         </div>
 

@@ -674,6 +674,12 @@ a {
     gap: 0.75rem 1.25rem !important;
 }
 
+@media (min-width: 1280px) {
+    .ficha-empleados-filters__toolbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+}
+
 .ficha-empleados-filters__search-group {
     flex-wrap: nowrap;
 }
@@ -690,7 +696,47 @@ a {
 }
 
 .ficha-empleados-filters__status-col {
+    width: auto;
+    flex: 0 0 auto;
+    align-self: flex-end;
     gap: 0.35rem;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.ficha-empleados-filters__pending-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: fit-content;
+    flex-shrink: 0;
+    padding: 0.35rem 0.45rem;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #b45309;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ficha-empleados-filters__pending-link:hover {
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+}
+
+.ficha-empleados-filters__pending-link.is-active {
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+.ficha-empleados-filters__pending-count {
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 1ch;
 }
 
 .ficha-empleados-filters__pills {

@@ -44,12 +44,12 @@ class FichaEmpleadosController extends Controller
         $estado = $this->resolveEstadoFilter($request);
 
         $entries = $this->entryListQuery($q, $estado)->get();
+        $pendingCount = PersonalRequisitionFichaEntry::query()->pending()->count();
 
         return view('areas.gestion_humana.ficha-empleados.employees.index', [
             'entries' => $entries,
             'filters' => ['q' => $q, 'estado' => $estado],
-            'estadoLabels' => self::estadoFilterLabels(),
-            'estadoPills' => self::estadoPillLabels(),
+            'pendingCount' => $pendingCount,
             'canManage' => $this->canManage(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -247,18 +247,6 @@ class FichaEmpleadosController extends Controller
         return [
             'pendientes' => 'Pendientes',
             'en_ficha' => 'En ficha',
-        ];
-    }
-
-    /**
-     * Pills visibles en el listado (sin "En ficha": es la vista por defecto).
-     *
-     * @return array<string, string>
-     */
-    private static function estadoPillLabels(): array
-    {
-        return [
-            'pendientes' => 'Pendientes',
         ];
     }
 
