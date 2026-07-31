@@ -98,6 +98,10 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/agregar` | `gestion-humana.ficha-empleados.employees.promote` | `ficha_empleados.manage` |
+| GET | `/gestion-humana/ficha-empleados/catalogos` | `gestion-humana.ficha-empleados.catalogs.index` | `ficha_empleados.manage` |
+| POST | `/gestion-humana/ficha-empleados/catalogos/{type}` | `gestion-humana.ficha-empleados.catalogs.store` | `ficha_empleados.manage` |
+| PATCH | `/gestion-humana/ficha-empleados/catalogos/{type}/{item}` | `gestion-humana.ficha-empleados.catalogs.update` | `ficha_empleados.manage` |
+| DELETE | `/gestion-humana/ficha-empleados/catalogos/{type}/{item}` | `gestion-humana.ficha-empleados.catalogs.destroy` | `ficha_empleados.manage` |
 
 Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export, `PromoteFichaEntryRequest::authorize()` para promote).
 
@@ -112,11 +116,18 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 - `editFicha` / `updateFicha` — formulario ficha empleado (`employee_ficha_profiles`).
 - `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry): RedirectResponse` — setea `moved_to_ficha_at`/`moved_to_ficha_by`; crea perfil prefilled; idempotente.
 
+## Controlador catálogos (`App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController`)
+
+- `index(): View` — tablero de catálogos nómina (`payroll_catalog_items`).
+- `store` / `update` / `destroy` — CRUD por `catalog_type` (`config/employee_ficha.catalog_type_labels`).
+- Servicio compartido: `EmployeeFichaCatalogService` (opciones formulario + admin).
+- Pestaña **Catalogos** visible solo con `ficha_empleados.manage` (`FichaEmpleadosAccessService::visibleTabsFor()`).
+
 ## Modelo `employee_ficha_profiles`
 
 Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date`.
 
-Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`.
+Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catalogos** en Ficha empleados; seed alternativo: `php artisan employee-ficha:seed-catalogs`.
 
 ## Export Excel — Plantilla masivos (nómina externa)
 
@@ -142,7 +153,7 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 ## Navegacion
 
 - `App\Services\Navigation\NavigationResolver`: rama `ficha_empleados` (patron identico a `gestion_clientes`) — visible en sidebar de `gestion_humana` solo con `canViewFichaEmpleadosBoard()`; URL resuelta por `User::defaultFichaEmpleadosBoardUrl()`.
-- `App\Traits\HasFichaEmpleadosTabs` (patron `HasGestionClientesTabs`): resuelve subnav de pestañas visibles segun `FichaEmpleadosAccessService::visibleTabsFor()`; v1 solo tiene `empleados`, pero el patron permite agregar mas pestañas sin reescribir la logica.
+- `App\Traits\HasFichaEmpleadosTabs` (patron `HasGestionClientesTabs`): resuelve subnav de pestañas visibles segun `FichaEmpleadosAccessService::visibleTabsFor()`; pestañas `empleados` y `catalogos` (esta ultima solo manage).
 - `App\Models\User::fichaEmpleadosBoardTabsFor()` / `defaultFichaEmpleadosBoardUrl()`.
 
 ## Vistas
@@ -150,7 +161,8 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha.
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — alta manual (sin requisición).
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/edit-ficha.blade.php` — formulario perfil empleado.
-- `resources/views/areas/gestion_humana/partials/ficha-empleados-subnav.blade.php` — subnav `.module-tab` (mismo estilo que `requisitions/partials/subnav.blade.php`).
+- `resources/views/areas/gestion_humana/ficha-empleados/catalogs/index.blade.php` — admin catalogos nómina (EPS, AFP, cargo, etc.).
+- `resources/views/areas/gestion_humana/partials/ficha-empleados-subnav.blade.php` — subnav `.module-tab`.
 
 ## Tests
 

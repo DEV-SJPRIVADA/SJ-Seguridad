@@ -86,6 +86,7 @@ return [
 
     'ficha_empleados_tabs' => [
         'empleados' => 'Empleados',
+        'catalogos' => 'Catalogos',
     ],
 
     'comercial_gestion_tab_board_keys' => [

@@ -97,7 +97,13 @@
                             </button>
                         </form>
 
-                        <form method="POST" action="{{ route('gestion-humana.ficha-empleados.employees.import') }}" enctype="multipart/form-data" class="ficha-empleados-masivos-modal__import-form">
+                        <form
+                            method="POST"
+                            action="{{ route('gestion-humana.ficha-empleados.employees.import') }}"
+                            enctype="multipart/form-data"
+                            class="ficha-empleados-masivos-modal__import-form"
+                            data-ficha-import-form
+                        >
                             @csrf
                             <input
                                 type="file"
@@ -111,7 +117,7 @@
                             >
                             <span class="ficha-empleados-masivos-modal__file-name" data-ficha-import-name>Sin archivo seleccionado</span>
                             <div class="ficha-empleados-masivos-modal__import-actions">
-                                <label for="ficha-import-file" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
+                                <label for="ficha-import-file" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action" data-ficha-import-choose>
                                     <x-lucide-icon name="upload" :size="15" />
                                     Elegir archivo
                                 </label>
@@ -124,6 +130,14 @@
                     </div>
                 </section>
             @endif
+        </div>
+
+        <div class="ficha-empleados-masivos-modal__loading" data-ficha-import-loading hidden aria-live="polite" aria-busy="true">
+            <div class="ficha-empleados-masivos-modal__loading-card">
+                <span class="ficha-empleados-masivos-modal__spinner" aria-hidden="true"></span>
+                <p class="ficha-empleados-masivos-modal__loading-title">Importando archivo</p>
+                <p class="ficha-empleados-masivos-modal__loading-text">Procesando filas, esto puede tardar unos minutos. No cierre esta ventana.</p>
+            </div>
         </div>
     </div>
 </x-modal>

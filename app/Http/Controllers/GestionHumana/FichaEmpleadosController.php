@@ -13,6 +13,7 @@ use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FichaEmpleadosController extends Controller
@@ -34,6 +36,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaImportTemplateExport $importTemplateExport,
         private readonly EmployeeFichaImportService $importService,
         private readonly EmployeeFichaProfilePrefill $profilePrefill,
+        private readonly EmployeeFichaCatalogService $catalogService,
     ) {}
 
     public function index(Request $request): View
@@ -141,19 +144,41 @@ class FichaEmpleadosController extends Controller
         }
 
         $message = sprintf(
-            'Importacion finalizada: %d nuevos, %d actualizados, %d omitidos.',
+            'Importacion finalizada: %d nuevos, %d actualizados.',
             $stats['imported'],
             $stats['updated'],
-            $stats['skipped']
         );
 
-        if ($stats['errors'] !== []) {
-            $message .= ' Revise los errores en el log.';
+        if ($stats['empty_rows'] > 0) {
+            $message .= sprintf(' %d filas sin cedula ignoradas.', $stats['empty_rows']);
         }
+
+        if ($stats['skipped'] > 0) {
+            $message .= sprintf(' %d filas con error (revise el detalle abajo).', $stats['skipped']);
+        }
+
+        if ($stats['errors'] !== []) {
+            Log::warning('Importacion ficha empleados con errores por fila.', [
+                'user_id' => $request->user()->id,
+                'errors_count' => count($stats['errors']),
+                'errors' => array_slice($stats['errors'], 0, 200),
+            ]);
+        }
+
+        $errorsForSession = array_slice($stats['errors'], 0, 100);
 
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.index')
-            ->with('status', $message);
+            ->with('status', $message)
+            ->with('import_result', [
+                'imported' => $stats['imported'],
+                'updated' => $stats['updated'],
+                'failed' => $stats['skipped'],
+                'empty_rows' => $stats['empty_rows'],
+                'errors' => $errorsForSession,
+                'errors_total' => count($stats['errors']),
+                'errors_truncated' => count($stats['errors']) > count($errorsForSession),
+            ]);
     }
 
     public function create(): View
@@ -165,7 +190,7 @@ class FichaEmpleadosController extends Controller
                 'document_type' => 'C',
                 'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
             ]),
-            'catalogs' => $this->catalogOptions(),
+            'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
     }
@@ -227,7 +252,7 @@ class FichaEmpleadosController extends Controller
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
             'profile' => $profile->fresh(),
-            'catalogs' => $this->catalogOptions(),
+            'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
     }
@@ -309,26 +334,6 @@ class FichaEmpleadosController extends Controller
                 });
             })
             ->orderByDesc('created_at');
-    }
-
-    /**
-     * @return array<string, list<array{code: string, name: string}>>
-     */
-    private function catalogOptions(): array
-    {
-        $options = [];
-
-        foreach (config('employee_ficha.catalog_types', []) as $type) {
-            $options[$type] = PayrollCatalogItem::query()
-                ->ofType($type)
-                ->active()
-                ->orderBy('name')
-                ->get(['code', 'name'])
-                ->map(fn (PayrollCatalogItem $item): array => ['code' => $item->code, 'name' => $item->name])
-                ->all();
-        }
-
-        return $options;
     }
 
     private function syncCatalogNamesFromCodes(EmployeeFichaProfile $profile): void

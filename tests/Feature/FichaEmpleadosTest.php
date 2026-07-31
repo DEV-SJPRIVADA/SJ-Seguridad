@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
@@ -464,6 +465,81 @@ class FichaEmpleadosTest extends TestCase
                 'hired_full_name' => 'Duplicado',
             ])
             ->assertSessionHasErrors('hired_document');
+    }
+
+    public function test_catalogs_tab_visible_only_for_manage_users(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $viewerTabs = app(FichaEmpleadosAccessService::class)->visibleTabsFor($viewer);
+        $managerTabs = app(FichaEmpleadosAccessService::class)->visibleTabsFor($manager);
+
+        $this->assertNotContains('catalogos', $viewerTabs);
+        $this->assertContains('catalogos', $managerTabs);
+    }
+
+    public function test_catalogs_index_forbidden_without_manage_permission(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.catalogs.index'))
+            ->assertForbidden();
+    }
+
+    public function test_catalogs_crud_for_manager(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.catalogs.index'))
+            ->assertOk()
+            ->assertSee('Catalogos de empleados')
+            ->assertSee('EPS');
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.catalogs.store', ['type' => 'eps']), [
+                'code' => 'EPS-TEST',
+                'name' => 'EPS Prueba UI',
+                'sort_order' => 5,
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
+
+        $item = PayrollCatalogItem::query()
+            ->where('catalog_type', 'eps')
+            ->where('code', 'EPS-TEST')
+            ->first();
+
+        $this->assertNotNull($item);
+        $this->assertSame('EPS Prueba UI', $item->name);
+
+        $this->actingAs($manager)
+            ->patch(route('gestion-humana.ficha-empleados.catalogs.update', ['type' => 'eps', 'item' => $item->id]), [
+                'code' => 'EPS-TEST',
+                'name' => 'EPS Prueba Actualizada',
+                'sort_order' => 10,
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
+
+        $this->assertSame('EPS Prueba Actualizada', $item->fresh()->name);
+
+        $this->actingAs($manager)
+            ->delete(route('gestion-humana.ficha-empleados.catalogs.destroy', ['type' => 'eps', 'item' => $item->id]))
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
+
+        $this->assertDatabaseMissing('payroll_catalog_items', ['id' => $item->id]);
     }
 
     /**

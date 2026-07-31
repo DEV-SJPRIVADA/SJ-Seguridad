@@ -51,6 +51,12 @@ class FichaEmpleadosAccessService
             return [];
         }
 
-        return array_keys(config('access.ficha_empleados_tabs', []));
+        $tabs = array_keys(config('access.ficha_empleados_tabs', []));
+
+        if (! $this->canManage($user)) {
+            $tabs = array_values(array_filter($tabs, fn (string $tab): bool => $tab !== 'catalogos'));
+        }
+
+        return $tabs;
     }
 }

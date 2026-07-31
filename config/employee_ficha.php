@@ -136,4 +136,20 @@ return [
         'economic_activity',
         'branch',
     ],
+
+    'catalog_type_labels' => [
+        'document_type' => 'Tipo documento',
+        'city' => 'Ciudad',
+        'position' => 'Cargo',
+        'cost_center' => 'Centro de costo',
+        'eps' => 'EPS',
+        'afp' => 'AFP',
+        'arp' => 'ARP',
+        'bank' => 'Banco',
+        'payment_method' => 'Forma de pago',
+        'contract_type' => 'Tipo contrato',
+        'salary_type' => 'Tipo salario',
+        'economic_activity' => 'Actividad economica',
+        'branch' => 'Sucursal',
+    ],
 ];

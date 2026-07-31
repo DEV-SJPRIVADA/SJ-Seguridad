@@ -149,6 +149,11 @@ class EmployeeFichaPlantillasTest extends TestCase
         ]);
 
         $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+        $response->assertSessionHas('import_result', function (array $result): bool {
+            return ($result['imported'] ?? 0) === 1
+                && ($result['updated'] ?? 0) === 0
+                && ($result['failed'] ?? 0) === 0;
+        });
 
         $this->assertDatabaseHas('employee_ficha_profiles', [
             'document_number' => '99887766',

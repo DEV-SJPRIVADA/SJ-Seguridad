@@ -81,16 +81,26 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. Pulse **Descargar plantilla importación** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
 2. Edite filas desde la fila 3; `cedula` es obligatoria.
-3. Suba el archivo con **Importar**.
-4. Los registros quedan en **En ficha**; puede vincular `codigo_requisicion` opcional.
+3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
+4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
 
 **Exportar datos para actualizar:** sin rango de fechas exporta solo **activos**; con fechas filtra por **fecha de ingreso**. Respeta la búsqueda activa del listado (`q`).
+
+### Administrar catalogos (selectores de ficha)
+
+1. Vaya a la pestaña **Catalogos** (solo usuarios con permiso de edicion de ficha).
+2. Elija el catalogo (EPS, AFP, Ciudad, Cargo, Centro de costo, etc.).
+3. Agregue registros con **codigo**, **nombre**, orden y estado activo.
+4. Edite o elimine entradas existentes; los inactivos no aparecen en los selectores de crear/editar empleado.
+
+Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion` o importacion masiva de empleados (upsert de pares codigo/nombre).
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.3 | 2026-07-31 | Catalogos UI | Pestaña Catalogos: CRUD de payroll_catalog_items para selectores de ficha. |
 | 1.2 | 2026-07-31 | Import round-trip | Export plantilla import con datos actuales para actualización masiva. |
 | 1.1 | 2026-07-31 | Plantillas | Perfil ficha, export Plantilla masivos, import SJ, catálogos nómina, filtro activos/fechas. |
 | 1.0 | 2026-07-30 | FEAT-020 | Version inicial: tablero Ficha empleados, pestaña Empleados, accion Agregar a ficha empleados, export Excel. |

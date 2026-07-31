@@ -29,7 +29,44 @@
     <div class="page-section ficha-empleados-page">
         <div class="app-container">
             @if (session('status'))
-                <div class="alert alert--success ficha-empleados-page__alert">{{ session('status') }}</div>
+                @php
+                    $importResult = session('import_result');
+                    $importHasErrors = is_array($importResult) && ($importResult['failed'] ?? 0) > 0;
+                @endphp
+                <div class="alert {{ $importHasErrors ? 'alert--warning' : 'alert--success' }} ficha-empleados-page__alert">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            @if (is_array(session('import_result')) && (session('import_result.failed') ?? 0) > 0)
+                @php
+                    $importResult = session('import_result');
+                @endphp
+                <div class="panel ficha-empleados-import-result">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Detalle de errores de importacion</h3>
+                        <p class="panel-text">
+                            Se procesaron {{ number_format(($importResult['imported'] ?? 0) + ($importResult['updated'] ?? 0)) }} filas correctamente.
+                            {{ number_format($importResult['failed'] ?? 0) }} filas fallaron.
+                            @if (($importResult['empty_rows'] ?? 0) > 0)
+                                {{ number_format($importResult['empty_rows']) }} filas sin cedula fueron ignoradas.
+                            @endif
+                        </p>
+                    </div>
+                    <div class="panel__body">
+                        <ul class="ficha-empleados-import-result__errors">
+                            @foreach ($importResult['errors'] ?? [] as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        @if ($importResult['errors_truncated'] ?? false)
+                            <p class="ficha-empleados-import-result__truncated">
+                                Mostrando {{ count($importResult['errors'] ?? []) }} de {{ number_format($importResult['errors_total'] ?? 0) }} errores.
+                                El resto quedo registrado en el log de la aplicacion.
+                            </p>
+                        @endif
+                    </div>
+                </div>
             @endif
 
             @if ($errors->has('export'))
@@ -191,7 +228,7 @@
                 @include('areas.gestion_humana.ficha-empleados.partials.masivos-modal', [
                     'filters' => $filters,
                     'canManage' => $canManage,
-                    'show' => $errors->has('export') || $errors->has('import_file'),
+                    'show' => $errors->has('export') || $errors->has('import_file') || (is_array(session('import_result')) && (session('import_result.failed') ?? 0) > 0),
                 ])
             @endif
         </div>
@@ -231,11 +268,13 @@
                 });
 
                 document.querySelectorAll('[data-ficha-import-file]').forEach(function (input) {
-                    var form = input.closest('.ficha-empleados-masivos-modal__import-form');
+                    var form = input.closest('[data-ficha-import-form]');
                     var nameEl = form?.querySelector('[data-ficha-import-name]');
                     var submitBtn = form?.querySelector('[data-ficha-import-submit]');
+                    var chooseBtn = form?.querySelector('[data-ficha-import-choose]');
+                    var loadingEl = document.querySelector('[data-ficha-import-loading]');
 
-                    if (!nameEl || !submitBtn) {
+                    if (!nameEl || !submitBtn || !form) {
                         return;
                     }
 
@@ -243,6 +282,21 @@
                         var file = input.files && input.files[0];
                         nameEl.textContent = file ? file.name : 'Sin archivo seleccionado';
                         submitBtn.disabled = !file;
+                    });
+
+                    form.addEventListener('submit', function () {
+                        if (loadingEl) {
+                            loadingEl.hidden = false;
+                        }
+
+                        submitBtn.disabled = true;
+
+                        if (chooseBtn) {
+                            chooseBtn.classList.add('is-disabled');
+                            chooseBtn.style.pointerEvents = 'none';
+                        }
+
+                        submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
                     });
                 });
 

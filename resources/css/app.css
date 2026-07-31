@@ -997,6 +997,97 @@ a {
     color: var(--color-text);
 }
 
+.ficha-empleados-masivos-modal__loading {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: inherit;
+}
+
+.ficha-empleados-masivos-modal__loading[hidden] {
+    display: none;
+}
+
+.ficha-empleados-masivos-modal__loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    max-width: 22rem;
+    text-align: center;
+}
+
+.ficha-empleados-masivos-modal__spinner,
+.ficha-empleados-masivos-modal__btn-spinner {
+    display: inline-block;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 2px solid rgba(0, 51, 102, 0.15);
+    border-top-color: var(--brand-blue);
+    border-radius: 999px;
+    animation: ficha-import-spin 0.75s linear infinite;
+}
+
+.ficha-empleados-masivos-modal__loading-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.ficha-empleados-masivos-modal__loading-text {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.ficha-empleados-masivos-modal .modal-card {
+    position: relative;
+}
+
+@keyframes ficha-import-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ficha-empleados-page__alert.alert--warning,
+.ficha-empleados-import-result {
+    margin-bottom: 1rem;
+}
+
+.alert.alert--warning {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.ficha-empleados-import-result__errors {
+    margin: 0;
+    padding-left: 1.2rem;
+    max-height: 16rem;
+    overflow: auto;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: #334155;
+}
+
+.ficha-empleados-import-result__errors li + li {
+    margin-top: 0.35rem;
+}
+
+.ficha-empleados-import-result__truncated {
+    margin: 0.75rem 0 0;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
 @media (min-width: 768px) {
     .ficha-empleados-filters__toolbar {
         display: grid;
@@ -1118,6 +1209,156 @@ a {
     border-color: var(--color-border-strong);
     border-radius: 12px;
     overflow: hidden;
+}
+
+.ficha-empleados-catalogs-page__alert {
+    margin-bottom: 1rem;
+}
+
+.ficha-empleados-catalogs-page__head {
+    padding-top: 0;
+    margin-bottom: 1.25rem;
+}
+
+.ficha-empleados-catalogs-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+}
+
+.ficha-empleados-catalogs-page__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1.25rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    text-align: center;
+}
+
+.ficha-empleados-catalogs-page__card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-sky);
+    box-shadow: var(--shadow-card);
+}
+
+.ficha-empleados-catalogs-page__card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    background: var(--brand-blue-pale);
+    color: var(--brand-blue);
+}
+
+.ficha-empleados-catalogs-page__card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.ficha-empleados-catalogs-page__card-count {
+    font-size: 0.74rem;
+    color: var(--color-text-soft);
+    background: var(--color-bg);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+}
+
+.ficha-empleados-catalogs-page__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+    border: none;
+    background: transparent;
+    color: var(--color-sky);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ficha-empleados-catalogs-page__back:hover {
+    text-decoration: underline;
+}
+
+.ficha-empleados-catalogs-page__create-form {
+    background: var(--color-bg);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+}
+
+.ficha-empleados-catalogs-page__create-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.ficha-empleados-catalogs-page__name-field {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.ficha-empleados-catalogs-page__sort-field {
+    width: 6rem;
+    flex-shrink: 0;
+}
+
+.ficha-empleados-catalogs-page__create-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 42px;
+}
+
+.ficha-empleados-catalogs-page__active-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ficha-empleados-catalogs-page__delete-form {
+    display: inline;
+}
+
+.ficha-empleados-catalogs-page__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ficha-empleados-catalogs-page__modal[hidden] {
+    display: none;
+}
+
+.ficha-empleados-catalogs-page__modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.ficha-empleados-catalogs-page__modal-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 480px;
 }
 
 .comercial-checklist-page__table-wrap {

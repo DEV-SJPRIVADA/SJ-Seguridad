@@ -1,7 +1,18 @@
 <?php
 
+use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/ficha-empleados/catalogos')
+    ->name('gestion-humana.ficha-empleados.catalogs.')
+    ->group(function (): void {
+        Route::get('/', [FichaEmpleadosCatalogController::class, 'index'])->name('index');
+        Route::post('/{type}', [FichaEmpleadosCatalogController::class, 'store'])->name('store');
+        Route::patch('/{type}/{item}', [FichaEmpleadosCatalogController::class, 'update'])->name('update');
+        Route::delete('/{type}/{item}', [FichaEmpleadosCatalogController::class, 'destroy'])->name('destroy');
+    });
 
 Route::middleware(['password.changed'])
     ->prefix('gestion-humana/ficha-empleados/empleados')

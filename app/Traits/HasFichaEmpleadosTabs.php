@@ -18,12 +18,15 @@ trait HasFichaEmpleadosTabs
         return collect($tabs)->map(function (string $tab) use ($activeTab, $routeName): array {
             $targetRoute = match ($tab) {
                 'empleados' => 'gestion-humana.ficha-empleados.employees.index',
+                'catalogos' => 'gestion-humana.ficha-empleados.catalogs.index',
                 default => 'gestion-humana.ficha-empleados.employees.index',
             };
 
             $active = match ($tab) {
                 'empleados' => $activeTab === 'empleados'
                     || str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.employees.'),
+                'catalogos' => $activeTab === 'catalogos'
+                    || str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.catalogs.'),
                 default => $tab === $activeTab,
             };
 
