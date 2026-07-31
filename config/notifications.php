@@ -4,6 +4,8 @@ return [
     'modules' => [
         'requisitions' => 'Requisiciones de personal',
         'comercial' => 'Comercial',
+        'purchase_requests' => 'Solicitudes de compra',
+        'supplies' => 'Suministros',
     ],
 
     'fallback_recipient' => 'desarrollo.tic@sjsp.com.co',
@@ -19,6 +21,13 @@ return [
         'comercial' => [
             'documentation_expiring',
             'service_contract_expiring',
+        ],
+        'purchase_requests' => [
+            'purchase_request_approved_for_compras',
+            'compras_queue_processed',
+        ],
+        'supplies' => [
+            'supply_request_approved_for_compras',
         ],
     ],
 ];

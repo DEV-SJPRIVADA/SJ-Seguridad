@@ -154,8 +154,13 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 - `tests/Feature/SupplyModuleTest.php`: catálogo, creación (catálogo y custom), snapshot de sede, bloqueo sin sede, aprobación, tablero Insumos aprobados (filtros, export por solicitud, `exported_at`), rutas purchasing eliminadas, filtros por módulo, redirección y correo.
 
 ### Pendientes conocidos
-- Proceso de compra con costeo (fase posterior).
 - Estado `borrador` documentado pero no implementado.
+
+### Integración bandeja Compras (2026-07-31)
+- Solicitudes `aprobada_calidad` aparecen en **Bandeja compras** (`purchase.tab.processing`).
+- Procesamiento: costos unitarios, estados `en_compras` → `completada`.
+- Notificación a Compras al aprobar Calidad (`supply_request_approved_for_compras`).
+- Ver también [`purchase-requests.md`](purchase-requests.md).
 
 ---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*

@@ -68,6 +68,22 @@ Route::get('/dashboard', function () {
                         ];
                     }
 
+                    if ($boardKey === 'solicitudes_compra') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->canViewPurchaseBoardFor($key),
+                        ];
+                    }
+
+                    if ($boardKey === 'bandeja_compras') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->can('purchase.tab.processing'),
+                        ];
+                    }
+
                     return [
                         'key' => $boardKey,
                         'label' => $boardLabel,
@@ -102,6 +118,14 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultSupplyBoardUrl($defaultModule['key']));
         }
 
+        if ($defaultBoard === 'solicitudes_compra') {
+            return redirect(auth()->user()->defaultPurchaseBoardUrl($defaultModule['key']));
+        }
+
+        if ($defaultBoard === 'bandeja_compras') {
+            return redirect()->route('purchase-requests.processing.index', ['module' => $defaultModule['key']]);
+        }
+
         if ($defaultBoard === 'documentos') {
             return redirect(auth()->user()->defaultQualityDocumentBoardUrl($defaultModule['key']));
         }
@@ -132,6 +156,14 @@ Route::get('/dashboard', function () {
 
     if ($selectedModule && $selectedBoardKey === 'suministros') {
         return redirect(auth()->user()->defaultSupplyBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'solicitudes_compra') {
+        return redirect(auth()->user()->defaultPurchaseBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'bandeja_compras') {
+        return redirect()->route('purchase-requests.processing.index', ['module' => $selectedModule['key']]);
     }
 
     if ($selectedModule && $selectedBoardKey === 'documentos') {
@@ -165,6 +197,8 @@ Route::get('/dashboard', function () {
     ]);
 })->middleware(['auth', 'active', 'password.changed', 'can:view.dashboard'])->name('dashboard');
 
+require __DIR__.'/modules/purchase-requests-email.php';
+
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -188,6 +222,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Modulos del sistema
     require __DIR__.'/modules/requisitions.php';
     require __DIR__.'/modules/supplies.php';
+    require __DIR__.'/modules/purchase-requests.php';
     require __DIR__.'/modules/quality-documents.php';
     require __DIR__.'/areas/operaciones.php';
     require __DIR__.'/areas/comercial.php';

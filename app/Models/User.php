@@ -6,11 +6,13 @@ namespace App\Models;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -75,6 +77,11 @@ class User extends Authenticatable
     public function site(): BelongsTo
     {
         return $this->belongsTo(SupplySite::class, 'sede_id');
+    }
+
+    public function managedAreas(): HasMany
+    {
+        return $this->hasMany(UserManagedArea::class);
     }
 
     public function hasAssignedSite(): bool
@@ -154,6 +161,38 @@ class User extends Authenticatable
             'aprobacion_insumos' => route('supplies.approval.index', ['module' => $moduleKey]),
             'insumos_aprobados' => route('supplies.approved.index', ['module' => $moduleKey]),
             'catalogo' => route('supplies.products.index', ['module' => $moduleKey]),
+            default => route('dashboard', ['module' => $moduleKey]),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function purchaseBoardTabsFor(string $moduleKey): Collection
+    {
+        return collect(app(PurchaseAccessService::class)->visibleTabsFor($this, $moduleKey));
+    }
+
+    public function canAccessPurchaseTab(string $moduleKey, string $tab): bool
+    {
+        return app(PurchaseAccessService::class)->canAccessTab($this, $moduleKey, $tab);
+    }
+
+    public function canViewPurchaseBoardFor(string $areaKey): bool
+    {
+        return app(PurchaseAccessService::class)->canViewPurchaseBoard($this, $areaKey);
+    }
+
+    public function defaultPurchaseBoardUrl(string $moduleKey): string
+    {
+        $tabs = $this->purchaseBoardTabsFor($moduleKey);
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'nueva' => route('purchase-requests.create', ['module' => $moduleKey]),
+            'mis_solicitudes' => route('purchase-requests.index', ['module' => $moduleKey]),
+            'pendientes_aprobacion' => route('purchase-requests.approval.index', ['module' => $moduleKey]),
+            'bandeja_compras' => route('purchase-requests.processing.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }

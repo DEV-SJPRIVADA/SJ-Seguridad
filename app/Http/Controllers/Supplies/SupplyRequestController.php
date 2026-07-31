@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Supplies;
 
 use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
+use App\Mail\SupplyRequestApprovedForComprasMail;
 use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Notifications\NotificationConfigService;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
 use App\Support\DisplayDate;
 use App\Traits\HasSupplyTabs;
@@ -23,6 +25,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class SupplyRequestController extends Controller
 {
     use HasSupplyTabs;
+
+    public function __construct(
+        private readonly NotificationConfigService $notificationConfig,
+    ) {}
 
     public function index(string $module)
     {
@@ -224,6 +230,8 @@ class SupplyRequestController extends Controller
                         'approved_quantity' => $data['approved_quantity'],
                     ]);
                 }
+
+                $this->notifyComprasSupplyApproved($supplyRequest->fresh(['user', 'items.product']));
             }
         });
 
@@ -344,6 +352,18 @@ class SupplyRequestController extends Controller
         }
 
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
+    }
+
+    private function notifyComprasSupplyApproved(SupplyRequest $supplyRequest): void
+    {
+        $recipients = $this->notificationConfig->recipientEmails(
+            'supplies',
+            'supply_request_approved_for_compras',
+        );
+
+        foreach ($recipients as $email) {
+            Mail::to($email)->queue(new SupplyRequestApprovedForComprasMail($supplyRequest));
+        }
     }
 
     private function authorizeSupplyView(SupplyRequest $supplyRequest): void

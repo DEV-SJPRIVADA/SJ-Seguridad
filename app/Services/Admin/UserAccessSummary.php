@@ -19,7 +19,11 @@ class UserAccessSummary
         }
 
         if ($user->hasRole('administrador')) {
-            $notes[] = 'El rol administrador incluye acceso base al panel y gestion de usuarios segun la configuracion del rol.';
+            $notes[] = 'El rol administrador incluye acceso base al panel y funciones de plataforma/GH segun la configuracion del rol.';
+        }
+
+        if ($user->hasRole('director')) {
+            $notes[] = 'El rol director incluye autorizacion de solicitudes de compra y cargo nuevo en requisiciones.';
         }
 
         $directCount = $user->permissions->count();

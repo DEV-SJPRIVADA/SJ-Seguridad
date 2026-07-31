@@ -21,7 +21,8 @@ class RoleAndPermissionSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
         $roles = [
             'super-admin' => $allPermissions,
-            'administrador' => ['view.dashboard', 'manage.users', 'manage.requisition.parameters', 'requisitions.approve.management'],
+            'administrador' => ['view.dashboard', 'manage.requisition.parameters', 'requisitions.approve.management'],
+            'director' => ['view.dashboard', 'purchase.tab.approval', 'requisitions.approve.management'],
             'usuario' => ['view.dashboard'],
         ];
 

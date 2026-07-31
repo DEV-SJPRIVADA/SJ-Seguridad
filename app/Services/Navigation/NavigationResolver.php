@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,7 @@ class NavigationResolver
         private readonly BoardAccessService $boardAccess,
         private readonly CommercialAccessService $commercialAccess,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly PurchaseAccessService $purchaseAccess,
     ) {}
 
     /**
@@ -199,6 +201,36 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'solicitudes_compra') {
+                            if (! $this->purchaseAccess->canViewPurchaseBoard($user, $key)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'purchase-requests.index',
+                                'url' => $user->defaultPurchaseBoardUrl($key),
+                                'active' => str_starts_with((string) $routeName, 'purchase-requests.') && $requestModule === $key,
+                            ];
+                        }
+
+                        if ($boardKey === 'bandeja_compras') {
+                            if (! $user->can('purchase.tab.processing') && ! $this->purchaseAccess->canViewPurchaseBoard($user, $key)) {
+                                return null;
+                            }
+
+                            if (! $user->can('purchase.tab.processing')) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'purchase-requests.processing.index',
+                                'url' => route('purchase-requests.processing.index', ['module' => $key]),
+                                'active' => str_starts_with((string) $routeName, 'purchase-requests.processing.'),
+                            ];
+                        }
+
                         $permission = "view.board.{$key}.{$boardKey}";
 
                         if (! $user->can($permission)) {
@@ -213,6 +245,8 @@ class NavigationResolver
                         $active = match (true) {
                             $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                            $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.') && $requestModule === $key,
+                            $boardKey === 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.'),
                             $boardKey === 'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
                             $boardKey === 'gestion_clientes' => (
                                 str_starts_with((string) $routeName, 'comercial.matriz.clients.')
@@ -262,6 +296,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'requisitions.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'supplies.') && (string) request()->route('module') === $key
+                ) || (
+                    str_starts_with((string) $routeName, 'purchase-requests.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 ) || (
@@ -323,6 +359,7 @@ class NavigationResolver
     {
         if (str_starts_with((string) $routeName, 'requisitions.')
             || str_starts_with((string) $routeName, 'supplies.')
+            || str_starts_with((string) $routeName, 'purchase-requests.')
             || str_starts_with((string) $routeName, 'quality-documents.')) {
             return (string) request()->route('module');
         }

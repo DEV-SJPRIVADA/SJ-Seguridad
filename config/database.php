@@ -112,6 +112,21 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'legacy_gestion_compras' => [
+            'driver' => 'mysql',
+            'host' => env('LEGACY_GESTION_COMPRAS_DB_HOST', '127.0.0.1'),
+            'port' => env('LEGACY_GESTION_COMPRAS_DB_PORT', '3306'),
+            'database' => env('LEGACY_GESTION_COMPRAS_DB_DATABASE', 'gestion_compras'),
+            'username' => env('LEGACY_GESTION_COMPRAS_DB_USERNAME', 'root'),
+            'password' => env('LEGACY_GESTION_COMPRAS_DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
     ],
 
     /*

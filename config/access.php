@@ -30,6 +30,12 @@ return [
         'manage.supply.catalog' => 'Administrar catalogo de suministros (Full)',
         'approve.supply.quality' => 'Aprobar insumos (permiso completo)',
         'manage.quality.documents' => 'Calidad: Administrar documentos',
+
+        // Solicitudes de compra
+        'purchase.tab.create' => 'Solicitudes compra: Crear',
+        'purchase.tab.my_requests' => 'Solicitudes compra: Mis solicitudes',
+        'purchase.tab.approval' => 'Solicitudes compra: Autorizar (director)',
+        'purchase.tab.processing' => 'Compras: Bandeja de procesamiento',
     ],
 
     'area_indicador_permissions' => [
@@ -67,6 +73,8 @@ return [
         'requisiciones' => 'Requisiciones',
         'gestion_clientes' => 'Gestion Clientes',
         'suministros' => 'Suministros',
+        'solicitudes_compra' => 'Solicitudes de compra',
+        'bandeja_compras' => 'Bandeja compras',
         'documentos' => 'Documentos',
         'ficha_empleados' => 'Ficha empleados',
     ],
@@ -108,6 +116,13 @@ return [
         'aprobacion_insumos' => 'Aprobacion Insumos',
         'insumos_aprobados' => 'Insumos aprobados',
         'catalogo' => 'Catalogo',
+    ],
+
+    'purchase_tabs' => [
+        'nueva' => 'Nueva solicitud',
+        'mis_solicitudes' => 'Mis solicitudes',
+        'pendientes_aprobacion' => 'Pendientes autorizacion',
+        'bandeja_compras' => 'Bandeja compras',
     ],
 
     'quality_document_tabs' => [
@@ -154,6 +169,8 @@ return [
             'requisitions.tab.solicitar',
             'requisitions.tab.seguimiento',
             'supply.tab.my_requests',
+            'purchase.tab.create',
+            'purchase.tab.my_requests',
         ],
         'global_groups' => [
             'administration' => [
@@ -186,6 +203,22 @@ return [
                 'permissions' => [
                     'supply.tab.catalog',
                     'manage.supply.catalog',
+                ],
+            ],
+            'purchases' => [
+                'label' => 'Solicitudes de compra',
+                'permissions' => [
+                    'purchase.tab.create',
+                    'purchase.tab.my_requests',
+                    'purchase.tab.approval',
+                    'purchase.tab.processing',
+                ],
+            ],
+            'directores' => [
+                'label' => 'Directores — Autorizacion',
+                'permissions' => [
+                    'purchase.tab.approval',
+                    'requisitions.approve.management',
                 ],
             ],
             'documents' => [
@@ -221,10 +254,18 @@ return [
                 'label' => 'Compras',
                 'subgroups' => [
                     'boards' => [
-                        'label' => 'Ver tableros de suministros',
+                        'label' => 'Ver tableros',
                         'permissions' => [
                             'view.board.compras.suministros',
+                            'view.board.compras.solicitudes_compra',
+                            'view.board.compras.bandeja_compras',
                             'view.board.compras.dashboard',
+                        ],
+                    ],
+                    'purchases' => [
+                        'label' => 'Solicitudes de compra (funciones)',
+                        'permissions' => [
+                            'purchase.tab.processing',
                         ],
                     ],
                 ],

@@ -54,7 +54,7 @@ class UserController extends Controller
             : null;
 
         if (! $selectedUser && $users->isNotEmpty()) {
-            /** @var \App\Models\User $selectedUser */
+            /** @var User $selectedUser */
             $selectedUser = $users->first();
         }
 
@@ -163,7 +163,7 @@ class UserController extends Controller
 
     private function roles()
     {
-        $orderedNames = ['super-admin', 'administrador', 'usuario'];
+        $orderedNames = ['super-admin', 'administrador', 'director', 'usuario'];
 
         return Role::query()
             ->whereIn('name', $orderedNames)

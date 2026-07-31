@@ -6,8 +6,9 @@ El proyecto usa `spatie/laravel-permission` con guard `web`.
 
 ## Roles base
 
-- `super-admin`
-- `administrador`
+- `super-admin` — acceso total; único rol con `manage.users` por defecto
+- `administrador` — plataforma/GH (`manage.requisition.parameters`, `requisitions.approve.management`); **sin** `manage.users`
+- `director` — autoriza solicitudes de compra y cargo nuevo en requisiciones (`purchase.tab.approval`, `requisitions.approve.management`)
 - `usuario`
 
 Los roles antiguos `coordinador` y `consulta` fueron eliminados; el seeder migra a `usuario` cualquier usuario que aun los tenga.
@@ -39,6 +40,15 @@ Permisos del modulo de suministros:
 - `supply.tab.catalog`
 - `manage.supply.catalog`
 - `approve.supply.quality`
+
+Permisos del modulo **Solicitudes de compra**:
+
+- `purchase.tab.create`
+- `purchase.tab.my_requests`
+- `purchase.tab.approval`
+- `purchase.tab.processing`
+
+Tableros: `view.board.{area}.solicitudes_compra`, `view.board.{area}.bandeja_compras`
 
 Permisos del modulo de documentos de Calidad:
 

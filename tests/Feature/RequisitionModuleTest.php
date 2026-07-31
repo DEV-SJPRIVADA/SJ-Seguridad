@@ -455,7 +455,8 @@ class RequisitionModuleTest extends TestCase
             'area_key' => 'gestion_humana',
             'must_change_password' => false,
         ]);
-        $approver->assignRole('administrador');
+        $approver->assignRole('director');
+        $approver->givePermissionTo('view.board.gestion_humana.requisiciones');
 
         $requester = User::factory()->create([
             'area_key' => 'operaciones',
@@ -1673,6 +1674,7 @@ class RequisitionModuleTest extends TestCase
                 'hired_document' => '999888777',
                 'hired_full_name' => 'Persona Reasignada',
                 'confirm_duplicate_hired' => 1,
+                'confirm_duplicate_hired_document' => '999888777',
             ])
         );
 
