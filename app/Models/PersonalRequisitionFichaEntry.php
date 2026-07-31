@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PersonalRequisitionFichaEntry extends Model
 {
@@ -40,6 +41,30 @@ class PersonalRequisitionFichaEntry extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(EmployeeFichaProfile::class, 'personal_requisition_ficha_entry_id');
+    }
+
+    public function scopeWithActiveProfile(Builder $query): Builder
+    {
+        return $query->where(function (Builder $inner): void {
+            $inner->whereDoesntHave('profile')
+                ->orWhereHas('profile', fn (Builder $profile) => $profile->where('employment_status', EmployeeFichaProfile::STATUS_ACTIVO));
+        });
+    }
+
+    public function scopeHireDateBetween(Builder $query, string $from, string $to): Builder
+    {
+        return $query->where(function (Builder $inner) use ($from, $to): void {
+            $inner->whereHas('profile', fn (Builder $profile) => $profile->whereBetween('hire_date', [$from, $to]))
+                ->orWhere(function (Builder $withoutProfile) use ($from, $to): void {
+                    $withoutProfile->whereDoesntHave('profile')
+                        ->whereHas('requisition', fn (Builder $req) => $req->whereBetween('hiring_date', [$from, $to]));
+                });
+        });
     }
 
     public function scopePending(Builder $query): Builder

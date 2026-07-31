@@ -90,6 +90,10 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | --- | --- | --- | --- |
 | GET | `/gestion-humana/ficha-empleados/empleados` | `gestion-humana.ficha-empleados.employees.index` | `ficha_empleados.view` |
 | GET | `/gestion-humana/ficha-empleados/empleados/exportar` | `gestion-humana.ficha-empleados.employees.export` | `ficha_empleados.view` |
+| GET | `/gestion-humana/ficha-empleados/empleados/plantilla-importacion` | `gestion-humana.ficha-empleados.employees.import-template` | `ficha_empleados.manage` |
+| POST | `/gestion-humana/ficha-empleados/empleados/importar` | `gestion-humana.ficha-empleados.employees.import` | `ficha_empleados.manage` |
+| GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
+| PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/agregar` | `gestion-humana.ficha-empleados.employees.promote` | `ficha_empleados.manage` |
 
 Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export, `PromoteFichaEntryRequest::authorize()` para promote).
@@ -97,15 +101,37 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
 - `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `pendientes`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`.
-- `exportExcel(Request $request): StreamedResponse` — misma query/filtros que `index` (respeta `estado` y `q` activos), `App\Exports\PersonalRequisitionFichaEntryExport` sobre `BaseExport`.
-- `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry): RedirectResponse` — setea `moved_to_ficha_at`/`moved_to_ficha_by`; idempotente (si ya esta en ficha, no-op con mensaje informativo).
+- `exportExcel(Request $request): StreamedResponse|RedirectResponse` — export **Plantilla masivos** solo registros **En ficha**; sin rango de fechas exporta solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por fecha de ingreso.
+- `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
+- `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
+- `editFicha` / `updateFicha` — formulario ficha empleado (`employee_ficha_profiles`).
+- `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry): RedirectResponse` — setea `moved_to_ficha_at`/`moved_to_ficha_by`; crea perfil prefilled; idempotente.
 
-## Export Excel
+## Modelo `employee_ficha_profiles`
 
-- Clase: `App\Exports\PersonalRequisitionFichaEntryExport` (sobre `BaseExport`), boton `<x-export-excel>` en la vista.
-- Columnas: Codigo requisicion, Cedula, Nombre completo, Cargo, Cliente, Ciudad, Fecha contratacion, Estado (Pendiente/En ficha), Agregado a ficha, Agregado por.
-- Filtros del export = mismos que la vista activa (`estado`, `q`); el boton construye la URL con `request()->query()` equivalente (`$entriesQuery()` en la vista).
-- Archivo: `ficha_empleados_{Y-m-d}.xlsx`; titulo dinamico segun filtro (`Ficha empleados — Pendientes` / `Ficha empleados — En ficha`).
+Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date`.
+
+Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`.
+
+## Export Excel — Plantilla masivos (nómina externa)
+
+- Clase: `App\Exports\PlantillaMasivosExport` — carga `storage/templates/plantilla-masivos.xlsx`, conserva filas 1–2, datos desde fila 3.
+- Mapper: `App\Services\GestionHumana\PlantillaMasivosMapper`.
+- Config: `config/employee_ficha.php`.
+- **Sin rango de fechas:** solo empleados activos en ficha.
+- **Con `fecha_desde` + `fecha_hasta`:** filtra por `hire_date` (perfil o requisición).
+- Archivo: `plantilla_masivos_{Y-m-d}.xlsx`.
+
+## Importación masiva SJ
+
+- Plantilla: `EmployeeFichaImportTemplateExport` / ruta `import-template`.
+- Servicio: `EmployeeFichaImportService`; comando `php artisan employee-ficha:import {path}`.
+- Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.
+- Mapeo técnico: [`docs/Contratacion/MAPEO-PLANTILLA-MASIVOS.md`](../Contratacion/MAPEO-PLANTILLA-MASIVOS.md).
+
+## Export listado simple (legacy)
+
+- Clase: `App\Exports\PersonalRequisitionFichaEntryExport` — conservada; ya no expuesta en UI principal.
 
 ## Navegacion
 
@@ -115,12 +141,13 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 
 ## Vistas
 
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros (pills estado + busqueda), export Excel, tabla DataTables, boton **Agregar a ficha empleados** (solo `canManage`) con confirmacion SweetAlert2.
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, export plantilla masivos (En ficha), import masivo, **Completar ficha**.
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/edit-ficha.blade.php` — formulario perfil empleado.
 - `resources/views/areas/gestion_humana/partials/ficha-empleados-subnav.blade.php` — subnav `.module-tab` (mismo estilo que `requisitions/partials/subnav.blade.php`).
 
 ## Tests
 
-`tests/Feature/FichaEmpleadosTest.php`:
+`tests/Feature/FichaEmpleadosTest.php` + `tests/Feature/EmployeeFichaPlantillasTest.php`:
 
 - Columnas de migracion (`personal_requisitions.hired_*`, `personal_requisition_ficha_entries.*`).
 - Relaciones/accessors del modelo `PersonalRequisitionFichaEntry`; scopes `pending`/`inFicha`.

@@ -15,6 +15,8 @@
         $entriesQuery = fn (array $overrides = []) => array_filter([
             'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
             'estado' => array_key_exists('estado', $overrides) ? $overrides['estado'] : ($filters['estado'] ?: null),
+            'fecha_desde' => array_key_exists('fecha_desde', $overrides) ? $overrides['fecha_desde'] : null,
+            'fecha_hasta' => array_key_exists('fecha_hasta', $overrides) ? $overrides['fecha_hasta'] : null,
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -24,18 +26,42 @@
                 <div class="alert alert--success ficha-empleados-page__alert">{{ session('status') }}</div>
             @endif
 
+            @if ($errors->has('export'))
+                <div class="alert alert--danger ficha-empleados-page__alert">{{ $errors->first('export') }}</div>
+            @endif
+
+            @if ($errors->has('import_file'))
+                <div class="alert alert--danger ficha-empleados-page__alert">{{ $errors->first('import_file') }}</div>
+            @endif
+
             <div class="panel ficha-empleados-panel">
                 <div class="panel__body panel__body--compact">
                     <div class="req-manage-filters ficha-empleados-filters">
-                        <div class="req-manage-filters__head">
+                        <div class="req-manage-filters__head ficha-empleados-filters__head">
                             <div class="panel-heading-row panel-heading-row--wrap">
                                 <h3 class="panel-title">Listado de empleados</h3>
                                 <p class="panel-text">Cedula, nombre o codigo de requisicion</p>
                             </div>
-                            <div class="req-manage-filters__actions ficha-empleados-filters__actions">
-                                <x-export-excel route="{{ route('gestion-humana.ficha-empleados.employees.export', $entriesQuery()) }}" />
+                            <div class="ficha-empleados-filters__head-actions">
                                 @if ($hasActiveFilters)
-                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index', ['estado' => $filters['estado']]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index', ['estado' => $filters['estado']]) }}" class="btn btn--secondary btn--sm">Limpiar busqueda</a>
+                                @endif
+
+                                @if (($filters['estado'] ?? 'pendientes') === 'en_ficha')
+                                    <button
+                                        type="button"
+                                        class="ficha-empleados-filters__bulk-icon"
+                                        title="Plantilla masivos — exportar e importar"
+                                        aria-label="Plantilla masivos — exportar e importar"
+                                        x-data=""
+                                        x-on:click.prevent="$dispatch('open-modal', 'ficha-masivos')"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 3v12"/>
+                                            <path d="m7 8 5-5 5 5"/>
+                                            <path d="M5 21h14"/>
+                                        </svg>
+                                    </button>
                                 @endif
                             </div>
                         </div>
@@ -55,13 +81,13 @@
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cedula, nombre o codigo de requisicion"
                                     >
-                                    <button type="submit" class="btn btn--primary">Buscar</button>
+                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
                                 </div>
                             </form>
 
                             <div class="req-manage-filters__status-col ficha-empleados-filters__status-col">
                                 <p class="req-manage-filters__status-label">Estado</p>
-                                <div class="req-manage-filters__pills">
+                                <div class="req-manage-filters__pills ficha-empleados-filters__pills">
                                     @foreach ($estadoLabels as $estadoKey => $estadoLabel)
                                         <a
                                             href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => $estadoKey])) }}"
@@ -92,6 +118,7 @@
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
                                     <th>Fecha contratacion</th>
+                                    <th>Ficha</th>
                                     @if (($filters['estado'] ?? 'pendientes') === 'en_ficha')
                                         <th>Agregado a ficha</th>
                                         <th>Agregado por</th>
@@ -110,6 +137,13 @@
                                         <td>{{ $entry->clientName() ?: '—' }}</td>
                                         <td>{{ $entry->cityName() ?: '—' }}</td>
                                         <td><x-date-table :value="$entry->requisition?->hiring_date" /></td>
+                                        <td>
+                                            @if ($canManage)
+                                                <a href="{{ route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry) }}" class="btn btn--secondary btn--sm">Completar ficha</a>
+                                            @else
+                                                {{ $entry->profile ? 'Si' : '—' }}
+                                            @endif
+                                        </td>
                                         @if ($entry->moved_to_ficha_at !== null)
                                             <td><x-date-table :value="$entry->moved_to_ficha_at" datetime /></td>
                                             <td>{{ $entry->movedBy?->name ?: '—' }}</td>
@@ -135,7 +169,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8">No hay registros para este filtro.</td>
+                                        <td colspan="9">No hay registros para este filtro.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -143,6 +177,78 @@
                     </div>
                 </div>
             </div>
+
+            @if (($filters['estado'] ?? 'pendientes') === 'en_ficha')
+                <x-modal
+                    name="ficha-masivos"
+                    maxWidth="md"
+                    :show="$errors->has('export') || $errors->has('import_file')"
+                    focusable
+                >
+                    <div class="modal-card form-stack ficha-empleados-masivos-modal">
+                        <div class="ficha-empleados-masivos-modal__header">
+                            <div>
+                                <h3 class="panel-title">Plantilla masivos</h3>
+                                <p class="panel-text">Exportar empleados en ficha o importar actualizaciones masivas</p>
+                            </div>
+                            <button
+                                type="button"
+                                class="ficha-empleados-masivos-modal__close"
+                                aria-label="Cerrar"
+                                x-on:click="$dispatch('close-modal', 'ficha-masivos')"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M18 6 6 18"/>
+                                    <path d="m6 6 12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        @if ($errors->has('export'))
+                            <div class="alert alert--danger">{{ $errors->first('export') }}</div>
+                        @endif
+
+                        @if ($errors->has('import_file'))
+                            <div class="alert alert--danger">{{ $errors->first('import_file') }}</div>
+                        @endif
+
+                        <div class="ficha-empleados-masivos-modal__section">
+                            <p class="ficha-empleados-masivos-modal__subtitle">Exportar</p>
+                            <p class="ficha-empleados-masivos-modal__note">Sin rango de fechas se exportan solo empleados activos.</p>
+                            <form method="GET" action="{{ route('gestion-humana.ficha-empleados.employees.export') }}" class="ficha-empleados-masivos-modal__export">
+                                <input type="hidden" name="q" value="{{ $filters['q'] ?? '' }}">
+                                <div class="ficha-empleados-masivos-modal__date-row">
+                                    <label class="ficha-empleados-masivos-modal__field-label" for="ficha-export-desde">Desde</label>
+                                    <input type="date" id="ficha-export-desde" name="fecha_desde" class="form-input" value="{{ request('fecha_desde') }}">
+                                    <label class="ficha-empleados-masivos-modal__field-label" for="ficha-export-hasta">Hasta</label>
+                                    <input type="date" id="ficha-export-hasta" name="fecha_hasta" class="form-input" value="{{ request('fecha_hasta') }}">
+                                </div>
+                                <button type="submit" class="btn btn--secondary btn--sm">Exportar plantilla</button>
+                            </form>
+                        </div>
+
+                        @if ($canManage)
+                            <div class="ficha-empleados-masivos-modal__section ficha-empleados-masivos-modal__section--import">
+                                <p class="ficha-empleados-masivos-modal__subtitle">Importar</p>
+                                <a href="{{ route('gestion-humana.ficha-empleados.employees.import-template') }}" class="btn btn--secondary btn--sm">Descargar plantilla vacia</a>
+                                <form method="POST" action="{{ route('gestion-humana.ficha-empleados.employees.import') }}" enctype="multipart/form-data" class="ficha-empleados-masivos-modal__import">
+                                    @csrf
+                                    <label class="ficha-empleados-masivos-modal__file">
+                                        <input type="file" name="import_file" accept=".xlsx" class="ficha-empleados-masivos-modal__file-input" required data-ficha-import-file>
+                                        <span class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__file-trigger">Elegir archivo</span>
+                                        <span class="ficha-empleados-masivos-modal__file-name" data-ficha-import-name>Sin archivo</span>
+                                    </label>
+                                    <button type="submit" class="btn btn--primary btn--sm">Importar</button>
+                                </form>
+                            </div>
+                        @endif
+
+                        <div class="content-actions content-actions--end ficha-empleados-masivos-modal__footer">
+                            <button type="button" class="btn btn--secondary btn--sm" x-on:click="$dispatch('close-modal', 'ficha-masivos')">Cerrar</button>
+                        </div>
+                    </div>
+                </x-modal>
+            @endif
         </div>
     </div>
 
@@ -150,6 +256,18 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('[data-ficha-import-file]').forEach(function (input) {
+                    var nameEl = input.closest('.ficha-empleados-masivos-modal__file')?.querySelector('[data-ficha-import-name]');
+                    if (!nameEl) {
+                        return;
+                    }
+
+                    input.addEventListener('change', function () {
+                        var file = input.files && input.files[0];
+                        nameEl.textContent = file ? file.name : 'Sin archivo';
+                    });
+                });
+
                 if (typeof Swal === 'undefined') {
                     return;
                 }

@@ -9,5 +9,9 @@ Route::middleware(['password.changed'])
     ->group(function (): void {
         Route::get('/', [FichaEmpleadosController::class, 'index'])->name('index');
         Route::get('/exportar', [FichaEmpleadosController::class, 'exportExcel'])->name('export');
+        Route::get('/plantilla-importacion', [FichaEmpleadosController::class, 'importTemplate'])->name('import-template');
+        Route::post('/importar', [FichaEmpleadosController::class, 'import'])->name('import');
+        Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
+        Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
         Route::patch('/{fichaEntry}/agregar', [FichaEmpleadosController::class, 'promote'])->name('promote');
     });

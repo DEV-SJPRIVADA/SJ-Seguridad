@@ -63,14 +63,30 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. Revise las columnas adicionales **Agregado a ficha** y **Agregado por**.
 3. Estos registros no admiten mas acciones desde esta pantalla.
 
-### Exportar a Excel
+### Completar ficha de empleado
 
-1. En cualquiera de las dos pills (**Pendientes** o **En ficha**), aplique los filtros que necesite (busqueda).
-2. Pulse **Exportar a Excel**.
-3. El archivo descargado respeta el filtro y la busqueda activos al momento de exportar.
+1. En **Pendientes** o **En ficha**, pulse **Completar ficha** (permiso de edición).
+2. Diligencie datos de contacto, nómina, EPS/AFP, centro de costo, etc.
+3. Si indica **fecha retiro**, el empleado queda como **desvinculado** y no saldrá en exportaciones masivas sin rango de fechas.
+
+### Exportar plantilla masivos (nómina)
+
+1. Cambie a la pill **En ficha**.
+2. Opcional: indique **fecha desde** y **fecha hasta** para filtrar por ingreso.
+3. Pulse **Exportar plantilla masivos**.
+4. Sin rango de fechas solo se exportan empleados **activos** (no desvinculados).
+5. El archivo conserva el formato legacy de nómina (filas 1–2 de encabezado).
+
+### Importar empleados masivamente
+
+1. Pulse **Descargar plantilla importación** (formato EMPLEADOS.xlsx).
+2. Diligencie filas desde la fila 3; `cedula` es obligatoria.
+3. Suba el archivo con **Importar masivo**.
+4. Los registros quedan en **En ficha**; puede vincular `codigo_requisicion` opcional.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.1 | 2026-07-31 | Plantillas | Perfil ficha, export Plantilla masivos, import SJ, catálogos nómina, filtro activos/fechas. |
 | 1.0 | 2026-07-30 | FEAT-020 | Version inicial: tablero Ficha empleados, pestaña Empleados, accion Agregar a ficha empleados, export Excel. |

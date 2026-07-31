@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
@@ -359,23 +360,16 @@ class FichaEmpleadosTest extends TestCase
         $this->assertTrue($boardLabels->contains(config('access.boards.ficha_empleados')));
     }
 
-    public function test_ficha_empleados_export_returns_spreadsheet_with_active_filter(): void
+    public function test_ficha_empleados_export_returns_plantilla_masivos_for_en_ficha_active(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
         $viewer->assignRole('usuario');
         $viewer->givePermissionTo('ficha_empleados.view');
 
-        $pendingRequisition = $this->createRequisition('REQ-FICHA-2001');
         $inFichaRequisition = $this->createRequisition('REQ-FICHA-2002');
         $mover = User::factory()->create(['must_change_password' => false]);
 
-        PersonalRequisitionFichaEntry::query()->create([
-            'personal_requisition_id' => $pendingRequisition->id,
-            'hired_document' => '900000007',
-            'hired_full_name' => 'Pendiente Export',
-        ]);
-
-        PersonalRequisitionFichaEntry::query()->create([
+        $entry = PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $inFichaRequisition->id,
             'hired_document' => '900000008',
             'hired_full_name' => 'En Ficha Export',
@@ -383,26 +377,23 @@ class FichaEmpleadosTest extends TestCase
             'moved_to_ficha_by' => $mover->id,
         ]);
 
-        $pendingResponse = $this->actingAs($viewer)
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '900000008',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($viewer)
             ->get(route('gestion-humana.ficha-empleados.employees.export'));
 
-        $pendingResponse->assertOk();
-        $pendingResponse->assertHeader(
+        $response->assertOk();
+        $response->assertHeader(
             'Content-Type',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         );
         $this->assertStringContainsString(
-            'ficha_empleados_',
-            $pendingResponse->headers->get('content-disposition')
-        );
-
-        $enFichaResponse = $this->actingAs($viewer)
-            ->get(route('gestion-humana.ficha-empleados.employees.export', ['estado' => 'en_ficha']));
-
-        $enFichaResponse->assertOk();
-        $enFichaResponse->assertHeader(
-            'Content-Type',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'plantilla_masivos_',
+            $response->headers->get('content-disposition')
         );
     }
 
