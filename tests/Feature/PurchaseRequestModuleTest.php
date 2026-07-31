@@ -8,6 +8,7 @@ use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Navigation\NavigationResolver;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -196,6 +197,41 @@ class PurchaseRequestModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('#'.$supplyRequest->id);
+    }
+
+    public function test_navigation_processing_bandeja_only_activates_compras_board(): void
+    {
+        $user = $this->comprasUser();
+
+        $nav = app(NavigationResolver::class)->resolve(
+            $user,
+            'purchase-requests.processing.index',
+            'compras',
+        );
+
+        $activeAreaKeys = collect($nav['appNavigation'])
+            ->filter(fn (array $module): bool => $module['active'])
+            ->pluck('key')
+            ->values()
+            ->all();
+
+        $this->assertSame(['compras'], $activeAreaKeys);
+
+        $comprasBoards = collect(collect($nav['appNavigation'])->firstWhere('key', 'compras')['items'] ?? []);
+        $activeBoardLabels = $comprasBoards
+            ->filter(fn (array $board): bool => $board['active'])
+            ->pluck('label')
+            ->values()
+            ->all();
+
+        $this->assertSame(['Bandeja compras'], $activeBoardLabels);
+
+        $gestionHumana = collect($nav['appNavigation'])->firstWhere('key', 'gestion_humana');
+        if ($gestionHumana !== null) {
+            $this->assertFalse(
+                collect($gestionHumana['items'] ?? [])->pluck('label')->contains('Bandeja compras')
+            );
+        }
     }
 
     private function purchaseRequester(string $area): User
