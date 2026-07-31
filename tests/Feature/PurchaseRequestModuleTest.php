@@ -10,7 +10,9 @@ use App\Models\SupplySite;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
@@ -58,6 +60,39 @@ class PurchaseRequestModuleTest extends TestCase
 
         Mail::assertQueued(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($director->email));
         Mail::assertNotQueued(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($requester->email));
+    }
+
+    public function test_user_can_upload_item_photo_when_creating_purchase_request(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+
+        $response = $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'operaciones']), [
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Teclado mecanico',
+                    'referencia' => 'KB-001',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Bogota',
+                    'foto' => UploadedFile::fake()->image('teclado.jpg'),
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('purchase-requests.create', ['module' => 'operaciones']));
+
+        $item = PurchaseRequest::query()->first()?->items()->first();
+        $this->assertNotNull($item);
+        $this->assertNotNull($item->foto_path);
+        $this->assertTrue(Storage::disk('public')->exists($item->foto_path));
     }
 
     public function test_director_sees_only_assigned_pending_requests(): void

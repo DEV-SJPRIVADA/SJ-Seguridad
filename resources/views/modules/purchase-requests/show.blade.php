@@ -118,6 +118,7 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Foto</th>
                                     <th>Cantidad</th>
                                     <th>Descripcion</th>
                                     <th>Referencia</th>
@@ -129,6 +130,19 @@
                                 @foreach ($purchaseRequest->items as $item)
                                     <tr>
                                         <td class="text-center">{{ $item->orden ?? $loop->iteration }}</td>
+                                        <td class="text-center">
+                                            @if ($item->foto_path)
+                                                <a href="{{ Storage::disk('public')->url($item->foto_path) }}" target="_blank" rel="noopener">
+                                                    <img
+                                                        src="{{ Storage::disk('public')->url($item->foto_path) }}"
+                                                        alt="Foto {{ $item->descripcion }}"
+                                                        style="max-width: 64px; max-height: 48px; object-fit: contain; border-radius: 4px;"
+                                                    >
+                                                </a>
+                                            @else
+                                                <span class="text-muted text-small">Sin foto</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">{{ $item->cantidad }}</td>
                                         <td style="font-weight: 600; color: var(--color-primary);">{{ $item->descripcion }}</td>
                                         <td>{{ $item->referencia }}</td>
