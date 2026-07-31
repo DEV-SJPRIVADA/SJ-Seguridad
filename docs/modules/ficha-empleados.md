@@ -88,6 +88,8 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 
 | Metodo | URI | Nombre | Permiso |
 | --- | --- | --- | --- |
+| GET | `/gestion-humana/ficha-empleados/empleados/nuevo` | `gestion-humana.ficha-empleados.employees.create` | `ficha_empleados.manage` |
+| POST | `/gestion-humana/ficha-empleados/empleados/nuevo` | `gestion-humana.ficha-empleados.employees.store` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados` | `gestion-humana.ficha-empleados.employees.index` | `ficha_empleados.view` |
 | GET | `/gestion-humana/ficha-empleados/empleados/exportar` | `gestion-humana.ficha-empleados.employees.export` | `ficha_empleados.view` |
 | GET | `/gestion-humana/ficha-empleados/empleados/plantilla-importacion` | `gestion-humana.ficha-empleados.employees.import-template` | `ficha_empleados.manage` |
@@ -100,7 +102,8 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
-- `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `pendientes`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`.
+- `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`.
+- `create(): View` / `store(StoreManualEmployeeFichaRequest): RedirectResponse` — alta manual sin requisición (`personal_requisition_id` null, directo en ficha con perfil).
 - `exportExcel(Request $request): StreamedResponse|RedirectResponse` — export **Plantilla masivos** solo registros **En ficha**; sin rango de fechas exporta solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por fecha de ingreso.
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
@@ -141,7 +144,8 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 
 ## Vistas
 
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, export plantilla masivos (En ficha), import masivo, **Completar ficha**.
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha.
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — alta manual (sin requisición).
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/edit-ficha.blade.php` — formulario perfil empleado.
 - `resources/views/areas/gestion_humana/partials/ficha-empleados-subnav.blade.php` — subnav `.module-tab` (mismo estilo que `requisitions/partials/subnav.blade.php`).
 

@@ -7,6 +7,8 @@ Route::middleware(['password.changed'])
     ->prefix('gestion-humana/ficha-empleados/empleados')
     ->name('gestion-humana.ficha-empleados.employees.')
     ->group(function (): void {
+        Route::get('/nuevo', [FichaEmpleadosController::class, 'create'])->name('create');
+        Route::post('/nuevo', [FichaEmpleadosController::class, 'store'])->name('store');
         Route::get('/', [FichaEmpleadosController::class, 'index'])->name('index');
         Route::get('/exportar', [FichaEmpleadosController::class, 'exportExcel'])->name('export');
         Route::get('/plantilla-importacion', [FichaEmpleadosController::class, 'importTemplate'])->name('import-template');

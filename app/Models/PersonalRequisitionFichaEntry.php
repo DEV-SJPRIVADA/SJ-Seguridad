@@ -84,16 +84,33 @@ class PersonalRequisitionFichaEntry extends Model
 
     public function positionName(): ?string
     {
+        if ($this->profile?->position_name) {
+            return $this->profile->position_name;
+        }
+
         return $this->requisition?->position?->name;
     }
 
     public function clientName(): ?string
     {
+        if ($this->profile?->work_center_name) {
+            return $this->profile->work_center_name;
+        }
+
         return $this->requisition?->client?->name;
     }
 
     public function cityName(): ?string
     {
+        if ($this->profile?->residence_city_name) {
+            return $this->profile->residence_city_name;
+        }
+
         return $this->requisition?->city?->name;
+    }
+
+    public function isManualEntry(): bool
+    {
+        return $this->personal_requisition_id === null;
     }
 }

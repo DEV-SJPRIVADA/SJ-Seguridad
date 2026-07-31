@@ -215,7 +215,7 @@ class FichaEmpleadosTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_ficha_empleados_index_lists_pending_by_default(): void
+    public function test_ficha_empleados_index_lists_en_ficha_by_default(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
         $viewer->assignRole('usuario');
@@ -225,13 +225,13 @@ class FichaEmpleadosTest extends TestCase
         $inFichaRequisition = $this->createRequisition('REQ-FICHA-1002');
         $mover = User::factory()->create(['must_change_password' => false]);
 
-        $pending = PersonalRequisitionFichaEntry::query()->create([
+        PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $pendingRequisition->id,
             'hired_document' => '900000001',
             'hired_full_name' => 'Pendiente Indice',
         ]);
 
-        PersonalRequisitionFichaEntry::query()->create([
+        $inFicha = PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $inFichaRequisition->id,
             'hired_document' => '900000002',
             'hired_full_name' => 'En Ficha Indice',
@@ -242,12 +242,12 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index'));
 
         $response->assertOk();
-        $response->assertViewHas('entries', function ($entries) use ($pending): bool {
-            return $entries->pluck('id')->contains($pending->id) && $entries->count() === 1;
+        $response->assertViewHas('entries', function ($entries) use ($inFicha): bool {
+            return $entries->pluck('id')->contains($inFicha->id) && $entries->count() === 1;
         });
     }
 
-    public function test_ficha_empleados_index_en_ficha_filter(): void
+    public function test_ficha_empleados_index_pendientes_filter(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
         $viewer->assignRole('usuario');
@@ -257,13 +257,13 @@ class FichaEmpleadosTest extends TestCase
         $inFichaRequisition = $this->createRequisition('REQ-FICHA-1004');
         $mover = User::factory()->create(['must_change_password' => false]);
 
-        PersonalRequisitionFichaEntry::query()->create([
+        $pending = PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $pendingRequisition->id,
             'hired_document' => '900000003',
             'hired_full_name' => 'Pendiente Filtro',
         ]);
 
-        $inFicha = PersonalRequisitionFichaEntry::query()->create([
+        PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $inFichaRequisition->id,
             'hired_document' => '900000004',
             'hired_full_name' => 'En Ficha Filtro',
@@ -271,11 +271,11 @@ class FichaEmpleadosTest extends TestCase
             'moved_to_ficha_by' => $mover->id,
         ]);
 
-        $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'en_ficha']));
+        $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
 
         $response->assertOk();
-        $response->assertViewHas('entries', function ($entries) use ($inFicha): bool {
-            return $entries->pluck('id')->contains($inFicha->id) && $entries->count() === 1;
+        $response->assertViewHas('entries', function ($entries) use ($pending): bool {
+            return $entries->pluck('id')->contains($pending->id) && $entries->count() === 1;
         });
     }
 
@@ -321,14 +321,14 @@ class FichaEmpleadosTest extends TestCase
         $this->assertNotNull($entry->moved_to_ficha_at);
         $this->assertTrue($entry->movedBy->is($manager));
 
-        $pendingIndex = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.index'));
-        $pendingIndex->assertViewHas('entries', function ($entries) use ($entry): bool {
-            return ! $entries->pluck('id')->contains($entry->id);
-        });
-
-        $enFichaIndex = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'en_ficha']));
+        $enFichaIndex = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.index'));
         $enFichaIndex->assertViewHas('entries', function ($entries) use ($entry): bool {
             return $entries->pluck('id')->contains($entry->id);
+        });
+
+        $pendingIndex = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
+        $pendingIndex->assertViewHas('entries', function ($entries) use ($entry): bool {
+            return ! $entries->pluck('id')->contains($entry->id);
         });
     }
 
@@ -405,6 +405,65 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($user)->get(route('gestion-humana.ficha-empleados.employees.export'));
 
         $response->assertForbidden();
+    }
+
+    public function test_manual_employee_create_form_requires_manage_permission(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertForbidden();
+    }
+
+    public function test_manual_employee_create_stores_entry_without_requisition(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
+            'hired_document' => '801234567',
+            'hired_full_name' => 'Empleado Manual Prueba',
+            'document_type' => 'C',
+            'sex' => 'M',
+            'salary' => '2500000',
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()
+            ->where('hired_document', '801234567')
+            ->first();
+
+        $this->assertNotNull($entry);
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+        $this->assertNull($entry->personal_requisition_id);
+        $this->assertNotNull($entry->moved_to_ficha_at);
+        $this->assertTrue($entry->isManualEntry());
+        $this->assertSame('Empleado Manual Prueba', $entry->profile?->full_name);
+    }
+
+    public function test_manual_employee_create_rejects_duplicate_document(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809999999',
+            'hired_full_name' => 'Ya Existe',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), [
+                'hired_document' => '809999999',
+                'hired_full_name' => 'Duplicado',
+            ])
+            ->assertSessionHasErrors('hired_document');
     }
 
     /**

@@ -7,18 +7,21 @@ use App\Exports\PlantillaMasivosExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\PromoteFichaEntryRequest;
+use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
+use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FichaEmpleadosController extends Controller
@@ -46,6 +49,7 @@ class FichaEmpleadosController extends Controller
             'entries' => $entries,
             'filters' => ['q' => $q, 'estado' => $estado],
             'estadoLabels' => self::estadoFilterLabels(),
+            'estadoPills' => self::estadoPillLabels(),
             'canManage' => $this->canManage(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -73,7 +77,7 @@ class FichaEmpleadosController extends Controller
 
         if ($entries->isEmpty()) {
             return redirect()
-                ->route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'en_ficha'])
+                ->route('gestion-humana.ficha-empleados.employees.index')
                 ->withErrors(['export' => 'No hay empleados activos en ficha para exportar con los filtros seleccionados.']);
         }
 
@@ -116,8 +120,69 @@ class FichaEmpleadosController extends Controller
         }
 
         return redirect()
-            ->route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'en_ficha'])
+            ->route('gestion-humana.ficha-empleados.employees.index')
             ->with('status', $message);
+    }
+
+    public function create(): View
+    {
+        abort_unless($this->canManage(), 403);
+
+        return view('areas.gestion_humana.ficha-empleados.employees.create-ficha', [
+            'profile' => new EmployeeFichaProfile([
+                'document_type' => 'C',
+                'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            ]),
+            'catalogs' => $this->catalogOptions(),
+            'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
+        ]);
+    }
+
+    public function store(StoreManualEmployeeFichaRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $userId = $request->user()->id;
+
+        $entry = DB::transaction(function () use ($validated, $userId): PersonalRequisitionFichaEntry {
+            $hiredDocument = trim($validated['hired_document']);
+            $hiredFullName = trim($validated['hired_full_name']);
+            $parsed = EmployeeFichaNameParser::parse($hiredFullName);
+
+            $entry = PersonalRequisitionFichaEntry::query()->create([
+                'personal_requisition_id' => null,
+                'hired_document' => $hiredDocument,
+                'hired_full_name' => $hiredFullName,
+                'moved_to_ficha_at' => now(),
+                'moved_to_ficha_by' => $userId,
+                'created_by' => $userId,
+            ]);
+
+            $profileAttributes = collect($validated)
+                ->except(['hired_document', 'hired_full_name'])
+                ->merge([
+                    'personal_requisition_ficha_entry_id' => $entry->id,
+                    'document_number' => $hiredDocument,
+                    'full_name' => $parsed['full_name'] ?: $hiredFullName,
+                    'first_surname' => $parsed['first_surname'],
+                    'second_surname' => $parsed['second_surname'],
+                    'first_name' => $parsed['first_name'],
+                    'second_name' => $parsed['second_name'],
+                    'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+                ])
+                ->all();
+
+            $profile = EmployeeFichaProfile::query()->create($profileAttributes);
+            $profile->syncEmploymentStatusFromTerminationDate();
+            $profile->save();
+
+            $this->syncCatalogNamesFromCodes($profile);
+
+            return $entry;
+        });
+
+        return redirect()
+            ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
+            ->with('status', 'Empleado creado en ficha correctamente.');
     }
 
     public function editFicha(PersonalRequisitionFichaEntry $fichaEntry): View
@@ -185,11 +250,23 @@ class FichaEmpleadosController extends Controller
         ];
     }
 
+    /**
+     * Pills visibles en el listado (sin "En ficha": es la vista por defecto).
+     *
+     * @return array<string, string>
+     */
+    private static function estadoPillLabels(): array
+    {
+        return [
+            'pendientes' => 'Pendientes',
+        ];
+    }
+
     private function resolveEstadoFilter(Request $request): string
     {
         $estado = trim($request->string('estado')->toString());
 
-        return array_key_exists($estado, self::estadoFilterLabels()) ? $estado : 'pendientes';
+        return array_key_exists($estado, self::estadoFilterLabels()) ? $estado : 'en_ficha';
     }
 
     /**

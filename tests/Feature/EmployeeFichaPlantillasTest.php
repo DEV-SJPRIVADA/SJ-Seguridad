@@ -110,7 +110,7 @@ class EmployeeFichaPlantillasTest extends TestCase
 
         $response = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.export'));
 
-        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'en_ficha']));
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
         $response->assertSessionHasErrors('export');
     }
 
@@ -147,7 +147,7 @@ class EmployeeFichaPlantillasTest extends TestCase
             'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
         ]);
 
-        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'en_ficha']));
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
 
         $this->assertDatabaseHas('employee_ficha_profiles', [
             'document_number' => '99887766',
@@ -169,7 +169,8 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
             ->assertOk()
-            ->assertSee('Completar ficha');
+            ->assertSee('Ficha —')
+            ->assertSee('Género');
     }
 
     public function test_seed_catalogs_command_dry_run(): void
