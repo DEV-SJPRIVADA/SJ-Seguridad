@@ -79,14 +79,18 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 ### Importar empleados masivamente
 
-1. Pulse **Descargar plantilla importación** (formato EMPLEADOS.xlsx).
-2. Diligencie filas desde la fila 3; `cedula` es obligatoria.
-3. Suba el archivo con **Importar masivo**.
+1. Pulse **Descargar plantilla importación** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
+2. Edite filas desde la fila 3; `cedula` es obligatoria.
+3. Suba el archivo con **Importar**.
 4. Los registros quedan en **En ficha**; puede vincular `codigo_requisicion` opcional.
+5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
+
+**Exportar datos para actualizar:** sin rango de fechas exporta solo **activos**; con fechas filtra por **fecha de ingreso**. Respeta la búsqueda activa del listado (`q`).
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.2 | 2026-07-31 | Import round-trip | Export plantilla import con datos actuales para actualización masiva. |
 | 1.1 | 2026-07-31 | Plantillas | Perfil ficha, export Plantilla masivos, import SJ, catálogos nómina, filtro activos/fechas. |
 | 1.0 | 2026-07-30 | FEAT-020 | Version inicial: tablero Ficha empleados, pestaña Empleados, accion Agregar a ficha empleados, export Excel. |

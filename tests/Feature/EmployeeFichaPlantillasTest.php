@@ -13,6 +13,7 @@ use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
+use App\Services\GestionHumana\EmployeeFichaImportRowMapper;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\PlantillaMasivosMapper;
 use App\Support\PermissionCatalog;
@@ -159,6 +160,68 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->assertDatabaseHas('personal_requisition_ficha_entries', [
             'hired_document' => '99887766',
         ]);
+    }
+
+    public function test_export_import_template_includes_profile_data(): void
+    {
+        $manager = $this->managerUser();
+        $entry = $this->createInFichaEntry('444444444', 'Export Import Test');
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '444444444',
+            'full_name' => 'Export Import Test',
+            'eps_code' => 'EPS99',
+            'nombre_eps' => 'EPS Export',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.export-import-template'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $temp = tempnam(sys_get_temp_dir(), 'import-export-');
+        file_put_contents($temp, $response->streamedContent());
+        $sheet = IOFactory::load($temp)->getActiveSheet();
+
+        $this->assertSame('cedula', $sheet->getCell('A1')->getValue());
+        $this->assertSame('444444444', (string) $sheet->getCell('A3')->getValue());
+        $this->assertSame('Export Import Test', $sheet->getCell('B3')->getValue());
+
+        $headers = array_keys(config('employee_ficha.import_columns'));
+        $epsCodeCol = Coordinate::stringFromColumnIndex(array_search('codigo_eps', $headers, true) + 1);
+        $this->assertSame('EPS99', $sheet->getCell($epsCodeCol.'3')->getValue());
+    }
+
+    public function test_export_import_template_requires_manage_permission(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.export-import-template'))
+            ->assertForbidden();
+    }
+
+    public function test_import_row_mapper_maps_profile_fields(): void
+    {
+        $entry = $this->createInFichaEntry('777777777', 'Mapper Test');
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '777777777',
+            'full_name' => 'Mapper Test',
+            'salary' => 2500000,
+            'eps_code' => 'EPS77',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $row = app(EmployeeFichaImportRowMapper::class)->mapRow($entry->fresh(['profile']));
+
+        $this->assertSame('777777777', $row['cedula']);
+        $this->assertSame('Mapper Test', $row['nombre']);
+        $this->assertSame('EPS77', $row['codigo_eps']);
+        $this->assertSame(2500000.0, (float) $row['salario']);
     }
 
     public function test_edit_ficha_form_accessible_for_manager(): void

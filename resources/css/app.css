@@ -920,6 +920,15 @@ a {
     gap: 0.65rem;
 }
 
+.ficha-empleados-masivos-modal__export--import {
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.ficha-empleados-masivos-modal__export-note {
+    margin: 0;
+}
+
 .ficha-empleados-masivos-modal__dates {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

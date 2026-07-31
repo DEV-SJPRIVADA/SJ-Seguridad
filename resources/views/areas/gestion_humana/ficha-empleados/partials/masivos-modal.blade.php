@@ -78,6 +78,25 @@
                             Descargar plantilla vacia
                         </a>
 
+                        <form method="GET" action="{{ route('gestion-humana.ficha-empleados.employees.export-import-template') }}" class="ficha-empleados-masivos-modal__export ficha-empleados-masivos-modal__export--import">
+                            <input type="hidden" name="q" value="{{ $filters['q'] ?? '' }}">
+                            <p class="ficha-empleados-masivos-modal__card-note ficha-empleados-masivos-modal__export-note">Exporte datos actuales en formato importable, edite y vuelva a subir.</p>
+                            <div class="ficha-empleados-masivos-modal__dates">
+                                <div class="form-field">
+                                    <label class="form-label" for="ficha-import-export-desde">Desde</label>
+                                    <input type="date" id="ficha-import-export-desde" name="fecha_desde" class="form-input" value="{{ request('fecha_desde') }}">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="ficha-import-export-hasta">Hasta</label>
+                                    <input type="date" id="ficha-import-export-hasta" name="fecha_hasta" class="form-input" value="{{ request('fecha_hasta') }}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
+                                <x-lucide-icon name="download" :size="15" />
+                                Exportar datos para actualizar
+                            </button>
+                        </form>
+
                         <form method="POST" action="{{ route('gestion-humana.ficha-empleados.employees.import') }}" enctype="multipart/form-data" class="ficha-empleados-masivos-modal__import-form">
                             @csrf
                             <input

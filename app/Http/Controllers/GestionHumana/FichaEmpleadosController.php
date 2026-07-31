@@ -94,6 +94,38 @@ class FichaEmpleadosController extends Controller
         return $this->importTemplateExport->download();
     }
 
+    public function exportImportTemplate(Request $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->canManage(), 403);
+
+        $q = trim($request->string('q')->toString());
+        $fechaDesde = $request->date('fecha_desde')?->toDateString();
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString();
+        $hasDateRange = $fechaDesde !== null && $fechaHasta !== null;
+
+        $query = $this->entryListQuery($q, 'en_ficha')
+            ->with(['profile', 'requisition.position', 'requisition.client']);
+
+        if ($hasDateRange) {
+            $query->hireDateBetween($fechaDesde, $fechaHasta);
+        } else {
+            $query->withActiveProfile();
+        }
+
+        $entries = $query->get();
+
+        if ($entries->isEmpty()) {
+            return redirect()
+                ->route('gestion-humana.ficha-empleados.employees.index')
+                ->withErrors(['export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.']);
+        }
+
+        return $this->importTemplateExport->downloadWithData(
+            $entries,
+            'plantilla_importacion_datos_'.now()->format('Y-m-d').'.xlsx'
+        );
+    }
+
     public function import(ImportEmployeeFichaRequest $request): RedirectResponse
     {
         $path = $request->file('import_file')?->getRealPath();

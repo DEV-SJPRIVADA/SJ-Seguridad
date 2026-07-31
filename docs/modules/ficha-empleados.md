@@ -93,6 +93,7 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | GET | `/gestion-humana/ficha-empleados/empleados` | `gestion-humana.ficha-empleados.employees.index` | `ficha_empleados.view` |
 | GET | `/gestion-humana/ficha-empleados/empleados/exportar` | `gestion-humana.ficha-empleados.employees.export` | `ficha_empleados.view` |
 | GET | `/gestion-humana/ficha-empleados/empleados/plantilla-importacion` | `gestion-humana.ficha-empleados.employees.import-template` | `ficha_empleados.manage` |
+| GET | `/gestion-humana/ficha-empleados/empleados/plantilla-importacion/exportar` | `gestion-humana.ficha-empleados.employees.export-import-template` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/empleados/importar` | `gestion-humana.ficha-empleados.employees.import` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
@@ -106,6 +107,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 - `create(): View` / `store(StoreManualEmployeeFichaRequest): RedirectResponse` — alta manual sin requisición (`personal_requisition_id` null, directo en ficha con perfil).
 - `exportExcel(Request $request): StreamedResponse|RedirectResponse` — export **Plantilla masivos** solo registros **En ficha**; sin rango de fechas exporta solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por fecha de ingreso.
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
+- `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
 - `editFicha` / `updateFicha` — formulario ficha empleado (`employee_ficha_profiles`).
 - `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry): RedirectResponse` — setea `moved_to_ficha_at`/`moved_to_ficha_by`; crea perfil prefilled; idempotente.
@@ -128,6 +130,7 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 ## Importación masiva SJ
 
 - Plantilla: `EmployeeFichaImportTemplateExport` / ruta `import-template`.
+- Export datos actuales: `EmployeeFichaImportTemplateExport::downloadWithData()` + `EmployeeFichaImportRowMapper` / ruta `export-import-template`.
 - Servicio: `EmployeeFichaImportService`; comando `php artisan employee-ficha:import {path}`.
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.
 - Mapeo técnico: [`docs/Contratacion/MAPEO-PLANTILLA-MASIVOS.md`](../Contratacion/MAPEO-PLANTILLA-MASIVOS.md).
