@@ -2770,6 +2770,123 @@ table.dataTable thead td {
     color: #475569;
 }
 
+.status-pill--compras-pendiente {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.status-pill--compras-en_curso {
+    background: #eff6ff;
+    color: #1984c7;
+}
+
+.status-pill--compras-completado {
+    background: var(--color-success-soft);
+    color: #15803d;
+}
+
+.status-pill--compras-rechazado {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-pendiente,
+.req-manage-filters__pill.status-pill--compras-pendiente.is-active {
+    background: #ea580c;
+    border-color: #ea580c;
+    color: #fff;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-en_curso,
+.req-manage-filters__pill.status-pill--compras-en_curso.is-active {
+    background: #1984c7;
+    border-color: #1984c7;
+    color: #fff;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-completado,
+.req-manage-filters__pill.status-pill--compras-completado.is-active {
+    background: #15803d;
+    border-color: #15803d;
+    color: #fff;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-rechazado,
+.req-manage-filters__pill.status-pill--compras-rechazado.is-active {
+    background: #be123c;
+    border-color: #be123c;
+    color: #fff;
+}
+
+/* Bandeja compras — toolbar compacto: campos izq, estado der */
+.req-manage-filters--bandeja .req-manage-filters__toolbar--bandeja {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    align-items: stretch;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__fields-col {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__row--bandeja {
+    margin: 0;
+    gap: 0.55rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__field--date {
+    flex: 0 1 9.5rem;
+    min-width: 8.5rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__field--compact {
+    flex: 1 1 8.5rem;
+    min-width: 7.5rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__field .form-input,
+.req-manage-filters--bandeja .req-manage-filters__field .form-select {
+    min-height: 36px;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.85rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__status-col--right {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills {
+    justify-content: flex-end;
+}
+
+@media (min-width: 992px) {
+    .req-manage-filters--bandeja .req-manage-filters__toolbar--bandeja {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right {
+        flex: 0 1 auto;
+        max-width: 52%;
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 991px) {
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right,
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills {
+        align-items: flex-start;
+        text-align: left;
+        justify-content: flex-start;
+    }
+}
+
 .requisition-subtabs {
     margin-left: 0;
     margin-right: 0;

@@ -7,12 +7,14 @@ use App\Http\Requests\PurchaseRequests\ProcessPurchaseComprasRequest;
 use App\Http\Requests\PurchaseRequests\ProcessSupplyComprasRequest;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
+use App\Services\Compras\ComprasQueueFilterBag;
 use App\Services\Compras\ComprasQueueService;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
 use App\Traits\HasPurchaseTabs;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -21,19 +23,19 @@ class PurchaseProcessingController extends Controller
 {
     use HasPurchaseTabs;
 
-    public function index(string $module, ComprasQueueService $queueService): View
+    public function index(string $module, Request $request, ComprasQueueService $queueService): View
     {
-        $filters = request()->validate([
-            'tipo' => ['nullable', 'in:purchase,supply'],
-            'estado_compras' => ['nullable', 'string'],
-        ]);
+        $filters = ComprasQueueFilterBag::fromRequest($request);
+        $queueItems = $queueService->items($filters);
 
         return view('modules.purchase-requests.processing.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
-            'queueItems' => $queueService->items($filters['tipo'] ?? null, $filters['estado_compras'] ?? null),
-            'filters' => $filters,
+            'queueItems' => $queueItems,
+            'filters' => $filters->toViewArray(),
+            'areas' => config('access.areas', []),
             'estadosCompras' => PurchaseRequest::estadosComprasLabels(),
+            'queueCount' => $queueItems->count(),
         ]);
     }
 

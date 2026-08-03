@@ -11,12 +11,12 @@ class ComprasQueueService
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    public function items(?string $tipo = null, ?string $estadoCompras = null): Collection
+    public function items(ComprasQueueFilterBag $filters): Collection
     {
         $purchaseItems = PurchaseRequest::query()
             ->with(['user', 'aprobador', 'items'])
             ->where('estado', PurchaseRequest::ESTADO_APROBADO)
-            ->when($estadoCompras, fn ($query) => $query->where('estado_compras', $estadoCompras))
+            ->tap(fn ($query) => $filters->applyPurchaseFilters($query))
             ->latest('fecha_aprobacion')
             ->get()
             ->map(fn (PurchaseRequest $request): array => [
@@ -35,9 +35,7 @@ class ComprasQueueService
         $supplyItems = SupplyRequest::query()
             ->with(['user', 'items.product'])
             ->whereIn('status', ['aprobada_calidad', 'en_compras'])
-            ->when($estadoCompras === PurchaseRequest::COMPRAS_PENDIENTE, fn ($query) => $query->where('status', 'aprobada_calidad'))
-            ->when($estadoCompras === PurchaseRequest::COMPRAS_EN_CURSO, fn ($query) => $query->where('status', 'en_compras'))
-            ->when(in_array($estadoCompras, [PurchaseRequest::COMPRAS_COMPLETADO, PurchaseRequest::COMPRAS_RECHAZADO], true), fn ($query) => $query->whereRaw('1 = 0'))
+            ->tap(fn ($query) => $filters->applySupplyFilters($query))
             ->latest('updated_at')
             ->get()
             ->map(fn (SupplyRequest $request): array => [
@@ -55,11 +53,11 @@ class ComprasQueueService
 
         $all = $purchaseItems->concat($supplyItems)->sortByDesc('fecha')->values();
 
-        if ($tipo === 'purchase') {
+        if ($filters->tipo === 'purchase') {
             return $all->where('tipo', 'purchase')->values();
         }
 
-        if ($tipo === 'supply') {
+        if ($filters->tipo === 'supply') {
             return $all->where('tipo', 'supply')->values();
         }
 

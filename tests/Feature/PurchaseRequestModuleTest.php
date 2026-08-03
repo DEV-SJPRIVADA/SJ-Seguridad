@@ -9,6 +9,8 @@ use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Compras\ComprasQueueFilterBag;
+use App\Services\Compras\ComprasQueueService;
 use App\Services\Navigation\NavigationResolver;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -295,6 +297,60 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertOk();
         $response->assertSee($purchaseRequest->fresh()->folio());
         $response->assertSee('Ver detalle', false);
+        $response->assertSee('Filtros', false);
+        $response->assertSee('encontrad', false);
+    }
+
+    public function test_compras_queue_service_filters_by_area(): void
+    {
+        $director = $this->director();
+        $operacionesRequester = $this->purchaseRequester('operaciones');
+        $comercialRequester = $this->purchaseRequester('comercial');
+
+        PurchaseRequest::query()->create([
+            'numero_solicitud' => 9101,
+            'user_id' => $operacionesRequester->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'descripcion' => 'Operaciones bandeja',
+            'cantidad' => 1,
+            'justificacion' => 'Prueba',
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+            'fecha_aprobacion' => now()->toDateString(),
+        ]);
+
+        PurchaseRequest::query()->create([
+            'numero_solicitud' => 9202,
+            'user_id' => $comercialRequester->id,
+            'area_key' => 'comercial',
+            'fecha_solicitud' => now()->toDateString(),
+            'descripcion' => 'Comercial bandeja',
+            'cantidad' => 1,
+            'justificacion' => 'Prueba',
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+            'fecha_aprobacion' => now()->toDateString(),
+        ]);
+
+        $items = app(ComprasQueueService::class)->items(
+            new ComprasQueueFilterBag(
+                estadoCompras: '',
+                tipo: null,
+                areaKey: 'operaciones',
+                dateFrom: null,
+                dateTo: null,
+            )
+        );
+
+        $this->assertCount(1, $items);
+        $this->assertSame('9101', $items->first()['folio']);
     }
 
     public function test_compras_analyst_can_open_purchase_detail_from_bandeja(): void
