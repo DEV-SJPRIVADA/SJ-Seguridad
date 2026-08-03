@@ -10,6 +10,8 @@ use Illuminate\Support\Collection;
 
 class ComprasDashboardService
 {
+    public function __construct(private ComprasQueueService $queue) {}
+
     /**
      * @param  array{year: int, month: int|null, area_key: string, tipo: string}  $filters
      * @return array{
@@ -18,7 +20,8 @@ class ComprasDashboardService
      *     areas: array<string, string>,
      *     yearOptions: Collection<int, int>,
      *     stats: array<string, int>,
-     *     chartData: array<string, mixed>
+     *     chartData: array<string, mixed>,
+     *     bandejaLinks: array<string, array<string, string>>
      * }
      */
     public function build(array $filters): array
@@ -27,8 +30,8 @@ class ComprasDashboardService
         $referenceDate = Carbon::create($filters['year'], $referenceMonth, 1)->startOfDay();
 
         $purchaseRequests = $this->purchaseRequestsQuery($filters)->get();
-        $bandejaPurchases = $this->bandejaPurchasesQuery($filters)->get();
-        $bandejaSupplies = $this->bandejaSuppliesQuery($filters)->get();
+        $bandejaFilters = ComprasQueueFilterBag::fromDashboardFilters($filters);
+        $bandejaStats = $this->queue->stats($bandejaFilters);
 
         $statsByEstado = $purchaseRequests->groupBy('estado')->map->count();
         $statsByMonth = $purchaseRequests
@@ -41,20 +44,14 @@ class ComprasDashboardService
             ->sortDesc()
             ->take(5);
 
-        $bandejaByEstado = $bandejaPurchases
-            ->groupBy(fn (PurchaseRequest $request) => $request->estado_compras ?? PurchaseRequest::COMPRAS_PENDIENTE)
-            ->map->count();
+        $bandejaByEstado = collect([
+            PurchaseRequest::COMPRAS_PENDIENTE => $bandejaStats['pendiente'],
+            PurchaseRequest::COMPRAS_EN_CURSO => $bandejaStats['en_curso'],
+            PurchaseRequest::COMPRAS_COMPLETADO => $bandejaStats['completado'],
+            PurchaseRequest::COMPRAS_RECHAZADO => $bandejaStats['rechazado'],
+        ]);
 
-        $bandejaSuppliesPending = $bandejaSupplies->where('status', 'aprobada_calidad')->count();
-        $bandejaSuppliesInProgress = $bandejaSupplies->where('status', 'en_compras')->count();
-
-        $bandejaByEstado[PurchaseRequest::COMPRAS_PENDIENTE] = ($bandejaByEstado[PurchaseRequest::COMPRAS_PENDIENTE] ?? 0) + $bandejaSuppliesPending;
-        $bandejaByEstado[PurchaseRequest::COMPRAS_EN_CURSO] = ($bandejaByEstado[PurchaseRequest::COMPRAS_EN_CURSO] ?? 0) + $bandejaSuppliesInProgress;
-
-        $tipoCounts = collect([
-            'Solicitud compra' => $bandejaPurchases->count(),
-            'Suministro' => $bandejaSupplies->count(),
-        ])->filter(fn (int $count): bool => $count > 0);
+        $tipoCounts = $bandejaStats['by_tipo']->filter(fn (int $count): bool => $count > 0);
 
         $estadoLabels = PurchaseRequest::estadosComprasLabels();
         $purchaseEstadoLabels = [
@@ -79,16 +76,19 @@ class ComprasDashboardService
             'areas' => config('access.areas', []),
             'yearOptions' => $this->yearOptions(),
             'stats' => [
-                'solicitudes_periodo' => $purchaseRequests->count(),
                 'pendiente_director' => PurchaseRequest::query()
                     ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
                     ->where('estado', PurchaseRequest::ESTADO_PENDIENTE)
                     ->count(),
-                'bandeja_total' => $bandejaPurchases->count() + $bandejaSupplies->count(),
-                'bandeja_pendiente' => $bandejaByEstado[PurchaseRequest::COMPRAS_PENDIENTE] ?? 0,
-                'bandeja_en_curso' => $bandejaByEstado[PurchaseRequest::COMPRAS_EN_CURSO] ?? 0,
+                'bandeja_total' => $bandejaStats['total'],
+                'bandeja_pendiente' => $bandejaStats['pendiente'],
+                'bandeja_en_curso' => $bandejaStats['en_curso'],
                 'completadas_periodo' => $this->completedInPeriodCount($filters),
-                'urgentes_bandeja' => $bandejaPurchases->where('urgente', true)->count(),
+            ],
+            'bandejaLinks' => [
+                'index' => ComprasQueueFilterBag::bandejaLinkQuery($filters),
+                'pendiente' => ComprasQueueFilterBag::bandejaLinkQuery($filters, PurchaseRequest::COMPRAS_PENDIENTE),
+                'en_curso' => ComprasQueueFilterBag::bandejaLinkQuery($filters, PurchaseRequest::COMPRAS_EN_CURSO),
             ],
             'chartData' => [
                 'trend' => [
@@ -126,28 +126,6 @@ class ComprasDashboardService
             ->when($filters['year'] > 0, fn (Builder $query) => $query->whereYear('fecha_solicitud', $filters['year']))
             ->when($filters['month'] !== null, fn (Builder $query) => $query->whereMonth('fecha_solicitud', $filters['month']))
             ->when($filters['tipo'] === 'supply', fn (Builder $query) => $query->whereRaw('1 = 0'));
-    }
-
-    /**
-     * @param  array{year: int, month: int|null, area_key: string, tipo: string}  $filters
-     */
-    private function bandejaPurchasesQuery(array $filters): Builder
-    {
-        return PurchaseRequest::query()
-            ->where('estado', PurchaseRequest::ESTADO_APROBADO)
-            ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
-            ->when($filters['tipo'] === 'supply', fn (Builder $query) => $query->whereRaw('1 = 0'));
-    }
-
-    /**
-     * @param  array{year: int, month: int|null, area_key: string, tipo: string}  $filters
-     */
-    private function bandejaSuppliesQuery(array $filters): Builder
-    {
-        return SupplyRequest::query()
-            ->whereIn('status', ['aprobada_calidad', 'en_compras'])
-            ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
-            ->when($filters['tipo'] === 'purchase', fn (Builder $query) => $query->whereRaw('1 = 0'));
     }
 
     /**

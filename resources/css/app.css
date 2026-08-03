@@ -3102,10 +3102,6 @@ table.dataTable thead td {
     color: var(--compras-kpi-accent);
 }
 
-.compras-dashboard-kpi--periodo {
-    --compras-kpi-accent: var(--brand-navy);
-}
-
 .compras-dashboard-kpi--pendiente-director,
 .compras-dashboard-kpi--bandeja-pendiente {
     --compras-kpi-accent: #ea580c;
@@ -3121,10 +3117,6 @@ table.dataTable thead td {
 
 .compras-dashboard-kpi--completadas {
     --compras-kpi-accent: #15803d;
-}
-
-.compras-dashboard-kpi--urgentes {
-    --compras-kpi-accent: #be123c;
 }
 
 @media (max-width: 640px) {

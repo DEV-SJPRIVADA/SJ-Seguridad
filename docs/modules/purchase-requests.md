@@ -110,7 +110,7 @@ Migracion: `2026_07_31_140100_create_purchase_requests_tables.php`.
 | `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
 | `PurchaseRequestNotificationService` | Correos director, solicitante, compras; persiste log en `purchase_request_mail_logs` |
 | `ComprasQueueService` | Mezcla purchase + supply en bandeja con filtros |
-| `ComprasDashboardService` | KPIs y graficos del dashboard Compras |
+| `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
 | `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
 | `PurchaseEmailApprovalController` | Redirect legacy correo → plataforma |
@@ -182,6 +182,8 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | Navegacion unificada: bandeja solo como pestana en Solicitudes de compra; landing analista en bandeja |
 | 2026-08-03 | Bandeja compras: filtros estilo Gestion requisiciones (buscar, fechas, pills estado, area/tipo) |
 | 2026-08-03 | Bandeja historica completa: completados visibles; limite 200 sin filtro fecha; sin limite con rango |
+| 2026-08-03 | Dashboard Compras: KPIs bandeja alineados con `ComprasQueueService` y filtros ano/mes (fecha aprobacion/actualizacion) |
+| 2026-08-03 | Dashboard Compras: retirados KPIs Solicitudes en periodo y Urgentes en bandeja |
 
 ## Referencias
 

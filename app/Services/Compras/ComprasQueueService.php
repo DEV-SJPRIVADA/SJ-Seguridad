@@ -18,9 +18,56 @@ class ComprasQueueService
     ];
 
     /**
+     * @return array{
+     *     total: int,
+     *     pendiente: int,
+     *     en_curso: int,
+     *     completado: int,
+     *     rechazado: int,
+     *     by_tipo: Collection<int|string, int>
+     * }
+     */
+    public function stats(ComprasQueueFilterBag $filters): array
+    {
+        $all = $this->matchingItems($filters);
+
+        return [
+            'total' => $all->count(),
+            'pendiente' => $all->where('estado', PurchaseRequest::COMPRAS_PENDIENTE)->count(),
+            'en_curso' => $all->where('estado', PurchaseRequest::COMPRAS_EN_CURSO)->count(),
+            'completado' => $all->where('estado', PurchaseRequest::COMPRAS_COMPLETADO)->count(),
+            'rechazado' => $all->where('estado', PurchaseRequest::COMPRAS_RECHAZADO)->count(),
+            'by_tipo' => $all
+                ->groupBy(fn (array $item): string => $item['tipo_label'])
+                ->map->count(),
+        ];
+    }
+
+    /**
      * @return array{items: Collection<int, array<string, mixed>>, truncated: bool, total_matching: int}
      */
     public function resolve(ComprasQueueFilterBag $filters): array
+    {
+        $all = $this->matchingItems($filters);
+        $totalMatching = $all->count();
+        $truncated = false;
+
+        if (! $filters->hasDateRangeFilter() && $totalMatching > self::DEFAULT_LIMIT) {
+            $all = $all->take(self::DEFAULT_LIMIT)->values();
+            $truncated = true;
+        }
+
+        return [
+            'items' => $all,
+            'truncated' => $truncated,
+            'total_matching' => $totalMatching,
+        ];
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function matchingItems(ComprasQueueFilterBag $filters): Collection
     {
         $purchaseItems = PurchaseRequest::query()
             ->with(['user', 'aprobador', 'items'])
@@ -42,26 +89,14 @@ class ComprasQueueService
             ->values();
 
         if ($filters->tipo === 'purchase') {
-            $all = $all->where('tipo', 'purchase')->values();
+            return $all->where('tipo', 'purchase')->values();
         }
 
         if ($filters->tipo === 'supply') {
-            $all = $all->where('tipo', 'supply')->values();
+            return $all->where('tipo', 'supply')->values();
         }
 
-        $totalMatching = $all->count();
-        $truncated = false;
-
-        if (! $filters->hasDateRangeFilter() && $totalMatching > self::DEFAULT_LIMIT) {
-            $all = $all->take(self::DEFAULT_LIMIT)->values();
-            $truncated = true;
-        }
-
-        return [
-            'items' => $all,
-            'truncated' => $truncated,
-            'total_matching' => $totalMatching,
-        ];
+        return $all;
     }
 
     /**

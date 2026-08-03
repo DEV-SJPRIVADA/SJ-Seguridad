@@ -6,6 +6,7 @@ use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -18,6 +19,60 @@ class ComprasQueueFilterBag
         public readonly ?string $dateFrom,
         public readonly ?string $dateTo,
     ) {}
+
+    /**
+     * @param  array{year: int, month: int|null, area_key: string, tipo: string}  $filters
+     */
+    public static function fromDashboardFilters(array $filters, string $estadoCompras = ''): self
+    {
+        [$dateFrom, $dateTo] = self::dateRangeFromDashboardFilters(
+            (int) $filters['year'],
+            $filters['month'] ?? null,
+        );
+
+        return new self(
+            estadoCompras: $estadoCompras,
+            tipo: ($filters['tipo'] ?? '') !== '' ? $filters['tipo'] : null,
+            areaKey: ($filters['area_key'] ?? '') !== '' ? $filters['area_key'] : null,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
+        );
+    }
+
+    /**
+     * @param  array{year: int, month: int|null, area_key: string, tipo: string}  $filters
+     * @return array<string, string>
+     */
+    public static function bandejaLinkQuery(array $filters, ?string $estadoCompras = null): array
+    {
+        $bag = self::fromDashboardFilters($filters, $estadoCompras ?? '');
+
+        return collect($bag->toViewArray())
+            ->filter(fn (mixed $value): bool => $value !== null && $value !== '')
+            ->map(fn (mixed $value): string => (string) $value)
+            ->all();
+    }
+
+    /**
+     * @return array{0: string|null, 1: string|null}
+     */
+    public static function dateRangeFromDashboardFilters(int $year, ?int $month): array
+    {
+        if ($month !== null && $month >= 1 && $month <= 12) {
+            $start = Carbon::create($year, $month, 1);
+
+            return [
+                $start->copy()->startOfMonth()->toDateString(),
+                $start->copy()->endOfMonth()->toDateString(),
+            ];
+        }
+
+        if ($year > 0) {
+            return ["{$year}-01-01", "{$year}-12-31"];
+        }
+
+        return [null, null];
+    }
 
     public static function fromRequest(Request $request): self
     {

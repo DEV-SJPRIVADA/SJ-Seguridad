@@ -133,33 +133,28 @@
                     </div>
                 </div>
                 <p class="form-hint" style="margin-top: 0.75rem; margin-bottom: 0;">
-                    Ano y mes aplican a solicitudes creadas y completadas en el periodo. La bandeja activa es una foto actual.
+                    Ano y mes aplican a solicitudes creadas, completadas y bandeja (fecha de aprobacion o ultima actualizacion).
                 </p>
             </form>
 
             <div class="dashboard-stat-grid dashboard-stat-grid--compras-kpis bottom-spaced">
-                <article class="compras-dashboard-kpi compras-dashboard-kpi--periodo">
-                    <span class="compras-dashboard-kpi__label">Solicitudes en periodo</span>
-                    <span class="compras-dashboard-kpi__value">{{ number_format($stats['solicitudes_periodo']) }}</span>
-                </article>
-
                 <article class="compras-dashboard-kpi compras-dashboard-kpi--pendiente-director">
                     <span class="compras-dashboard-kpi__label">Pendientes director</span>
                     <span class="compras-dashboard-kpi__value">{{ number_format($stats['pendiente_director']) }}</span>
                 </article>
 
                 @can('purchase.tab.processing')
-                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras']) }}" class="compras-dashboard-kpi compras-dashboard-kpi--bandeja">
+                    <a href="{{ route('purchase-requests.processing.index', array_merge(['module' => 'compras'], $bandejaLinks['index'])) }}" class="compras-dashboard-kpi compras-dashboard-kpi--bandeja">
                         <span class="compras-dashboard-kpi__label">En bandeja</span>
                         <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_total']) }}</span>
                     </a>
 
-                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras', 'estado_compras' => \App\Models\PurchaseRequest::COMPRAS_PENDIENTE]) }}" class="compras-dashboard-kpi compras-dashboard-kpi--bandeja-pendiente">
+                    <a href="{{ route('purchase-requests.processing.index', array_merge(['module' => 'compras'], $bandejaLinks['pendiente'])) }}" class="compras-dashboard-kpi compras-dashboard-kpi--bandeja-pendiente">
                         <span class="compras-dashboard-kpi__label">Bandeja pendiente</span>
                         <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_pendiente']) }}</span>
                     </a>
 
-                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras', 'estado_compras' => \App\Models\PurchaseRequest::COMPRAS_EN_CURSO]) }}" class="compras-dashboard-kpi compras-dashboard-kpi--en-curso">
+                    <a href="{{ route('purchase-requests.processing.index', array_merge(['module' => 'compras'], $bandejaLinks['en_curso'])) }}" class="compras-dashboard-kpi compras-dashboard-kpi--en-curso">
                         <span class="compras-dashboard-kpi__label">En curso</span>
                         <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_en_curso']) }}</span>
                     </a>
@@ -183,11 +178,6 @@
                 <article class="compras-dashboard-kpi compras-dashboard-kpi--completadas">
                     <span class="compras-dashboard-kpi__label">Completadas</span>
                     <span class="compras-dashboard-kpi__value">{{ number_format($stats['completadas_periodo']) }}</span>
-                </article>
-
-                <article class="compras-dashboard-kpi compras-dashboard-kpi--urgentes">
-                    <span class="compras-dashboard-kpi__label">Urgentes en bandeja</span>
-                    <span class="compras-dashboard-kpi__value">{{ number_format($stats['urgentes_bandeja']) }}</span>
                 </article>
             </div>
 
@@ -219,7 +209,7 @@
                 <div class="form-panels block-spaced-lg">
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Bandeja por estado (actual)</h3>
+                            <h3 class="panel-title">Bandeja por estado (periodo)</h3>
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
