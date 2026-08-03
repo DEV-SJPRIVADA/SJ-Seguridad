@@ -85,34 +85,8 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
         }
-        .kpi-card {
-            padding: 0.75rem 1rem !important;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            min-width: 0;
-            transition: transform 0.2s;
-        }
-        .kpi-card:hover { transform: translateY(-3px); color: inherit; }
-        .kpi-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            line-height: 1;
-            margin: 0.25rem 0;
-        }
-        .dashboard-stat-grid.dashboard-stat-grid--compras-kpis {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 0.5rem !important;
-            margin-bottom: 1rem !important;
-        }
-        .dashboard-stat-grid--compras-kpis .kpi-card {
-            flex: 1 1 calc(16.66% - 0.5rem);
-            min-width: 140px;
-        }
         @media (max-width: 900px) {
             .dashboard-scroll-area .form-panels { grid-template-columns: 1fr !important; }
-            .dashboard-stat-grid--compras-kpis .kpi-card { flex: 1 1 calc(50% - 0.5rem); }
         }
     </style>
 
@@ -164,66 +138,56 @@
             </form>
 
             <div class="dashboard-stat-grid dashboard-stat-grid--compras-kpis bottom-spaced">
-                <article class="card kpi-card" style="border-left: 5px solid var(--color-primary);">
-                    <p class="text-caption">Solicitudes en periodo</p>
-                    <p class="kpi-value">{{ number_format($stats['solicitudes_periodo']) }}</p>
-                    <p class="text-small text-muted">Compras registradas {{ $referenceDate->locale('es')->isoFormat('MMM YYYY') }}</p>
+                <article class="compras-dashboard-kpi compras-dashboard-kpi--periodo">
+                    <span class="compras-dashboard-kpi__label">Solicitudes en periodo</span>
+                    <span class="compras-dashboard-kpi__value">{{ number_format($stats['solicitudes_periodo']) }}</span>
                 </article>
 
-                <article class="card kpi-card" style="border-left: 5px solid #6366f1;">
-                    <p class="text-caption">Pendientes director</p>
-                    <p class="kpi-value" style="color: #6366f1;">{{ number_format($stats['pendiente_director']) }}</p>
-                    <p class="text-small text-muted">Sin autorizacion aun</p>
+                <article class="compras-dashboard-kpi compras-dashboard-kpi--pendiente-director">
+                    <span class="compras-dashboard-kpi__label">Pendientes director</span>
+                    <span class="compras-dashboard-kpi__value">{{ number_format($stats['pendiente_director']) }}</span>
                 </article>
 
                 @can('purchase.tab.processing')
-                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras']) }}" class="card kpi-card" style="border-left: 5px solid var(--color-sky);">
-                        <p class="text-caption">En bandeja</p>
-                        <p class="kpi-value" style="color: var(--color-sky);">{{ number_format($stats['bandeja_total']) }}</p>
-                        <p class="text-small text-muted">Compras + suministros activos</p>
+                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras']) }}" class="compras-dashboard-kpi compras-dashboard-kpi--bandeja">
+                        <span class="compras-dashboard-kpi__label">En bandeja</span>
+                        <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_total']) }}</span>
                     </a>
 
-                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras', 'estado_compras' => \App\Models\PurchaseRequest::COMPRAS_PENDIENTE]) }}" class="card kpi-card" style="border-left: 5px solid var(--color-warning);">
-                        <p class="text-caption">Bandeja pendiente</p>
-                        <p class="kpi-value" style="color: var(--color-warning);">{{ number_format($stats['bandeja_pendiente']) }}</p>
-                        <p class="text-small text-muted">Por iniciar procesamiento</p>
+                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras', 'estado_compras' => \App\Models\PurchaseRequest::COMPRAS_PENDIENTE]) }}" class="compras-dashboard-kpi compras-dashboard-kpi--bandeja-pendiente">
+                        <span class="compras-dashboard-kpi__label">Bandeja pendiente</span>
+                        <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_pendiente']) }}</span>
                     </a>
 
-                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras', 'estado_compras' => \App\Models\PurchaseRequest::COMPRAS_EN_CURSO]) }}" class="card kpi-card" style="border-left: 5px solid #0ea5e9;">
-                        <p class="text-caption">En curso</p>
-                        <p class="kpi-value" style="color: #0ea5e9;">{{ number_format($stats['bandeja_en_curso']) }}</p>
-                        <p class="text-small text-muted">Procesamiento activo</p>
+                    <a href="{{ route('purchase-requests.processing.index', ['module' => 'compras', 'estado_compras' => \App\Models\PurchaseRequest::COMPRAS_EN_CURSO]) }}" class="compras-dashboard-kpi compras-dashboard-kpi--en-curso">
+                        <span class="compras-dashboard-kpi__label">En curso</span>
+                        <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_en_curso']) }}</span>
                     </a>
                 @else
-                    <article class="card kpi-card" style="border-left: 5px solid var(--color-sky);">
-                        <p class="text-caption">En bandeja</p>
-                        <p class="kpi-value" style="color: var(--color-sky);">{{ number_format($stats['bandeja_total']) }}</p>
-                        <p class="text-small text-muted">Compras + suministros activos</p>
+                    <article class="compras-dashboard-kpi compras-dashboard-kpi--bandeja">
+                        <span class="compras-dashboard-kpi__label">En bandeja</span>
+                        <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_total']) }}</span>
                     </article>
 
-                    <article class="card kpi-card" style="border-left: 5px solid var(--color-warning);">
-                        <p class="text-caption">Bandeja pendiente</p>
-                        <p class="kpi-value" style="color: var(--color-warning);">{{ number_format($stats['bandeja_pendiente']) }}</p>
-                        <p class="text-small text-muted">Por iniciar procesamiento</p>
+                    <article class="compras-dashboard-kpi compras-dashboard-kpi--bandeja-pendiente">
+                        <span class="compras-dashboard-kpi__label">Bandeja pendiente</span>
+                        <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_pendiente']) }}</span>
                     </article>
 
-                    <article class="card kpi-card" style="border-left: 5px solid #0ea5e9;">
-                        <p class="text-caption">En curso</p>
-                        <p class="kpi-value" style="color: #0ea5e9;">{{ number_format($stats['bandeja_en_curso']) }}</p>
-                        <p class="text-small text-muted">Procesamiento activo</p>
+                    <article class="compras-dashboard-kpi compras-dashboard-kpi--en-curso">
+                        <span class="compras-dashboard-kpi__label">En curso</span>
+                        <span class="compras-dashboard-kpi__value">{{ number_format($stats['bandeja_en_curso']) }}</span>
                     </article>
                 @endcan
 
-                <article class="card kpi-card" style="border-left: 5px solid #15803d;">
-                    <p class="text-caption">Completadas</p>
-                    <p class="kpi-value" style="color: #15803d;">{{ number_format($stats['completadas_periodo']) }}</p>
-                    <p class="text-small text-muted">Cerradas en el periodo</p>
+                <article class="compras-dashboard-kpi compras-dashboard-kpi--completadas">
+                    <span class="compras-dashboard-kpi__label">Completadas</span>
+                    <span class="compras-dashboard-kpi__value">{{ number_format($stats['completadas_periodo']) }}</span>
                 </article>
 
-                <article class="card kpi-card" style="border-left: 5px solid #be123c;">
-                    <p class="text-caption">Urgentes en bandeja</p>
-                    <p class="kpi-value" style="color: #be123c;">{{ number_format($stats['urgentes_bandeja']) }}</p>
-                    <p class="text-small text-muted">Solicitudes marcadas urgentes</p>
+                <article class="compras-dashboard-kpi compras-dashboard-kpi--urgentes">
+                    <span class="compras-dashboard-kpi__label">Urgentes en bandeja</span>
+                    <span class="compras-dashboard-kpi__value">{{ number_format($stats['urgentes_bandeja']) }}</span>
                 </article>
             </div>
 

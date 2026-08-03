@@ -2904,6 +2904,130 @@ table.dataTable thead td {
     --req-kpi-accent: #be123c;
 }
 
+/* Dashboard compras — KPI (misma línea visual que requisiciones) */
+.dashboard-stat-grid.dashboard-stat-grid--compras-kpis {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.dashboard-stat-grid.dashboard-stat-grid--compras-kpis > .compras-dashboard-kpi {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+}
+
+.compras-dashboard-kpi {
+    --compras-kpi-accent: var(--brand-navy);
+    --compras-kpi-border: var(--color-border, #e2e8f0);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 4.25rem;
+    padding: 0.65rem 0.45rem;
+    border-radius: 14px;
+    border: 1px solid var(--compras-kpi-border);
+    background: var(--color-surface, #fff);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.compras-dashboard-kpi::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 2.25rem;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: var(--compras-kpi-accent);
+}
+
+.compras-dashboard-kpi:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--compras-kpi-accent) 35%, var(--compras-kpi-border));
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    color: inherit;
+}
+
+.compras-dashboard-kpi__label {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding-top: 0.1rem;
+    font-size: clamp(0.62rem, 0.55rem + 0.35vw, 0.78rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    color: #475569;
+}
+
+.compras-dashboard-kpi__value {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: clamp(1.05rem, 0.85rem + 0.55vw, 1.55rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--compras-kpi-accent);
+}
+
+.compras-dashboard-kpi--periodo {
+    --compras-kpi-accent: var(--brand-navy);
+}
+
+.compras-dashboard-kpi--pendiente-director,
+.compras-dashboard-kpi--bandeja-pendiente {
+    --compras-kpi-accent: #ea580c;
+}
+
+.compras-dashboard-kpi--bandeja {
+    --compras-kpi-accent: #0284c7;
+}
+
+.compras-dashboard-kpi--en-curso {
+    --compras-kpi-accent: #1984c7;
+}
+
+.compras-dashboard-kpi--completadas {
+    --compras-kpi-accent: #15803d;
+}
+
+.compras-dashboard-kpi--urgentes {
+    --compras-kpi-accent: #be123c;
+}
+
+@media (max-width: 640px) {
+    .dashboard-stat-grid.dashboard-stat-grid--compras-kpis {
+        flex-wrap: wrap;
+    }
+
+    .dashboard-stat-grid.dashboard-stat-grid--compras-kpis > .compras-dashboard-kpi {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: calc(50% - 0.25rem);
+        max-width: calc(50% - 0.25rem);
+        min-height: 4rem;
+        padding: 0.6rem 0.5rem;
+    }
+
+    .compras-dashboard-kpi__value {
+        font-size: 1.35rem;
+    }
+}
+
 /* Dashboard requisiciones — gráficos uniformes */
 .req-dashboard-charts {
     --req-chart-height: clamp(240px, 28vw, 300px);

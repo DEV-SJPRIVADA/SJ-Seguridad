@@ -2,8 +2,7 @@ import ApexCharts from 'apexcharts';
 import {
     BRAND_BLUE,
     BRAND_NAVY,
-    DONUT_COLORS,
-    STATUS_DONUT_COLORS,
+    colorsForWorkflowStatusLabels,
     sharedChart,
 } from './charts/apex-defaults';
 
@@ -63,7 +62,7 @@ function renderPurchaseStatus(data) {
         chart: { ...sharedChart.chart, type: 'donut', height: '100%' },
         series: data.purchaseStatus.data.map(Number),
         labels: data.purchaseStatus.labels,
-        colors: STATUS_DONUT_COLORS,
+        colors: colorsForWorkflowStatusLabels(data.purchaseStatus.labels),
         legend: { position: 'bottom', fontSize: '11px' },
         stroke: { width: 0 },
         plotOptions: {
@@ -85,7 +84,7 @@ function renderBandejaStatus(data) {
         chart: { ...sharedChart.chart, type: 'donut', height: '100%' },
         series: data.bandejaStatus.data.map(Number),
         labels: data.bandejaStatus.labels,
-        colors: DONUT_COLORS,
+        colors: colorsForWorkflowStatusLabels(data.bandejaStatus.labels),
         legend: { position: 'bottom', fontSize: '11px' },
         stroke: { width: 0 },
         plotOptions: {
