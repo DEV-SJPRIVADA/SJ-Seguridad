@@ -216,7 +216,6 @@ class NavigationResolver
                                 'route' => 'purchase-requests.index',
                                 'url' => $user->defaultPurchaseBoardUrl($key),
                                 'active' => str_starts_with((string) $routeName, 'purchase-requests.')
-                                    && ! str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                     && $requestModule === $key,
                             ];
                         }
@@ -259,7 +258,6 @@ class NavigationResolver
                             $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
                             $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.')
-                                && ! str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                 && $requestModule === $key,
                             $boardKey === 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                 && $requestModule === $key,

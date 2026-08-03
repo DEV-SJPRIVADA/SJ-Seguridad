@@ -66,7 +66,7 @@ Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccess
 | `purchase.tab.approval` | Pendientes + autorizar (policy `approve`) |
 | `purchase.tab.processing` | Bandeja y procesamiento (policy `process`) |
 | `view.board.{area}.solicitudes_compra` | Alcance sidebar (hogar canonico: area base o Compras) |
-| `view.board.compras.bandeja_compras` | Tablero bandeja en sidebar Compras |
+| `view.board.compras.bandeja_compras` | Legacy sidebar; la bandeja se accede como pestaña en Solicitudes de compra |
 
 `PurchaseRequestPolicy`:
 
@@ -82,7 +82,9 @@ Directores: rol `director` incluye `view.board.gestion_humana.requisiciones` (GH
 | --- | --- |
 | Solicitante | Su `area_key` → Solicitudes de compra |
 | Director | Compras → Solicitudes de compra → Pendientes |
-| Compras | Compras → Bandeja compras |
+| Compras (analista) | Compras → Solicitudes de compra → pestaña Bandeja compras (landing por defecto); Nueva solicitud / Mis solicitudes segun permisos |
+
+La bandeja **no** aparece como tablero separado en sidebar cuando ya es pestaña del modulo Solicitudes de compra.
 
 Config: `board_canonical_areas.solicitudes_compra` en `config/access.php`. Servicio: `SidebarVisibilityService`.
 
@@ -177,6 +179,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | PDF solicitud alineado al detalle (metadatos, estilo FO-AD-44); sin registro de correos |
 | 2026-08-03 | Dashboard Compras (`compras.dashboard`): KPIs bandeja, tendencias y graficos ApexCharts |
 | 2026-08-03 | Bandeja compras: accion Ver detalle; analista compras ve detalle completo y vuelve a bandeja |
+| 2026-08-03 | Navegacion unificada: bandeja solo como pestana en Solicitudes de compra; landing analista en bandeja |
 
 ## Referencias
 

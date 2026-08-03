@@ -109,6 +109,10 @@ class SidebarVisibilityService
             return false;
         }
 
+        if ($this->purchaseAccess->bandejaAccessibleViaPurchaseBoard($user, $areaKey)) {
+            return false;
+        }
+
         return $user->can('purchase.tab.processing')
             || $user->can('view.board.compras.bandeja_compras');
     }

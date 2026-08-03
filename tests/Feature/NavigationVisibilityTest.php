@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Navigation\NavigationResolver;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class NavigationVisibilityTest extends TestCase
@@ -99,7 +100,27 @@ class NavigationVisibilityTest extends TestCase
             ->all();
 
         $this->assertContains(config('access.boards.suministros'), $comprasBoards);
-        $this->assertContains(config('access.boards.bandeja_compras'), $comprasBoards);
+        $this->assertContains(config('access.boards.solicitudes_compra'), $comprasBoards);
+        $this->assertNotContains(config('access.boards.bandeja_compras'), $comprasBoards);
+    }
+
+    public function test_compras_analyst_default_purchase_board_url_is_bandeja(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'compras',
+            'must_change_password' => false,
+        ]);
+        $user->givePermissionTo([
+            'purchase.tab.create',
+            'purchase.tab.my_requests',
+            'purchase.tab.processing',
+            'view.board.compras.solicitudes_compra',
+        ]);
+
+        $this->assertSame(
+            route('purchase-requests.processing.index', ['module' => 'compras']),
+            $user->defaultPurchaseBoardUrl('compras'),
+        );
     }
 
     public function test_gh_operator_does_not_see_requisiciones_in_other_areas(): void
@@ -133,7 +154,7 @@ class NavigationVisibilityTest extends TestCase
             ->flatMap(function (array $module): array {
                 $items = $module['items'] ?? [];
 
-                return $items instanceof \Illuminate\Support\Collection ? $items->all() : $items;
+                return $items instanceof Collection ? $items->all() : $items;
             })
             ->filter(fn (array $item): bool => ($item['label'] ?? '') === $label)
             ->count();

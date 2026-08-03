@@ -415,7 +415,7 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertSee($supplyRequest->folio());
     }
 
-    public function test_navigation_processing_bandeja_only_activates_compras_board(): void
+    public function test_navigation_processing_bandeja_activates_solicitudes_compra_board(): void
     {
         $user = $this->comprasUser();
 
@@ -440,7 +440,10 @@ class PurchaseRequestModuleTest extends TestCase
             ->values()
             ->all();
 
-        $this->assertSame(['Bandeja compras'], $activeBoardLabels);
+        $this->assertSame(['Solicitudes de compra'], $activeBoardLabels);
+        $this->assertFalse(
+            $comprasBoards->pluck('label')->contains('Bandeja compras')
+        );
 
         $gestionHumana = collect($nav['appNavigation'])->firstWhere('key', 'gestion_humana');
         if ($gestionHumana !== null) {

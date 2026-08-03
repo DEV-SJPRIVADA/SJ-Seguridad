@@ -186,6 +186,11 @@ class User extends Authenticatable
     public function defaultPurchaseBoardUrl(string $moduleKey): string
     {
         $tabs = $this->purchaseBoardTabsFor($moduleKey);
+
+        if ($moduleKey === 'compras' && $tabs->contains('bandeja_compras')) {
+            return route('purchase-requests.processing.index', ['module' => $moduleKey]);
+        }
+
         $firstTab = $tabs->first();
 
         return match ($firstTab) {

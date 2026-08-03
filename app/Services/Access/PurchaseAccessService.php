@@ -47,6 +47,12 @@ class PurchaseAccessService
         return $this->baseAreaBoardVisible($user, $areaKey);
     }
 
+    public function bandejaAccessibleViaPurchaseBoard(User $user, string $areaKey): bool
+    {
+        return $user->can('purchase.tab.processing')
+            && $this->canViewPurchaseBoard($user, $areaKey);
+    }
+
     public function canAccessTab(User $user, string $module, string $tab): bool
     {
         if ($this->isAdminBypass($user)) {
