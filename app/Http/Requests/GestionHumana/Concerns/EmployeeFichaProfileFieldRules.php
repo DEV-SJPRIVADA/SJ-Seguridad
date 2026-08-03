@@ -48,7 +48,8 @@ trait EmployeeFichaProfileFieldRules
             'payment_method_code' => ['nullable', 'string', 'max:50'],
             'economic_activity_code' => ['nullable', 'string', 'max:50'],
             'economic_activity_name' => ['nullable', 'string', 'max:150'],
-            'linkage_type' => ['nullable', 'string', 'max:30'],
+            'linkage_type' => ['nullable', 'string', 'max:100'],
+            'contributor_type' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

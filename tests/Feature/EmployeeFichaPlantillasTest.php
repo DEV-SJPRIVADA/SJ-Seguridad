@@ -167,6 +167,34 @@ class EmployeeFichaPlantillasTest extends TestCase
         ]);
     }
 
+    public function test_import_accepts_long_tipo_vinculacion_from_payroll_template(): void
+    {
+        $manager = $this->managerUser();
+        $longLinkage = 'Contrato Laboral(Dependiente Asociado)';
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '18393026',
+            'nombre' => 'GOMEZ GARCIA JULIO CESAR',
+            'tipo_vinculacion' => $longLinkage,
+            'tipo_cotizante' => 'Dependiente',
+            'fecha_ingreso' => '2014-02-15',
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ]);
+
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+        $response->assertSessionHas('import_result', function (array $result): bool {
+            return ($result['imported'] ?? 0) === 1 && ($result['failed'] ?? 0) === 0;
+        });
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '18393026',
+            'linkage_type' => $longLinkage,
+            'contributor_type' => 'Dependiente',
+        ]);
+    }
+
     public function test_export_import_template_includes_profile_data(): void
     {
         $manager = $this->managerUser();
