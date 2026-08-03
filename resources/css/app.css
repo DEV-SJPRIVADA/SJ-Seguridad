@@ -3710,6 +3710,12 @@ table.dataTable thead td {
     height: 40px;
 }
 
+.brand-logo img {
+    display: block;
+    height: 50px;
+    width: auto;
+}
+
 .brand-logo svg {
     height: 100%;
     width: auto;
@@ -4252,6 +4258,14 @@ table.dataTable thead td {
     background: var(--color-bg);
 }
 
+.guest-shell--login {
+    background-color: #0b1220;
+    background-image: url('/images/fondo%20inicio%20sesion.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .guest-stack {
     width: min(100%, 32rem);
     display: flex;
@@ -4261,7 +4275,9 @@ table.dataTable thead td {
 }
 
 .guest-logo {
-    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
 }
 
 .guest-card {

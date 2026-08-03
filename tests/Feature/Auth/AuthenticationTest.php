@@ -20,7 +20,9 @@ class AuthenticationTest extends TestCase
             ->assertSee('Contrasena')
             ->assertSee('Recordarme')
             ->assertSee('Iniciar sesion')
-            ->assertSee('form-password-field__toggle');
+            ->assertSee('form-password-field__toggle')
+            ->assertSee('guest-shell--login')
+            ->assertSee('SJ Seguridad Logo');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

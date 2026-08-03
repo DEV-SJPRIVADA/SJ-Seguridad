@@ -1,4 +1,4 @@
-<x-guest-layout>
+<x-guest-layout shell-class="guest-shell--login">
     <!-- Session Status -->
     <x-auth-session-status :status="session('status')" />
 
