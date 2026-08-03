@@ -25,6 +25,10 @@
                                 <tr>
                                     <th>Folio</th>
                                     <th>Fecha</th>
+                                    <th>Solicitante</th>
+                                    <th>Director aprobador</th>
+                                    <th>Fecha de aprobacion</th>
+                                    <th>Productos</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -34,6 +38,16 @@
                                     <tr>
                                         <td class="text-center">{{ $purchaseRequest->folio() }}</td>
                                         <td class="text-center"><x-date-table :value="$purchaseRequest->fecha_solicitud ?? $purchaseRequest->created_at" /></td>
+                                        <td>{{ $purchaseRequest->user?->name ?? '—' }}</td>
+                                        <td>{{ $purchaseRequest->aprobador?->name ?? '—' }}</td>
+                                        <td class="text-center">
+                                            @if ($purchaseRequest->fecha_aprobacion)
+                                                <x-date-table :value="$purchaseRequest->fecha_aprobacion" />
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">{{ $purchaseRequest->items->count() }}</td>
                                         <td class="text-center">
                                             @php
                                                 $estadoPill = match ($purchaseRequest->estado) {
@@ -60,7 +74,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-muted">No tienes solicitudes de compra registradas.</td>
+                                        <td colspan="8" class="text-muted">No tienes solicitudes de compra registradas.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

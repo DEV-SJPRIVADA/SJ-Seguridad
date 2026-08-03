@@ -121,10 +121,22 @@ class PurchaseRequestModuleTest extends TestCase
             'estado' => PurchaseRequest::ESTADO_PENDIENTE,
         ]);
 
+        $purchaseRequest->items()->create([
+            'orden' => 1,
+            'cantidad' => 2,
+            'descripcion' => 'Producto prueba',
+            'referencia' => 'REF-1',
+            'utilizacion' => 'Oficina',
+            'ubicacion' => 'Cali',
+        ]);
+
         $this->actingAs($requester)
             ->get(route('purchase-requests.index', ['module' => 'compras']))
             ->assertOk()
-            ->assertSee($purchaseRequest->folio());
+            ->assertSee($purchaseRequest->folio())
+            ->assertSee('Director aprobador')
+            ->assertSee($director->name)
+            ->assertSee($requester->name);
     }
 
     public function test_show_displays_mail_log_registry(): void

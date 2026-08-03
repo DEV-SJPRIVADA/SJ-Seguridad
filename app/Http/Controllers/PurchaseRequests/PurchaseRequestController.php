@@ -23,7 +23,7 @@ class PurchaseRequestController extends Controller
     public function index(string $module): View
     {
         $purchaseRequests = PurchaseRequest::query()
-            ->with(['aprobador', 'items'])
+            ->with(['user', 'aprobador', 'items'])
             ->where('user_id', auth()->id())
             ->latest()
             ->get();

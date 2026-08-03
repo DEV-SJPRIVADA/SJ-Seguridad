@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="panel__body">
-                    <div class="dashboard-stat-grid bottom-spaced">
+                    <div class="purchase-request-meta-grid bottom-spaced">
                         <article class="card card--muted">
                             <p class="text-caption">Fecha de solicitud</p>
                             <p class="panel-title">{{ optional($purchaseRequest->fecha_solicitud)->format('d/m/Y') ?? '—' }}</p>
@@ -74,9 +74,6 @@
                             <p class="text-caption">Solicitud para</p>
                             <p class="panel-title">{{ $purchaseRequest->solicitud_para }}</p>
                         </article>
-                    </div>
-
-                    <div class="dashboard-stat-grid bottom-spaced">
                         <article class="card card--muted">
                             <p class="text-caption">Director aprobador</p>
                             <p class="panel-title">{{ $purchaseRequest->aprobador?->name ?? '—' }}</p>
@@ -221,4 +218,44 @@
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            .purchase-request-meta-grid {
+                display: grid;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+                grid-template-columns: 1fr;
+            }
+
+            .purchase-request-meta-grid .card {
+                padding: 0.55rem 0.65rem;
+                margin: 0;
+            }
+
+            .purchase-request-meta-grid .text-caption {
+                margin-bottom: 0.15rem;
+                font-size: 0.72rem;
+            }
+
+            .purchase-request-meta-grid .panel-title {
+                font-size: 0.95rem;
+                line-height: 1.25;
+                margin: 0;
+                word-break: break-word;
+            }
+
+            @media (min-width: 768px) {
+                .purchase-request-meta-grid {
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
+                }
+            }
+
+            @media (min-width: 1280px) {
+                .purchase-request-meta-grid {
+                    grid-template-columns: repeat(7, minmax(0, 1fr));
+                }
+            }
+        </style>
+    @endpush
 </x-app-layout>
