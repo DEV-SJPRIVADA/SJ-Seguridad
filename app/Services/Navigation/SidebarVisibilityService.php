@@ -156,6 +156,14 @@ class SidebarVisibilityService
                 || $user->can('view.area.comercial');
         }
 
+        if ($areaKey === 'compras') {
+            return $user->can('view.board.compras.dashboard')
+                || $user->can('purchase.tab.processing')
+                || $user->can('purchase.tab.approval')
+                || $user->can('view.area.compras')
+                || $user->can('manage.area.compras');
+        }
+
         if ($user->can('manage.users')) {
             return in_array($areaKey, $this->compactNavigationAreas($user), true);
         }

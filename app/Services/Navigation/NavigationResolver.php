@@ -251,6 +251,7 @@ class NavigationResolver
 
                         $url = match (true) {
                             $key === 'comercial' && $boardKey === 'dashboard' => route('comercial.dashboard'),
+                            $key === 'compras' && $boardKey === 'dashboard' => route('compras.dashboard'),
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };
 
@@ -270,12 +271,18 @@ class NavigationResolver
                             ) && $key === 'comercial',
                             $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
+                            $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
 
                         return [
                             'label' => $boardLabel,
-                            'route' => $boardKey === 'requisiciones' ? 'requisitions.dashboard' : ($key === 'comercial' && $boardKey === 'dashboard' ? 'comercial.dashboard' : 'dashboard'),
+                            'route' => match (true) {
+                                $boardKey === 'requisiciones' => 'requisitions.dashboard',
+                                $key === 'comercial' && $boardKey === 'dashboard' => 'comercial.dashboard',
+                                $key === 'compras' && $boardKey === 'dashboard' => 'compras.dashboard',
+                                default => 'dashboard',
+                            },
                             'url' => $url,
                             'active' => $active,
                         ];
@@ -298,6 +305,22 @@ class NavigationResolver
                         'route' => 'comercial.dashboard',
                         'url' => route('comercial.dashboard'),
                         'active' => $routeName === 'comercial.dashboard',
+                    ]);
+                }
+
+                if ($key === 'compras'
+                    && (
+                        $user->can('purchase.tab.processing')
+                        || $user->can('purchase.tab.approval')
+                    )
+                    && $boardItems->doesntContain('label', config('access.boards.dashboard'))
+                    && $this->sidebarVisibility->shouldShowBoard($user, 'compras', 'dashboard')
+                ) {
+                    $boardItems->prepend([
+                        'label' => config('access.boards.dashboard'),
+                        'route' => 'compras.dashboard',
+                        'url' => route('compras.dashboard'),
+                        'active' => $routeName === 'compras.dashboard',
                     ]);
                 }
 
@@ -325,6 +348,11 @@ class NavigationResolver
                         || str_starts_with((string) $routeName, 'comercial.matriz.services.')
                         || str_starts_with((string) $routeName, 'comercial.parameters.')
                     ) && $key === 'comercial'
+                ) || (
+                    (
+                        $routeName === 'compras.dashboard'
+                        || str_starts_with((string) $routeName, 'purchase-requests.processing.')
+                    ) && $key === 'compras'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana'
                 );

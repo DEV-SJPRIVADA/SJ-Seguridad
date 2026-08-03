@@ -370,11 +370,23 @@ class SupplyRequestController extends Controller
     {
         $user = auth()->user();
 
-        $canReview = $user->can('supply.tab.quality')
-            || $user->can('approve.supply.quality')
-            || $user->can('manage.users');
+        if ($user->can('manage.users')) {
+            return;
+        }
 
-        abort_unless($supplyRequest->user_id === $user->id || $canReview, 403);
+        if ($user->can('purchase.tab.processing') && $this->supplyVisibleInComprasBandeja($supplyRequest)) {
+            return;
+        }
+
+        $canReview = $user->can('supply.tab.quality')
+            || $user->can('approve.supply.quality');
+
+        abort_unless((int) $supplyRequest->user_id === (int) $user->id || $canReview, 403);
+    }
+
+    private function supplyVisibleInComprasBandeja(SupplyRequest $supplyRequest): bool
+    {
+        return in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true);
     }
 
     /**

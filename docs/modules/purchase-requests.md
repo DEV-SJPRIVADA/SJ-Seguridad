@@ -108,6 +108,8 @@ Migracion: `2026_07_31_140100_create_purchase_requests_tables.php`.
 | `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
 | `PurchaseRequestNotificationService` | Correos director, solicitante, compras; persiste log en `purchase_request_mail_logs` |
 | `ComprasQueueService` | Mezcla purchase + supply en bandeja con filtros |
+| `ComprasDashboardService` | KPIs y graficos del dashboard Compras |
+| `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
 | `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
 | `PurchaseEmailApprovalController` | Redirect legacy correo → plataforma |
 
@@ -173,6 +175,8 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | Hogares canonicos sidebar (`SidebarVisibilityService`); permisos director en seeder/migracion |
 | 2026-08-03 | Urgente opcional al crear; Mis solicitudes por usuario; registro de correos en detalle |
 | 2026-08-03 | PDF solicitud alineado al detalle (metadatos, estilo FO-AD-44); sin registro de correos |
+| 2026-08-03 | Dashboard Compras (`compras.dashboard`): KPIs bandeja, tendencias y graficos ApexCharts |
+| 2026-08-03 | Bandeja compras: accion Ver detalle; analista compras ve detalle completo y vuelve a bandeja |
 
 ## Referencias
 

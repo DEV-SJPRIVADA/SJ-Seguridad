@@ -16,8 +16,8 @@
                                 </span>
                             </p>
                         </div>
-                        <a href="{{ route('supplies.index', ['module' => $module]) }}" class="btn btn--secondary">
-                            Volver al listado
+                        <a href="{{ auth()->user()?->can('purchase.tab.processing') ? route('purchase-requests.processing.index', ['module' => 'compras']) : route('supplies.index', ['module' => $module]) }}" class="btn btn--secondary">
+                            {{ auth()->user()?->can('purchase.tab.processing') ? 'Volver a bandeja' : 'Volver al listado' }}
                         </a>
                     </div>
                 </div>

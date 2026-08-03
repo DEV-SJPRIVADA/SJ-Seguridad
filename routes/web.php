@@ -178,6 +178,10 @@ Route::get('/dashboard', function () {
         return redirect()->route('comercial.dashboard');
     }
 
+    if ($selectedModuleKey === 'compras' && $selectedBoardKey === 'dashboard') {
+        return redirect()->route('compras.dashboard');
+    }
+
     if ($selectedModule && $selectedBoardKey === 'gestion_clientes') {
         return redirect(auth()->user()->defaultGestionClientesBoardUrl());
     }
@@ -227,6 +231,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/areas/operaciones.php';
     require __DIR__.'/areas/comercial.php';
     require __DIR__.'/areas/gestion_humana.php';
+    require __DIR__.'/areas/compras.php';
 });
 
 if (app()->environment('local')) {

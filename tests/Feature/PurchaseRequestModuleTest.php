@@ -282,6 +282,28 @@ class PurchaseRequestModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertSee($purchaseRequest->fresh()->folio());
+        $response->assertSee('Ver detalle', false);
+    }
+
+    public function test_compras_analyst_can_open_purchase_detail_from_bandeja(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $compras = $this->comprasUser();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->actingAs($director)->patch(route('purchase-requests.approval.update', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]), [
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+        ])->assertRedirect();
+
+        $this->actingAs($compras)
+            ->get(route('purchase-requests.show', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee($purchaseRequest->folio())
+            ->assertSee('Volver a bandeja')
+            ->assertSee('Registro de correos de esta solicitud');
     }
 
     public function test_director_can_approve_from_show_page(): void

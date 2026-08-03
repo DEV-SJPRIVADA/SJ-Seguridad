@@ -43,6 +43,10 @@
                                 <a href="{{ route('purchase-requests.approval.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
                                     Volver a pendientes
                                 </a>
+                            @elseif (auth()->user()?->can('purchase.tab.processing'))
+                                <a href="{{ route('purchase-requests.processing.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
+                                    Volver a bandeja
+                                </a>
                             @else
                                 <a href="{{ route('purchase-requests.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
                                     Volver al listado
