@@ -6,7 +6,6 @@ use App\Exports\EmployeeFichaImportTemplateExport;
 use App\Exports\PlantillaMasivosExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
-use App\Http\Requests\GestionHumana\PromoteFichaEntryRequest;
 use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
 use App\Models\EmployeeFichaProfile;
@@ -187,15 +186,30 @@ class FichaEmpleadosController extends Controller
             ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         abort_unless($this->canManage(), 403);
 
+        $fichaEntry = null;
+        $profile = new EmployeeFichaProfile([
+            'document_type' => 'C',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $desde = $request->query('desde');
+
+        if ($desde !== null) {
+            $fichaEntry = PersonalRequisitionFichaEntry::query()
+                ->pending()
+                ->with(['requisition.position', 'requisition.city', 'requisition.contractType', 'requisition.client', 'profile'])
+                ->findOrFail($desde);
+
+            $profile = $this->profilePrefill->buildForEntry($fichaEntry);
+        }
+
         return view('areas.gestion_humana.ficha-empleados.employees.create-ficha', [
-            'profile' => new EmployeeFichaProfile([
-                'document_type' => 'C',
-                'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
-            ]),
+            'fichaEntry' => $fichaEntry,
+            'profile' => $profile,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -205,6 +219,48 @@ class FichaEmpleadosController extends Controller
     {
         $validated = $request->validated();
         $userId = $request->user()->id;
+        $fichaEntryId = $validated['ficha_entry_id'] ?? null;
+
+        if ($fichaEntryId !== null) {
+            DB::transaction(function () use ($validated, $userId, $fichaEntryId): void {
+                $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
+
+                $hiredDocument = trim($validated['hired_document']);
+                $hiredFullName = trim($validated['hired_full_name']);
+                $parsed = EmployeeFichaNameParser::parse($hiredFullName);
+
+                $entry->update([
+                    'hired_document' => $hiredDocument,
+                    'hired_full_name' => $hiredFullName,
+                    'moved_to_ficha_at' => now(),
+                    'moved_to_ficha_by' => $userId,
+                ]);
+
+                $profileAttributes = collect($validated)
+                    ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
+                    ->merge([
+                        'personal_requisition_ficha_entry_id' => $entry->id,
+                        'document_number' => $hiredDocument,
+                        'full_name' => $parsed['full_name'] ?: $hiredFullName,
+                        'first_surname' => $parsed['first_surname'],
+                        'second_surname' => $parsed['second_surname'],
+                        'first_name' => $parsed['first_name'],
+                        'second_name' => $parsed['second_name'],
+                    ])
+                    ->all();
+
+                $profile = $entry->profile ?? new EmployeeFichaProfile(['personal_requisition_ficha_entry_id' => $entry->id]);
+                $profile->fill($profileAttributes);
+                $profile->syncEmploymentStatusFromTerminationDate();
+                $profile->save();
+
+                $this->syncCatalogNamesFromCodes($profile);
+            });
+
+            return redirect()
+                ->route('gestion-humana.ficha-empleados.employees.index')
+                ->with('status', 'Empleado movido a Ficha empleados correctamente.');
+        }
 
         $entry = DB::transaction(function () use ($validated, $userId): PersonalRequisitionFichaEntry {
             $hiredDocument = trim($validated['hired_document']);
@@ -221,7 +277,7 @@ class FichaEmpleadosController extends Controller
             ]);
 
             $profileAttributes = collect($validated)
-                ->except(['hired_document', 'hired_full_name'])
+                ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
                 ->merge([
                     'personal_requisition_ficha_entry_id' => $entry->id,
                     'document_number' => $hiredDocument,
@@ -280,26 +336,6 @@ class FichaEmpleadosController extends Controller
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $fichaEntry)
             ->with('status', 'Ficha de empleado actualizada.');
-    }
-
-    public function promote(PromoteFichaEntryRequest $request, PersonalRequisitionFichaEntry $fichaEntry): RedirectResponse
-    {
-        if ($fichaEntry->moved_to_ficha_at !== null) {
-            return redirect()
-                ->route('gestion-humana.ficha-empleados.employees.index')
-                ->with('status', 'Ese registro ya estaba en Ficha empleados.');
-        }
-
-        $fichaEntry->update([
-            'moved_to_ficha_at' => now(),
-            'moved_to_ficha_by' => $request->user()->id,
-        ]);
-
-        $this->profilePrefill->prefillForEntry($fichaEntry->fresh());
-
-        return redirect()
-            ->route('gestion-humana.ficha-empleados.employees.index')
-            ->with('status', 'Registro agregado a Ficha empleados.');
     }
 
     /**

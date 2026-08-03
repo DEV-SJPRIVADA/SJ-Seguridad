@@ -280,59 +280,6 @@ class FichaEmpleadosTest extends TestCase
         });
     }
 
-    public function test_ficha_empleados_promote_requires_manage_permission(): void
-    {
-        $viewer = User::factory()->create(['must_change_password' => false]);
-        $viewer->assignRole('usuario');
-        $viewer->givePermissionTo('ficha_empleados.view');
-
-        $requisition = $this->createRequisition('REQ-FICHA-1005');
-        $entry = PersonalRequisitionFichaEntry::query()->create([
-            'personal_requisition_id' => $requisition->id,
-            'hired_document' => '900000005',
-            'hired_full_name' => 'Sin Manage',
-        ]);
-
-        $response = $this->actingAs($viewer)
-            ->patch(route('gestion-humana.ficha-empleados.employees.promote', $entry));
-
-        $response->assertForbidden();
-        $this->assertNull($entry->fresh()->moved_to_ficha_at);
-    }
-
-    public function test_ficha_empleados_promote_moves_entry_to_ficha(): void
-    {
-        $manager = User::factory()->create(['must_change_password' => false]);
-        $manager->assignRole('usuario');
-        $manager->givePermissionTo('ficha_empleados.manage');
-
-        $requisition = $this->createRequisition('REQ-FICHA-1006');
-        $entry = PersonalRequisitionFichaEntry::query()->create([
-            'personal_requisition_id' => $requisition->id,
-            'hired_document' => '900000006',
-            'hired_full_name' => 'Promover Ahora',
-        ]);
-
-        $response = $this->actingAs($manager)
-            ->patch(route('gestion-humana.ficha-empleados.employees.promote', $entry));
-
-        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
-
-        $entry->refresh();
-        $this->assertNotNull($entry->moved_to_ficha_at);
-        $this->assertTrue($entry->movedBy->is($manager));
-
-        $enFichaIndex = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.index'));
-        $enFichaIndex->assertViewHas('entries', function ($entries) use ($entry): bool {
-            return $entries->pluck('id')->contains($entry->id);
-        });
-
-        $pendingIndex = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
-        $pendingIndex->assertViewHas('entries', function ($entries) use ($entry): bool {
-            return ! $entries->pluck('id')->contains($entry->id);
-        });
-    }
-
     public function test_ficha_empleados_index_shows_hire_termination_and_status_columns(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
@@ -609,6 +556,285 @@ class FichaEmpleadosTest extends TestCase
                 'hired_full_name' => 'Duplicado',
             ])
             ->assertSessionHasErrors('hired_document');
+    }
+
+    public function test_create_form_prefills_from_pending_ficha_entry_without_persisting(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4001', [
+            'hired_document' => '900000401',
+            'hired_full_name' => 'Prefill Sin Persistir',
+            'base_salary' => 2000000,
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000401',
+            'hired_full_name' => 'Prefill Sin Persistir',
+        ]);
+
+        $response = $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]));
+
+        $response->assertOk()
+            ->assertSee('Gestionar empleado')
+            ->assertSee('900000401')
+            ->assertSee('Prefill Sin Persistir');
+
+        $this->assertDatabaseMissing('employee_ficha_profiles', [
+            'personal_requisition_ficha_entry_id' => $entry->id,
+        ]);
+        $this->assertNull($entry->fresh()->moved_to_ficha_at);
+    }
+
+    public function test_create_form_reuses_existing_profile_when_already_present(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4002', [
+            'hired_document' => '900000402',
+            'hired_full_name' => 'Con Perfil Previo',
+            'base_salary' => 2000000,
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000402',
+            'hired_full_name' => 'Con Perfil Previo',
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '900000402',
+            'full_name' => 'Con Perfil Previo',
+            'salary' => 5550000,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]));
+
+        $response->assertOk()->assertSee('5550000');
+
+        $this->assertDatabaseCount('employee_ficha_profiles', 1);
+    }
+
+    public function test_create_form_returns_404_when_desde_entry_already_in_ficha(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4003');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000403',
+            'hired_full_name' => 'Ya En Ficha',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]))
+            ->assertNotFound();
+    }
+
+    public function test_create_form_returns_404_when_desde_entry_does_not_exist(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => 999999]))
+            ->assertNotFound();
+    }
+
+    public function test_store_with_ficha_entry_id_updates_existing_entry_and_moves_to_ficha(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4004');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000404',
+            'hired_full_name' => 'Gestionar Ahora',
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
+            'ficha_entry_id' => $entry->id,
+            'hired_document' => '900000404',
+            'hired_full_name' => 'Gestionar Ahora Corregido',
+            'document_type' => 'C',
+            'sex' => 'F',
+            'salary' => '3000000',
+        ]);
+
+        $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
+
+        $entry->refresh();
+        $this->assertNotNull($entry->moved_to_ficha_at);
+        $this->assertTrue($entry->movedBy->is($manager));
+        $this->assertSame('Gestionar Ahora Corregido', $entry->hired_full_name);
+        $this->assertSame('Gestionar Ahora Corregido', $entry->profile?->full_name);
+
+        $response->assertSessionHasNoErrors();
+    }
+
+    public function test_store_with_ficha_entry_id_redirects_to_index_en_ficha(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4005');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000405',
+            'hired_full_name' => 'Redirect Test',
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
+            'ficha_entry_id' => $entry->id,
+            'hired_document' => '900000405',
+            'hired_full_name' => 'Redirect Test',
+        ]);
+
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+    }
+
+    public function test_store_with_ficha_entry_id_does_not_update_requisition_hired_fields(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4006', [
+            'hired_document' => '900000406',
+            'hired_full_name' => 'Nombre Original Requisicion',
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000406',
+            'hired_full_name' => 'Nombre Original Requisicion',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
+            'ficha_entry_id' => $entry->id,
+            'hired_document' => '900000499',
+            'hired_full_name' => 'Nombre Corregido En Ficha',
+        ]);
+
+        $requisition->refresh();
+        $this->assertSame('900000406', $requisition->hired_document);
+        $this->assertSame('Nombre Original Requisicion', $requisition->hired_full_name);
+    }
+
+    public function test_store_with_ficha_entry_id_allows_keeping_same_hired_document(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4007');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000407',
+            'hired_full_name' => 'Mantiene Cedula',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
+            'ficha_entry_id' => $entry->id,
+            'hired_document' => '900000407',
+            'hired_full_name' => 'Mantiene Cedula',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertNotNull($entry->fresh()->moved_to_ficha_at);
+    }
+
+    public function test_store_with_ficha_entry_id_rejects_document_duplicated_in_other_entry(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-4008')->id,
+            'hired_document' => '900000408',
+            'hired_full_name' => 'Ya En Ficha Con Cedula',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-4009')->id,
+            'hired_document' => '900000409',
+            'hired_full_name' => 'Pendiente Con Cedula Propia',
+        ]);
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900000408',
+                'hired_full_name' => 'Pendiente Con Cedula Propia',
+            ])
+            ->assertSessionHasErrors('hired_document');
+
+        $this->assertNull($entry->fresh()->moved_to_ficha_at);
+    }
+
+    public function test_store_with_ficha_entry_id_rejects_when_entry_already_moved(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4010');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000410',
+            'hired_full_name' => 'Ya Movido Doble Envio',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+        ]);
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900000410',
+                'hired_full_name' => 'Ya Movido Doble Envio',
+            ])
+            ->assertSessionHasErrors('ficha_entry_id');
+    }
+
+    public function test_pending_index_shows_gestionar_empleado_button_linking_to_create_with_desde(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $requisition = $this->createRequisition('REQ-FICHA-4011');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000411',
+            'hired_full_name' => 'Pendiente Boton Vista',
+        ]);
+
+        $response = $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
+
+        $response->assertOk()
+            ->assertSee('Gestionar Empleado')
+            ->assertDontSee('Agregar a ficha empleados')
+            ->assertSee(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]), false);
     }
 
     public function test_catalogs_tab_visible_only_for_manage_users(): void

@@ -27,5 +27,4 @@ Route::middleware(['password.changed'])
         Route::post('/importar', [FichaEmpleadosController::class, 'import'])->name('import');
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
-        Route::patch('/{fichaEntry}/agregar', [FichaEmpleadosController::class, 'promote'])->name('promote');
     });

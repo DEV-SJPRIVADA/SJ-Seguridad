@@ -9,7 +9,7 @@ Llevar la lista de espera de personas contratadas por Gestion Humana (capturadas
 - Funcionalidad de **area unica** de Gestion Humana (no compartida entre areas como `requisitions`); sigue el patron de Comercial → Gestion Clientes.
 - Tablero `ficha_empleados` (etiqueta **Ficha empleados**) con una unica pestaña **Empleados** (`ficha_empleados_tabs.empleados`).
 - Pestaña Empleados: pills **Pendientes | En ficha** (default Pendientes), busqueda `q` (cedula, nombre, codigo de requisicion), export Excel.
-- Accion **Agregar a ficha empleados** (solo `ficha_empleados.manage`): mueve un registro de Pendientes a En ficha de forma inmediata.
+- Accion **Gestionar Empleado** (solo `ficha_empleados.manage`, desde FEAT-022): abre el formulario de ficha precargado con los datos de la requisicion; el registro solo se mueve de Pendientes a En ficha cuando el usuario confirma el formulario con **Crear empleado** (ver seccion "Flujo Gestionar Empleado").
 - **Fuera de V1:** modulo real de alta/ingreso de empleados (usuario, nomina, expediente); notificaciones por correo; edicion/eliminacion de registros desde la UI de Ficha empleados (las correcciones se hacen reabriendo la requisicion en Gestion).
 
 ## Modelo de datos
@@ -30,7 +30,7 @@ Relacion **1:1** con `personal_requisitions`. No duplica columnas de contexto (c
 | `hired_document` | `string(50)` | Copia operativa; permite reasignar sin tocar la requisicion original en caso de duplicado |
 | `hired_full_name` | `string(255)` | Idem |
 | `moved_to_ficha_at` | `timestamp` nullable | `null` = pendiente (lista de espera); no nulo = en ficha |
-| `moved_to_ficha_by` | bigint FK nullable → `users.id`, `nullOnDelete` | Quien ejecuto "Agregar a ficha empleados" |
+| `moved_to_ficha_by` | bigint FK nullable → `users.id`, `nullOnDelete` | Quien guardo el formulario que movio el registro a ficha (**Gestionar Empleado** o alta manual) |
 | `created_by` | bigint FK nullable → `users.id`, `nullOnDelete` | Quien marco Contratado (normalmente `managed_by` en ese momento) |
 | `timestamps` | | |
 
@@ -73,7 +73,7 @@ Invocado desde `RequisitionController::update` dentro de la misma transaccion, c
 | --- | --- |
 | `view.board.gestion_humana.ficha_empleados` | Ver el tablero **Ficha empleados** en el sidebar de Gestion Humana |
 | `ficha_empleados.view` | Ver pestaña Empleados (Pendientes + En ficha), usar filtros, exportar Excel |
-| `ficha_empleados.manage` | Todo lo de `ficha_empleados.view` + ejecutar **Agregar a ficha empleados** |
+| `ficha_empleados.manage` | Todo lo de `ficha_empleados.view` + `create`/`store` de empleados (alta manual y **Gestionar Empleado** desde un pendiente) |
 
 - `ficha_empleados.manage` **implica** `ficha_empleados.view` en `FichaEmpleadosAccessService` (no via herencia Spatie).
 - Ambos son **independientes** de `requisitions.tab.gestion`: un usuario puede tener cualquier combinacion (Gestion sin Ficha empleados, Ficha empleados sin Gestion, o ambos).
@@ -97,24 +97,44 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | POST | `/gestion-humana/ficha-empleados/empleados/importar` | `gestion-humana.ficha-empleados.employees.import` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
-| PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/agregar` | `gestion-humana.ficha-empleados.employees.promote` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/catalogos` | `gestion-humana.ficha-empleados.catalogs.index` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/catalogos/{type}` | `gestion-humana.ficha-empleados.catalogs.store` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/catalogos/{type}/{item}` | `gestion-humana.ficha-empleados.catalogs.update` | `ficha_empleados.manage` |
 | DELETE | `/gestion-humana/ficha-empleados/catalogos/{type}/{item}` | `gestion-humana.ficha-empleados.catalogs.destroy` | `ficha_empleados.manage` |
 
-Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export, `PromoteFichaEntryRequest::authorize()` para promote).
+> **FEAT-022 (2026-08-03):** se elimino la ruta `PATCH .../{fichaEntry}/agregar` (`...employees.promote`) y su `PromoteFichaEntryRequest`. `create`/`store` ahora tienen **dos modos** sobre las mismas URIs (ver seccion "Flujo Gestionar Empleado" abajo): sin `desde`/`ficha_entry_id` (alta manual, sin cambios) y con `desde`/`ficha_entry_id` (completar un pendiente existente).
+
+Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export, `abort_unless($this->canManage(), 403)` para `create`/`store`/import/catalogos).
 
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
 - `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`.
-- `create(): View` / `store(StoreManualEmployeeFichaRequest): RedirectResponse` — alta manual sin requisición (`personal_requisition_id` null, directo en ficha con perfil).
+- `create(Request $request): View` — **dos modos** segun query `desde` (ver "Flujo Gestionar Empleado" abajo):
+  - Sin `desde`: alta manual sin requisición — `$fichaEntry = null`, perfil vacio con `document_type='C'` y `employment_status=activo`.
+  - Con `desde={fichaEntryId}`: resuelve `$fichaEntry` con `PersonalRequisitionFichaEntry::pending()->findOrFail($desde)` (**404** si no existe o ya esta en ficha) y arma el perfil precargado con `EmployeeFichaProfilePrefill::buildForEntry()` (no persiste nada en el `GET`).
+- `store(StoreManualEmployeeFichaRequest): RedirectResponse` — bifurca por `ficha_entry_id` (input oculto del formulario):
+  - Con `ficha_entry_id`: revalida `pending()` (`findOrFail`, 404/422 si ya fue movida por otro proceso — proteccion doble envio), actualiza `hired_document`/`hired_full_name`/`moved_to_ficha_at`/`moved_to_ficha_by` en la fila **existente** (no crea duplicado), crea o actualiza su `EmployeeFichaProfile`, y redirige a `employees.index` (estado por defecto `en_ficha`).
+  - Sin `ficha_entry_id` (alta manual, sin cambios): crea fila nueva (`personal_requisition_id = null`) + perfil, redirige a `.../{id}/ficha`.
 - `exportExcel(Request $request): StreamedResponse|RedirectResponse` — export **Plantilla masivos** solo registros **En ficha**; sin rango de fechas exporta solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por fecha de ingreso.
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
-- `editFicha` / `updateFicha` — formulario ficha empleado (`employee_ficha_profiles`).
-- `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry): RedirectResponse` — setea `moved_to_ficha_at`/`moved_to_ficha_by`; crea perfil prefilled; idempotente.
+- `editFicha` / `updateFicha` — formulario ficha empleado para un pendiente o uno ya en ficha (`employee_ficha_profiles`); **no** mueve a ficha (`moved_to_ficha_at` no se toca aqui), fuera del alcance de FEAT-022.
+
+> **FEAT-022:** se elimino `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry)` (setear `moved_to_ficha_at` de un clic sin formulario). Toda promocion de un pendiente pasa ahora por `create`/`store` en modo `desde`.
+
+## Flujo "Gestionar Empleado" (FEAT-022 — completar un pendiente via formulario)
+
+Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agregar` + SweetAlert). Reutiliza las mismas rutas/vista de alta manual (`create`/`store`, `create-ficha.blade.php`) en un segundo modo, sin URIs nuevas.
+
+1. **Entrada:** en el listado de Pendientes, el boton **"Gestionar Empleado"** es un enlace `GET` (no un formulario) a `gestion-humana/ficha-empleados/empleados/nuevo?desde={fichaEntryId}`.
+2. **`create()` con `desde`:** resuelve la fila con `PersonalRequisitionFichaEntry::query()->pending()->findOrFail($desde)`. Si el `id` no existe o la fila ya esta **en ficha**, responde **404** (protege contra reprocesar un registro ya movido).
+3. **Prefill sin persistir:** `App\Services\GestionHumana\EmployeeFichaProfilePrefill::buildForEntry($fichaEntry)` arma un `EmployeeFichaProfile` **en memoria** con la misma logica de mapeo requisicion → perfil que `prefillForEntry()` (documento, nombre parseado, sexo, salario, fecha de ingreso, centro de costo, cargo, tipo de contrato, ciudad, cliente), extraida a un metodo privado comun `attributesForEntry()`. Si el pendiente ya tiene un perfil **persistido** (por ejemplo, porque antes se visito `/{id}/ficha`), se reutiliza ese perfil real tal cual esta, sin sobrescribirlo. Visitar la pantalla en este modo **no** crea ningun `EmployeeFichaProfile` ni toca `moved_to_ficha_at` cuando no habia perfil previo.
+4. **Formulario:** `create-ficha.blade.php` muestra un bloque de referencia de solo lectura (codigo de requisicion, cliente, cargo, via `$fichaEntry->requisitionCode()`/`clientName()`/`positionName()`), titulo dinamico **"Gestionar empleado — {hired_full_name}"**, campo oculto `ficha_entry_id`, y los mismos campos de `ficha-form-fields.blade.php` que el alta manual. `hired_document`/`hired_full_name` quedan **editables**; el link "Volver" apunta a `employees.index?estado=pendientes`.
+5. **`store()` con `ficha_entry_id`:** dentro de una transaccion, revalida `pending()->findOrFail()` (protege contra doble envio/doble pestaña — si ya fue movida, falla en vez de sobrescribir), actualiza `hired_document`, `hired_full_name`, `moved_to_ficha_at = now()`, `moved_to_ficha_by = auth user` en la fila **existente**, y crea/actualiza su `EmployeeFichaProfile` con los datos del formulario. Redirige a `gestion-humana.ficha-empleados.employees.index` (estado por defecto `en_ficha`) con mensaje de exito.
+6. **Cedula duplicada:** `StoreManualEmployeeFichaRequest` valida `hired_document` con `Rule::unique('personal_requisition_ficha_entries', 'hired_document')->ignore($fichaEntryId)` — permite guardar sin cambiar la cedula propia, pero bloquea si se cambia a una cedula que ya pertenece a **otra** fila (mismo mensaje de validacion que el alta manual, sin flujo de confirmacion tipo SweetAlert).
+7. **No propagacion:** ninguna escritura de este flujo toca `personal_requisitions.hired_document`/`hired_full_name`; esos campos siguen reflejando lo capturado al marcar Contratado en la requisicion.
+8. **Alta manual sin requisicion** (`/nuevo` sin `desde`) sigue exactamente igual: crea fila nueva, redirige a `/{id}/ficha`.
 
 ## Controlador catálogos (`App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController`)
 
@@ -159,8 +179,8 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 
 ## Vistas
 
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha.
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — alta manual (sin requisición).
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha; en pill **Pendientes**, boton **Gestionar Empleado** por fila (enlace `GET` a `create` con `?desde={id}`, sin formulario ni SweetAlert).
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — formulario unico con **dos modos**: alta manual (sin requisición, titulo "Nuevo empleado") y **Gestionar Empleado** (`$fichaEntry` presente: titulo dinamico, bloque de referencia de requisicion de solo lectura, campo oculto `ficha_entry_id`).
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/edit-ficha.blade.php` — formulario perfil empleado.
 - `resources/views/areas/gestion_humana/ficha-empleados/catalogs/index.blade.php` — admin catalogos nómina (EPS, AFP, cargo, etc.).
 - `resources/views/areas/gestion_humana/partials/ficha-empleados-subnav.blade.php` — subnav `.module-tab`.
@@ -172,7 +192,8 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 - Columnas de migracion (`personal_requisitions.hired_*`, `personal_requisition_ficha_entries.*`).
 - Relaciones/accessors del modelo `PersonalRequisitionFichaEntry`; scopes `pending`/`inFicha`.
 - `FichaEmpleadosAccessService`: bypass admin, sin permisos, solo view, manage implica view, board sin tab, independencia de `requisitions.tab.gestion`.
-- Controlador: 403 sin `ficha_empleados.view`; listado pendientes por defecto; filtro `en_ficha`; `promote` requiere `manage` y mueve el registro; export responde `xlsx` respetando el filtro activo y exige `ficha_empleados.view`.
+- Controlador: 403 sin `ficha_empleados.view`; listado pendientes por defecto; filtro `en_ficha`; export responde `xlsx` respetando el filtro activo y exige `ficha_empleados.view`.
+- **FEAT-022 (modo `desde`):** `create()` precarga desde un pendiente sin persistir perfil; reutiliza el perfil existente si ya habia uno; 404 si el `id` no existe o ya esta en ficha; `store()` con `ficha_entry_id` actualiza la fila existente (no duplica), mueve a ficha, no propaga a la requisicion, respeta cedula duplicada (`unique->ignore`) y revalida `pending()` ante doble envio; vista de pendientes muestra el enlace **Gestionar Empleado** correcto; regresion de alta manual sin `desde` sigue en verde. Tests de `promote` eliminados (ruta retirada).
 - Navegacion: tablero visible/oculto segun `view.board.gestion_humana.ficha_empleados`.
 
 Tests de regresion en `tests/Feature/RequisitionModuleTest.php` (marcar Contratado): validacion condicional de `hired_document`/`hired_full_name`, alta/reuso de entrada, duplicado (422 sin confirmar / reasignacion al confirmar), reversion de estado (elimina si pendiente, conserva si ya en ficha).

@@ -241,17 +241,10 @@
                                         @else
                                             <td class="table-actions ficha-empleados-row__actions">
                                                 @if ($canManage)
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('gestion-humana.ficha-empleados.employees.promote', $entry) }}"
-                                                        class="js-promote-ficha-entry"
-                                                        data-confirm-title="Agregar a ficha empleados"
-                                                        data-confirm-text="¿Agregar a {{ $entry->hired_full_name }} a Ficha empleados? El registro dejara de aparecer en Pendientes."
-                                                    >
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="btn btn--primary btn--sm">Agregar a ficha empleados</button>
-                                                    </form>
+                                                    <a
+                                                        href="{{ route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]) }}"
+                                                        class="btn btn--primary btn--sm"
+                                                    >Gestionar Empleado</a>
                                                 @else
                                                     —
                                                 @endif
@@ -280,7 +273,6 @@
     </div>
 
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 document.querySelectorAll('.ficha-empleados-page__table-wrap tbody').forEach(function (tbody) {
@@ -342,34 +334,6 @@
                         }
 
                         submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
-                    });
-                });
-
-                if (typeof Swal === 'undefined') {
-                    return;
-                }
-
-                document.querySelectorAll('.js-promote-ficha-entry').forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (form.dataset.confirmed === '1') {
-                            return;
-                        }
-
-                        event.preventDefault();
-
-                        Swal.fire({
-                            icon: 'question',
-                            title: form.dataset.confirmTitle || 'Confirmar accion',
-                            text: form.dataset.confirmText || '¿Continuar?',
-                            showCancelButton: true,
-                            confirmButtonText: 'Agregar',
-                            cancelButtonText: 'Cancelar',
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                form.dataset.confirmed = '1';
-                                form.submit();
-                            }
-                        });
                     });
                 });
             });

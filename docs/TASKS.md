@@ -30,6 +30,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-022 | Pendientes ficha: Gestionar Empleado con formulario precargado desde requisicion | orquestado | Si | [`docs/runs/FEAT-022-run-log.md`](runs/FEAT-022-run-log.md) | 2026-08-03 |
 | FEAT-021 | Audit log central del sistema | orquestado | Si | [`docs/runs/FEAT-021-run-log.md`](runs/FEAT-021-run-log.md) | 2026-08-03 |
 | FEAT-019 | Notificacion contrato servicio por vencer (30 dias) | orquestado | Si | [`docs/runs/FEAT-019-run-log.md`](runs/FEAT-019-run-log.md) | 2026-07-30 |
 | FEAT-018 | Comercial: pestaña Parametros selectores servicios | orquestado | Si | [`docs/runs/FEAT-018-run-log.md`](runs/FEAT-018-run-log.md) | 2026-07-30 |

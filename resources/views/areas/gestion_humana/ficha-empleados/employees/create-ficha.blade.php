@@ -3,8 +3,16 @@
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
         <div class="app-container ficha-empleados-page__workspace-header">
             <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Nuevo empleado</h2>
-                <p class="panel-text">Registro manual sin requisición — empleados históricos o carga directa en ficha.</p>
+                <h2 class="panel-title panel-title--page">
+                    {{ $fichaEntry ? 'Gestionar empleado — '.$fichaEntry->hired_full_name : 'Nuevo empleado' }}
+                </h2>
+                <p class="panel-text">
+                    @if ($fichaEntry)
+                        Completa o corrige los datos antes de moverlo a Ficha empleados.
+                    @else
+                        Registro manual sin requisición — empleados históricos o carga directa en ficha.
+                    @endif
+                </p>
             </div>
         </div>
     </x-slot>
@@ -33,7 +41,34 @@
             >
                 @csrf
 
+                @if ($fichaEntry)
+                    <input type="hidden" name="ficha_entry_id" value="{{ $fichaEntry->id }}">
+                @endif
+
                 <div class="panel__body panel__body--compact">
+                    @if ($fichaEntry && $fichaEntry->requisition)
+                        <section class="ficha-empleados-form__section">
+                            <header class="ficha-empleados-form__section-head">
+                                <h3 class="ficha-empleados-form__section-title">Referencia de requisición</h3>
+                                <p class="ficha-empleados-form__section-lead">Datos de solo lectura tomados de la requisición contratada.</p>
+                            </header>
+                            <div class="form-grid form-grid--two ficha-empleados-form__grid">
+                                <div class="form-field">
+                                    <label class="form-label">Código requisición</label>
+                                    <input class="form-input" value="{{ $fichaEntry->requisitionCode() ?: '—' }}" disabled readonly>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Cliente</label>
+                                    <input class="form-input" value="{{ $fichaEntry->clientName() ?: '—' }}" disabled readonly>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Cargo</label>
+                                    <input class="form-input" value="{{ $fichaEntry->positionName() ?: '—' }}" disabled readonly>
+                                </div>
+                            </div>
+                        </section>
+                    @endif
+
                     <section class="ficha-empleados-form__section">
                         <header class="ficha-empleados-form__section-head">
                             <h3 class="ficha-empleados-form__section-title">Identificación</h3>
@@ -46,7 +81,7 @@
                                     id="hired_document"
                                     name="hired_document"
                                     class="form-input"
-                                    value="{{ old('hired_document') }}"
+                                    value="{{ old('hired_document', $fichaEntry->hired_document ?? '') }}"
                                     required
                                     autocomplete="off"
                                 >
@@ -57,7 +92,7 @@
                                     id="hired_full_name"
                                     name="hired_full_name"
                                     class="form-input"
-                                    value="{{ old('hired_full_name') }}"
+                                    value="{{ old('hired_full_name', $fichaEntry->hired_full_name ?? '') }}"
                                     required
                                     autocomplete="off"
                                 >
@@ -72,7 +107,7 @@
                 </div>
 
                 <div class="panel__footer panel__footer--actions ficha-empleados-form__footer">
-                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary">Volver</a>
+                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index', $fichaEntry ? ['estado' => 'pendientes'] : []) }}" class="btn btn--secondary">Volver</a>
                     <button type="submit" class="btn btn--primary">Crear empleado</button>
                 </div>
             </form>

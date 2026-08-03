@@ -16,6 +16,30 @@ class EmployeeFichaProfilePrefill
             return $entry->profile;
         }
 
+        return EmployeeFichaProfile::query()->create($this->attributesForEntry($entry));
+    }
+
+    /**
+     * Construye un perfil precargado desde la requisicion sin persistirlo. Si el pendiente
+     * ya tiene un perfil propio (creado previamente, por ejemplo via `/{id}/ficha`), se
+     * reutiliza ese perfil real en vez de sobrescribirlo con el prefill.
+     */
+    public function buildForEntry(PersonalRequisitionFichaEntry $entry): EmployeeFichaProfile
+    {
+        $entry->loadMissing(['requisition.position', 'requisition.city', 'requisition.contractType', 'requisition.client', 'profile']);
+
+        if ($entry->profile !== null) {
+            return $entry->profile;
+        }
+
+        return new EmployeeFichaProfile($this->attributesForEntry($entry));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function attributesForEntry(PersonalRequisitionFichaEntry $entry): array
+    {
         $requisition = $entry->requisition;
         $parsed = EmployeeFichaNameParser::parse($entry->hired_full_name);
         $payrollPositionCode = null;
@@ -26,7 +50,7 @@ class EmployeeFichaProfilePrefill
                 ->value('payroll_position_code');
         }
 
-        $profile = EmployeeFichaProfile::query()->create([
+        return [
             'personal_requisition_ficha_entry_id' => $entry->id,
             'document_number' => $entry->hired_document,
             'full_name' => $parsed['full_name'] ?: $entry->hired_full_name,
@@ -46,9 +70,7 @@ class EmployeeFichaProfilePrefill
             'contract_type_name' => $requisition?->contractType?->name,
             'residence_city_name' => $requisition?->city?->name,
             'work_center_name' => $requisition?->client?->name,
-        ]);
-
-        return $profile;
+        ];
     }
 
     private function mapSex(?string $sex): ?string
