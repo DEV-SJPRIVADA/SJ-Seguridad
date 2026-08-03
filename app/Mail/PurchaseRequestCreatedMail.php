@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\PurchaseRequest;
 use App\Models\User;
+use App\Services\PurchaseRequests\PurchaseEmailApprovalUrlBuilder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -32,10 +33,13 @@ class PurchaseRequestCreatedMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        $urlBuilder = app(PurchaseEmailApprovalUrlBuilder::class);
+
         return new Content(
             markdown: 'emails.purchase-requests.created',
             with: [
-                'approvalUrl' => route('purchase-requests.show', [
+                'emailApprovalUrl' => $urlBuilder->showUrl($this->purchaseRequest, $this->director),
+                'platformUrl' => route('purchase-requests.show', [
                     'module' => $this->purchaseRequest->area_key,
                     'purchase_request' => $this->purchaseRequest->id,
                 ]),

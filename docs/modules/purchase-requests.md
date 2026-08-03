@@ -10,7 +10,8 @@ Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autori
 - Solicitud **Interno** o **Cliente** (campos adicionales de cliente)
 - Director aprobador seleccionado en el formulario (usuarios con rol `director` + `purchase.tab.approval`)
 - Autorizacion **in-app**: pestaña Pendientes + formulario Aprobar/Rechazar en detalle (`show`)
-- Correo al director solo **notifica** y enlaza al detalle autenticado (no aprueba por correo)
+- Autorizacion **por correo**: enlace firmado (sin login) a `aprobacion-correo/{id}` con formulario guest Aprobar/Rechazar; vigencia configurable (`PURCHASE_EMAIL_APPROVAL_LINK_DAYS`, default 7)
+- Correo al director incluye boton **Autorizar por correo** (enlace firmado) y alternativa **Ver en la plataforma**
 - Bandeja Compras unificada: solicitudes de compra aprobadas + insumos `aprobada_calidad`, `en_compras` o `completada` (historico visible)
 - Export FO-AD-44: PDF y Excel por solicitud de compra; PDF/Excel por suministro en bandeja
 - Import legacy desde BD gestion-compras (`purchase-requests:import-legacy`)
@@ -52,9 +53,13 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Detalle / export (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel` |
 | Dashboard Compras | `view.board.compras.dashboard` u otros permisos compras | `compras.dashboard` (ver `routes/areas/compras.php`) |
 
-Rutas publicas legacy (URLs firmadas, sin login en GET redirect):
+Rutas publicas (URLs firmadas, sin login):
 
-- `GET/POST purchase-requests/aprobacion-correo/{id}` → redirigen al detalle en plataforma; POST ya no resuelve la solicitud.
+- `GET purchase-requests/aprobacion-correo/{id}?director={userId}` — formulario guest de autorizacion (vista `email-approval.blade.php`)
+- `POST purchase-requests/aprobacion-correo/{id}` — registra aprobacion/rechazo via `PurchaseApprovalService`
+- `GET purchase-requests/aprobacion-correo/{id}/pdf` — PDF FO-AD-44 con firma valida
+
+Servicio: `PurchaseEmailApprovalUrlBuilder` genera URLs firmadas para mail y controlador.
 
 Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccessService`.
 
@@ -115,7 +120,7 @@ Migracion: `2026_07_31_140100_create_purchase_requests_tables.php`.
 | `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
 | `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
-| `PurchaseEmailApprovalController` | Redirect legacy correo → plataforma |
+| `PurchaseEmailApprovalController` | Autorizacion guest por enlace firmado (show/update/pdf) |
 
 Vistas: `resources/views/modules/purchase-requests/` (create, index, show, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
 
@@ -168,7 +173,7 @@ Tipos en `notification_types` (modulo `purchase_requests`):
 | `purchase_request_approved_for_compras` | Emails configurados | Director aprueba |
 | `compras_queue_processed` | Solicitante | Compras actualiza estado |
 
-Correo director: boton enlaza a `purchase-requests.show` (login requerido).
+Correo director: boton principal **Autorizar por correo** (URL firmada a `email-approval.show`) y secundario a `purchase-requests.show` (login requerido en plataforma).
 
 **Registro de correos:** tabla `purchase_request_mail_logs` (tipo, destinatario, estado `enviado`/`fallido`, detalle, fecha). Visible en detalle de la solicitud.
 

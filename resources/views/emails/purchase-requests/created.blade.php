@@ -3,10 +3,14 @@
 
 Solicitud **N.º {{ $purchaseRequest->folio() }}** creada por **{{ $purchaseRequest->user?->name }}** y asignada a usted para autorizacion.
 
-Ingrese a la plataforma, revise el detalle y registre su decision desde **Solicitudes de compra → Pendientes de autorizacion**.
+Puede revisar el detalle y registrar su decision directamente desde este correo (enlace personal con vigencia limitada) o ingresar a la plataforma.
 
-@component('mail::button', ['url' => $approvalUrl])
-Ver solicitud en la plataforma
+@component('mail::button', ['url' => $emailApprovalUrl])
+Autorizar por correo
+@endcomponent
+
+@component('mail::button', ['url' => $platformUrl, 'color' => 'secondary'])
+Ver en la plataforma
 @endcomponent
 
 Gracias,<br>

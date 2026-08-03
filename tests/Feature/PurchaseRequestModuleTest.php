@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\PurchaseRequestCreatedMail;
+use App\Mail\PurchaseRequestResolvedMail;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestMailLog;
 use App\Models\SupplyProduct;
@@ -528,51 +529,83 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
     }
 
-    public function test_legacy_email_signed_link_redirects_to_platform_show(): void
+    public function test_email_signed_link_shows_guest_approval_form(): void
     {
         $requester = $this->purchaseRequester('operaciones');
         $director = $this->director();
         $purchaseRequest = $this->createPurchaseRequest($requester, $director);
 
-        $url = URL::temporarySignedRoute(
-            'purchase-requests.email-approval.show',
-            now()->addHour(),
-            ['purchase_request' => $purchaseRequest->id, 'director' => $director->id],
-        );
-
-        $this->get($url)->assertRedirect(route('purchase-requests.show', [
-            'module' => 'operaciones',
-            'purchase_request' => $purchaseRequest->id,
-        ]));
-
-        $this->actingAs($director)
-            ->followingRedirects()
-            ->get($url)
+        $this->get($this->emailApprovalShowUrl($purchaseRequest, $director))
             ->assertOk()
-            ->assertSee('Autorizacion de solicitud');
+            ->assertSee('Autorizacion de solicitud de compra', false)
+            ->assertSee('Aprobar solicitud')
+            ->assertSee('Ver PDF (FO-AD-44)');
     }
 
-    public function test_legacy_email_approval_post_does_not_resolve_request(): void
+    public function test_email_approval_post_approves_request_without_login(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->post($this->emailApprovalUpdateUrl($purchaseRequest, $director), [
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'comentarios_director' => 'Aprobado por correo',
+        ])->assertOk()
+            ->assertSee('Decision registrada')
+            ->assertSee('aprobada');
+
+        $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
+        Mail::assertQueued(PurchaseRequestResolvedMail::class);
+    }
+
+    public function test_email_approval_post_rejects_requires_comment(): void
     {
         $requester = $this->purchaseRequester('operaciones');
         $director = $this->director();
         $purchaseRequest = $this->createPurchaseRequest($requester, $director);
 
-        $url = URL::temporarySignedRoute(
-            'purchase-requests.email-approval.update',
-            now()->addHour(),
-            ['purchase_request' => $purchaseRequest->id, 'director' => $director->id],
-        );
-
-        $this->post($url, [
-            'director' => $director->id,
-            'estado' => PurchaseRequest::ESTADO_APROBADO,
-        ])->assertRedirect(route('purchase-requests.show', [
-            'module' => 'operaciones',
-            'purchase_request' => $purchaseRequest->id,
-        ]))->assertSessionHas('warning');
+        $this->post($this->emailApprovalUpdateUrl($purchaseRequest, $director), [
+            'estado' => PurchaseRequest::ESTADO_RECHAZADO,
+        ])->assertSessionHasErrors('comentarios_director');
 
         $this->assertSame(PurchaseRequest::ESTADO_PENDIENTE, $purchaseRequest->fresh()->estado);
+    }
+
+    public function test_email_approval_invalid_signature_is_forbidden(): void
+    {
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->get($this->emailApprovalShowUrl($purchaseRequest, $director).'&invalid=1')
+            ->assertForbidden();
+    }
+
+    public function test_email_approval_wrong_director_is_forbidden(): void
+    {
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $otherDirector = $this->director('otro.director@test.local');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->get($this->emailApprovalShowUrl($purchaseRequest, $otherDirector))
+            ->assertForbidden();
+    }
+
+    public function test_email_approval_already_resolved_shows_message(): void
+    {
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+        $purchaseRequest->update(['estado' => PurchaseRequest::ESTADO_APROBADO]);
+
+        $this->get($this->emailApprovalShowUrl($purchaseRequest, $director))
+            ->assertOk()
+            ->assertSee('ya fue gestionada', false)
+            ->assertDontSee('Aprobar solicitud');
     }
 
     public function test_supply_approval_appears_in_compras_queue(): void
@@ -716,5 +749,23 @@ class PurchaseRequestModuleTest extends TestCase
             'aprobador_id' => $director->id,
             'estado' => PurchaseRequest::ESTADO_PENDIENTE,
         ]);
+    }
+
+    private function emailApprovalShowUrl(PurchaseRequest $purchaseRequest, User $director): string
+    {
+        return URL::temporarySignedRoute(
+            'purchase-requests.email-approval.show',
+            now()->addHour(),
+            ['purchase_request' => $purchaseRequest->id, 'director' => $director->id],
+        );
+    }
+
+    private function emailApprovalUpdateUrl(PurchaseRequest $purchaseRequest, User $director): string
+    {
+        return URL::temporarySignedRoute(
+            'purchase-requests.email-approval.update',
+            now()->addHour(),
+            ['purchase_request' => $purchaseRequest->id, 'director' => $director->id],
+        );
     }
 }

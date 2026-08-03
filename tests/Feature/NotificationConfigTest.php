@@ -36,6 +36,8 @@ class NotificationConfigTest extends TestCase
             ->get(route('admin.notifications.index'))
             ->assertOk()
             ->assertSee('Configuracion de notificaciones')
+            ->assertSee('Respaldo si no hay destinatarios')
+            ->assertSee('Sin destinatarios')
             ->assertSee('Nueva requisicion')
             ->assertSee('Documentacion comercial (por vencer o vencida)')
             ->assertSee('Comercial')
@@ -59,13 +61,19 @@ class NotificationConfigTest extends TestCase
             ->post(route('admin.notifications.types.emails.attach', $type), [
                 'email' => 'ops@example.com',
             ])
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->actingAs($user)
             ->post(route('admin.notifications.types.emails.attach', $type), [
                 'email' => 'ops@example.com',
             ])
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->assertSame(1, $type->fresh()->notificationEmails()->count());
 
@@ -74,7 +82,10 @@ class NotificationConfigTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('admin.notifications.types.emails.detach', [$type, $email]))
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->assertFalse($type->fresh()->notificationEmails()->where('notification_emails.id', $email->id)->exists());
         $this->assertNull(NotificationEmail::query()->find($email->id));
@@ -96,7 +107,10 @@ class NotificationConfigTest extends TestCase
             ->post(route('admin.notifications.types.emails.attach', $type), [
                 'email' => 'comercial@example.com',
             ])
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->assertTrue(
             $type->fresh()->notificationEmails()->where('name', 'comercial@example.com')->exists()

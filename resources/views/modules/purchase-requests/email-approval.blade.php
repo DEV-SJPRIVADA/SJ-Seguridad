@@ -4,9 +4,16 @@
             <article class="req-approval-letter">
                 <h1 class="req-approval-letter__title">Autorizacion de solicitud de compra</h1>
 
-                <p class="req-approval-letter__lead">
-                    Se registro una solicitud de compra que <strong>requiere su autorizacion</strong> como director asignado.
-                </p>
+                @if ($alreadyResolved ?? false)
+                    <div class="alert alert--info ficha-empleados-page__alert">
+                        Esta solicitud ya fue gestionada. Estado actual:
+                        <strong>{{ $purchaseRequest->estado === \App\Models\PurchaseRequest::ESTADO_APROBADO ? 'Aprobada' : 'Rechazada' }}</strong>.
+                    </div>
+                @else
+                    <p class="req-approval-letter__lead">
+                        Se registro una solicitud de compra que <strong>requiere su autorizacion</strong> como director asignado.
+                    </p>
+                @endif
 
                 <div class="req-approval-letter__panel">
                     <p><strong>Folio:</strong> {{ $purchaseRequest->folio() }}</p>
@@ -50,31 +57,39 @@
                     </table>
                 </div>
 
-                <form method="POST" action="{{ $decideUrl }}" class="req-approval-letter__form">
-                    @csrf
-
-                    <div class="form-field">
-                        <x-input-label for="comentarios_director" value="Comentarios (opcional al aprobar)" />
-                        <textarea
-                            id="comentarios_director"
-                            name="comentarios_director"
-                            class="form-textarea"
-                            rows="3"
-                            placeholder="Obligatorio si rechaza. Opcional al aprobar."
-                        >{{ old('comentarios_director') }}</textarea>
-                        <x-input-error :messages="$errors->get('comentarios_director')" />
-                        <x-input-error :messages="$errors->get('estado')" />
+                @if (! ($alreadyResolved ?? false))
+                    <div class="req-approval-letter__alt-actions">
+                        <a href="{{ $pdfUrl }}" class="req-approval-letter__back" target="_blank" rel="noopener">
+                            Ver PDF (FO-AD-44)
+                        </a>
                     </div>
 
-                    <div class="req-approval-letter__actions">
-                        <button type="submit" name="estado" value="aprobado" class="btn btn--primary">
-                            Aprobar solicitud
-                        </button>
-                        <button type="submit" name="estado" value="rechazado" class="btn btn--danger">
-                            Rechazar
-                        </button>
-                    </div>
-                </form>
+                    <form method="POST" action="{{ $decideUrl }}" class="req-approval-letter__form">
+                        @csrf
+
+                        <div class="form-field">
+                            <x-input-label for="comentarios_director" value="Comentarios (opcional al aprobar)" />
+                            <textarea
+                                id="comentarios_director"
+                                name="comentarios_director"
+                                class="form-textarea"
+                                rows="3"
+                                placeholder="Obligatorio si rechaza. Opcional al aprobar."
+                            >{{ old('comentarios_director') }}</textarea>
+                            <x-input-error :messages="$errors->get('comentarios_director')" />
+                            <x-input-error :messages="$errors->get('estado')" />
+                        </div>
+
+                        <div class="req-approval-letter__actions">
+                            <button type="submit" name="estado" value="aprobado" class="btn btn--primary">
+                                Aprobar solicitud
+                            </button>
+                            <button type="submit" name="estado" value="rechazado" class="btn btn--danger">
+                                Rechazar
+                            </button>
+                        </div>
+                    </form>
+                @endif
 
                 <p class="req-approval-letter__hint">
                     Este enlace es personal y tiene vigencia limitada. Tambien puede gestionar pendientes desde el tablero de Solicitudes de compra.

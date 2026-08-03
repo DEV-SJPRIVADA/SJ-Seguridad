@@ -33,6 +33,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Modulo | Doc tecnica | Doc usuario |
 | --- | --- | --- |
 | Admin usuarios | [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md) | [`user/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/user/admin-users.md) |
+| Notificaciones (admin) | [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md) | [`user/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/user/notifications-config.md) |
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
@@ -46,6 +47,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 ## Modulos documentados
 
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
+- [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md)
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 - [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)

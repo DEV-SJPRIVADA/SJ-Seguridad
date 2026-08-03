@@ -16,7 +16,7 @@ Segun su perfil puede:
 - Procesar solicitudes aprobadas e insumos aprobados desde la bandeja unificada de Compras
 - Descargar el formato FO-AD-44 (PDF y Excel) desde el detalle
 
-El correo que recibe el director es solo un aviso con enlace a la plataforma; la decision se registra dentro del sistema.
+El director puede autorizar desde el **correo** (enlace personal firmado, sin login) o desde la **plataforma** (Pendientes de autorizacion o detalle).
 
 ## Definiciones
 
@@ -62,7 +62,7 @@ El correo que recibe el director es solo un aviso con enlace a la plataforma; la
 5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional.
 6. Opcionalmente adjunte un archivo de pedido.
 7. Envie el formulario. Recibira confirmacion con el numero de folio.
-8. El director recibira un correo de aviso para ingresar a la plataforma.
+8. El director recibira un correo con enlace para **autorizar por correo** o ingresar a la plataforma.
 
 ### Consultar mis solicitudes
 
@@ -73,8 +73,19 @@ El correo que recibe el director es solo un aviso con enlace a la plataforma; la
 
 ### Autorizar o rechazar (director)
 
+**Opcion A — Por correo (sin login)**
+
+1. Abra el correo de nueva solicitud de compra.
+2. Pulse **Autorizar por correo** (enlace personal con vigencia limitada).
+3. Revise folio, lineas y datos del solicitante; opcionalmente abra el PDF.
+4. Escriba comentarios si rechaza (obligatorio al rechazar).
+5. Pulse **Aprobar solicitud** o **Rechazar**.
+6. Confirme en la pantalla de resultado; el solicitante recibe correo con el outcome.
+
+**Opcion B — Por plataforma**
+
 1. Ingrese a **Compras → Solicitudes de compra → Pendientes de autorizacion**.
-2. Pulse **Autorizar** en la fila deseada (o use el enlace del correo de aviso).
+2. Pulse **Autorizar** en la fila deseada (o abra el detalle desde el correo con **Ver en la plataforma**).
 3. Revise el detalle, lineas y datos del solicitante.
 4. Opcionalmente escriba comentarios (obligatorios si rechaza).
 5. Pulse **Aprobar solicitud** o **Rechazar**.
@@ -111,3 +122,4 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 | 1.1 | 2026-07-31 | Autorizacion in-app | Director autoriza en plataforma; correo solo notifica |
 | 1.2 | 2026-08-03 | Navegacion canonica | Tabla de entrada al menu por perfil; guia ampliada |
 | 1.3 | 2026-08-03 | Bandeja y dashboard | Filtros bandeja, dashboard Compras, ver detalle suministro unificado, KPIs alineados |
+| 1.4 | 2026-08-03 | Autorizacion por correo | Director puede aprobar/rechazar via enlace firmado sin login; flujo dual correo + plataforma |

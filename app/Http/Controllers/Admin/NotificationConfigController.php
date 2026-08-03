@@ -18,8 +18,15 @@ class NotificationConfigController extends Controller
 
     public function index(): View
     {
+        $moduleGroups = $this->notificationConfig->typesGroupedByModule(adminConfigurableOnly: true);
+
         return view('admin.notifications.index', [
-            'moduleGroups' => $this->notificationConfig->typesGroupedByModule(adminConfigurableOnly: true),
+            'moduleGroups' => $moduleGroups,
+            'stats' => $this->notificationConfig->dashboardStats($moduleGroups),
+            'fallbackRecipient' => $this->notificationConfig->fallbackRecipient(),
+            'suggestedEmails' => $this->notificationConfig->knownRecipientEmails(),
+            'initialModule' => request()->string('module')->toString() ?: null,
+            'initialTypeId' => request()->has('type') ? request()->integer('type') : null,
         ]);
     }
 
@@ -32,9 +39,7 @@ class NotificationConfigController extends Controller
             $request->string('email')->toString(),
         );
 
-        return redirect()
-            ->route('admin.notifications.index')
-            ->with('status', 'Correo agregado a «'.$notificationType->label.'».');
+        return $this->redirectToType($notificationType, 'Correo agregado a «'.$notificationType->label.'».');
     }
 
     public function detachTypeEmail(NotificationType $notificationType, NotificationEmail $notificationEmail): RedirectResponse
@@ -43,8 +48,17 @@ class NotificationConfigController extends Controller
 
         $this->notificationConfig->removeEmailFromType($notificationType, $notificationEmail);
 
+        return $this->redirectToType($notificationType, 'Correo quitado de «'.$notificationType->label.'».');
+    }
+
+    private function redirectToType(NotificationType $notificationType, string $status): RedirectResponse
+    {
         return redirect()
-            ->route('admin.notifications.index')
-            ->with('status', 'Correo quitado de «'.$notificationType->label.'».');
+            ->route('admin.notifications.index', [
+                'module' => $notificationType->module,
+                'type' => $notificationType->id,
+            ])
+            ->withFragment('notification-type-'.$notificationType->id)
+            ->with('status', $status);
     }
 }
