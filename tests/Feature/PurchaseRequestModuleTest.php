@@ -239,7 +239,7 @@ class PurchaseRequestModuleTest extends TestCase
         $response = $this->actingAs($compras)->get(route('purchase-requests.processing.index', ['module' => 'compras']));
 
         $response->assertOk();
-        $response->assertSee('#'.$supplyRequest->id);
+        $response->assertSee($supplyRequest->folio());
     }
 
     public function test_navigation_processing_bandeja_only_activates_compras_board(): void

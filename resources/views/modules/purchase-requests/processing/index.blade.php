@@ -60,9 +60,6 @@
                                             };
                                         @endphp
                                         <span class="status-pill {{ $estadoPill }}">{{ $queueItem['estado_label'] ?? '—' }}</span>
-                                        @if (! empty($queueItem['urgente']))
-                                            <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Urgente</span>
-                                        @endif
                                     </td>
                                     <td class="table-actions">
                                         @if ($queueItem['tipo'] === 'purchase')

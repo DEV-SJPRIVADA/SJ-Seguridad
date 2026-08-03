@@ -29,7 +29,6 @@ class ComprasQueueService
                 'area' => $request->areaLabel(),
                 'estado' => $request->estado_compras,
                 'estado_label' => $request->estadoComprasLabel(),
-                'urgente' => $request->urgente,
                 'model' => $request,
             ]);
 
@@ -45,13 +44,12 @@ class ComprasQueueService
                 'tipo' => 'supply',
                 'tipo_label' => 'Suministro',
                 'id' => $request->id,
-                'folio' => '#'.$request->id,
+                'folio' => $request->folio(),
                 'fecha' => $request->updated_at,
                 'solicitante' => $request->user?->name,
                 'area' => config("access.areas.{$request->area_key}", $request->area_key),
                 'estado' => $request->status === 'en_compras' ? PurchaseRequest::COMPRAS_EN_CURSO : PurchaseRequest::COMPRAS_PENDIENTE,
                 'estado_label' => $request->statusLabel(),
-                'urgente' => false,
                 'model' => $request,
             ]);
 

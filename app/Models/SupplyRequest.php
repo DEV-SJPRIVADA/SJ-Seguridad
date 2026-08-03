@@ -67,4 +67,9 @@ class SupplyRequest extends Model
             default => ucfirst(str_replace('_', ' ', $this->status)),
         };
     }
+
+    public function folio(): string
+    {
+        return str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+    }
 }
