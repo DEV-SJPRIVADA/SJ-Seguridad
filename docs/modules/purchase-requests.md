@@ -1,43 +1,173 @@
-# Módulo: Solicitudes de compra
+# Modulo: Solicitudes de compra
 
 ## Objetivo
 
-Gestionar solicitudes de compra libres (multi-línea, fotos), con autorización por director seleccionado y procesamiento unificado en bandeja Compras junto con suministros aprobados por Calidad.
+Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autorizacion por director seleccionado y procesamiento unificado en **Bandeja compras** junto con suministros aprobados por Calidad.
+
+## Alcance actual
+
+- Creacion multi-linea con foto opcional por articulo
+- Solicitud **Interno** o **Cliente** (campos adicionales de cliente)
+- Director aprobador seleccionado en el formulario (usuarios con rol `director` + `purchase.tab.approval`)
+- Autorizacion **in-app**: pestaña Pendientes + formulario Aprobar/Rechazar en detalle (`show`)
+- Correo al director solo **notifica** y enlaza al detalle autenticado (no aprueba por correo)
+- Bandeja Compras unificada: solicitudes de compra aprobadas + insumos `aprobada_calidad` / `en_compras`
+- Export FO-AD-44: PDF y Excel por solicitud de compra; PDF/Excel por suministro en bandeja
+- Import legacy desde BD gestion-compras (`purchase-requests:import-legacy`)
+
+## Flujo de estados
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    state Director {
+        pendiente --> aprobado: Director aprueba
+        pendiente --> rechazado: Director rechaza
+    }
+    state Compras {
+        aprobado --> compras_pendiente: Ingreso bandeja
+        compras_pendiente --> en_curso
+        en_curso --> completado
+        compras_pendiente --> rechazado_compras: Compras rechaza
+    }
+```
+
+| Campo | Valores | Quien cambia |
+| --- | --- | --- |
+| `estado` | `pendiente`, `aprobado`, `rechazado` | Director asignado |
+| `estado_compras` | `pendiente`, `en_curso`, `completado`, `rechazado` | Equipo Compras (solo si `estado=aprobado`) |
+
+Al aprobar el director: `estado_compras` pasa a `pendiente` y se notifica a Compras (destinatarios configurables en tipos de notificacion).
 
 ## Rutas
 
 Prefijo autenticado: `/purchase-requests/{module}/`
 
-| Pestaña | Permiso | Rutas |
-|---------|---------|-------|
-| Nueva solicitud | `purchase.tab.create` | `purchase-requests.create`, `store` |
+| Pestana | Permiso | Rutas |
+| --- | --- | --- |
+| Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store` |
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
-| Pendientes autorización | `purchase.tab.approval` | `purchase-requests.approval.*` |
+| Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
+| Detalle / export (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel` |
 
-**Autorización:** el director aprueba o rechaza desde **Pendientes autorización** (detalle de la solicitud en la plataforma). El correo solo notifica y enlaza al detalle autenticado.
+Rutas publicas legacy (URLs firmadas, sin login en GET redirect):
 
-Enlaces legacy firmados (`/purchase-requests/aprobacion-correo/{id}`) redirigen al detalle en la plataforma; ya no resuelven la solicitud por POST.
+- `GET/POST purchase-requests/aprobacion-correo/{id}` → redirigen al detalle en plataforma; POST ya no resuelve la solicitud.
 
-## Roles
+Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccessService`.
 
-- **`director`**: autoriza solicitudes (`purchase.tab.approval`); incluye Calidad si se le asigna el rol.
-- **`administrador`**: plataforma/GH; ya no incluye `manage.users` (solo `super-admin`).
-- **Compras**: `purchase.tab.processing` para bandeja unificada.
+## Permisos y policy
 
-## Integración Suministros
+| Permiso | Uso |
+| --- | --- |
+| `purchase.tab.create` | Crear solicitudes |
+| `purchase.tab.my_requests` | Listar propias + ver detalle (policy `view` como dueno) |
+| `purchase.tab.approval` | Pendientes + autorizar (policy `approve`) |
+| `purchase.tab.processing` | Bandeja y procesamiento (policy `process`) |
+| `view.board.{area}.solicitudes_compra` | Alcance sidebar (hogar canonico: area base o Compras) |
+| `view.board.compras.bandeja_compras` | Tablero bandeja en sidebar Compras |
 
-Al aprobar Calidad (`aprobada_calidad`), la solicitud aparece en bandeja Compras. Procesamiento supply: costos unitarios → `en_compras` → `completada`.
+`PurchaseRequestPolicy`:
+
+- `view`: super-admin, compras processing, solicitante, director asignado
+- `approve`: director asignado + pendiente
+- `process`: compras + solicitud aprobada
+
+Directores: rol `director` incluye `view.board.gestion_humana.requisiciones` (GH) y `view.board.compras.solicitudes_compra` (compras).
+
+## Navegacion (sidebar)
+
+| Perfil | Entrada en menu |
+| --- | --- |
+| Solicitante | Su `area_key` → Solicitudes de compra |
+| Director | Compras → Solicitudes de compra → Pendientes |
+| Compras | Compras → Bandeja compras |
+
+Config: `board_canonical_areas.solicitudes_compra` en `config/access.php`. Servicio: `SidebarVisibilityService`.
+
+## Base de datos
+
+### `purchase_requests`
+
+Folio visible: `numero_solicitud` (4 digitos, unico). Campos clave: `area_key`, `solicitud_para`, `urgente`, `aprobador_id`, `estado`, `estado_compras`, `fecha_aprobacion`, `comentarios_director`, `comentarios_compras`, `procesado_compras_at`, `procesado_compras_por`.
+
+### `purchase_request_items`
+
+Lineas: `orden`, `cantidad`, `descripcion`, `referencia`, `utilizacion`, `ubicacion`, `foto_path` (disco `public`).
+
+Migracion: `2026_07_31_140100_create_purchase_requests_tables.php`.
+
+## Servicios y controladores
+
+| Componente | Responsabilidad |
+| --- | --- |
+| `PurchaseRequestController` | CRUD solicitante, show, export PDF/Excel |
+| `PurchaseApprovalController` | Lista pendientes del director, PATCH autorizar |
+| `PurchaseProcessingController` | Bandeja unificada, procesar compra/suministro |
+| `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
+| `PurchaseRequestNotificationService` | Correos director, solicitante, compras |
+| `ComprasQueueService` | Mezcla purchase + supply en bandeja con filtros |
+| `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
+| `PurchaseEmailApprovalController` | Redirect legacy correo → plataforma |
+
+Vistas: `resources/views/modules/purchase-requests/` (create, index, show, approval/, processing/, partials/approval-form.blade.php).
+
+## Notificaciones
+
+Tipos en `notification_types` (modulo `purchase_requests`):
+
+| Slug | Destinatario | Cuando |
+| --- | --- | --- |
+| `purchase_request_created` | Director asignado | Al crear (cola) |
+| `purchase_request_resolved` | Solicitante | Director aprueba/rechaza |
+| `purchase_request_approved_for_compras` | Emails configurados | Director aprueba |
+| `compras_queue_processed` | Solicitante | Compras actualiza estado |
+
+Correo director: boton enlaza a `purchase-requests.show` (login requerido).
+
+## Integracion Suministros
+
+`ComprasQueueService` incluye `SupplyRequest` con status `aprobada_calidad` o `en_compras`. Al abrir un suministro aprobado, pasa automaticamente a `en_compras`. Compras ingresa costos unitarios y puede completar (`completada`). Export FO-AD-44 desde bandeja.
 
 ## FO-AD-44
 
-PDF y Excel por solicitud de compra; PDF adicional para suministros (Excel ya existía).
+- Compra: `PurchaseRequestPdfService`, `PurchaseRequestExcelExporter` (`App\Exports\BaseExport`)
+- Suministro: `SupplyPurchasePdfExporter`, `SupplyPurchaseReportExporter`
+- Botones: `<x-export-excel>` en detalle/bandeja
 
 ## Import legacy
 
-`php artisan purchase-requests:import-legacy --dry-run` (requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`).
+```bash
+php artisan purchase-requests:import-legacy --dry-run
+```
+
+Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchaseRequestsCommand`.
+
+## Reglas de negocio
+
+- Folio correlativo con lock en transaccion al crear
+- Director debe estar en `approversQuery()` (rol director, activo, `purchase.tab.approval`)
+- Rechazo director: comentarios obligatorios (`UpdatePurchaseApprovalRequest`)
+- Solo solicitudes `aprobado` entran en bandeja Compras
+- `show` muestra formulario de autorizacion si `@can('approve', $purchaseRequest)`
 
 ## Pruebas
 
 - `tests/Feature/PurchaseRequestModuleTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
+- `tests/Feature/NavigationVisibilityTest.php`
+
+## Control de cambios
+
+| Fecha | Descripcion |
+| --- | --- |
+| 2026-07-31 | Modulo inicial: CRUD, bandeja, correos, FO-AD-44, import legacy |
+| 2026-07-31 | Autorizacion in-app (correo solo notifica); approval-form en show |
+| 2026-08-03 | Hogares canonicos sidebar (`SidebarVisibilityService`); permisos director en seeder/migracion |
+
+## Referencias
+
+- Guia usuario: [`docs/user/purchase-requests.md`](../user/purchase-requests.md)
+- Acceso: [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md)
+- Suministros: [`docs/modules/suministros.md`](suministros.md)

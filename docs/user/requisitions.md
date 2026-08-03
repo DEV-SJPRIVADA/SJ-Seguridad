@@ -6,7 +6,15 @@ Permitir solicitar, dar seguimiento y gestionar la contratacion de personal por 
 
 ## Alcance
 
-Aplica al tablero **Requisiciones** disponible en las areas autorizadas (principalmente Gestion Humana y areas operativas segun permisos).
+Aplica al tablero **Requisiciones** segun su perfil y el area visible en el menu lateral:
+
+| Perfil | Donde entrar |
+| --- | --- |
+| Solicitante de area | Su area (ej. Operaciones) → Requisiciones |
+| Gestion Humana (gestion, dashboard, parametros) | **Gestion humana** → Requisiciones |
+| Director (autorizacion cargo nuevo) | **Gestion humana** → Requisiciones → Autorizacion gerencia |
+
+El menu ya no repite Requisiciones en todas las areas para quien tiene funciones de GH o gerencia.
 
 El usuario puede, segun su perfil:
 
@@ -43,6 +51,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 | Gestion Humana | Gestionar todas las requisiciones; revisar o corregir Estructura del servicio; completar compensacion y cierre; cambiar estados. |
 | Administrador | Parametros, permisos de usuarios, correos de notificacion; en GH, toggles de encargados de seleccion. |
 | Coordinador / lider de area | Solicitar segun necesidades del servicio (permiso solicitar). |
+| Director / gerencia | Autorizar requisiciones **Cargo nuevo** desde Gestion humana → Requisiciones → Autorizacion gerencia. |
 
 ## Desarrollo
 
@@ -128,3 +137,4 @@ Esta seccion aparece **unicamente** en el tablero **Requisiciones** del area **G
 | 1.3 | 2026-07-27 | FEAT-010 | Dashboard con graficos ApexCharts unificados; seccion Consultar el dashboard |
 | 1.4 | 2026-07-28 | FEAT-011 | Encargados de seleccion por toggles en Parametros GH; Reclutador desde usuarios habilitados; checklist post-actualizacion |
 | 1.5 | 2026-07-30 | FEAT-020 | Campos **Cedula/Nombre persona contratada** al marcar Contratado; alerta de confirmacion por cedula duplicada; enlace al tablero **Ficha empleados** |
+| 1.6 | 2026-08-03 | Navegacion canonica | Tabla de entrada al menu por perfil (GH vs area solicitante; director en Autorizacion gerencia) |

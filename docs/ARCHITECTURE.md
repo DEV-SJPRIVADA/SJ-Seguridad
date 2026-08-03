@@ -74,7 +74,8 @@
 
 - Los permisos no se hardcodean en vistas o controladores sin respaldo en configuracion central.
 - La gestion inicial de usuarios vive aislada en `admin/users`.
-- La navegacion de modulos y tableros autorizados se resuelve desde configuracion central y se comparte al layout base.
+- La navegacion de modulos y tableros autorizados se resuelve desde configuracion central (`NavigationResolver`) y se comparte al layout base.
+- **Hogares canonicos del sidebar:** `SidebarVisibilityService` filtra que tableros aparecen en cada area del menu (evita duplicar Requisiciones/Suministros/Documentos en las 8 areas). Detalle en [`ACCESS_CONTROL.md`](c:/laragon/www/SJSEGURIDAD/docs/ACCESS_CONTROL.md). Las rutas y middleware conservan el bypass operativo de `manage.users`.
 - El crecimiento por areas debe mantener rutas, permisos, vistas y validaciones desacopladas.
 
 ## Ownership por modulo

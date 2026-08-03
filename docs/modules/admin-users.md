@@ -38,14 +38,21 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - `UserPermissionFormBuilder` — estructura del formulario
 - `UserPermissionValidator` — avisos de coherencia (GH, Compras, Calidad, Operaciones, Comercial)
 - `UserAccessSummary` — notas de acceso efectivo en el listado
-- `NavigationResolver` — sidebar de la app (sin preview en Admin)
+- `NavigationResolver` + `SidebarVisibilityService` — sidebar de la app con hogares canonicos (sin preview en Admin)
 
 ## Reglas de negocio
 
 - `manage.requisitions` oculto en Admin (legacy migrado a `requisitions.tab.gestion`)
 - Tablero `view.board.gestion_humana.suministros` migrado a `view.board.compras.suministros`
 - Suministros: aprobacion = Calidad; catalogo = Compras
-- El motor Spatie no cambia; solo la presentacion en Admin
+- **Hogares canonicos:** no asigne `view.board.{area}.requisiciones` en multiples areas a roles transversales; use funcionalidades transversales + hogar GH/Compras (ver `docs/ACCESS_CONTROL.md`)
+- El motor Spatie no cambia; solo la presentacion en Admin y el filtro del sidebar
+
+## Control de cambios
+
+| Version | Fecha | Descripcion |
+| --- | --- | --- |
+| 1.1 | 2026-08-03 | Hogares canonicos del sidebar (`SidebarVisibilityService`); avisos en validador de permisos |
 
 ## Referencias
 

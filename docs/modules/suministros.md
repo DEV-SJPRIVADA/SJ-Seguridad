@@ -46,13 +46,17 @@ Catálogo administrable de productos disponibles para pedir.
 * `timestamps`
 
 ## 4. Matriz de Permisos (`config/access.php`)
-Siguiendo la arquitectura actual, los accesos se controlarán con:
 
-* **Tableros / Vistas:**
-  * `view.board.suministros.mis_solicitudes`: Ver y crear solicitudes propias.
-  * `view.board.suministros.revision_calidad`: Tablero exclusivo para Calidad (aprobar/editar cantidades).
-  * `view.board.suministros.gestion_compras`: Tablero exclusivo para Compras (ingresar costos y completar).
-  * `view.board.suministros.catalogo`: Administrar productos (Activar/Inactivar/Crear).
+Siguiendo la arquitectura actual, los accesos se controlan con permisos funcionales (`supply.tab.*`) y tablero por area (`view.board.{area}.suministros`). **Hogares canonicos del sidebar:**
+
+| Funcion | Donde aparece en el menu |
+| --- | --- |
+| Mis solicitudes (solicitante) | Area base del usuario |
+| Aprobacion insumos / Insumos aprobados | **Calidad** |
+| Catalogo | **Compras** |
+| Bandeja compras (insumos aprobados) | **Compras** (modulo purchase-requests) |
+
+Ver [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md) y `SidebarVisibilityService`.
 
 ## 5. Requerimiento Específico: Integración de Costos
 * El área de **Compras** tendrá un formulario donde, por cada ítem aprobado por calidad, podrán ingresar el **Costo Unitario**.
@@ -77,10 +81,10 @@ Siguiendo la arquitectura actual, los accesos se controlarán con:
 El modulo tiene **4 pestañas** activas. El control es granular por pestaña mas el tablero por area:
 
 - `supply.tab.my_requests`: ver y crear solicitudes propias (area base del usuario).
-- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados**; requiere `view.board.{module}.suministros`.
-- `supply.tab.catalog`: administrar el catalogo; requiere `view.board.{module}.suministros`.
-- `manage.supply.catalog`, `approve.supply.quality`: variantes "full" (con tablero visible).
-- `view.board.{area}.suministros`: solo visualiza el tablero en sidebar; no sustituye permisos funcionales.
+- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados**; sidebar en area **Calidad** (hogar canonico).
+- `supply.tab.catalog`: administrar el catalogo; sidebar en area **Compras**.
+- `manage.supply.catalog`, `approve.supply.quality`: variantes "full" (con tablero visible en su hogar).
+- `view.board.{area}.suministros`: solo visualiza el tablero en sidebar cuando aplica regla canonica; no sustituye permisos funcionales.
 
 El acceso se resuelve en `SupplyAccessService`, `User::supplyBoardTabsFor()` y middleware `supply.tab:{tab}`.
 

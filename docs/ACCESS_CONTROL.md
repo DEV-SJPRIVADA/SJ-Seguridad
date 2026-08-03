@@ -126,11 +126,39 @@ Requieren permiso funcional **y** `view.board.{module}.{board}`:
 
 ### Migracion manual post-deploy
 
-- Directores: tablero + `requisitions.tab.solicitar` (+ Mis requisiciones si aplica)
+- Directores: permisos transversales de autorizacion; el menu muestra **Gestion humana → Requisiciones** y **Compras → Solicitudes de compra** (hogares canonicos; no requiere tableros en todas las areas)
 - Administradores de personal: funcionalidades de area base + tableros visibles en alcance + tabs por modulo (ej. Gestión en GH)
 - Solicitantes insumos: `supply.tab.my_requests` (+ tablero visible si actuan fuera del area base)
 
-## Tableros por area
+## Hogares canonicos del sidebar
+
+El sidebar usa [`SidebarVisibilityService`](../app/Services/Navigation/SidebarVisibilityService.php) y la config `board_canonical_areas` en [`config/access.php`](../config/access.php). Cada tablero transversal aparece **una vez** en su area natural; las demas areas solo muestran tableros propios del solicitante en su `area_key`.
+
+| Tablero | Hogar en menu | Excepcion |
+| --- | --- | --- |
+| Requisiciones (gestion GH, autorizacion gerencia) | `gestion_humana` | — |
+| Requisiciones (solicitar / mis req.) | `users.area_key` | Con permisos de solicitante |
+| Suministros (aprobacion Calidad) | `calidad` | — |
+| Suministros (catalogo / operacion Compras) | `compras` | — |
+| Suministros (mis solicitudes) | `users.area_key` | Con `supply.tab.my_requests` |
+| Solicitudes de compra (pendientes / bandeja) | `compras` | — |
+| Solicitudes de compra (crear / mis) | `users.area_key` | Con permisos base |
+| Documentos (administrar) | `calidad` | — |
+| Documentos (consulta) | `users.area_key` o `view.area.*` explicito | Super-admin: solo Calidad + su area base |
+
+**Matriz rol → areas visibles tipicas**
+
+| Rol | Areas en sidebar |
+| --- | --- |
+| Super-admin | GH, Compras, Calidad, Operaciones, Comercial (+ area base si distinta) |
+| Director | Gestion humana, Compras |
+| Usuario de area | Solo su `area_key` (+ otras areas con `view.board` explicito sin alcance GH global) |
+| Compras (processing) | Compras |
+
+La visibilidad del sidebar **no restringe rutas**: un super-admin puede seguir accediendo por URL directa. Los middleware y policies conservan el bypass operativo con `manage.users`.
+
+**Pruebas:** `tests/Feature/NavigationVisibilityTest.php` (super-admin, director, usuario de area, compras).
+
 
 Cada area puede tener tableros internos definidos en `config/access.php`. Los tableros base son:
 
@@ -149,7 +177,7 @@ Esto produce permisos como:
 - `view.board.gestion_humana.requisiciones`
 - `view.board.compras.suministros` (tablero de suministros; area **Compras**, no GH)
 
-El tablero `documentos` **no** usa `view.board.{area}.documentos`. Aparece en cada area con acceso (`view.area.*` o `manage.area.*`) y la biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
+El tablero `documentos` **no** usa `view.board.{area}.documentos`. En el **sidebar**, aparece en el `area_key` del usuario, en areas con `view.area.*` / `manage.area.*` explicito, o en **Calidad** para quien administra documentos. Super-admin ve Documentos solo en Calidad + su area base (no en las 8 areas). La biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
 
 Adicionalmente, un documento puede asignarse a usuarios especificos mediante la tabla `quality_document_users`. Esos destinatarios lo consultan en la pestaña `Mis documentos` del tablero `Documentos` de su area (`/quality-documents/{module}/mis-documentos`). No se requiere permiso adicional para ver esa pestaña.
 
@@ -157,8 +185,9 @@ Adicionalmente, un documento puede asignarse a usuarios especificos mediante la 
 
 Sembrada en [`database/seeders/RoleAndPermissionSeeder.php`](c:/laragon/www/SJSEGURIDAD/database/seeders/RoleAndPermissionSeeder.php):
 
-- `super-admin`: todos los permisos
-- `administrador`: `view.dashboard`, `manage.users` y `manage.requisition.parameters`
+- `super-admin`: todos los permisos (sidebar compacto via `SidebarVisibilityService`)
+- `administrador`: `view.dashboard`, `manage.requisition.parameters`, `requisitions.approve.management`
+- `director`: autorizacion compras + cargo nuevo; menu en GH y Compras (ver hogares canonicos)
 - `usuario`: `view.dashboard`
 
 Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el seeder si existen. Los permisos de areas que ya no esten definidos en `config/access.php` se eliminan para evitar accesos obsoletos.

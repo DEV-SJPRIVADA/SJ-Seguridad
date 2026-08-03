@@ -79,6 +79,48 @@ return [
         'ficha_empleados' => 'Ficha empleados',
     ],
 
+    /*
+    | Hogares canonicos del sidebar (NavigationResolver + SidebarVisibilityService).
+    | Los permisos view.board.{area}.{tablero} en areas que no son hogar solo aplican
+    | a solicitantes de esa area; roles transversales deben usar el hogar indicado.
+    */
+    'board_canonical_areas' => [
+        'requisiciones' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => true,
+        ],
+        'suministros' => [
+            'home' => 'compras',
+            'alt_home' => 'calidad',
+            'base_area_tab' => true,
+        ],
+        'solicitudes_compra' => [
+            'home' => 'compras',
+            'base_area_tab' => true,
+        ],
+        'bandeja_compras' => [
+            'home' => 'compras',
+            'base_area_tab' => false,
+        ],
+        'documentos' => [
+            'home' => null,
+            'admin_home' => 'calidad',
+            'base_area_tab' => true,
+        ],
+        'ficha_empleados' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'indicadores' => [
+            'home' => 'operaciones',
+            'base_area_tab' => false,
+        ],
+        'gestion_clientes' => [
+            'home' => 'comercial',
+            'base_area_tab' => false,
+        ],
+    ],
+
     'indicador_tabs' => [
         'dashboard' => 'Dashboard',
         'captura' => 'Listado de Indicadores',

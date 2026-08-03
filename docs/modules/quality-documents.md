@@ -46,7 +46,7 @@ Permitir al director de Calidad publicar documentos (Word/Excel) o enlaces exter
 
 - Solo usuarios con el permiso funcional `manage.quality.documents` pueden administrar documentos (por ejemplo, la directora de Calidad).
 - Varios usuarios pueden tener acceso al area Calidad; la gestion de documentos se asigna de forma independiente en Admin → Usuarios → pestaña Funcionalidad → categoria Calidad.
-- El tablero `Documentos` aparece en **todas** las areas donde el usuario tenga acceso (`view.area.*` o `manage.area.*`).
+- El tablero `Documentos` en el **sidebar** aparece en su **area asignada**, en areas con acceso explicito (`view.area.*` / `manage.area.*`), o en **Calidad** si administra documentos. No se repite en todas las areas del menu.
 - La biblioteca de cada area muestra unicamente los documentos activos asignados a esa area.
 - Un documento puede asignarse a areas, a usuarios especificos, o ambos (modo combinado).
 - Los documentos asignados solo a usuarios no aparecen en bibliotecas de area; el destinatario los ve en la pestaña `Mis documentos` del tablero `Documentos`.

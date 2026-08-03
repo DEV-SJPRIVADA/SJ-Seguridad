@@ -1,29 +1,102 @@
-# Solicitudes de compra — Guía de usuario
+# Solicitudes de compra — Guia de usuario
 
 ## Objetivo
 
-Permitir a colaboradores solicitar compras, que un director autorice, y que Compras procese la solicitud junto con los insumos aprobados por Calidad.
+Permitir a colaboradores solicitar compras de bienes o servicios, que un director autorice la solicitud, y que el area de Compras procese el pedido junto con los insumos que Calidad ya haya aprobado.
 
-## Flujo
+## Alcance
 
-1. **Solicitante** crea solicitud (líneas + fotos) y elige **director** autorizador.
-2. **Director** recibe correo de aviso, ingresa a la plataforma y autoriza o rechaza en **Pendientes de autorización** (detalle de la solicitud).
-3. Si aprueba → **Compras** ve la solicitud en **Bandeja compras**.
-4. **Compras** marca en curso / completado / rechazado.
+Aplica al tablero **Solicitudes de compra** y a la **Bandeja compras** (area Compras).
 
-## Suministros
+Segun su perfil puede:
 
-Los pedidos de insumos aprobados por Calidad también aparecen en la misma bandeja Compras.
+- Crear solicitudes con una o varias lineas de productos (con foto opcional)
+- Consultar el estado de sus propias solicitudes
+- Autorizar o rechazar solicitudes asignadas a usted como director
+- Procesar solicitudes aprobadas e insumos aprobados desde la bandeja unificada de Compras
+- Descargar el formato FO-AD-44 (PDF y Excel) desde el detalle
 
-## FO-AD-44
+El correo que recibe el director es solo un aviso con enlace a la plataforma; la decision se registra dentro del sistema.
 
-Desde el detalle puede descargar PDF y Excel del formato FO-AD-44.
+## Definiciones
+
+| Termino | Significado |
+| --- | --- |
+| Solicitud de compra | Pedido formal de bienes o servicios con lineas de detalle (cantidad, descripcion, referencia, etc.). |
+| Folio / N.º solicitud | Numero correlativo de cuatro digitos (ej. 0042) que identifica la solicitud. |
+| Director aprobador | Usuario con rol de director seleccionado al crear la solicitud; unico que puede autorizarla. |
+| Pendiente (director) | Esperando decision del director asignado. |
+| Aprobado / Rechazado (director) | Decision del director; si aprueba, pasa a Compras. |
+| Bandeja compras | Listado unificado de solicitudes de compra aprobadas e insumos aprobados por Calidad. |
+| Estado Compras | Pendiente, En curso, Completado o Rechazado — lo gestiona el equipo de Compras. |
+| Solicitud Interno | Compra para uso interno de la empresa. |
+| Solicitud Cliente | Compra asociada a un cliente (requiere razon social y datos adicionales). |
+| Urgente | Marca de prioridad visible para director y Compras. |
+| FO-AD-44 | Formato estandar de reporte/exportacion de la solicitud. |
 
 ## Responsabilidades
 
-| Perfil | Acción |
-|--------|--------|
-| Colaborador | Crear y consultar sus solicitudes |
-| Director | Autorizar en la plataforma solo las asignadas a él |
-| Compras | Procesar solicitudes aprobadas e insumos aprobados |
-| Super-admin | Gestionar usuarios y permisos |
+| Rol / perfil | Responsabilidad |
+| --- | --- |
+| Colaborador solicitante | Crear solicitudes en su area, elegir director, consultar mis solicitudes. |
+| Director | Revisar y aprobar o rechazar solo las solicitudes asignadas a el. |
+| Compras | Gestionar bandeja, actualizar estados, procesar insumos aprobados, exportar reportes. |
+| Super-admin / Admin usuarios | Asignar permisos (`purchase.tab.*`) y rol director. |
+
+## Donde encontrar el modulo en el menu
+
+| Perfil | Ruta en el menu |
+| --- | --- |
+| Colaborador solicitante | Su area → Solicitudes de compra |
+| Director | Compras → Solicitudes de compra → Pendientes |
+| Equipo Compras | Compras → Bandeja compras |
+
+## Desarrollo
+
+### Crear una solicitud de compra
+
+1. Entre a **Solicitudes de compra** en su area → pestaña **Nueva solicitud**.
+2. Complete **Area**, **Fecha**, **Solicitud para** (Interno o Cliente) y seleccione el **Director aprobador**.
+3. Marque **Urgente** si aplica.
+4. Si eligio **Cliente**, complete razon social, proyecto nuevo y si asume el cliente.
+5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional.
+6. Opcionalmente adjunte un archivo de pedido.
+7. Envie el formulario. Recibira confirmacion con el numero de folio.
+8. El director recibira un correo de aviso para ingresar a la plataforma.
+
+### Consultar mis solicitudes
+
+1. Abra **Mis solicitudes**.
+2. Revise el listado con estado (Pendiente, Aprobado, Rechazado).
+3. Pulse el folio o **Ver detalle** para consultar lineas, comentarios del director o de Compras.
+4. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44).
+
+### Autorizar o rechazar (director)
+
+1. Ingrese a **Compras → Solicitudes de compra → Pendientes de autorizacion**.
+2. Pulse **Autorizar** en la fila deseada (o use el enlace del correo de aviso).
+3. Revise el detalle, lineas y datos del solicitante.
+4. Opcionalmente escriba comentarios (obligatorios si rechaza).
+5. Pulse **Aprobar solicitud** o **Rechazar**.
+6. La solicitud sale del listado de pendientes; el solicitante recibe correo con el resultado.
+
+### Procesar en bandeja Compras
+
+1. Entre a **Compras → Bandeja compras**.
+2. Filtre por tipo (Solicitud compra / Suministro) o por estado Compras si lo necesita.
+3. Abra la solicitud de compra aprobada o el insumo aprobado por Calidad.
+4. Para **solicitudes de compra**: actualice el estado (Pendiente, En curso, Completado, Rechazado) y comentarios de Compras.
+5. Para **suministros**: ingrese costos unitarios por linea; guarde o marque como completado.
+6. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
+
+### Suministros en la misma bandeja
+
+Los pedidos de insumos que Calidad aprobo aparecen junto con las solicitudes de compra. Compras puede exportar FO-AD-44 de insumos desde la bandeja.
+
+## Control de cambios
+
+| Version | Fecha | Autor | Descripcion del cambio |
+| --- | --- | --- | --- |
+| 1.0 | 2026-07-31 | Modulo inicial | Flujo solicitante → director → Compras; FO-AD-44 |
+| 1.1 | 2026-07-31 | Autorizacion in-app | Director autoriza en plataforma; correo solo notifica |
+| 1.2 | 2026-08-03 | Navegacion canonica | Tabla de entrada al menu por perfil; guia ampliada |

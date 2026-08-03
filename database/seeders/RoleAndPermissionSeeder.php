@@ -22,7 +22,13 @@ class RoleAndPermissionSeeder extends Seeder
         $roles = [
             'super-admin' => $allPermissions,
             'administrador' => ['view.dashboard', 'manage.requisition.parameters', 'requisitions.approve.management'],
-            'director' => ['view.dashboard', 'purchase.tab.approval', 'requisitions.approve.management'],
+            'director' => [
+                'view.dashboard',
+                'purchase.tab.approval',
+                'requisitions.approve.management',
+                'view.board.gestion_humana.requisiciones',
+                'view.board.compras.solicitudes_compra',
+            ],
             'usuario' => ['view.dashboard'],
         ];
 

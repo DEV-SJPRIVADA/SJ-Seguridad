@@ -24,6 +24,7 @@ class UserAccessSummary
 
         if ($user->hasRole('director')) {
             $notes[] = 'El rol director incluye autorizacion de solicitudes de compra y cargo nuevo en requisiciones.';
+            $notes[] = 'Puntos de entrada en menu: Gestion humana → Requisiciones (autorizacion gerencia) y Compras → Solicitudes de compra (pendientes).';
         }
 
         $directCount = $user->permissions->count();

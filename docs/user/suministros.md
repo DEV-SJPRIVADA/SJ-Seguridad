@@ -6,7 +6,13 @@ Permitir solicitar insumos (aseo, cafeteria, papeleria, etc.), someterlos a apro
 
 ## Alcance
 
-Aplica al tablero **Suministros** en las areas donde este habilitado.
+Aplica al tablero **Suministros**. Segun su rol, el menu lo muestra en un solo lugar:
+
+| Rol | Donde entrar |
+| --- | --- |
+| Solicitante | Su area asignada → Suministros → Mis solicitudes |
+| Calidad (aprobacion) | **Calidad** → Suministros |
+| Compras (catalogo / reportes) | **Compras** → Suministros |
 
 Segun permisos, el usuario puede:
 
@@ -74,3 +80,4 @@ El proceso de compra con costeo unitario esta planificado para una fase posterio
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
+| 1.1 | 2026-08-03 | Navegacion canonica | Entrada al menu por area base vs Calidad vs Compras |

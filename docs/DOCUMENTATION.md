@@ -70,6 +70,7 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Admin usuarios | [`modules/admin-users.md`](modules/admin-users.md) | [`user/admin-users.md`](user/admin-users.md) | Admin |
 | Requisiciones | [`modules/requisitions.md`](modules/requisitions.md) | [`user/requisitions.md`](user/requisitions.md) | Compartido |
 | Suministros | [`modules/suministros.md`](modules/suministros.md) | [`user/suministros.md`](user/suministros.md) | Compartido |
+| Solicitudes de compra | [`modules/purchase-requests.md`](modules/purchase-requests.md) | [`user/purchase-requests.md`](user/purchase-requests.md) | Compartido |
 | Documentos calidad | [`modules/quality-documents.md`](modules/quality-documents.md) | [`user/quality-documents.md`](user/quality-documents.md) | Compartido |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](modules/indicadores.md) | [`user/indicadores.md`](user/indicadores.md) | Area operaciones |
 | Matriz comercial | [`modules/matriz-clientes.md`](modules/matriz-clientes.md) | [`user/matriz-clientes.md`](user/matriz-clientes.md) | Area comercial |

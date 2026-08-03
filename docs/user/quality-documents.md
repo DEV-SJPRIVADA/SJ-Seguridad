@@ -6,7 +6,7 @@ Consultar documentos del sistema de gestion de calidad, recibir documentos asign
 
 ## Alcance
 
-El tablero **Documentos** aparece en las areas donde usted tenga acceso. Segun permisos:
+El tablero **Documentos** aparece en el menu en **su area asignada** (consulta de biblioteca) y, si administra documentos, tambien en **Calidad**. Segun permisos dentro del tablero:
 
 - **Biblioteca:** consultar documentos activos asignados a su area.
 - **Mis documentos:** ver descargas/enlaces de documentos asignados directamente a su usuario.
@@ -68,3 +68,4 @@ Tipos de recurso: archivo (Word/Excel) o enlace externo.
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
+| 1.1 | 2026-08-03 | Navegacion canonica | Documentos en area asignada y Calidad (no repetido en todas las areas) |

@@ -6,7 +6,10 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 
 ## Alcance actual
 
-- Tablero `Requisiciones` visible por `view.board.{area}.requisiciones` o por funcionalidades de **area base** en el area del usuario
+- Tablero `Requisiciones` en sidebar:
+  - **Gestion / Dashboard / Parametros / Autorizacion gerencia:** hogar canonico **Gestion humana** (`SidebarVisibilityService`)
+  - **Solicitar / Mis requisiciones:** area base del usuario (`users.area_key`)
+  - Otras areas: solo si `view.board.{area}.requisiciones` y el usuario **no** tiene alcance GH global
 - Subtableros internos:
   - `Dashboard`
   - `Solicitar`
@@ -263,6 +266,7 @@ Tabla eliminada (FEAT-011): `requisition_recruiters`.
 - **FEAT-012 (2026-07-28):** autorizacion gerencia para motivo cargo nuevo (`pendiente_autorizacion_gerencia`); pestaña Autorizacion gerencia; tipos de notificacion en Parametros (`new_requisition`, `management_approval_cargo_nuevo`).
 - **FEAT-011 (2026-07-28):** encargados de seleccion = usuarios GH + permiso `requisitions.selection_officer` (toggles en Parametros); `recruiter_id` referencia `users`; migracion elimina `requisition_recruiters`; export/impresion/historial usan `displayRecruiterName()`.
 - **FEAT-020 (2026-07-30):** columnas `hired_document`/`hired_full_name` (persona contratada) obligatorias solo con `status=contratado`, con deteccion de cedula duplicada (`App\Rules\Requisitions\HiredDocumentNotDuplicated`) y confirmacion via SweetAlert2; upsert 1:1 en `personal_requisition_ficha_entries` (`App\Services\Requisitions\PersonalRequisitionFichaSync`) que alimenta el tablero nuevo **Ficha empleados**; labels nuevos "Cedula contratado"/"Nombre contratado" en `PersonalRequisitionChangeLogger`. Riesgo conocido: `quantity > 1` en Gestion sigue permitido y una fila asi marcada Contratado solo registra una persona (fuera de alcance v1).
+- **Navegacion canonica (2026-08-03):** tablero Requisiciones GH consolidado en sidebar bajo Gestion humana; ver `SidebarVisibilityService` y `docs/ACCESS_CONTROL.md`.
 
 ## Referencias
 

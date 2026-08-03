@@ -21,6 +21,7 @@ class NavigationResolver
         private readonly CommercialAccessService $commercialAccess,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly PurchaseAccessService $purchaseAccess,
+        private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
 
     /**
@@ -103,6 +104,10 @@ class NavigationResolver
 
                 $boardItems = collect(config('access.boards', []))
                     ->map(function (string $boardLabel, string $boardKey) use ($key, $user, $routeName, $requestModule, $requestBoard): ?array {
+                        if (! $this->sidebarVisibility->shouldShowBoard($user, $key, $boardKey)) {
+                            return null;
+                        }
+
                         if ($boardKey === 'documentos') {
                             if (! $this->boardAccess->canViewDocumentsBoard($user, $key)) {
                                 return null;
@@ -286,6 +291,7 @@ class NavigationResolver
                         || $user->can('view.board.comercial.servicios_comerciales')
                     )
                     && $boardItems->doesntContain('label', config('access.boards.dashboard'))
+                    && $this->sidebarVisibility->shouldShowBoard($user, 'comercial', 'dashboard')
                 ) {
                     $boardItems->prepend([
                         'label' => config('access.boards.dashboard'),

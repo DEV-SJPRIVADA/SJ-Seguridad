@@ -34,6 +34,12 @@ class PurchaseAccessService
 
     public function canViewPurchaseBoard(User $user, string $areaKey): bool
     {
+        if ($areaKey === 'compras' && (
+            $user->can('purchase.tab.approval') || $user->can('purchase.tab.processing')
+        )) {
+            return true;
+        }
+
         if ($this->hasBoardVisibility($user, $areaKey)) {
             return true;
         }
