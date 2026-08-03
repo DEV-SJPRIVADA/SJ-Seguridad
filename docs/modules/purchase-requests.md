@@ -106,7 +106,7 @@ Migracion: `2026_07_31_140100_create_purchase_requests_tables.php`.
 | `PurchaseApprovalController` | Lista pendientes del director, PATCH autorizar |
 | `PurchaseProcessingController` | Bandeja unificada, procesar compra/suministro |
 | `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
-| `PurchaseRequestNotificationService` | Correos director, solicitante, compras |
+| `PurchaseRequestNotificationService` | Correos director, solicitante, compras; persiste log en `purchase_request_mail_logs` |
 | `ComprasQueueService` | Mezcla purchase + supply en bandeja con filtros |
 | `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
 | `PurchaseEmailApprovalController` | Redirect legacy correo → plataforma |
@@ -125,6 +125,12 @@ Tipos en `notification_types` (modulo `purchase_requests`):
 | `compras_queue_processed` | Solicitante | Compras actualiza estado |
 
 Correo director: boton enlaza a `purchase-requests.show` (login requerido).
+
+**Registro de correos:** tabla `purchase_request_mail_logs` (tipo, destinatario, estado `enviado`/`fallido`, detalle, fecha). Visible en detalle de la solicitud.
+
+## Mis solicitudes
+
+Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin filtrar por `area_key` del modulo en la URL (el area elegida al crear puede diferir del tablero desde el que navega).
 
 ## Integracion Suministros
 
@@ -165,6 +171,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-07-31 | Modulo inicial: CRUD, bandeja, correos, FO-AD-44, import legacy |
 | 2026-07-31 | Autorizacion in-app (correo solo notifica); approval-form en show |
 | 2026-08-03 | Hogares canonicos sidebar (`SidebarVisibilityService`); permisos director en seeder/migracion |
+| 2026-08-03 | Urgente opcional al crear; Mis solicitudes por usuario; registro de correos en detalle |
 
 ## Referencias
 

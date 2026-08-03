@@ -12,6 +12,13 @@ class StorePurchaseRequestRequest extends FormRequest
         return $this->user()?->can('purchase.tab.create') ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'urgente' => $this->boolean('urgente'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -19,7 +26,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'fecha_solicitud' => ['required', 'date', 'before_or_equal:today'],
             'archivo_pedido' => ['nullable', 'file', 'max:10240'],
             'solicitud_para' => ['required', 'in:Interno,Cliente'],
-            'urgente' => ['required', 'boolean'],
+            'urgente' => ['boolean'],
             'aprobador_id' => ['required', 'exists:users,id'],
             'proyecto_nuevo' => ['nullable', 'boolean'],
             'razon_social' => ['nullable', 'string', 'max:255', 'required_if:solicitud_para,Cliente'],

@@ -162,6 +162,43 @@
 
                     @include('modules.purchase-requests.partials.approval-form')
 
+                    <div class="block-spaced-lg">
+                        <h4 class="form-label">Registro de correos de esta solicitud</h4>
+                        @if ($purchaseRequest->mailLogs->isEmpty())
+                            <p class="text-muted text-small">No hay correos registrados para esta solicitud.</p>
+                        @else
+                            <table class="supply-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha / hora</th>
+                                        <th>Tipo</th>
+                                        <th>Destinatario</th>
+                                        <th>Estado</th>
+                                        <th>Detalle</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($purchaseRequest->mailLogs as $mailLog)
+                                        <tr>
+                                            <td>{{ optional($mailLog->sent_at)->format('d/m/Y H:i') ?? '—' }}</td>
+                                            <td>{{ $mailLog->typeLabel() }}</td>
+                                            <td>{{ $mailLog->recipient_email }}</td>
+                                            <td>
+                                                @php
+                                                    $mailStatusClass = $mailLog->status === \App\Models\PurchaseRequestMailLog::STATUS_ENVIADO
+                                                        ? 'status-pill--success'
+                                                        : 'status-pill--danger';
+                                                @endphp
+                                                <span class="status-pill {{ $mailStatusClass }}">{{ $mailLog->statusLabel() }}</span>
+                                            </td>
+                                            <td>{{ $mailLog->detail ?? '—' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+
                     @if ($purchaseRequest->comentarios_compras)
                         <div class="block-spaced-lg">
                             <h4 class="form-label">Comentarios de compras</h4>

@@ -25,7 +25,6 @@ class PurchaseRequestController extends Controller
         $purchaseRequests = PurchaseRequest::query()
             ->with(['aprobador', 'items'])
             ->where('user_id', auth()->id())
-            ->where('area_key', $module)
             ->latest()
             ->get();
 
@@ -130,7 +129,7 @@ class PurchaseRequestController extends Controller
     {
         $this->authorize('view', $purchaseRequest);
 
-        $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor']);
+        $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor', 'mailLogs']);
 
         return view('modules.purchase-requests.show', [
             'module' => $module,

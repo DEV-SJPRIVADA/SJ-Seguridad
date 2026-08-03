@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\PurchaseRequestCreatedMail;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestMailLog;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplySite;
@@ -39,7 +40,6 @@ class PurchaseRequestModuleTest extends TestCase
             'area_key' => 'operaciones',
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
-            'urgente' => false,
             'aprobador_id' => $director->id,
             'items' => [
                 [
@@ -57,10 +57,95 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $requester->id,
             'aprobador_id' => $director->id,
             'estado' => PurchaseRequest::ESTADO_PENDIENTE,
+            'urgente' => false,
         ]);
 
         Mail::assertQueued(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($director->email));
         Mail::assertNotQueued(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($requester->email));
+
+        $purchaseRequest = PurchaseRequest::query()->first();
+        $this->assertNotNull($purchaseRequest);
+        $this->assertDatabaseHas('purchase_request_mail_logs', [
+            'purchase_request_id' => $purchaseRequest->id,
+            'recipient_email' => $director->email,
+            'status' => 'enviado',
+        ]);
+    }
+
+    public function test_user_can_create_purchase_request_marked_as_urgent(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+
+        $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'operaciones']), [
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'urgente' => '1',
+            'aprobador_id' => $director->id,
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Silla ergonomica',
+                    'referencia' => 'CH-100',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Bogota',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('purchase_requests', [
+            'user_id' => $requester->id,
+            'urgente' => true,
+        ]);
+    }
+
+    public function test_my_requests_lists_own_requests_regardless_of_area_key(): void
+    {
+        $requester = $this->purchaseRequester('compras');
+        $director = $this->director();
+
+        $purchaseRequest = PurchaseRequest::query()->create([
+            'numero_solicitud' => 1,
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'descripcion' => 'Prueba area distinta',
+            'cantidad' => 1,
+            'justificacion' => 'Prueba',
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_PENDIENTE,
+        ]);
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee($purchaseRequest->folio());
+    }
+
+    public function test_show_displays_mail_log_registry(): void
+    {
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $purchaseRequest->mailLogs()->create([
+            'mail_type' => PurchaseRequestMailLog::TYPE_DIRECTOR_ASSIGNED,
+            'recipient_email' => $director->email,
+            'status' => PurchaseRequestMailLog::STATUS_ENVIADO,
+            'sent_at' => now(),
+        ]);
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.show', ['module' => 'operaciones', 'purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee('Registro de correos de esta solicitud')
+            ->assertSee($director->email)
+            ->assertSee('Enviado');
     }
 
     public function test_user_can_upload_item_photo_when_creating_purchase_request(): void

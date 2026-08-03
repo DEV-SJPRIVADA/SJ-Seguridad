@@ -89,6 +89,11 @@ class PurchaseRequest extends Model
         return $this->hasMany(PurchaseRequestItem::class)->orderBy('orden');
     }
 
+    public function mailLogs(): HasMany
+    {
+        return $this->hasMany(PurchaseRequestMailLog::class)->latest('sent_at')->latest('id');
+    }
+
     public function areaLabel(): ?string
     {
         return config("access.areas.{$this->area_key}");
