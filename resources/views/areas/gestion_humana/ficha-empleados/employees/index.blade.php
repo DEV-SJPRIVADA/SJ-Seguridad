@@ -11,15 +11,21 @@
 
     @php
         $currentEstado = $filters['estado'] ?? 'en_ficha';
-        $currentEmploymentStatus = $filters['employment_status'] ?? '';
+        $employmentStatusMode = $filters['employment_status_mode'] ?? 'default_activo';
+        $employmentStatusQueryParam = match ($employmentStatusMode) {
+            'todos' => 'todos',
+            'desvinculado' => 'desvinculado',
+            'activo' => 'activo',
+            default => null,
+        };
         $hasActiveFilters = ($filters['q'] ?? '') !== ''
             || ($currentEstado !== 'en_ficha')
-            || ($currentEmploymentStatus !== '');
+            || in_array($employmentStatusMode, ['todos', 'desvinculado'], true);
 
         $entriesQuery = fn (array $overrides = []) => array_filter([
             'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
             'estado' => array_key_exists('estado', $overrides) ? $overrides['estado'] : ($filters['estado'] ?: null),
-            'employment_status' => array_key_exists('employment_status', $overrides) ? $overrides['employment_status'] : ($currentEmploymentStatus ?: null),
+            'employment_status' => array_key_exists('employment_status', $overrides) ? $overrides['employment_status'] : $employmentStatusQueryParam,
             'fecha_desde' => array_key_exists('fecha_desde', $overrides) ? $overrides['fecha_desde'] : null,
             'fecha_hasta' => array_key_exists('fecha_hasta', $overrides) ? $overrides['fecha_hasta'] : null,
         ], fn ($value) => $value !== null && $value !== '');
@@ -28,7 +34,7 @@
         $pendingHref = $pendingActive
             ? route('gestion-humana.ficha-empleados.employees.index', array_filter([
                 'q' => $filters['q'] ?: null,
-                'employment_status' => $currentEmploymentStatus ?: null,
+                'employment_status' => $employmentStatusQueryParam,
             ]))
             : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => 'pendientes', 'employment_status' => null]));
     @endphp
@@ -121,8 +127,8 @@
                                 @if ($currentEstado !== 'en_ficha')
                                     <input type="hidden" name="estado" value="{{ $currentEstado }}">
                                 @endif
-                                @if ($currentEmploymentStatus !== '')
-                                    <input type="hidden" name="employment_status" value="{{ $currentEmploymentStatus }}">
+                                @if ($employmentStatusQueryParam !== null)
+                                    <input type="hidden" name="employment_status" value="{{ $employmentStatusQueryParam }}">
                                 @endif
                                 <label class="req-manage-filters__label" for="ficha-search-input">Buscar</label>
                                 <div class="req-manage-filters__search-group ficha-empleados-filters__search-group">
@@ -155,13 +161,13 @@
                                             <p class="req-manage-filters__status-label">Estado</p>
                                             <div class="req-manage-filters__pills ficha-empleados-filters__pills">
                                                 <a
-                                                    href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => null])) }}"
-                                                    class="req-manage-filters__pill {{ $currentEmploymentStatus === '' ? 'is-active' : '' }}"
+                                                    href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => 'todos'])) }}"
+                                                    class="req-manage-filters__pill {{ $employmentStatusMode === 'todos' ? 'is-active' : '' }}"
                                                 >Todos</a>
                                                 @foreach ($employmentStatusLabels as $statusKey => $statusLabel)
                                                     <a
                                                         href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => $statusKey])) }}"
-                                                        class="req-manage-filters__pill status-pill--ficha-{{ $statusKey }} {{ $currentEmploymentStatus === $statusKey ? 'is-active' : '' }}"
+                                                        class="req-manage-filters__pill status-pill--ficha-{{ $statusKey }} {{ ($statusKey === 'activo' && in_array($employmentStatusMode, ['activo', 'default_activo'], true)) || $employmentStatusMode === $statusKey ? 'is-active' : '' }}"
                                                     >{{ $statusLabel }}</a>
                                                 @endforeach
                                             </div>
@@ -174,8 +180,8 @@
                         <p class="req-manage-filters__meta ficha-empleados-filters__meta">
                             <strong>{{ number_format($entries->count()) }}</strong>
                             {{ $entries->count() === 1 ? 'registro' : 'registros' }}
-                            @if ($currentEmploymentStatus !== '')
-                                · Estado: <strong>{{ $employmentStatusLabels[$currentEmploymentStatus] ?? $currentEmploymentStatus }}</strong>
+                            @if ($currentEstado === 'en_ficha' && $employmentStatusMode !== 'todos')
+                                · Estado: <strong>{{ $employmentStatusLabels[$employmentStatusMode === 'default_activo' ? 'activo' : $employmentStatusMode] ?? $employmentStatusMode }}</strong>
                             @endif
                             @if ($filters['q'] ?? '')
                                 · Busqueda: <strong>{{ $filters['q'] }}</strong>

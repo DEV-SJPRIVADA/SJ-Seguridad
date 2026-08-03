@@ -44,7 +44,7 @@ class FichaEmpleadosController extends Controller
 
         $q = trim($request->string('q')->toString());
         $estado = $this->resolveEstadoFilter($request);
-        $employmentStatus = $this->resolveEmploymentStatusFilter($request, $estado);
+        [$employmentStatus, $employmentStatusMode] = $this->resolveEmploymentStatusFilter($request, $estado);
 
         $entries = $this->entryListQuery($q, $estado, $employmentStatus)->get();
         $pendingCount = PersonalRequisitionFichaEntry::query()->pending()->count();
@@ -55,6 +55,7 @@ class FichaEmpleadosController extends Controller
                 'q' => $q,
                 'estado' => $estado,
                 'employment_status' => $employmentStatus,
+                'employment_status_mode' => $employmentStatusMode,
             ],
             'employmentStatusLabels' => self::employmentStatusFilterLabels(),
             'pendingCount' => $pendingCount,
@@ -367,19 +368,30 @@ class FichaEmpleadosController extends Controller
         return $labels;
     }
 
-    private function resolveEmploymentStatusFilter(Request $request, string $estado): ?string
+    /**
+     * @return array{0: ?string, 1: string}
+     */
+    private function resolveEmploymentStatusFilter(Request $request, string $estado): array
     {
         if ($estado !== 'en_ficha') {
-            return null;
+            return [null, 'none'];
+        }
+
+        if (! $request->has('employment_status')) {
+            return [EmployeeFichaProfile::STATUS_ACTIVO, 'default_activo'];
         }
 
         $status = trim($request->string('employment_status')->toString());
 
-        if ($status === '') {
-            return null;
+        if ($status === '' || $status === 'todos') {
+            return [null, 'todos'];
         }
 
-        return array_key_exists($status, self::employmentStatusFilterLabels()) ? $status : null;
+        if (array_key_exists($status, self::employmentStatusFilterLabels())) {
+            return [$status, $status];
+        }
+
+        return [EmployeeFichaProfile::STATUS_ACTIVO, 'default_activo'];
     }
 
     /**
