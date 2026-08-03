@@ -172,6 +172,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-07-31 | Autorizacion in-app (correo solo notifica); approval-form en show |
 | 2026-08-03 | Hogares canonicos sidebar (`SidebarVisibilityService`); permisos director en seeder/migracion |
 | 2026-08-03 | Urgente opcional al crear; Mis solicitudes por usuario; registro de correos en detalle |
+| 2026-08-03 | PDF solicitud alineado al detalle (metadatos, estilo FO-AD-44); sin registro de correos |
 
 ## Referencias
 

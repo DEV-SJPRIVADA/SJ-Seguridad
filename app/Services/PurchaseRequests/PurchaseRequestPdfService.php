@@ -10,7 +10,7 @@ class PurchaseRequestPdfService
 {
     public function generate(PurchaseRequest $purchaseRequest): string
     {
-        $purchaseRequest->loadMissing(['user', 'aprobador', 'items']);
+        $purchaseRequest->loadMissing(['user', 'aprobador', 'items', 'procesadoComprasPor']);
 
         $itemPhotos = [];
         foreach ($purchaseRequest->items as $item) {
@@ -22,6 +22,7 @@ class PurchaseRequestPdfService
             'itemPhotos' => $itemPhotos,
             'generatedAt' => now(),
             'formCode' => config('purchase-requests.form_code'),
+            'formVersion' => config('purchase-requests.form_version'),
             'reportTitle' => config('purchase-requests.report_title'),
         ])
             ->setPaper('letter', 'portrait')

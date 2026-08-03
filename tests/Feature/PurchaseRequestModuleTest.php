@@ -148,6 +148,60 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertSee('Enviado');
     }
 
+    public function test_pdf_export_includes_detail_metadata(): void
+    {
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = PurchaseRequest::query()->create([
+            'numero_solicitud' => 99,
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'descripcion' => 'Equipo de oficina',
+            'cantidad' => 2,
+            'justificacion' => 'Reposicion anual',
+            'solicitud_para' => 'Interno',
+            'urgente' => true,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_PENDIENTE,
+        ]);
+
+        $purchaseRequest->items()->create([
+            'orden' => 1,
+            'cantidad' => 2,
+            'descripcion' => 'Monitor LED',
+            'referencia' => 'MON-001',
+            'utilizacion' => 'Puesto administrativo',
+            'ubicacion' => 'Cali',
+        ]);
+
+        $response = $this->actingAs($requester)->get(route('purchase-requests.export.pdf', [
+            'module' => 'operaciones',
+            'purchase_request' => $purchaseRequest->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+
+        $html = view('pdf.purchase-request-solicitud', [
+            'purchaseRequest' => $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor']),
+            'itemPhotos' => [],
+            'generatedAt' => now(),
+            'formCode' => config('purchase-requests.form_code'),
+            'formVersion' => config('purchase-requests.form_version'),
+            'reportTitle' => config('purchase-requests.report_title'),
+        ])->render();
+
+        $this->assertStringContainsString('Fecha solicitud', $html);
+        $this->assertStringContainsString('Director aprobador', $html);
+        $this->assertStringContainsString('Productos solicitados', $html);
+        $this->assertStringContainsString($director->name, $html);
+        $this->assertStringContainsString($requester->name, $html);
+        $this->assertStringContainsString('Monitor LED', $html);
+        $this->assertStringContainsString('Urgente', $html);
+        $this->assertStringNotContainsString('Registro de correos', $html);
+    }
+
     public function test_user_can_upload_item_photo_when_creating_purchase_request(): void
     {
         Mail::fake();
