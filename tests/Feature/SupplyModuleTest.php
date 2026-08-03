@@ -7,6 +7,8 @@ use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Supplies\SupplyPurchaseReportExporter;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -19,7 +21,7 @@ class SupplyModuleTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     public function test_supply_catalog_is_seeded(): void
@@ -479,7 +481,7 @@ class SupplyModuleTest extends TestCase
             'is_not_in_catalog' => false,
         ]);
 
-        $exporter = app(\App\Services\Supplies\SupplyPurchaseReportExporter::class);
+        $exporter = app(SupplyPurchaseReportExporter::class);
         $rows = $exporter->buildMergedRowsForRequest($request);
 
         $this->assertCount(1, $rows);
@@ -559,5 +561,48 @@ class SupplyModuleTest extends TestCase
         ]);
 
         return $request;
+    }
+
+    public function test_compras_user_sees_supply_detail_like_purchase_with_export_actions(): void
+    {
+        $requester = $this->requester('operaciones');
+        $supplyRequest = $this->approvedSupplyRequest(
+            $requester,
+            'operaciones',
+            SupplySite::query()->where('name', 'cali_central')->firstOrFail(),
+            SupplyProduct::query()->firstOrFail(),
+            5,
+        );
+
+        $compras = User::factory()->create([
+            'area_key' => 'compras',
+            'must_change_password' => false,
+        ]);
+        $compras->givePermissionTo('purchase.tab.processing');
+
+        $this->actingAs($compras)
+            ->get(route('supplies.show', ['module' => 'operaciones', 'supply_request' => $supplyRequest->id]))
+            ->assertOk()
+            ->assertSee('Solicitud de suministro '.$supplyRequest->folio())
+            ->assertSee('Volver a bandeja')
+            ->assertSee('Descargar PDF')
+            ->assertSee('Exportar Excel');
+    }
+
+    public function test_approved_supply_can_export_pdf_from_show(): void
+    {
+        $requester = $this->requester('operaciones');
+        $supplyRequest = $this->approvedSupplyRequest(
+            $requester,
+            'operaciones',
+            SupplySite::query()->where('name', 'cali_central')->firstOrFail(),
+            SupplyProduct::query()->firstOrFail(),
+            3,
+        );
+
+        $this->actingAs($requester)
+            ->get(route('supplies.export.pdf', ['module' => 'operaciones', 'supply_request' => $supplyRequest->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 }

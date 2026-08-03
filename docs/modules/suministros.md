@@ -96,6 +96,8 @@ Prefijo `supplies/{module}`:
 
 - `GET /mis-solicitudes` (`supplies.index`)
 - `GET /solicitud/{supply_request}` (`supplies.show`)
+- `GET /solicitud/{supply_request}/pdf` (`supplies.export.pdf`) — FO-AD-44, solicitudes aprobadas por calidad en adelante
+- `GET /solicitud/{supply_request}/excel` (`supplies.export.excel`)
 - `GET|POST /solicitar` (`supplies.create` / `supplies.store`) — UI catalogo + carrito
 - `GET /aprobacion-insumos` (`supplies.approval.index`)
 - `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)

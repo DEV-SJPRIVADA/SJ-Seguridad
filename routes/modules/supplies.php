@@ -13,6 +13,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{mod
     });
 
     Route::get('/solicitud/{supply_request}', [SupplyRequestController::class, 'show'])->name('show');
+    Route::get('/solicitud/{supply_request}/pdf', [SupplyRequestController::class, 'exportPdf'])->name('export.pdf');
+    Route::get('/solicitud/{supply_request}/excel', [SupplyRequestController::class, 'exportExcelRequest'])->name('export.excel');
 
     Route::middleware(['supply.tab:quality'])->group(function () {
         Route::get('/aprobacion-insumos', [SupplyRequestController::class, 'approvalIndex'])->name('approval.index');
