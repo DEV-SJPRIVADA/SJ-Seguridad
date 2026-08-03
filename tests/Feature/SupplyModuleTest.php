@@ -604,5 +604,23 @@ class SupplyModuleTest extends TestCase
             ->get(route('supplies.export.pdf', ['module' => 'operaciones', 'supply_request' => $supplyRequest->id]))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+
+        $html = view('pdf.supply-request-solicitud', [
+            'supplyRequest' => $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'purchasingManager']),
+            'lineItems' => app(SupplyPurchaseReportExporter::class)
+                ->buildMergedRowsForRequest($supplyRequest)
+                ->values()
+                ->all(),
+            'generatedAt' => now(),
+            'formCode' => config('supplies.report.form_code'),
+            'formVersion' => config('supplies.report.version'),
+            'reportTitle' => config('supplies.report.title'),
+        ])->render();
+
+        $this->assertStringContainsString('Fecha solicitud', $html);
+        $this->assertStringContainsString('Revisor calidad', $html);
+        $this->assertStringContainsString('Productos solicitados', $html);
+        $this->assertStringContainsString($requester->name, $html);
+        $this->assertStringContainsString('Solicitud de suministro', $html);
     }
 }

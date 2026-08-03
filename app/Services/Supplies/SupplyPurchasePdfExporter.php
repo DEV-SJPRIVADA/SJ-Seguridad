@@ -13,14 +13,19 @@ class SupplyPurchasePdfExporter
 
     public function generate(SupplyRequest $supplyRequest): string
     {
-        $supplyRequest->loadMissing(['user', 'items.product']);
-        $rows = $this->excelExporter->buildMergedRowsForRequest($supplyRequest);
+        $supplyRequest->loadMissing(['user', 'items.product', 'qualityReviewer', 'purchasingManager']);
+
+        $lineItems = $this->excelExporter
+            ->buildMergedRowsForRequest($supplyRequest)
+            ->values()
+            ->all();
 
         return Pdf::loadView('pdf.supply-request-solicitud', [
             'supplyRequest' => $supplyRequest,
-            'rows' => $rows,
+            'lineItems' => $lineItems,
             'generatedAt' => now(),
             'formCode' => config('supplies.report.form_code'),
+            'formVersion' => config('supplies.report.version'),
             'reportTitle' => config('supplies.report.title'),
         ])
             ->setPaper('letter', 'portrait')
@@ -29,6 +34,6 @@ class SupplyPurchasePdfExporter
 
     public function filename(SupplyRequest $supplyRequest): string
     {
-        return 'Suministro-'.$supplyRequest->id.'.pdf';
+        return 'Suministro-'.$supplyRequest->folio().'.pdf';
     }
 }
