@@ -26,16 +26,18 @@ class PurchaseProcessingController extends Controller
     public function index(string $module, Request $request, ComprasQueueService $queueService): View
     {
         $filters = ComprasQueueFilterBag::fromRequest($request);
-        $queueItems = $queueService->items($filters);
+        $queueResult = $queueService->resolve($filters);
 
         return view('modules.purchase-requests.processing.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
-            'queueItems' => $queueItems,
+            'queueItems' => $queueResult['items'],
+            'queueTruncated' => $queueResult['truncated'],
+            'queueTotalMatching' => $queueResult['total_matching'],
             'filters' => $filters->toViewArray(),
             'areas' => config('access.areas', []),
             'estadosCompras' => PurchaseRequest::estadosComprasLabels(),
-            'queueCount' => $queueItems->count(),
+            'queueCount' => $queueResult['items']->count(),
         ]);
     }
 

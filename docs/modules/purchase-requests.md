@@ -138,7 +138,7 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 
 ## Integracion Suministros
 
-`ComprasQueueService` incluye `SupplyRequest` con status `aprobada_calidad` o `en_compras`. Al abrir un suministro aprobado, pasa automaticamente a `en_compras`. Compras ingresa costos unitarios y puede completar (`completada`). Export FO-AD-44 desde bandeja.
+`ComprasQueueService` incluye solicitudes de compra aprobadas (todos los `estado_compras`, incluido completado) y suministros con status `aprobada_calidad`, `en_compras` o `completada`. Sin filtro de fechas muestra hasta 200 registros mas recientes; con rango de fechas trae todos los del periodo. Al abrir un suministro aprobado, pasa automaticamente a `en_compras`. Compras ingresa costos unitarios y puede completar (`completada`). Export FO-AD-44 desde bandeja.
 
 ## FO-AD-44
 
@@ -181,6 +181,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | Bandeja compras: accion Ver detalle; analista compras ve detalle completo y vuelve a bandeja |
 | 2026-08-03 | Navegacion unificada: bandeja solo como pestana en Solicitudes de compra; landing analista en bandeja |
 | 2026-08-03 | Bandeja compras: filtros estilo Gestion requisiciones (buscar, fechas, pills estado, area/tipo) |
+| 2026-08-03 | Bandeja historica completa: completados visibles; limite 200 sin filtro fecha; sin limite con rango |
 
 ## Referencias
 

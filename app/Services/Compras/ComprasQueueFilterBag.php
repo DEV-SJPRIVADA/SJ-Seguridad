@@ -57,8 +57,12 @@ class ComprasQueueFilterBag
         return $this->estadoCompras !== ''
             || $this->tipo !== null
             || $this->areaKey !== null
-            || $this->dateFrom !== null
-            || $this->dateTo !== null;
+            || $this->hasDateRangeFilter();
+    }
+
+    public function hasDateRangeFilter(): bool
+    {
+        return $this->dateFrom !== null || $this->dateTo !== null;
     }
 
     /**
@@ -96,7 +100,9 @@ class ComprasQueueFilterBag
             $query->where('status', 'aprobada_calidad');
         } elseif ($this->estadoCompras === PurchaseRequest::COMPRAS_EN_CURSO) {
             $query->where('status', 'en_compras');
-        } elseif (in_array($this->estadoCompras, [PurchaseRequest::COMPRAS_COMPLETADO, PurchaseRequest::COMPRAS_RECHAZADO], true)) {
+        } elseif ($this->estadoCompras === PurchaseRequest::COMPRAS_COMPLETADO) {
+            $query->where('status', 'completada');
+        } elseif ($this->estadoCompras === PurchaseRequest::COMPRAS_RECHAZADO) {
             $query->whereRaw('1 = 0');
         }
 

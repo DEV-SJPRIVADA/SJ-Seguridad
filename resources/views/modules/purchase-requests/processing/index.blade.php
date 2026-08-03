@@ -92,7 +92,11 @@
 
                         <p class="req-manage-filters__meta">
                             <strong>{{ number_format($queueCount) }}</strong>
-                            {{ $queueCount === 1 ? 'elemento encontrado' : 'elementos encontrados' }}
+                            {{ $queueCount === 1 ? 'elemento mostrado' : 'elementos mostrados' }}
+                            @if ($queueTruncated ?? false)
+                                · de <strong>{{ number_format($queueTotalMatching) }}</strong> en total
+                                · Mostrando los {{ \App\Services\Compras\ComprasQueueService::DEFAULT_LIMIT }} mas recientes; use filtro de fechas para ver todos en un rango
+                            @endif
                             @if ($filters['estado_compras'] ?? '')
                                 · Estado: <strong>{{ $estadosCompras[$filters['estado_compras']] ?? $filters['estado_compras'] }}</strong>
                             @endif

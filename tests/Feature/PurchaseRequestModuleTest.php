@@ -298,7 +298,143 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertSee($purchaseRequest->fresh()->folio());
         $response->assertSee('Ver detalle', false);
         $response->assertSee('Filtros', false);
-        $response->assertSee('encontrad', false);
+        $response->assertSee('mostrad', false);
+    }
+
+    public function test_completed_purchase_remains_in_bandeja_queue(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+
+        PurchaseRequest::query()->create([
+            'numero_solicitud' => 8801,
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'descripcion' => 'Completada bandeja',
+            'cantidad' => 1,
+            'justificacion' => 'Prueba',
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'estado_compras' => PurchaseRequest::COMPRAS_COMPLETADO,
+            'fecha_aprobacion' => now()->toDateString(),
+            'procesado_compras_at' => now(),
+        ]);
+
+        $result = app(ComprasQueueService::class)->resolve(new ComprasQueueFilterBag(
+            estadoCompras: '',
+            tipo: null,
+            areaKey: null,
+            dateFrom: null,
+            dateTo: null,
+        ));
+
+        $this->assertTrue($result['items']->contains(fn (array $item): bool => $item['folio'] === '8801'));
+        $this->assertSame('Completado', $result['items']->firstWhere('folio', '8801')['estado_label']);
+    }
+
+    public function test_completed_supply_remains_in_bandeja_queue_with_completado_label(): void
+    {
+        $requester = $this->supplyRequester('operaciones');
+
+        $supplyRequest = SupplyRequest::query()->create([
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'sede_id' => $requester->sede_id,
+            'status' => 'completada',
+            'updated_at' => now(),
+        ]);
+
+        $result = app(ComprasQueueService::class)->resolve(new ComprasQueueFilterBag(
+            estadoCompras: '',
+            tipo: null,
+            areaKey: null,
+            dateFrom: null,
+            dateTo: null,
+        ));
+
+        $item = $result['items']->firstWhere('tipo', 'supply');
+
+        $this->assertNotNull($item);
+        $this->assertSame($supplyRequest->folio(), $item['folio']);
+        $this->assertSame(PurchaseRequest::COMPRAS_COMPLETADO, $item['estado']);
+        $this->assertSame('Completado', $item['estado_label']);
+    }
+
+    public function test_bandeja_queue_truncates_to_two_hundred_without_date_filter(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+
+        for ($i = 1; $i <= 205; $i++) {
+            PurchaseRequest::query()->create([
+                'numero_solicitud' => 7000 + $i,
+                'user_id' => $requester->id,
+                'area_key' => 'operaciones',
+                'fecha_solicitud' => now()->toDateString(),
+                'descripcion' => "Lote {$i}",
+                'cantidad' => 1,
+                'justificacion' => 'Prueba',
+                'solicitud_para' => 'Interno',
+                'urgente' => false,
+                'aprobador_id' => $director->id,
+                'estado' => PurchaseRequest::ESTADO_APROBADO,
+                'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+                'fecha_aprobacion' => now()->subDays(205 - $i)->toDateString(),
+            ]);
+        }
+
+        $result = app(ComprasQueueService::class)->resolve(new ComprasQueueFilterBag(
+            estadoCompras: '',
+            tipo: null,
+            areaKey: null,
+            dateFrom: null,
+            dateTo: null,
+        ));
+
+        $this->assertTrue($result['truncated']);
+        $this->assertSame(205, $result['total_matching']);
+        $this->assertCount(ComprasQueueService::DEFAULT_LIMIT, $result['items']);
+    }
+
+    public function test_bandeja_queue_returns_all_in_date_range_even_over_two_hundred(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $dateFrom = now()->subDays(10)->toDateString();
+        $dateTo = now()->toDateString();
+
+        for ($i = 1; $i <= 210; $i++) {
+            PurchaseRequest::query()->create([
+                'numero_solicitud' => 6000 + $i,
+                'user_id' => $requester->id,
+                'area_key' => 'operaciones',
+                'fecha_solicitud' => now()->toDateString(),
+                'descripcion' => "Rango {$i}",
+                'cantidad' => 1,
+                'justificacion' => 'Prueba',
+                'solicitud_para' => 'Interno',
+                'urgente' => false,
+                'aprobador_id' => $director->id,
+                'estado' => PurchaseRequest::ESTADO_APROBADO,
+                'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+                'fecha_aprobacion' => now()->subDays($i % 11)->toDateString(),
+            ]);
+        }
+
+        $result = app(ComprasQueueService::class)->resolve(new ComprasQueueFilterBag(
+            estadoCompras: '',
+            tipo: null,
+            areaKey: null,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
+        ));
+
+        $this->assertFalse($result['truncated']);
+        $this->assertSame(210, $result['total_matching']);
+        $this->assertCount(210, $result['items']);
     }
 
     public function test_compras_queue_service_filters_by_area(): void
