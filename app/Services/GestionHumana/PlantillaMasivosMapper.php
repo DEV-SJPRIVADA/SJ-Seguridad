@@ -23,7 +23,7 @@ class PlantillaMasivosMapper
 
         return [
             $profile?->document_number ?: $entry->hired_document,
-            $profile?->document_type ?: 'C',
+            $this->documentTypeCode($profile?->document_type),
             $fullName,
             $profile?->first_surname ?: $parsed['first_surname'],
             $profile?->second_surname ?: $parsed['second_surname'],
@@ -85,6 +85,21 @@ class PlantillaMasivosMapper
             $profile?->economic_activity_name,
             data_get($extra, 'exclude_overtime', 0),
         ];
+    }
+
+    private function documentTypeCode(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return 'C';
+        }
+
+        if (str_contains($value, ' — ')) {
+            return trim(explode(' — ', $value, 2)[0]);
+        }
+
+        return $value;
     }
 
     private function mapSex(?string $sex): ?string

@@ -6,6 +6,18 @@ return [
         'desvinculado' => 'Desvinculado',
     ],
 
+    /**
+     * Tipos de documento para nómina / plantilla masivos (CLASEDOC.C1 = code).
+     *
+     * @var list<array{code: string, name: string, sort_order: int}>
+     */
+    'document_type_defaults' => [
+        ['code' => 'C', 'name' => 'Cedula', 'sort_order' => 1],
+        ['code' => 'N', 'name' => 'Nit', 'sort_order' => 2],
+        ['code' => 'TI', 'name' => 'Tarjeta de Identidad', 'sort_order' => 3],
+        ['code' => 'PT', 'name' => 'Permiso temporal', 'sort_order' => 4],
+    ],
+
     'import_columns' => [
         'cedula' => 'Cédula (obligatorio)',
         'nombre' => 'Nombre completo',

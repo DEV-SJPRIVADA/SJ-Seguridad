@@ -42,6 +42,7 @@ class EmployeeFichaCatalogService
             $options[$type] = PayrollCatalogItem::query()
                 ->ofType($type)
                 ->active()
+                ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(['code', 'name'])
                 ->map(fn (PayrollCatalogItem $item): array => ['code' => $item->code, 'name' => $item->name])

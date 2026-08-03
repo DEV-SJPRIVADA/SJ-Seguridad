@@ -62,8 +62,25 @@ class EmployeeFichaPlantillasTest extends TestCase
         $row = app(PlantillaMasivosMapper::class)->mapRow($entry->fresh(['profile', 'requisition']));
 
         $this->assertSame('111111111', $row[0]);
+        $this->assertSame('C', $row[1]);
         $this->assertSame('Juan Perez', $row[2]);
         $this->assertSame(1500000.0, (float) $row[27]);
+    }
+
+    public function test_plantilla_masivos_mapper_exports_document_type_code_not_label(): void
+    {
+        $entry = $this->createInFichaEntry('1122334455', 'Tarjeta Identidad Test');
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '1122334455',
+            'document_type' => 'TI',
+            'full_name' => 'Tarjeta Identidad Test',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $row = app(PlantillaMasivosMapper::class)->mapRow($entry->fresh(['profile', 'requisition']));
+
+        $this->assertSame('TI', $row[1]);
     }
 
     public function test_export_plantilla_masivos_only_includes_active_en_ficha_without_date_range(): void

@@ -419,6 +419,20 @@ class FichaEmpleadosTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_manual_employee_create_form_shows_document_type_select_from_catalog(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertOk()
+            ->assertSee('id="document_type"', false)
+            ->assertSee('C — Cedula')
+            ->assertSee('TI — Tarjeta de Identidad');
+    }
+
     public function test_manual_employee_create_stores_entry_without_requisition(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);
@@ -505,6 +519,7 @@ class FichaEmpleadosTest extends TestCase
             ->get(route('gestion-humana.ficha-empleados.catalogs.index'))
             ->assertOk()
             ->assertSee('Catalogos de empleados')
+            ->assertSee('Tipo documento')
             ->assertSee('EPS');
 
         $this->actingAs($manager)

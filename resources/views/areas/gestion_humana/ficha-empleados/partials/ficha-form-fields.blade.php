@@ -7,7 +7,12 @@
     <div class="form-grid form-grid--two ficha-empleados-form__grid">
         <div class="form-field">
             <label class="form-label" for="document_type">Tipo documento</label>
-            <input id="document_type" name="document_type" class="form-input" value="{{ old('document_type', $profile->document_type) }}">
+            <select id="document_type" name="document_type" class="form-select js-ficha-select">
+                <option value="">—</option>
+                @foreach ($catalogs['document_type'] ?? [] as $item)
+                    <option value="{{ $item['code'] }}" @selected(old('document_type', $profile->document_type) === $item['code'])>{{ $item['code'] }} — {{ $item['name'] }}</option>
+                @endforeach
+            </select>
         </div>
         <div class="form-field">
             <label class="form-label" for="birth_date">Fecha nacimiento</label>
