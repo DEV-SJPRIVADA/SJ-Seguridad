@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\NotificationConfigController;
 use App\Http\Controllers\Admin\SupplySiteController;
+use App\Http\Controllers\Admin\SystemAuditController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Mail\PersonalRequisitionNotification;
@@ -221,6 +222,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('notificaciones', [NotificationConfigController::class, 'index'])->name('notifications.index');
         Route::post('notificaciones/tipos/{notification_type}/correos', [NotificationConfigController::class, 'attachTypeEmail'])->name('notifications.types.emails.attach');
         Route::delete('notificaciones/tipos/{notification_type}/correos/{notification_email}', [NotificationConfigController::class, 'detachTypeEmail'])->name('notifications.types.emails.detach');
+    });
+
+    Route::middleware(['password.changed', 'permission:system.view.audit'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('auditoria', [SystemAuditController::class, 'index'])->name('audit.index');
     });
 
     // Modulos del sistema

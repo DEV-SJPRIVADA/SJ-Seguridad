@@ -54,6 +54,11 @@
 - No agregar dependencias adicionales de exportacion; usar `PhpSpreadsheet` (ya incluido via `phpoffice/phpspreadsheet`).
 - El boton DataTables `excelHtml5` esta deprecado; no reintroducirlo.
 
+## Auditoria central
+- Modulos nuevos deben registrar eventos via `App\Services\Audit\SystemAuditService` (wrapper delgado por modulo con `module`/`area` fijos).
+- No crear tablas de audit duplicadas salvo historiales de dominio embebidos (ej. cambios campo a campo en requisiciones).
+- Ver `config/audit.php` y `docs/modules/audit-log.md`.
+
 ## Criterio de revision continua
 - Verificar que no se rompan rutas protegidas ni estados de sesion.
 - Verificar migraciones nuevas y compatibilidad con despliegue en hosting compartido.

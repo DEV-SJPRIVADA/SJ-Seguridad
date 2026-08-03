@@ -39,8 +39,7 @@ class IndicadorController extends Controller
         private readonly ManagementReportDataBuilder $managementReportDataBuilder,
         private readonly ManagementReportPptxExporter $managementReportPptxExporter,
         private readonly IndicatorCaptureAccessService $captureAccessService,
-    ) {
-    }
+    ) {}
 
     public function dashboard(Request $request): View
     {
@@ -160,7 +159,9 @@ class IndicadorController extends Controller
         }
 
         if ($section === 'auditoria') {
-            $data['logs'] = AuditLog::query()
+            $moduleQuery = AuditLog::forModule('indicadores');
+
+            $data['logs'] = (clone $moduleQuery)
                 ->with('user')
                 ->when($request->filled('event_type'), fn ($query) => $query->where('event_type', $request->string('event_type')))
                 ->when($request->filled('action'), fn ($query) => $query->where('action', $request->string('action')))
@@ -168,8 +169,8 @@ class IndicadorController extends Controller
                 ->paginate(30)
                 ->withQueryString();
 
-            $data['eventTypes'] = AuditLog::query()->select('event_type')->distinct()->orderBy('event_type')->pluck('event_type');
-            $data['actions'] = AuditLog::query()->select('action')->distinct()->orderBy('action')->pluck('action');
+            $data['eventTypes'] = (clone $moduleQuery)->select('event_type')->distinct()->orderBy('event_type')->pluck('event_type');
+            $data['actions'] = (clone $moduleQuery)->select('action')->distinct()->orderBy('action')->pluck('action');
         }
 
         if ($section === 'capturadores') {

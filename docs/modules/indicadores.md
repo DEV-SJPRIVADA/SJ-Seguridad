@@ -23,7 +23,7 @@ La pestaña **Ajustes** (`indicadores.admin.ajustes`) agrupa tres secciones inte
 |---|---|
 | `periodos` (default) | Crear/cerrar/reabrir periodos de captura |
 | `metas` | Operador (`>=`, `<=`, `==`), meta (%) y critico (%) por indicador; alimenta listado, captura y cumplimiento |
-| `auditoria` | Log de cambios con filtros |
+| `auditoria` | Log de cambios con filtros (tabla central `audit_logs`, `module=indicadores`) |
 | `capturadores` | Usuarios activos del area Operaciones; toggle `operations.capture` (mismo estilo que permisos en admin) |
 
 Las rutas legacy `/admin/periodos`, `/admin/pesos` (redirige a metas), `/admin/metas`, `/admin/capturadores` y `/admin/auditoria` redirigen al tablero Ajustes con la seccion correspondiente. Los POST/PATCH de administracion se mantienen en las mismas rutas (`PATCH /admin/metas` guarda metas; `PATCH /admin/capturadores/{user}` activa captura; `PATCH /admin/pesos` sigue aceptado por compatibilidad).
@@ -43,6 +43,11 @@ El acceso es solo por permiso Spatie; las capturas se asocian a `user_id`.
 - `Indicator`, `Period` (`indicator_periods`), `IndicatorCapture`
 - `DashboardWeight`, `DashboardSummary`
 - `Improvement` — plan de mejora ligado a una captura en rojo
+- `AuditLog` — auditoria central (`audit_logs`, `module=indicadores`, `area=operaciones`); escritura via `AuditLogService` wrapper
+
+## Auditoria
+
+Los eventos se persisten en `audit_logs` (no en `indicator_audit_logs`). Escritura: `App\Services\Indicadores\AuditLogService` → `SystemAuditService`. Lectura Ajustes: `AuditLog::forModule('indicadores')`. Migracion historica: `php artisan audit:migrate-indicator-logs`.
 
 ## Seeders
 

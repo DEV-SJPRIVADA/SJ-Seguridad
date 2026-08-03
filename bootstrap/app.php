@@ -28,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('comercial:send-service-contract-notification-digest')
             ->dailyAt('06:00')
             ->timezone('America/Bogota');
+
+        $schedule->command('audit:purge --force')
+            ->monthlyOn(1, '03:00')
+            ->timezone('America/Bogota');
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([

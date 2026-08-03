@@ -19,6 +19,7 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 
 - `view.dashboard`
 - `manage.users`
+- `system.view.audit` — auditoria global del sistema (super-admin)
 - `manage.requisition.parameters`
 - `requisitions.tab.dashboard`
 - `requisitions.tab.solicitar`

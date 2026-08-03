@@ -39,6 +39,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Solicitudes de compra | [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md) | [`user/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/purchase-requests.md) |
 | Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | [`user/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/user/quality-documents.md) |
 | Indicadores | [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md) | [`user/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/user/indicadores.md) |
+| Audit log | [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md) | [`user/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/user/audit-log.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
 | Branding | [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md) | — |
 
@@ -52,6 +53,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
+- [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md)
 - [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)
 
 ## Objetivo de esta documentacion

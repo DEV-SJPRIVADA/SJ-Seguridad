@@ -10,6 +10,7 @@ return [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
         'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
+        'system.view.audit' => 'Ver auditoria global del sistema',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
         'manage.commercial.parameters' => 'Administrar parametros comerciales',
@@ -221,6 +222,7 @@ return [
                     'view.dashboard',
                     'manage.users',
                     'manage.notifications',
+                    'system.view.audit',
                 ],
             ],
             'requisitions' => [
@@ -379,7 +381,7 @@ return [
     'navigation' => [
         'administracion' => [
             'label' => 'Administracion',
-            'patterns' => ['admin.users.*', 'admin.notifications.*'],
+            'patterns' => ['admin.users.*', 'admin.notifications.*', 'admin.audit.*'],
             'items' => [
                 [
                     'label' => 'Usuarios',
@@ -392,6 +394,12 @@ return [
                     'route' => 'admin.notifications.index',
                     'permission' => 'manage.notifications',
                     'patterns' => ['admin.notifications.*'],
+                ],
+                [
+                    'label' => 'Auditoria del sistema',
+                    'route' => 'admin.audit.index',
+                    'permission' => 'system.view.audit',
+                    'patterns' => ['admin.audit.*'],
                 ],
             ],
         ],
