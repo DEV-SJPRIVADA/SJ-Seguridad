@@ -14,19 +14,16 @@
 
         <!-- Email Address -->
         <div class="form-field">
-            <x-input-label for="email" class="form-label--auth" :value="__('Email')" />
+            <x-input-label for="email" class="form-label--auth" :value="__('Correo electronico')" />
             <x-text-input id="email" class="form-input--auth" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" />
         </div>
 
         <!-- Password -->
         <div class="form-field">
-            <x-input-label for="password" class="form-label--auth" :value="__('Password')" />
+            <x-input-label for="password" class="form-label--auth" :value="__('Contrasena')" />
 
-            <x-text-input id="password" class="form-input--auth"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+            <x-password-input id="password" class="form-input--auth" name="password" required />
 
             <x-input-error :messages="$errors->get('password')" />
         </div>
@@ -35,19 +32,19 @@
         <div>
             <label for="remember_me" class="auth-checkbox">
                 <input id="remember_me" type="checkbox" class="form-check" name="remember">
-                <span>{{ __('Remember me') }}</span>
+                <span>{{ __('Recordarme') }}</span>
             </label>
         </div>
 
         <div class="auth-row auth-row--login">
             @if (Route::has('password.request'))
                 <a class="auth-link" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
+                    {{ __('Olvidaste tu contrasena?') }}
                 </a>
             @endif
 
             <x-primary-button class="btn--auth">
-                {{ __('Log in') }}
+                {{ __('Iniciar sesion') }}
             </x-primary-button>
         </div>
     </form>

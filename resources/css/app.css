@@ -4341,6 +4341,41 @@ table.dataTable thead td {
     background: #f8fafc;
 }
 
+.form-password-field {
+    position: relative;
+}
+
+.form-password-field .form-input,
+.form-password-field .form-input--auth {
+    width: 100%;
+    padding-right: 3rem;
+}
+
+.form-password-field__toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transform: translateY(-50%);
+    border-radius: 999px;
+}
+
+.form-password-field__toggle:hover {
+    color: var(--color-text);
+}
+
+.form-password-field__toggle:focus-visible {
+    outline: 2px solid var(--color-sky);
+    outline-offset: 2px;
+}
+
 .btn--auth {
     min-width: 132px;
 }
