@@ -1,8 +1,18 @@
 <?php
 
+use App\Http\Middleware\EnsureIndicadorAccess;
+use App\Http\Middleware\EnsurePasswordIsChanged;
+use App\Http\Middleware\EnsurePurchaseTabAccess;
+use App\Http\Middleware\EnsureRequisitionTabAccess;
+use App\Http\Middleware\EnsureSupplyTabAccess;
+use App\Http\Middleware\EnsureUserIsActive;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -10,16 +20,30 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('comercial:send-documentation-notification-digest')
+            ->dailyAt('06:00')
+            ->timezone('America/Bogota');
+
+        $schedule->command('comercial:send-service-contract-notification-digest')
+            ->dailyAt('06:00')
+            ->timezone('America/Bogota');
+
+        $schedule->command('audit:purge --force')
+            ->monthlyOn(1, '03:00')
+            ->timezone('America/Bogota');
+    })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'active' => \App\Http\Middleware\EnsureUserIsActive::class,
-            'password.changed' => \App\Http\Middleware\EnsurePasswordIsChanged::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'supply.tab' => \App\Http\Middleware\EnsureSupplyTabAccess::class,
-            'requisition.tab' => \App\Http\Middleware\EnsureRequisitionTabAccess::class,
-            'indicador.tab' => \App\Http\Middleware\EnsureIndicadorAccess::class,
+            'active' => EnsureUserIsActive::class,
+            'password.changed' => EnsurePasswordIsChanged::class,
+            'permission' => PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'supply.tab' => EnsureSupplyTabAccess::class,
+            'purchase.tab' => EnsurePurchaseTabAccess::class,
+            'requisition.tab' => EnsureRequisitionTabAccess::class,
+            'indicador.tab' => EnsureIndicadorAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

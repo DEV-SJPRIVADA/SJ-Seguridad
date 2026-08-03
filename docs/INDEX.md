@@ -33,21 +33,29 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Modulo | Doc tecnica | Doc usuario |
 | --- | --- | --- |
 | Admin usuarios | [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md) | [`user/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/user/admin-users.md) |
+| Notificaciones (admin) | [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md) | [`user/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/user/notifications-config.md) |
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
+| Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
+| Solicitudes de compra | [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md) | [`user/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/purchase-requests.md) |
 | Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | [`user/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/user/quality-documents.md) |
 | Indicadores | [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md) | [`user/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/user/indicadores.md) |
+| Audit log | [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md) | [`user/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/user/audit-log.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
 | Branding | [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md) | — |
 
 ## Modulos documentados
 
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
+- [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md)
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
+- [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)
+- [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md)
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
+- [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md)
 - [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)
 
 ## Objetivo de esta documentacion

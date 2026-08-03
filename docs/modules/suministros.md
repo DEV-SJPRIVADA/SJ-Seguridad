@@ -46,13 +46,17 @@ Catálogo administrable de productos disponibles para pedir.
 * `timestamps`
 
 ## 4. Matriz de Permisos (`config/access.php`)
-Siguiendo la arquitectura actual, los accesos se controlarán con:
 
-* **Tableros / Vistas:**
-  * `view.board.suministros.mis_solicitudes`: Ver y crear solicitudes propias.
-  * `view.board.suministros.revision_calidad`: Tablero exclusivo para Calidad (aprobar/editar cantidades).
-  * `view.board.suministros.gestion_compras`: Tablero exclusivo para Compras (ingresar costos y completar).
-  * `view.board.suministros.catalogo`: Administrar productos (Activar/Inactivar/Crear).
+Siguiendo la arquitectura actual, los accesos se controlan con permisos funcionales (`supply.tab.*`) y tablero por area (`view.board.{area}.suministros`). **Hogares canonicos del sidebar:**
+
+| Funcion | Donde aparece en el menu |
+| --- | --- |
+| Mis solicitudes (solicitante) | Area base del usuario |
+| Aprobacion insumos / Insumos aprobados | **Calidad** |
+| Catalogo | **Compras** |
+| Bandeja compras (insumos aprobados) | **Compras** (modulo purchase-requests) |
+
+Ver [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md) y `SidebarVisibilityService`.
 
 ## 5. Requerimiento Específico: Integración de Costos
 * El área de **Compras** tendrá un formulario donde, por cada ítem aprobado por calidad, podrán ingresar el **Costo Unitario**.
@@ -77,21 +81,25 @@ Siguiendo la arquitectura actual, los accesos se controlarán con:
 El modulo tiene **4 pestañas** activas. El control es granular por pestaña mas el tablero por area:
 
 - `supply.tab.my_requests`: ver y crear solicitudes propias (area base del usuario).
-- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados**; requiere `view.board.{module}.suministros`.
-- `supply.tab.catalog`: administrar el catalogo; requiere `view.board.{module}.suministros`.
-- `manage.supply.catalog`, `approve.supply.quality`: variantes "full" (con tablero visible).
-- `view.board.{area}.suministros`: solo visualiza el tablero en sidebar; no sustituye permisos funcionales.
+- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados**; sidebar en area **Calidad** (hogar canonico).
+- `supply.tab.catalog`: administrar el catalogo; sidebar en area **Compras**.
+- `manage.supply.catalog`, `approve.supply.quality`: variantes "full" (con tablero visible en su hogar).
+- `view.board.{area}.suministros`: solo visualiza el tablero en sidebar cuando aplica regla canonica; no sustituye permisos funcionales.
 
 El acceso se resuelve en `SupplyAccessService`, `User::supplyBoardTabsFor()` y middleware `supply.tab:{tab}`.
 
 ### Flujo de estados
-`pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad`. Los estados `en_compras` y `completada` quedan obsoletos hasta el proceso de compra futuro.
+`pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad` → (bandeja Compras) `en_compras` → `completada`.
+
+Los estados `en_compras` y `completada` se gestionan desde el modulo **Solicitudes de compra** (bandeja Compras). Ver [`purchase-requests.md`](purchase-requests.md).
 
 ### Rutas reales (`routes/modules/supplies.php`)
 Prefijo `supplies/{module}`:
 
 - `GET /mis-solicitudes` (`supplies.index`)
-- `GET /solicitud/{supply_request}` (`supplies.show`)
+- `GET /solicitud/{supply_request}` (`supplies.show`) — detalle alineado visualmente a solicitud de compra
+- `GET /solicitud/{supply_request}/pdf` (`supplies.export.pdf`) — FO-AD-44, layout igual que PDF solicitud compra
+- `GET /solicitud/{supply_request}/excel` (`supplies.export.excel`) — FO-AD-44 Excel
 - `GET|POST /solicitar` (`supplies.create` / `supplies.store`) — UI catalogo + carrito
 - `GET /aprobacion-insumos` (`supplies.approval.index`)
 - `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)
@@ -120,6 +128,19 @@ Catálogo de sedes físicas con `name`, `utilization` (columna Utilización del 
 - Al crear una solicitud (`store`), se copia snapshot: `sede_id`, `site_utilization`, `site_city` desde la sede del usuario. Sin sede asignada no puede solicitar.
 - `exported_at` en `supply_requests`: marca solicitudes ya incluidas en un export FO-AD-44.
 
+### Vista detalle (`supplies.show`)
+
+Vista: `resources/views/modules/supplies/show.blade.php`. Misma estructura que `purchase-requests/show`:
+
+- Cabecera con folio (`SupplyRequest::folio()`), estado en pill, acciones PDF/Excel (si exportable).
+- Grid compacto de metadatos: fecha, solicitante, area, sede, ubicacion, revisor calidad, estado compras.
+- Tabla de lineas (#, foto placeholder, cantidades, descripcion, referencia, inventario, cant. autorizada).
+- Observaciones de calidad y notas del solicitante; bloque procesamiento compras si aplica.
+
+**Subnav:** solicitante/Calidad → pestañas Suministros; analista Compras (`purchase.tab.processing`) → pestañas Solicitudes de compra + "Volver a bandeja".
+
+**Export FO-AD-44 desde detalle:** disponible cuando `status` ∈ `aprobada_calidad`, `en_compras`, `completada` (`SupplyRequest::isExportableForCompras()`). PDF usa filas autorizadas (`approved_quantity > 0`) agrupadas como en Excel.
+
 ### Reporte Excel FO-AD-44 (por solicitud)
 Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 
@@ -139,9 +160,10 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 | Ubicación | `site_city` (snapshot) |
 
 ### Reglas de autorizacion aplicadas
-- `supplies.show`: solicitante duenio o quien tenga permiso de aprobacion (`supply.tab.quality`, `approve.supply.quality`, `manage.users`).
+- `supplies.show`: solicitante dueno; revisores Calidad (`supply.tab.quality`, `approve.supply.quality`); analista Compras con `purchase.tab.processing` si el suministro esta en bandeja (`aprobada_calidad`, `en_compras`, `completada`); `manage.users`.
+- `supplies.export.pdf` / `supplies.export.excel`: misma visibilidad que show + estado exportable.
 - `supplies.approval.*`: solo solicitudes `pendiente_calidad` del modulo activo.
-- Bandejas filtran por `area_key` del modulo en la URL.
+- Bandejas Calidad filtran por `area_key` del modulo en la URL; bandeja Compras es cross-area via `ComprasQueueService`.
 
 ### Navegacion
 - `User::defaultSupplyBoardUrl()` redirige a la primera pestaña autorizada (mis solicitudes, aprobacion insumos o catalogo).
@@ -151,11 +173,26 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 - Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios con `supply.tab.quality` o `approve.supply.quality`.
 
 ### Pruebas
-- `tests/Feature/SupplyModuleTest.php`: catálogo, creación (catálogo y custom), snapshot de sede, bloqueo sin sede, aprobación, tablero Insumos aprobados (filtros, export por solicitud, `exported_at`), rutas purchasing eliminadas, filtros por módulo, redirección y correo.
+- `tests/Feature/SupplyModuleTest.php`: catalogo, creacion (catalogo y custom), snapshot de sede, bloqueo sin sede, aprobacion, tablero Insumos aprobados (filtros, export por solicitud, `exported_at`), detalle alineado Compras, export PDF desde show, rutas purchasing, filtros por modulo, redireccion y correo.
 
 ### Pendientes conocidos
-- Proceso de compra con costeo (fase posterior).
 - Estado `borrador` documentado pero no implementado.
+
+### Integración bandeja Compras
+- Solicitudes `aprobada_calidad`, `en_compras` y `completada` aparecen en **Bandeja compras** (`purchase.tab.processing`).
+- **Ver detalle** desde bandeja abre `supplies.show` con experiencia unificada y export PDF/Excel.
+- **Procesar** abre `purchase-requests.processing.supply` (costos unitarios, completar).
+- Al iniciar procesamiento, `aprobada_calidad` → `en_compras`.
+- Notificacion a Compras al aprobar Calidad (`supply_request_approved_for_compras`).
+- Ver [`purchase-requests.md`](purchase-requests.md) (dashboard, filtros bandeja, KPIs).
+
+### Control de cambios (modulo)
+
+| Fecha | Descripcion |
+| --- | --- |
+| 2026-08-03 | Detalle `supplies.show` alineado a solicitud compra; rutas `supplies.export.pdf` / `excel` |
+| 2026-08-03 | PDF FO-AD-44 suministro con layout identico a PDF solicitud compra |
+| 2026-08-03 | Doc corregida: estados `en_compras` y `completada` activos via bandeja Compras |
 
 ---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*

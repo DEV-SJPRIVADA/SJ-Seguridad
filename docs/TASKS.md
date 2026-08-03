@@ -12,6 +12,9 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | FEAT-013 | Configuracion global de notificaciones (Super Admin) | orquestado | Feature T1-T3 implementado | 2026-07-29 | — | [`docs/briefs/FEAT-013.md`](briefs/FEAT-013.md) | [`docs/runs/FEAT-013-run-log.md`](runs/FEAT-013-run-log.md) | `config/access.php`, rutas admin |
 | FEAT-014 | Checklist documental por cliente + vista seguimiento tablero Clientes | orquestado | Feature T1–T4 (implementado) | 2026-07-29 checklist cliente | — | [`docs/briefs/FEAT-014.md`](briefs/FEAT-014.md) | [`docs/runs/FEAT-014-run-log.md`](runs/FEAT-014-run-log.md) | rutas comercial, dashboard, import, vistas servicio |
+| FEAT-015 | Notificacion correo documentacion comercial por vencer | orquestado | Feature T1 implementado — Revisor | 2026-07-29 comercial doc por vencer | — | [`docs/briefs/FEAT-015.md`](briefs/FEAT-015.md) | [`docs/runs/FEAT-015-run-log.md`](runs/FEAT-015-run-log.md) | migracion tipo notificacion, `routes/console.php`, admin notificaciones |
+| FEAT-016 | Listado servicios: orden columnas y vigencia por contrato | orquestado | Feature T1 implementado — Revisor | 2026-07-29 servicios vigencia | — | [`docs/briefs/FEAT-016.md`](briefs/FEAT-016.md) | [`docs/runs/FEAT-016-run-log.md`](runs/FEAT-016-run-log.md) | export servicios, migracion is_inactive, activar |
+| FEAT-020 | Contratado: cedula/nombre + lista espera + tablero Ficha empleados | orquestado | Cierre (T1-T4 + review) | 2026-07-30 ficha empleados | — | [`docs/briefs/FEAT-020.md`](briefs/FEAT-020.md) | [`docs/runs/FEAT-020-run-log.md`](runs/FEAT-020-run-log.md) | `config/access.php`, rutas GH, migraciones, requisitions edit |
 
 ---
 
@@ -27,6 +30,11 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-022 | Pendientes ficha: Gestionar Empleado con formulario precargado desde requisicion | orquestado | Si | [`docs/runs/FEAT-022-run-log.md`](runs/FEAT-022-run-log.md) | 2026-08-03 |
+| FEAT-021 | Audit log central del sistema | orquestado | Si | [`docs/runs/FEAT-021-run-log.md`](runs/FEAT-021-run-log.md) | 2026-08-03 |
+| FEAT-019 | Notificacion contrato servicio por vencer (30 dias) | orquestado | Si | [`docs/runs/FEAT-019-run-log.md`](runs/FEAT-019-run-log.md) | 2026-07-30 |
+| FEAT-018 | Comercial: pestaña Parametros selectores servicios | orquestado | Si | [`docs/runs/FEAT-018-run-log.md`](runs/FEAT-018-run-log.md) | 2026-07-30 |
+| FEAT-017 | Comercial: tablero Gestion Clientes + pestañas Clientes/Servicios | orquestado | Si | [`docs/runs/FEAT-017-run-log.md`](runs/FEAT-017-run-log.md) | 2026-07-30 |
 | FEAT-012 | Autorizacion gerencia cargo nuevo (enfoque A) | orquestado | Si | [`docs/runs/FEAT-012-run-log.md`](runs/FEAT-012-run-log.md) | 2026-07-28 |
 | FEAT-011 | Encargados seleccion: usuarios GH activables (Reclutador) | orquestado | Si | [`docs/runs/FEAT-011-run-log.md`](runs/FEAT-011-run-log.md) | 2026-07-28 |
 | FEAT-010 | Unificar graficos ApexCharts (GH + Operaciones; quitar Chart.js/ECharts) | orquestado | Si | [`docs/runs/FEAT-010-run-log.md`](runs/FEAT-010-run-log.md) | 2026-07-27 |

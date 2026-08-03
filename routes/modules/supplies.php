@@ -8,10 +8,13 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{mod
     Route::middleware(['supply.tab:my_requests'])->group(function () {
         Route::get('/mis-solicitudes', [SupplyRequestController::class, 'index'])->name('index');
         Route::get('/mis-solicitudes/exportar', [SupplyRequestController::class, 'exportExcel'])->name('export');
-        Route::get('/solicitud/{supply_request}', [SupplyRequestController::class, 'show'])->name('show');
         Route::get('/solicitar', [SupplyRequestController::class, 'create'])->name('create');
         Route::post('/solicitar', [SupplyRequestController::class, 'store'])->name('store');
     });
+
+    Route::get('/solicitud/{supply_request}', [SupplyRequestController::class, 'show'])->name('show');
+    Route::get('/solicitud/{supply_request}/pdf', [SupplyRequestController::class, 'exportPdf'])->name('export.pdf');
+    Route::get('/solicitud/{supply_request}/excel', [SupplyRequestController::class, 'exportExcelRequest'])->name('export.excel');
 
     Route::middleware(['supply.tab:quality'])->group(function () {
         Route::get('/aprobacion-insumos', [SupplyRequestController::class, 'approvalIndex'])->name('approval.index');

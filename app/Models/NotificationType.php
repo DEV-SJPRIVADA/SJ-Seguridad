@@ -10,7 +10,13 @@ class NotificationType extends Model
 {
     public const MODULE_REQUISITIONS = 'requisitions';
 
+    public const MODULE_COMERCIAL = 'comercial';
+
     public const SLUG_NEW_REQUISITION = 'new_requisition';
+
+    public const SLUG_DOCUMENTATION_EXPIRING = 'documentation_expiring';
+
+    public const SLUG_SERVICE_CONTRACT_EXPIRING = 'service_contract_expiring';
 
     public const SLUG_MANAGEMENT_APPROVAL_CARGO_NUEVO = 'management_approval_cargo_nuevo';
 

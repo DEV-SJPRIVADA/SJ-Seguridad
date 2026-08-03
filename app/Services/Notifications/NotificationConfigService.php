@@ -59,29 +59,74 @@ class NotificationConfigService
             })
             ->groupBy('module')
             ->map(function (Collection $types, string $module) use ($moduleLabels): array {
+                $mappedTypes = $types->map(fn (NotificationType $type): array => [
+                    'id' => $type->id,
+                    'slug' => $type->slug,
+                    'label' => $type->label,
+                    'description' => $type->description,
+                    'emails' => $type->notificationEmails()
+                        ->orderBy('notification_emails.name')
+                        ->get(['notification_emails.id', 'notification_emails.name'])
+                        ->unique('id')
+                        ->values()
+                        ->map(fn (NotificationEmail $email): array => [
+                            'id' => $email->id,
+                            'name' => $email->name,
+                        ])
+                        ->all(),
+                ])->values()->all();
+
                 return [
                     'module' => $module,
                     'module_label' => $moduleLabels[$module] ?? $module,
-                    'types' => $types->map(fn (NotificationType $type): array => [
-                        'id' => $type->id,
-                        'slug' => $type->slug,
-                        'label' => $type->label,
-                        'description' => $type->description,
-                        'emails' => $type->notificationEmails()
-                            ->orderBy('notification_emails.name')
-                            ->get(['notification_emails.id', 'notification_emails.name'])
-                            ->unique('id')
-                            ->values()
-                            ->map(fn (NotificationEmail $email): array => [
-                                'id' => $email->id,
-                                'name' => $email->name,
-                            ])
-                            ->all(),
-                    ])->values()->all(),
+                    'types' => $mappedTypes,
+                    'type_count' => count($mappedTypes),
+                    'empty_count' => collect($mappedTypes)->filter(fn (array $type): bool => $type['emails'] === [])->count(),
                 ];
             })
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  list<array{module: string, module_label: string, types: list<array{emails: list<mixed>}>, type_count: int, empty_count: int}>  $moduleGroups
+     * @return array{modules: int, types: int, configured_types: int, empty_types: int}
+     */
+    public function dashboardStats(array $moduleGroups): array
+    {
+        $totalTypes = 0;
+        $emptyTypes = 0;
+
+        foreach ($moduleGroups as $group) {
+            $totalTypes += (int) ($group['type_count'] ?? count($group['types'] ?? []));
+            $emptyTypes += (int) ($group['empty_count'] ?? 0);
+        }
+
+        return [
+            'modules' => count($moduleGroups),
+            'types' => $totalTypes,
+            'configured_types' => max(0, $totalTypes - $emptyTypes),
+            'empty_types' => $emptyTypes,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function knownRecipientEmails(): array
+    {
+        return NotificationEmail::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->filter(fn (mixed $email): bool => is_string($email) && $email !== '')
+            ->values()
+            ->all();
+    }
+
+    public function fallbackRecipient(): string
+    {
+        return $this->fallbackEmail();
     }
 
     public function isAdminConfigurable(NotificationType $type): bool

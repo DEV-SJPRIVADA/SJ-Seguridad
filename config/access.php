@@ -10,14 +10,18 @@ return [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
         'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
+        'system.view.audit' => 'Ver auditoria global del sistema',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
+        'manage.commercial.parameters' => 'Administrar parametros comerciales',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
         'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
         'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de seleccion',
         'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
+        'ficha_empleados.view' => 'Ficha empleados: Ver lista de espera y ficha',
+        'ficha_empleados.manage' => 'Ficha empleados: Agregar a ficha empleados',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -27,6 +31,12 @@ return [
         'manage.supply.catalog' => 'Administrar catalogo de suministros (Full)',
         'approve.supply.quality' => 'Aprobar insumos (permiso completo)',
         'manage.quality.documents' => 'Calidad: Administrar documentos',
+
+        // Solicitudes de compra
+        'purchase.tab.create' => 'Solicitudes compra: Crear',
+        'purchase.tab.my_requests' => 'Solicitudes compra: Mis solicitudes',
+        'purchase.tab.approval' => 'Solicitudes compra: Autorizar (director)',
+        'purchase.tab.processing' => 'Compras: Bandeja de procesamiento',
     ],
 
     'area_indicador_permissions' => [
@@ -62,10 +72,54 @@ return [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
         'requisiciones' => 'Requisiciones',
-        'matriz_clientes' => 'Clientes',
-        'servicios_comerciales' => 'Servicios',
+        'gestion_clientes' => 'Gestion Clientes',
         'suministros' => 'Suministros',
+        'solicitudes_compra' => 'Solicitudes de compra',
+        'bandeja_compras' => 'Bandeja compras',
         'documentos' => 'Documentos',
+        'ficha_empleados' => 'Ficha empleados',
+    ],
+
+    /*
+    | Hogares canonicos del sidebar (NavigationResolver + SidebarVisibilityService).
+    | Los permisos view.board.{area}.{tablero} en areas que no son hogar solo aplican
+    | a solicitantes de esa area; roles transversales deben usar el hogar indicado.
+    */
+    'board_canonical_areas' => [
+        'requisiciones' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => true,
+        ],
+        'suministros' => [
+            'home' => 'compras',
+            'alt_home' => 'calidad',
+            'base_area_tab' => true,
+        ],
+        'solicitudes_compra' => [
+            'home' => 'compras',
+            'base_area_tab' => true,
+        ],
+        'bandeja_compras' => [
+            'home' => 'compras',
+            'base_area_tab' => false,
+        ],
+        'documentos' => [
+            'home' => null,
+            'admin_home' => 'calidad',
+            'base_area_tab' => true,
+        ],
+        'ficha_empleados' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'indicadores' => [
+            'home' => 'operaciones',
+            'base_area_tab' => false,
+        ],
+        'gestion_clientes' => [
+            'home' => 'comercial',
+            'base_area_tab' => false,
+        ],
     ],
 
     'indicador_tabs' => [
@@ -73,6 +127,22 @@ return [
         'captura' => 'Listado de Indicadores',
         'consolidado' => 'Consolidado',
         'ajustes' => 'Ajustes',
+    ],
+
+    'gestion_clientes_tabs' => [
+        'clientes' => 'Clientes',
+        'servicios' => 'Servicios',
+        'parametros' => 'Parametros',
+    ],
+
+    'ficha_empleados_tabs' => [
+        'empleados' => 'Empleados',
+        'catalogos' => 'Catalogos',
+    ],
+
+    'comercial_gestion_tab_board_keys' => [
+        'matriz_clientes',
+        'servicios_comerciales',
     ],
 
     'requisition_tabs' => [
@@ -89,6 +159,13 @@ return [
         'aprobacion_insumos' => 'Aprobacion Insumos',
         'insumos_aprobados' => 'Insumos aprobados',
         'catalogo' => 'Catalogo',
+    ],
+
+    'purchase_tabs' => [
+        'nueva' => 'Nueva solicitud',
+        'mis_solicitudes' => 'Mis solicitudes',
+        'pendientes_aprobacion' => 'Pendientes autorizacion',
+        'bandeja_compras' => 'Bandeja compras',
     ],
 
     'quality_document_tabs' => [
@@ -135,6 +212,8 @@ return [
             'requisitions.tab.solicitar',
             'requisitions.tab.seguimiento',
             'supply.tab.my_requests',
+            'purchase.tab.create',
+            'purchase.tab.my_requests',
         ],
         'global_groups' => [
             'administration' => [
@@ -143,6 +222,7 @@ return [
                     'view.dashboard',
                     'manage.users',
                     'manage.notifications',
+                    'system.view.audit',
                 ],
             ],
             'requisitions' => [
@@ -169,6 +249,22 @@ return [
                     'manage.supply.catalog',
                 ],
             ],
+            'purchases' => [
+                'label' => 'Solicitudes de compra',
+                'permissions' => [
+                    'purchase.tab.create',
+                    'purchase.tab.my_requests',
+                    'purchase.tab.approval',
+                    'purchase.tab.processing',
+                ],
+            ],
+            'directores' => [
+                'label' => 'Directores — Autorizacion',
+                'permissions' => [
+                    'purchase.tab.approval',
+                    'requisitions.approve.management',
+                ],
+            ],
             'documents' => [
                 'label' => 'Documentos de Calidad',
                 'permissions' => [
@@ -186,6 +282,14 @@ return [
                         'permissions' => [
                             'view.board.gestion_humana.requisiciones',
                             'view.board.gestion_humana.dashboard',
+                            'view.board.gestion_humana.ficha_empleados',
+                        ],
+                    ],
+                    'ficha_empleados' => [
+                        'label' => 'Ficha empleados',
+                        'permissions' => [
+                            'ficha_empleados.view',
+                            'ficha_empleados.manage',
                         ],
                     ],
                 ],
@@ -194,10 +298,18 @@ return [
                 'label' => 'Compras',
                 'subgroups' => [
                     'boards' => [
-                        'label' => 'Ver tableros de suministros',
+                        'label' => 'Ver tableros',
                         'permissions' => [
                             'view.board.compras.suministros',
+                            'view.board.compras.solicitudes_compra',
+                            'view.board.compras.bandeja_compras',
                             'view.board.compras.dashboard',
+                        ],
+                    ],
+                    'purchases' => [
+                        'label' => 'Solicitudes de compra (funciones)',
+                        'permissions' => [
+                            'purchase.tab.processing',
                         ],
                     ],
                 ],
@@ -230,8 +342,7 @@ return [
                         'label' => 'Ver tableros',
                         'permissions' => [
                             'view.board.comercial.dashboard',
-                            'view.board.comercial.matriz_clientes',
-                            'view.board.comercial.servicios_comerciales',
+                            'view.board.comercial.gestion_clientes',
                         ],
                     ],
                     'matriz' => [
@@ -239,6 +350,9 @@ return [
                         'permissions' => [
                             'comercial.matriz.view',
                             'comercial.matriz.manage',
+                            'manage.commercial.parameters',
+                            'view.board.comercial.matriz_clientes',
+                            'view.board.comercial.servicios_comerciales',
                         ],
                     ],
                 ],
@@ -267,7 +381,7 @@ return [
     'navigation' => [
         'administracion' => [
             'label' => 'Administracion',
-            'patterns' => ['admin.users.*', 'admin.notifications.*'],
+            'patterns' => ['admin.users.*', 'admin.notifications.*', 'admin.audit.*'],
             'items' => [
                 [
                     'label' => 'Usuarios',
@@ -280,6 +394,12 @@ return [
                     'route' => 'admin.notifications.index',
                     'permission' => 'manage.notifications',
                     'patterns' => ['admin.notifications.*'],
+                ],
+                [
+                    'label' => 'Auditoria del sistema',
+                    'route' => 'admin.audit.index',
+                    'permission' => 'system.view.audit',
+                    'patterns' => ['admin.audit.*'],
                 ],
             ],
         ],

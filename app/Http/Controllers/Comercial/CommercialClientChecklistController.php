@@ -9,6 +9,7 @@ use App\Models\CommercialClient;
 use App\Models\CommercialClientDocumentItem;
 use App\Support\CommercialDocumentCatalog;
 use App\Support\DisplayDate;
+use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialClientChecklistController extends Controller
 {
+    use HasGestionClientesTabs;
+
     public function index(Request $request): View
     {
         $this->authorizeView();
@@ -35,6 +38,7 @@ class CommercialClientChecklistController extends Controller
             'filters' => $filters,
             'documentStatuses' => CommercialDocumentCatalog::documentStatuses(),
             'canManage' => $this->canManage(),
+            'subTabs' => $this->getGestionClientesSubTabs('clientes'),
         ]);
     }
 

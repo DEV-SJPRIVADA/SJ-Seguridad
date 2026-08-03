@@ -12,6 +12,7 @@ use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
 use App\Support\DisplayDate;
+use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialServiceController extends Controller
 {
+    use HasGestionClientesTabs;
+
     public function index(Request $request): View
     {
         $this->authorizeView();
@@ -27,14 +30,17 @@ class CommercialServiceController extends Controller
         $q = trim($request->string('q')->toString());
         $portfolio = $request->string('portfolio')->toString();
         $vigencia = $request->string('vigencia')->toString();
+        $status = $this->resolveServiceStatusFilter($request);
 
-        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia)->get();
+        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia, $status)->get();
 
         return view('areas.comercial.matriz-clientes.services.index', [
             'services' => $services,
             'portfolios' => CommercialService::portfolios(),
-            'filters' => ['q' => $q, 'portfolio' => $portfolio, 'vigencia' => $vigencia],
+            'filters' => ['q' => $q, 'portfolio' => $portfolio, 'vigencia' => $vigencia, 'status' => $status],
+            'statusLabels' => self::serviceStatusFilterLabels(),
             'canManage' => $this->canManage(),
+            'subTabs' => $this->getGestionClientesSubTabs('servicios'),
         ]);
     }
 
@@ -45,21 +51,22 @@ class CommercialServiceController extends Controller
         $q = trim($request->string('q')->toString());
         $portfolio = $request->string('portfolio')->toString();
         $vigencia = $request->string('vigencia')->toString();
+        $status = $this->resolveServiceStatusFilter($request);
 
-        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia)->get();
+        $services = $this->filteredServicesQuery($q, $portfolio, $vigencia, $status)->get();
 
         $portfolios = CommercialService::portfolios();
 
         $columns = [
-            ['key' => fn ($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
             ['key' => fn ($s) => $s->client?->nit ?? '—', 'label' => 'NIT'],
-            ['key' => fn ($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
+            ['key' => fn ($s) => $s->client?->name ?? '—', 'label' => 'Cliente'],
             ['key' => 'contract_number', 'label' => 'Contrato'],
             ['key' => fn ($s) => $s->serviceType?->name ?? '—', 'label' => 'Tipo servicio'],
+            ['key' => fn ($s) => $portfolios[$s->portfolio] ?? $s->portfolio, 'label' => 'Portafolio'],
             ['key' => 'advisor_name', 'label' => 'Asesor'],
             ['key' => fn ($s) => DisplayDate::date($s->contract_start), 'label' => 'Inicio'],
             ['key' => fn ($s) => DisplayDate::date($s->contract_end), 'label' => 'Fin'],
-            ['key' => fn ($s) => $s->isExpired() ? 'Vencido' : ($s->isExpiringSoon(30) ? '≤30 dias' : ($s->isExpiringSoon(60) ? '≤60 dias' : '—')), 'label' => 'Vigencia'],
+            ['key' => fn ($s) => $s->serviceEstadoLabel(), 'label' => 'Estado'],
         ];
 
         return (new BaseExport($services, $columns, 'servicios_'.now()->format('Y-m-d').'.xlsx', 'Servicios - SJ Seguridad'))->download();
@@ -77,6 +84,7 @@ class CommercialServiceController extends Controller
                 'commercial_client_id' => $preselectedClientId,
             ]),
             'selectedClient' => $this->resolveSelectedClient($preselectedClientId),
+            'subTabs' => $this->getGestionClientesSubTabs('servicios'),
             ...$this->formOptions(),
         ]);
     }
@@ -106,6 +114,7 @@ class CommercialServiceController extends Controller
         return view('areas.comercial.matriz-clientes.services.edit', [
             'service' => $service,
             'selectedClient' => $this->resolveSelectedClient($selectedClientId) ?? $service->client,
+            'subTabs' => $this->getGestionClientesSubTabs('servicios'),
             ...$this->formOptions(),
         ]);
     }
@@ -129,13 +138,27 @@ class CommercialServiceController extends Controller
         $this->authorizeManage();
 
         $service->update([
-            'portfolio' => CommercialService::PORTFOLIO_INACTIVOS,
+            'is_active' => false,
             'updated_by' => auth()->id(),
         ]);
 
         return redirect()
             ->route('comercial.matriz.services.index')
-            ->with('status', 'Servicio movido a Inactivos.');
+            ->with('status', 'Servicio inactivado.');
+    }
+
+    public function activate(CommercialService $service): RedirectResponse
+    {
+        $this->authorizeManage();
+
+        $service->update([
+            'is_active' => true,
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Servicio activado.');
     }
 
     private function resolveSelectedClient(?int $clientId): ?CommercialClient
@@ -150,7 +173,7 @@ class CommercialServiceController extends Controller
     /**
      * @return Builder<CommercialService>
      */
-    private function filteredServicesQuery(string $q, string $portfolio, string $vigencia)
+    private function filteredServicesQuery(string $q, string $portfolio, string $vigencia, string $status = '')
     {
         return CommercialService::query()
             ->with(['client', 'serviceType'])
@@ -169,9 +192,30 @@ class CommercialServiceController extends Controller
                 fn ($query) => $query->where('portfolio', $portfolio)
             )
             ->filterByVigencia($vigencia)
-            ->orderByRaw('CASE WHEN portfolio = ? THEN 1 ELSE 0 END', [CommercialService::PORTFOLIO_INACTIVOS])
+            ->filterByServiceEstado($status)
+            ->orderBy('is_active')
             ->orderByDesc('contract_end')
             ->orderBy('contract_number');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function serviceStatusFilterLabels(): array
+    {
+        return [
+            'activo' => CommercialService::ESTADO_ACTIVO,
+            'por_vencer' => CommercialService::ESTADO_POR_VENCER,
+            'vencido' => CommercialService::ESTADO_VENCIDO,
+            'inactivo' => CommercialService::ESTADO_INACTIVO,
+        ];
+    }
+
+    private function resolveServiceStatusFilter(Request $request): string
+    {
+        $status = trim($request->string('status')->toString());
+
+        return array_key_exists($status, self::serviceStatusFilterLabels()) ? $status : '';
     }
 
     /**

@@ -86,6 +86,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 - Use contrasenas temporales y exija cambio en el primer ingreso para cuentas nuevas.
 - Desactive cuentas de personal que ya no pertenezca a la organizacion.
 - Ante dudas sobre un permiso transversal, consulte con el responsable del area (GH, Compras, Calidad, etc.).
+- **Evite duplicar tableros:** los permisos transversales (gestion GH, autorizacion director, bandeja Compras) muestran el menu en su **hogar canonico** — Gestion humana o Compras — sin necesidad de marcar Requisiciones/Suministros en todas las areas.
 
 ## Control de cambios
 
@@ -93,3 +94,4 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial — guia de usuario Admin Users |
 | 1.1 | 2026-07-22 | Alineacion documental | Sincronizada con matriz DOCUMENTATION.md |
+| 1.2 | 2026-08-03 | Navegacion canonica | Hogares canonicos del sidebar; guia para no duplicar tableros |

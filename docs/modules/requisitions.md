@@ -6,7 +6,10 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
 
 ## Alcance actual
 
-- Tablero `Requisiciones` visible por `view.board.{area}.requisiciones` o por funcionalidades de **area base** en el area del usuario
+- Tablero `Requisiciones` en sidebar:
+  - **Gestion / Dashboard / Parametros / Autorizacion gerencia:** hogar canonico **Gestion humana** (`SidebarVisibilityService`)
+  - **Solicitar / Mis requisiciones:** area base del usuario (`users.area_key`)
+  - Otras areas: solo si `view.board.{area}.requisiciones` y el usuario **no** tiene alcance GH global
 - Subtableros internos:
   - `Dashboard`
   - `Solicitar`
@@ -47,6 +50,8 @@ Gestionar el flujo de requisicion de personal por area, desde la solicitud inici
   - `cancelada`
 - Motivo **Cargo nuevo**: la requisicion queda pendiente hasta que gerencia autorice en la pestaña **Autorizacion gerencia**; GH no edita hasta pasar a `solicitada`
 - Al cerrar como `contratado`, es obligatorio `hiring_date` y los campos de compensacion marcados como requeridos en la validacion de update
+- Al cerrar como `contratado`, tambien son obligatorios `hired_document` (cedula, max 50) y `hired_full_name` (nombre completo, max 255) de la persona contratada — una persona por fila, sin importar `quantity` (alineado a FEAT-011); en cualquier otro estado son `nullable`. Son independientes de `replacement_document`/`replacement_name` (persona a quien se reemplaza, seccion Motivo)
+- Guardar una requisicion `contratado` crea/actualiza una entrada 1:1 en `personal_requisition_ficha_entries` (lista de espera de **Ficha empleados**, ver [`docs/modules/ficha-empleados.md`](ficha-empleados.md)); si `hired_document` ya existe en **otra** requisicion, se pide confirmacion (SweetAlert2) antes de reasignar el registro existente
 - Despues de creada, la requisicion ya no se modifica desde el flujo del solicitante; solo gestion humana puede hacerlo
 - Usuarios con `manage.users` o `manage.area.gestion_humana` pueden crear solicitudes en cualquier modulo sin necesidad de tener `area_key` coincidente
 
@@ -119,6 +124,7 @@ Post-despliegue: GH debe reactivar encargados en toggles; trazabilidad previa so
 
 ### Export Excel
 - Gestion y Mis requisiciones / seguimiento usan `App\Exports\PersonalRequisitionFullExport` (sobre `BaseExport`) con **todas las columnas operativas** de `personal_requisitions`, incluyendo compensacion; relaciones (cargo, cliente, motivo, etc.) se exportan como **nombres legibles**
+- El export de Gestion/Seguimiento **no** incluye `hired_document`/`hired_full_name` como columnas propias; esos datos se consultan en el export dedicado de **Ficha empleados** (`App\Exports\PersonalRequisitionFichaEntryExport`, ver [`docs/modules/ficha-empleados.md`](ficha-empleados.md))
 - Filtros del export = mismos que la vista: busqueda (`q`), estado, **fecha inicio / fecha fin** sobre `request_date` (opcionales; sin fechas exporta todo el universo filtrado por el resto). En seguimiento tambien aplican cliente, ciudad y solo mis solicitudes
 - Filtros de fecha en panel de Gestion y Seguimiento; al pulsar Buscar filtran la tabla y el Excel
 
@@ -214,7 +220,8 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 
 ## Tablas implicadas
 
-- `personal_requisitions` (compensacion, `recruiter_id` FK → `users.id` nullable, `recruiter_name` legacy solo lectura, cierre con `hiring_date`, `service_structure` text nullable)
+- `personal_requisitions` (compensacion, `recruiter_id` FK → `users.id` nullable, `recruiter_name` legacy solo lectura, cierre con `hiring_date`, `service_structure` text nullable, `hired_document`/`hired_full_name` nullable — persona contratada, ver Ficha empleados)
+- `personal_requisition_ficha_entries` (lista de espera 1:1 con `personal_requisitions`; ver [`docs/modules/ficha-empleados.md`](ficha-empleados.md))
 - `personal_requisition_status_logs`
 - `personal_requisition_change_logs` (trazabilidad de campos editados en gestion)
 - `requisition_positions`
@@ -258,8 +265,11 @@ Tabla eliminada (FEAT-011): `requisition_recruiters`.
 - **FEAT-010 (2026-07-27):** dashboard GH migra a **ApexCharts** via Vite (`resources/js/requisitions-dashboard-charts.js` + `apex-defaults.js`); Chart.js retirado.
 - **FEAT-012 (2026-07-28):** autorizacion gerencia para motivo cargo nuevo (`pendiente_autorizacion_gerencia`); pestaña Autorizacion gerencia; tipos de notificacion en Parametros (`new_requisition`, `management_approval_cargo_nuevo`).
 - **FEAT-011 (2026-07-28):** encargados de seleccion = usuarios GH + permiso `requisitions.selection_officer` (toggles en Parametros); `recruiter_id` referencia `users`; migracion elimina `requisition_recruiters`; export/impresion/historial usan `displayRecruiterName()`.
+- **FEAT-020 (2026-07-30):** columnas `hired_document`/`hired_full_name` (persona contratada) obligatorias solo con `status=contratado`, con deteccion de cedula duplicada (`App\Rules\Requisitions\HiredDocumentNotDuplicated`) y confirmacion via SweetAlert2; upsert 1:1 en `personal_requisition_ficha_entries` (`App\Services\Requisitions\PersonalRequisitionFichaSync`) que alimenta el tablero nuevo **Ficha empleados**; labels nuevos "Cedula contratado"/"Nombre contratado" en `PersonalRequisitionChangeLogger`. Riesgo conocido: `quantity > 1` en Gestion sigue permitido y una fila asi marcada Contratado solo registra una persona (fuera de alcance v1).
+- **Navegacion canonica (2026-08-03):** tablero Requisiciones GH consolidado en sidebar bajo Gestion humana; ver `SidebarVisibilityService` y `docs/ACCESS_CONTROL.md`.
 
 ## Referencias
 
 - Guia de usuario: [`docs/user/requisitions.md`](../user/requisitions.md)
+- Modulo relacionado: [`docs/modules/ficha-empleados.md`](ficha-empleados.md) (lista de espera y ficha de personas contratadas)
 - Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

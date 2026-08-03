@@ -9,7 +9,7 @@ use Spatie\Permission\PermissionRegistrar;
 class PermissionCatalog
 {
     /**
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
     public static function configuredNames(): Collection
     {
@@ -38,11 +38,11 @@ class PermissionCatalog
                                 return true;
                             }
 
-                            if ($boardKey === 'matriz_clientes' && $areaKey !== 'comercial') {
+                            if ($boardKey === 'gestion_clientes' && $areaKey !== 'comercial') {
                                 return true;
                             }
 
-                            if ($boardKey === 'servicios_comerciales' && $areaKey !== 'comercial') {
+                            if ($boardKey === 'ficha_empleados' && $areaKey !== 'gestion_humana') {
                                 return true;
                             }
 
@@ -50,6 +50,10 @@ class PermissionCatalog
                         })
                         ->map(fn (string $boardKey) => "view.board.{$areaKey}.{$boardKey}")
                 ))
+            )
+            ->merge(
+                collect(config('access.comercial_gestion_tab_board_keys', []))
+                    ->map(fn (string $boardKey) => "view.board.comercial.{$boardKey}")
             )
             ->unique()
             ->values();

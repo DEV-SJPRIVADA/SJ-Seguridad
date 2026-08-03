@@ -1,5 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
+        @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
         <div class="app-container comercial-clients-page__workspace-header">
             <div class="panel-heading-row">
                 <h2 class="panel-title panel-title--page">Clientes</h2>
@@ -146,7 +147,7 @@
                                         </td>
                                         <td>{{ $client->services_count }}</td>
                                         <td>
-                                            @if ($client->vigente_operational_services_count > 0)
+                                            @if ($client->active_operational_services_count > 0)
                                                 <span class="status-pill status-pill--success">Activo</span>
                                             @else
                                                 <span class="status-pill status-pill--danger">Inactivo</span>

@@ -35,6 +35,18 @@ Mismo flujo de roles, pero el usuario abre un chat por rol y pega outputs entre 
 
 Prompts en [`docs/agents/prompts/`](agents/prompts/).
 
+## Proteccion de datos (todos los agentes)
+
+**Prohibido** ejecutar o proponer como paso automatico, sin autorizacion explicita del usuario:
+
+- `php artisan migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`
+- SQL destructivo: `DROP DATABASE`, `DROP TABLE`, `TRUNCATE`, `DELETE` masivo
+- Restaurar un dump SQL sobre la BD de desarrollo o produccion
+
+Si una migracion falla: corregir la migracion y usar `php artisan migrate`. Informar al usuario antes de cualquier operacion que pueda perder datos.
+
+Backups automaticos Laragon (local): `C:\laragon\backup\mysql\`. Regla Cursor: [`.cursor/rules/database-safety.mdc`](../.cursor/rules/database-safety.mdc).
+
 ## Carril rapido (excepciones)
 
 **No** pasa por Analista, AgentSj ni `TASKS.md` cuando:

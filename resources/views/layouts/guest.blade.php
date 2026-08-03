@@ -16,17 +16,17 @@
         @endif
     </head>
     <body>
-        <div class="guest-shell">
+        <div @class(['guest-shell', $shellClass])>
             <div class="guest-stack">
-            <div class="guest-logo">
-                <a href="/">
-                    <x-application-logo class="brand-logo" />
-                </a>
-            </div>
+                <div class="guest-card">
+                    <div class="guest-logo">
+                        <a href="/">
+                            <x-application-logo class="brand-logo" />
+                        </a>
+                    </div>
 
-            <div class="guest-card">
-                {{ $slot }}
-            </div>
+                    {{ $slot }}
+                </div>
             </div>
         </div>
     </body>

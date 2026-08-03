@@ -4,9 +4,11 @@ namespace App\Services\Navigation;
 
 use App\Models\User;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\CommercialAccessService;
+use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -16,6 +18,10 @@ class NavigationResolver
         private readonly RequisitionAccessService $requisitionAccess,
         private readonly SupplyAccessService $supplyAccess,
         private readonly BoardAccessService $boardAccess,
+        private readonly CommercialAccessService $commercialAccess,
+        private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly PurchaseAccessService $purchaseAccess,
+        private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
 
     /**
@@ -98,6 +104,10 @@ class NavigationResolver
 
                 $boardItems = collect(config('access.boards', []))
                     ->map(function (string $boardLabel, string $boardKey) use ($key, $user, $routeName, $requestModule, $requestBoard): ?array {
+                        if (! $this->sidebarVisibility->shouldShowBoard($user, $key, $boardKey)) {
+                            return null;
+                        }
+
                         if ($boardKey === 'documentos') {
                             if (! $this->boardAccess->canViewDocumentsBoard($user, $key)) {
                                 return null;
@@ -130,42 +140,39 @@ class NavigationResolver
                             ];
                         }
 
-                        if ($boardKey === 'matriz_clientes') {
+                        if ($boardKey === 'gestion_clientes') {
                             if ($key !== 'comercial') {
                                 return null;
                             }
 
-                            if (! $user->can('comercial.matriz.view') && ! $user->can('comercial.matriz.manage') && ! $user->can('view.board.comercial.matriz_clientes')) {
+                            if (! $this->commercialAccess->canViewGestionClientesBoard($user)) {
                                 return null;
                             }
 
                             return [
                                 'label' => $boardLabel,
                                 'route' => 'comercial.matriz.clients.index',
-                                'url' => route('comercial.matriz.clients.index'),
-                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.clients.'),
+                                'url' => $user->defaultGestionClientesBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.clients.')
+                                    || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                                    || str_starts_with((string) $routeName, 'comercial.parameters.'),
                             ];
                         }
 
-                        if ($boardKey === 'servicios_comerciales') {
-                            if ($key !== 'comercial') {
+                        if ($boardKey === 'ficha_empleados') {
+                            if ($key !== 'gestion_humana') {
                                 return null;
                             }
 
-                            if (
-                                ! $user->can('comercial.matriz.view')
-                                && ! $user->can('comercial.matriz.manage')
-                                && ! $user->can('view.board.comercial.servicios_comerciales')
-                                && ! $user->can('view.board.comercial.matriz_clientes')
-                            ) {
+                            if (! $this->fichaEmpleadosAccess->canViewFichaEmpleadosBoard($user)) {
                                 return null;
                             }
 
                             return [
                                 'label' => $boardLabel,
-                                'route' => 'comercial.matriz.services.index',
-                                'url' => route('comercial.matriz.services.index'),
-                                'active' => str_starts_with((string) $routeName, 'comercial.matriz.services.'),
+                                'route' => 'gestion-humana.ficha-empleados.employees.index',
+                                'url' => $user->defaultFichaEmpleadosBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.'),
                             ];
                         }
 
@@ -199,6 +206,42 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'solicitudes_compra') {
+                            if (! $this->purchaseAccess->canViewPurchaseBoard($user, $key)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'purchase-requests.index',
+                                'url' => $user->defaultPurchaseBoardUrl($key),
+                                'active' => str_starts_with((string) $routeName, 'purchase-requests.')
+                                    && $requestModule === $key,
+                            ];
+                        }
+
+                        if ($boardKey === 'bandeja_compras') {
+                            if ($key !== 'compras') {
+                                return null;
+                            }
+
+                            if (! $user->can('purchase.tab.processing') && ! $user->can('view.board.compras.bandeja_compras')) {
+                                return null;
+                            }
+
+                            if (! $user->can('purchase.tab.processing')) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'purchase-requests.processing.index',
+                                'url' => route('purchase-requests.processing.index', ['module' => $key]),
+                                'active' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
+                                    && $requestModule === $key,
+                            ];
+                        }
+
                         $permission = "view.board.{$key}.{$boardKey}";
 
                         if (! $user->can($permission)) {
@@ -207,22 +250,37 @@ class NavigationResolver
 
                         $url = match (true) {
                             $key === 'comercial' && $boardKey === 'dashboard' => route('comercial.dashboard'),
+                            $key === 'compras' && $boardKey === 'dashboard' => route('compras.dashboard'),
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };
 
                         $active = match (true) {
                             $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                            $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.')
+                                && $requestModule === $key,
+                            $boardKey === 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
+                                && $requestModule === $key,
                             $boardKey === 'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
-                            $boardKey === 'matriz_clientes' => str_starts_with((string) $routeName, 'comercial.matriz.clients.') && $key === 'comercial',
-                            $boardKey === 'servicios_comerciales' => str_starts_with((string) $routeName, 'comercial.matriz.services.') && $key === 'comercial',
+                            $boardKey === 'gestion_clientes' => (
+                                str_starts_with((string) $routeName, 'comercial.matriz.clients.')
+                                || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                                || str_starts_with((string) $routeName, 'comercial.parameters.')
+                            ) && $key === 'comercial',
+                            $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
+                            $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
 
                         return [
                             'label' => $boardLabel,
-                            'route' => $boardKey === 'requisiciones' ? 'requisitions.dashboard' : ($key === 'comercial' && $boardKey === 'dashboard' ? 'comercial.dashboard' : 'dashboard'),
+                            'route' => match (true) {
+                                $boardKey === 'requisiciones' => 'requisitions.dashboard',
+                                $key === 'comercial' && $boardKey === 'dashboard' => 'comercial.dashboard',
+                                $key === 'compras' && $boardKey === 'dashboard' => 'compras.dashboard',
+                                default => 'dashboard',
+                            },
                             'url' => $url,
                             'active' => $active,
                         ];
@@ -238,12 +296,29 @@ class NavigationResolver
                         || $user->can('view.board.comercial.servicios_comerciales')
                     )
                     && $boardItems->doesntContain('label', config('access.boards.dashboard'))
+                    && $this->sidebarVisibility->shouldShowBoard($user, 'comercial', 'dashboard')
                 ) {
                     $boardItems->prepend([
                         'label' => config('access.boards.dashboard'),
                         'route' => 'comercial.dashboard',
                         'url' => route('comercial.dashboard'),
                         'active' => $routeName === 'comercial.dashboard',
+                    ]);
+                }
+
+                if ($key === 'compras'
+                    && (
+                        $user->can('purchase.tab.processing')
+                        || $user->can('purchase.tab.approval')
+                    )
+                    && $boardItems->doesntContain('label', config('access.boards.dashboard'))
+                    && $this->sidebarVisibility->shouldShowBoard($user, 'compras', 'dashboard')
+                ) {
+                    $boardItems->prepend([
+                        'label' => config('access.boards.dashboard'),
+                        'route' => 'compras.dashboard',
+                        'url' => route('compras.dashboard'),
+                        'active' => $routeName === 'compras.dashboard',
                     ]);
                 }
 
@@ -259,6 +334,8 @@ class NavigationResolver
                 ) || (
                     str_starts_with((string) $routeName, 'supplies.') && (string) request()->route('module') === $key
                 ) || (
+                    str_starts_with((string) $routeName, 'purchase-requests.') && (string) request()->route('module') === $key
+                ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
@@ -267,7 +344,15 @@ class NavigationResolver
                         $routeName === 'comercial.dashboard'
                         || str_starts_with((string) $routeName, 'comercial.matriz.clients.')
                         || str_starts_with((string) $routeName, 'comercial.matriz.services.')
+                        || str_starts_with((string) $routeName, 'comercial.parameters.')
                     ) && $key === 'comercial'
+                ) || (
+                    (
+                        $routeName === 'compras.dashboard'
+                        || str_starts_with((string) $routeName, 'purchase-requests.processing.')
+                    ) && $key === 'compras'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana'
                 );
 
                 return [
@@ -316,6 +401,7 @@ class NavigationResolver
     {
         if (str_starts_with((string) $routeName, 'requisitions.')
             || str_starts_with((string) $routeName, 'supplies.')
+            || str_starts_with((string) $routeName, 'purchase-requests.')
             || str_starts_with((string) $routeName, 'quality-documents.')) {
             return (string) request()->route('module');
         }

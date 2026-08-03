@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Comercial;
 
-use App\Models\CommercialService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -73,7 +72,7 @@ class StoreCommercialServiceRequest extends FormRequest
     {
         return [
             'commercial_client_id' => ['required', 'integer', Rule::exists('commercial_clients', 'id')],
-            'portfolio' => ['required', 'string', Rule::in(array_keys(CommercialService::portfolios()))],
+            'portfolio' => ['required', 'string', Rule::exists('commercial_portfolios', 'slug')],
             'contract_number' => ['nullable', 'string', 'max:80'],
             'advisor_name' => ['nullable', 'string', 'max:120'],
             'commercial_sector_id' => ['nullable', 'integer', Rule::exists('commercial_sectors', 'id')],

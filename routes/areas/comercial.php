@@ -3,6 +3,7 @@
 use App\Http\Controllers\Comercial\CommercialClientChecklistController;
 use App\Http\Controllers\Comercial\CommercialClientController;
 use App\Http\Controllers\Comercial\CommercialDashboardController;
+use App\Http\Controllers\Comercial\CommercialParameterController;
 use App\Http\Controllers\Comercial\CommercialServiceController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,4 +39,15 @@ Route::middleware(['password.changed'])
         Route::get('/{service}/editar', [CommercialServiceController::class, 'edit'])->name('edit');
         Route::patch('/{service}', [CommercialServiceController::class, 'update'])->name('update');
         Route::post('/{service}/inactivar', [CommercialServiceController::class, 'inactivate'])->name('inactivate');
+        Route::post('/{service}/activar', [CommercialServiceController::class, 'activate'])->name('activate');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('comercial/parametros')
+    ->name('comercial.parameters.')
+    ->group(function (): void {
+        Route::get('/', [CommercialParameterController::class, 'index'])->name('index');
+        Route::post('/{type}', [CommercialParameterController::class, 'store'])->name('store');
+        Route::patch('/{type}/{parameterId}', [CommercialParameterController::class, 'update'])->name('update');
+        Route::delete('/{type}/{parameterId}', [CommercialParameterController::class, 'destroy'])->name('destroy');
     });

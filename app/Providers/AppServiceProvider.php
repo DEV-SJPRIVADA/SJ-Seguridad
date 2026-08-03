@@ -3,17 +3,19 @@
 namespace App\Providers;
 
 use App\Models\PersonalRequisition;
+use App\Models\PurchaseRequest;
 use App\Models\QualityDocument;
 use App\Models\SupplyRequest;
 use App\Models\User;
 use App\Policies\PersonalRequisitionPolicy;
+use App\Policies\PurchaseRequestPolicy;
 use App\Policies\QualityDocumentPolicy;
 use App\Policies\SupplyRequestPolicy;
 use App\Services\Navigation\NavigationResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,14 +43,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(QualityDocument::class, QualityDocumentPolicy::class);
         Gate::policy(SupplyRequest::class, SupplyRequestPolicy::class);
         Gate::policy(PersonalRequisition::class, PersonalRequisitionPolicy::class);
+        Gate::policy(PurchaseRequest::class, PurchaseRequestPolicy::class);
 
         Route::bind('supply_request', function (string $value, $route) {
             $query = SupplyRequest::query()->whereKey($value);
 
             $routeName = (string) $route->getName();
-            $isCrossAreaApprovedRoute = str_starts_with($routeName, 'supplies.approved.');
+            $isCrossAreaRoute = str_starts_with($routeName, 'supplies.approved.')
+                || str_starts_with($routeName, 'purchase-requests.processing.');
 
-            if (! $isCrossAreaApprovedRoute) {
+            if (! $isCrossAreaRoute) {
                 $query->where('area_key', (string) $route->parameter('module'));
             }
 

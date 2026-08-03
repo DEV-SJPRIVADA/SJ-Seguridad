@@ -74,8 +74,10 @@
 
 - Los permisos no se hardcodean en vistas o controladores sin respaldo en configuracion central.
 - La gestion inicial de usuarios vive aislada en `admin/users`.
-- La navegacion de modulos y tableros autorizados se resuelve desde configuracion central y se comparte al layout base.
+- La navegacion de modulos y tableros autorizados se resuelve desde configuracion central (`NavigationResolver`) y se comparte al layout base.
+- **Hogares canonicos del sidebar:** `SidebarVisibilityService` filtra que tableros aparecen en cada area del menu (evita duplicar Requisiciones/Suministros/Documentos en las 8 areas). Detalle en [`ACCESS_CONTROL.md`](c:/laragon/www/SJSEGURIDAD/docs/ACCESS_CONTROL.md). Las rutas y middleware conservan el bypass operativo de `manage.users`.
 - El crecimiento por areas debe mantener rutas, permisos, vistas y validaciones desacopladas.
+- **Auditoria hibrida (FEAT-021):** eventos cross-modulo en `audit_logs` via `SystemAuditService`; historiales embebidos de dominio (ej. cambios campo a campo en requisiciones) permanecen en tablas propias. Escritura sync o en cola (`AUDIT_QUEUE`); retencion con `audit:purge`.
 
 ## Ownership por modulo
 
@@ -89,6 +91,7 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 | operaciones / indicadores | `routes/areas/operaciones.php` | `Operaciones\IndicadorController` | `resources/views/areas/operaciones/` | `docs/modules/indicadores.md` | `docs/user/indicadores.md` |
 | comercial | `routes/areas/comercial.php` | `Comercial\*Controller` | `resources/views/areas/comercial/` | `docs/modules/matriz-clientes.md` | `docs/user/matriz-clientes.md` |
 | admin-users | `routes/web.php` (grupo admin) | `Admin\UserController` | `resources/views/admin/` | `docs/modules/admin-users.md` | `docs/user/admin-users.md` |
+| audit-log (transversal) | `routes/web.php` (admin auditoria) | `Admin\SystemAuditController`, `SystemAuditService` | `resources/views/admin/audit/` | `docs/modules/audit-log.md` | `docs/user/audit-log.md` |
 | branding | — | — | layouts, components | `docs/modules/branding.md` | — |
 
 Archivos compartidos (un solo agente por tarea): `config/access.php`, `routes/web.php` (require), layouts, `resources/css/app.css`, seeders globales.

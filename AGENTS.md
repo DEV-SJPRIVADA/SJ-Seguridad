@@ -21,6 +21,13 @@
 - Las contrasenas temporales deben forzar cambio al primer ingreso cuando aplique.
 - Revisar periodicamente logs, pruebas y validaciones de permisos antes de cerrar cada sprint.
 
+## Proteccion de datos (obligatorio para humanos e IA)
+- **Nunca** borrar, truncar, resetear ni reemplazar datos de la base de datos **sin consultar al usuario y obtener autorizacion explicita**.
+- Comandos **prohibidos** salvo OK del usuario: `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`, `DROP DATABASE`, `DROP TABLE`, `TRUNCATE`, restauracion de backups SQL sobre la BD activa.
+- Si una migracion falla: corregir el archivo y ejecutar `migrate`; **no** usar fresh como atajo.
+- En desarrollo local, Laragon guarda backups en `C:\laragon\backup\mysql\`. Ante perdida de datos, informar al usuario y ofrecer restauracion; no restaurar sin su confirmacion.
+- Regla Cursor: [`.cursor/rules/database-safety.mdc`](.cursor/rules/database-safety.mdc).
+
 ## Convenciones actuales
 - El control de acceso usa `spatie/laravel-permission`.
 - Los roles base son `super-admin`, `administrador` y `usuario` (los antiguos `coordinador` y `consulta` fueron migrados a `usuario`).
@@ -46,6 +53,11 @@
 - Boton reutilizable mediante el componente Blade `<x-export-excel>`.
 - No agregar dependencias adicionales de exportacion; usar `PhpSpreadsheet` (ya incluido via `phpoffice/phpspreadsheet`).
 - El boton DataTables `excelHtml5` esta deprecado; no reintroducirlo.
+
+## Auditoria central
+- Modulos nuevos deben registrar eventos via `App\Services\Audit\SystemAuditService` (wrapper delgado por modulo con `module`/`area` fijos).
+- No crear tablas de audit duplicadas salvo historiales de dominio embebidos (ej. cambios campo a campo en requisiciones).
+- Ver `config/audit.php` y `docs/modules/audit-log.md`.
 
 ## Criterio de revision continua
 - Verificar que no se rompan rutas protegidas ni estados de sesion.

@@ -27,6 +27,7 @@ use App\Services\Access\RequisitionAccessService;
 use App\Services\Notifications\NotificationConfigService;
 use App\Services\Requisitions\CommercialClientBridge;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
+use App\Services\Requisitions\PersonalRequisitionFichaSync;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
 use App\Services\Requisitions\RequisitionRequestReasonCatalog;
 use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
@@ -54,6 +55,7 @@ class RequisitionController extends Controller
         private readonly PersonalRequisitionChangeLogger $changeLogger,
         private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
         private readonly NotificationConfigService $notificationConfig,
+        private readonly PersonalRequisitionFichaSync $fichaSync,
     ) {}
 
     /**
@@ -484,6 +486,12 @@ class RequisitionController extends Controller
                 'requester_observation' => $request->input('requester_observation'),
                 'human_resources_observation' => $request->input('human_resources_observation'),
                 'hiring_date' => $request->input('hiring_date'),
+                'hired_document' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_document')
+                    : null,
+                'hired_full_name' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_full_name')
+                    : null,
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
                 'closed_at' => in_array($newStatus, [PersonalRequisition::STATUS_CONTRATADO, PersonalRequisition::STATUS_CANCELADA], true) ? now() : null,
@@ -492,6 +500,25 @@ class RequisitionController extends Controller
             $this->changeLogger->logUpdate($requisition, $updateData, $request->user()->id);
 
             $requisition->update($updateData);
+
+            $hiredDocument = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? trim((string) $request->input('hired_document'))
+                : '';
+            $hiredFullName = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? trim((string) $request->input('hired_full_name'))
+                : '';
+            $confirmDuplicate = $request->boolean('confirm_duplicate_hired')
+                && $hiredDocument !== ''
+                && $hiredDocument === trim((string) $request->input('confirm_duplicate_hired_document'));
+
+            $this->fichaSync->syncOnUpdate(
+                $requisition,
+                $newStatus,
+                $hiredDocument !== '' ? $hiredDocument : null,
+                $hiredFullName !== '' ? $hiredFullName : null,
+                $confirmDuplicate,
+                $request->user()->id,
+            );
 
             if ($oldStatus !== $newStatus) {
                 $requisition->statusLogs()->create([

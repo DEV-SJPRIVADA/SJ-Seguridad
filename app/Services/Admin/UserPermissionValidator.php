@@ -2,6 +2,8 @@
 
 namespace App\Services\Admin;
 
+use Illuminate\Support\Collection;
+
 class UserPermissionValidator
 {
     /**
@@ -28,13 +30,32 @@ class UserPermissionValidator
         ]);
 
         if ($requisitionScoped->isNotEmpty()) {
-            $hasRequisitionBoard = $permissionSet->contains(
-                fn (string $name) => str_starts_with($name, 'view.board.') && str_ends_with($name, '.requisiciones')
+            $hasGhRequisitionHome = $permissionSet->contains('view.board.gestion_humana.requisiciones')
+                || $permissionSet->contains('requisitions.approve.management');
+
+            if (! $hasGhRequisitionHome) {
+                $warnings[] = 'Marco acciones de Requisiciones (GH); el menu las muestra bajo Gestion humana (hogar canonico). No requiere tableros en otras areas.';
+            }
+
+            $redundantRequisitionBoards = $permissionSet->filter(
+                fn (string $name): bool => str_starts_with($name, 'view.board.')
+                    && str_ends_with($name, '.requisiciones')
+                    && ! str_starts_with($name, 'view.board.gestion_humana.')
             );
 
-            if (! $hasRequisitionBoard) {
-                $warnings[] = 'Marco acciones de Requisiciones (GH), pero no habilito ver Requisiciones en el menu de ninguna area.';
+            if ($redundantRequisitionBoards->isNotEmpty()) {
+                $warnings[] = 'Tiene tableros Requisiciones fuera de Gestion humana y alcance GH; el menu solo mostrara Requisiciones en GH (salvo su area base como solicitante).';
             }
+        }
+
+        if ($permissionSet->contains('requisitions.approve.management')
+            && ! $permissionSet->contains('view.board.gestion_humana.requisiciones')
+        ) {
+            $warnings[] = 'Autorizacion gerencia aparece en el menu bajo Gestion humana → Requisiciones (hogar canonico).';
+        }
+
+        if ($permissionSet->contains('purchase.tab.approval')) {
+            $warnings[] = 'Autorizacion de compras aparece en Compras → Solicitudes de compra → Pendientes (hogar canonico).';
         }
 
         $supplyQualityScoped = $permissionSet->intersect([
@@ -104,9 +125,9 @@ class UserPermissionValidator
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, string>  $permissionSet
+     * @param  Collection<int, string>  $permissionSet
      */
-    private function hasSupplyBoard(\Illuminate\Support\Collection $permissionSet): bool
+    private function hasSupplyBoard(Collection $permissionSet): bool
     {
         return $permissionSet->contains(
             fn (string $name) => str_starts_with($name, 'view.board.') && str_ends_with($name, '.suministros')

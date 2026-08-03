@@ -2,11 +2,19 @@
 
 namespace App\Services\Indicadores;
 
-use App\Models\AuditLog;
+use App\Services\Audit\SystemAuditService;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditLogService
 {
+    private const MODULE = 'indicadores';
+
+    private const AREA = 'operaciones';
+
+    public function __construct(
+        private readonly SystemAuditService $systemAuditService,
+    ) {}
+
     public function logModelChange(
         string $eventType,
         string $action,
@@ -16,19 +24,17 @@ class AuditLogService
         ?string $reason = null,
         array $metadata = []
     ): void {
-        AuditLog::query()->create([
-            'user_id' => auth()->id(),
-            'event_type' => $eventType,
-            'action' => $action,
-            'auditable_type' => $model ? $model::class : null,
-            'auditable_id' => $model?->getKey(),
-            'old_values' => $before,
-            'new_values' => $after,
-            'metadata' => $metadata,
-            'reason' => $reason,
-            'ip_address' => request()?->ip(),
-            'user_agent' => request()?->userAgent(),
-        ]);
+        $this->systemAuditService->logModelChange(
+            module: self::MODULE,
+            eventType: $eventType,
+            action: $action,
+            model: $model,
+            before: $before,
+            after: $after,
+            reason: $reason,
+            metadata: $metadata,
+            area: self::AREA,
+        );
     }
 
     public function logEvent(
@@ -38,14 +44,14 @@ class AuditLogService
         array $metadata = [],
         ?Model $model = null
     ): void {
-        $this->logModelChange(
+        $this->systemAuditService->logEvent(
+            module: self::MODULE,
             eventType: $eventType,
             action: $action,
-            model: $model,
-            before: null,
-            after: null,
             reason: $reason,
-            metadata: $metadata
+            metadata: $metadata,
+            model: $model,
+            area: self::AREA,
         );
     }
 }

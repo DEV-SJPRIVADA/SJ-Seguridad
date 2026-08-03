@@ -91,6 +91,10 @@
                             config.dom = 'rt';
                         }
 
+                        if ($(this).attr('data-dt-responsive') === 'false') {
+                            config.responsive = false;
+                        }
+
                         $(this).DataTable(config);
                     }
                 });
@@ -481,14 +485,14 @@
                 padding: 0 !important;
             }
 
-            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) {
+            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis):not(.dashboard-stat-grid--compras-kpis) {
                 display: grid !important;
                 gap: 1rem !important;
                 grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
                 margin-bottom: 2rem !important;
             }
 
-            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) .card {
+            .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis):not(.dashboard-stat-grid--compras-kpis) .card {
                 padding: 1.25rem !important;
                 height: 100% !important;
             }
@@ -568,11 +572,27 @@
                 margin: 0.15rem 0 0 !important;
             }
 
+            /* Compras: KPIs compactos en una fila */
+            .dashboard-stat-grid.dashboard-stat-grid--compras-kpis {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                align-items: stretch !important;
+                gap: 0.5rem !important;
+                margin-bottom: 1rem !important;
+                width: 100% !important;
+            }
+
+            .dashboard-stat-grid--compras-kpis > .compras-dashboard-kpi {
+                flex: 1 1 0 !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+
             @media (max-width: 1024px) {
-                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) {
+                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis):not(.dashboard-stat-grid--compras-kpis) {
                     grid-template-columns: 1fr !important;
                 }
-                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) .card {
+                .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis):not(.dashboard-stat-grid--compras-kpis) .card {
                     text-align: center !important;
                 }
                 .dashboard-hero__header {
@@ -602,6 +622,16 @@
                     flex: 1 1 calc(50% - 0.35rem) !important;
                     min-width: calc(50% - 0.35rem) !important;
                     max-width: calc(50% - 0.35rem) !important;
+                }
+
+                .dashboard-stat-grid.dashboard-stat-grid--compras-kpis {
+                    flex-wrap: wrap !important;
+                }
+
+                .dashboard-stat-grid--compras-kpis > .compras-dashboard-kpi {
+                    flex: 1 1 calc(50% - 0.25rem) !important;
+                    min-width: calc(50% - 0.25rem) !important;
+                    max-width: calc(50% - 0.25rem) !important;
                 }
             }
 

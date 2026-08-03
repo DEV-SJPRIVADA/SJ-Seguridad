@@ -51,6 +51,8 @@ class PersonalRequisitionChangeLogger
         'requester_observation' => 'Observacion del solicitante',
         'human_resources_observation' => 'Observacion de gestion humana',
         'hiring_date' => 'Fecha de contratacion',
+        'hired_document' => 'Cedula contratado',
+        'hired_full_name' => 'Nombre contratado',
         'status' => 'Estado',
     ];
 

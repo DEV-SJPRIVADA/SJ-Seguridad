@@ -6,8 +6,9 @@ El proyecto usa `spatie/laravel-permission` con guard `web`.
 
 ## Roles base
 
-- `super-admin`
-- `administrador`
+- `super-admin` — acceso total; único rol con `manage.users` por defecto
+- `administrador` — plataforma/GH (`manage.requisition.parameters`, `requisitions.approve.management`); **sin** `manage.users`
+- `director` — autoriza solicitudes de compra y cargo nuevo en requisiciones (`purchase.tab.approval`, `requisitions.approve.management`)
 - `usuario`
 
 Los roles antiguos `coordinador` y `consulta` fueron eliminados; el seeder migra a `usuario` cualquier usuario que aun los tenga.
@@ -18,6 +19,7 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 
 - `view.dashboard`
 - `manage.users`
+- `system.view.audit` — auditoria global del sistema (super-admin)
 - `manage.requisition.parameters`
 - `requisitions.tab.dashboard`
 - `requisitions.tab.solicitar`
@@ -40,6 +42,15 @@ Permisos del modulo de suministros:
 - `manage.supply.catalog`
 - `approve.supply.quality`
 
+Permisos del modulo **Solicitudes de compra**:
+
+- `purchase.tab.create`
+- `purchase.tab.my_requests`
+- `purchase.tab.approval`
+- `purchase.tab.processing`
+
+Tableros: `view.board.{area}.solicitudes_compra`, `view.board.{area}.bandeja_compras`
+
 Permisos del modulo de documentos de Calidad:
 
 - `manage.quality.documents`
@@ -53,15 +64,18 @@ Permisos del modulo de indicadores (area `operaciones`, board `indicadores`):
 
 Estos permisos viven en `config/access.php` bajo `area_indicador_permissions.operaciones`. En **Administracion de usuarios** aparecen en **Activa visualizacion de otras areas → Operaciones → Indicadores (funciones)**.
 
-Permisos de Matriz comercial (area `comercial`, boards `dashboard`, `matriz_clientes` y `servicios_comerciales`):
+Permisos de Matriz comercial (area `comercial`, boards sidebar `dashboard` y `gestion_clientes`):
 
 - `comercial.matriz.view`
 - `comercial.matriz.manage`
 - `view.board.comercial.dashboard` / `view.area.comercial` (tablero **Dashboard** KPI)
-- `view.board.comercial.matriz_clientes` (tablero **Clientes**)
-- `view.board.comercial.servicios_comerciales` (tablero **Servicios**)
+- `view.board.comercial.gestion_clientes` (tablero sidebar **Gestion Clientes**)
+- `view.board.comercial.matriz_clientes` (pestaña **Clientes** dentro de Gestion Clientes)
+- `view.board.comercial.servicios_comerciales` (pestaña **Servicios** dentro de Gestion Clientes)
 
-Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Activa visualizacion de otras areas → Comercial**.
+Viven en `area_indicador_permissions.comercial`. En Admin usuarios: **Activa visualizacion de otras areas → Comercial** (*Ver tableros* / *Matriz comercial*).
+
+Visibilidad de pestañas: `CommercialAccessService` — usuario con solo permiso de clientes ve pestaña Clientes; solo servicios ve Servicios; `comercial.matriz.*` ve ambas.
 
 ## Areas actuales
 
@@ -113,11 +127,39 @@ Requieren permiso funcional **y** `view.board.{module}.{board}`:
 
 ### Migracion manual post-deploy
 
-- Directores: tablero + `requisitions.tab.solicitar` (+ Mis requisiciones si aplica)
+- Directores: permisos transversales de autorizacion; el menu muestra **Gestion humana → Requisiciones** y **Compras → Solicitudes de compra** (hogares canonicos; no requiere tableros en todas las areas)
 - Administradores de personal: funcionalidades de area base + tableros visibles en alcance + tabs por modulo (ej. Gestión en GH)
 - Solicitantes insumos: `supply.tab.my_requests` (+ tablero visible si actuan fuera del area base)
 
-## Tableros por area
+## Hogares canonicos del sidebar
+
+El sidebar usa [`SidebarVisibilityService`](../app/Services/Navigation/SidebarVisibilityService.php) y la config `board_canonical_areas` en [`config/access.php`](../config/access.php). Cada tablero transversal aparece **una vez** en su area natural; las demas areas solo muestran tableros propios del solicitante en su `area_key`.
+
+| Tablero | Hogar en menu | Excepcion |
+| --- | --- | --- |
+| Requisiciones (gestion GH, autorizacion gerencia) | `gestion_humana` | — |
+| Requisiciones (solicitar / mis req.) | `users.area_key` | Con permisos de solicitante |
+| Suministros (aprobacion Calidad) | `calidad` | — |
+| Suministros (catalogo / operacion Compras) | `compras` | — |
+| Suministros (mis solicitudes) | `users.area_key` | Con `supply.tab.my_requests` |
+| Solicitudes de compra (pendientes / bandeja) | `compras` | — |
+| Solicitudes de compra (crear / mis) | `users.area_key` | Con permisos base |
+| Documentos (administrar) | `calidad` | — |
+| Documentos (consulta) | `users.area_key` o `view.area.*` explicito | Super-admin: solo Calidad + su area base |
+
+**Matriz rol → areas visibles tipicas**
+
+| Rol | Areas en sidebar |
+| --- | --- |
+| Super-admin | GH, Compras, Calidad, Operaciones, Comercial (+ area base si distinta) |
+| Director | Gestion humana, Compras |
+| Usuario de area | Solo su `area_key` (+ otras areas con `view.board` explicito sin alcance GH global) |
+| Compras (processing) | Compras |
+
+La visibilidad del sidebar **no restringe rutas**: un super-admin puede seguir accediendo por URL directa. Los middleware y policies conservan el bypass operativo con `manage.users`.
+
+**Pruebas:** `tests/Feature/NavigationVisibilityTest.php` (super-admin, director, usuario de area, compras).
+
 
 Cada area puede tener tableros internos definidos en `config/access.php`. Los tableros base son:
 
@@ -126,8 +168,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `suministros`
 - `documentos`
 - `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
-- `matriz_clientes` (etiqueta UI: **Clientes**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.matriz_clientes`)
-- `servicios_comerciales` (etiqueta UI: **Servicios**; solo en area `comercial`; acceso por `comercial.matriz.*` y/o `view.board.comercial.servicios_comerciales` / board clientes)
+- `gestion_clientes` (etiqueta UI: **Gestion Clientes**; solo en area `comercial`; sidebar por `view.board.comercial.gestion_clientes`, `comercial.matriz.*` o permisos legacy de pestaña; pestañas Clientes/Servicios con permisos `view.board.comercial.matriz_clientes` y `view.board.comercial.servicios_comerciales`)
 - En area `comercial`, el board `dashboard` redirige a `comercial/dashboard` (KPIs de matriz); acceso por `comercial.matriz.*`, `view.board.comercial.dashboard` o `view.area.comercial`
 
 Esto produce permisos como:
@@ -137,7 +178,7 @@ Esto produce permisos como:
 - `view.board.gestion_humana.requisiciones`
 - `view.board.compras.suministros` (tablero de suministros; area **Compras**, no GH)
 
-El tablero `documentos` **no** usa `view.board.{area}.documentos`. Aparece en cada area con acceso (`view.area.*` o `manage.area.*`) y la biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
+El tablero `documentos` **no** usa `view.board.{area}.documentos`. En el **sidebar**, aparece en el `area_key` del usuario, en areas con `view.area.*` / `manage.area.*` explicito, o en **Calidad** para quien administra documentos. Super-admin ve Documentos solo en Calidad + su area base (no en las 8 areas). La biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
 
 Adicionalmente, un documento puede asignarse a usuarios especificos mediante la tabla `quality_document_users`. Esos destinatarios lo consultan en la pestaña `Mis documentos` del tablero `Documentos` de su area (`/quality-documents/{module}/mis-documentos`). No se requiere permiso adicional para ver esa pestaña.
 
@@ -145,8 +186,9 @@ Adicionalmente, un documento puede asignarse a usuarios especificos mediante la 
 
 Sembrada en [`database/seeders/RoleAndPermissionSeeder.php`](c:/laragon/www/SJSEGURIDAD/database/seeders/RoleAndPermissionSeeder.php):
 
-- `super-admin`: todos los permisos
-- `administrador`: `view.dashboard`, `manage.users` y `manage.requisition.parameters`
+- `super-admin`: todos los permisos (sidebar compacto via `SidebarVisibilityService`)
+- `administrador`: `view.dashboard`, `manage.requisition.parameters`, `requisitions.approve.management`
+- `director`: autorizacion compras + cargo nuevo; menu en GH y Compras (ver hogares canonicos)
 - `usuario`: `view.dashboard`
 
 Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el seeder si existen. Los permisos de areas que ya no esten definidos en `config/access.php` se eliminan para evitar accesos obsoletos.

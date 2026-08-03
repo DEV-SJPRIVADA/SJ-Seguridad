@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\NotificationConfigController;
 use App\Http\Controllers\Admin\SupplySiteController;
+use App\Http\Controllers\Admin\SystemAuditController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Mail\PersonalRequisitionNotification;
@@ -38,27 +39,16 @@ Route::get('/dashboard', function () {
                         ];
                     }
 
-                    if ($boardKey === 'matriz_clientes') {
+                    if ($boardKey === 'gestion_clientes') {
                         return [
                             'key' => $boardKey,
                             'label' => $boardLabel,
                             'can_view' => $key === 'comercial' && (
-                                $user->can('comercial.matriz.view')
+                                $user->can('view.board.comercial.gestion_clientes')
+                                || $user->can('comercial.matriz.view')
                                 || $user->can('comercial.matriz.manage')
                                 || $user->can('view.board.comercial.matriz_clientes')
-                            ),
-                        ];
-                    }
-
-                    if ($boardKey === 'servicios_comerciales') {
-                        return [
-                            'key' => $boardKey,
-                            'label' => $boardLabel,
-                            'can_view' => $key === 'comercial' && (
-                                $user->can('comercial.matriz.view')
-                                || $user->can('comercial.matriz.manage')
                                 || $user->can('view.board.comercial.servicios_comerciales')
-                                || $user->can('view.board.comercial.matriz_clientes')
                             ),
                         ];
                     }
@@ -76,6 +66,22 @@ Route::get('/dashboard', function () {
                             'key' => $boardKey,
                             'label' => $boardLabel,
                             'can_view' => $user->canViewSupplyBoardFor($key),
+                        ];
+                    }
+
+                    if ($boardKey === 'solicitudes_compra') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->canViewPurchaseBoardFor($key),
+                        ];
+                    }
+
+                    if ($boardKey === 'bandeja_compras') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->can('purchase.tab.processing'),
                         ];
                     }
 
@@ -113,12 +119,24 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultSupplyBoardUrl($defaultModule['key']));
         }
 
+        if ($defaultBoard === 'solicitudes_compra') {
+            return redirect(auth()->user()->defaultPurchaseBoardUrl($defaultModule['key']));
+        }
+
+        if ($defaultBoard === 'bandeja_compras') {
+            return redirect()->route('purchase-requests.processing.index', ['module' => $defaultModule['key']]);
+        }
+
         if ($defaultBoard === 'documentos') {
             return redirect(auth()->user()->defaultQualityDocumentBoardUrl($defaultModule['key']));
         }
 
         if ($defaultBoard === 'indicadores') {
             return redirect(auth()->user()->defaultIndicadorBoardUrl());
+        }
+
+        if ($defaultBoard === 'gestion_clientes') {
+            return redirect(auth()->user()->defaultGestionClientesBoardUrl());
         }
 
         return redirect()->route('dashboard', array_filter([
@@ -141,6 +159,14 @@ Route::get('/dashboard', function () {
         return redirect(auth()->user()->defaultSupplyBoardUrl($selectedModule['key']));
     }
 
+    if ($selectedModule && $selectedBoardKey === 'solicitudes_compra') {
+        return redirect(auth()->user()->defaultPurchaseBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'bandeja_compras') {
+        return redirect()->route('purchase-requests.processing.index', ['module' => $selectedModule['key']]);
+    }
+
     if ($selectedModule && $selectedBoardKey === 'documentos') {
         return redirect(auth()->user()->defaultQualityDocumentBoardUrl($selectedModule['key']));
     }
@@ -151,6 +177,14 @@ Route::get('/dashboard', function () {
 
     if ($selectedModuleKey === 'comercial' && $selectedBoardKey === 'dashboard') {
         return redirect()->route('comercial.dashboard');
+    }
+
+    if ($selectedModuleKey === 'compras' && $selectedBoardKey === 'dashboard') {
+        return redirect()->route('compras.dashboard');
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'gestion_clientes') {
+        return redirect(auth()->user()->defaultGestionClientesBoardUrl());
     }
 
     if ($selectedModule && $selectedBoardKey === 'matriz_clientes') {
@@ -167,6 +201,8 @@ Route::get('/dashboard', function () {
         'selectedModule' => $selectedModule,
     ]);
 })->middleware(['auth', 'active', 'password.changed', 'can:view.dashboard'])->name('dashboard');
+
+require __DIR__.'/modules/purchase-requests-email.php';
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -188,12 +224,19 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('notificaciones/tipos/{notification_type}/correos/{notification_email}', [NotificationConfigController::class, 'detachTypeEmail'])->name('notifications.types.emails.detach');
     });
 
+    Route::middleware(['password.changed', 'permission:system.view.audit'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('auditoria', [SystemAuditController::class, 'index'])->name('audit.index');
+    });
+
     // Modulos del sistema
     require __DIR__.'/modules/requisitions.php';
     require __DIR__.'/modules/supplies.php';
+    require __DIR__.'/modules/purchase-requests.php';
     require __DIR__.'/modules/quality-documents.php';
     require __DIR__.'/areas/operaciones.php';
     require __DIR__.'/areas/comercial.php';
+    require __DIR__.'/areas/gestion_humana.php';
+    require __DIR__.'/areas/compras.php';
 });
 
 if (app()->environment('local')) {

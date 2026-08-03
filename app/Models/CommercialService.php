@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class CommercialService extends Model
 {
@@ -18,6 +19,31 @@ class CommercialService extends Model
 
     public const PORTFOLIO_INACTIVOS = 'inactivos';
 
+    public const ESTADO_INACTIVO = 'Inactivo';
+
+    public const ESTADO_VENCIDO = 'Vencido';
+
+    public const ESTADO_POR_VENCER = 'Por vencer';
+
+    public const ESTADO_ACTIVO = 'Activo';
+
+    public const CONTRACT_ESTADO_WINDOW_DAYS = 30;
+
+    /** @deprecated Use ESTADO_* constants */
+    public const VIGENCIA_INACTIVO = self::ESTADO_INACTIVO;
+
+    /** @deprecated Use ESTADO_* constants */
+    public const VIGENCIA_VENCIDO = self::ESTADO_VENCIDO;
+
+    /** @deprecated Use ESTADO_* constants */
+    public const VIGENCIA_POR_VENCER = self::ESTADO_POR_VENCER;
+
+    /** @deprecated Use ESTADO_* constants */
+    public const VIGENCIA_ACTIVO = self::ESTADO_ACTIVO;
+
+    /** @deprecated Use CONTRACT_ESTADO_WINDOW_DAYS */
+    public const CONTRACT_VIGENCIA_WINDOW_DAYS = self::CONTRACT_ESTADO_WINDOW_DAYS;
+
     public const DOC_OK = CommercialDocumentCatalog::DOC_OK;
 
     public const DOC_X = CommercialDocumentCatalog::DOC_X;
@@ -28,9 +54,14 @@ class CommercialService extends Model
 
     public const DOC_INCOMPLETE = CommercialDocumentCatalog::DOC_INCOMPLETE;
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected $fillable = [
         'commercial_client_id',
         'portfolio',
+        'is_active',
         'contract_number',
         'advisor_name',
         'commercial_sector_id',
@@ -53,10 +84,34 @@ class CommercialService extends Model
         return [
             'contract_start' => 'date',
             'contract_end' => 'date',
+            'is_active' => 'boolean',
         ];
     }
 
     public static function portfolios(): array
+    {
+        if (! Schema::hasTable('commercial_portfolios')) {
+            return self::fallbackPortfolios();
+        }
+
+        $fromDatabase = CommercialPortfolio::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->pluck('name', 'slug')
+            ->all();
+
+        if ($fromDatabase !== []) {
+            return $fromDatabase;
+        }
+
+        return self::fallbackPortfolios();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function fallbackPortfolios(): array
     {
         return [
             self::PORTFOLIO_SEG_FISICA => 'Seg. Fisica',
@@ -100,7 +155,7 @@ class CommercialService extends Model
 
     public function isExpiringSoon(int $days = 60, ?Carbon $asOf = null): bool
     {
-        if ($this->portfolio === self::PORTFOLIO_INACTIVOS) {
+        if ($this->is_active === false || $this->portfolio === self::PORTFOLIO_INACTIVOS) {
             return false;
         }
 
@@ -121,7 +176,7 @@ class CommercialService extends Model
 
     public function isExpired(?Carbon $asOf = null): bool
     {
-        if ($this->portfolio === self::PORTFOLIO_INACTIVOS) {
+        if ($this->is_active === false || $this->portfolio === self::PORTFOLIO_INACTIVOS) {
             return false;
         }
 
@@ -136,9 +191,42 @@ class CommercialService extends Model
         return $client?->isDocumentationExpired($asOf) ?? false;
     }
 
-    public function scopeFilterByVigencia(Builder $query, string $vigencia, ?Carbon $asOf = null, int $days = 30): Builder
+    public function serviceEstadoLabel(?Carbon $asOf = null, int $windowDays = self::CONTRACT_ESTADO_WINDOW_DAYS): string
     {
-        if (! in_array($vigencia, ['expiring', 'expired'], true)) {
+        if ($this->is_active === false) {
+            return self::ESTADO_INACTIVO;
+        }
+
+        $asOf = ($asOf ?? now())->copy()->startOfDay();
+
+        if ($this->contract_end instanceof Carbon) {
+            $end = $this->contract_end->copy()->startOfDay();
+
+            if ($end->lt($asOf)) {
+                return self::ESTADO_VENCIDO;
+            }
+
+            $limit = $asOf->copy()->addDays($windowDays);
+
+            if ($end->lte($limit)) {
+                return self::ESTADO_POR_VENCER;
+            }
+
+            return self::ESTADO_ACTIVO;
+        }
+
+        return self::ESTADO_ACTIVO;
+    }
+
+    /** @deprecated Use serviceEstadoLabel() */
+    public function contractVigenciaLabel(?Carbon $asOf = null, int $windowDays = self::CONTRACT_ESTADO_WINDOW_DAYS): string
+    {
+        return $this->serviceEstadoLabel($asOf, $windowDays);
+    }
+
+    public function scopeFilterByContractEstado(Builder $query, string $estado, ?Carbon $asOf = null, int $days = self::CONTRACT_ESTADO_WINDOW_DAYS): Builder
+    {
+        if (! in_array($estado, ['expiring', 'expired'], true)) {
             return $query;
         }
 
@@ -146,26 +234,54 @@ class CommercialService extends Model
         $inDays = $today->copy()->addDays($days);
 
         return $query
-            ->where('portfolio', '!=', self::PORTFOLIO_INACTIVOS)
-            ->where(function (Builder $outer) use ($vigencia, $today, $inDays): void {
-                if ($vigencia === 'expired') {
-                    $outer->where(function (Builder $q) use ($today): void {
-                        $q->whereNotNull('contract_end')
-                            ->whereDate('contract_end', '<', $today);
-                    });
-
-                    $outer->orWhereHas('client', fn (Builder $clientQuery) => $clientQuery->documentationExpired($today));
+            ->where('is_active', true)
+            ->where(function (Builder $outer) use ($estado, $today, $inDays): void {
+                if ($estado === 'expired') {
+                    $outer->whereNotNull('contract_end')
+                        ->whereDate('contract_end', '<', $today);
 
                     return;
                 }
 
-                $outer->where(function (Builder $q) use ($today, $inDays): void {
-                    $q->whereNotNull('contract_end')
-                        ->whereDate('contract_end', '>=', $today)
-                        ->whereDate('contract_end', '<=', $inDays);
-                });
-
-                $outer->orWhereHas('client', fn (Builder $clientQuery) => $clientQuery->documentationExpiring($today));
+                $outer->whereNotNull('contract_end')
+                    ->whereDate('contract_end', '>=', $today)
+                    ->whereDate('contract_end', '<=', $inDays);
             });
+    }
+
+    /** @deprecated Use scopeFilterByContractEstado() */
+    public function scopeFilterByVigencia(Builder $query, string $vigencia, ?Carbon $asOf = null, int $days = self::CONTRACT_ESTADO_WINDOW_DAYS): Builder
+    {
+        return $query->filterByContractEstado($vigencia, $asOf, $days);
+    }
+
+    /**
+     * @param  'activo'|'por_vencer'|'vencido'|'inactivo'|''  $estado
+     */
+    public function scopeFilterByServiceEstado(Builder $query, string $estado, ?Carbon $asOf = null, int $days = self::CONTRACT_ESTADO_WINDOW_DAYS): Builder
+    {
+        if ($estado === '') {
+            return $query;
+        }
+
+        $today = ($asOf ?? now())->copy()->startOfDay();
+        $inDays = $today->copy()->addDays($days);
+
+        return match ($estado) {
+            'inactivo' => $query->where('is_active', false),
+            'vencido' => $query->where('is_active', true)
+                ->whereNotNull('contract_end')
+                ->whereDate('contract_end', '<', $today),
+            'por_vencer' => $query->where('is_active', true)
+                ->whereNotNull('contract_end')
+                ->whereDate('contract_end', '>=', $today)
+                ->whereDate('contract_end', '<=', $inDays),
+            'activo' => $query->where('is_active', true)
+                ->where(function (Builder $inner) use ($inDays): void {
+                    $inner->whereNull('contract_end')
+                        ->orWhereDate('contract_end', '>', $inDays);
+                }),
+            default => $query,
+        };
     }
 }

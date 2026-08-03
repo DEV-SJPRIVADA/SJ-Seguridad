@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'enabled' => env('AUDIT_ENABLED', true),
+    'queue' => env('AUDIT_QUEUE', false),
+    'connection' => env('AUDIT_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'database')),
+    'retention_months' => (int) env('AUDIT_RETENTION_MONTHS', 24),
+    'max_json_bytes' => 65536,
+    'filter_lookback_days' => 90,
+
+    'modules' => [
+        'indicadores' => [
+            'label' => 'Indicadores',
+            'area' => 'operaciones',
+        ],
+        'admin' => [
+            'label' => 'Administracion',
+            'area' => null,
+        ],
+        'requisitions' => [
+            'label' => 'Requisiciones',
+            'area' => 'gestion_humana',
+        ],
+    ],
+];

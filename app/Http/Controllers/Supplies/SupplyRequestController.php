@@ -4,15 +4,21 @@ namespace App\Http\Controllers\Supplies;
 
 use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
+use App\Mail\SupplyRequestApprovedForComprasMail;
 use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Notifications\NotificationConfigService;
+use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
 use App\Support\DisplayDate;
+use App\Traits\HasPurchaseTabs;
 use App\Traits\HasSupplyTabs;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -22,7 +28,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupplyRequestController extends Controller
 {
+    use HasPurchaseTabs;
     use HasSupplyTabs;
+
+    public function __construct(
+        private readonly NotificationConfigService $notificationConfig,
+    ) {}
 
     public function index(string $module)
     {
@@ -61,13 +72,48 @@ class SupplyRequestController extends Controller
     {
         $this->authorizeSupplyView($supplyRequest);
 
-        $supplyRequest->load(['user', 'items.product', 'qualityReviewer']);
+        $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'purchasingManager', 'site']);
+
+        $fromComprasBandeja = auth()->user()?->can('purchase.tab.processing')
+            && $this->supplyVisibleInComprasBandeja($supplyRequest);
+
+        $subTabs = $fromComprasBandeja
+            ? $this->purchaseSubTabsForSupplyDetail()
+            : $this->getSupplySubTabs($module);
 
         return view('modules.supplies.show', [
             'module' => $module,
-            'request' => $supplyRequest,
-            'subTabs' => $this->getSupplySubTabs($module),
+            'supplyRequest' => $supplyRequest,
+            'fromComprasBandeja' => $fromComprasBandeja,
+            'canExportFoAd44' => $supplyRequest->isExportableForCompras(),
+            'subTabs' => $subTabs,
+            'purchaseModule' => $fromComprasBandeja ? 'compras' : $module,
         ]);
+    }
+
+    public function exportPdf(string $module, SupplyRequest $supplyRequest, SupplyPurchasePdfExporter $exporter): Response
+    {
+        $this->authorizeSupplyView($supplyRequest);
+        abort_unless($supplyRequest->isExportableForCompras(), 403);
+
+        return response($exporter->generate($supplyRequest), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$exporter->filename($supplyRequest).'"',
+        ]);
+    }
+
+    public function exportExcelRequest(string $module, SupplyRequest $supplyRequest, SupplyPurchaseReportExporter $exporter): StreamedResponse
+    {
+        $this->authorizeSupplyView($supplyRequest);
+        abort_unless($supplyRequest->isExportableForCompras(), 403);
+
+        $rows = $exporter->buildMergedRowsForRequest($supplyRequest);
+
+        if (! $supplyRequest->exported_at) {
+            $supplyRequest->update(['exported_at' => now()]);
+        }
+
+        return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
     }
 
     public function create(string $module)
@@ -224,6 +270,8 @@ class SupplyRequestController extends Controller
                         'approved_quantity' => $data['approved_quantity'],
                     ]);
                 }
+
+                $this->notifyComprasSupplyApproved($supplyRequest->fresh(['user', 'items.product']));
             }
         });
 
@@ -346,15 +394,51 @@ class SupplyRequestController extends Controller
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
     }
 
+    private function notifyComprasSupplyApproved(SupplyRequest $supplyRequest): void
+    {
+        $recipients = $this->notificationConfig->recipientEmails(
+            'supplies',
+            'supply_request_approved_for_compras',
+        );
+
+        foreach ($recipients as $email) {
+            Mail::to($email)->queue(new SupplyRequestApprovedForComprasMail($supplyRequest));
+        }
+    }
+
     private function authorizeSupplyView(SupplyRequest $supplyRequest): void
     {
         $user = auth()->user();
 
-        $canReview = $user->can('supply.tab.quality')
-            || $user->can('approve.supply.quality')
-            || $user->can('manage.users');
+        if ($user->can('manage.users')) {
+            return;
+        }
 
-        abort_unless($supplyRequest->user_id === $user->id || $canReview, 403);
+        if ($user->can('purchase.tab.processing') && $this->supplyVisibleInComprasBandeja($supplyRequest)) {
+            return;
+        }
+
+        $canReview = $user->can('supply.tab.quality')
+            || $user->can('approve.supply.quality');
+
+        abort_unless((int) $supplyRequest->user_id === (int) $user->id || $canReview, 403);
+    }
+
+    private function supplyVisibleInComprasBandeja(SupplyRequest $supplyRequest): bool
+    {
+        return $supplyRequest->isExportableForCompras();
+    }
+
+    /**
+     * @return Collection<int, array{label: string, url: string, active: bool}>
+     */
+    private function purchaseSubTabsForSupplyDetail(): Collection
+    {
+        return $this->getPurchaseSubTabs('compras')->map(function (array $tab): array {
+            $tab['active'] = str_contains($tab['url'], 'bandeja-compras');
+
+            return $tab;
+        });
     }
 
     /**

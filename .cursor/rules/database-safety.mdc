@@ -1,0 +1,37 @@
+---
+description: Prohibicion absoluta de borrar o resetear datos sin autorizacion explicita del usuario
+alwaysApply: true
+---
+
+# Seguridad de base de datos — no negociable
+
+## Prohibido sin autorizacion explicita del usuario
+
+Nunca ejecutar, sugerir como siguiente paso automatico, ni delegar a subagentes:
+
+- `php artisan migrate:fresh` / `migrate:fresh --seed`
+- `php artisan migrate:refresh` / `migrate:reset`
+- `php artisan db:wipe`
+- `DROP DATABASE`, `DROP TABLE`, `TRUNCATE TABLE`
+- `DELETE FROM` masivo sin filtro acotado y confirmado
+- Restaurar un backup SQL sobre la BD activa
+- Cualquier comando que pueda **eliminar o sobrescribir datos existentes**
+
+## Obligatorio antes de tocar datos
+
+1. **Consultar al usuario** si la operacion puede borrar, truncar o reemplazar datos.
+2. Esperar **autorizacion explicita** (ej. "si, restaura el backup", "si, ejecuta migrate:fresh en local").
+3. Si el usuario no autorizo: usar alternativas no destructivas (`migrate` sin fresh, `--dry-run`, consultas read-only, importadores con `--limit`).
+4. En tests: **solo** `RefreshDatabase` dentro de PHPUnit; nunca fresh/wipe contra la BD de desarrollo del usuario.
+
+## Si hay error de migracion
+
+- Corregir la migracion o el esquema; luego `php artisan migrate`.
+- **No** usar `migrate:fresh` como atajo.
+- Informar al usuario del riesgo y proponer backup antes de cualquier reset.
+
+## Backups Laragon
+
+Backups automaticos locales: `C:\laragon\backup\mysql\`. Ante perdida de datos, **informar al usuario** y ofrecer restauracion; no restaurar sin su OK.
+
+Referencia: [`AGENTS.md`](../../AGENTS.md) seccion "Proteccion de datos".

@@ -67,4 +67,33 @@ class SupplyRequest extends Model
             default => ucfirst(str_replace('_', ' ', $this->status)),
         };
     }
+
+    public function folio(): string
+    {
+        return str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function estadoComprasKey(): ?string
+    {
+        return match ($this->status) {
+            'aprobada_calidad' => PurchaseRequest::COMPRAS_PENDIENTE,
+            'en_compras' => PurchaseRequest::COMPRAS_EN_CURSO,
+            'completada' => PurchaseRequest::COMPRAS_COMPLETADO,
+            default => null,
+        };
+    }
+
+    public function estadoComprasLabel(): ?string
+    {
+        $key = $this->estadoComprasKey();
+
+        return $key !== null
+            ? (PurchaseRequest::estadosComprasLabels()[$key] ?? null)
+            : null;
+    }
+
+    public function isExportableForCompras(): bool
+    {
+        return in_array($this->status, ['aprobada_calidad', 'en_compras', 'completada'], true);
+    }
 }

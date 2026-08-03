@@ -3,6 +3,7 @@
 namespace App\Services\Access;
 
 use App\Models\User;
+use App\Services\Navigation\SidebarVisibilityService;
 
 class RequisitionAccessService
 {
@@ -51,6 +52,10 @@ class RequisitionAccessService
 
     public function canViewRequisitionsBoard(User $user, string $areaKey): bool
     {
+        if ($areaKey === 'gestion_humana' && $user->can('requisitions.approve.management')) {
+            return true;
+        }
+
         if ($this->hasBoardVisibility($user, $areaKey)) {
             return true;
         }
@@ -67,31 +72,7 @@ class RequisitionAccessService
 
     public function areaVisibleInSidebar(User $user, string $areaKey): bool
     {
-        if ($this->isAdminBypass($user)) {
-            return true;
-        }
-
-        foreach (array_keys(config('access.boards', [])) as $boardKey) {
-            if (in_array($boardKey, ['documentos', 'indicadores', 'matriz_clientes', 'servicios_comerciales'], true)) {
-                continue;
-            }
-
-            if ($user->can("view.board.{$areaKey}.{$boardKey}")) {
-                return true;
-            }
-        }
-
-        if ($this->baseAreaBoardVisible($user, $areaKey)) {
-            return true;
-        }
-
-        if ($user->hasAssignedArea()
-            && $user->area_key === $areaKey
-            && $user->can('supply.tab.my_requests')) {
-            return true;
-        }
-
-        return false;
+        return app(SidebarVisibilityService::class)->shouldShowArea($user, $areaKey);
     }
 
     public function canAccessTab(User $user, string $module, string $tab): bool

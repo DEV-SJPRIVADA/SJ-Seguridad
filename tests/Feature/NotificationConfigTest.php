@@ -36,7 +36,11 @@ class NotificationConfigTest extends TestCase
             ->get(route('admin.notifications.index'))
             ->assertOk()
             ->assertSee('Configuracion de notificaciones')
+            ->assertSee('Respaldo si no hay destinatarios')
+            ->assertSee('Sin destinatarios')
             ->assertSee('Nueva requisicion')
+            ->assertSee('Documentacion comercial (por vencer o vencida)')
+            ->assertSee('Comercial')
             ->assertDontSee('Autorizacion requisicion cargo nuevo')
             ->assertDontSee('Correos destinatarios');
     }
@@ -57,13 +61,19 @@ class NotificationConfigTest extends TestCase
             ->post(route('admin.notifications.types.emails.attach', $type), [
                 'email' => 'ops@example.com',
             ])
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->actingAs($user)
             ->post(route('admin.notifications.types.emails.attach', $type), [
                 'email' => 'ops@example.com',
             ])
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->assertSame(1, $type->fresh()->notificationEmails()->count());
 
@@ -72,10 +82,39 @@ class NotificationConfigTest extends TestCase
 
         $this->actingAs($user)
             ->delete(route('admin.notifications.types.emails.detach', [$type, $email]))
-            ->assertRedirect(route('admin.notifications.index'));
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
 
         $this->assertFalse($type->fresh()->notificationEmails()->where('notification_emails.id', $email->id)->exists());
         $this->assertNull(NotificationEmail::query()->find($email->id));
+    }
+
+    public function test_add_email_to_comercial_documentation_notification_type(): void
+    {
+        PermissionCatalog::sync();
+
+        $user = User::factory()->create(['must_change_password' => false]);
+        $user->givePermissionTo('manage.notifications');
+
+        $type = NotificationType::query()
+            ->where('module', NotificationType::MODULE_COMERCIAL)
+            ->where('slug', NotificationType::SLUG_DOCUMENTATION_EXPIRING)
+            ->firstOrFail();
+
+        $this->actingAs($user)
+            ->post(route('admin.notifications.types.emails.attach', $type), [
+                'email' => 'comercial@example.com',
+            ])
+            ->assertRedirect(route('admin.notifications.index', [
+                'module' => $type->module,
+                'type' => $type->id,
+            ]).'#notification-type-'.$type->id);
+
+        $this->assertTrue(
+            $type->fresh()->notificationEmails()->where('name', 'comercial@example.com')->exists()
+        );
     }
 
     public function test_cannot_attach_email_to_non_configurable_type(): void

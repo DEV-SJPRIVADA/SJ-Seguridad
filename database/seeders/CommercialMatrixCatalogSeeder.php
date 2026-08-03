@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\CommercialClientType;
+use App\Models\CommercialPortfolio;
 use App\Models\CommercialSector;
 use App\Models\CommercialServiceType;
 use Illuminate\Database\Seeder;
@@ -32,6 +33,19 @@ class CommercialMatrixCatalogSeeder extends Seeder
             CommercialServiceType::query()->firstOrCreate(
                 ['name' => $name],
                 ['is_active' => true, 'sort_order' => $i + 1]
+            );
+        }
+
+        $portfolios = [
+            ['slug' => 'seg_fisica', 'name' => 'Seg. Fisica'],
+            ['slug' => 'monitoreo', 'name' => 'Monitoreo'],
+            ['slug' => 'ocasionales', 'name' => 'Ocasionales'],
+            ['slug' => 'inactivos', 'name' => 'Inactivos'],
+        ];
+        foreach ($portfolios as $i => $portfolio) {
+            CommercialPortfolio::query()->firstOrCreate(
+                ['slug' => $portfolio['slug']],
+                ['name' => $portfolio['name'], 'is_active' => true, 'sort_order' => $i + 1]
             );
         }
     }
