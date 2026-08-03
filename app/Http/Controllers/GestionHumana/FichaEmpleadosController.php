@@ -45,13 +45,19 @@ class FichaEmpleadosController extends Controller
 
         $q = trim($request->string('q')->toString());
         $estado = $this->resolveEstadoFilter($request);
+        $employmentStatus = $this->resolveEmploymentStatusFilter($request, $estado);
 
-        $entries = $this->entryListQuery($q, $estado)->get();
+        $entries = $this->entryListQuery($q, $estado, $employmentStatus)->get();
         $pendingCount = PersonalRequisitionFichaEntry::query()->pending()->count();
 
         return view('areas.gestion_humana.ficha-empleados.employees.index', [
             'entries' => $entries,
-            'filters' => ['q' => $q, 'estado' => $estado],
+            'filters' => [
+                'q' => $q,
+                'estado' => $estado,
+                'employment_status' => $employmentStatus,
+            ],
+            'employmentStatusLabels' => self::employmentStatusFilterLabels(),
             'pendingCount' => $pendingCount,
             'canManage' => $this->canManage(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
@@ -315,9 +321,35 @@ class FichaEmpleadosController extends Controller
     }
 
     /**
+     * @return array<string, string>
+     */
+    private static function employmentStatusFilterLabels(): array
+    {
+        /** @var array<string, string> $labels */
+        $labels = config('employee_ficha.employment_status', []);
+
+        return $labels;
+    }
+
+    private function resolveEmploymentStatusFilter(Request $request, string $estado): ?string
+    {
+        if ($estado !== 'en_ficha') {
+            return null;
+        }
+
+        $status = trim($request->string('employment_status')->toString());
+
+        if ($status === '') {
+            return null;
+        }
+
+        return array_key_exists($status, self::employmentStatusFilterLabels()) ? $status : null;
+    }
+
+    /**
      * @return Builder<PersonalRequisitionFichaEntry>
      */
-    private function entryListQuery(string $q, string $estado): Builder
+    private function entryListQuery(string $q, string $estado, ?string $employmentStatus = null): Builder
     {
         return PersonalRequisitionFichaEntry::query()
             ->with(['requisition.position', 'requisition.client', 'requisition.city', 'movedBy', 'profile'])
@@ -325,6 +357,10 @@ class FichaEmpleadosController extends Controller
                 $estado === 'en_ficha',
                 fn (Builder $query) => $query->inFicha(),
                 fn (Builder $query) => $query->pending()
+            )
+            ->when(
+                $estado === 'en_ficha' && $employmentStatus !== null,
+                fn (Builder $query) => $query->withEmploymentStatus($employmentStatus)
             )
             ->when($q !== '', function (Builder $query) use ($q): void {
                 $query->where(function (Builder $inner) use ($q): void {

@@ -333,6 +333,136 @@ class FichaEmpleadosTest extends TestCase
         });
     }
 
+    public function test_ficha_empleados_index_shows_hire_termination_and_status_columns(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $mover = User::factory()->create(['must_change_password' => false]);
+        $activeRequisition = $this->createRequisition('REQ-FICHA-3001', [
+            'hiring_date' => '2024-03-15',
+        ]);
+        $retiredRequisition = $this->createRequisition('REQ-FICHA-3002');
+
+        $activeEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $activeRequisition->id,
+            'hired_document' => '900000301',
+            'hired_full_name' => 'Empleado Activo Tabla',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        $retiredEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $retiredRequisition->id,
+            'hired_document' => '900000302',
+            'hired_full_name' => 'Empleado Retirado Tabla',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $activeEntry->id,
+            'document_number' => '900000301',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'hire_date' => '2024-03-15',
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $retiredEntry->id,
+            'document_number' => '900000302',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'hire_date' => '2020-01-10',
+            'termination_date' => '2025-06-30',
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index'));
+
+        $response->assertOk()
+            ->assertSee('Fecha contrato', false)
+            ->assertSee('Fecha ingreso', false)
+            ->assertSee('Fecha retiro', false)
+            ->assertSee('Estado', false)
+            ->assertDontSee('Agregado a ficha', false)
+            ->assertSee('Empleado Activo Tabla')
+            ->assertSee('Empleado Retirado Tabla')
+            ->assertSee('Activo')
+            ->assertSee('Desvinculado')
+            ->assertSee('15/03/24')
+            ->assertSee('30/06/25');
+    }
+
+    public function test_ficha_empleados_index_filters_by_employment_status(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $mover = User::factory()->create(['must_change_password' => false]);
+
+        $activeEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-3003')->id,
+            'hired_document' => '900000303',
+            'hired_full_name' => 'Solo Activo Filtro',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        $defaultActiveEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-3004')->id,
+            'hired_document' => '900000304',
+            'hired_full_name' => 'Activo Sin Perfil Filtro',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        $retiredEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-3005')->id,
+            'hired_document' => '900000305',
+            'hired_full_name' => 'Solo Desvinculado Filtro',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $activeEntry->id,
+            'document_number' => '900000303',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $retiredEntry->id,
+            'document_number' => '900000305',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index', ['employment_status' => 'desvinculado']))
+            ->assertOk()
+            ->assertViewHas('entries', function ($entries) use ($retiredEntry, $activeEntry, $defaultActiveEntry): bool {
+                $ids = $entries->pluck('id');
+
+                return $ids->contains($retiredEntry->id)
+                    && ! $ids->contains($activeEntry->id)
+                    && ! $ids->contains($defaultActiveEntry->id);
+            })
+            ->assertSee('Solo Desvinculado Filtro')
+            ->assertDontSee('Solo Activo Filtro')
+            ->assertDontSee('Activo Sin Perfil Filtro');
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index', ['employment_status' => 'activo']))
+            ->assertOk()
+            ->assertViewHas('entries', function ($entries) use ($retiredEntry, $activeEntry, $defaultActiveEntry): bool {
+                $ids = $entries->pluck('id');
+
+                return $ids->contains($activeEntry->id)
+                    && $ids->contains($defaultActiveEntry->id)
+                    && ! $ids->contains($retiredEntry->id);
+            });
+    }
+
     public function test_ficha_empleados_board_hidden_without_board_permission(): void
     {
         $user = User::factory()->create(['must_change_password' => false]);

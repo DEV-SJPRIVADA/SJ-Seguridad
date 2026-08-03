@@ -699,9 +699,19 @@ a {
     width: auto;
     flex: 0 0 auto;
     align-self: flex-end;
-    gap: 0.35rem;
+}
+
+.ficha-empleados-filters__status-row {
+    display: flex;
     align-items: flex-end;
-    justify-content: flex-end;
+    gap: 2rem;
+}
+
+.ficha-empleados-filters__employment-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
 }
 
 .ficha-empleados-filters__pending-link {
@@ -741,6 +751,7 @@ a {
 
 .ficha-empleados-filters__pills {
     flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .ficha-empleados-filters__meta {
@@ -2535,6 +2546,30 @@ a {
     border-color: #b91c1c;
 }
 
+.req-manage-filters__pill.status-pill--ficha-activo:not(.is-active) {
+    border-color: #86efac;
+    color: #15803d;
+    background: #ecfdf5;
+}
+
+.req-manage-filters__pill.status-pill--ficha-desvinculado:not(.is-active) {
+    border-color: #fecaca;
+    color: #be123c;
+    background: #fff1f2;
+}
+
+.req-manage-filters__pill.is-active.status-pill--ficha-activo,
+.req-manage-filters__pill.status-pill--ficha-activo.is-active {
+    background: #15803d;
+    border-color: #15803d;
+}
+
+.req-manage-filters__pill.is-active.status-pill--ficha-desvinculado,
+.req-manage-filters__pill.status-pill--ficha-desvinculado.is-active {
+    background: #be123c;
+    border-color: #be123c;
+}
+
 .req-manage-filters__meta {
     margin: 0.85rem 0 0;
     font-size: 0.82rem;
@@ -2740,6 +2775,16 @@ table.dataTable thead td {
 }
 
 .status-pill--req-cancelada {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+.status-pill--ficha-activo {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--ficha-desvinculado {
     background: #ffe4e6;
     color: #be123c;
 }

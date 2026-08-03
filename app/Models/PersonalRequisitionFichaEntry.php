@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 class PersonalRequisitionFichaEntry extends Model
 {
@@ -112,5 +113,55 @@ class PersonalRequisitionFichaEntry extends Model
     public function isManualEntry(): bool
     {
         return $this->personal_requisition_id === null;
+    }
+
+    public function hireDate(): ?Carbon
+    {
+        return $this->profile?->hire_date ?? $this->requisition?->hiring_date;
+    }
+
+    public function contractDate(): ?Carbon
+    {
+        return $this->requisition?->hiring_date;
+    }
+
+    public function terminationDate(): ?Carbon
+    {
+        return $this->profile?->termination_date;
+    }
+
+    public function employmentStatus(): ?string
+    {
+        if ($this->moved_to_ficha_at === null) {
+            return null;
+        }
+
+        return $this->profile?->employment_status ?? EmployeeFichaProfile::STATUS_ACTIVO;
+    }
+
+    public function employmentStatusLabel(): ?string
+    {
+        $status = $this->employmentStatus();
+
+        if ($status === null) {
+            return null;
+        }
+
+        /** @var array<string, string> $labels */
+        $labels = config('employee_ficha.employment_status', []);
+
+        return $labels[$status] ?? $status;
+    }
+
+    public function scopeWithEmploymentStatus(Builder $query, string $status): Builder
+    {
+        if ($status === EmployeeFichaProfile::STATUS_ACTIVO) {
+            return $query->where(function (Builder $inner): void {
+                $inner->whereDoesntHave('profile')
+                    ->orWhereHas('profile', fn (Builder $profile) => $profile->where('employment_status', EmployeeFichaProfile::STATUS_ACTIVO));
+            });
+        }
+
+        return $query->whereHas('profile', fn (Builder $profile) => $profile->where('employment_status', $status));
     }
 }

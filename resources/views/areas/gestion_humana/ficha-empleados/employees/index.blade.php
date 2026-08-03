@@ -11,19 +11,26 @@
 
     @php
         $currentEstado = $filters['estado'] ?? 'en_ficha';
-        $hasActiveFilters = ($filters['q'] ?? '') !== '';
+        $currentEmploymentStatus = $filters['employment_status'] ?? '';
+        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+            || ($currentEstado !== 'en_ficha')
+            || ($currentEmploymentStatus !== '');
 
         $entriesQuery = fn (array $overrides = []) => array_filter([
             'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
             'estado' => array_key_exists('estado', $overrides) ? $overrides['estado'] : ($filters['estado'] ?: null),
+            'employment_status' => array_key_exists('employment_status', $overrides) ? $overrides['employment_status'] : ($currentEmploymentStatus ?: null),
             'fecha_desde' => array_key_exists('fecha_desde', $overrides) ? $overrides['fecha_desde'] : null,
             'fecha_hasta' => array_key_exists('fecha_hasta', $overrides) ? $overrides['fecha_hasta'] : null,
         ], fn ($value) => $value !== null && $value !== '');
 
         $pendingActive = $currentEstado === 'pendientes';
         $pendingHref = $pendingActive
-            ? route('gestion-humana.ficha-empleados.employees.index', array_filter(['q' => $filters['q'] ?: null]))
-            : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => 'pendientes']));
+            ? route('gestion-humana.ficha-empleados.employees.index', array_filter([
+                'q' => $filters['q'] ?: null,
+                'employment_status' => $currentEmploymentStatus ?: null,
+            ]))
+            : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => 'pendientes', 'employment_status' => null]));
     @endphp
 
     <div class="page-section ficha-empleados-page">
@@ -91,7 +98,7 @@
                                 @endif
 
                                 @if ($hasActiveFilters)
-                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index', array_filter(['estado' => $currentEstado === 'en_ficha' ? null : $currentEstado])) }}" class="btn btn--secondary btn--sm">Limpiar busqueda</a>
+                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
                                 @endif
 
                                 @if ($currentEstado === 'en_ficha')
@@ -114,6 +121,9 @@
                                 @if ($currentEstado !== 'en_ficha')
                                     <input type="hidden" name="estado" value="{{ $currentEstado }}">
                                 @endif
+                                @if ($currentEmploymentStatus !== '')
+                                    <input type="hidden" name="employment_status" value="{{ $currentEmploymentStatus }}">
+                                @endif
                                 <label class="req-manage-filters__label" for="ficha-search-input">Buscar</label>
                                 <div class="req-manage-filters__search-group ficha-empleados-filters__search-group">
                                     <input
@@ -129,21 +139,44 @@
                             </form>
 
                             <div class="req-manage-filters__status-col ficha-empleados-filters__status-col">
-                                <a
-                                    href="{{ $pendingHref }}"
-                                    class="ficha-empleados-filters__pending-link {{ $pendingActive ? 'is-active' : '' }}"
-                                    title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
-                                    aria-label="Pendientes: {{ number_format($pendingCount) }}"
-                                >
-                                    <x-ri-pass-pending-fill :size="24" />
-                                    <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
-                                </a>
+                                <div class="ficha-empleados-filters__status-row">
+                                    <a
+                                        href="{{ $pendingHref }}"
+                                        class="ficha-empleados-filters__pending-link {{ $pendingActive ? 'is-active' : '' }}"
+                                        title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
+                                        aria-label="Pendientes: {{ number_format($pendingCount) }}"
+                                    >
+                                        <x-ri-pass-pending-fill :size="24" />
+                                        <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
+                                    </a>
+
+                                    @if ($currentEstado === 'en_ficha')
+                                        <div class="ficha-empleados-filters__employment-filters">
+                                            <p class="req-manage-filters__status-label">Estado</p>
+                                            <div class="req-manage-filters__pills ficha-empleados-filters__pills">
+                                                <a
+                                                    href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => null])) }}"
+                                                    class="req-manage-filters__pill {{ $currentEmploymentStatus === '' ? 'is-active' : '' }}"
+                                                >Todos</a>
+                                                @foreach ($employmentStatusLabels as $statusKey => $statusLabel)
+                                                    <a
+                                                        href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => $statusKey])) }}"
+                                                        class="req-manage-filters__pill status-pill--ficha-{{ $statusKey }} {{ $currentEmploymentStatus === $statusKey ? 'is-active' : '' }}"
+                                                    >{{ $statusLabel }}</a>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
                         <p class="req-manage-filters__meta ficha-empleados-filters__meta">
                             <strong>{{ number_format($entries->count()) }}</strong>
                             {{ $entries->count() === 1 ? 'registro' : 'registros' }}
+                            @if ($currentEmploymentStatus !== '')
+                                · Estado: <strong>{{ $employmentStatusLabels[$currentEmploymentStatus] ?? $currentEmploymentStatus }}</strong>
+                            @endif
                             @if ($filters['q'] ?? '')
                                 · Busqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
@@ -159,9 +192,11 @@
                                     <th>Cargo</th>
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
-                                    <th>Fecha contratacion</th>
+                                    <th>Fecha contrato</th>
+                                    <th>Fecha ingreso</th>
+                                    <th>Fecha retiro</th>
+                                    <th>Estado</th>
                                     @if ($currentEstado === 'en_ficha')
-                                        <th>Agregado a ficha</th>
                                         <th>Agregado por</th>
                                     @else
                                         <th>Acciones</th>
@@ -189,9 +224,19 @@
                                         <td>{{ $entry->positionName() ?: '—' }}</td>
                                         <td>{{ $entry->clientName() ?: '—' }}</td>
                                         <td>{{ $entry->cityName() ?: '—' }}</td>
-                                        <td><x-date-table :value="$entry->requisition?->hiring_date" /></td>
-                                        @if ($entry->moved_to_ficha_at !== null)
-                                            <td><x-date-table :value="$entry->moved_to_ficha_at" datetime /></td>
+                                        <td><x-date-table :value="$entry->contractDate()" /></td>
+                                        <td><x-date-table :value="$entry->hireDate()" /></td>
+                                        <td><x-date-table :value="$entry->terminationDate()" /></td>
+                                        <td>
+                                            @if ($entry->employmentStatusLabel())
+                                                <span class="status-pill status-pill--ficha-{{ $entry->employmentStatus() }}">
+                                                    {{ $entry->employmentStatusLabel() }}
+                                                </span>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        @if ($currentEstado === 'en_ficha')
                                             <td>{{ $entry->movedBy?->name ?: '—' }}</td>
                                         @else
                                             <td class="table-actions ficha-empleados-row__actions">
@@ -215,7 +260,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ $currentEstado === 'en_ficha' ? 8 : 7 }}">No hay registros para este filtro.</td>
+                                        <td colspan="{{ $currentEstado === 'en_ficha' ? 10 : 9 }}">No hay registros para este filtro.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
