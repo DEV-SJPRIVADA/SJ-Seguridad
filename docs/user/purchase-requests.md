@@ -49,7 +49,7 @@ El correo que recibe el director es solo un aviso con enlace a la plataforma; la
 | --- | --- |
 | Colaborador solicitante | Su area → Solicitudes de compra |
 | Director | Compras → Solicitudes de compra → Pendientes |
-| Equipo Compras | Compras → Bandeja compras |
+| Equipo Compras | Compras → Solicitudes de compra → Bandeja compras (landing por defecto); Dashboard Compras en tablero del area |
 
 ## Desarrollo
 
@@ -82,16 +82,26 @@ El correo que recibe el director es solo un aviso con enlace a la plataforma; la
 
 ### Procesar en bandeja Compras
 
-1. Entre a **Compras → Bandeja compras**.
-2. Filtre por tipo (Solicitud compra / Suministro) o por estado Compras si lo necesita.
-3. Abra la solicitud de compra aprobada o el insumo aprobado por Calidad.
-4. Para **solicitudes de compra**: actualice el estado (Pendiente, En curso, Completado, Rechazado) y comentarios de Compras.
-5. Para **suministros**: ingrese costos unitarios por linea; guarde o marque como completado.
-6. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
+1. Entre a **Compras → Solicitudes de compra → Bandeja compras**.
+2. Use **Filtros**: rango de fechas, area solicitante, tipo (Solicitud compra / Suministro) y pills de estado (Pendiente, En curso, Completado, Rechazado).
+3. Sin filtro de fechas el listado muestra hasta 200 registros recientes; con fechas ve el historico completo del periodo.
+4. Pulse **Ver detalle** para consultar la solicitud o el suministro sin salir del flujo de lectura.
+5. Para **procesar** una solicitud de compra: abra el flujo de procesamiento y actualice estado y comentarios de Compras.
+6. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
+7. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
+
+### Dashboard Compras
+
+1. Entre a **Compras → Dashboard** (tablero Dashboard Compras).
+2. Filtre por ano, mes (opcional), area y tipo si necesita acotar el periodo.
+3. Revise los indicadores: pendientes del director, en bandeja, bandeja pendiente, en curso y completadas en el periodo.
+4. Los numeros de bandeja coinciden con la bandeja cuando usa el mismo mes o rango de fechas.
+5. Pulse un indicador de bandeja para abrir la bandeja con esos filtros ya aplicados.
+6. Consulte los graficos de tendencia, estados y distribucion por area o tipo.
 
 ### Suministros en la misma bandeja
 
-Los pedidos de insumos que Calidad aprobo aparecen junto con las solicitudes de compra. Compras puede exportar FO-AD-44 de insumos desde la bandeja.
+Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) aparecen junto con las solicitudes de compra. Desde **Ver detalle** puede consultar el pedido con el mismo formato que una solicitud de compra y descargar **PDF** o **Excel** (FO-AD-44).
 
 ## Control de cambios
 
@@ -100,3 +110,4 @@ Los pedidos de insumos que Calidad aprobo aparecen junto con las solicitudes de 
 | 1.0 | 2026-07-31 | Modulo inicial | Flujo solicitante → director → Compras; FO-AD-44 |
 | 1.1 | 2026-07-31 | Autorizacion in-app | Director autoriza en plataforma; correo solo notifica |
 | 1.2 | 2026-08-03 | Navegacion canonica | Tabla de entrada al menu por perfil; guia ampliada |
+| 1.3 | 2026-08-03 | Bandeja y dashboard | Filtros bandeja, dashboard Compras, ver detalle suministro unificado, KPIs alineados |

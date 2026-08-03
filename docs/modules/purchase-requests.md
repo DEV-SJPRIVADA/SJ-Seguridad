@@ -11,7 +11,7 @@ Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autori
 - Director aprobador seleccionado en el formulario (usuarios con rol `director` + `purchase.tab.approval`)
 - Autorizacion **in-app**: pestaña Pendientes + formulario Aprobar/Rechazar en detalle (`show`)
 - Correo al director solo **notifica** y enlaza al detalle autenticado (no aprueba por correo)
-- Bandeja Compras unificada: solicitudes de compra aprobadas + insumos `aprobada_calidad` / `en_compras`
+- Bandeja Compras unificada: solicitudes de compra aprobadas + insumos `aprobada_calidad`, `en_compras` o `completada` (historico visible)
 - Export FO-AD-44: PDF y Excel por solicitud de compra; PDF/Excel por suministro en bandeja
 - Import legacy desde BD gestion-compras (`purchase-requests:import-legacy`)
 
@@ -50,6 +50,7 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
 | Detalle / export (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel` |
+| Dashboard Compras | `view.board.compras.dashboard` u otros permisos compras | `compras.dashboard` (ver `routes/areas/compras.php`) |
 
 Rutas publicas legacy (URLs firmadas, sin login en GET redirect):
 
@@ -110,12 +111,51 @@ Migracion: `2026_07_31_140100_create_purchase_requests_tables.php`.
 | `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
 | `PurchaseRequestNotificationService` | Correos director, solicitante, compras; persiste log en `purchase_request_mail_logs` |
 | `ComprasQueueService` | Mezcla purchase + supply en bandeja con filtros |
+| `ComprasQueueFilterBag` | Parametros de filtro bandeja (fechas, area, tipo, estado compras) |
 | `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
 | `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
 | `PurchaseEmailApprovalController` | Redirect legacy correo → plataforma |
 
-Vistas: `resources/views/modules/purchase-requests/` (create, index, show, approval/, processing/, partials/approval-form.blade.php).
+Vistas: `resources/views/modules/purchase-requests/` (create, index, show, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
+
+## Bandeja compras — filtros y listado
+
+`ComprasQueueFilterBag` + vista `processing/index` (estilo filtros GH):
+
+| Filtro | Campo / efecto |
+| --- | --- |
+| Fecha inicio / fin | Compras: `COALESCE(fecha_aprobacion, created_at)`; suministros: `updated_at` |
+| Area solicitante | `area_key` |
+| Tipo | `purchase` \| `supply` |
+| Estado (pills) | `estado_compras`: pendiente, en_curso, completado, rechazado |
+
+Reglas de volumen (`ComprasQueueService`):
+
+- Sin rango de fechas: maximo **200** registros mas recientes (`truncated` + aviso en UI).
+- Con rango de fechas: todos los que coincidan (sin tope).
+
+Acciones por fila: **Ver detalle** (compra → `purchase-requests.show`; suministro → `supplies.show` con `module=area_key` del pedido). **Procesar** sigue en rutas `processing.purchase` / `processing.supply`.
+
+## Dashboard Compras (`compras.dashboard`)
+
+Ruta: `GET /compras/dashboard`. Filtros globales: **ano**, **mes** (opcional), **area solicitante**, **tipo**.
+
+### KPIs visibles (2026-08-03)
+
+| KPI | Logica | Filtro fecha |
+| --- | --- | --- |
+| Pendientes director | `estado=pendiente` (solo area) | No usa ano/mes |
+| En bandeja | Total en `ComprasQueueService` | Si: convierte ano/mes a `date_from`/`date_to` |
+| Bandeja pendiente | `estado_compras=pendiente` (+ suministro `aprobada_calidad`) | Igual que bandeja |
+| En curso | `estado_compras=en_curso` (+ suministro `en_compras`) | Igual que bandeja |
+| Completadas | Compras: `procesado_compras_at`; suministros: `updated_at` con `status=completada` | Ano/mes del dashboard |
+
+Los KPIs de bandeja enlazan a `purchase-requests.processing.index` con los mismos parametros de fecha/area/tipo. Graficos ApexCharts: tendencia anual, estado solicitudes (periodo), bandeja por estado (periodo), top areas, bandeja por tipo. JS: `resources/js/compras-dashboard-charts.js`.
+
+**Retirados:** KPIs "Solicitudes en periodo" y "Urgentes en bandeja" (2026-08-03).
+
+Conversión dashboard → bandeja: mes seleccionado → primer/ultimo dia del mes; mes "Todos" + ano → `YYYY-01-01` … `YYYY-12-31` (`ComprasQueueFilterBag::dateRangeFromDashboardFilters`).
 
 ## Notificaciones
 
@@ -138,13 +178,18 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 
 ## Integracion Suministros
 
-`ComprasQueueService` incluye solicitudes de compra aprobadas (todos los `estado_compras`, incluido completado) y suministros con status `aprobada_calidad`, `en_compras` o `completada`. Sin filtro de fechas muestra hasta 200 registros mas recientes; con rango de fechas trae todos los del periodo. Al abrir un suministro aprobado, pasa automaticamente a `en_compras`. Compras ingresa costos unitarios y puede completar (`completada`). Export FO-AD-44 desde bandeja.
+`ComprasQueueService` incluye solicitudes de compra aprobadas (todos los `estado_compras`, incluido completado) y suministros con status `aprobada_calidad`, `en_compras` o `completada`. Sin filtro de fechas muestra hasta 200 registros mas recientes; con rango de fechas trae todos los del periodo.
+
+- **Ver detalle** suministro: `supplies.show` — vista alineada a `purchase-requests.show` (metadatos en grid, tabla de lineas, export PDF/Excel FO-AD-44). Si el usuario tiene `purchase.tab.processing`, subnav de Solicitudes de compra y boton "Volver a bandeja".
+- **Procesar** suministro: `purchase-requests.processing.supply` (costos, completar).
+- Al abrir procesamiento desde bandeja, suministro `aprobada_calidad` pasa a `en_compras`.
+- Export FO-AD-44 suministro: `supplies.export.pdf` / `supplies.export.excel` (detalle) o `purchase-requests.processing.supply.pdf` (bandeja).
 
 ## FO-AD-44
 
-- Compra: `PurchaseRequestPdfService`, `PurchaseRequestExcelExporter` (`App\Exports\BaseExport`)
-- Suministro: `SupplyPurchasePdfExporter`, `SupplyPurchaseReportExporter`
-- Botones: `<x-export-excel>` en detalle/bandeja
+- Compra: `PurchaseRequestPdfService` → `pdf/purchase-request-solicitud.blade.php`; Excel `PurchaseRequestExcelExporter`
+- Suministro: `SupplyPurchasePdfExporter` → `pdf/supply-request-solicitud.blade.php` (**mismo layout visual** que compra); Excel `SupplyPurchaseReportExporter`
+- Botones: detalle compra, detalle suministro y bandeja compras (suministro)
 
 ## Import legacy
 
@@ -165,6 +210,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 ## Pruebas
 
 - `tests/Feature/PurchaseRequestModuleTest.php`
+- `tests/Feature/ComprasDashboardTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
 - `tests/Feature/NavigationVisibilityTest.php`
 
@@ -180,7 +226,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | Dashboard Compras (`compras.dashboard`): KPIs bandeja, tendencias y graficos ApexCharts |
 | 2026-08-03 | Bandeja compras: accion Ver detalle; analista compras ve detalle completo y vuelve a bandeja |
 | 2026-08-03 | Navegacion unificada: bandeja solo como pestana en Solicitudes de compra; landing analista en bandeja |
-| 2026-08-03 | Bandeja compras: filtros estilo Gestion requisiciones (buscar, fechas, pills estado, area/tipo) |
+| 2026-08-03 | Bandeja compras: filtros estilo Gestion requisiciones (fechas, pills estado, area/tipo) |
 | 2026-08-03 | Bandeja historica completa: completados visibles; limite 200 sin filtro fecha; sin limite con rango |
 | 2026-08-03 | Dashboard Compras: KPIs bandeja alineados con `ComprasQueueService` y filtros ano/mes (fecha aprobacion/actualizacion) |
 | 2026-08-03 | Dashboard Compras: retirados KPIs Solicitudes en periodo y Urgentes en bandeja |

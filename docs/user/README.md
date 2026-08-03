@@ -21,6 +21,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Documentos calidad | [`modules/quality-documents.md`](../modules/quality-documents.md) | [`quality-documents.md`](quality-documents.md) |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](../modules/indicadores.md) | [`indicadores.md`](indicadores.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](../modules/matriz-clientes.md) | [`matriz-clientes.md`](matriz-clientes.md) |
+| Solicitudes de compra | [`modules/purchase-requests.md`](../modules/purchase-requests.md) | [`purchase-requests.md`](purchase-requests.md) |
 | Branding / UI | [`modules/branding.md`](../modules/branding.md) | — (solo doc tecnica) |
 
 Ver workflow completo en [`docs/AGENT_WORKFLOW.md`](../AGENT_WORKFLOW.md).
