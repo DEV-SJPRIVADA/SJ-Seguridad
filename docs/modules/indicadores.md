@@ -75,6 +75,8 @@ La seccion **Indicadores criticos** lista solo capturas en umbral critico por us
 
 El consolidado agrega capturas de usuarios del area Operaciones con permiso `operations.capture` o `operations.manage` (gestion en Ajustes → Capturadores).
 
+**FT-OP-01 (v2 consolidado):** la ruta `indicadores.admin.consolidado.show` reutiliza la misma ficha y grafico de captura (`capture-form.blade.php` + `indicadores-capture.js`) en modo solo lectura. Filtros: ano, mes y **capturador** (`user_id` opcional). Sin capturador seleccionado muestra datos consolidados (suma numeradores/denominadores de todos los capturadores); con capturador muestra la captura individual. Export: consolidado Excel/PDF cuando es “Todos”; leader Excel/PDF cuando hay capturador.
+
 ## Exportaciones
 
 Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin maatwebsite/excel).

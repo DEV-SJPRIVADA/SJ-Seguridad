@@ -413,6 +413,46 @@ class IndicadorController extends Controller
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
 
+        if ($indicator->code === 'FT-OP-01') {
+            $selectedUser = null;
+            if ($request->filled('user_id')) {
+                $selectedUser = User::query()->findOrFail((int) $request->integer('user_id'));
+            }
+
+            $capture = $this->captureService->buildConsolidadoShowContext(
+                indicator: $indicator,
+                year: $year,
+                month: $month,
+                selectedUser: $selectedUser,
+            );
+
+            $this->auditLogService->logEvent(
+                eventType: 'admin_action',
+                action: 'consolidado_view',
+                reason: 'Consulta consolidado con vista de captura',
+                metadata: [
+                    'indicator' => $indicator->code,
+                    'year' => $year,
+                    'month' => $month,
+                    'user_id' => $selectedUser?->id,
+                ]
+            );
+
+            return view('areas.operaciones.consolidado.show-capture', array_merge($capture, [
+                'subTabs' => IndicadorNavigation::subTabs(),
+                'headerFilters' => [
+                    'years' => $capture['years'],
+                    'months' => $capture['months'],
+                    'selectedYear' => $capture['selectedYear'],
+                    'selectedMonth' => $capture['selectedMonth'],
+                    'isPeriodClosed' => $capture['isPeriodClosed'],
+                    'captureUserName' => $capture['captureUserName'],
+                    'capturableUsers' => $capture['capturableUsers'],
+                    'selectedCapturadorId' => $capture['selectedCapturadorId'],
+                ],
+            ]));
+        }
+
         $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month);
         $quarterly = $indicator->code === 'FT-OP-08'
             ? $this->consolidadoService->getQuarterlyDataFtOp08($year)

@@ -2,8 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\Improvement;
+use App\Models\Indicator;
+use App\Models\IndicatorCapture;
+use App\Models\Period;
 use App\Models\User;
+use App\Services\Indicadores\IndicatorMetricCalculator;
 use App\Support\PermissionCatalog;
+use Database\Seeders\DashboardWeightSeeder;
+use Database\Seeders\IndicadorDemoDataSeeder;
+use Database\Seeders\IndicadorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -17,9 +25,9 @@ class IndicadorModuleTest extends TestCase
         parent::setUp();
 
         PermissionCatalog::sync();
-        $this->seed(\Database\Seeders\IndicadorSeeder::class);
-        $this->seed(\Database\Seeders\DashboardWeightSeeder::class);
-        $this->seed(\Database\Seeders\IndicadorDemoDataSeeder::class);
+        $this->seed(IndicadorSeeder::class);
+        $this->seed(DashboardWeightSeeder::class);
+        $this->seed(IndicadorDemoDataSeeder::class);
     }
 
     public function test_guest_cannot_access_indicadores_dashboard(): void
@@ -170,8 +178,8 @@ class IndicadorModuleTest extends TestCase
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.manage']);
 
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
-        $allIndicators = \App\Models\Indicator::query()->where('is_active', true)->orderBy('code')->get();
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $allIndicators = Indicator::query()->where('is_active', true)->orderBy('code')->get();
 
         $payload = [
             'reason' => 'Ajuste anual de metas',
@@ -195,13 +203,13 @@ class IndicadorModuleTest extends TestCase
 
     public function test_capture_compliance_uses_updated_operator(): void
     {
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
         $indicator->update([
             'target_operator' => '<=',
             'target_value' => 90,
         ]);
 
-        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
+        $calculator = app(IndicatorMetricCalculator::class);
 
         $compliesAt89 = $calculator->calculate($indicator, [
             'supervisiones_programadas' => 100,
@@ -222,7 +230,7 @@ class IndicadorModuleTest extends TestCase
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
         $indicator->update(['target_operator' => '<=', 'target_value' => 12.5]);
 
         $this->actingAs($user)
@@ -233,16 +241,16 @@ class IndicadorModuleTest extends TestCase
 
     public function test_sheet_rows_recalculate_complies_after_operator_change(): void
     {
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
-        $period = \App\Models\Period::query()->firstOrCreate(
+        $period = Period::query()->firstOrCreate(
             ['year' => 2026, 'month' => 3],
-            ['status' => \App\Models\Period::STATUS_OPEN]
+            ['status' => Period::STATUS_OPEN]
         );
 
-        \App\Models\IndicatorCapture::query()->updateOrCreate(
+        IndicatorCapture::query()->updateOrCreate(
             [
                 'indicator_id' => $indicator->id,
                 'user_id' => $user->id,
@@ -273,7 +281,7 @@ class IndicadorModuleTest extends TestCase
 
     public function test_ft_op_03_meta_label_is_composite(): void
     {
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
 
         $this->assertTrue($indicator->usesCompositeTarget());
         $this->assertStringContainsString('A ≤', $indicator->metaLabel());
@@ -285,7 +293,7 @@ class IndicadorModuleTest extends TestCase
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
         $indicator->update(['target_value' => 88, 'critical_value' => 75]);
 
         $this->actingAs($user)
@@ -308,15 +316,53 @@ class IndicadorModuleTest extends TestCase
 
     public function test_operations_manage_user_can_access_consolidado_show(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
         $user->givePermissionTo(['view.dashboard', 'operations.manage']);
 
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
 
         $this->actingAs($user)
             ->get(route('indicadores.admin.consolidado.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
             ->assertOk()
-            ->assertSee('Consolidado — FT-OP-01');
+            ->assertSee('Consolidado — FT-OP-01')
+            ->assertSee('Todos los capturadores')
+            ->assertSee('FICHA DEL INDICADOR DE GESTION')
+            ->assertSee('ft-op-01-chart', false);
+    }
+
+    public function test_consolidado_ft_op_01_can_filter_by_capturador(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $capturador = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+            'name' => 'Capturador Consolidado Test',
+        ]);
+        $capturador->givePermissionTo(['operations.capture', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($manager)
+            ->get(route('indicadores.admin.consolidado.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+                'user_id' => $capturador->id,
+            ]))
+            ->assertOk()
+            ->assertSee('Capturador Consolidado Test')
+            ->assertSee('FICHA DEL INDICADOR DE GESTION');
     }
 
     public function test_operations_export_user_can_download_capture_excel(): void
@@ -324,7 +370,7 @@ class IndicadorModuleTest extends TestCase
         $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.capture']);
 
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
 
         $response = $this->actingAs($user)->get(route('indicadores.export.leader.excel', [
             'indicator' => $indicator->code,
@@ -387,8 +433,8 @@ class IndicadorModuleTest extends TestCase
 
     public function test_critical_result_detects_below_threshold_for_gte_operator(): void
     {
-        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $calculator = app(IndicatorMetricCalculator::class);
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
         $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
 
         $this->assertTrue($calculator->isCriticalResult($indicator, 50.0));
@@ -397,8 +443,8 @@ class IndicadorModuleTest extends TestCase
 
     public function test_critical_result_detects_above_threshold_for_equals_operator(): void
     {
-        $calculator = app(\App\Services\Indicadores\IndicatorMetricCalculator::class);
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-06')->firstOrFail();
+        $calculator = app(IndicatorMetricCalculator::class);
+        $indicator = Indicator::query()->where('code', 'FT-OP-06')->firstOrFail();
         $indicator->update(['target_operator' => '==', 'target_value' => 0, 'critical_value' => 3]);
 
         $this->assertTrue($calculator->isCriticalResult($indicator, 5.0));
@@ -409,7 +455,7 @@ class IndicadorModuleTest extends TestCase
     {
         $year = (int) config('indicators.base_year', now()->year);
         $month = 7;
-        $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
+        $period = Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
 
         $leaderA = User::factory()->create([
             'name' => 'Ranking Alpha',
@@ -435,10 +481,10 @@ class IndicadorModuleTest extends TestCase
         ]);
         $inactiveCapturer->givePermissionTo(['operations.capture', 'operations.view']);
 
-        $indicatorOne = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
-        $indicatorTwo = \App\Models\Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
+        $indicatorOne = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicatorTwo = Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
 
-        $captureAOne = \App\Models\IndicatorCapture::query()->updateOrCreate(
+        $captureAOne = IndicatorCapture::query()->updateOrCreate(
             [
                 'indicator_id' => $indicatorOne->id,
                 'user_id' => $leaderA->id,
@@ -455,7 +501,7 @@ class IndicadorModuleTest extends TestCase
             ]
         );
 
-        \App\Models\IndicatorCapture::query()->updateOrCreate(
+        IndicatorCapture::query()->updateOrCreate(
             [
                 'indicator_id' => $indicatorTwo->id,
                 'user_id' => $leaderA->id,
@@ -472,7 +518,7 @@ class IndicadorModuleTest extends TestCase
             ]
         );
 
-        $captureBOne = \App\Models\IndicatorCapture::query()->updateOrCreate(
+        $captureBOne = IndicatorCapture::query()->updateOrCreate(
             [
                 'indicator_id' => $indicatorOne->id,
                 'user_id' => $leaderB->id,
@@ -489,7 +535,7 @@ class IndicadorModuleTest extends TestCase
             ]
         );
 
-        \App\Models\Improvement::query()->create([
+        Improvement::query()->create([
             'indicator_capture_id' => $captureAOne->id,
             'indicator_id' => $indicatorOne->id,
             'user_id' => $leaderA->id,
@@ -501,7 +547,7 @@ class IndicadorModuleTest extends TestCase
             'created_by_user_id' => $leaderA->id,
         ]);
 
-        \App\Models\Improvement::query()->create([
+        Improvement::query()->create([
             'indicator_capture_id' => $captureBOne->id,
             'indicator_id' => $indicatorOne->id,
             'user_id' => $leaderB->id,
@@ -540,11 +586,11 @@ class IndicadorModuleTest extends TestCase
         $month = 7;
         $captureUser = User::query()->where('email', 'operaciones.demo@sjseguridad.test')->firstOrFail();
         $captureUser->update(['area_key' => 'operaciones']);
-        $indicator = \App\Models\Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
         $indicator->update(['target_operator' => '>=', 'critical_value' => 60]);
-        $period = \App\Models\Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
+        $period = Period::query()->where(['year' => $year, 'month' => $month])->firstOrFail();
 
-        \App\Models\IndicatorCapture::query()->updateOrCreate(
+        IndicatorCapture::query()->updateOrCreate(
             [
                 'indicator_id' => $indicator->id,
                 'user_id' => $captureUser->id,

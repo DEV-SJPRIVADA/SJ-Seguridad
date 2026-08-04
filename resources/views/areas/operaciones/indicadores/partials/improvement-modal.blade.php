@@ -21,26 +21,28 @@
             <div class="indicadores-modal-fields">
                 <div>
                     <label class="form-label">Analisis</label>
-                    <textarea name="improvement[analysis]" rows="5" class="supply-textarea">{{ old('improvement.analysis', $improvementAnalysis) }}</textarea>
+                    <textarea name="improvement[analysis]" rows="5" class="supply-textarea" @disabled($readOnly ?? false)>{{ old('improvement.analysis', $improvementAnalysis) }}</textarea>
                 </div>
                 <div>
                     <label class="form-label">Accion tomada</label>
-                    <textarea name="improvement[action_taken]" rows="5" class="supply-textarea">{{ old('improvement.action_taken', $improvementActionTaken) }}</textarea>
+                    <textarea name="improvement[action_taken]" rows="5" class="supply-textarea" @disabled($readOnly ?? false)>{{ old('improvement.action_taken', $improvementActionTaken) }}</textarea>
                 </div>
                 <div>
                     <label class="form-label">Accion definida</label>
-                    <textarea name="improvement[action_defined]" rows="5" class="supply-textarea">{{ old('improvement.action_defined', $improvementActionDefined) }}</textarea>
+                    <textarea name="improvement[action_defined]" rows="5" class="supply-textarea" @disabled($readOnly ?? false)>{{ old('improvement.action_defined', $improvementActionDefined) }}</textarea>
                 </div>
                 <div data-improvement-required-wrap @if ($complies) hidden @endif>
                     <label class="form-label">Debe agregar mejora</label>
-                    <textarea name="improvement[improvement_required]" rows="5" class="supply-textarea indicadores-textarea--warning" placeholder="Describe la mejora requerida porque no se cumplio la meta...">{{ old('improvement.improvement_required', $improvementRequired) }}</textarea>
+                    <textarea name="improvement[improvement_required]" rows="5" class="supply-textarea indicadores-textarea--warning" placeholder="Describe la mejora requerida porque no se cumplio la meta..." @disabled($readOnly ?? false)>{{ old('improvement.improvement_required', $improvementRequired) }}</textarea>
                 </div>
             </div>
             <div class="indicadores-actions indicadores-actions--end">
-                <button type="button" class="btn btn--secondary btn--sm js-close-improvement-modal">Cancelar</button>
+                <button type="button" class="btn btn--secondary btn--sm js-close-improvement-modal">{{ ($readOnly ?? false) ? 'Cerrar' : 'Cancelar' }}</button>
+                @if (! ($readOnly ?? false))
                 <button type="submit" class="btn btn--primary btn--sm" @disabled($isPeriodClosed)>
                     Guardar mes
                 </button>
+                @endif
             </div>
         </div>
     </div>

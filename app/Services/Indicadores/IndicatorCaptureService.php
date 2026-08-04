@@ -7,6 +7,7 @@ use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class IndicatorCaptureService
@@ -15,8 +16,9 @@ class IndicatorCaptureService
         private readonly AuditLogService $auditLogService,
         private readonly YearRangeService $yearRangeService,
         private readonly IndicatorMetricCalculator $calculator,
-    ) {
-    }
+        private readonly IndicatorConsolidadoService $consolidadoService,
+        private readonly IndicatorCaptureAccessService $captureAccessService,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -119,6 +121,224 @@ class IndicatorCaptureService
             'quarterChartPayload' => $ftOp03['quarterChartPayload'],
             'openImprovementModal' => (bool) old('_open_improvement_modal', false),
             'openClassificationModal' => (bool) old('_open_classification_modal', false),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function buildConsolidadoShowContext(Indicator $indicator, int $year, int $month, ?User $selectedUser): array
+    {
+        $capturableUsers = $this->captureAccessService->capturableUsers();
+
+        if ($selectedUser !== null) {
+            abort_unless($capturableUsers->contains(fn (User $user): bool => $user->id === $selectedUser->id), 404);
+
+            return array_merge(
+                $this->buildShowContext($indicator, $year, $month, $selectedUser),
+                $this->consolidadoViewMeta($capturableUsers, $selectedUser->id),
+            );
+        }
+
+        $months = config('indicators.months');
+        $years = $this->yearRangeService->years();
+
+        $period = Period::query()->firstOrCreate(
+            ['year' => $year, 'month' => $month],
+            ['status' => Period::STATUS_OPEN]
+        );
+
+        $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month, $capturableUsers);
+        $consolidated = $monthly['consolidated'];
+
+        $form = $this->normalizePostedForm($indicator->code, [
+            'total_personal' => ($consolidated['denominator'] ?? 0) > 0 ? $consolidated['denominator'] : null,
+            'personal_capacitado' => ($consolidated['numerator'] ?? 0) > 0 ? $consolidated['numerator'] : null,
+        ]);
+
+        $metrics = $this->calculator->calculate($indicator, $form);
+        [$sheetDenominatorLabel, $sheetNumeratorLabel] = $this->calculator->sheetLabels($indicator);
+        $sheet = $this->buildConsolidatedSheetData($indicator, $year, $capturableUsers);
+
+        $resultPercentage = $consolidated['result_percentage'] ?? $metrics['result_percentage'];
+        $complies = $this->compliesFromResult($indicator, $resultPercentage !== null ? (float) $resultPercentage : null);
+
+        return array_merge([
+            'indicator' => $indicator,
+            'selectedYear' => $year,
+            'selectedMonth' => $month,
+            'selectedUser' => null,
+            'captureUser' => null,
+            'months' => $months,
+            'years' => $years,
+            'periodId' => $period->id,
+            'isPeriodClosed' => $period->isClosed(),
+            'form' => $form,
+            'captureId' => null,
+            'improvementId' => null,
+            'analysisText' => '',
+            'improvementAnalysis' => '',
+            'improvementActionTaken' => '',
+            'improvementActionDefined' => '',
+            'improvementRequired' => '',
+            'resultPercentage' => (float) ($resultPercentage ?? 0),
+            'numerator' => (float) ($consolidated['numerator'] ?? 0),
+            'denominator' => (float) ($consolidated['denominator'] ?? 0),
+            'complies' => $complies,
+            'semaforo' => $consolidated['semaforo'] ?? ($complies ? 'VERDE' : 'ROJO'),
+            'metricErrors' => $metrics['errors'],
+            'sheetRows' => $sheet['sheetRows'],
+            'chartPayload' => $sheet['chartPayload'],
+            'sheetDenominatorLabel' => $sheetDenominatorLabel,
+            'sheetNumeratorLabel' => $sheetNumeratorLabel,
+            'fieldsView' => $this->calculator->fieldsPartial($indicator->code),
+            'clientFormula' => $this->calculator->clientFormula($indicator->code, $indicator),
+            'siniestroOptions' => $this->calculator->siniestroOptions(),
+            'financeRows' => [],
+            'incidentRows' => [],
+            'quarterlyTables' => [],
+            'financeChartPayload' => [],
+            'incidentChartPayload' => [],
+            'quarterChartPayload' => [],
+            'openImprovementModal' => false,
+            'openClassificationModal' => false,
+        ], $this->consolidadoViewMeta($capturableUsers, null));
+    }
+
+    /**
+     * @param  Collection<int, User>  $capturableUsers
+     * @return array<string, mixed>
+     */
+    private function consolidadoViewMeta(Collection $capturableUsers, ?int $selectedCapturadorId): array
+    {
+        $selectedUser = $selectedCapturadorId !== null
+            ? $capturableUsers->firstWhere('id', $selectedCapturadorId)
+            : null;
+
+        return [
+            'isConsolidadoView' => true,
+            'readOnly' => true,
+            'capturableUsers' => $capturableUsers,
+            'selectedCapturadorId' => $selectedCapturadorId,
+            'captureUserName' => $selectedUser?->name ?? 'Todos los capturadores',
+            'exportUserId' => $selectedCapturadorId,
+        ];
+    }
+
+    private function compliesFromResult(Indicator $indicator, ?float $resultPercentage): bool
+    {
+        if ($resultPercentage === null) {
+            return false;
+        }
+
+        $target = (float) $indicator->target_value;
+
+        return match ($indicator->target_operator) {
+            '>=' => $resultPercentage >= $target,
+            '<=' => $resultPercentage <= $target,
+            '==' => round($resultPercentage, 2) === round($target, 2),
+            default => false,
+        };
+    }
+
+    /**
+     * @param  Collection<int, User>  $users
+     * @return array{sheetRows: list<array<string, mixed>>, chartPayload: array<string, mixed>}
+     */
+    private function buildConsolidatedSheetData(Indicator $indicator, int $year, Collection $users): array
+    {
+        $monthNames = [
+            1 => 'ENE', 2 => 'FEB', 3 => 'MAR', 4 => 'ABR',
+            5 => 'MAY', 6 => 'JUN', 7 => 'JUL', 8 => 'AGO',
+            9 => 'SEP', 10 => 'OCT', 11 => 'NOV', 12 => 'DIC',
+        ];
+
+        $userIds = $users->pluck('id')->all();
+        if ($userIds === []) {
+            return ['sheetRows' => [], 'chartPayload' => []];
+        }
+
+        [$sheetDenominatorLabel, $sheetNumeratorLabel] = $this->calculator->sheetLabels($indicator);
+
+        $periods = Period::query()
+            ->where('year', $year)
+            ->whereBetween('month', [1, 12])
+            ->get(['id', 'month'])
+            ->keyBy('month');
+
+        $captures = IndicatorCapture::query()
+            ->where('indicator_id', $indicator->id)
+            ->whereIn('user_id', $userIds)
+            ->whereIn('period_id', $periods->pluck('id'))
+            ->get(['id', 'period_id', 'numerator', 'denominator', 'result_percentage', 'complies', 'analysis_text']);
+
+        $capturesByMonth = $captures->groupBy(function (IndicatorCapture $capture) use ($periods): int {
+            $period = $periods->firstWhere('id', $capture->period_id);
+
+            return (int) ($period?->month ?? 0);
+        });
+
+        $rows = [];
+        $denominators = [];
+        $numerators = [];
+        $percentages = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            /** @var Collection<int, IndicatorCapture> $monthCaptures */
+            $monthCaptures = $capturesByMonth->get($month, collect());
+
+            $denominator = (float) $monthCaptures->sum(fn (IndicatorCapture $capture): float => (float) $capture->denominator);
+            $numerator = (float) $monthCaptures->sum(fn (IndicatorCapture $capture): float => (float) $capture->numerator);
+            $result = $denominator > 0 ? round(($numerator / $denominator) * 100, 2) : 0.0;
+            $hasCapture = $monthCaptures->isNotEmpty();
+            $complies = $this->compliesFromResult($indicator, $hasCapture ? $result : null);
+
+            $analysis = $monthCaptures
+                ->map(function (IndicatorCapture $capture) use ($users): string {
+                    $userName = $users->firstWhere('id', $capture->user_id)?->name ?? 'Capturador';
+                    $text = trim((string) ($capture->analysis_text ?? ''));
+
+                    if ($text === '') {
+                        return '';
+                    }
+
+                    return $userName.":\n".$text;
+                })
+                ->filter(fn (string $text): bool => $text !== '')
+                ->implode("\n\n---\n\n");
+
+            $analysis = preg_replace('/\n{3,}/', "\n\n", $analysis) ?? $analysis;
+
+            $rows[] = [
+                'month_number' => $month,
+                'month' => $monthNames[$month],
+                'denominator' => $denominator,
+                'numerator' => $numerator,
+                'result_percentage' => $result,
+                'analysis' => $analysis,
+                'has_capture' => $hasCapture,
+                'complies' => $complies,
+                'improvement' => $hasCapture && ! $complies,
+            ];
+
+            $denominators[] = $denominator;
+            $numerators[] = $numerator;
+            $percentages[] = $result;
+        }
+
+        return [
+            'sheetRows' => $rows,
+            'chartPayload' => [
+                'months' => array_values($monthNames),
+                'denominator' => $denominators,
+                'numerator' => $numerators,
+                'result_percentage' => $percentages,
+                'meta' => array_fill(0, 12, (float) $indicator->target_value),
+                'denominator_label' => $sheetDenominatorLabel,
+                'numerator_label' => $sheetNumeratorLabel,
+                'title' => 'Nivel de cumplimiento '.$indicator->name.' '.$year.' (Consolidado)',
+                'year' => $year,
+            ],
         ];
     }
 
