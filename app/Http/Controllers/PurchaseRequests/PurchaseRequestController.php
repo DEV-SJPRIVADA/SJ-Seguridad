@@ -14,6 +14,7 @@ use App\Traits\HasPurchaseTabs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class PurchaseRequestController extends Controller
@@ -127,7 +128,7 @@ class PurchaseRequestController extends Controller
 
     public function show(string $module, PurchaseRequest $purchaseRequest): View
     {
-        $this->authorize('view', $purchaseRequest);
+        Gate::authorize('view', $purchaseRequest);
 
         $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor', 'mailLogs']);
 
@@ -140,7 +141,7 @@ class PurchaseRequestController extends Controller
 
     public function exportPdf(string $module, PurchaseRequest $purchaseRequest, PurchaseRequestPdfService $pdfService): Response
     {
-        $this->authorize('view', $purchaseRequest);
+        Gate::authorize('view', $purchaseRequest);
 
         return response($pdfService->generate($purchaseRequest), 200, [
             'Content-Type' => 'application/pdf',
@@ -150,7 +151,7 @@ class PurchaseRequestController extends Controller
 
     public function exportExcel(string $module, PurchaseRequest $purchaseRequest, PurchaseRequestExcelExporter $exporter): Response
     {
-        $this->authorize('view', $purchaseRequest);
+        Gate::authorize('view', $purchaseRequest);
 
         $purchaseRequest->load('items');
 

@@ -12,7 +12,7 @@ class PurchaseAccessService
 
     public function isAdminBypass(User $user): bool
     {
-        return $user->can('manage.users');
+        return $user->hasRole('super-admin') || $user->can('manage.users');
     }
 
     public function hasBoardVisibility(User $user, string $module): bool

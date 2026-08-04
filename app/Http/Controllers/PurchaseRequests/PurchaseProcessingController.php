@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class PurchaseProcessingController extends Controller
@@ -43,7 +44,7 @@ class PurchaseProcessingController extends Controller
 
     public function editPurchase(string $module, PurchaseRequest $purchaseRequest): View
     {
-        $this->authorize('process', $purchaseRequest);
+        Gate::authorize('process', $purchaseRequest);
 
         $purchaseRequest->load(['user', 'aprobador', 'items']);
 
@@ -61,7 +62,7 @@ class PurchaseProcessingController extends Controller
         PurchaseRequest $purchaseRequest,
         PurchaseRequestNotificationService $notifications,
     ): RedirectResponse {
-        $this->authorize('process', $purchaseRequest);
+        Gate::authorize('process', $purchaseRequest);
 
         $estadoCompras = $request->validated('estado_compras');
 

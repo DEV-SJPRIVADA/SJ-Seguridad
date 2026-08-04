@@ -9,7 +9,17 @@ class StorePurchaseRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('purchase.tab.create') ?? false;
+        $user = $this->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        if ($user->hasRole('super-admin') || $user->can('manage.users')) {
+            return true;
+        }
+
+        return $user->can('purchase.tab.create');
     }
 
     protected function prepareForValidation(): void

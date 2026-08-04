@@ -19,6 +19,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class PurchaseRequestModuleTest extends TestCase
@@ -30,6 +31,40 @@ class PurchaseRequestModuleTest extends TestCase
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
+    }
+
+    public function test_super_admin_can_store_purchase_request_without_explicit_tab_permissions(): void
+    {
+        Mail::fake();
+
+        Role::findOrCreate('super-admin', 'web');
+
+        $superAdmin = User::factory()->create([
+            'area_key' => 'compras',
+            'must_change_password' => false,
+        ]);
+        $superAdmin->assignRole('super-admin');
+        $superAdmin->syncPermissions([]);
+
+        $director = $this->director();
+
+        $this->actingAs($superAdmin)->post(route('purchase-requests.store', ['module' => 'compras']), [
+            'area_key' => 'compras',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Prueba super-admin',
+                    'referencia' => 'N/A',
+                    'utilizacion' => 'Test',
+                    'ubicacion' => 'Cali',
+                ],
+            ],
+        ])->assertRedirect(route('purchase-requests.create', ['module' => 'compras']));
+
+        Mail::assertSent(PurchaseRequestCreatedMail::class);
     }
 
     public function test_user_with_create_permission_can_store_from_any_purchase_module(): void
@@ -360,6 +395,27 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertOk();
         $response->assertSee($assigned->folio());
         $response->assertDontSee(PurchaseRequest::query()->where('aprobador_id', $directorB->id)->first()->folio());
+    }
+
+    public function test_director_approval_index_keeps_resolved_history_with_filter(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+
+        $pending = $this->createPurchaseRequest($requester, $director);
+        $approved = $this->createPurchaseRequest($requester, $director, PurchaseRequest::ESTADO_APROBADO);
+
+        $this->actingAs($director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee($pending->folio())
+            ->assertDontSee($approved->folio());
+
+        $this->actingAs($director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'estado' => 'todos']))
+            ->assertOk()
+            ->assertSee($pending->folio())
+            ->assertSee($approved->folio());
     }
 
     public function test_non_assigned_director_cannot_approve(): void
@@ -830,7 +886,7 @@ class PurchaseRequestModuleTest extends TestCase
         return $user;
     }
 
-    private function createPurchaseRequest(User $requester, User $director): PurchaseRequest
+    private function createPurchaseRequest(User $requester, User $director, string $estado = PurchaseRequest::ESTADO_PENDIENTE): PurchaseRequest
     {
         return PurchaseRequest::query()->create([
             'numero_solicitud' => (PurchaseRequest::query()->max('numero_solicitud') ?? 0) + 1,
@@ -843,7 +899,8 @@ class PurchaseRequestModuleTest extends TestCase
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
-            'estado' => PurchaseRequest::ESTADO_PENDIENTE,
+            'estado' => $estado,
+            'fecha_aprobacion' => $estado === PurchaseRequest::ESTADO_PENDIENTE ? null : now()->toDateString(),
         ]);
     }
 
