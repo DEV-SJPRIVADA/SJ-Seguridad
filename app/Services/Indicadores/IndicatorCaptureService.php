@@ -902,12 +902,16 @@ class IndicatorCaptureService
                 'facturacion' => array_values($facturacion),
                 'pagado' => array_values($valorPagado),
                 'cumplimiento' => array_values($pctCumplimiento),
+                'meta' => array_fill(0, 12, (float) $indicator->target_value),
+                'critico' => array_fill(0, 12, (float) ($indicator->critical_value ?? 0)),
             ],
             'incidentChartPayload' => [
                 'months' => array_values($monthNames),
                 'clientes' => array_values($clientes),
                 'siniestros' => array_values($siniestros),
                 'porcentaje' => array_values($pctSiniestros),
+                'meta' => array_fill(0, 12, (float) $indicator->target_value),
+                'critico' => array_fill(0, 12, (float) ($indicator->critical_value ?? 0)),
             ],
             'quarterChartPayload' => $quarterChartPayload,
         ];
