@@ -34,7 +34,7 @@
                     @foreach ($classificationRows as $index => $row)
                         <tr data-classification-row>
                             <td style="text-align:left;">
-                                <select name="form[clasificacion_por_tipo][{{ $index }}][tipo]" class="supply-input supply-select js-classification-type">
+                                <select name="form[clasificacion_por_tipo][{{ $index }}][tipo]" class="supply-input supply-select js-classification-type" @disabled($readOnly ?? false)>
                                     <option value="">Seleccione...</option>
                                     @foreach ($siniestroOptions as $option)
                                         <option value="{{ $option }}" @selected(($row['tipo'] ?? '') === $option)>{{ $option }}</option>
@@ -42,10 +42,12 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" step="0.01" name="form[clasificacion_por_tipo][{{ $index }}][cantidad]" value="{{ $row['cantidad'] ?? '' }}" class="supply-input" />
+                                <input type="number" step="0.01" name="form[clasificacion_por_tipo][{{ $index }}][cantidad]" value="{{ $row['cantidad'] ?? '' }}" class="supply-input" @disabled($readOnly ?? false) />
                             </td>
                             <td>
-                                <button type="button" class="btn btn--secondary btn--sm js-remove-classification-row">X</button>
+                                @if (! ($readOnly ?? false))
+                                    <button type="button" class="btn btn--secondary btn--sm js-remove-classification-row">X</button>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -72,9 +74,13 @@
             </template>
 
             <div class="indicadores-actions indicadores-actions--end">
-                <button type="button" class="btn btn--secondary btn--sm js-add-classification-row">Agregar fila</button>
-                <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cancelar</button>
-                <button type="button" class="btn btn--primary btn--sm js-close-classification-modal">Guardar clasificacion</button>
+                @if (! ($readOnly ?? false))
+                    <button type="button" class="btn btn--secondary btn--sm js-add-classification-row">Agregar fila</button>
+                    <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cancelar</button>
+                    <button type="button" class="btn btn--primary btn--sm js-close-classification-modal">Guardar clasificacion</button>
+                @else
+                    <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cerrar</button>
+                @endif
             </div>
         </div>
     </div>

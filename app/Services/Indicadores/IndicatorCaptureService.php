@@ -71,7 +71,7 @@ class IndicatorCaptureService
 
         $sheet = $this->buildSheetData($indicator, $user->id, $year, $sheetDenominatorLabel, $sheetNumeratorLabel);
         $ftOp03 = $indicator->code === 'FT-OP-03'
-            ? $this->buildFtOp03Data($indicator, $user->id, $year)
+            ? $this->buildFtOp03Data($indicator, $year, [$user->id])
             : [
                 'financeRows' => [],
                 'incidentRows' => [],
@@ -151,6 +151,58 @@ class IndicatorCaptureService
         $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month, $capturableUsers);
         $consolidated = $monthly['consolidated'];
 
+        if ($indicator->code === 'FT-OP-03') {
+            $form = $this->normalizePostedForm(
+                $indicator->code,
+                $this->buildConsolidatedFtOp03Form($consolidated, $monthly['rows']),
+            );
+            $metrics = $this->calculator->calculate($indicator, $form);
+            $ftOp03 = $this->buildFtOp03Data($indicator, $year, $capturableUsers->pluck('id')->all());
+            $complies = ($consolidated['final'] ?? 'ROJO') === 'VERDE';
+            $resultPercentage = (float) ($consolidated['a']['result_percentage'] ?? $metrics['result_percentage'] ?? 0);
+
+            return array_merge([
+                'indicator' => $indicator,
+                'selectedYear' => $year,
+                'selectedMonth' => $month,
+                'selectedUser' => null,
+                'captureUser' => null,
+                'months' => $months,
+                'years' => $years,
+                'periodId' => $period->id,
+                'isPeriodClosed' => $period->isClosed(),
+                'form' => $form,
+                'captureId' => null,
+                'improvementId' => null,
+                'analysisText' => '',
+                'improvementAnalysis' => '',
+                'improvementActionTaken' => '',
+                'improvementActionDefined' => '',
+                'improvementRequired' => '',
+                'resultPercentage' => $resultPercentage,
+                'numerator' => (float) ($consolidated['a']['numerator'] ?? 0),
+                'denominator' => (float) ($consolidated['a']['denominator'] ?? 0),
+                'complies' => $complies,
+                'semaforo' => $consolidated['final'] ?? ($complies ? 'VERDE' : 'ROJO'),
+                'metricErrors' => $metrics['errors'],
+                'sheetRows' => [],
+                'chartPayload' => [],
+                'sheetDenominatorLabel' => '',
+                'sheetNumeratorLabel' => '',
+                'fieldsView' => $this->calculator->fieldsPartial($indicator->code),
+                'clientFormula' => $this->calculator->clientFormula($indicator->code, $indicator),
+                'siniestroOptions' => $this->calculator->siniestroOptions(),
+                'financeRows' => $ftOp03['financeRows'],
+                'incidentRows' => $ftOp03['incidentRows'],
+                'quarterlyTables' => $ftOp03['quarterlyTables'],
+                'financeChartPayload' => $ftOp03['financeChartPayload'],
+                'incidentChartPayload' => $ftOp03['incidentChartPayload'],
+                'quarterChartPayload' => $ftOp03['quarterChartPayload'],
+                'openImprovementModal' => false,
+                'openClassificationModal' => false,
+            ], $this->consolidadoViewMeta($capturableUsers, null));
+        }
+
         $form = $this->normalizePostedForm(
             $indicator->code,
             $this->calculator->consolidatedFormFromTotals(
@@ -226,6 +278,42 @@ class IndicatorCaptureService
             'selectedCapturadorId' => $selectedCapturadorId,
             'captureUserName' => $selectedUser?->name ?? 'Todos los capturadores',
             'exportUserId' => $selectedCapturadorId,
+        ];
+    }
+
+    /**
+     * @param  array{a?: array<string, mixed>, b?: array<string, mixed>, final?: string}  $consolidated
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @return array<string, mixed>
+     */
+    private function buildConsolidatedFtOp03Form(array $consolidated, Collection $rows): array
+    {
+        $clasificacionTotals = [];
+
+        foreach ($rows as $row) {
+            foreach ((array) ($row['input']['clasificacion_por_tipo'] ?? []) as $item) {
+                $type = trim((string) ($item['tipo'] ?? ''));
+                if ($type === '') {
+                    continue;
+                }
+
+                $clasificacionTotals[$type] = ($clasificacionTotals[$type] ?? 0) + (float) ($item['cantidad'] ?? 0);
+            }
+        }
+
+        $clasificacion = $clasificacionTotals === []
+            ? [['tipo' => '', 'cantidad' => null]]
+            : collect($clasificacionTotals)
+                ->map(fn (float $qty, string $type): array => ['tipo' => $type, 'cantidad' => $qty])
+                ->values()
+                ->all();
+
+        return [
+            'total_servicios' => ($consolidated['a']['denominator'] ?? 0) > 0 ? $consolidated['a']['denominator'] : null,
+            'total_siniestros' => ($consolidated['a']['numerator'] ?? 0) > 0 ? $consolidated['a']['numerator'] : null,
+            'facturacion_mensual' => ($consolidated['b']['denominator'] ?? 0) > 0 ? $consolidated['b']['denominator'] : null,
+            'valor_pagado_siniestros' => ($consolidated['b']['numerator'] ?? 0) > 0 ? $consolidated['b']['numerator'] : null,
+            'clasificacion_por_tipo' => $clasificacion,
         ];
     }
 
@@ -660,7 +748,7 @@ class IndicatorCaptureService
      *     quarterChartPayload: array<int, mixed>
      * }
      */
-    private function buildFtOp03Data(Indicator $indicator, int $userId, int $year): array
+    private function buildFtOp03Data(Indicator $indicator, int $year, array $userIds): array
     {
         $monthNames = [
             1 => 'ENE', 2 => 'FEB', 3 => 'MAR', 4 => 'ABR',
@@ -677,7 +765,7 @@ class IndicatorCaptureService
             'quarterChartPayload' => [],
         ];
 
-        if ($userId <= 0) {
+        if ($userIds === []) {
             return $empty;
         }
 
@@ -689,14 +777,15 @@ class IndicatorCaptureService
 
         $captures = IndicatorCapture::query()
             ->where('indicator_id', $indicator->id)
-            ->where('user_id', $userId)
+            ->whereIn('user_id', $userIds)
             ->whereIn('period_id', $periods->pluck('id'))
-            ->get(['id', 'period_id', 'input_data'])
-            ->keyBy(function (IndicatorCapture $capture) use ($periods): int {
-                $period = $periods->firstWhere('id', $capture->period_id);
+            ->get(['id', 'period_id', 'input_data']);
 
-                return (int) ($period?->month ?? 0);
-            });
+        $capturesByMonth = $captures->groupBy(function (IndicatorCapture $capture) use ($periods): int {
+            $period = $periods->firstWhere('id', $capture->period_id);
+
+            return (int) ($period?->month ?? 0);
+        });
 
         $facturacion = [];
         $valorPagado = [];
@@ -707,11 +796,32 @@ class IndicatorCaptureService
         $quarterTypeTotals = [1 => [], 2 => [], 3 => [], 4 => []];
 
         for ($m = 1; $m <= 12; $m++) {
-            $input = (array) (($captures->get($m)?->input_data) ?? []);
-            $f = (float) ($input['facturacion_mensual'] ?? 0);
-            $v = (float) ($input['valor_pagado_siniestros'] ?? 0);
-            $c = (float) ($input['total_servicios'] ?? 0);
-            $s = (float) ($input['total_siniestros'] ?? 0);
+            /** @var Collection<int, IndicatorCapture> $monthCaptures */
+            $monthCaptures = $capturesByMonth->get($m, collect());
+
+            $f = 0.0;
+            $v = 0.0;
+            $c = 0.0;
+            $s = 0.0;
+
+            foreach ($monthCaptures as $capture) {
+                $input = (array) ($capture->input_data ?? []);
+                $f += (float) ($input['facturacion_mensual'] ?? 0);
+                $v += (float) ($input['valor_pagado_siniestros'] ?? 0);
+                $c += (float) ($input['total_servicios'] ?? 0);
+                $s += (float) ($input['total_siniestros'] ?? 0);
+
+                $quarter = (int) ceil($m / 3);
+                foreach ((array) ($input['clasificacion_por_tipo'] ?? []) as $row) {
+                    $type = trim((string) ($row['tipo'] ?? ''));
+                    if ($type === '') {
+                        continue;
+                    }
+                    $qty = (float) ($row['cantidad'] ?? 0);
+                    $quarterTypeTotals[$quarter][$type] = ($quarterTypeTotals[$quarter][$type] ?? 0) + $qty;
+                }
+            }
+
             $p1 = $f > 0 ? round(($v / $f) * 100, 2) : 0.0;
             $p2 = $c > 0 ? round(($s / $c) * 100, 2) : 0.0;
 
@@ -721,16 +831,6 @@ class IndicatorCaptureService
             $clientes[$m] = $c;
             $siniestros[$m] = $s;
             $pctSiniestros[$m] = $p2;
-
-            $quarter = (int) ceil($m / 3);
-            foreach ((array) ($input['clasificacion_por_tipo'] ?? []) as $row) {
-                $type = trim((string) ($row['tipo'] ?? ''));
-                if ($type === '') {
-                    continue;
-                }
-                $qty = (float) ($row['cantidad'] ?? 0);
-                $quarterTypeTotals[$quarter][$type] = ($quarterTypeTotals[$quarter][$type] ?? 0) + $qty;
-            }
         }
 
         $defaultTypes = $this->calculator->siniestroOptions();

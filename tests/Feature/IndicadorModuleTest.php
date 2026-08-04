@@ -357,6 +357,52 @@ class IndicadorModuleTest extends TestCase
             ->assertSee('FICHA DEL INDICADOR DE GESTION');
     }
 
+    public function test_consolidado_ft_op_03_uses_capture_view(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
+
+        $this->actingAs($manager)
+            ->get(route('indicadores.admin.consolidado.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+            ]))
+            ->assertOk()
+            ->assertSee('Consolidado — FT-OP-03')
+            ->assertSee('Facturacion mensual')
+            ->assertSee('ft-op-03-chart-finance', false);
+    }
+
+    public function test_consolidado_ft_op_09_uses_capture_view(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-09')->firstOrFail();
+
+        $this->actingAs($manager)
+            ->get(route('indicadores.admin.consolidado.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+            ]))
+            ->assertOk()
+            ->assertSee('Consolidado — FT-OP-09')
+            ->assertSee('Armas programadas')
+            ->assertSee('FICHA DEL INDICADOR DE GESTION');
+    }
+
     public function test_consolidado_ft_op_01_can_filter_by_capturador(): void
     {
         $manager = User::factory()->create([

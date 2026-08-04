@@ -35,6 +35,13 @@ return [
     'consolidado_capture_view_codes' => [
         'FT-OP-01',
         'FT-OP-02',
+        'FT-OP-03',
+        'FT-OP-04',
+        'FT-OP-05',
+        'FT-OP-06',
+        'FT-OP-07',
+        'FT-OP-08',
+        'FT-OP-09',
     ],
 
     /*
