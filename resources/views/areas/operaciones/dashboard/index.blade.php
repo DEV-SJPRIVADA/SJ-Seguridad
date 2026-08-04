@@ -170,21 +170,6 @@
                             </div>
                         </div>
                     </div>
-
-                    @can('operations.manage')
-                        <div class="panel indicadores-nested-panel" style="margin-top:1.5rem;">
-                            <div class="panel__header"><h4 class="panel-title">Resumen ejecutivo</h4></div>
-                            <div class="panel__body">
-                                <form method="POST" action="{{ route('indicadores.admin.dashboard.summary') }}" class="indicadores-form-compact">
-                                    @csrf
-                                    <input type="hidden" name="year" value="{{ $year }}">
-                                    <input type="hidden" name="month" value="{{ $month }}">
-                                    <textarea name="summary_text" class="supply-textarea" rows="4" placeholder="Resumen del periodo...">{{ old('summary_text', $summary?->summary_text) }}</textarea>
-                                    <button type="submit" class="btn btn--primary btn--sm">Guardar resumen</button>
-                                </form>
-                            </div>
-                        </div>
-                    @endcan
                 </div>
             </div>
         </div>

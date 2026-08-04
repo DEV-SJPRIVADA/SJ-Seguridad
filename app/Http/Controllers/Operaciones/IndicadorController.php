@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Operaciones;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operaciones\StoreIndicatorCaptureRequest;
 use App\Models\AuditLog;
-use App\Models\DashboardSummary;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\ManagementReportDraft;
@@ -49,7 +48,6 @@ class IndicadorController extends Controller
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
         $dashboard = $this->dashboardService->build($year, $month);
-        $summary = DashboardSummary::query()->where(['year' => $year, 'month' => $month])->first();
 
         $this->auditLogService->logEvent(
             eventType: 'admin_action',
@@ -65,7 +63,6 @@ class IndicadorController extends Controller
             'years' => $this->yearRangeService->years(),
             'months' => config('indicators.months'),
             'dashboard' => $dashboard,
-            'summary' => $summary,
         ]);
     }
 
@@ -554,49 +551,11 @@ class IndicadorController extends Controller
         ]));
     }
 
-    public function saveSummary(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'year' => $this->yearRangeService->validationRules(),
-            'month' => ['required', 'integer', 'min:1', 'max:12'],
-            'summary_text' => ['required', 'string'],
-        ]);
-
-        $year = (int) $validated['year'];
-        $month = (int) $validated['month'];
-
-        $summary = DashboardSummary::query()->firstOrNew(['year' => $year, 'month' => $month]);
-        $before = $summary->exists ? $summary->toArray() : null;
-
-        if (! $summary->exists) {
-            $summary->generated_by_user_id = auth()->id();
-        }
-
-        $summary->summary_text = $validated['summary_text'];
-        $summary->updated_by_user_id = auth()->id();
-        $summary->save();
-
-        $this->auditLogService->logModelChange(
-            eventType: 'dashboard_summary',
-            action: 'save',
-            model: $summary,
-            before: $before,
-            after: $summary->fresh()->toArray(),
-            reason: 'Actualizacion de resumen ejecutivo',
-            metadata: ['year' => $year, 'month' => $month]
-        );
-
-        return redirect()
-            ->route('indicadores.dashboard', ['year' => $year, 'month' => $month])
-            ->with('status', 'Resumen ejecutivo guardado.');
-    }
-
     public function exportDashboardPdf(Request $request)
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
         $dashboard = $this->dashboardService->build($year, $month);
-        $summary = DashboardSummary::query()->where(['year' => $year, 'month' => $month])->first();
 
         $this->auditLogService->logEvent(
             eventType: 'export',
@@ -605,7 +564,7 @@ class IndicadorController extends Controller
             metadata: ['year' => $year, 'month' => $month]
         );
 
-        $pdf = Pdf::loadView('areas.operaciones.dashboard.pdf', compact('year', 'month', 'dashboard', 'summary'))
+        $pdf = Pdf::loadView('areas.operaciones.dashboard.pdf', compact('year', 'month', 'dashboard'))
             ->setPaper('a4', 'landscape');
 
         return $pdf->download('dashboard-ejecutivo-'.$year.'-'.$month.'.pdf');

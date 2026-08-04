@@ -50,7 +50,5 @@ Route::middleware(['password.changed'])
             Route::get('/consolidado/{indicator:code}', [IndicadorController::class, 'consolidadoShow'])->name('consolidado.show');
 
             Route::get('/auditoria', [IndicadorController::class, 'auditLog'])->name('audit.index');
-
-            Route::post('/dashboard/resumen', [IndicadorController::class, 'saveSummary'])->name('dashboard.summary');
         });
     });

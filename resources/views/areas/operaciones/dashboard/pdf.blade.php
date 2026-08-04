@@ -15,10 +15,6 @@
     <h1>Dashboard General de Operaciones — {{ config('indicators.months')[$month] ?? $month }} {{ $year }}</h1>
     <p><strong>Score global:</strong> {{ number_format($dashboard['global_score'], 2) }}% — {{ $dashboard['global_state'] }}</p>
 
-    @if ($summary?->summary_text)
-        <p><strong>Resumen ejecutivo:</strong> {{ $summary->summary_text }}</p>
-    @endif
-
     <table>
         <thead>
             <tr>

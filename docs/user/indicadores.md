@@ -8,7 +8,7 @@ Registrar, consultar y consolidar indicadores de desempeno (KPI) del area de Ope
 
 Modulo exclusivo del area **Operaciones**. Segun permisos:
 
-- **Dashboard:** ver indicadores globales y resumen del periodo.
+- **Dashboard:** ver indicadores globales, KPIs y ranking del periodo.
 - **Captura:** registrar valores mensuales de indicadores; la captura puede ser propia (jefe capturador) o **por suplencia** (a nombre de otro capturador autorizado). Graficos interactivos unificados (ApexCharts) en la ficha del indicador.
 - **Ajustes:** administrar periodos, metas, capturadores y suplentes del area, y consultar auditoria (gestores).
 - **Consolidado:** vista consolidada de capturas del equipo (gestores).

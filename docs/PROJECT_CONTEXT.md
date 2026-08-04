@@ -53,7 +53,7 @@ El workflow multi-agente actualiza estas capas al cerrar features ([`docs/AGENT_
 - **Requisiciones:** `personal_requisitions`, `personal_requisition_status_logs`, `personal_requisition_change_logs`, catalogos en `requisition_*`, `requisition_notification_emails`
 - **Suministros:** `supply_products`, `supply_requests`, `supply_request_items`, `supply_sites`
 - **Calidad documentos:** `quality_documents`, `quality_document_areas`, `quality_document_users`
-- **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `dashboard_summaries`, `improvements`
+- **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `improvements`
 - **Comercial:** `commercial_clients`, `commercial_services`, catalogos `commercial_*`
 - `requisition_clients` (puente interno con matriz comercial)
 - tablas de `cache` y `jobs`

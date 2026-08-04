@@ -32,9 +32,6 @@ class AuditEventCatalog
         'indicator_targets' => [
             'update' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
         ],
-        'dashboard_summary' => [
-            'save' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
-        ],
         'export' => [
             'dashboard_pdf' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
             'management_pptx' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],

@@ -106,7 +106,7 @@ Columna **Suplencia** independiente de **Captura**. `IndicadorController::update
 
 - `User` — titular de cada captura (`indicator_captures.user_id`); digitador en `created_by_user_id` / `updated_by_user_id`
 - `Indicator`, `Period` (`indicator_periods`), `IndicatorCapture`
-- `DashboardWeight`, `DashboardSummary`
+- `DashboardWeight`
 - `Improvement` — plan de mejora ligado a una captura en rojo
 - `AuditLog` — auditoria central (`audit_logs`, `module=indicadores`, `area=operaciones`); escritura via `AuditLogService` wrapper
 
