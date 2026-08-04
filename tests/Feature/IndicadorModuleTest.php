@@ -502,6 +502,42 @@ class IndicadorModuleTest extends TestCase
         $this->assertStringContainsString('<c:v>684</c:v>', (string) $chart);
     }
 
+    public function test_management_pptx_replaces_slide_text_and_produces_valid_slide_xml(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.management.pptx', [
+            'year' => (int) config('indicators.base_year', now()->year),
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+
+        $file = $response->baseResponse->getFile();
+        $this->assertNotNull($file);
+
+        $zip = new \ZipArchive;
+        $zip->open($file->getPathname());
+
+        $slide1 = (string) $zip->getFromName('ppt/slides/slide1.xml');
+        $slide2 = (string) $zip->getFromName('ppt/slides/slide2.xml');
+
+        $zip->close();
+
+        $this->assertStringNotContainsString('{{REPORT_TITLE}}', $slide1);
+        $this->assertStringNotContainsString('{{INDICATOR_TITLE_FT_OP_01}}', $slide2);
+        $this->assertStringNotContainsString('{{INDICATOR_NARRATIVE_FT_OP_01}}', $slide2);
+        $this->assertStringNotContainsString('ns3:', $slide2);
+        $this->assertStringNotContainsString('ns4:', $slide2);
+        $this->assertStringContainsString('PERSONAL CAPACITADO SJ', $slide2);
+
+        $previous = libxml_use_internal_errors(true);
+        $this->assertNotFalse(simplexml_load_string($slide1));
+        $this->assertNotFalse(simplexml_load_string($slide2));
+        libxml_use_internal_errors($previous);
+    }
+
     public function test_critical_result_detects_below_threshold_for_gte_operator(): void
     {
         $calculator = app(IndicatorMetricCalculator::class);

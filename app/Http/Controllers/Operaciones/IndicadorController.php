@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\DashboardSummary;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
+use App\Models\ManagementReportDraft;
 use App\Models\Period;
 use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
@@ -17,6 +18,7 @@ use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
 use App\Services\Indicadores\ManagementReport\ManagementReportDataBuilder;
+use App\Services\Indicadores\ManagementReport\ManagementReportDraftService;
 use App\Services\Indicadores\ManagementReport\ManagementReportPptxExporter;
 use App\Services\Indicadores\YearRangeService;
 use App\Support\IndicadorNavigation;
@@ -38,6 +40,7 @@ class IndicadorController extends Controller
         private readonly IndicatorCaptureService $captureService,
         private readonly ManagementReportDataBuilder $managementReportDataBuilder,
         private readonly ManagementReportPptxExporter $managementReportPptxExporter,
+        private readonly ManagementReportDraftService $managementReportDraftService,
         private readonly IndicatorCaptureAccessService $captureAccessService,
     ) {}
 
@@ -622,6 +625,97 @@ class IndicadorController extends Controller
         );
 
         return $this->managementReportPptxExporter->downloadResponse($report);
+    }
+
+    public function managementReportPreview(Request $request): View
+    {
+        $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
+        $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
+        $report = $this->managementReportDataBuilder->build($year, $month);
+        $draft = $this->managementReportDraftService->getDraft($year, $month);
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_report_preview',
+            reason: 'Vista previa informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return view('areas.operaciones.dashboard.management-report-preview', [
+            'subTabs' => IndicadorNavigation::subTabs(),
+            'year' => $year,
+            'month' => $month,
+            'years' => $this->yearRangeService->years(),
+            'months' => config('indicators.months'),
+            'report' => $report,
+            'draft' => $draft,
+            'hasDraft' => $draft instanceof ManagementReportDraft,
+        ]);
+    }
+
+    public function storeManagementReportDraft(Request $request): RedirectResponse
+    {
+        $indicatorCodes = collect(config('indicators.management_report.indicators', []))
+            ->pluck('code')
+            ->all();
+
+        $validated = $request->validate([
+            'year' => $this->yearRangeService->validationRules(),
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'report_title' => ['nullable', 'string', 'max:255'],
+            'narratives' => ['nullable', 'array'],
+            'narratives.*' => ['nullable', 'string'],
+        ]);
+
+        $year = (int) $validated['year'];
+        $month = (int) $validated['month'];
+        $narratives = array_intersect_key(
+            (array) ($validated['narratives'] ?? []),
+            array_flip($indicatorCodes)
+        );
+
+        $this->managementReportDraftService->saveDraft(
+            $year,
+            $month,
+            $request->user(),
+            $validated['report_title'] ?? null,
+            $narratives
+        );
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_report_draft_save',
+            reason: 'Guardado de borrador informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return redirect()
+            ->route('indicadores.export.management.preview', ['year' => $year, 'month' => $month])
+            ->with('status', 'Borrador del informe guardado correctamente.');
+    }
+
+    public function regenerateManagementReportDraft(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'year' => $this->yearRangeService->validationRules(),
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $year = (int) $validated['year'];
+        $month = (int) $validated['month'];
+
+        $this->managementReportDraftService->clearDraft($year, $month);
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_report_draft_regenerate',
+            reason: 'Regeneracion de textos automaticos del informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return redirect()
+            ->route('indicadores.export.management.preview', ['year' => $year, 'month' => $month])
+            ->with('status', 'Textos regenerados automaticamente.');
     }
 
     public function exportLeaderExcel(Request $request, Indicator $indicator)

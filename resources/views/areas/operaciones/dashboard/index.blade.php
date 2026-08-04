@@ -25,8 +25,8 @@
                                 <a href="{{ route('indicadores.export.dashboard.pdf', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
                                     Exportar PDF
                                 </a>
-                                <a href="{{ route('indicadores.export.management.pptx', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
-                                    Informe PPTX
+                                <a href="{{ route('indicadores.export.management.preview', ['year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">
+                                    Preparar informe PPTX
                                 </a>
                             </div>
                         @endcan

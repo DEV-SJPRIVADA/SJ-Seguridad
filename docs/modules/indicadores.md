@@ -157,7 +157,10 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 | `indicadores.export.leader.pdf` | PDF captura por usuario |
 | `indicadores.export.consolidado.excel` | Excel consolidado |
 | `indicadores.export.consolidado.pdf` | PDF consolidado |
-| `indicadores.export.management.pptx` | Informe de gestion FO-GI-39 (PowerPoint) |
+| `indicadores.export.management.preview` | Vista previa HTML del informe FO-GI-39 con narrativas editables |
+| `indicadores.export.management.draft.store` | Guarda borrador (titulo + narrativas) por ano/mes |
+| `indicadores.export.management.draft.regenerate` | Elimina el borrador y vuelve a las narrativas auto-generadas |
+| `indicadores.export.management.pptx` | Informe de gestion FO-GI-39 (PowerPoint), usa el borrador si existe |
 
 Requiere permiso `operations.export`.
 
@@ -167,14 +170,15 @@ Plantilla sanitizada: `storage/app/templates/operaciones/FO-GI-39-v7.template.pp
 
 Servicios:
 
-- `ManagementReportDataBuilder` — KPIs, narrativa y series mensuales por FT-OP.
+- `ManagementReportDataBuilder` — KPIs, narrativa y series mensuales por FT-OP; aplica el borrador guardado (`ManagementReportDraftService`) al final de `build()`.
+- `ManagementReportDraftService` — CRUD del borrador (`ManagementReportDraft` / tabla `indicator_management_report_drafts`, unica por ano/mes): `getDraft()`, `saveDraft()`, `clearDraft()`, `applyDraftToReport()`.
 - `ManagementReportPptxArchive` — extrae/reempaqueta la plantilla PPTX en disco temporal.
 - `ManagementReportChartInjector` — inyecta graficos desde `chart-prototype/` cuando la plantilla no los trae.
 - `ManagementReportChartSanitizer` — elimina referencias Excel/extensiones invalidas del XML de graficos.
 - `ManagementReportChartUpdater` — actualiza caches mensuales del grafico.
 - `ManagementReportPptxExporter` — orquesta placeholders, graficos y descarga del informe.
 
-Ruta: `GET indicadores.export.management.pptx?year=&month=`. Boton **Informe PPTX** en dashboard de indicadores.
+Flujo: `GET indicadores.export.management.preview?year=&month=` muestra una vista HTML (no un render PPTX fiel) con el titulo de portada, **graficos ApexCharts mensuales** (misma serie que el PPTX: denominador, numerador, resultado y meta) y las 9 narrativas FT-OP-01…09 precargadas (analisis de captura del mes o texto auto-generado). Datos de graficos: `chart_series` en `ManagementReportDataBuilder`; JS `resources/js/management-report-preview-charts.js`. El usuario edita y guarda con `POST indicadores.export.management.draft.store` (`report_title` opcional, `narratives[FT-OP-XX]`); el borrador se guarda con `updated_by_user_id`. **Regenerar textos** (`POST .../draft.regenerate`) elimina el borrador del periodo y vuelve a los textos auto-generados. La descarga (`GET indicadores.export.management.pptx`) reutiliza `ManagementReportDataBuilder::build()`, que ya aplica el borrador si existe. Boton **Preparar informe PPTX** en el dashboard de indicadores abre la vista previa.
 
 Documentacion de placeholders: `storage/app/templates/operaciones/README.md`. Mapeo en `config/indicators.php` → `management_report`. Regenerar plantilla: `python tools/sanitize_pptx_template.py`. Prototipo de graficos: `python tools/extract_chart_prototype.py`.
 
@@ -193,6 +197,7 @@ Datos demo: capturas para los 9 FT-OP (meses 1–12 del anio base) con usuario `
 
 ## Referencias
 
+- Feature Brief: [`docs/briefs/FEAT-024.md`](../briefs/FEAT-024.md) — preview HTML informe FO-GI-39 con narrativas editables
 - Feature Brief: [`docs/briefs/FEAT-023.md`](../briefs/FEAT-023.md) — captura delegada (suplencia)
 - Review: [`docs/reviews/FEAT-023.md`](../reviews/FEAT-023.md)
 - Guia de usuario: [`docs/user/indicadores.md`](../user/indicadores.md)

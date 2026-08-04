@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/compras-dashboard-charts.js',
                 'resources/js/requisitions-dashboard-charts.js',
                 'resources/js/indicadores-capture.js',
+                'resources/js/management-report-preview-charts.js',
                 'resources/js/purchase-request-form.js',
             ],
             refresh: true,
