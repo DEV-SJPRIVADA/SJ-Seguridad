@@ -455,8 +455,7 @@ class RequisitionModuleTest extends TestCase
             'area_key' => 'gestion_humana',
             'must_change_password' => false,
         ]);
-        $approver->assignRole('director');
-        $approver->givePermissionTo('view.board.gestion_humana.requisiciones');
+        $approver->assignRole('administrador');
 
         $requester = User::factory()->create([
             'area_key' => 'operaciones',

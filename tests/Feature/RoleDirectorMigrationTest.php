@@ -25,16 +25,21 @@ class RoleDirectorMigrationTest extends TestCase
         $permissionNames = $role->permissions->pluck('name')->all();
 
         $this->assertContains('purchase.tab.approval', $permissionNames);
-        $this->assertContains('requisitions.approve.management', $permissionNames);
+        $this->assertContains('view.board.compras.solicitudes_compra', $permissionNames);
+        $this->assertNotContains('requisitions.approve.management', $permissionNames);
+        $this->assertNotContains('view.board.gestion_humana.requisiciones', $permissionNames);
         $this->assertNotContains('manage.users', $permissionNames);
     }
 
-    public function test_administrador_role_does_not_include_manage_users(): void
+    public function test_administrador_role_includes_management_requisition_approval(): void
     {
         $role = Role::findByName('administrador', 'web');
         $permissionNames = $role->permissions->pluck('name')->all();
 
+        $this->assertContains('requisitions.approve.management', $permissionNames);
+        $this->assertContains('view.board.gestion_humana.requisiciones', $permissionNames);
         $this->assertNotContains('manage.users', $permissionNames);
+        $this->assertNotContains('purchase.tab.approval', $permissionNames);
     }
 
     public function test_super_admin_has_manage_users(): void

@@ -267,6 +267,7 @@ Tabla eliminada (FEAT-011): `requisition_recruiters`.
 - **FEAT-011 (2026-07-28):** encargados de seleccion = usuarios GH + permiso `requisitions.selection_officer` (toggles en Parametros); `recruiter_id` referencia `users`; migracion elimina `requisition_recruiters`; export/impresion/historial usan `displayRecruiterName()`.
 - **FEAT-020 (2026-07-30):** columnas `hired_document`/`hired_full_name` (persona contratada) obligatorias solo con `status=contratado`, con deteccion de cedula duplicada (`App\Rules\Requisitions\HiredDocumentNotDuplicated`) y confirmacion via SweetAlert2; upsert 1:1 en `personal_requisition_ficha_entries` (`App\Services\Requisitions\PersonalRequisitionFichaSync`) que alimenta el tablero nuevo **Ficha empleados**; labels nuevos "Cedula contratado"/"Nombre contratado" en `PersonalRequisitionChangeLogger`. Riesgo conocido: `quantity > 1` en Gestion sigue permitido y una fila asi marcada Contratado solo registra una persona (fuera de alcance v1).
 - **Navegacion canonica (2026-08-03):** tablero Requisiciones GH consolidado en sidebar bajo Gestion humana; ver `SidebarVisibilityService` y `docs/ACCESS_CONTROL.md`.
+- **Roles (2026-08-04):** autorizacion cargo nuevo (`requisitions.approve.management`) exclusiva del rol `administrador`; rol `director` solo autoriza compras.
 
 ## Referencias
 

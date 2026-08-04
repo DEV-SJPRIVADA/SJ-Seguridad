@@ -261,10 +261,9 @@ return [
                 ],
             ],
             'directores' => [
-                'label' => 'Directores — Autorizacion',
+                'label' => 'Directores — Autorizacion compras',
                 'permissions' => [
                     'purchase.tab.approval',
-                    'requisitions.approve.management',
                 ],
             ],
             'documents' => [

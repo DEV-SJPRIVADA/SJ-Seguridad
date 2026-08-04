@@ -80,7 +80,7 @@ Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccess
 - `approve`: director asignado + pendiente
 - `process`: compras + solicitud aprobada
 
-Directores: rol `director` incluye `view.board.gestion_humana.requisiciones` (GH) y `view.board.compras.solicitudes_compra` (compras).
+Directores: rol `director` incluye `view.board.compras.solicitudes_compra` (compras). No incluye autorizacion de requisiciones cargo nuevo (rol `administrador`).
 
 ## Navegacion (sidebar)
 

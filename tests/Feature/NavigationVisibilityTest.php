@@ -36,7 +36,7 @@ class NavigationVisibilityTest extends TestCase
         $this->assertNotContains('juridico', $areaKeys);
     }
 
-    public function test_director_sees_only_gestion_humana_and_compras_areas(): void
+    public function test_director_sees_only_compras_area_for_purchase_approval(): void
     {
         $director = User::factory()->create(['must_change_password' => false]);
         $director->assignRole('director');
@@ -45,17 +45,31 @@ class NavigationVisibilityTest extends TestCase
 
         $areaKeys = collect($nav['appNavigation'])->pluck('key')->values()->all();
 
-        $this->assertSame(['gestion_humana', 'compras'], $areaKeys);
-
-        $ghBoards = collect(collect($nav['appNavigation'])->firstWhere('key', 'gestion_humana')['items'] ?? [])
-            ->pluck('label')
-            ->all();
-        $this->assertContains(config('access.boards.requisiciones'), $ghBoards);
+        $this->assertSame(['compras'], $areaKeys);
+        $this->assertNotContains('gestion_humana', $areaKeys);
 
         $comprasBoards = collect(collect($nav['appNavigation'])->firstWhere('key', 'compras')['items'] ?? [])
             ->pluck('label')
             ->all();
         $this->assertContains(config('access.boards.solicitudes_compra'), $comprasBoards);
+    }
+
+    public function test_administrador_sees_gestion_humana_requisitions_for_management_approval(): void
+    {
+        $admin = User::factory()->create(['must_change_password' => false]);
+        $admin->assignRole('administrador');
+
+        $nav = app(NavigationResolver::class)->resolve($admin, 'dashboard');
+
+        $areaKeys = collect($nav['appNavigation'])->pluck('key')->values()->all();
+
+        $this->assertContains('gestion_humana', $areaKeys);
+        $this->assertNotContains('compras', $areaKeys);
+
+        $ghBoards = collect(collect($nav['appNavigation'])->firstWhere('key', 'gestion_humana')['items'] ?? [])
+            ->pluck('label')
+            ->all();
+        $this->assertContains(config('access.boards.requisiciones'), $ghBoards);
     }
 
     public function test_operaciones_requester_sees_only_operaciones_area(): void
