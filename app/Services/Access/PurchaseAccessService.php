@@ -76,30 +76,11 @@ class PurchaseAccessService
 
     private function canAccessSolicitudTab(User $user, string $module, string $tab): bool
     {
-        $permission = match ($tab) {
-            'create' => 'purchase.tab.create',
-            'my_requests' => 'purchase.tab.my_requests',
-            default => null,
+        return match ($tab) {
+            'create' => $user->can('purchase.tab.create'),
+            'my_requests' => $user->can('purchase.tab.my_requests'),
+            default => false,
         };
-
-        if ($permission === null || ! $user->can($permission)) {
-            return false;
-        }
-
-        if ($user->hasAssignedArea() && $user->area_key === $module) {
-            return true;
-        }
-
-        $canonicalHome = config('access.board_canonical_areas.solicitudes_compra.home');
-        if (is_string($canonicalHome) && $canonicalHome !== '' && $module === $canonicalHome) {
-            return true;
-        }
-
-        if ($this->hasBoardVisibility($user, $module)) {
-            return true;
-        }
-
-        return false;
     }
 
     /**

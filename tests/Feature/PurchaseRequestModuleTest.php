@@ -32,6 +32,66 @@ class PurchaseRequestModuleTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
+    public function test_user_with_create_permission_can_store_from_any_purchase_module(): void
+    {
+        Mail::fake();
+
+        $requester = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $requester->givePermissionTo([
+            'purchase.tab.create',
+            'purchase.tab.my_requests',
+            'view.board.gestion_humana.solicitudes_compra',
+        ]);
+
+        $director = $this->director();
+
+        $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'compras']), [
+            'area_key' => 'gestion_humana',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Silla',
+                    'referencia' => 'Ergonómica',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Bogota',
+                ],
+            ],
+        ])->assertRedirect(route('purchase-requests.create', ['module' => 'compras']));
+    }
+
+    public function test_user_without_create_permission_cannot_store_purchase_request(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'compras',
+            'must_change_password' => false,
+        ]);
+        $user->givePermissionTo('view.board.compras.solicitudes_compra');
+
+        $director = $this->director();
+
+        $this->actingAs($user)->post(route('purchase-requests.store', ['module' => 'compras']), [
+            'area_key' => 'compras',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Test',
+                    'referencia' => 'Ref',
+                    'utilizacion' => 'Uso',
+                    'ubicacion' => 'Cali',
+                ],
+            ],
+        ])->assertForbidden();
+    }
+
     public function test_user_can_create_purchase_request_from_compras_canonical_module(): void
     {
         Mail::fake();
