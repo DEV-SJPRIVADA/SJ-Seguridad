@@ -9,6 +9,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -252,7 +253,7 @@ class User extends Authenticatable
     {
         $allowed = collect([
             'dashboard' => $this->can('operations.view') || $this->can('operations.manage'),
-            'captura' => $this->can('operations.capture') || $this->can('operations.manage'),
+            'captura' => app(IndicatorCaptureAccessService::class)->canAccessCaptureScreen($this),
             'consolidado' => $this->can('operations.manage'),
             'ajustes' => $this->can('operations.manage'),
         ])->filter()->keys();
@@ -266,7 +267,7 @@ class User extends Authenticatable
     {
         return match ($tab) {
             'dashboard' => $this->can('operations.view') || $this->can('operations.manage'),
-            'capture' => $this->can('operations.capture') || $this->can('operations.manage'),
+            'capture' => app(IndicatorCaptureAccessService::class)->canAccessCaptureScreen($this),
             'manage' => $this->can('operations.manage'),
             default => false,
         };

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Improvement;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
 use App\Services\Indicadores\IndicatorMetricCalculator;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DashboardWeightSeeder;
@@ -56,7 +58,7 @@ class IndicadorModuleTest extends TestCase
 
     public function test_operations_capture_user_can_access_captura_list(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $this->actingAs($user)->get(route('indicadores.index'))->assertOk();
@@ -227,7 +229,7 @@ class IndicadorModuleTest extends TestCase
 
     public function test_capture_list_shows_updated_operator(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
@@ -242,7 +244,7 @@ class IndicadorModuleTest extends TestCase
     public function test_sheet_rows_recalculate_complies_after_operator_change(): void
     {
         $indicator = Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $period = Period::query()->firstOrCreate(
@@ -290,7 +292,7 @@ class IndicadorModuleTest extends TestCase
 
     public function test_capture_form_reflects_updated_meta(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-04')->firstOrFail();
@@ -685,6 +687,500 @@ class IndicadorModuleTest extends TestCase
             ->assertSee('Operaciones Demo')
             ->assertSee('FT-OP-01')
             ->assertSee('50.00%');
+    }
+
+    public function test_delegate_user_can_access_captura_tab(): void
+    {
+        $delegate = $this->delegateOnlyUser();
+
+        $this->actingAs($delegate)->get(route('indicadores.index'))->assertOk();
+    }
+
+    public function test_delegate_only_user_show_defaults_to_first_capturador(): void
+    {
+        $this->capturadorUser('Titular Alfabetico');
+        $delegate = $this->delegateOnlyUser();
+
+        $expectedFirst = app(IndicatorCaptureAccessService::class)->capturableUsers()->first();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)
+            ->get(route('indicadores.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
+            ->assertOk()
+            ->assertSee('name="capturador_user_id" value="'.$expectedFirst->id.'"', false);
+    }
+
+    public function test_delegate_only_user_show_with_valid_capturador_id(): void
+    {
+        $this->capturadorUser('Titular Uno');
+        $titularDos = $this->capturadorUser('Titular Dos');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)
+            ->get(route('indicadores.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+                'capturador_id' => $titularDos->id,
+            ]))
+            ->assertOk()
+            ->assertSee('name="capturador_user_id" value="'.$titularDos->id.'"', false);
+    }
+
+    public function test_show_with_invalid_capturador_id_returns_not_found(): void
+    {
+        $this->capturadorUser('Titular Valido');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)
+            ->get(route('indicadores.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+                'capturador_id' => 999999,
+            ]))
+            ->assertNotFound();
+    }
+
+    public function test_delegate_user_can_store_capture_for_titular(): void
+    {
+        $titular = $this->capturadorUser('Titular Store');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)
+            ->post(route('indicadores.capture.store', $indicator), array_merge(
+                $this->captureStorePayload($titular->id),
+                ['year' => 2026, 'month' => 7]
+            ))
+            ->assertRedirect(route('indicadores.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+                'capturador_id' => $titular->id,
+            ]));
+
+        $this->assertDatabaseHas('indicator_captures', [
+            'indicator_id' => $indicator->id,
+            'user_id' => $titular->id,
+        ]);
+    }
+
+    public function test_delegated_capture_sets_user_id_titular_and_created_by_actor(): void
+    {
+        $titular = $this->capturadorUser('Titular Digitador');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)->post(route('indicadores.capture.store', $indicator), array_merge(
+            $this->captureStorePayload($titular->id),
+            ['year' => 2026, 'month' => 7]
+        ))->assertRedirect();
+
+        $capture = IndicatorCapture::query()
+            ->where('indicator_id', $indicator->id)
+            ->where('user_id', $titular->id)
+            ->firstOrFail();
+
+        $this->assertSame($titular->id, $capture->user_id);
+        $this->assertSame($delegate->id, $capture->created_by_user_id);
+        $this->assertSame($delegate->id, $capture->updated_by_user_id);
+    }
+
+    public function test_delegated_capture_audit_includes_delegation_metadata(): void
+    {
+        $titular = $this->capturadorUser('Titular Auditoria');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)->post(route('indicadores.capture.store', $indicator), array_merge(
+            $this->captureStorePayload($titular->id),
+            ['year' => 2026, 'month' => 7]
+        ))->assertRedirect();
+
+        $log = AuditLog::query()
+            ->where('event_type', 'indicator_capture')
+            ->orderByDesc('id')
+            ->first();
+
+        $this->assertNotNull($log);
+        $this->assertTrue((bool) ($log->metadata['delegated'] ?? false));
+        $this->assertSame($titular->id, $log->metadata['titular_user_id'] ?? null);
+        $this->assertSame($delegate->id, $log->metadata['actor_user_id'] ?? null);
+    }
+
+    public function test_store_with_invalid_capturador_user_id_returns_unprocessable(): void
+    {
+        $this->capturadorUser('Titular Rango');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)
+            ->postJson(route('indicadores.capture.store', $indicator), array_merge(
+                $this->captureStorePayload(999999),
+                ['year' => 2026, 'month' => 7]
+            ))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['capturador_user_id']);
+    }
+
+    public function test_delegate_only_user_cannot_store_without_capturador_user_id(): void
+    {
+        $this->capturadorUser('Titular Requerido');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $payload = $this->captureStorePayload(null);
+        unset($payload['capturador_user_id']);
+
+        $this->actingAs($delegate)
+            ->postJson(route('indicadores.capture.store', $indicator), array_merge($payload, [
+                'year' => 2026,
+                'month' => 7,
+            ]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['capturador_user_id']);
+    }
+
+    public function test_capture_only_user_self_capture_regression(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $user->givePermissionTo(['view.dashboard', 'operations.capture']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('indicadores.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
+            ->assertOk()
+            ->assertDontSee('name="capturador_id"', false);
+
+        $this->actingAs($user)->post(route('indicadores.capture.store', $indicator), array_merge(
+            $this->captureStorePayload(null),
+            ['year' => 2026, 'month' => 7]
+        ))->assertRedirect();
+
+        $capture = IndicatorCapture::query()
+            ->where('indicator_id', $indicator->id)
+            ->where('user_id', $user->id)
+            ->where('period_id', Period::query()->where(['year' => 2026, 'month' => 7])->firstOrFail()->id)
+            ->firstOrFail();
+
+        $this->assertSame($user->id, $capture->user_id);
+        $this->assertSame($user->id, $capture->created_by_user_id);
+        $this->assertSame($user->id, $capture->updated_by_user_id);
+    }
+
+    public function test_user_with_both_permissions_defaults_to_self_on_show(): void
+    {
+        $actor = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+            'name' => 'Capturador Ambos Permisos',
+        ]);
+        $actor->givePermissionTo(array_merge(
+            ['view.dashboard', 'operations.capture'],
+            app(IndicatorCaptureAccessService::class)->delegatePermissionsToGrant()
+        ));
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($actor)
+            ->get(route('indicadores.show', ['indicator' => $indicator->code, 'year' => 2026, 'month' => 7]))
+            ->assertOk()
+            ->assertSee('name="capturador_user_id" value="'.$actor->id.'"', false);
+    }
+
+    public function test_user_with_both_permissions_can_delegate_to_other_capturador(): void
+    {
+        $actor = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $actor->givePermissionTo(array_merge(
+            ['view.dashboard', 'operations.capture'],
+            app(IndicatorCaptureAccessService::class)->delegatePermissionsToGrant()
+        ));
+
+        $otherTitular = $this->capturadorUser('Otro Titular Delegado');
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($actor)->post(route('indicadores.capture.store', $indicator), array_merge(
+            $this->captureStorePayload($otherTitular->id),
+            ['year' => 2026, 'month' => 7]
+        ))->assertRedirect();
+
+        $this->assertDatabaseHas('indicator_captures', [
+            'indicator_id' => $indicator->id,
+            'user_id' => $otherTitular->id,
+            'created_by_user_id' => $actor->id,
+        ]);
+        $this->assertDatabaseMissing('indicator_captures', [
+            'indicator_id' => $indicator->id,
+            'user_id' => $actor->id,
+        ]);
+    }
+
+    public function test_operations_manage_without_delegate_cannot_access_delegate_flow(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $otherCapturador = $this->capturadorUser('Capturador Ignorado');
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($manager)->post(route('indicadores.capture.store', $indicator), array_merge(
+            $this->captureStorePayload($otherCapturador->id),
+            ['year' => 2026, 'month' => 7]
+        ))->assertRedirect();
+
+        $this->assertDatabaseHas('indicator_captures', [
+            'indicator_id' => $indicator->id,
+            'user_id' => $manager->id,
+        ]);
+        $this->assertDatabaseMissing('indicator_captures', [
+            'indicator_id' => $indicator->id,
+            'user_id' => $otherCapturador->id,
+        ]);
+    }
+
+    public function test_operations_manage_user_can_enable_delegate_for_operaciones_user(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $suplente = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.delegate.update', $suplente), [
+                'enabled' => true,
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $suplente->refresh();
+        $this->assertTrue($suplente->can('operations.capture.delegate'));
+        $this->assertTrue($suplente->can('operations.view'));
+        $this->assertFalse($suplente->can('operations.capture'));
+    }
+
+    public function test_operations_manage_user_can_disable_delegate_for_operaciones_user(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $suplente = $this->delegateOnlyUser();
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.delegate.update', $suplente), [
+                'enabled' => false,
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $suplente->refresh();
+        $this->assertFalse($suplente->can('operations.capture.delegate'));
+    }
+
+    public function test_delegate_toggle_does_not_grant_operations_capture(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $suplente = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+
+        $this->actingAs($manager)->patch(route('indicadores.admin.capturadores.delegate.update', $suplente), [
+            'enabled' => true,
+        ])->assertRedirect();
+
+        $suplente->refresh();
+        $this->assertFalse($suplente->can('operations.capture'));
+    }
+
+    public function test_delegate_toggle_accepts_string_enabled_from_html_form(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $suplente = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.delegate.update', $suplente), [
+                'enabled' => '1',
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $suplente->refresh();
+        $this->assertTrue($suplente->can('operations.capture.delegate'));
+    }
+
+    public function test_delegate_toggle_creates_missing_delegate_permission(): void
+    {
+        Permission::query()->where('name', 'operations.capture.delegate')->delete();
+
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $suplente = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(route('indicadores.admin.capturadores.delegate.update', $suplente), [
+                'enabled' => '1',
+            ])
+            ->assertRedirect(route('indicadores.admin.ajustes', ['section' => 'capturadores']));
+
+        $suplente->refresh();
+        $this->assertTrue($suplente->can('operations.capture.delegate'));
+        $this->assertDatabaseHas('permissions', ['name' => 'operations.capture.delegate']);
+    }
+
+    public function test_delegated_improvement_created_by_reflects_actor(): void
+    {
+        $titular = $this->capturadorUser('Titular Mejora');
+        $delegate = $this->delegateOnlyUser();
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)->post(route('indicadores.capture.store', $indicator), array_merge(
+            $this->captureStorePayload($titular->id),
+            ['year' => 2026, 'month' => 7]
+        ))->assertRedirect();
+
+        $improvement = Improvement::query()
+            ->where('indicator_id', $indicator->id)
+            ->where('user_id', $titular->id)
+            ->firstOrFail();
+
+        $this->assertSame($delegate->id, $improvement->created_by_user_id);
+    }
+
+    public function test_closed_period_blocks_delegated_capture(): void
+    {
+        $titular = $this->capturadorUser('Titular Cerrado');
+        $delegate = $this->delegateOnlyUser();
+
+        Period::query()->updateOrCreate(
+            ['year' => 2026, 'month' => 7],
+            ['status' => Period::STATUS_CLOSED]
+        );
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+
+        $this->actingAs($delegate)
+            ->postJson(route('indicadores.capture.store', $indicator), array_merge(
+                $this->captureStorePayload($titular->id),
+                ['year' => 2026, 'month' => 7]
+            ))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['period']);
+    }
+
+    private function delegateOnlyUser(): User
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $user->givePermissionTo(array_merge(
+            ['view.dashboard'],
+            app(IndicatorCaptureAccessService::class)->delegatePermissionsToGrant()
+        ));
+
+        return $user;
+    }
+
+    private function capturadorUser(string $name): User
+    {
+        $user = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+            'name' => $name,
+        ]);
+        $user->givePermissionTo(['operations.capture', 'operations.view']);
+
+        return $user;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function captureStorePayload(?int $capturadorUserId): array
+    {
+        $payload = [
+            'form' => [
+                'total_personal' => 100,
+                'personal_capacitado' => 50,
+            ],
+            'improvement' => [
+                'analysis' => 'Analisis de prueba',
+                'action_taken' => 'Accion tomada de prueba',
+                'action_defined' => 'Accion definida de prueba',
+                'improvement_required' => 'Mejora requerida de prueba',
+            ],
+        ];
+
+        if ($capturadorUserId !== null) {
+            $payload['capturador_user_id'] = $capturadorUserId;
+        }
+
+        return $payload;
     }
 
     private function operationsViewer(): User

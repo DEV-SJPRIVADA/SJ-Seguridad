@@ -3,10 +3,15 @@
     <p class="indicadores-subpanel__text">
         Usuarios activos del area <strong>Operaciones</strong>. Active la captura para permitir el ingreso de datos en las fichas FT-OP.
         Los administradores de indicadores (<code>operations.manage</code>) siempre pueden capturar y consolidar.
+        Active <strong>Suplencia</strong> para permitir que el usuario capture indicadores a nombre de otro capturador (vacaciones u otra ausencia).
     </p>
 
-    @if ($errors->has('capturador'))
-        <div class="alert alert--error" role="alert">{{ $errors->first('capturador') }}</div>
+    @if ($errors->any())
+        <div class="alert alert--error" role="alert">
+            @foreach ($errors->all() as $error)
+                <div>{{ $error }}</div>
+            @endforeach
+        </div>
     @endif
 
     <div class="indicadores-table-wrap">
@@ -17,6 +22,7 @@
                     <th>Correo</th>
                     <th>Rol</th>
                     <th class="indicadores-table__col-captura">Captura</th>
+                    <th class="indicadores-table__col-captura">Suplencia</th>
                 </tr>
             </thead>
             <tbody>
@@ -59,10 +65,27 @@
                                 </form>
                             @endif
                         </td>
+                        <td class="indicadores-table__col-captura">
+                            @php $delegateEnabled = $captureAccessService->canDelegateCapture($operacionesUser); @endphp
+                            <form method="POST"
+                                  action="{{ route('indicadores.admin.capturadores.delegate.update', $operacionesUser) }}"
+                                  class="indicadores-capturador-toggle-form">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="enabled" value="{{ $delegateEnabled ? '1' : '0' }}">
+                                <label class="toggle-switch indicadores-capturador-toggle">
+                                    <input type="checkbox"
+                                           @checked($delegateEnabled)
+                                           aria-label="Suplencia activa para {{ $operacionesUser->name }}"
+                                           onchange="this.form.querySelector('[name=enabled]').value = this.checked ? '1' : '0'; this.form.submit();">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </form>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4">No hay usuarios activos asignados al area Operaciones.</td>
+                        <td colspan="5">No hay usuarios activos asignados al area Operaciones.</td>
                     </tr>
                 @endforelse
             </tbody>

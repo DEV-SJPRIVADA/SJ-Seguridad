@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\User;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -30,7 +31,7 @@ class IndicadorNavigation
                 'label' => config('access.indicador_tabs.captura'),
                 'route' => 'indicadores.index',
                 'patterns' => ['indicadores.index', 'indicadores.show'],
-                'visible' => $user->can('operations.capture') || $user->can('operations.manage'),
+                'visible' => app(IndicatorCaptureAccessService::class)->canAccessCaptureScreen($user),
             ],
             'consolidado' => [
                 'key' => 'consolidado',

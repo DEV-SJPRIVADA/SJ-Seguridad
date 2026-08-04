@@ -3,17 +3,22 @@
 namespace App\Http\Requests\Operaciones;
 
 use App\Models\Indicator;
+use App\Models\User;
+use App\Services\Indicadores\IndicatorCaptureAccessService;
+use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorMetricCalculator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreIndicatorCaptureRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('operations.capture')
-            || $this->user()?->can('operations.manage')
-            || false;
+        $user = $this->user();
+
+        return $user instanceof User
+            && app(IndicatorCaptureAccessService::class)->canAccessCaptureScreen($user);
     }
 
     /**
@@ -29,6 +34,7 @@ class StoreIndicatorCaptureRequest extends FormRequest
         $rules = [
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'capturador_user_id' => $this->capturadorUserIdRules(),
             'improvement.analysis' => ['required', 'string'],
             'improvement.action_taken' => ['required', 'string'],
             'improvement.action_defined' => ['required', 'string'],
@@ -40,13 +46,34 @@ class StoreIndicatorCaptureRequest extends FormRequest
         return array_merge($rules, $calculator->fieldRules($indicator->code, $form));
     }
 
+    /**
+     * @return list<mixed>
+     */
+    private function capturadorUserIdRules(): array
+    {
+        $actor = $this->user();
+        $accessService = app(IndicatorCaptureAccessService::class);
+
+        if (! $actor instanceof User || ! $accessService->canDelegateCapture($actor)) {
+            return ['nullable', 'integer'];
+        }
+
+        $capturableIds = $accessService->capturableUsers()->pluck('id')->all();
+
+        if (! $accessService->canCaptureIndicators($actor)) {
+            return ['required', 'integer', Rule::in($capturableIds)];
+        }
+
+        return ['nullable', 'integer', Rule::in($capturableIds)];
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
             /** @var Indicator $indicator */
             $indicator = $this->route('indicator');
             $calculator = app(IndicatorMetricCalculator::class);
-            $form = app(\App\Services\Indicadores\IndicatorCaptureService::class)
+            $form = app(IndicatorCaptureService::class)
                 ->normalizePostedForm($indicator->code, (array) $this->input('form', []));
 
             $metrics = $calculator->calculate($indicator, $form);

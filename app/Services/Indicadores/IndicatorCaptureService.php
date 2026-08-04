@@ -23,7 +23,7 @@ class IndicatorCaptureService
     /**
      * @return array<string, mixed>
      */
-    public function buildShowContext(Indicator $indicator, int $year, int $month, User $user): array
+    public function buildShowContext(Indicator $indicator, int $year, int $month, User $titular, User $actor): array
     {
         $months = config('indicators.months');
         $years = $this->yearRangeService->years();
@@ -47,7 +47,7 @@ class IndicatorCaptureService
 
         $capture = IndicatorCapture::query()->where([
             'indicator_id' => $indicator->id,
-            'user_id' => $user->id,
+            'user_id' => $titular->id,
             'period_id' => $period->id,
         ])->first();
 
@@ -69,9 +69,9 @@ class IndicatorCaptureService
         $metrics = $this->calculator->calculate($indicator, $form);
         [$sheetDenominatorLabel, $sheetNumeratorLabel] = $this->calculator->sheetLabels($indicator);
 
-        $sheet = $this->buildSheetData($indicator, $user->id, $year, $sheetDenominatorLabel, $sheetNumeratorLabel);
+        $sheet = $this->buildSheetData($indicator, $titular->id, $year, $sheetDenominatorLabel, $sheetNumeratorLabel);
         $ftOp03 = $indicator->code === 'FT-OP-03'
-            ? $this->buildFtOp03Data($indicator, $year, [$user->id])
+            ? $this->buildFtOp03Data($indicator, $year, [$titular->id])
             : [
                 'financeRows' => [],
                 'incidentRows' => [],
@@ -85,9 +85,13 @@ class IndicatorCaptureService
             'indicator' => $indicator,
             'selectedYear' => $year,
             'selectedMonth' => $month,
-            'selectedUser' => $user,
-            'captureUser' => $user,
-            'captureUserName' => $user->name,
+            'selectedUser' => $titular,
+            'captureUser' => $titular,
+            'captureUserName' => $titular->name,
+            'capturableUsers' => $this->captureAccessService->capturableUsers(),
+            'selectedCapturadorId' => $titular->id,
+            'showCapturadorSelector' => $this->captureAccessService->canDelegateCapture($actor),
+            'isDelegatedCapture' => $titular->id !== $actor->id,
             'months' => $months,
             'years' => $years,
             'periodId' => $period->id,
@@ -135,7 +139,7 @@ class IndicatorCaptureService
             abort_unless($capturableUsers->contains(fn (User $user): bool => $user->id === $selectedUser->id), 404);
 
             return array_merge(
-                $this->buildShowContext($indicator, $year, $month, $selectedUser),
+                $this->buildShowContext($indicator, $year, $month, $selectedUser, $selectedUser),
                 $this->consolidadoViewMeta($capturableUsers, $selectedUser->id),
             );
         }
@@ -444,7 +448,8 @@ class IndicatorCaptureService
         int $month,
         array $form,
         array $improvement,
-        User $user,
+        User $titular,
+        User $actor,
     ): IndicatorCapture {
         $period = Period::query()->firstOrCreate(
             ['year' => $year, 'month' => $month],
@@ -466,15 +471,20 @@ class IndicatorCaptureService
 
         $analysisText = $this->buildImprovementBlock($improvement, (bool) $metrics['complies']);
 
+        $isDelegated = $titular->id !== $actor->id;
+        $auditMetadata = $isDelegated
+            ? ['delegated' => true, 'titular_user_id' => $titular->id, 'actor_user_id' => $actor->id]
+            : [];
+
         $existing = IndicatorCapture::query()->where([
             'indicator_id' => $indicator->id,
-            'user_id' => $user->id,
+            'user_id' => $titular->id,
             'period_id' => $period->id,
         ])->first();
 
         $payload = [
             'indicator_id' => $indicator->id,
-            'user_id' => $user->id,
+            'user_id' => $titular->id,
             'period_id' => $period->id,
             'input_data' => $form,
             'numerator' => $metrics['numerator'],
@@ -482,7 +492,7 @@ class IndicatorCaptureService
             'result_percentage' => $metrics['result_percentage'],
             'complies' => $metrics['complies'],
             'analysis_text' => $analysisText,
-            'updated_by_user_id' => $user->id,
+            'updated_by_user_id' => $actor->id,
         ];
 
         if ($existing) {
@@ -496,10 +506,11 @@ class IndicatorCaptureService
                 model: $capture,
                 before: $before,
                 after: $capture->toArray(),
-                reason: 'Actualizacion captura mensual'
+                reason: 'Actualizacion captura mensual',
+                metadata: $auditMetadata,
             );
         } else {
-            $payload['created_by_user_id'] = $user->id;
+            $payload['created_by_user_id'] = $actor->id;
             $capture = IndicatorCapture::query()->create($payload);
 
             $this->auditLogService->logModelChange(
@@ -508,19 +519,20 @@ class IndicatorCaptureService
                 model: $capture,
                 before: null,
                 after: $capture->toArray(),
-                reason: 'Creacion captura mensual'
+                reason: 'Creacion captura mensual',
+                metadata: $auditMetadata,
             );
         }
 
         $this->persistImprovement(
             capture: $capture,
             indicator: $indicator,
-            userId: $user->id,
+            titularUserId: $titular->id,
             periodId: $period->id,
             improvement: $improvement,
             analysisText: $analysisText,
             complies: (bool) $metrics['complies'],
-            user: $user,
+            actor: $actor,
         );
 
         return $capture;
@@ -605,25 +617,24 @@ class IndicatorCaptureService
     private function persistImprovement(
         IndicatorCapture $capture,
         Indicator $indicator,
-        int $userId,
+        int $titularUserId,
         int $periodId,
         array $improvement,
         string $analysisText,
         bool $complies,
-        User $user,
+        User $actor,
     ): void {
         $existing = Improvement::query()->where('indicator_capture_id', $capture->id)->first();
         $payload = [
             'indicator_capture_id' => $capture->id,
             'indicator_id' => $indicator->id,
-            'user_id' => $userId,
+            'user_id' => $titularUserId,
             'period_id' => $periodId,
             'analysis' => trim((string) ($improvement['analysis'] ?? '')),
             'action_taken' => trim((string) ($improvement['action_taken'] ?? '')),
             'action_defined' => trim((string) ($improvement['action_defined'] ?? '')),
             'improvement_required' => $complies ? null : trim((string) ($improvement['improvement_required'] ?? '')),
             'integrated_analysis_block' => $analysisText,
-            'created_by_user_id' => $user->id,
         ];
 
         if ($existing) {
@@ -641,6 +652,7 @@ class IndicatorCaptureService
             return;
         }
 
+        $payload['created_by_user_id'] = $actor->id;
         $model = Improvement::query()->create($payload);
         $this->auditLogService->logModelChange(
             eventType: 'improvement',

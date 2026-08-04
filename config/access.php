@@ -43,6 +43,7 @@ return [
         'operaciones' => [
             'operations.view' => 'Indicadores: Ver dashboards',
             'operations.capture' => 'Indicadores: Capturar datos',
+            'operations.capture.delegate' => 'Indicadores: Capturar por suplencia',
             'operations.manage' => 'Indicadores: Administrar (ajustes, consolidado)',
             'operations.export' => 'Indicadores: Exportar PDF y Excel',
         ],
@@ -330,6 +331,7 @@ return [
                         'permissions' => [
                             'operations.view',
                             'operations.capture',
+                            'operations.capture.delegate',
                             'operations.manage',
                             'operations.export',
                         ],
