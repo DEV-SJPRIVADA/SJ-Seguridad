@@ -4,12 +4,14 @@ namespace App\Http\Controllers\PurchaseRequests;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestRequest;
+use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\PurchaseRequests\PurchaseRequestPdfService;
+use App\Services\PurchaseRequests\PurchaseRequestResubmitService;
 use App\Traits\HasPurchaseTabs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
@@ -70,9 +72,8 @@ class PurchaseRequestController extends Controller
             : null;
 
         $totalCantidad = collect($itemsInput)->sum(fn ($item) => (int) ($item['cantidad'] ?? 0));
-        $lineCount = count($itemsInput);
 
-        $purchaseRequest = DB::transaction(function () use ($request, $validated, $archivoPedido, $aprobador, $itemsInput, $totalCantidad, $lineCount, $module) {
+        $purchaseRequest = DB::transaction(function () use ($request, $validated, $archivoPedido, $aprobador, $itemsInput, $totalCantidad, $module) {
             $next = ((int) PurchaseRequest::query()->lockForUpdate()->max('numero_solicitud')) + 1;
 
             $purchaseRequest = PurchaseRequest::create([
@@ -80,9 +81,9 @@ class PurchaseRequestController extends Controller
                 'user_id' => $request->user()->id,
                 'area_key' => $validated['area_key'] ?? $module,
                 'fecha_solicitud' => $validated['fecha_solicitud'],
-                'descripcion' => 'Solicitud con '.$lineCount.' articulo(s) — total '.$totalCantidad.' unidad(es).',
+                'descripcion' => $validated['descripcion'],
                 'cantidad' => max(1, $totalCantidad),
-                'justificacion' => 'Detalle en lineas de la solicitud.',
+                'justificacion' => $validated['justificacion'] ?? null,
                 'archivo_pedido_path' => $archivoPedido,
                 'solicitud_para' => $validated['solicitud_para'],
                 'urgente' => (bool) $validated['urgente'],
@@ -114,16 +115,69 @@ class PurchaseRequestController extends Controller
             return $purchaseRequest;
         });
 
-        $correoEnviado = $notifications->notifyDirectorAssigned($purchaseRequest, $aprobador);
+        $notifications->notifyDirectorAssignedAfterResponse($purchaseRequest, $aprobador);
 
-        $redirect = redirect()->route('purchase-requests.create', ['module' => $module])
-            ->with('status', 'Solicitud N.º '.$purchaseRequest->folio().' guardada correctamente.');
+        return redirect()
+            ->route('purchase-requests.index', ['module' => $module])
+            ->with(
+                'status',
+                'Solicitud N.º '.$purchaseRequest->folio().' guardada correctamente. El director recibira un correo para autorizar.',
+            );
+    }
 
-        if (! $correoEnviado) {
-            $redirect->with('warning', 'No se pudo enviar el correo a '.$aprobador->email.'.');
+    public function edit(
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseAccessService $accessService,
+    ): View {
+        Gate::authorize('resubmit', $purchaseRequest);
+
+        $purchaseRequest->load(['items', 'aprobador']);
+
+        return view('modules.purchase-requests.edit', [
+            'module' => $module,
+            'subTabs' => $this->getPurchaseSubTabs($module),
+            'purchaseRequest' => $purchaseRequest,
+            'directores' => $accessService->approversQuery()->get(),
+            'areas' => collect(config('access.areas', [])),
+        ]);
+    }
+
+    public function update(
+        UpdatePurchaseRequestRequest $request,
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseAccessService $accessService,
+        PurchaseRequestResubmitService $resubmitService,
+        PurchaseRequestNotificationService $notifications,
+    ): RedirectResponse {
+        $validated = $request->validated();
+
+        $aprobador = $accessService->approversQuery()
+            ->whereKey($validated['aprobador_id'])
+            ->first();
+
+        if ($aprobador === null) {
+            return back()->withErrors([
+                'aprobador_id' => 'Seleccione un director valido de la lista.',
+            ])->withInput();
         }
 
-        return $redirect;
+        $purchaseRequest = $resubmitService->resubmit(
+            $purchaseRequest,
+            $validated,
+            $request,
+            $aprobador,
+        );
+
+        $notifications->notifyDirectorAssignedAfterResponse($purchaseRequest, $aprobador);
+
+        return redirect()
+            ->route('purchase-requests.index', ['module' => $module])
+            ->with(
+                'status',
+                'Solicitud N.º '.$purchaseRequest->folio().' reenviada al director para autorizacion. El director recibira un correo para autorizar.',
+            );
     }
 
     public function show(string $module, PurchaseRequest $purchaseRequest): View

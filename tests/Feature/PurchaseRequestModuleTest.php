@@ -53,6 +53,7 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -62,7 +63,7 @@ class PurchaseRequestModuleTest extends TestCase
                     'ubicacion' => 'Cali',
                 ],
             ],
-        ])->assertRedirect(route('purchase-requests.create', ['module' => 'compras']));
+        ])->assertRedirect(route('purchase-requests.index', ['module' => 'compras']));
 
         Mail::assertSent(PurchaseRequestCreatedMail::class);
     }
@@ -88,6 +89,7 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -97,7 +99,7 @@ class PurchaseRequestModuleTest extends TestCase
                     'ubicacion' => 'Bogota',
                 ],
             ],
-        ])->assertRedirect(route('purchase-requests.create', ['module' => 'compras']));
+        ])->assertRedirect(route('purchase-requests.index', ['module' => 'compras']));
     }
 
     public function test_user_without_create_permission_cannot_store_purchase_request(): void
@@ -115,6 +117,7 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -148,6 +151,7 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -159,7 +163,7 @@ class PurchaseRequestModuleTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('purchase-requests.create', ['module' => 'compras']));
+        $response->assertRedirect(route('purchase-requests.index', ['module' => 'compras']));
         Mail::assertSent(PurchaseRequestCreatedMail::class);
     }
 
@@ -175,6 +179,7 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 2,
@@ -186,7 +191,7 @@ class PurchaseRequestModuleTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('purchase-requests.create', ['module' => 'operaciones']));
+        $response->assertRedirect(route('purchase-requests.index', ['module' => 'operaciones']));
         $this->assertDatabaseHas('purchase_requests', [
             'user_id' => $requester->id,
             'aprobador_id' => $director->id,
@@ -219,6 +224,7 @@ class PurchaseRequestModuleTest extends TestCase
             'solicitud_para' => 'Interno',
             'urgente' => '1',
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -341,11 +347,87 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertStringContainsString('Fecha solicitud', $html);
         $this->assertStringContainsString('Director aprobador', $html);
         $this->assertStringContainsString('Productos solicitados', $html);
-        $this->assertStringContainsString($director->name, $html);
+        $this->assertTrue(
+            str_contains($html, $director->name)
+            || str_contains($html, htmlspecialchars($director->name, ENT_QUOTES, 'UTF-8')),
+            'Expected director name in PDF output.',
+        );
         $this->assertStringContainsString($requester->name, $html);
         $this->assertStringContainsString('Monitor LED', $html);
         $this->assertStringContainsString('Urgente', $html);
         $this->assertStringNotContainsString('Registro de correos', $html);
+    }
+
+    public function test_store_persists_descripcion_and_justificacion_from_form(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+
+        $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'operaciones']), [
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'descripcion' => 'Equipo para area TIC',
+            'justificacion' => 'Renovacion de hardware',
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Monitor',
+                    'referencia' => 'Dell',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Cali',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('purchase_requests', [
+            'user_id' => $requester->id,
+            'descripcion' => 'Equipo para area TIC',
+            'justificacion' => 'Renovacion de hardware',
+        ]);
+    }
+
+    public function test_show_displays_uploaded_item_photo(): void
+    {
+        Storage::fake('public');
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+
+        $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'operaciones']), [
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud con foto',
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Teclado mecanico',
+                    'referencia' => 'KB-001',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Bogota',
+                    'foto' => UploadedFile::fake()->image('teclado.jpg'),
+                ],
+            ],
+        ]);
+
+        $purchaseRequest = PurchaseRequest::query()->first();
+        $item = $purchaseRequest?->items()->first();
+        $this->assertNotNull($item?->fotoUrl());
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.show', [
+                'module' => 'operaciones',
+                'purchase_request' => $purchaseRequest->id,
+            ]))
+            ->assertOk()
+            ->assertSee($item->fotoUrl(), false)
+            ->assertSee('Descripcion general', false)
+            ->assertSee('Solicitud con foto', false);
     }
 
     public function test_user_can_upload_item_photo_when_creating_purchase_request(): void
@@ -361,6 +443,7 @@ class PurchaseRequestModuleTest extends TestCase
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -373,7 +456,7 @@ class PurchaseRequestModuleTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('purchase-requests.create', ['module' => 'operaciones']));
+        $response->assertRedirect(route('purchase-requests.index', ['module' => 'operaciones']));
 
         $item = PurchaseRequest::query()->first()?->items()->first();
         $this->assertNotNull($item);
@@ -729,6 +812,64 @@ class PurchaseRequestModuleTest extends TestCase
         });
     }
 
+    public function test_requester_can_edit_rejected_purchase_request(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director, PurchaseRequest::ESTADO_RECHAZADO, 'Ajustar cantidades');
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.edit', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee('Reabrir solicitud')
+            ->assertSee('Motivo del rechazo')
+            ->assertSee('Ajustar cantidades');
+    }
+
+    public function test_requester_cannot_edit_non_rejected_purchase_request(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.edit', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->assertForbidden();
+    }
+
+    public function test_resubmit_rejected_request_resets_pending_and_notifies_director(): void
+    {
+        Mail::fake();
+
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director, PurchaseRequest::ESTADO_RECHAZADO, 'Faltan referencias');
+
+        $this->actingAs($requester)->patch(
+            route('purchase-requests.update', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]),
+            $this->resubmitPayload($director, [
+                'descripcion' => 'Solicitud corregida tras rechazo',
+                'items' => [[
+                    'cantidad' => 3,
+                    'descripcion' => 'Teclado mecanico',
+                    'referencia' => 'KB-002',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Cali',
+                ]],
+            ])
+        )->assertRedirect(route('purchase-requests.index', ['module' => 'compras']));
+
+        $fresh = $purchaseRequest->fresh();
+        $this->assertSame(PurchaseRequest::ESTADO_PENDIENTE, $fresh->estado);
+        $this->assertNull($fresh->comentarios_director);
+        $this->assertNull($fresh->fecha_aprobacion);
+        $this->assertSame('Solicitud corregida tras rechazo', $fresh->descripcion);
+        $this->assertCount(1, $fresh->items);
+        $this->assertSame(3, $fresh->items->first()->cantidad);
+
+        Mail::assertSent(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($director->email));
+    }
+
     public function test_email_signed_link_shows_guest_approval_form(): void
     {
         $requester = $this->purchaseRequester('operaciones');
@@ -957,8 +1098,12 @@ class PurchaseRequestModuleTest extends TestCase
         return $user;
     }
 
-    private function createPurchaseRequest(User $requester, User $director, string $estado = PurchaseRequest::ESTADO_PENDIENTE): PurchaseRequest
-    {
+    private function createPurchaseRequest(
+        User $requester,
+        User $director,
+        string $estado = PurchaseRequest::ESTADO_PENDIENTE,
+        ?string $comentariosDirector = null,
+    ): PurchaseRequest {
         return PurchaseRequest::query()->create([
             'numero_solicitud' => (PurchaseRequest::query()->max('numero_solicitud') ?? 0) + 1,
             'user_id' => $requester->id,
@@ -972,7 +1117,32 @@ class PurchaseRequestModuleTest extends TestCase
             'aprobador_id' => $director->id,
             'estado' => $estado,
             'fecha_aprobacion' => $estado === PurchaseRequest::ESTADO_PENDIENTE ? null : now()->toDateString(),
+            'comentarios_director' => $comentariosDirector,
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function resubmitPayload(User $director, array $overrides = []): array
+    {
+        return array_merge([
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'descripcion' => 'Solicitud reabierta',
+            'justificacion' => 'Correccion tras rechazo',
+            'items' => [[
+                'cantidad' => 1,
+                'descripcion' => 'Monitor',
+                'referencia' => 'Dell',
+                'utilizacion' => 'Oficina',
+                'ubicacion' => 'Bogota',
+            ]],
+        ], $overrides);
     }
 
     private function emailApprovalShowUrl(PurchaseRequest $purchaseRequest, User $director): string

@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function clearPhotoPreview(zone) {
         const input = zone.querySelector('.purchase-item-foto__input');
+        const existingPathInput = zone.querySelector('.purchase-item-foto__existing-path');
         const placeholder = zone.querySelector('.purchase-item-foto__placeholder');
         const preview = zone.querySelector('.purchase-item-foto__preview');
         const img = zone.querySelector('.purchase-item-foto__img');
@@ -70,6 +71,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (input) {
             input.value = '';
+        }
+
+        if (existingPathInput) {
+            existingPathInput.value = '';
         }
 
         if (img) {
@@ -191,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return `
             <td class="purchase-item-foto-cell">
                 <div class="purchase-item-foto" data-purchase-item-foto role="button" tabindex="0" title="Subir foto del producto (opcional)">
+                    <input type="hidden" name="items[${index}][existing_foto_path]" value="" class="purchase-item-foto__existing-path">
                     <input type="file" name="items[${index}][foto]" class="purchase-item-foto__input" accept="image/jpeg,image/png,image/webp,image/gif">
                     <div class="purchase-item-foto__placeholder">
                         <span class="purchase-item-foto__icon" aria-hidden="true">📷</span>

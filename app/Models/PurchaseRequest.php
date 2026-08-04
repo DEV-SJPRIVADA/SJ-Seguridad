@@ -128,4 +128,9 @@ class PurchaseRequest extends Model
     {
         return self::estadosComprasLabels()[$this->estado_compras] ?? '—';
     }
+
+    public function puedeReabrir(): bool
+    {
+        return $this->estado === self::ESTADO_RECHAZADO;
+    }
 }

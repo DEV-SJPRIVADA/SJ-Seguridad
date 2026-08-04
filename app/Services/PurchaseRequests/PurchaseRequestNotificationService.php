@@ -30,6 +30,26 @@ class PurchaseRequestNotificationService
         );
     }
 
+    public function notifyDirectorAssignedAfterResponse(PurchaseRequest $purchaseRequest, User $director): void
+    {
+        $purchaseRequestId = $purchaseRequest->id;
+        $directorId = $director->id;
+
+        dispatch(function () use ($purchaseRequestId, $directorId): void {
+            $purchaseRequest = PurchaseRequest::query()
+                ->with(['user', 'items', 'aprobador'])
+                ->find($purchaseRequestId);
+
+            $director = User::query()->find($directorId);
+
+            if ($purchaseRequest === null || $director === null) {
+                return;
+            }
+
+            app(self::class)->notifyDirectorAssigned($purchaseRequest, $director);
+        })->afterResponse();
+    }
+
     public function notifyRequesterResolved(PurchaseRequest $purchaseRequest): void
     {
         $purchaseRequest->loadMissing('user');

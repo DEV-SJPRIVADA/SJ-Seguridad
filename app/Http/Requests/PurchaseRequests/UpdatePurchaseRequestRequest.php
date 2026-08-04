@@ -2,24 +2,18 @@
 
 namespace App\Http\Requests\PurchaseRequests;
 
+use App\Models\PurchaseRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StorePurchaseRequestRequest extends FormRequest
+class UpdatePurchaseRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $user = $this->user();
+        $purchaseRequest = $this->route('purchase_request');
 
-        if ($user === null) {
-            return false;
-        }
-
-        if ($user->hasRole('super-admin') || $user->can('manage.users')) {
-            return true;
-        }
-
-        return $user->can('purchase.tab.create');
+        return $purchaseRequest instanceof PurchaseRequest
+            && $this->user()?->can('resubmit', $purchaseRequest);
     }
 
     protected function prepareForValidation(): void
@@ -50,6 +44,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'items.*.utilizacion' => ['required', 'string', 'max:1000'],
             'items.*.ubicacion' => ['required', 'string', 'max:255'],
             'items.*.foto' => ['nullable', 'image', 'max:5120'],
+            'items.*.existing_foto_path' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

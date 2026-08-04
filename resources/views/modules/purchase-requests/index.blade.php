@@ -19,6 +19,14 @@
                 </div>
 
                 <div class="panel__body">
+                    @if (session('status'))
+                        <div class="alert alert--success bottom-spaced" role="alert">{{ session('status') }}</div>
+                    @endif
+
+                    @if (session('warning'))
+                        <div class="alert alert--warning bottom-spaced" role="alert">{{ session('warning') }}</div>
+                    @endif
+
                     <div class="block-spaced">
                         <table class="supply-table js-datatable">
                             <thead>
@@ -67,9 +75,21 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--secondary btn--sm">
-                                                Ver detalle
-                                            </a>
+                                            <div class="purchase-request-row-actions">
+                                                <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--secondary btn--sm">
+                                                    Ver detalle
+                                                </a>
+                                                @can('resubmit', $purchaseRequest)
+                                                    <a
+                                                        href="{{ route('purchase-requests.edit', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
+                                                        class="btn btn--secondary btn--sm purchase-request-resubmit-btn"
+                                                        title="Reabrir y editar"
+                                                        aria-label="Reabrir y editar"
+                                                    >
+                                                        <x-ri-issues-reopen-fill :size="18" />
+                                                    </a>
+                                                @endcan
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -84,4 +104,24 @@
             </div>
         </div>
     </div>
+
+    @push('styles')
+        <style>
+            .purchase-request-row-actions {
+                display: flex;
+                gap: 0.35rem;
+                justify-content: center;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .purchase-request-resubmit-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding-inline: 0.45rem;
+                line-height: 1;
+            }
+        </style>
+    @endpush
 </x-app-layout>
