@@ -4,8 +4,8 @@ namespace App\Services\PurchaseRequests;
 
 use App\Models\PurchaseRequest;
 use App\Models\User;
+use App\Support\ApplicationUrls;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\URL;
 
 final class PurchaseEmailApprovalUrlBuilder
 {
@@ -16,7 +16,7 @@ final class PurchaseEmailApprovalUrlBuilder
 
     public function showUrl(PurchaseRequest $purchaseRequest, User $director): string
     {
-        return URL::temporarySignedRoute(
+        return ApplicationUrls::temporarySignedRoute(
             'purchase-requests.email-approval.show',
             $this->expiresAt(),
             [
@@ -28,7 +28,7 @@ final class PurchaseEmailApprovalUrlBuilder
 
     public function updateUrl(PurchaseRequest $purchaseRequest, User $director): string
     {
-        return URL::temporarySignedRoute(
+        return ApplicationUrls::temporarySignedRoute(
             'purchase-requests.email-approval.update',
             $this->expiresAt(),
             [
@@ -40,7 +40,7 @@ final class PurchaseEmailApprovalUrlBuilder
 
     public function pdfUrl(PurchaseRequest $purchaseRequest, User $director): string
     {
-        return URL::temporarySignedRoute(
+        return ApplicationUrls::temporarySignedRoute(
             'purchase-requests.email-approval.pdf',
             $this->expiresAt(),
             [

@@ -4,13 +4,12 @@ namespace App\Mail;
 
 use App\Models\PurchaseRequest;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PurchaseRequestApprovedForComprasMail extends Mailable implements ShouldQueue
+class PurchaseRequestApprovedForComprasMail extends Mailable
 {
     use Queueable, SerializesModels;
 

@@ -59,10 +59,6 @@ class PurchaseAccessService
             return true;
         }
 
-        if (in_array($tab, ['create', 'my_requests'], true)) {
-            return $this->canAccessBaseAreaTab($user, $module, $tab);
-        }
-
         if ($tab === 'approval') {
             return $user->can('purchase.tab.approval');
         }
@@ -71,32 +67,39 @@ class PurchaseAccessService
             return $user->can('purchase.tab.processing');
         }
 
-        if (! $this->hasBoardVisibility($user, $module)) {
+        if (in_array($tab, ['create', 'my_requests'], true)) {
+            return $this->canAccessSolicitudTab($user, $module, $tab);
+        }
+
+        return false;
+    }
+
+    private function canAccessSolicitudTab(User $user, string $module, string $tab): bool
+    {
+        $permission = match ($tab) {
+            'create' => 'purchase.tab.create',
+            'my_requests' => 'purchase.tab.my_requests',
+            default => null,
+        };
+
+        if ($permission === null || ! $user->can($permission)) {
             return false;
         }
 
-        return match ($tab) {
-            'create' => $user->can('purchase.tab.create'),
-            'my_requests' => $user->can('purchase.tab.my_requests'),
-            default => false,
-        };
-    }
-
-    public function canAccessBaseAreaTab(User $user, string $module, string $tab): bool
-    {
-        if ($this->isAdminBypass($user)) {
+        if ($user->hasAssignedArea() && $user->area_key === $module) {
             return true;
         }
 
-        if ($user->area_key !== $module) {
-            return false;
+        $canonicalHome = config('access.board_canonical_areas.solicitudes_compra.home');
+        if (is_string($canonicalHome) && $canonicalHome !== '' && $module === $canonicalHome) {
+            return true;
         }
 
-        return match ($tab) {
-            'create' => $user->can('purchase.tab.create'),
-            'my_requests' => $user->can('purchase.tab.my_requests'),
-            default => false,
-        };
+        if ($this->hasBoardVisibility($user, $module)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

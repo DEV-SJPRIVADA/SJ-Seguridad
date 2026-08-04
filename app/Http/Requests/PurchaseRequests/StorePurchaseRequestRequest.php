@@ -9,7 +9,10 @@ class StorePurchaseRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('purchase.tab.create') ?? false;
+        $user = $this->user();
+        $module = (string) $this->route('module');
+
+        return $user?->canAccessPurchaseTab($module, 'create') ?? false;
     }
 
     protected function prepareForValidation(): void

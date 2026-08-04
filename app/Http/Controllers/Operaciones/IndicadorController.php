@@ -413,7 +413,7 @@ class IndicadorController extends Controller
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
 
-        if ($indicator->code === 'FT-OP-01') {
+        if (in_array($indicator->code, config('indicators.consolidado_capture_view_codes', []), true)) {
             $selectedUser = null;
             if ($request->filled('user_id')) {
                 $selectedUser = User::query()->findOrFail((int) $request->integer('user_id'));

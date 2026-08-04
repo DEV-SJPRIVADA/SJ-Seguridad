@@ -151,10 +151,14 @@ class IndicatorCaptureService
         $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month, $capturableUsers);
         $consolidated = $monthly['consolidated'];
 
-        $form = $this->normalizePostedForm($indicator->code, [
-            'total_personal' => ($consolidated['denominator'] ?? 0) > 0 ? $consolidated['denominator'] : null,
-            'personal_capacitado' => ($consolidated['numerator'] ?? 0) > 0 ? $consolidated['numerator'] : null,
-        ]);
+        $form = $this->normalizePostedForm(
+            $indicator->code,
+            $this->calculator->consolidatedFormFromTotals(
+                $indicator->code,
+                (float) ($consolidated['denominator'] ?? 0),
+                (float) ($consolidated['numerator'] ?? 0),
+            ),
+        );
 
         $metrics = $this->calculator->calculate($indicator, $form);
         [$sheetDenominatorLabel, $sheetNumeratorLabel] = $this->calculator->sheetLabels($indicator);

@@ -61,6 +61,7 @@ return [
         'calidad' => 'Calidad',
         'admin_financiero' => 'Admin y Financiero',
         'compras' => 'Compras',
+        'Tic' => 'Tic',
     ],
 
     'area_actions' => [

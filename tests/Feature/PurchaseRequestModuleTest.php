@@ -32,6 +32,42 @@ class PurchaseRequestModuleTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
+    public function test_user_can_create_purchase_request_from_compras_canonical_module(): void
+    {
+        Mail::fake();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->givePermissionTo([
+            'purchase.tab.create',
+            'purchase.tab.my_requests',
+            'view.board.compras.solicitudes_compra',
+        ]);
+
+        $director = $this->director();
+
+        $response = $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'compras']), [
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'items' => [
+                [
+                    'cantidad' => 1,
+                    'descripcion' => 'Teclado',
+                    'referencia' => 'Logitech',
+                    'utilizacion' => 'Oficina',
+                    'ubicacion' => 'Cali',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('purchase-requests.create', ['module' => 'compras']));
+        Mail::assertSent(PurchaseRequestCreatedMail::class);
+    }
+
     public function test_user_can_create_purchase_request_and_notify_selected_director(): void
     {
         Mail::fake();
@@ -63,8 +99,8 @@ class PurchaseRequestModuleTest extends TestCase
             'urgente' => false,
         ]);
 
-        Mail::assertQueued(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($director->email));
-        Mail::assertNotQueued(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($requester->email));
+        Mail::assertSent(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($director->email));
+        Mail::assertNotSent(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($requester->email));
 
         $purchaseRequest = PurchaseRequest::query()->first();
         $this->assertNotNull($purchaseRequest);
@@ -558,7 +594,7 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertSee('aprobada');
 
         $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
-        Mail::assertQueued(PurchaseRequestResolvedMail::class);
+        Mail::assertSent(PurchaseRequestResolvedMail::class);
     }
 
     public function test_email_approval_post_rejects_requires_comment(): void

@@ -31,6 +31,12 @@ return [
         'FT-OP-09',
     ],
 
+    /** Indicadores cuyo consolidado reutiliza la ficha de captura (v2). */
+    'consolidado_capture_view_codes' => [
+        'FT-OP-01',
+        'FT-OP-02',
+    ],
+
     /*
     | Informe de gestion FO-GI-39 (PowerPoint)
     | Plantilla sanitizada: storage/app/templates/operaciones/FO-GI-39-v7.template.pptx

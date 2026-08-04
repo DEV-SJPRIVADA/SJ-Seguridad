@@ -334,6 +334,29 @@ class IndicadorModuleTest extends TestCase
             ->assertSee('ft-op-01-chart', false);
     }
 
+    public function test_consolidado_ft_op_02_uses_capture_view(): void
+    {
+        $manager = User::factory()->create([
+            'is_active' => true,
+            'must_change_password' => false,
+            'area_key' => 'operaciones',
+        ]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.manage']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-02')->firstOrFail();
+
+        $this->actingAs($manager)
+            ->get(route('indicadores.admin.consolidado.show', [
+                'indicator' => $indicator->code,
+                'year' => 2026,
+                'month' => 7,
+            ]))
+            ->assertOk()
+            ->assertSee('Consolidado — FT-OP-02')
+            ->assertSee('Total servicios')
+            ->assertSee('FICHA DEL INDICADOR DE GESTION');
+    }
+
     public function test_consolidado_ft_op_01_can_filter_by_capturador(): void
     {
         $manager = User::factory()->create([

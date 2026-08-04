@@ -12,6 +12,10 @@
                 </div>
 
                 <div class="panel__body">
+                    @if (session('warning'))
+                        <div class="alert alert--warning bottom-spaced" role="alert">{{ session('warning') }}</div>
+                    @endif
+
                     <form action="{{ route('purchase-requests.store', ['module' => $module]) }}" method="POST" enctype="multipart/form-data" id="purchase-request-form">
                         @csrf
 
