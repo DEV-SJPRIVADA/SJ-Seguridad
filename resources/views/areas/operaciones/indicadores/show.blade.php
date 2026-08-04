@@ -29,15 +29,31 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
-                                <label class="form-label">Usuario</label>
-                                <p class="panel-text" style="margin:0.35rem 0 0;">{{ $headerFilters['captureUserName'] ?? auth()->user()?->name }}</p>
-                            </div>
+                            @if ($headerFilters['showCapturadorSelector'])
+                                <div>
+                                    <label class="form-label">Capturador</label>
+                                    <select name="capturador_id" onchange="this.form.submit()" class="supply-input supply-select">
+                                        @foreach ($headerFilters['capturableUsers'] as $capturador)
+                                            <option value="{{ $capturador->id }}" @selected($headerFilters['selectedCapturadorId'] === $capturador->id)>{{ $capturador->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <div>
+                                    <label class="form-label">Usuario</label>
+                                    <p class="panel-text" style="margin:0.35rem 0 0;">{{ $headerFilters['captureUserName'] ?? auth()->user()?->name }}</p>
+                                </div>
+                            @endif
                             <div>
                                 <span class="status-pill {{ $headerFilters['isPeriodClosed'] ? 'status-pill--req-cancelada' : 'status-pill--req-contratado' }}">
                                     {{ $headerFilters['isPeriodClosed'] ? 'Periodo cerrado' : 'Periodo abierto' }}
                                 </span>
                             </div>
+                            @if ($headerFilters['isDelegatedCapture'])
+                                <div>
+                                    <span class="status-pill status-pill--info">Captura por suplencia</span>
+                                </div>
+                            @endif
                         </form>
                     </div>
                 </div>
@@ -51,6 +67,7 @@
                             @csrf
                             <input type="hidden" name="year" value="{{ $selectedYear }}">
                             <input type="hidden" name="month" value="{{ $selectedMonth }}">
+                            <input type="hidden" name="capturador_user_id" value="{{ $selectedCapturadorId }}">
 
                             @if ($indicator->code === 'FT-OP-03')
                                 @include('areas.operaciones.indicadores.capture-form-03')

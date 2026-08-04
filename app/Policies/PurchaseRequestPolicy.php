@@ -40,4 +40,17 @@ class PurchaseRequestPolicy
         return $user->can('purchase.tab.processing')
             && $purchaseRequest->estaEnBandejaCompras();
     }
+
+    public function resubmit(User $user, PurchaseRequest $purchaseRequest): bool
+    {
+        if ((int) $purchaseRequest->user_id !== (int) $user->id) {
+            return false;
+        }
+
+        if ($purchaseRequest->estado !== PurchaseRequest::ESTADO_RECHAZADO) {
+            return false;
+        }
+
+        return $user->can('purchase.tab.my_requests') || $user->can('purchase.tab.create');
+    }
 }

@@ -20,16 +20,25 @@
     <div class="card kpi-card">
         <p class="text-caption">Mejora</p>
         <p class="kpi-value">
-            <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
-                {{ $improvementId ? 'SI' : 'NO' }}
-            </button>
+            @if ($readOnly ?? false)
+                {{ ($improvementId ?? null) ? 'SI' : 'NO' }}
+            @else
+                <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
+                    {{ $improvementId ? 'SI' : 'NO' }}
+                </button>
+            @endif
         </p>
     </div>
 </div>
 
 <div class="indicadores-actions">
     @can('operations.export')
-        <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
-        <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
+        @if (($isConsolidadoView ?? false) && empty($exportUserId))
+            <a href="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+            <a href="{{ route('indicadores.export.consolidado.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
+        @else
+            <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId ?? auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+            <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId ?? auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
+        @endif
     @endcan
 </div>

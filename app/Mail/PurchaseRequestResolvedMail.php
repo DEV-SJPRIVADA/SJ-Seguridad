@@ -4,13 +4,12 @@ namespace App\Mail;
 
 use App\Models\PurchaseRequest;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PurchaseRequestResolvedMail extends Mailable implements ShouldQueue
+class PurchaseRequestResolvedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -22,7 +21,7 @@ class PurchaseRequestResolvedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Solicitud de compra N.º '.$this->purchaseRequest->folio().' — '.$this->purchaseRequest->estado,
+            subject: 'Solicitud de compra N.º '.$this->purchaseRequest->folio().' — '.$this->purchaseRequest->estadoLabel(),
         );
     }
 

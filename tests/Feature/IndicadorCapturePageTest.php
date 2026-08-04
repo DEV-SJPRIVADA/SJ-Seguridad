@@ -23,7 +23,7 @@ class IndicadorCapturePageTest extends TestCase
 
     public function test_capture_page_renders_vanilla_form_and_scripts(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
@@ -50,7 +50,7 @@ class IndicadorCapturePageTest extends TestCase
 
     public function test_ft_op_03_capture_page_renders_classification_modal(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();
@@ -71,7 +71,7 @@ class IndicadorCapturePageTest extends TestCase
 
     public function test_store_ft_op_03_with_classification(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-03')->firstOrFail();

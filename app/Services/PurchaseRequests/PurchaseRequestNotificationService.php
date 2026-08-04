@@ -21,33 +21,33 @@ class PurchaseRequestNotificationService
 
     public function notifyDirectorAssigned(PurchaseRequest $purchaseRequest, User $director): bool
     {
-        try {
-            Mail::to($director->email)->queue(new PurchaseRequestCreatedMail($purchaseRequest, $director));
-            $this->logMail(
-                $purchaseRequest,
-                PurchaseRequestMailLog::TYPE_DIRECTOR_ASSIGNED,
-                $director->email,
-                PurchaseRequestMailLog::STATUS_ENVIADO,
-            );
+        return $this->sendToRecipient(
+            $purchaseRequest,
+            $director->email,
+            new PurchaseRequestCreatedMail($purchaseRequest, $director),
+            PurchaseRequestMailLog::TYPE_DIRECTOR_ASSIGNED,
+            'PDF adjunto + enlace de aprobacion por correo',
+        );
+    }
 
-            return true;
-        } catch (\Throwable $exception) {
-            $this->logMail(
-                $purchaseRequest,
-                PurchaseRequestMailLog::TYPE_DIRECTOR_ASSIGNED,
-                $director->email,
-                PurchaseRequestMailLog::STATUS_FALLIDO,
-                $exception->getMessage(),
-            );
+    public function notifyDirectorAssignedAfterResponse(PurchaseRequest $purchaseRequest, User $director): void
+    {
+        $purchaseRequestId = $purchaseRequest->id;
+        $directorId = $director->id;
 
-            Log::warning('No se pudo enviar correo al director', [
-                'purchase_request_id' => $purchaseRequest->id,
-                'director_id' => $director->id,
-                'error' => $exception->getMessage(),
-            ]);
+        dispatch(function () use ($purchaseRequestId, $directorId): void {
+            $purchaseRequest = PurchaseRequest::query()
+                ->with(['user', 'items', 'aprobador'])
+                ->find($purchaseRequestId);
 
-            return false;
-        }
+            $director = User::query()->find($directorId);
+
+            if ($purchaseRequest === null || $director === null) {
+                return;
+            }
+
+            app(self::class)->notifyDirectorAssigned($purchaseRequest, $director);
+        })->afterResponse();
     }
 
     public function notifyRequesterResolved(PurchaseRequest $purchaseRequest): void
@@ -58,11 +58,12 @@ class PurchaseRequestNotificationService
             return;
         }
 
-        $this->queueToRecipient(
+        $this->sendToRecipient(
             $purchaseRequest,
             $purchaseRequest->user->email,
             new PurchaseRequestResolvedMail($purchaseRequest),
             PurchaseRequestMailLog::TYPE_REQUESTER_RESOLVED,
+            'Estado: '.$purchaseRequest->estado,
         );
     }
 
@@ -74,11 +75,12 @@ class PurchaseRequestNotificationService
         );
 
         foreach ($recipients as $email) {
-            $this->queueToRecipient(
+            $this->sendToRecipient(
                 $purchaseRequest,
                 $email,
                 new PurchaseRequestApprovedForComprasMail($purchaseRequest),
                 PurchaseRequestMailLog::TYPE_COMPRAS_APPROVED,
+                'Bandeja: solicitud aprobada por director',
             );
         }
     }
@@ -91,28 +93,33 @@ class PurchaseRequestNotificationService
             return;
         }
 
-        $this->queueToRecipient(
+        $this->sendToRecipient(
             $purchaseRequest,
             $purchaseRequest->user->email,
             new PurchaseRequestProcessedMail($purchaseRequest),
             PurchaseRequestMailLog::TYPE_REQUESTER_PROCESSED,
+            'Estado compras: '.($purchaseRequest->estado_compras ?? '—'),
         );
     }
 
-    private function queueToRecipient(
+    private function sendToRecipient(
         PurchaseRequest $purchaseRequest,
         string $recipientEmail,
         object $mailable,
         string $mailType,
-    ): void {
+        ?string $detail = null,
+    ): bool {
         try {
-            Mail::to($recipientEmail)->queue($mailable);
+            Mail::to($recipientEmail)->send($mailable);
             $this->logMail(
                 $purchaseRequest,
                 $mailType,
                 $recipientEmail,
                 PurchaseRequestMailLog::STATUS_ENVIADO,
+                $detail,
             );
+
+            return true;
         } catch (\Throwable $exception) {
             $this->logMail(
                 $purchaseRequest,
@@ -122,12 +129,14 @@ class PurchaseRequestNotificationService
                 $exception->getMessage(),
             );
 
-            Log::warning('No se pudo encolar correo de solicitud de compra', [
+            Log::warning('No se pudo enviar correo de solicitud de compra', [
                 'purchase_request_id' => $purchaseRequest->id,
                 'mail_type' => $mailType,
                 'recipient' => $recipientEmail,
                 'error' => $exception->getMessage(),
             ]);
+
+            return false;
         }
     }
 

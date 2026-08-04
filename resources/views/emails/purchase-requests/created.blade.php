@@ -5,6 +5,8 @@ Solicitud **N.º {{ $purchaseRequest->folio() }}** creada por **{{ $purchaseRequ
 
 Puede revisar el detalle y registrar su decision directamente desde este correo (enlace personal con vigencia limitada) o ingresar a la plataforma.
 
+Adjunto: PDF con el detalle completo de los articulos solicitados ({{ $formCode }}).
+
 @component('mail::button', ['url' => $emailApprovalUrl])
 Autorizar por correo
 @endcomponent

@@ -12,7 +12,7 @@ class PurchaseAccessService
 
     public function isAdminBypass(User $user): bool
     {
-        return $user->can('manage.users');
+        return $user->hasRole('super-admin') || $user->can('manage.users');
     }
 
     public function hasBoardVisibility(User $user, string $module): bool
@@ -59,10 +59,6 @@ class PurchaseAccessService
             return true;
         }
 
-        if (in_array($tab, ['create', 'my_requests'], true)) {
-            return $this->canAccessBaseAreaTab($user, $module, $tab);
-        }
-
         if ($tab === 'approval') {
             return $user->can('purchase.tab.approval');
         }
@@ -71,27 +67,15 @@ class PurchaseAccessService
             return $user->can('purchase.tab.processing');
         }
 
-        if (! $this->hasBoardVisibility($user, $module)) {
-            return false;
+        if (in_array($tab, ['create', 'my_requests'], true)) {
+            return $this->canAccessSolicitudTab($user, $module, $tab);
         }
 
-        return match ($tab) {
-            'create' => $user->can('purchase.tab.create'),
-            'my_requests' => $user->can('purchase.tab.my_requests'),
-            default => false,
-        };
+        return false;
     }
 
-    public function canAccessBaseAreaTab(User $user, string $module, string $tab): bool
+    private function canAccessSolicitudTab(User $user, string $module, string $tab): bool
     {
-        if ($this->isAdminBypass($user)) {
-            return true;
-        }
-
-        if ($user->area_key !== $module) {
-            return false;
-        }
-
         return match ($tab) {
             'create' => $user->can('purchase.tab.create'),
             'my_requests' => $user->can('purchase.tab.my_requests'),

@@ -39,17 +39,14 @@
                                 label="Exportar Excel"
                                 class="btn btn--secondary btn--sm"
                             />
-                            @can('approve', $purchaseRequest)
-                                <a href="{{ route('purchase-requests.approval.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
-                                    Volver a pendientes
-                                </a>
-                            @elseif (auth()->user()?->can('purchase.tab.processing'))
-                                <a href="{{ route('purchase-requests.processing.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
-                                    Volver a bandeja
-                                </a>
-                            @else
-                                <a href="{{ route('purchase-requests.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">
-                                    Volver al listado
+                            @can('resubmit', $purchaseRequest)
+                                <a
+                                    href="{{ route('purchase-requests.edit', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
+                                    class="btn btn--secondary btn--sm purchase-request-resubmit-btn"
+                                    title="Reabrir y editar"
+                                    aria-label="Reabrir y editar"
+                                >
+                                    <x-ri-issues-reopen-fill :size="18" />
                                 </a>
                             @endcan
                         </div>
@@ -106,27 +103,27 @@
                         </div>
                     @endif
 
-                    @if ($purchaseRequest->descripcion)
+                    @if (filled($purchaseRequest->descripcion))
                         <div class="block-spaced">
                             <h4 class="form-label">Descripcion general</h4>
-                            <p class="text-muted">{{ $purchaseRequest->descripcion }}</p>
+                            <p class="purchase-request-text-block">{{ $purchaseRequest->descripcion }}</p>
                         </div>
                     @endif
 
-                    @if ($purchaseRequest->justificacion)
+                    @if (filled($purchaseRequest->justificacion))
                         <div class="block-spaced">
                             <h4 class="form-label">Justificacion</h4>
-                            <p class="text-muted">{{ $purchaseRequest->justificacion }}</p>
+                            <p class="purchase-request-text-block">{{ $purchaseRequest->justificacion }}</p>
                         </div>
                     @endif
 
                     <div class="block-spaced">
-                        <table class="supply-table">
+                        <table class="supply-table purchase-request-items-table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Foto</th>
-                                    <th>Cantidad</th>
+                                    <th class="col-num">#</th>
+                                    <th class="col-foto">Foto</th>
+                                    <th class="col-qty">Cantidad</th>
                                     <th>Descripcion</th>
                                     <th>Referencia</th>
                                     <th>Utilizacion</th>
@@ -137,13 +134,14 @@
                                 @foreach ($purchaseRequest->items as $item)
                                     <tr>
                                         <td class="text-center">{{ $item->orden ?? $loop->iteration }}</td>
-                                        <td class="text-center">
-                                            @if ($item->foto_path)
-                                                <a href="{{ Storage::disk('public')->url($item->foto_path) }}" target="_blank" rel="noopener">
+                                        <td class="text-center purchase-item-photo-cell">
+                                            @if ($item->fotoUrl())
+                                                <a href="{{ $item->fotoUrl() }}" target="_blank" rel="noopener" class="purchase-item-photo-link" title="Ver foto ampliada">
                                                     <img
-                                                        src="{{ Storage::disk('public')->url($item->foto_path) }}"
-                                                        alt="Foto {{ $item->descripcion }}"
-                                                        style="max-width: 64px; max-height: 48px; object-fit: contain; border-radius: 4px;"
+                                                        src="{{ $item->fotoUrl() }}"
+                                                        alt="Foto del producto"
+                                                        class="purchase-item-photo-thumb"
+                                                        loading="lazy"
                                                     >
                                                 </a>
                                             @else
@@ -255,6 +253,63 @@
                 .purchase-request-meta-grid {
                     grid-template-columns: repeat(7, minmax(0, 1fr));
                 }
+            }
+
+            .purchase-request-text-block {
+                margin: 0;
+                padding: 0.65rem 0.75rem;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                white-space: pre-wrap;
+                word-break: break-word;
+                line-height: 1.45;
+            }
+
+            .purchase-request-items-table .col-num {
+                width: 48px;
+            }
+
+            .purchase-request-items-table .col-foto {
+                width: 96px;
+            }
+
+            .purchase-request-items-table .col-qty {
+                width: 80px;
+            }
+
+            .purchase-item-photo-cell {
+                vertical-align: middle;
+                padding: 0.5rem;
+            }
+
+            .purchase-item-photo-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 72px;
+                height: 56px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                background: #fff;
+                overflow: hidden;
+            }
+
+            .purchase-item-photo-thumb {
+                display: block;
+                max-width: 100%;
+                max-height: 100%;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+            }
+
+            .purchase-request-resubmit-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding-inline: 0.45rem;
+                line-height: 1;
             }
         </style>
     @endpush

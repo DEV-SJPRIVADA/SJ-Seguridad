@@ -26,6 +26,7 @@ trait HasPurchaseTabs
             $active = match ($tab) {
                 'nueva' => in_array($routeName, ['purchase-requests.create'], true),
                 'mis_solicitudes' => $routeName === 'purchase-requests.index'
+                    || in_array($routeName, ['purchase-requests.edit', 'purchase-requests.update'], true)
                     || ($routeName === 'purchase-requests.show' && ! $approvalShowContext),
                 'pendientes_aprobacion' => str_starts_with((string) $routeName, 'purchase-requests.approval.')
                     || ($routeName === 'purchase-requests.show' && $approvalShowContext),

@@ -3,6 +3,7 @@
 namespace App\Services\Indicadores;
 
 use App\Models\Indicator;
+use App\Models\IndicatorCapture;
 
 class IndicatorMetricCalculator
 {
@@ -113,7 +114,7 @@ class IndicatorMetricCalculator
         };
     }
 
-    public function compliesForCapture(Indicator $indicator, ?\App\Models\IndicatorCapture $capture): bool
+    public function compliesForCapture(Indicator $indicator, ?IndicatorCapture $capture): bool
     {
         if ($capture === null) {
             return false;
@@ -209,6 +210,26 @@ class IndicatorMetricCalculator
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function consolidatedFormFromTotals(string $code, float $denominator, float $numerator): array
+    {
+        $form = $this->defaultForm($code);
+        $keys = $this->ratioFieldKeys($code);
+
+        if ($keys === null) {
+            return $form;
+        }
+
+        [$denKey, $numKey] = $keys;
+
+        return array_merge($form, [
+            $denKey => $denominator > 0 ? $denominator : null,
+            $numKey => $numerator > 0 ? $numerator : null,
+        ]);
+    }
+
+    /**
      * @return array{0: string, 1: string}|null
      */
     private function ratioFieldKeys(string $code): ?array
@@ -276,7 +297,7 @@ class IndicatorMetricCalculator
         };
     }
 
-    public function isCriticalCapture(Indicator $indicator, ?\App\Models\IndicatorCapture $capture): bool
+    public function isCriticalCapture(Indicator $indicator, ?IndicatorCapture $capture): bool
     {
         if ($capture === null || $capture->result_percentage === null) {
             return false;
@@ -292,7 +313,7 @@ class IndicatorMetricCalculator
     /**
      * Valor medido que debe mostrarse en la tabla de indicadores criticos.
      */
-    public function criticalDisplayValue(Indicator $indicator, \App\Models\IndicatorCapture $capture): ?float
+    public function criticalDisplayValue(Indicator $indicator, IndicatorCapture $capture): ?float
     {
         if ($indicator->code === 'FT-OP-03') {
             $data = $capture->input_data ?? [];
@@ -321,7 +342,7 @@ class IndicatorMetricCalculator
         return (float) $capture->result_percentage;
     }
 
-    private function isCriticalFtOp03Capture(Indicator $indicator, \App\Models\IndicatorCapture $capture): bool
+    private function isCriticalFtOp03Capture(Indicator $indicator, IndicatorCapture $capture): bool
     {
         $data = $capture->input_data ?? [];
         $servicios = (float) ($data['total_servicios'] ?? 0);

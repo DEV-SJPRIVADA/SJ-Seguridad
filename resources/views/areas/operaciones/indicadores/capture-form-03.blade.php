@@ -148,8 +148,8 @@
             </tr>
         </table>
 
-        <div class="border border-gray-600 border-t-0 p-3" style="width:1036px; min-width:1036px;">
-            <div id="ft-op-03-chart-finance" data-chart='@json($financeChartPayload)' class="w-full h-[360px]"></div>
+        <div class="border border-gray-600 border-t-0 p-3 indicadores-ftop03-chart-wrap">
+            <div id="ft-op-03-chart-finance" data-chart='@json($financeChartPayload)' class="indicadores-ftop03-chart"></div>
         </div>
 
         <table class="border-collapse table-fixed text-[13px] text-black border border-gray-600 border-t-0" style="min-width: 1036px;">
@@ -185,8 +185,8 @@
             </tr>
         </table>
 
-        <div class="border border-gray-600 border-t-0 p-3" style="width:1036px; min-width:1036px;">
-            <div id="ft-op-03-chart-clients" data-chart='@json($incidentChartPayload)' class="w-full h-[360px]"></div>
+        <div class="border border-gray-600 border-t-0 p-3 indicadores-ftop03-chart-wrap">
+            <div id="ft-op-03-chart-clients" data-chart='@json($incidentChartPayload)' class="indicadores-ftop03-chart"></div>
         </div>
 
         @for ($q = 1; $q <= 4; $q++)
@@ -220,7 +220,7 @@
                     </tr>
                 </table>
                 <div class="md:col-span-2 p-3">
-                    <div id="ft-op-03-quarter-{{ $q }}" data-chart='@json($quarterChartPayload[$q] ?? [])' class="w-full h-[320px]"></div>
+                    <div id="ft-op-03-quarter-{{ $q }}" data-chart='@json($quarterChartPayload[$q] ?? [])' class="indicadores-ftop03-chart indicadores-ftop03-chart--quarter"></div>
                 </div>
             </div>
         @endfor

@@ -109,8 +109,28 @@ class PurchaseRequest extends Model
         return $this->estado === self::ESTADO_APROBADO;
     }
 
+    /** @return array<string, string> */
+    public static function estadosLabels(): array
+    {
+        return [
+            self::ESTADO_PENDIENTE => 'Pendiente',
+            self::ESTADO_APROBADO => 'Aprobado',
+            self::ESTADO_RECHAZADO => 'Rechazado',
+        ];
+    }
+
+    public function estadoLabel(): string
+    {
+        return self::estadosLabels()[$this->estado] ?? ucfirst((string) $this->estado);
+    }
+
     public function estadoComprasLabel(): string
     {
         return self::estadosComprasLabels()[$this->estado_compras] ?? '—';
+    }
+
+    public function puedeReabrir(): bool
+    {
+        return $this->estado === self::ESTADO_RECHAZADO;
     }
 }

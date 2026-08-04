@@ -633,3 +633,25 @@
     }
 }
 
+.indicadores-ftop03-chart-wrap {
+    width: 1036px;
+    min-width: 1036px;
+    max-width: 100%;
+}
+
+.indicadores-ftop03-chart {
+    width: 100%;
+    min-height: 360px;
+    height: 360px;
+}
+
+.indicadores-ftop03-chart--quarter {
+    min-height: 320px;
+    height: 320px;
+}
+
+.indicadores-ftop03-chart .apexcharts-canvas,
+.indicadores-ftop03-chart svg {
+    width: 100% !important;
+}
+

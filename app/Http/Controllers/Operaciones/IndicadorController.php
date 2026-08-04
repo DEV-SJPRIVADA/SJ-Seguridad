@@ -83,11 +83,16 @@ class IndicadorController extends Controller
         $selectedYear = $this->yearRangeService->normalize((int) $request->integer('year', (int) now()->year));
         $selectedMonth = $this->normalizeMonth((int) $request->integer('month', (int) now()->month));
 
+        $actor = $request->user();
+        $capturadorId = $request->filled('capturador_id') ? (int) $request->integer('capturador_id') : null;
+        $titular = $this->captureAccessService->resolveTitularUser($actor, $capturadorId);
+
         $capture = $this->captureService->buildShowContext(
             indicator: $indicator,
             year: $selectedYear,
             month: $selectedMonth,
-            user: $request->user(),
+            titular: $titular,
+            actor: $actor,
         );
 
         return view('areas.operaciones.indicadores.show', array_merge($capture, [
@@ -99,6 +104,10 @@ class IndicadorController extends Controller
                 'selectedMonth' => $capture['selectedMonth'],
                 'isPeriodClosed' => $capture['isPeriodClosed'],
                 'captureUserName' => $capture['captureUserName'],
+                'capturableUsers' => $capture['capturableUsers'],
+                'selectedCapturadorId' => $capture['selectedCapturadorId'],
+                'showCapturadorSelector' => $capture['showCapturadorSelector'],
+                'isDelegatedCapture' => $capture['isDelegatedCapture'],
             ],
         ]));
     }
@@ -109,6 +118,9 @@ class IndicadorController extends Controller
 
         $year = $this->yearRangeService->normalize((int) $request->integer('year'));
         $month = $this->normalizeMonth((int) $request->integer('month'));
+        $actor = $request->user();
+        $capturadorId = $request->filled('capturador_user_id') ? (int) $request->integer('capturador_user_id') : null;
+        $titular = $this->captureAccessService->resolveTitularUser($actor, $capturadorId);
 
         $this->captureService->save(
             indicator: $indicator,
@@ -116,15 +128,17 @@ class IndicadorController extends Controller
             month: $month,
             form: (array) $request->input('form', []),
             improvement: $request->improvementPayload(),
-            user: $request->user(),
+            titular: $titular,
+            actor: $actor,
         );
 
         return redirect()
-            ->route('indicadores.show', [
+            ->route('indicadores.show', array_filter([
                 'indicator' => $indicator->code,
                 'year' => $year,
                 'month' => $month,
-            ])
+                'capturador_id' => $titular->id !== $actor->id ? $titular->id : null,
+            ]))
             ->with('status', 'Captura guardada correctamente para el mes seleccionado.');
     }
 
@@ -183,9 +197,11 @@ class IndicadorController extends Controller
 
     public function updateCapturador(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'enabled' => ['required', 'boolean'],
-        ]);
+        if (! $request->has('enabled')) {
+            return $this->capturadoresToggleError('No se recibio el estado del toggle de captura.');
+        }
+
+        $enabled = $request->boolean('enabled');
 
         $before = [
             'operations.capture' => $user->can('operations.capture'),
@@ -193,32 +209,81 @@ class IndicadorController extends Controller
         ];
 
         try {
-            $this->captureAccessService->setCaptureEnabled($user, (bool) $validated['enabled']);
+            $this->captureAccessService->setCaptureEnabled($user, $enabled);
         } catch (\InvalidArgumentException $exception) {
-            return back()->withErrors(['capturador' => $exception->getMessage()]);
+            return $this->capturadoresToggleError($exception->getMessage());
         }
 
         $user->refresh();
 
         $this->auditLogService->logModelChange(
             eventType: 'admin_action',
-            action: $validated['enabled'] ? 'capture_user_enable' : 'capture_user_disable',
+            action: $enabled ? 'capture_user_enable' : 'capture_user_disable',
             model: $user,
             before: $before,
             after: [
                 'operations.capture' => $user->can('operations.capture'),
                 'operations.manage' => $user->can('operations.manage'),
             ],
-            reason: $validated['enabled']
+            reason: $enabled
                 ? 'Activacion de captura desde Ajustes → Capturadores'
                 : 'Inactivacion de captura desde Ajustes → Capturadores'
         );
 
         return redirect()
             ->route('indicadores.admin.ajustes', ['section' => 'capturadores'])
-            ->with('status', $validated['enabled']
+            ->with('status', $enabled
                 ? 'Captura de indicadores activada para '.$user->name.'.'
                 : 'Captura de indicadores desactivada para '.$user->name.'.');
+    }
+
+    public function updateCapturadorDelegate(Request $request, User $user): RedirectResponse
+    {
+        if (! $request->has('enabled')) {
+            return $this->capturadoresToggleError('No se recibio el estado del toggle de suplencia.');
+        }
+
+        $enabled = $request->boolean('enabled');
+
+        $before = [
+            'operations.capture.delegate' => $user->can('operations.capture.delegate'),
+            'operations.capture' => $user->can('operations.capture'),
+        ];
+
+        try {
+            $this->captureAccessService->setDelegateCaptureEnabled($user, $enabled);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->capturadoresToggleError($exception->getMessage());
+        }
+
+        $user->refresh();
+
+        $this->auditLogService->logModelChange(
+            eventType: 'admin_action',
+            action: $enabled ? 'capture_delegate_enable' : 'capture_delegate_disable',
+            model: $user,
+            before: $before,
+            after: [
+                'operations.capture.delegate' => $user->can('operations.capture.delegate'),
+                'operations.capture' => $user->can('operations.capture'),
+            ],
+            reason: $enabled
+                ? 'Activacion de suplencia desde Ajustes → Capturadores'
+                : 'Inactivacion de suplencia desde Ajustes → Capturadores'
+        );
+
+        return redirect()
+            ->route('indicadores.admin.ajustes', ['section' => 'capturadores'])
+            ->with('status', $enabled
+                ? 'Suplencia de captura activada para '.$user->name.'.'
+                : 'Suplencia de captura desactivada para '.$user->name.'.');
+    }
+
+    private function capturadoresToggleError(string $message): RedirectResponse
+    {
+        return redirect()
+            ->route('indicadores.admin.ajustes', ['section' => 'capturadores'])
+            ->withErrors(['capturador' => $message]);
     }
 
     public function capturadores(): RedirectResponse
@@ -412,6 +477,46 @@ class IndicadorController extends Controller
 
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
+
+        if (in_array($indicator->code, config('indicators.consolidado_capture_view_codes', []), true)) {
+            $selectedUser = null;
+            if ($request->filled('user_id')) {
+                $selectedUser = User::query()->findOrFail((int) $request->integer('user_id'));
+            }
+
+            $capture = $this->captureService->buildConsolidadoShowContext(
+                indicator: $indicator,
+                year: $year,
+                month: $month,
+                selectedUser: $selectedUser,
+            );
+
+            $this->auditLogService->logEvent(
+                eventType: 'admin_action',
+                action: 'consolidado_view',
+                reason: 'Consulta consolidado con vista de captura',
+                metadata: [
+                    'indicator' => $indicator->code,
+                    'year' => $year,
+                    'month' => $month,
+                    'user_id' => $selectedUser?->id,
+                ]
+            );
+
+            return view('areas.operaciones.consolidado.show-capture', array_merge($capture, [
+                'subTabs' => IndicadorNavigation::subTabs(),
+                'headerFilters' => [
+                    'years' => $capture['years'],
+                    'months' => $capture['months'],
+                    'selectedYear' => $capture['selectedYear'],
+                    'selectedMonth' => $capture['selectedMonth'],
+                    'isPeriodClosed' => $capture['isPeriodClosed'],
+                    'captureUserName' => $capture['captureUserName'],
+                    'capturableUsers' => $capture['capturableUsers'],
+                    'selectedCapturadorId' => $capture['selectedCapturadorId'],
+                ],
+            ]));
+        }
 
         $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month);
         $quarterly = $indicator->code === 'FT-OP-08'

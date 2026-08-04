@@ -168,14 +168,14 @@ Tipos en `notification_types` (modulo `purchase_requests`):
 
 | Slug | Destinatario | Cuando |
 | --- | --- | --- |
-| `purchase_request_created` | Director asignado | Al crear (cola) |
+| `purchase_request_created` | Director asignado | Al crear (envio sincrono `Mail::send`) |
 | `purchase_request_resolved` | Solicitante | Director aprueba/rechaza |
 | `purchase_request_approved_for_compras` | Emails configurados | Director aprueba |
 | `compras_queue_processed` | Solicitante | Compras actualiza estado |
 
-Correo director: boton principal **Autorizar por correo** (URL firmada a `email-approval.show`) y secundario a `purchase-requests.show` (login requerido en plataforma).
+Correo director: boton principal **Autorizar por correo** (URL firmada a `email-approval.show`) y secundario a `purchase-requests.show` (login requerido en plataforma). Enlaces generados con `PUBLIC_APP_URL` (`App\Support\ApplicationUrls`) para que sean alcanzables desde VPN/red interna. PDF FO-AD-44 adjunto en el correo de nueva solicitud.
 
-**Registro de correos:** tabla `purchase_request_mail_logs` (tipo, destinatario, estado `enviado`/`fallido`, detalle, fecha). Visible en detalle de la solicitud.
+**Registro de correos:** tabla `purchase_request_mail_logs` (tipo, destinatario, estado `enviado`/`fallido`, detalle, fecha). Visible en detalle de la solicitud. Si falla el envio al crear, aviso amarillo en formulario Nueva solicitud.
 
 ## Mis solicitudes
 

@@ -8,25 +8,42 @@ use App\Models\PurchaseRequest;
 use App\Services\PurchaseRequests\PurchaseApprovalService;
 use App\Traits\HasPurchaseTabs;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PurchaseApprovalController extends Controller
 {
     use HasPurchaseTabs;
 
-    public function index(string $module): View
+    public function index(string $module, Request $request): View
     {
-        $purchaseRequests = PurchaseRequest::query()
+        $estado = $request->string('estado')->toString();
+        if ($estado === '') {
+            $estado = PurchaseRequest::ESTADO_PENDIENTE;
+        }
+
+        $query = PurchaseRequest::query()
             ->with(['user', 'items', 'aprobador'])
-            ->where('estado', PurchaseRequest::ESTADO_PENDIENTE)
-            ->where('aprobador_id', auth()->id())
-            ->latest()
+            ->where('aprobador_id', auth()->id());
+
+        if ($estado !== 'todos') {
+            $query->where('estado', $estado);
+        }
+
+        $purchaseRequests = $query
+            ->orderByRaw('CASE WHEN estado = ? THEN 0 ELSE 1 END', [PurchaseRequest::ESTADO_PENDIENTE])
+            ->latest('fecha_solicitud')
+            ->latest('id')
             ->get();
 
         return view('modules.purchase-requests.approval.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
             'purchaseRequests' => $purchaseRequests,
+            'filters' => [
+                'estado' => $estado,
+            ],
+            'estadoLabels' => PurchaseRequest::estadosLabels(),
         ]);
     }
 

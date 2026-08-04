@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Indicator;
 use App\Models\User;
 use App\Support\PermissionCatalog;
+use Database\Seeders\IndicadorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,12 +18,12 @@ class IndicadorCaptureModalTest extends TestCase
         parent::setUp();
 
         PermissionCatalog::sync();
-        $this->seed(\Database\Seeders\IndicadorSeeder::class);
+        $this->seed(IndicadorSeeder::class);
     }
 
     public function test_capture_page_shows_improvement_modal_markup(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
@@ -42,7 +43,7 @@ class IndicadorCaptureModalTest extends TestCase
 
     public function test_store_capture_persists_metrics_and_improvement(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
@@ -77,7 +78,7 @@ class IndicadorCaptureModalTest extends TestCase
 
     public function test_store_requires_improvement_when_not_complying(): void
     {
-        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
         $user->givePermissionTo(['view.dashboard', 'operations.capture']);
 
         $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();

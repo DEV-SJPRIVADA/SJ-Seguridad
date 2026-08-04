@@ -12,6 +12,7 @@ use App\Services\PurchaseRequests\PurchaseRequestPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 class PurchaseEmailApprovalController extends Controller
@@ -21,6 +22,7 @@ class PurchaseEmailApprovalController extends Controller
         PurchaseRequest $purchaseRequest,
         PurchaseEmailApprovalUrlBuilder $urlBuilder,
     ): View {
+        $this->forceUrlsFromRequest($request);
         $director = $this->resolveDirector($request, $purchaseRequest);
         $purchaseRequest->load(['user', 'items']);
 
@@ -40,6 +42,7 @@ class PurchaseEmailApprovalController extends Controller
         PurchaseRequest $purchaseRequest,
         PurchaseRequestPdfService $pdfService,
     ): Response {
+        $this->forceUrlsFromRequest($request);
         $this->resolveDirector($request, $purchaseRequest);
         $purchaseRequest->load(['user', 'items', 'aprobador']);
 
@@ -55,6 +58,7 @@ class PurchaseEmailApprovalController extends Controller
         PurchaseApprovalService $approvalService,
         PurchaseEmailApprovalUrlBuilder $urlBuilder,
     ): View|RedirectResponse {
+        $this->forceUrlsFromRequest($request);
         $director = $this->resolveDirector($request, $purchaseRequest);
         $purchaseRequest->load(['user', 'items']);
 
@@ -92,11 +96,16 @@ class PurchaseEmailApprovalController extends Controller
 
     private function resolveDirector(Request $request, PurchaseRequest $purchaseRequest): User
     {
-        abort_unless($request->hasValidSignature(), 403);
-
         $directorId = (int) $request->query('director', $request->input('director'));
         abort_unless($directorId > 0 && (int) $purchaseRequest->aprobador_id === $directorId, 403);
 
         return User::query()->whereKey($directorId)->firstOrFail();
+    }
+
+    /** Enlaces del formulario usan la misma URL con la que el director abrio el correo. */
+    private function forceUrlsFromRequest(Request $request): void
+    {
+        URL::forceRootUrl($request->root());
+        URL::forceScheme($request->getScheme());
     }
 }

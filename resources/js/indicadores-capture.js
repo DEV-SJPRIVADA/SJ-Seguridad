@@ -424,116 +424,253 @@ function initFtOp01Chart() {
     });
 }
 
-function initFtOp03Charts() {
-    if (!document.getElementById('ft-op-03-chart-finance')) {
+function destroyMountedChart(el) {
+    if (!el) {
         return;
     }
 
-    const instances = [];
+    if (el._apexChart) {
+        el._apexChart.destroy();
+        el._apexChart = null;
+    }
+}
 
-    function renderBar(id, payload, config) {
-        const el = document.getElementById(id);
-        if (!el) {
-            return;
-        }
+function mountChart(el, options) {
+    if (!el) {
+        return null;
+    }
 
-        const chart = renderMixedBarLine(el, {
-            categories: payload.months || [],
+    destroyMountedChart(el);
+
+    const chart = new ApexCharts(el, options);
+    chart.render();
+    el._apexChart = chart;
+
+    return chart;
+}
+
+function formatFtOp03Amount(value) {
+    return `$ ${Number(value || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
+}
+
+function formatFtOp03Count(value) {
+    return Number(value || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+}
+
+function renderFtOp03ComboChart(el, payload, config) {
+    const categories = payload.months || [];
+    const bar1Label = config.bar1Label;
+    const bar2Label = config.bar2Label;
+    const lineLabel = config.lineLabel;
+    const metaLabel = config.metaLabel || 'META';
+    const criticoLabel = config.criticoLabel || 'CRITICO';
+    const valueFormatter = config.valueFormatter || ((value) => String(value ?? 0));
+    const lineSeries = [
+        {
+            name: lineLabel,
+            type: 'line',
+            data: payload[config.lineKey] || [],
+        },
+        {
+            name: metaLabel,
+            type: 'line',
+            data: payload.meta || [],
+        },
+        {
+            name: criticoLabel,
+            type: 'line',
+            data: payload.critico || [],
+        },
+    ];
+
+    return mountChart(el, {
+        ...sharedChart,
+        chart: {
+            ...sharedChart.chart,
+            type: 'line',
             height: 360,
-            barSeries: [
-                {
-                    name: config.bar1Label,
-                    type: 'column',
-                    data: payload[config.bar1Key] || [],
-                    color: BRAND_BLUE,
+            stacked: false,
+        },
+        series: [
+            {
+                name: bar1Label,
+                type: 'column',
+                data: payload[config.bar1Key] || [],
+            },
+            {
+                name: bar2Label,
+                type: 'column',
+                data: payload[config.bar2Key] || [],
+            },
+            ...lineSeries,
+        ],
+        colors: [BRAND_BLUE, BRAND_NAVY, LINE_RESULT, LINE_META, '#9333ea'],
+        stroke: {
+            width: [0, 0, 3, 2, 2],
+            curve: 'smooth',
+            dashArray: [0, 0, 0, 6, 4],
+        },
+        plotOptions: {
+            bar: {
+                columnWidth: '42%',
+                borderRadius: 4,
+            },
+        },
+        xaxis: {
+            categories,
+            labels: {
+                style: { fontSize: '11px', fontWeight: 600 },
+            },
+        },
+        yaxis: [
+            {
+                seriesName: bar1Label,
+                title: { text: config.leftAxisTitle || 'Valor' },
+                labels: {
+                    style: { fontSize: '11px' },
+                    formatter: (value) => valueFormatter(value),
                 },
-                {
-                    name: config.bar2Label,
-                    type: 'column',
-                    data: payload[config.bar2Key] || [],
-                    color: BRAND_NAVY,
+                min: 0,
+                forceNiceScale: true,
+            },
+            {
+                seriesName: bar2Label,
+                show: false,
+                min: 0,
+                forceNiceScale: true,
+            },
+            {
+                seriesName: lineLabel,
+                opposite: true,
+                min: 0,
+                max: 100,
+                title: { text: '%' },
+                labels: {
+                    style: { fontSize: '11px' },
+                    formatter: (value) => `${round2(value)}%`,
                 },
-            ],
-            lineSeries: [
-                {
-                    name: config.lineLabel,
-                    type: 'line',
-                    data: payload[config.lineKey] || [],
-                    color: LINE_RESULT,
-                    strokeWidth: 3,
-                },
-            ],
-        });
+            },
+            {
+                seriesName: metaLabel,
+                opposite: true,
+                show: false,
+                min: 0,
+                max: 100,
+            },
+            {
+                seriesName: criticoLabel,
+                opposite: true,
+                show: false,
+                min: 0,
+                max: 100,
+            },
+        ],
+        legend: {
+            position: 'top',
+            fontSize: '11px',
+            horizontalAlign: 'center',
+        },
+        grid: {
+            ...sharedChart.grid,
+            padding: { top: 8, right: 12, bottom: 0, left: 12 },
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: (value, { seriesIndex }) => {
+                    if (seriesIndex <= 1) {
+                        return valueFormatter(value);
+                    }
 
-        if (chart) {
-            instances.push(chart);
-        }
+                    return `${round2(value)}%`;
+                },
+            },
+        },
+    });
+}
+
+function renderFtOp03PieChart(el) {
+    const payload = parseDataChart(el);
+    const data = payload.data || [];
+    const total = data.reduce((sum, item) => sum + Number(item.value || 0), 0);
+
+    return mountChart(el, {
+        ...sharedChart,
+        chart: {
+            ...sharedChart.chart,
+            type: 'pie',
+            height: 320,
+        },
+        title: {
+            text: payload.title || '',
+            align: 'center',
+            style: { fontSize: '16px', fontWeight: 700 },
+        },
+        series: total > 0 ? data.map((item) => Number(item.value || 0)) : [1],
+        labels: total > 0 ? data.map((item) => item.name) : ['Sin datos'],
+        colors: total > 0 ? undefined : [PIE_EMPTY],
+        legend: {
+            show: total > 0,
+            position: 'bottom',
+            fontSize: '11px',
+        },
+        dataLabels: { enabled: false },
+        tooltip: {
+            enabled: total > 0,
+            y: {
+                formatter: (value) => String(value),
+            },
+        },
+        plotOptions: {
+            pie: {
+                dataLabels: { offset: -4 },
+            },
+        },
+        noData: {
+            text: 'Sin datos para este trimestre',
+        },
+    });
+}
+
+function initFtOp03Charts() {
+    const financeEl = document.getElementById('ft-op-03-chart-finance');
+    if (!financeEl) {
+        return;
     }
 
-    function renderPie(id) {
-        const el = document.getElementById(id);
-        if (!el) {
-            return;
-        }
-
-        const payload = parseDataChart(el);
-        const data = payload.data || [];
-        const total = data.reduce((sum, item) => sum + Number(item.value || 0), 0);
-
-        const chart = new ApexCharts(el, {
-            ...sharedChart,
-            chart: {
-                ...sharedChart.chart,
-                type: 'pie',
-                height: 320,
-            },
-            title: {
-                text: payload.title || '',
-                align: 'center',
-                style: { fontSize: '16px', fontWeight: 700 },
-            },
-            series: total > 0 ? data.map((item) => Number(item.value || 0)) : [1],
-            labels: total > 0 ? data.map((item) => item.name) : ['Sin datos'],
-            colors: total > 0 ? undefined : [PIE_EMPTY],
-            legend: {
-                show: total > 0,
-                position: 'bottom',
-                fontSize: '11px',
-            },
-            dataLabels: { enabled: false },
-            tooltip: {
-                enabled: total > 0,
-                y: {
-                    formatter: (value) => String(value),
-                },
-            },
-            noData: {
-                text: 'Sin datos para este trimestre',
-            },
+    requestAnimationFrame(() => {
+        renderFtOp03ComboChart(financeEl, parseDataChart(financeEl), {
+            bar1Key: 'facturacion',
+            bar2Key: 'pagado',
+            lineKey: 'cumplimiento',
+            bar1Label: 'TOTAL FACTURACION MENSUAL',
+            bar2Label: 'VALOR PAGADO MENSUAL',
+            lineLabel: '% CUMPLIMIENTO',
+            leftAxisTitle: 'Valor ($)',
+            valueFormatter: formatFtOp03Amount,
         });
 
-        chart.render();
-        instances.push(chart);
-    }
+        const clientsEl = document.getElementById('ft-op-03-chart-clients');
+        if (clientsEl) {
+            renderFtOp03ComboChart(clientsEl, parseDataChart(clientsEl), {
+                bar1Key: 'clientes',
+                bar2Key: 'siniestros',
+                lineKey: 'porcentaje',
+                bar1Label: 'TOTAL DE CLIENTES MENSUAL',
+                bar2Label: 'TOTAL SINIESTROS MENSUAL',
+                lineLabel: '% SINIESTROS',
+                leftAxisTitle: 'Cantidad',
+                valueFormatter: formatFtOp03Count,
+            });
+        }
 
-    renderBar('ft-op-03-chart-finance', parseDataChart(document.getElementById('ft-op-03-chart-finance')), {
-        bar1Key: 'facturacion',
-        bar2Key: 'pagado',
-        lineKey: 'cumplimiento',
-        bar1Label: 'TOTAL FACTURACION MENSUAL',
-        bar2Label: 'VALOR PAGADO MENSUAL',
-        lineLabel: '% CUMPLIMIENTO',
-    });
-    renderBar('ft-op-03-chart-clients', parseDataChart(document.getElementById('ft-op-03-chart-clients')), {
-        bar1Key: 'clientes',
-        bar2Key: 'siniestros',
-        lineKey: 'porcentaje',
-        bar1Label: 'TOTAL DE CLIENTES MENSUAL',
-        bar2Label: 'TOTAL SINIESTROS MENSUAL',
-        lineLabel: '% SINIESTROS',
-    });
-    [1, 2, 3, 4].forEach((q) => {
-        renderPie(`ft-op-03-quarter-${q}`);
+        [1, 2, 3, 4].forEach((quarter) => {
+            const quarterEl = document.getElementById(`ft-op-03-quarter-${quarter}`);
+            if (quarterEl) {
+                renderFtOp03PieChart(quarterEl);
+            }
+        });
     });
 }
 

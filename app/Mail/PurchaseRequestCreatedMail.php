@@ -5,15 +5,16 @@ namespace App\Mail;
 use App\Models\PurchaseRequest;
 use App\Models\User;
 use App\Services\PurchaseRequests\PurchaseEmailApprovalUrlBuilder;
+use App\Services\PurchaseRequests\PurchaseRequestPdfService;
+use App\Support\ApplicationUrls;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PurchaseRequestCreatedMail extends Mailable implements ShouldQueue
+class PurchaseRequestCreatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -39,10 +40,11 @@ class PurchaseRequestCreatedMail extends Mailable implements ShouldQueue
             markdown: 'emails.purchase-requests.created',
             with: [
                 'emailApprovalUrl' => $urlBuilder->showUrl($this->purchaseRequest, $this->director),
-                'platformUrl' => route('purchase-requests.show', [
+                'platformUrl' => ApplicationUrls::route('purchase-requests.show', [
                     'module' => $this->purchaseRequest->area_key,
                     'purchase_request' => $this->purchaseRequest->id,
                 ]),
+                'formCode' => config('purchase-requests.form_code'),
             ],
         );
     }
@@ -52,6 +54,13 @@ class PurchaseRequestCreatedMail extends Mailable implements ShouldQueue
      */
     public function attachments(): array
     {
-        return [];
+        $pdfService = app(PurchaseRequestPdfService::class);
+
+        return [
+            Attachment::fromData(
+                fn () => $pdfService->generate($this->purchaseRequest),
+                $pdfService->filename($this->purchaseRequest),
+            )->withMime('application/pdf'),
+        ];
     }
 }
