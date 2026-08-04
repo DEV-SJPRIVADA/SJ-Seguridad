@@ -681,6 +681,54 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
     }
 
+    public function test_director_approval_notifies_requester_with_decision_and_comments(): void
+    {
+        Mail::fake();
+
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->actingAs($director)->patch(route('purchase-requests.approval.update', [
+            'module' => 'compras',
+            'purchase_request' => $purchaseRequest->id,
+        ]), [
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'comentarios_director' => 'Autorizado. Proceder con cotizacion.',
+        ])->assertRedirect(route('purchase-requests.approval.index', ['module' => 'compras']));
+
+        Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester, $purchaseRequest): bool {
+            return $mail->hasTo($requester->email)
+                && $mail->purchaseRequest->is($purchaseRequest->fresh())
+                && $mail->purchaseRequest->comentarios_director === 'Autorizado. Proceder con cotizacion.';
+        });
+    }
+
+    public function test_director_rejection_notifies_requester_with_observations(): void
+    {
+        Mail::fake();
+
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->actingAs($director)->patch(route('purchase-requests.approval.update', [
+            'module' => 'compras',
+            'purchase_request' => $purchaseRequest->id,
+        ]), [
+            'estado' => PurchaseRequest::ESTADO_RECHAZADO,
+            'comentarios_director' => 'Presupuesto no disponible este trimestre.',
+        ])->assertRedirect(route('purchase-requests.approval.index', ['module' => 'compras']));
+
+        $this->assertSame(PurchaseRequest::ESTADO_RECHAZADO, $purchaseRequest->fresh()->estado);
+
+        Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester): bool {
+            return $mail->hasTo($requester->email)
+                && $mail->purchaseRequest->estado === PurchaseRequest::ESTADO_RECHAZADO
+                && $mail->purchaseRequest->comentarios_director === 'Presupuesto no disponible este trimestre.';
+        });
+    }
+
     public function test_email_signed_link_shows_guest_approval_form(): void
     {
         $requester = $this->purchaseRequester('operaciones');
@@ -710,7 +758,30 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertSee('aprobada');
 
         $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
-        Mail::assertSent(PurchaseRequestResolvedMail::class);
+        Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester): bool {
+            return $mail->hasTo($requester->email)
+                && $mail->purchaseRequest->comentarios_director === 'Aprobado por correo';
+        });
+    }
+
+    public function test_email_approval_post_rejection_notifies_requester(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('operaciones');
+        $director = $this->director();
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+
+        $this->post($this->emailApprovalUpdateUrl($purchaseRequest, $director), [
+            'estado' => PurchaseRequest::ESTADO_RECHAZADO,
+            'comentarios_director' => 'No cumple politica de compras.',
+        ])->assertOk();
+
+        Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester): bool {
+            return $mail->hasTo($requester->email)
+                && $mail->purchaseRequest->estado === PurchaseRequest::ESTADO_RECHAZADO
+                && $mail->purchaseRequest->comentarios_director === 'No cumple politica de compras.';
+        });
     }
 
     public function test_email_approval_post_rejects_requires_comment(): void
