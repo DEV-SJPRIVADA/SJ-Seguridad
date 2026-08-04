@@ -38,7 +38,7 @@
                                     <th>Fecha de aprobacion</th>
                                     <th>Productos</th>
                                     <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -74,7 +74,7 @@
                                                 <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Urgente</span>
                                             @endif
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center purchase-request-actions-col">
                                             <div class="purchase-request-row-actions">
                                                 <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--secondary btn--sm">
                                                     Ver detalle
@@ -107,12 +107,24 @@
 
     @push('styles')
         <style>
+            .purchase-request-actions-col {
+                width: 1%;
+                min-width: 11.5rem;
+                white-space: nowrap;
+            }
+
             .purchase-request-row-actions {
-                display: flex;
+                display: inline-flex;
                 gap: 0.35rem;
                 justify-content: center;
                 align-items: center;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                white-space: nowrap;
+            }
+
+            .purchase-request-row-actions .btn {
+                flex-shrink: 0;
+                white-space: nowrap;
             }
 
             .purchase-request-resubmit-btn {

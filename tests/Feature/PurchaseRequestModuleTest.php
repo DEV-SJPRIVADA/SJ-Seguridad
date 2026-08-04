@@ -742,7 +742,7 @@ class PurchaseRequestModuleTest extends TestCase
             ->get(route('purchase-requests.show', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
             ->assertOk()
             ->assertSee($purchaseRequest->folio())
-            ->assertSee('Volver a bandeja')
+            ->assertSee('Descargar PDF')
             ->assertSee('Registro de correos de esta solicitud');
     }
 
