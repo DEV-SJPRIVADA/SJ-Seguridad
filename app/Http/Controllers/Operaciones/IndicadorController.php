@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
+use App\Services\Indicadores\IndicatorCapturePdfPresenter;
 use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
@@ -41,6 +42,7 @@ class IndicadorController extends Controller
         private readonly ManagementReportPptxExporter $managementReportPptxExporter,
         private readonly ManagementReportDraftService $managementReportDraftService,
         private readonly IndicatorCaptureAccessService $captureAccessService,
+        private readonly IndicatorCapturePdfPresenter $capturePdfPresenter,
     ) {}
 
     public function dashboard(Request $request): View
@@ -714,7 +716,8 @@ class IndicadorController extends Controller
             ]
         );
 
-        $pdf = Pdf::loadView('areas.operaciones.exports.leader-pdf', $report)->setPaper('a4', 'portrait');
+        $pdfContext = $this->capturePdfPresenter->present($report);
+        $pdf = Pdf::loadView('areas.operaciones.exports.capture-pdf', $pdfContext)->setPaper('a4', 'landscape');
 
         return $pdf->download(sprintf(
             'captura-%s-%d-%d-%02d.pdf',
@@ -752,6 +755,13 @@ class IndicadorController extends Controller
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            $pdfContext = $this->capturePdfPresenter->present($report, consolidadoPortrait: true);
+            $pdf = Pdf::loadView('areas.operaciones.exports.capture-pdf', $pdfContext)->setPaper('a4', 'portrait');
+
+            return $pdf->download(sprintf('consolidado-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
+        }
+
         $pdf = Pdf::loadView('areas.operaciones.exports.consolidado-pdf', $report)->setPaper('a4', 'landscape');
 
         return $pdf->download(sprintf('consolidado-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
@@ -765,27 +775,27 @@ class IndicadorController extends Controller
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
         $user = User::query()->findOrFail((int) $request->integer('user_id', $request->user()->id));
+        $actor = $request->user();
 
-        $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
+        abort_unless($actor instanceof User, 403);
+
+        $context = $this->captureService->buildShowContext($indicator, $year, $month, $user, $actor);
+
         $capture = null;
-        if ($period) {
+        if (($context['captureId'] ?? null) !== null) {
             $capture = IndicatorCapture::query()
                 ->with('improvement')
-                ->where('indicator_id', $indicator->id)
-                ->where('user_id', $user->id)
-                ->where('period_id', $period->id)
-                ->first();
+                ->find($context['captureId']);
         }
 
-        return [
-            'indicator' => $indicator,
+        return array_merge($context, [
             'user' => $user,
             'operations_leader' => $user,
             'year' => $year,
             'month' => $month,
             'capture' => $capture,
-            'display' => $capture?->input_data ?? [],
-        ];
+            'display' => $context['form'] ?? [],
+        ]);
     }
 
     /**
@@ -795,13 +805,35 @@ class IndicadorController extends Controller
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
+        $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month);
+
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            $selectedUser = null;
+            if ($request->filled('user_id')) {
+                $selectedUser = User::query()->findOrFail((int) $request->integer('user_id'));
+            }
+
+            return array_merge(
+                $this->captureService->buildConsolidadoShowContext($indicator, $year, $month, $selectedUser),
+                [
+                    'year' => $year,
+                    'month' => $month,
+                    'monthly' => $monthly,
+                ],
+            );
+        }
 
         return [
             'indicator' => $indicator,
             'year' => $year,
             'month' => $month,
-            'monthly' => $this->consolidadoService->getMonthlyData($indicator, $year, $month),
+            'monthly' => $monthly,
         ];
+    }
+
+    private function usesConsolidadoCapturePdf(Indicator $indicator): bool
+    {
+        return in_array($indicator->code, config('indicators.consolidado_capture_view_codes', []), true);
     }
 
     private function normalizeMonth(int $month): int

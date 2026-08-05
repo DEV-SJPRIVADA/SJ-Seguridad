@@ -164,6 +164,16 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 
 Requiere permiso `operations.export`.
 
+**PDF alineado con la UI (DomPDF):**
+
+| Export | Contenido |
+|---|---|
+| Dashboard PDF | Score global, KPIs del mes, ranking de usuarios e indicadores criticos (equivalente a `panel__body`, sin filtros) |
+| Captura PDF (`leader.pdf`) | Campos del indicador, metricas (resultado/semaforo/cumple/mejora), analisis de mejora y ficha completa (`indicadores-sheet-panel`) con grafico PNG generado server-side |
+| Consolidado PDF (`consolidado.pdf`, FT-OP-01…09) | Misma ficha que la vista consolidado v2; **A4 vertical**, hoja 1 = ficha + GRAFICOS, hoja 2 = solo analisis de resultados |
+
+Servicios: `IndicatorCapturePdfPresenter` (contexto + filas de formulario), `IndicatorPdfChartRenderer` (GD PNG embebido en base64). Vistas: `resources/views/areas/operaciones/exports/capture-pdf.blade.php` y partials en `exports/partials/`. Excel mantiene el formato tabular anterior.
+
 ## Informe de gestion FO-GI-39 (PowerPoint)
 
 Plantilla sanitizada: `storage/app/templates/operaciones/FO-GI-39-v7.template.pptx`
