@@ -163,7 +163,6 @@ class SidebarVisibilityService
         if ($areaKey === 'compras') {
             return $user->can('view.board.compras.dashboard')
                 || $user->can('purchase.tab.processing')
-                || $user->can('purchase.tab.approval')
                 || $user->can('view.area.compras')
                 || $user->can('manage.area.compras');
         }

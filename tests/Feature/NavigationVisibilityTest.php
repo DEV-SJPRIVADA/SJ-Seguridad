@@ -52,6 +52,7 @@ class NavigationVisibilityTest extends TestCase
             ->pluck('label')
             ->all();
         $this->assertContains(config('access.boards.solicitudes_compra'), $comprasBoards);
+        $this->assertNotContains(config('access.boards.dashboard'), $comprasBoards);
     }
 
     public function test_administrador_sees_gestion_humana_requisitions_for_management_approval(): void

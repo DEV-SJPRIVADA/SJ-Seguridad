@@ -64,6 +64,24 @@ class ComprasDashboardTest extends TestCase
         $this->actingAs($user)->get(route('compras.dashboard'))->assertForbidden();
     }
 
+    public function test_director_with_approval_only_cannot_access_compras_dashboard(): void
+    {
+        $director = User::factory()->create(['must_change_password' => false]);
+        $director->assignRole('director');
+
+        $this->actingAs($director)->get(route('compras.dashboard'))->assertForbidden();
+    }
+
+    public function test_director_can_still_access_purchase_approval_queue(): void
+    {
+        $director = User::factory()->create(['must_change_password' => false]);
+        $director->assignRole('director');
+
+        $this->actingAs($director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras']))
+            ->assertOk();
+    }
+
     public function test_navigation_links_compras_dashboard_board(): void
     {
         $user = User::factory()->create([
