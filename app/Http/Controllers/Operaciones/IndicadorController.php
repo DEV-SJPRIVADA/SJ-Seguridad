@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
+use App\Services\Indicadores\IndicatorCaptureExcelExporter;
 use App\Services\Indicadores\IndicatorCapturePdfPresenter;
 use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
@@ -43,6 +44,7 @@ class IndicadorController extends Controller
         private readonly ManagementReportDraftService $managementReportDraftService,
         private readonly IndicatorCaptureAccessService $captureAccessService,
         private readonly IndicatorCapturePdfPresenter $capturePdfPresenter,
+        private readonly IndicatorCaptureExcelExporter $captureExcelExporter,
     ) {}
 
     public function dashboard(Request $request): View
@@ -696,6 +698,19 @@ class IndicadorController extends Controller
             ]
         );
 
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            return $this->captureExcelExporter->download(
+                $this->capturePdfPresenter->present($report),
+                sprintf(
+                    'captura-%s-%d-%d-%02d.xlsx',
+                    $indicator->code,
+                    $report['user']->id,
+                    $report['year'],
+                    $report['month']
+                ),
+            );
+        }
+
         return $this->reportExporter->leaderExcelResponse($report);
     }
 
@@ -739,6 +754,13 @@ class IndicadorController extends Controller
             reason: 'Exporte Excel consolidado',
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
+
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            return $this->captureExcelExporter->download(
+                $this->capturePdfPresenter->present($report),
+                sprintf('consolidado-%s-%d-%02d.xlsx', $indicator->code, $report['year'], $report['month']),
+            );
+        }
 
         return $this->reportExporter->consolidadoExcelResponse($report);
     }

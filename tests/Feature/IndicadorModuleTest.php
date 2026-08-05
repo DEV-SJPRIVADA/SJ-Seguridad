@@ -456,6 +456,64 @@ class IndicadorModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertGreaterThan(5000, strlen($response->streamedContent()));
+    }
+
+    public function test_operations_export_user_can_download_consolidado_excel_with_sheet_content(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.consolidado.excel', [
+            'indicator' => $indicator->code,
+            'year' => $year,
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertGreaterThan(5000, strlen($response->streamedContent()));
+    }
+
+    public function test_consolidado_excel_export_contains_ficha_sections_on_single_sheet(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.consolidado.excel', [
+            'indicator' => $indicator->code,
+            'year' => $year,
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+
+        $content = $response->streamedContent();
+        $temp = tempnam(sys_get_temp_dir(), 'consolidado-xlsx-');
+        file_put_contents($temp, $content);
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($temp));
+        $sheetXml = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+        $sharedStrings = (string) $zip->getFromName('xl/sharedStrings.xml');
+        $workbookXml = (string) $zip->getFromName('xl/workbook.xml');
+        $zip->close();
+
+        if (is_file($temp)) {
+            unlink($temp);
+        }
+
+        $this->assertStringContainsString('FICHA DEL INDICADOR DE GESTION', $sharedStrings);
+        $this->assertStringContainsString('GRAFICOS', $sharedStrings);
+        $this->assertStringContainsString('ANALISIS DE RESULTADOS', $sharedStrings);
+        $this->assertStringContainsString('<drawing', $sheetXml);
+        $this->assertSame(1, substr_count($workbookXml, '<sheet '));
     }
 
     public function test_operations_export_user_can_download_capture_pdf_with_sheet_content(): void

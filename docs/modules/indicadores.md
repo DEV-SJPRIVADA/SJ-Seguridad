@@ -173,8 +173,9 @@ Requiere permiso `operations.export`.
 | Dashboard PDF | Score global, KPIs del mes, ranking de usuarios e indicadores criticos (equivalente a `panel__body`, sin filtros) |
 | Captura PDF (`leader.pdf`) | Campos del indicador, metricas (resultado/semaforo/cumple/mejora), analisis de mejora y ficha completa (`indicadores-sheet-panel`) con grafico PNG generado server-side |
 | Consolidado PDF (`consolidado.pdf`, FT-OP-01…09) | Misma ficha que la vista consolidado v2; **A4 vertical**, hoja 1 = ficha + GRAFICOS, hoja 2 = solo analisis de resultados |
+| Consolidado Excel (`consolidado.excel`, FT-OP-01…09) | Mismo contenido que PDF consolidado en **una sola hoja** de calculo (tablas + graficos PNG embebidos + analisis). `leader.excel` con capturador en consolidado admin usa la misma ficha |
 
-Servicios: `IndicatorCapturePdfPresenter` (contexto + filas de formulario), `IndicatorPdfChartRenderer` (GD PNG embebido en base64). Vistas: `resources/views/areas/operaciones/exports/capture-pdf.blade.php` y partials en `exports/partials/`. Excel mantiene el formato tabular anterior.
+Servicios: `IndicatorCapturePdfPresenter` (contexto + filas de formulario), `IndicatorPdfChartRenderer` (GD PNG embebido en base64), `IndicatorCaptureExcelExporter` (ficha completa en una hoja con PhpSpreadsheet). Vistas PDF: `resources/views/areas/operaciones/exports/capture-pdf.blade.php` y partials en `exports/partials/`. Excel v2 reutiliza el mismo contexto que PDF; el export tabular legacy (`IndicatorReportExporter`) aplica solo a codigos fuera de `consolidado_capture_view_codes`.
 
 ## Informe de gestion FO-GI-39 (PowerPoint)
 

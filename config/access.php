@@ -54,6 +54,7 @@ return [
     ],
 
     'areas' => [
+        'gerencia' => 'Gerencia',
         'gestion_humana' => 'Gestion humana',
         'operaciones' => 'Operaciones',
         'programacion' => 'Programacion',
