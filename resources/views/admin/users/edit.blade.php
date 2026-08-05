@@ -7,7 +7,15 @@
                         <div>
                             <p class="eyebrow">Accesos de Usuarios</p>
                             <h2 class="page-title title-spaced">Editar usuario</h2>
-                            <p class="page-subtitle">{{ $user->name }} | {{ $user->email }}</p>
+                            <p class="page-subtitle">{{ $user->name }} · {{ $user->email }}</p>
+                            <p class="text-small text-muted">
+                                {{ $user->areaLabel() ?: 'Sin area base' }}
+                                @if ($user->sede)
+                                    · {{ $user->sede->utilization }} ({{ $user->sede->city }})
+                                @else
+                                    · Sin sede asignada
+                                @endif
+                            </p>
                         </div>
 
                         <div class="form-actions__group">
@@ -17,9 +25,12 @@
                             <span class="status-pill status-pill--muted">
                                 {{ $selectedRole ?: 'Sin rol' }}
                             </span>
-                            <a href="{{ route('admin.users.index') }}" class="btn btn--secondary">
+                            <a href="{{ route('admin.users.index', ['selected' => $user->id]) }}" class="btn btn--secondary">
                                 Volver al listado
                             </a>
+                            <button type="submit" form="user-permissions-form" class="btn btn--primary">
+                                Actualizar usuario
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -38,7 +49,7 @@
             @if (session('permission_warnings'))
                 <div class="notice notice--warning bottom-spaced">
                     <p class="text-small font-bold">Avisos de permisos</p>
-                    <ul class="text-small" style="margin: 0.5rem 0 0 1rem;">
+                    <ul class="text-small user-form__error-list">
                         @foreach (session('permission_warnings', []) as $warning)
                             <li>{{ $warning }}</li>
                         @endforeach

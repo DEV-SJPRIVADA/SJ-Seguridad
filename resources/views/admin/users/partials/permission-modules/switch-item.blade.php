@@ -4,6 +4,9 @@
     <div class="switch-item__info">
         <span class="switch-item__title">{{ $perm['label'] }}</span>
         <code class="switch-item__code" title="Identificador interno">{{ $perm['name'] }}</code>
+        @if (! empty($perm['help']) && $perm['help'] !== $perm['name'])
+            <span class="switch-item__desc">{{ $perm['help'] }}</span>
+        @endif
     </div>
     <label class="toggle-switch">
         <input

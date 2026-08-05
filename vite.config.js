@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/indicadores-capture.js',
                 'resources/js/management-report-preview-charts.js',
                 'resources/js/purchase-request-form.js',
+                'resources/js/admin/user-permissions-form.js',
             ],
             refresh: true,
         }),

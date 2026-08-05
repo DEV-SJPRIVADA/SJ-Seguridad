@@ -196,8 +196,9 @@ return [
 
     'admin_ui' => [
         'tabs' => [
-            'user' => 'Usuario',
-            'capabilities' => 'Que puede hacer',
+            'user' => 'Identidad',
+            'capabilities' => 'Acceso y permisos',
+            'security' => 'Seguridad',
         ],
         'sections' => [
             'assigned_area' => 'En su area asignada',
@@ -207,7 +208,7 @@ return [
         'help' => [
             'area_key' => 'Contexto operativo del usuario. Las acciones de esta seccion solo aplican en el area seleccionada aqui.',
             'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, tableros y funciones exclusivas por area.',
-            'assigned_area' => 'Operan unicamente en el area base definida en la pestana Usuario.',
+            'assigned_area' => 'Operan unicamente en el area base definida en la pestana Identidad.',
             'global' => 'Acciones que no dependen del area base. Combinelas con tableros visibles en la seccion inferior.',
             'other_areas' => 'Tableros visibles y modulos propios de cada area (GH, Compras, Operaciones, Comercial, Calidad).',
         ],

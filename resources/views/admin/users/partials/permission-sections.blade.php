@@ -48,7 +48,7 @@
 <div class="perm-accordion permission-sections">
     <x-permission-accordion
         id="assigned"
-        icon="📍"
+        icon="SA"
         :title="$assigned['label'] ?? 'En su area asignada'"
         :help="$assigned['help'] ?? ''"
         meta='Area base: <strong id="assigned-area-label">Sin area fija</strong>'
@@ -57,6 +57,7 @@
         :badge="$assignedSelected"
         :total="count($assignedPermissions)"
     >
+        @include('admin.users.partials.permission-bulk-actions')
         @include('admin.users.partials.permission-modules.switch-list', [
             'permissions' => $assignedPermissions,
             'selectedPermissions' => $selectedPermissions,
@@ -65,7 +66,7 @@
 
     <x-permission-accordion
         id="global"
-        icon="🌐"
+        icon="GL"
         :title="$global['label'] ?? 'Funcionalidades transversales'"
         :help="$global['help'] ?? ''"
         :open="false"
@@ -73,6 +74,7 @@
         :badge="$globalSelected"
         :total="count($globalPermissions)"
     >
+        @include('admin.users.partials.permission-bulk-actions')
         @include('admin.users.partials.permission-modules.subgroup-list', [
             'groups' => $global['groups'] ?? [],
             'selectedPermissions' => $selectedPermissions,
@@ -82,7 +84,7 @@
 
     <x-permission-accordion
         id="other"
-        icon="🗂️"
+        icon="OA"
         :title="$otherAreas['label'] ?? 'Activa visualizacion de otras areas'"
         :help="$otherAreas['help'] ?? ''"
         :open="false"
@@ -90,6 +92,7 @@
         :badge="$otherSelected"
         :total="count($otherPermissions)"
     >
+        @include('admin.users.partials.permission-bulk-actions')
         @include('admin.users.partials.permission-modules.subgroup-list', [
             'groups' => $otherGroups,
             'selectedPermissions' => $selectedPermissions,
