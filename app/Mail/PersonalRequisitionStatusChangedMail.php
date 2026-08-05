@@ -6,6 +6,7 @@ use App\Models\PersonalRequisition;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -20,7 +21,7 @@ class PersonalRequisitionStatusChangedMail extends Mailable implements ShouldQue
 
     public string $toStatus;
 
-    public function __construct(PersonalRequisition $requisition, string $fromStatus, string $toStatus)
+    public function __construct(PersonalRequisition $requisition, string $fromStatus, string $toStatus, public ?string $statusChangeComment = null)
     {
         $this->requisition = $requisition->load(['position', 'client', 'requester']);
         $this->fromStatus = $fromStatus;
@@ -44,12 +45,13 @@ class PersonalRequisitionStatusChangedMail extends Mailable implements ShouldQue
             with: [
                 'fromStatusLabel' => PersonalRequisition::statuses()[$this->fromStatus] ?? $this->fromStatus,
                 'toStatusLabel' => PersonalRequisition::statuses()[$this->toStatus] ?? $this->toStatus,
+                'statusChangeComment' => $this->statusChangeComment,
             ],
         );
     }
 
     /**
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

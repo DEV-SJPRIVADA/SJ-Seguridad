@@ -63,6 +63,9 @@
                                                 </span>
                                             </div>
                                             <p class="req-form-history__author">{{ $log->author?->name ?? 'Sistema' }}</p>
+                                            @if (filled($log->comment))
+                                                <p class="req-form-history__comment">{{ $log->comment }}</p>
+                                            @endif
                                         </li>
                                     @endforeach
                                 </ul>

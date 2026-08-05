@@ -212,13 +212,19 @@
                                         <td>{{ $requisition->city?->name }}</td>
                                         <td>{{ $requisition->quantity }}</td>
                                         <td>
-                                            <span class="status-pill status-pill--req-{{ $requisition->status }}">
+                                            @php
+                                                $rejectionComment = $requisition->managementRejectionComment();
+                                            @endphp
+                                            <span
+                                                class="status-pill status-pill--req-{{ $requisition->status }}"
+                                                @if ($rejectionComment) title="Observacion de gerencia: {{ $rejectionComment }}" @endif
+                                            >
                                                 {{ $statusLabels[$requisition->status] ?? $requisition->status }}
                                             </span>
                                         </td>
                                         <td><x-date-table :value="$requisition->status_changed_at" datetime empty="Sin cambios" /></td>
                                         <td class="table-actions">
-                                            <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary btn--sm">
+                                            <a href="{{ route('requisitions.tracking.show', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary btn--sm">
                                                 Ver detalle
                                             </a>
                                         </td>

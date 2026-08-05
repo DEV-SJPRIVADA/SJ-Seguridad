@@ -203,6 +203,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'active', 'password.changed', 'can:view.dashboard'])->name('dashboard');
 
 require __DIR__.'/modules/purchase-requests-email.php';
+require __DIR__.'/modules/requisitions-email.php';
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

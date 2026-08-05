@@ -96,21 +96,25 @@ Post-despliegue: GH debe reactivar encargados en toggles; trazabilidad previa so
 - Disparo: mismo `store` si motivo normalizado es **cargo nuevo** (`RequisitionRequestReasonCatalog`)
 - Estado inicial: `pendiente_autorizacion_gerencia`
 - Clase: `App\Mail\PersonalRequisitionManagementApprovalMail` (sincrono)
-- Destinatarios: `emailsForType('management_approval_cargo_nuevo')`
-- CTA: `requisitions.management-approval.show` (login → detalle)
+- Destinatarios: `NotificationConfigService::recipientEmails('requisitions', 'management_approval_cargo_nuevo')`
+- CTA correo: enlace firmado guest `requisitions.email-approval.show` (boton **Autorizar por correo**); secundario a plataforma con login
+- Config: `config/requisitions.php` (`email_approval_link_days`, opcional `email_approval_log_user_id` para `status_logs.changed_by` en aprobacion por correo)
 
 ### Bandeja gerencia (enfoque A)
-- Sin tabla auxiliar: listado = `personal_requisitions` con `status = pendiente_autorizacion_gerencia`
-- Rutas: `RequisitionManagementApprovalController` — index, show, decide
-- Permiso: `requisitions.approve.management`
+- Sin tabla auxiliar: listado filtrable por vista (`estado`: `pendiente` default, `aprobada`, `rechazada`, `todos`)
+- Aprobadas/rechazadas se identifican por transicion desde `pendiente_autorizacion_gerencia` en `personal_requisition_status_logs`
+- Rutas: `RequisitionManagementApprovalController` — index, show, decide; guest `RequisitionEmailApprovalController` — show, update (signed)
+- Servicio compartido: `RequisitionManagementApprovalService::resolve()`
+- Permiso plataforma: `requisitions.approve.management`
 - Aprobar → `solicitada`; rechazar → `cancelada` + correo al solicitante si aplica
+- Comentario de rechazo/autorizacion se guarda en `personal_requisition_status_logs.comment` y se muestra en: detalle de Autorizacion gerencia (ya gestionada), **Mis requisiciones → Ver detalle**, historial de estados en Gestion, tooltip en pill **Cancelada** (seguimiento) y correo al solicitante
 
 ### Al cambiar de estado (solicitante)
-- Disparo: `RequisitionController::update` **solo si** el estado cambio (`old !== new`)
+- Disparo: `RequisitionController::update` **solo si** el estado cambio (`old !== new`); rechazo gerencia vía `RequisitionManagementApprovalService::resolve`
 - Clase: `App\Mail\PersonalRequisitionStatusChangedMail`
 - Vista: `resources/views/emails/requisitions/status-changed.blade.php`
 - Destinatario: email del usuario `requested_by` (si no hay email, no se envia)
-- Contenido: codigo, cargo, cliente, estado anterior → nuevo, observacion GH; CTA a Seguimiento del area solicitante con `q`
+- Contenido: codigo, cargo, cliente, estado anterior → nuevo, observacion del cambio (gerencia o GH); CTA a Seguimiento del area solicitante con `q`
 - No notifica al catalogo de Parametros ni al fallback GH
 
 ### Trazabilidad en edicion (gestion)
@@ -188,6 +192,7 @@ Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitio
 - `POST /requisitions/{module}/solicitar`
 - `GET /requisitions/{module}/clientes/buscar` — JSON de clientes comerciales para el formulario (param `q`, min. 2 caracteres)
 - `GET /requisitions/{module}/seguimiento`
+- `GET /requisitions/{module}/seguimiento/{requisition}` — detalle lectura (mismo layout que Autorizacion gerencia; no formato impresion)
 - `GET /requisitions/{module}/gestion`
 - `GET /requisitions/{module}/gestion/{requisition}/editar`
 - `GET /requisitions/{module}/gestion/{requisition}/imprimir`

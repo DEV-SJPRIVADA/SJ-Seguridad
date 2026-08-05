@@ -3,6 +3,8 @@
 namespace App\Mail;
 
 use App\Models\PersonalRequisition;
+use App\Services\Requisitions\RequisitionEmailApprovalUrlBuilder;
+use App\Support\ApplicationUrls;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -33,8 +35,17 @@ class PersonalRequisitionManagementApprovalMail extends Mailable
 
     public function content(): Content
     {
+        $urlBuilder = app(RequisitionEmailApprovalUrlBuilder::class);
+
         return new Content(
             markdown: 'emails.requisitions.management-approval',
+            with: [
+                'emailApprovalUrl' => $urlBuilder->showUrl($this->requisition),
+                'platformUrl' => ApplicationUrls::route('requisitions.management-approval.show', [
+                    'module' => 'gestion_humana',
+                    'requisition' => $this->requisition->id,
+                ]),
+            ],
         );
     }
 

@@ -26,6 +26,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -480,7 +481,10 @@ class RequisitionModuleTest extends TestCase
             ]), [
                 'action' => 'approve',
             ])
-            ->assertRedirect(route('requisitions.management-approval.index', ['module' => 'gestion_humana']));
+            ->assertRedirect(route('requisitions.management-approval.index', [
+                'module' => 'gestion_humana',
+                'estado' => 'aprobada',
+            ]));
 
         $this->assertDatabaseHas('personal_requisitions', [
             'id' => $requisition->id,
@@ -488,9 +492,81 @@ class RequisitionModuleTest extends TestCase
         ]);
 
         $this->actingAs($approver)
+            ->get(route('requisitions.management-approval.index', [
+                'module' => 'gestion_humana',
+                'estado' => 'aprobada',
+            ]))
+            ->assertOk()
+            ->assertSee($requisition->code);
+
+        $this->actingAs($approver)
             ->get(route('requisitions.management-approval.index', ['module' => 'gestion_humana']))
             ->assertOk()
             ->assertSee('No hay requisiciones pendientes de autorizacion');
+    }
+
+    public function test_management_approval_email_flow(): void
+    {
+        PermissionCatalog::sync();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0810', 'operaciones', 'Cargo email'),
+            ['status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA]
+        ));
+
+        $this->get($this->emailManagementApprovalShowUrl($requisition))
+            ->assertOk()
+            ->assertSee('Autorizar solicitud');
+
+        $this->post($this->emailManagementApprovalUpdateUrl($requisition), [
+            'action' => 'approve',
+        ])
+            ->assertOk()
+            ->assertSee('Decision registrada');
+
+        $this->assertDatabaseHas('personal_requisitions', [
+            'id' => $requisition->id,
+            'status' => PersonalRequisition::STATUS_SOLICITADA,
+        ]);
+    }
+
+    public function test_management_approval_email_rejects_with_comment(): void
+    {
+        PermissionCatalog::sync();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'email' => 'solicitante-rechazo@example.com',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0811', 'operaciones', 'Cargo rechazo'),
+            ['status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA]
+        ));
+
+        Mail::fake();
+
+        $this->post($this->emailManagementApprovalUpdateUrl($requisition), [
+            'action' => 'reject',
+            'comment' => 'No hay presupuesto.',
+        ])
+            ->assertOk()
+            ->assertSee('rechazada');
+
+        $this->assertDatabaseHas('personal_requisitions', [
+            'id' => $requisition->id,
+            'status' => PersonalRequisition::STATUS_CANCELADA,
+        ]);
+
+        Mail::assertQueued(PersonalRequisitionStatusChangedMail::class);
     }
 
     public function test_gestion_cannot_edit_pending_management_approval_requisition(): void
@@ -680,6 +756,97 @@ class RequisitionModuleTest extends TestCase
         $response->assertSee('REQ-2026-0101');
         $response->assertSee('REQ-2026-0102');
         $response->assertDontSee('REQ-2026-0103');
+    }
+
+    public function test_requester_with_seguimiento_can_view_tracking_detail(): void
+    {
+        PermissionCatalog::sync();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+        $requester->givePermissionTo('requisitions.tab.seguimiento');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0110', 'operaciones', 'Perfil detalle'));
+
+        $response = $this->actingAs($requester)->get(route('requisitions.tracking.show', [
+            'module' => 'operaciones',
+            'requisition' => $requisition,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Detalle de requisicion');
+        $response->assertSee('REQ-2026-0110');
+        $response->assertSee('Perfil detalle');
+        $response->assertDontSee('<title>Requisición de Personal', false);
+    }
+
+    public function test_management_rejection_comment_visible_in_tracking_and_approval_views(): void
+    {
+        PermissionCatalog::sync();
+
+        $approver = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $approver->assignRole('administrador');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+        $requester->givePermissionTo('requisitions.tab.seguimiento');
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0812', 'operaciones', 'Cargo rechazado'),
+            ['status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA]
+        ));
+
+        $this->actingAs($approver)->post(route('requisitions.management-approval.decide', [
+            'module' => 'gestion_humana',
+            'requisition' => $requisition,
+        ]), [
+            'action' => 'reject',
+            'comment' => 'No hay presupuesto para este cargo.',
+        ])->assertRedirect();
+
+        $this->actingAs($requester)
+            ->get(route('requisitions.tracking.show', ['module' => 'operaciones', 'requisition' => $requisition->fresh()]))
+            ->assertOk()
+            ->assertSee('Observacion de gerencia:')
+            ->assertSee('No hay presupuesto para este cargo.');
+
+        $this->actingAs($approver)
+            ->get(route('requisitions.management-approval.show', ['module' => 'gestion_humana', 'requisition' => $requisition->fresh()]))
+            ->assertOk()
+            ->assertSee('No hay presupuesto para este cargo.');
+
+        $this->actingAs($requester)
+            ->get(route('requisitions.tracking', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSee('title="Observacion de gerencia: No hay presupuesto para este cargo."', false);
+    }
+
+    public function test_requester_with_seguimiento_cannot_use_gestion_print_route(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+        $requester->givePermissionTo('requisitions.tab.seguimiento');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0111', 'operaciones', 'Perfil gestion print'));
+
+        $response = $this->actingAs($requester)->get(route('requisitions.print', [
+            'module' => 'operaciones',
+            'requisition' => $requisition,
+        ]));
+
+        $response->assertForbidden();
     }
 
     public function test_requester_can_filter_tracking_to_only_own_requests(): void
@@ -1834,5 +2001,23 @@ class RequisitionModuleTest extends TestCase
             'status' => PersonalRequisition::STATUS_SOLICITADA,
             'status_changed_at' => now(),
         ];
+    }
+
+    private function emailManagementApprovalShowUrl(PersonalRequisition $requisition): string
+    {
+        return URL::temporarySignedRoute(
+            'requisitions.email-approval.show',
+            now()->addHour(),
+            ['requisition' => $requisition->id],
+        );
+    }
+
+    private function emailManagementApprovalUpdateUrl(PersonalRequisition $requisition): string
+    {
+        return URL::temporarySignedRoute(
+            'requisitions.email-approval.update',
+            now()->addHour(),
+            ['requisition' => $requisition->id],
+        );
     }
 }

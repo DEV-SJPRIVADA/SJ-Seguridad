@@ -9,7 +9,9 @@ El estado de su solicitud de personal en **{{ config('app.name') }}** ha cambiad
 **Cliente:** {{ $requisition->client?->name }}  
 **Estado anterior:** {{ $fromStatusLabel }}  
 **Estado nuevo:** {{ $toStatusLabel }}  
-@if ($requisition->human_resources_observation)
+@if (filled($statusChangeComment))
+**Observacion:** {{ $statusChangeComment }}  
+@elseif ($requisition->human_resources_observation)
 **Observación GH:** {{ $requisition->human_resources_observation }}  
 @endif
 </x-mail::panel>
