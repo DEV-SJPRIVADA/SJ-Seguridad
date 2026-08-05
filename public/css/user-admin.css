@@ -867,3 +867,9 @@ input:checked + .toggle-slider:before {
         flex-basis: 100%;
     }
 }
+
+.form-input--invalid,
+.form-select.form-input--invalid {
+    border-color: var(--color-danger, #dc2626);
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.15);
+}

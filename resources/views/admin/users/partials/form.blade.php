@@ -37,6 +37,17 @@
         </aside>
 
         <main class="split-view__content">
+            @if ($errors->any())
+                <div id="validation-error-summary" class="notice notice--danger bottom-spaced" role="alert">
+                    <p class="text-small font-bold">Revisa los siguientes campos:</p>
+                    <ul class="text-small" style="margin: 0.5rem 0 0 1rem;">
+                        @foreach ($errors->all() as $message)
+                            <li>{{ $message }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div id="section-user" class="split-section">
                 <div class="section-header">
                     <h3 class="section-header__title">Datos Generales</h3>
@@ -46,26 +57,29 @@
                 <div class="form-grid form-grid--two">
                     <div class="form-field">
                         <label class="form-label">Nombre completo</label>
-                        <input name="name" type="text" class="form-input" value="{{ old('name', $user?->name) }}" required>
+                        <input name="name" type="text" class="form-input @error('name') form-input--invalid @enderror" value="{{ old('name', $user?->name) }}" required>
+                        <x-input-error :messages="$errors->get('name')" />
                     </div>
                     <div class="form-field">
                         <label class="form-label">Correo electronico</label>
-                        <input name="email" type="email" class="form-input" value="{{ old('email', $user?->email) }}" required>
+                        <input name="email" type="email" class="form-input @error('email') form-input--invalid @enderror" value="{{ old('email', $user?->email) }}" required>
+                        <x-input-error :messages="$errors->get('email')" />
                     </div>
                     <div class="form-field">
                         <label class="form-label">Area base</label>
-                        <select name="area_key" id="user-area-key" class="form-select">
+                        <select name="area_key" id="user-area-key" class="form-select @error('area_key') form-input--invalid @enderror">
                             <option value="">Sin area fija</option>
                             @foreach ($areas as $key => $label)
                                 <option value="{{ $key }}" @selected(old('area_key', $user?->area_key) === $key)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <x-input-error :messages="$errors->get('area_key')" />
                         <p class="text-small text-muted">{{ $help['area_key'] ?? '' }}</p>
                     </div>
                     <div class="form-field">
                         <label class="form-label">Sede fisica</label>
                         <div style="display: flex; gap: 0.5rem; align-items: stretch;">
-                            <select name="sede_id" id="user-sede-id" class="form-select" style="flex: 1;">
+                            <select name="sede_id" id="user-sede-id" class="form-select @error('sede_id') form-input--invalid @enderror" style="flex: 1;">
                                 <option value="">Sin sede asignada</option>
                                 @foreach ($sites ?? [] as $site)
                                     <option value="{{ $site->id }}" @selected((string) old('sede_id', $user?->sede_id) === (string) $site->id)>
@@ -77,19 +91,22 @@
                                 Gestionar
                             </button>
                         </div>
+                        <x-input-error :messages="$errors->get('sede_id')" />
                         <p class="text-small text-muted">Requerida para solicitar insumos.</p>
                     </div>
                     <div class="form-field">
                         <label class="form-label">Perfil / Rol Principal</label>
-                        <select name="role" class="form-select" required>
+                        <select name="role" class="form-select @error('role') form-input--invalid @enderror" required>
                             @foreach ($roles as $role)
                                 <option value="{{ $role->name }}" @selected($selectedRole === $role->name)>{{ ucfirst($role->name) }}</option>
                             @endforeach
                         </select>
+                        <x-input-error :messages="$errors->get('role')" />
                     </div>
                     <div class="form-field">
                         <label class="form-label">{{ $user ? 'Nueva Contrasena (opcional)' : 'Contrasena Temporal' }}</label>
-                        <input name="password" type="password" class="form-input" @required(!$user)>
+                        <input name="password" type="password" class="form-input @error('password') form-input--invalid @enderror" @required(!$user) autocomplete="new-password">
+                        <x-input-error :messages="$errors->get('password')" />
                     </div>
                 </div>
             </div>
@@ -110,6 +127,11 @@
                     'selectedPermissions' => $selectedPermissions,
                     'help' => $help,
                 ])
+
+                <x-input-error :messages="$errors->get('permissions')" />
+                @if ($errors->has('permissions.*'))
+                    <x-input-error :messages="collect($errors->getMessages())->filter(fn ($messages, $key) => str_starts_with($key, 'permissions.'))->flatten()->all()" />
+                @endif
             </div>
         </main>
     </div>
@@ -247,5 +269,22 @@
         });
 
         refreshPermissionUi();
+
+        @if ($errors->any())
+            @php
+                $hasUserFieldError = $errors->hasAny(['name', 'email', 'area_key', 'sede_id', 'role', 'password']);
+                $hasPermissionError = $errors->has('permissions') || collect($errors->keys())->contains(
+                    fn (string $key): bool => str_starts_with($key, 'permissions.')
+                );
+            @endphp
+
+            @if ($hasPermissionError && ! $hasUserFieldError)
+                document.querySelector('[data-target="section-capabilities"]')?.click();
+            @else
+                document.querySelector('[data-target="section-user"]')?.click();
+            @endif
+
+            document.getElementById('validation-error-summary')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        @endif
     });
 </script>

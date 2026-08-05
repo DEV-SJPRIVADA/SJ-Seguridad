@@ -13,6 +13,7 @@ use App\Services\Admin\UserPermissionValidator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -79,7 +80,7 @@ class UserController extends Controller
     {
         return view('admin.users.create', [
             'areas' => config('access.areas', []),
-            'sites' => SupplySite::query()->active()->ordered()->get(),
+            'sites' => $this->sitesForForm(),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'roles' => $this->roles(),
             'permissionForm' => $this->permissionFormBuilder->build(),
@@ -119,10 +120,10 @@ class UserController extends Controller
     {
         return view('admin.users.edit', [
             'areas' => config('access.areas', []),
-            'sites' => SupplySite::query()->active()->ordered()->get(),
+            'sites' => $this->sitesForForm($user),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'permissionForm' => $this->permissionFormBuilder->build(),
-            'roles' => $this->roles(),
+            'roles' => $this->roles($user),
             'selectedPermissions' => $user->permissions->pluck('name')->all(),
             'selectedRole' => old('role', $user->roles->pluck('name')->first()),
             'user' => $user->load(['roles', 'permissions']),
@@ -161,14 +162,37 @@ class UserController extends Controller
             ->with('permission_warnings', $warnings);
     }
 
-    private function roles()
+    private function roles(?User $forUser = null)
     {
         $orderedNames = ['super-admin', 'administrador', 'director', 'usuario'];
+        $currentRole = $forUser?->roles->pluck('name')->first();
+
+        if (is_string($currentRole) && $currentRole !== '' && ! in_array($currentRole, $orderedNames, true)) {
+            $orderedNames[] = $currentRole;
+        }
 
         return Role::query()
             ->whereIn('name', $orderedNames)
             ->get()
             ->sortBy(fn (Role $role) => array_search($role->name, $orderedNames, true))
             ->values();
+    }
+
+    /**
+     * @return Collection<int, SupplySite>
+     */
+    private function sitesForForm(?User $user = null)
+    {
+        $sites = SupplySite::query()->active()->ordered()->get();
+
+        if ($user?->sede_id && ! $sites->contains('id', $user->sede_id)) {
+            $currentSite = SupplySite::query()->find($user->sede_id);
+
+            if ($currentSite) {
+                $sites->prepend($currentSite);
+            }
+        }
+
+        return $sites;
     }
 }
