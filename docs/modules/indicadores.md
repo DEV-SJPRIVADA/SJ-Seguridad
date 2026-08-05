@@ -164,6 +164,8 @@ Servicio `App\Services\Indicadores\IndicatorReportExporter` (PhpSpreadsheet, sin
 
 Requiere permiso `operations.export`.
 
+**Botones en UI:** Excel/PDF visibles en **Consolidado admin** (`/admin/consolidado/{indicator}`), no en la pantalla de **Captura** (`/captura/{indicator}`). Las rutas `leader.*` siguen disponibles por API/direct URL (p. ej. consolidado con capturador seleccionado).
+
 **PDF alineado con la UI (DomPDF):**
 
 | Export | Contenido |
