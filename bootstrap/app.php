@@ -10,9 +10,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -47,5 +49,19 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (HttpException $exception, Request $request) {
+            if ($exception->getStatusCode() !== 419) {
+                return null;
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Tu sesion expiro. Inicia sesion nuevamente.',
+                ], 419);
+            }
+
+            return redirect()
+                ->guest(route('login'))
+                ->with('status', 'Tu sesion expiro. Por seguridad, inicia sesion nuevamente.');
+        });
     })->create();
