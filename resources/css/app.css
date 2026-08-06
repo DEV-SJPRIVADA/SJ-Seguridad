@@ -1311,6 +1311,63 @@ a {
     color: var(--text-muted, #64748b);
 }
 
+.archivo-consult-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.archivo-consult-history-filters {
+    margin-bottom: 0.75rem;
+}
+
+.archivo-consult-history-filters__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.75fr) minmax(0, 0.75fr) auto;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+@media (max-width: 900px) {
+    .archivo-consult-history-filters__row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.archivo-consult-history-filters__field {
+    min-width: 0;
+}
+
+.archivo-consult-history-filters__field--sm {
+    max-width: 12rem;
+}
+
+.archivo-consult-history-filters__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.archivo-consult-history__received-cell {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.archivo-consult-history__received-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.archivo-consult-history__observation-input {
+    min-width: 10rem;
+}
+
+.archivo-consult-modal__delivered {
+    margin-top: 1rem;
+}
+
 .ficha-empleados-row--clickable {
     cursor: pointer;
 }

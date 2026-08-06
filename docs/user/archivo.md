@@ -22,18 +22,25 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 
 ### Consultar ubicaciones
 
-1. Entre al area **Gestion Humana** → **Archivo**.
+1. Entre al area **Gestion Humana** → **Archivo** → pestaña **Historias Laborales**.
 2. Use la busqueda por cedula, nombre o codigo de requisicion.
 3. Revise columnas **Estantes** y **Cajas**.
 
 ### Consultar varias cedulas a la vez
 
-1. En **Archivo**, pulse **Consulta multiple**.
+1. En **Historias Laborales**, pulse **Consulta multiple**.
 2. Pegue o escriba las cedulas (una por linea o separadas por coma).
 3. Marque uno o mas motivos de consulta (Juridico, Gerencia, etc.).
-4. Pulse **Consultar**.
-5. El sistema registra la consulta, muestra el historial reciente y filtra el listado a esas cedulas.
-6. Use **Quitar filtro** para volver al listado completo.
+4. Indique **Entregada a** (persona o area que recibe).
+5. Pulse **Consultar**.
+6. El sistema registra la consulta, filtra el listado a esas cedulas y crea filas en **Historial de consultas**.
+
+### Seguimiento en Historial de consultas
+
+1. Abra la pestaña **Historial de consultas**.
+2. Revise columnas Fecha, Concepto, Cedula, Nombre, Estante, Caja, Entregada a, Semana y Mes.
+3. Marque **Recibida** cuando se entregue la historia laboral.
+4. Edite **Observacion** si aplica y pulse **Actualizar** en la fila.
 
 ### Registrar o corregir ubicacion
 
@@ -67,3 +74,4 @@ Use ese Excel para trabajo offline del area de archivo. Complete estantes/cajas 
 | 1.1 | 2026-08-06 | Import archivo | Carga masiva de estantes/cajas separada del masivo de nomina |
 | 1.2 | 2026-08-06 | Edicion inline | Tabla editable; eliminada vista `/editar` |
 | 1.3 | 2026-08-06 | Consulta multiple | Modal con cedulas y motivos; historial y filtro por consulta |
+| 1.4 | 2026-08-06 | Pestañas Archivo | Historias Laborales + Historial de consultas; campo Entregada a; recibida/observacion |

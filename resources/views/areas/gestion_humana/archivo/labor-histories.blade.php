@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
+        @include('areas.gestion_humana.archivo.partials.subnav', ['subTabs' => $subTabs])
         <div class="app-container">
             <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Archivo</h2>
+                <h2 class="panel-title panel-title--page">Historias Laborales</h2>
                 <p class="panel-text">Gestion humana — ubicacion documental de empleados (estantes y cajas)</p>
             </div>
         </div>
@@ -120,6 +121,11 @@
                                 <p class="archivo-consult-banner__types">
                                     <strong>Motivos:</strong> {{ implode(' · ', $activeConsultation->typeLabels()) }}
                                 </p>
+                                @if ($activeConsultation->delivered_to)
+                                    <p class="archivo-consult-banner__docs">
+                                        <strong>Entregada a:</strong> {{ $activeConsultation->delivered_to }}
+                                    </p>
+                                @endif
                                 <p class="archivo-consult-banner__docs">
                                     <strong>Cedulas:</strong> {{ implode(', ', $activeConsultation->document_numbers ?? []) }}
                                 </p>
@@ -129,32 +135,15 @@
                                     </p>
                                 @endif
                             </div>
-                            <a href="{{ route('gestion-humana.archivo.index', array_filter(['q' => $filters['q'] ?? null])) }}" class="btn btn--secondary btn--sm">
-                                Quitar filtro
-                            </a>
-                        </div>
-                    @endif
-
-                    @if (($recentConsultations ?? collect())->isNotEmpty())
-                        <details class="archivo-consult-history" @if ($activeConsultation ?? null) open @endif>
-                            <summary class="archivo-consult-history__summary">Historial de consultas recientes</summary>
-                            <div class="archivo-consult-history__list">
-                                @foreach ($recentConsultations as $consultation)
-                                    <a
-                                        href="{{ route('gestion-humana.archivo.index', ['consultation' => $consultation->id]) }}"
-                                        class="archivo-consult-history__item {{ ($activeConsultation?->id ?? null) === $consultation->id ? 'archivo-consult-history__item--active' : '' }}"
-                                    >
-                                        <span class="archivo-consult-history__item-title">
-                                            #{{ $consultation->id }} · {{ $consultation->created_at?->format('d/m/Y H:i') }}
-                                        </span>
-                                        <span class="archivo-consult-history__item-meta">
-                                            {{ $consultation->documents_matched }}/{{ $consultation->documents_requested }} cedula(s)
-                                            · {{ implode(', ', array_slice($consultation->typeLabels(), 0, 2)) }}@if (count($consultation->typeLabels()) > 2)…@endif
-                                        </span>
-                                    </a>
-                                @endforeach
+                            <div class="archivo-consult-banner__actions">
+                                <a href="{{ route('gestion-humana.archivo.consultation-history.index') }}" class="btn btn--secondary btn--sm">
+                                    Ver historial
+                                </a>
+                                <a href="{{ route('gestion-humana.archivo.labor-histories.index', array_filter(['q' => $filters['q'] ?? null])) }}" class="btn btn--secondary btn--sm">
+                                    Quitar filtro
+                                </a>
                             </div>
-                        </details>
+                        </div>
                     @endif
 
                     <div class="data-table-wrap">

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\EmployeeArchiveConsultation;
+use App\Models\EmployeeArchiveConsultationItem;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\User;
@@ -46,13 +47,23 @@ class EmployeeArchiveTest extends TestCase
         $this->assertTrue($service->canManage($user));
     }
 
-    public function test_archivo_index_requires_permission(): void
+    public function test_archivo_labor_histories_requires_permission(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get(route('gestion-humana.archivo.index'))
+            ->get(route('gestion-humana.archivo.labor-histories.index'))
             ->assertForbidden();
+    }
+
+    public function test_archivo_index_redirects_to_labor_histories(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.index'))
+            ->assertRedirect(route('gestion-humana.archivo.labor-histories.index'));
     }
 
     public function test_archivo_manager_can_update_shelf_and_box(): void
@@ -81,7 +92,7 @@ class EmployeeArchiveTest extends TestCase
                 'archive_shelf' => 'A-01',
                 'archive_box' => 'Caja 15',
             ])
-            ->assertRedirect(route('gestion-humana.archivo.index'));
+            ->assertRedirect(route('gestion-humana.archivo.labor-histories.index'));
 
         $this->assertDatabaseHas('employee_ficha_profiles', [
             'personal_requisition_ficha_entry_id' => $entry->id,
@@ -177,7 +188,7 @@ class EmployeeArchiveTest extends TestCase
             'import_file' => new UploadedFile($path, 'archivo.xlsx', null, null, true),
         ]);
 
-        $response->assertRedirect(route('gestion-humana.archivo.index'));
+        $response->assertRedirect(route('gestion-humana.archivo.labor-histories.index'));
         $response->assertSessionHas('import_result', function (array $result): bool {
             return ($result['updated'] ?? 0) === 1;
         });
@@ -236,9 +247,10 @@ class EmployeeArchiveTest extends TestCase
         $response = $this->actingAs($viewer)->post(route('gestion-humana.archivo.consult'), [
             'documents' => "1010101010\n9999999999",
             'consultation_types' => ['juridico', 'gerencia'],
+            'delivered_to' => 'Area Juridica',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('gestion-humana.archivo.labor-histories.index', ['consultation' => EmployeeArchiveConsultation::query()->value('id')]));
 
         $consultationId = EmployeeArchiveConsultation::query()->value('id');
 
@@ -248,13 +260,70 @@ class EmployeeArchiveTest extends TestCase
             'user_id' => $viewer->id,
             'documents_requested' => 2,
             'documents_matched' => 1,
+            'delivered_to' => 'Area Juridica',
+        ]);
+
+        $this->assertDatabaseCount('employee_archive_consultation_items', 2);
+        $this->assertDatabaseHas('employee_archive_consultation_items', [
+            'employee_archive_consultation_id' => $consultationId,
+            'document_number' => '1010101010',
+            'full_name' => 'CONSULTA MATCH',
+            'delivered_to' => 'Area Juridica',
+            'received' => false,
         ]);
 
         $this->actingAs($viewer)
-            ->get(route('gestion-humana.archivo.index', ['consultation' => $consultationId]))
+            ->get(route('gestion-humana.archivo.labor-histories.index', ['consultation' => $consultationId]))
             ->assertOk()
             ->assertSee('CONSULTA MATCH')
             ->assertDontSee('CONSULTA OTHER');
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.index'))
+            ->assertOk()
+            ->assertSee('Area Juridica')
+            ->assertSee('CONSULTA MATCH');
+    }
+
+    public function test_archivo_consultation_history_item_can_be_updated(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $consultation = EmployeeArchiveConsultation::query()->create([
+            'user_id' => $viewer->id,
+            'document_numbers' => ['1010101010'],
+            'consultation_types' => ['juridico'],
+            'documents_requested' => 1,
+            'documents_matched' => 1,
+            'delivered_to' => 'Gerencia',
+        ]);
+
+        $item = EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '1010101010',
+            'full_name' => 'CONSULTA MATCH',
+            'concept' => 'Juridico',
+            'delivered_to' => 'Gerencia',
+            'received' => false,
+            'observation' => null,
+            'week_of_month' => 1,
+            'month_number' => 8,
+            'month_label' => 'Agosto',
+        ]);
+
+        $this->actingAs($viewer)
+            ->patch(route('gestion-humana.archivo.consultation-history.update', $item), [
+                'received' => '1',
+                'observation' => 'Entregado en sobre manila',
+            ])
+            ->assertRedirect(route('gestion-humana.archivo.consultation-history.index'));
+
+        $this->assertDatabaseHas('employee_archive_consultation_items', [
+            'id' => $item->id,
+            'received' => true,
+            'observation' => 'Entregado en sobre manila',
+        ]);
     }
 
     public function test_archivo_consultation_requires_types(): void

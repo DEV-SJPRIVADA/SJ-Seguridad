@@ -44,19 +44,49 @@ Servicio: `App\Services\Access\ArchivoAccessService`.
 
 Export archivo en Ficha empleados: usuarios con `archivo.view` **o** permisos de ver Ficha empleados (`ficha_empleados.view` / `manage`).
 
+## Pestañas Archivo
+
+| Pestaña | Ruta | Descripcion |
+| --- | --- | --- |
+| Historias Laborales | `/gestion-humana/archivo/historias-laborales` | Listado de empleados en ficha, consulta multiple, import/export |
+| Historial de consultas | `/gestion-humana/archivo/historial-consultas` | Registro detallado por cedula de cada consulta |
+
+`/gestion-humana/archivo` redirige a **Historias Laborales**.
+
+Subnav: `resources/views/areas/gestion_humana/archivo/partials/subnav.blade.php` (trait `HasArchivoTabs`).
+
 ## Consulta multiple
 
-- Modal **Consulta multiple** en tablero Archivo (`archivo.view` o `archivo.manage`).
-- Izquierda: textarea con varias cedulas (linea, coma o punto y coma).
-- Derecha: checkboxes de motivo (`config('employee_ficha.archive_consultation_types')`).
-- Al consultar: registra en `employee_archive_consultations` y filtra el listado por esas cedulas (`?consultation={id}`).
-- Historial: ultimas 10 consultas en el tablero; banner con detalle de consulta activa.
+- Modal **Consulta multiple** en pestaña Historias Laborales (`archivo.view` o `archivo.manage`).
+- Campos: cedulas (textarea), motivos (checkboxes), **Entregada a** (texto).
+- Al consultar: registra cabecera en `employee_archive_consultations` y **un registro por cedula** en `employee_archive_consultation_items`.
+- Filtra Historias Laborales por consulta activa (`?consultation={id}`).
 
-Modelo: `App\Models\EmployeeArchiveConsultation`.
+Modelos: `EmployeeArchiveConsultation`, `EmployeeArchiveConsultationItem`.
 
 Servicio parser: `App\Services\GestionHumana\EmployeeArchiveConsultationParser`.
 
-Migracion: `2026_08_06_151631_create_employee_archive_consultations_table.php`.
+Migraciones:
+- `2026_08_06_151631_create_employee_archive_consultations_table.php`
+- `2026_08_06_154044_add_delivered_to_employee_archive_consultations_table.php`
+- `2026_08_06_154045_create_employee_archive_consultation_items_table.php`
+
+## Historial de consultas
+
+Columnas por fila (item):
+
+| Columna | Origen |
+| --- | --- |
+| Fecha | `created_at` del item |
+| Concepto | Motivos seleccionados (texto) |
+| Cedula / Nombre / Estante / Caja | Snapshot al registrar |
+| Entregada a | Campo del modal |
+| Recibida | Checkbox editable (`received`) |
+| Observacion | Texto editable |
+| Semana | Numero de semana del mes (`week_of_month`) |
+| Mes | Nombre del mes (`month_label`) |
+
+Filtros: busqueda, mes, semana. PATCH por fila para `received` y `observation`.
 
 ## Rutas
 
@@ -64,8 +94,11 @@ Migracion: `2026_08_06_151631_create_employee_archive_consultations_table.php`.
 
 | Metodo | URI | Nombre | Permiso |
 | --- | --- | --- | --- |
-| GET | `/gestion-humana/archivo` | `gestion-humana.archivo.index` | `archivo.view` |
+| GET | `/gestion-humana/archivo` | `gestion-humana.archivo.index` | `archivo.view` (redirect) |
+| GET | `/gestion-humana/archivo/historias-laborales` | `gestion-humana.archivo.labor-histories.index` | `archivo.view` |
+| GET | `/gestion-humana/archivo/historial-consultas` | `gestion-humana.archivo.consultation-history.index` | `archivo.view` |
 | POST | `/gestion-humana/archivo/consultar` | `gestion-humana.archivo.consult` | `archivo.view` |
+| PATCH | `/gestion-humana/archivo/historial-consultas/{item}` | `gestion-humana.archivo.consultation-history.update` | `archivo.view` |
 | PATCH | `/gestion-humana/archivo/{fichaEntry}` | `gestion-humana.archivo.update` | `archivo.manage` |
 | POST | `/gestion-humana/archivo/importar` | `gestion-humana.archivo.import` | `archivo.manage` |
 | GET | `/gestion-humana/archivo/importar/reporte/{token}` | `gestion-humana.archivo.import-report` | `archivo.manage` |

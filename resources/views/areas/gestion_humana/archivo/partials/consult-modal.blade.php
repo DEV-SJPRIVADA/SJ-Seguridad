@@ -76,6 +76,22 @@
                 </fieldset>
             </div>
 
+            <div class="archivo-consult-modal__delivered">
+                <label class="req-manage-filters__label" for="archivo-consult-delivered-to">Entregada a</label>
+                <input
+                    id="archivo-consult-delivered-to"
+                    type="text"
+                    name="delivered_to"
+                    class="form-input"
+                    maxlength="150"
+                    value="{{ old('delivered_to') }}"
+                    placeholder="Persona o area a quien se entrega"
+                >
+                @error('delivered_to')
+                    <p class="archivo-page__inline-error">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="archivo-consult-modal__actions">
                 <button
                     type="button"

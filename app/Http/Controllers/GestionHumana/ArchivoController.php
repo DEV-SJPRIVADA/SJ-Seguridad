@@ -6,17 +6,21 @@ use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportEmployeeArchiveRequest;
 use App\Http\Requests\GestionHumana\StoreEmployeeArchiveConsultationRequest;
+use App\Http\Requests\GestionHumana\UpdateEmployeeArchiveConsultationItemRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeArchiveRequest;
 use App\Models\EmployeeArchiveConsultation;
+use App\Models\EmployeeArchiveConsultationItem;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\GestionHumana\EmployeeArchiveConsultationParser;
 use App\Services\GestionHumana\EmployeeArchiveImportService;
+use App\Traits\HasArchivoTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -24,6 +28,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ArchivoController extends Controller
 {
     use HandlesImportFailureReports;
+    use HasArchivoTabs;
 
     public function __construct(
         private readonly ArchivoAccessService $archivoAccess,
@@ -31,7 +36,14 @@ class ArchivoController extends Controller
         private readonly EmployeeArchiveConsultationParser $consultationParser,
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): RedirectResponse
+    {
+        $this->authorizeView();
+
+        return redirect()->route('gestion-humana.archivo.labor-histories.index', $request->query());
+    }
+
+    public function laborHistories(Request $request): View
     {
         $this->authorizeView();
 
@@ -73,26 +85,54 @@ class ArchivoController extends Controller
             })
             ->orderByDesc('moved_to_ficha_at');
 
-        $entries = $entriesQuery->get();
-
-        $recentConsultations = EmployeeArchiveConsultation::query()
-            ->with('user')
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        return view('areas.gestion_humana.archivo.index', [
-            'entries' => $entries,
+        return view('areas.gestion_humana.archivo.labor-histories', [
+            'entries' => $entriesQuery->get(),
             'filters' => [
                 'q' => $q,
                 'consultation' => $consultationId,
             ],
+            'subTabs' => $this->getArchivoSubTabs('historias-laborales'),
             'canManage' => $this->canManage(),
             'canExportArchive' => $this->canExportArchive(),
             'importResult' => $importResult,
             'importHasFailures' => $importHasFailures,
             'activeConsultation' => $activeConsultation,
-            'recentConsultations' => $recentConsultations,
+            'consultationTypes' => config('employee_ficha.archive_consultation_types', []),
+        ]);
+    }
+
+    public function consultationHistory(Request $request): View
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+        $month = $request->integer('month') ?: null;
+        $week = $request->integer('week') ?: null;
+
+        $items = EmployeeArchiveConsultationItem::query()
+            ->with(['consultation.user'])
+            ->when($q !== '', function (Builder $query) use ($q): void {
+                $query->where(function (Builder $inner) use ($q): void {
+                    $inner->where('document_number', 'like', "%{$q}%")
+                        ->orWhere('full_name', 'like', "%{$q}%")
+                        ->orWhere('delivered_to', 'like', "%{$q}%")
+                        ->orWhere('concept', 'like', "%{$q}%");
+                });
+            })
+            ->when($month !== null, fn (Builder $query) => $query->where('month_number', $month))
+            ->when($week !== null, fn (Builder $query) => $query->where('week_of_month', $week))
+            ->latest('created_at')
+            ->get();
+
+        return view('areas.gestion_humana.archivo.consultation-history', [
+            'items' => $items,
+            'filters' => [
+                'q' => $q,
+                'month' => $month,
+                'week' => $week,
+            ],
+            'subTabs' => $this->getArchivoSubTabs('historial-consultas'),
+            'canManage' => $this->canManage(),
             'consultationTypes' => config('employee_ficha.archive_consultation_types', []),
         ]);
     }
@@ -116,6 +156,7 @@ class ArchivoController extends Controller
 
         $matchedEntries = PersonalRequisitionFichaEntry::query()
             ->inFicha()
+            ->with('profile')
             ->where(function (Builder $query) use ($normalizedDocuments): void {
                 $query->whereIn('hired_document', $normalizedDocuments)
                     ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
@@ -141,14 +182,28 @@ class ArchivoController extends Controller
             ),
         ));
 
-        $consultation = EmployeeArchiveConsultation::query()->create([
-            'user_id' => $request->user()->id,
-            'document_numbers' => $documents,
-            'consultation_types' => $request->validated('consultation_types'),
-            'documents_requested' => count($documents),
-            'documents_matched' => count($matchedDocuments),
-            'documents_not_found' => $documentsNotFound !== [] ? $documentsNotFound : null,
-        ]);
+        $deliveredTo = trim($request->string('delivered_to')->toString()) ?: null;
+        $typeKeys = $request->validated('consultation_types');
+        $consultation = DB::transaction(function () use ($request, $documents, $documentsNotFound, $deliveredTo, $typeKeys, $matchedEntries): EmployeeArchiveConsultation {
+            $consultation = EmployeeArchiveConsultation::query()->create([
+                'user_id' => $request->user()->id,
+                'document_numbers' => $documents,
+                'consultation_types' => $typeKeys,
+                'documents_requested' => count($documents),
+                'documents_matched' => count(array_unique(array_map(
+                    fn (PersonalRequisitionFichaEntry $entry): string => $this->consultationParser->normalizeDocument(
+                        (string) ($entry->profile?->document_number ?: $entry->hired_document),
+                    ),
+                    $matchedEntries->all(),
+                ))),
+                'documents_not_found' => $documentsNotFound !== [] ? $documentsNotFound : null,
+                'delivered_to' => $deliveredTo,
+            ]);
+
+            $this->createConsultationItems($consultation, $documents, $matchedEntries, $deliveredTo);
+
+            return $consultation;
+        });
 
         $message = sprintf(
             'Consulta registrada: %d cedula(s) solicitada(s), %d encontrada(s) en ficha.',
@@ -161,8 +216,29 @@ class ArchivoController extends Controller
         }
 
         return redirect()
-            ->route('gestion-humana.archivo.index', ['consultation' => $consultation->id])
+            ->route('gestion-humana.archivo.labor-histories.index', ['consultation' => $consultation->id])
             ->with('status', $message);
+    }
+
+    public function updateConsultationItem(
+        UpdateEmployeeArchiveConsultationItemRequest $request,
+        EmployeeArchiveConsultationItem $consultationItem,
+    ): RedirectResponse {
+        $this->authorizeView();
+
+        $consultationItem->fill([
+            'received' => $request->boolean('received'),
+            'observation' => trim($request->string('observation')->toString()) ?: null,
+        ]);
+        $consultationItem->save();
+
+        return redirect()
+            ->route('gestion-humana.archivo.consultation-history.index', array_filter([
+                'q' => $request->string('q')->toString() ?: null,
+                'month' => $request->integer('month') ?: null,
+                'week' => $request->integer('week') ?: null,
+            ]))
+            ->with('status', 'Registro de consulta actualizado.');
     }
 
     public function import(ImportEmployeeArchiveRequest $request): RedirectResponse
@@ -218,7 +294,7 @@ class ArchivoController extends Controller
         );
 
         return redirect()
-            ->route('gestion-humana.archivo.index')
+            ->route('gestion-humana.archivo.labor-histories.index')
             ->with('status', $message)
             ->with('import_result', $importResult);
     }
@@ -255,11 +331,54 @@ class ArchivoController extends Controller
         });
 
         return redirect()
-            ->route('gestion-humana.archivo.index', array_filter([
+            ->route('gestion-humana.archivo.labor-histories.index', array_filter([
                 'q' => $request->string('q')->toString() ?: null,
                 'consultation' => $request->integer('consultation') ?: null,
             ]))
             ->with('status', 'Ubicacion actualizada correctamente.');
+    }
+
+    /**
+     * @param  list<string>  $documents
+     * @param  Collection<int, PersonalRequisitionFichaEntry>  $matchedEntries
+     */
+    private function createConsultationItems(
+        EmployeeArchiveConsultation $consultation,
+        array $documents,
+        Collection $matchedEntries,
+        ?string $deliveredTo,
+    ): void {
+        $entriesByDocument = [];
+
+        foreach ($matchedEntries as $entry) {
+            $normalized = $this->consultationParser->normalizeDocument(
+                (string) ($entry->profile?->document_number ?: $entry->hired_document),
+            );
+            $entriesByDocument[$normalized] = $entry;
+        }
+
+        $registeredAt = $consultation->created_at ?? now();
+        $calendarMeta = EmployeeArchiveConsultationItem::calendarMeta($registeredAt);
+        $concept = $consultation->conceptLabel();
+
+        foreach ($documents as $document) {
+            $normalized = $this->consultationParser->normalizeDocument($document);
+            $entry = $entriesByDocument[$normalized] ?? null;
+
+            EmployeeArchiveConsultationItem::query()->create([
+                'employee_archive_consultation_id' => $consultation->id,
+                'personal_requisition_ficha_entry_id' => $entry?->id,
+                'document_number' => $document,
+                'full_name' => $entry ? ($entry->profile?->full_name ?: $entry->hired_full_name) : null,
+                'archive_shelf' => $entry?->profile?->archive_shelf,
+                'archive_box' => $entry?->profile?->archive_box,
+                'concept' => $concept,
+                'delivered_to' => $deliveredTo,
+                'received' => false,
+                'observation' => null,
+                ...$calendarMeta,
+            ]);
+        }
     }
 
     /**

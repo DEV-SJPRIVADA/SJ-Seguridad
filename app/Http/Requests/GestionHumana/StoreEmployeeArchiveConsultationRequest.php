@@ -23,6 +23,7 @@ class StoreEmployeeArchiveConsultationRequest extends FormRequest
 
         return [
             'documents' => ['required', 'string', 'max:5000'],
+            'delivered_to' => ['nullable', 'string', 'max:150'],
             'consultation_types' => ['required', 'array', 'min:1'],
             'consultation_types.*' => ['required', 'string', Rule::in($typeKeys)],
         ];
