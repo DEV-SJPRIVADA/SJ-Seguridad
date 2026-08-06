@@ -93,11 +93,6 @@
 
             <div class="form-grid {{ $compactCreate ? 'admin-user-create__grid' : 'form-grid--two' }}">
                 <div class="form-field">
-                    <label class="form-label">Nombre completo</label>
-                    <input name="name" type="text" class="form-input @error('name') form-input--invalid @enderror" value="{{ old('name', $user?->name) }}" required>
-                    <x-input-error :messages="$errors->get('name')" />
-                </div>
-                <div class="form-field">
                     <label class="form-label">Cedula</label>
                     <input name="document_number" type="text" class="form-input @error('document_number') form-input--invalid @enderror" value="{{ old('document_number', $user?->document_number) }}" maxlength="50" required>
                     <x-input-error :messages="$errors->get('document_number')" />
@@ -107,6 +102,12 @@
                         <p class="text-small text-muted">Se usara como contrasena temporal al crear el usuario.</p>
                     @endif
                 </div>
+                <div class="form-field">
+                    <label class="form-label">Nombre completo</label>
+                    <input name="name" type="text" class="form-input @error('name') form-input--invalid @enderror" value="{{ old('name', $user?->name) }}" required>
+                    <x-input-error :messages="$errors->get('name')" />
+                </div>
+
                 <div class="form-field">
                     <label class="form-label">Correo electronico</label>
                     <input name="email" type="email" class="form-input @error('email') form-input--invalid @enderror" value="{{ old('email', $user?->email) }}" required>
