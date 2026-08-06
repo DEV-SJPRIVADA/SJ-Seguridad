@@ -26,6 +26,15 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 2. Use la busqueda por cedula, nombre o codigo de requisicion.
 3. Revise columnas **Estantes** y **Cajas**.
 
+### Consultar varias cedulas a la vez
+
+1. En **Archivo**, pulse **Consulta multiple**.
+2. Pegue o escriba las cedulas (una por linea o separadas por coma).
+3. Marque uno o mas motivos de consulta (Juridico, Gerencia, etc.).
+4. Pulse **Consultar**.
+5. El sistema registra la consulta, muestra el historial reciente y filtra el listado a esas cedulas.
+6. Use **Quitar filtro** para volver al listado completo.
+
 ### Registrar o corregir ubicacion
 
 1. En el listado de **Archivo**, edite **Estante** y **Caja** directamente en la fila del empleado.
@@ -57,3 +66,4 @@ Use ese Excel para trabajo offline del area de archivo. Complete estantes/cajas 
 | 1.0 | 2026-08-06 | Modulo Archivo | Campos estantes/cajas, tablero Archivo, export dedicado |
 | 1.1 | 2026-08-06 | Import archivo | Carga masiva de estantes/cajas separada del masivo de nomina |
 | 1.2 | 2026-08-06 | Edicion inline | Tabla editable; eliminada vista `/editar` |
+| 1.3 | 2026-08-06 | Consulta multiple | Modal con cedulas y motivos; historial y filtro por consulta |

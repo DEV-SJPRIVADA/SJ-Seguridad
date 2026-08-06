@@ -42,6 +42,17 @@
                                 <p class="panel-text">Cedula, nombre o codigo de requisicion</p>
                             </div>
                             <div class="req-manage-filters__actions">
+                                <button
+                                    type="button"
+                                    class="btn btn--secondary btn--sm"
+                                    title="Consulta multiple por cedulas"
+                                    aria-label="Consulta multiple por cedulas"
+                                    x-data=""
+                                    x-on:click.prevent="$dispatch('open-modal', 'archivo-consult')"
+                                >
+                                    <x-lucide-icon name="search" :size="16" />
+                                    Consulta multiple
+                                </button>
                                 @if ($canExportArchive ?? false)
                                     <x-export-excel
                                         route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
@@ -67,6 +78,9 @@
 
                         <div class="req-manage-filters__toolbar">
                             <form method="GET" class="req-manage-filters__search-col">
+                                @if ($filters['consultation'] ?? null)
+                                    <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
+                                @endif
                                 <label class="req-manage-filters__label" for="archivo-search-input">Buscar</label>
                                 <div class="req-manage-filters__search-group">
                                     <input
@@ -88,8 +102,60 @@
                             @if ($filters['q'] ?? '')
                                 · Busqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
+                            @if ($activeConsultation ?? null)
+                                · Consulta #{{ $activeConsultation->id }}
+                            @endif
                         </p>
                     </div>
+
+                    @if ($activeConsultation ?? null)
+                        <div class="archivo-consult-banner">
+                            <div class="archivo-consult-banner__body">
+                                <p class="archivo-consult-banner__title">Consulta activa #{{ $activeConsultation->id }}</p>
+                                <p class="archivo-consult-banner__meta">
+                                    {{ $activeConsultation->created_at?->format('d/m/Y H:i') }}
+                                    · {{ $activeConsultation->user?->name ?: 'Usuario' }}
+                                    · {{ $activeConsultation->documents_matched }}/{{ $activeConsultation->documents_requested }} cedula(s) en ficha
+                                </p>
+                                <p class="archivo-consult-banner__types">
+                                    <strong>Motivos:</strong> {{ implode(' · ', $activeConsultation->typeLabels()) }}
+                                </p>
+                                <p class="archivo-consult-banner__docs">
+                                    <strong>Cedulas:</strong> {{ implode(', ', $activeConsultation->document_numbers ?? []) }}
+                                </p>
+                                @if (! empty($activeConsultation->documents_not_found))
+                                    <p class="archivo-consult-banner__missing">
+                                        <strong>No encontradas:</strong> {{ implode(', ', $activeConsultation->documents_not_found) }}
+                                    </p>
+                                @endif
+                            </div>
+                            <a href="{{ route('gestion-humana.archivo.index', array_filter(['q' => $filters['q'] ?? null])) }}" class="btn btn--secondary btn--sm">
+                                Quitar filtro
+                            </a>
+                        </div>
+                    @endif
+
+                    @if (($recentConsultations ?? collect())->isNotEmpty())
+                        <details class="archivo-consult-history" @if ($activeConsultation ?? null) open @endif>
+                            <summary class="archivo-consult-history__summary">Historial de consultas recientes</summary>
+                            <div class="archivo-consult-history__list">
+                                @foreach ($recentConsultations as $consultation)
+                                    <a
+                                        href="{{ route('gestion-humana.archivo.index', ['consultation' => $consultation->id]) }}"
+                                        class="archivo-consult-history__item {{ ($activeConsultation?->id ?? null) === $consultation->id ? 'archivo-consult-history__item--active' : '' }}"
+                                    >
+                                        <span class="archivo-consult-history__item-title">
+                                            #{{ $consultation->id }} · {{ $consultation->created_at?->format('d/m/Y H:i') }}
+                                        </span>
+                                        <span class="archivo-consult-history__item-meta">
+                                            {{ $consultation->documents_matched }}/{{ $consultation->documents_requested }} cedula(s)
+                                            · {{ implode(', ', array_slice($consultation->typeLabels(), 0, 2)) }}@if (count($consultation->typeLabels()) > 2)…@endif
+                                        </span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </details>
+                    @endif
 
                     <div class="data-table-wrap">
                         <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
@@ -182,11 +248,19 @@
                                 @if ($filters['q'] ?? '')
                                     <input type="hidden" name="q" value="{{ $filters['q'] }}">
                                 @endif
+                                @if ($filters['consultation'] ?? null)
+                                    <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
+                                @endif
                             </form>
                         @endforeach
                     @endif
                 </div>
             </div>
+
+            @include('areas.gestion_humana.archivo.partials.consult-modal', [
+                'consultationTypes' => $consultationTypes ?? config('employee_ficha.archive_consultation_types', []),
+                'show' => $errors->has('documents') || $errors->has('consultation_types') || $errors->has('consultation_types.*'),
+            ])
 
             @if ($canManage)
                 @include('areas.gestion_humana.archivo.partials.import-modal', [

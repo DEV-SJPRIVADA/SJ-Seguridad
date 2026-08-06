@@ -44,6 +44,20 @@ Servicio: `App\Services\Access\ArchivoAccessService`.
 
 Export archivo en Ficha empleados: usuarios con `archivo.view` **o** permisos de ver Ficha empleados (`ficha_empleados.view` / `manage`).
 
+## Consulta multiple
+
+- Modal **Consulta multiple** en tablero Archivo (`archivo.view` o `archivo.manage`).
+- Izquierda: textarea con varias cedulas (linea, coma o punto y coma).
+- Derecha: checkboxes de motivo (`config('employee_ficha.archive_consultation_types')`).
+- Al consultar: registra en `employee_archive_consultations` y filtra el listado por esas cedulas (`?consultation={id}`).
+- Historial: ultimas 10 consultas en el tablero; banner con detalle de consulta activa.
+
+Modelo: `App\Models\EmployeeArchiveConsultation`.
+
+Servicio parser: `App\Services\GestionHumana\EmployeeArchiveConsultationParser`.
+
+Migracion: `2026_08_06_151631_create_employee_archive_consultations_table.php`.
+
 ## Rutas
 
 `routes/areas/gestion_humana.php`:
@@ -51,6 +65,7 @@ Export archivo en Ficha empleados: usuarios con `archivo.view` **o** permisos de
 | Metodo | URI | Nombre | Permiso |
 | --- | --- | --- | --- |
 | GET | `/gestion-humana/archivo` | `gestion-humana.archivo.index` | `archivo.view` |
+| POST | `/gestion-humana/archivo/consultar` | `gestion-humana.archivo.consult` | `archivo.view` |
 | PATCH | `/gestion-humana/archivo/{fichaEntry}` | `gestion-humana.archivo.update` | `archivo.manage` |
 | POST | `/gestion-humana/archivo/importar` | `gestion-humana.archivo.import` | `archivo.manage` |
 | GET | `/gestion-humana/archivo/importar/reporte/{token}` | `gestion-humana.archivo.import-report` | `archivo.manage` |

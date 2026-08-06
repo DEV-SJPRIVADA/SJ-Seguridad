@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\EmployeeArchiveConsultation;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\User;
@@ -207,6 +208,67 @@ class EmployeeArchiveTest extends TestCase
             ->assertForbidden();
 
         @unlink($path);
+    }
+
+    public function test_archivo_consultation_registers_and_filters_entries(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $matchedEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '1010101010',
+            'hired_full_name' => 'CONSULTA MATCH',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '2020202020',
+            'hired_full_name' => 'CONSULTA OTHER',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        $response = $this->actingAs($viewer)->post(route('gestion-humana.archivo.consult'), [
+            'documents' => "1010101010\n9999999999",
+            'consultation_types' => ['juridico', 'gerencia'],
+        ]);
+
+        $response->assertRedirect();
+
+        $consultationId = EmployeeArchiveConsultation::query()->value('id');
+
+        $this->assertNotNull($consultationId);
+        $this->assertDatabaseHas('employee_archive_consultations', [
+            'id' => $consultationId,
+            'user_id' => $viewer->id,
+            'documents_requested' => 2,
+            'documents_matched' => 1,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.index', ['consultation' => $consultationId]))
+            ->assertOk()
+            ->assertSee('CONSULTA MATCH')
+            ->assertDontSee('CONSULTA OTHER');
+    }
+
+    public function test_archivo_consultation_requires_types(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $this->actingAs($viewer)
+            ->post(route('gestion-humana.archivo.consult'), [
+                'documents' => '1010101010',
+            ])
+            ->assertSessionHasErrors([
+                'consultation_types' => 'Debe seleccionar un motivo de consulta.',
+            ]);
     }
 
     /**

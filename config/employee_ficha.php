@@ -74,6 +74,17 @@ return [
         'cajas' => 'Cajas',
     ],
 
+    'archive_consultation_types' => [
+        'ordenacion_clasificacion' => 'Ordenacion y clasificacion documental',
+        'juridico' => 'Juridico',
+        'gerencia' => 'Gerencia',
+        'gestion_humana' => 'Gestion Humana',
+        'reorganizacion_hl' => 'Reorganizacion de historias laborales',
+        'suministro_ss' => 'Suministro de documentos de seguridad social',
+        'cedulas_nomina_hl' => 'Cedulas a nomina y documentos HL para licitaciones',
+        'auditorias' => 'Auditorias',
+    ],
+
     'plantilla_masivos_template' => storage_path('templates/plantilla-masivos.xlsx'),
 
     'plantilla_masivos_columns' => [

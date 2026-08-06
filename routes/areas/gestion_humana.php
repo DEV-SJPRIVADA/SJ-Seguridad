@@ -37,6 +37,7 @@ Route::middleware(['password.changed'])
     ->name('gestion-humana.archivo.')
     ->group(function (): void {
         Route::get('/', [ArchivoController::class, 'index'])->name('index');
+        Route::post('/consultar', [ArchivoController::class, 'consult'])->name('consult');
         Route::post('/importar', [ArchivoController::class, 'import'])->name('import');
         Route::get('/importar/reporte/{token}', [ArchivoController::class, 'downloadImportReport'])->name('import-report');
         Route::patch('/{fichaEntry}', [ArchivoController::class, 'update'])->name('update');
