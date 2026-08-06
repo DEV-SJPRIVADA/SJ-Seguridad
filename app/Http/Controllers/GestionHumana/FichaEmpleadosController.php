@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\GestionHumana;
 
+use App\Exports\EmployeeFichaArchiveTemplateExport;
 use App\Exports\EmployeeFichaImportTemplateExport;
 use App\Exports\PlantillaMasivosExport;
 use App\Http\Controllers\Concerns\HandlesImportFailureReports;
@@ -12,6 +13,7 @@ use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
@@ -33,8 +35,10 @@ class FichaEmpleadosController extends Controller
 
     public function __construct(
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillaMasivosExport $plantillaMasivosExport,
         private readonly EmployeeFichaImportTemplateExport $importTemplateExport,
+        private readonly EmployeeFichaArchiveTemplateExport $archiveTemplateExport,
         private readonly EmployeeFichaImportService $importService,
         private readonly EmployeeFichaProfilePrefill $profilePrefill,
         private readonly EmployeeFichaCatalogService $catalogService,
@@ -62,6 +66,7 @@ class FichaEmpleadosController extends Controller
             'employmentStatusLabels' => self::employmentStatusFilterLabels(),
             'pendingCount' => $pendingCount,
             'canManage' => $this->canManage(),
+            'canExportArchive' => $this->canExportArchive(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
     }
@@ -134,6 +139,38 @@ class FichaEmpleadosController extends Controller
         return $this->importTemplateExport->downloadWithData(
             $entries,
             'plantilla_importacion_datos_'.now()->format('Y-m-d').'.xlsx'
+        );
+    }
+
+    public function exportArchiveTemplate(Request $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->canExportArchive(), 403);
+
+        $q = trim($request->string('q')->toString());
+        $fechaDesde = $request->date('fecha_desde')?->toDateString();
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString();
+        $hasDateRange = $fechaDesde !== null && $fechaHasta !== null;
+
+        $query = $this->entryListQuery($q, 'en_ficha')
+            ->with(['profile', 'requisition.position', 'requisition.client']);
+
+        if ($hasDateRange) {
+            $query->hireDateBetween($fechaDesde, $fechaHasta);
+        } else {
+            $query->withActiveProfile();
+        }
+
+        $entries = $query->get();
+
+        if ($entries->isEmpty()) {
+            return redirect()
+                ->route('gestion-humana.ficha-empleados.employees.index')
+                ->withErrors(['export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.']);
+        }
+
+        return $this->archiveTemplateExport->downloadWithData(
+            $entries,
+            'exportacion_archivo_empleados_'.now()->format('Y-m-d').'.xlsx'
         );
     }
 
@@ -488,5 +525,10 @@ class FichaEmpleadosController extends Controller
     private function canManage(): bool
     {
         return $this->fichaEmpleadosAccess->canManage(auth()->user());
+    }
+
+    private function canExportArchive(): bool
+    {
+        return $this->archivoAccess->canExportArchiveTemplate(auth()->user());
     }
 }

@@ -22,6 +22,8 @@ return [
         'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
         'ficha_empleados.view' => 'Ficha empleados: Ver lista de espera y ficha',
         'ficha_empleados.manage' => 'Ficha empleados: Agregar a ficha empleados',
+        'archivo.view' => 'Archivo: Ver ubicacion documental de empleados',
+        'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -81,6 +83,7 @@ return [
         'bandeja_compras' => 'Bandeja compras',
         'documentos' => 'Documentos',
         'ficha_empleados' => 'Ficha empleados',
+        'archivo' => 'Archivo',
     ],
 
     /*
@@ -112,6 +115,10 @@ return [
             'base_area_tab' => true,
         ],
         'ficha_empleados' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'archivo' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
@@ -286,6 +293,7 @@ return [
                             'view.board.gestion_humana.requisiciones',
                             'view.board.gestion_humana.dashboard',
                             'view.board.gestion_humana.ficha_empleados',
+                            'view.board.gestion_humana.archivo',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -293,6 +301,13 @@ return [
                         'permissions' => [
                             'ficha_empleados.view',
                             'ficha_empleados.manage',
+                        ],
+                    ],
+                    'archivo' => [
+                        'label' => 'Archivo',
+                        'permissions' => [
+                            'archivo.view',
+                            'archivo.manage',
                         ],
                     ],
                 ],

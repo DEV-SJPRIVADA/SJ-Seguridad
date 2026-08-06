@@ -3,6 +3,7 @@
 namespace App\Services\Navigation;
 
 use App\Models\User;
+use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
@@ -18,6 +19,7 @@ class SidebarVisibilityService
         private readonly BoardAccessService $boardAccess,
         private readonly CommercialAccessService $commercialAccess,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly ArchivoAccessService $archivoAccess,
         private readonly PurchaseAccessService $purchaseAccess,
     ) {}
 
@@ -41,6 +43,7 @@ class SidebarVisibilityService
             'bandeja_compras' => $this->shouldShowBandejaComprasBoard($user, $areaKey),
             'documentos' => $this->shouldShowDocumentsBoard($user, $areaKey),
             'ficha_empleados' => $this->shouldShowFichaEmpleadosBoard($user, $areaKey),
+            'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -129,6 +132,15 @@ class SidebarVisibilityService
         }
 
         return $this->fichaEmpleadosAccess->canViewFichaEmpleadosBoard($user);
+    }
+
+    private function shouldShowArchivoBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->archivoAccess->canViewArchivoBoard($user);
     }
 
     private function shouldShowIndicadoresBoard(User $user, string $areaKey): bool

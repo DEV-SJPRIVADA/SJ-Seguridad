@@ -66,6 +66,14 @@ return [
         'codigo_requisicion' => 'Código requisición (opcional)',
     ],
 
+    /*
+    | Columnas adicionales solo para exportación Archivo (no forman parte del import masivo).
+    */
+    'archive_export_extra_columns' => [
+        'estantes' => 'Estantes',
+        'cajas' => 'Cajas',
+    ],
+
     'plantilla_masivos_template' => storage_path('templates/plantilla-masivos.xlsx'),
 
     'plantilla_masivos_columns' => [

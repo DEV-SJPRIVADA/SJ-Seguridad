@@ -64,6 +64,17 @@ class EmployeeFichaImportRowMapper
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function mapRowWithArchive(PersonalRequisitionFichaEntry $entry): array
+    {
+        return array_merge($this->mapRow($entry), [
+            'estantes' => $entry->profile?->archive_shelf,
+            'cajas' => $entry->profile?->archive_box,
+        ]);
+    }
+
     private function dateString(?CarbonInterface $value): ?string
     {
         return $value?->toDateString();

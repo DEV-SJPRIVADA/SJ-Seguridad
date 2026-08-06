@@ -325,4 +325,9 @@ class User extends Authenticatable
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }
+
+    public function defaultArchivoBoardUrl(): string
+    {
+        return route('gestion-humana.archivo.index');
+    }
 }

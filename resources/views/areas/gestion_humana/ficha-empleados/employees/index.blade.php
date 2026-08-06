@@ -92,6 +92,14 @@
                                     >
                                         <x-lucide-icon name="upload" :size="20" />
                                     </button>
+
+                                    @if ($canExportArchive ?? false)
+                                        <x-export-excel
+                                            route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
+                                            label="Exportar archivo"
+                                            class="btn btn--secondary btn--sm"
+                                        />
+                                    @endif
                                 @endif
                             </div>
                         </div>
