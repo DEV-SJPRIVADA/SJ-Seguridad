@@ -17,6 +17,10 @@ Route::middleware(['password.changed'])
     ->group(function (): void {
         Route::get('/', [CommercialClientController::class, 'index'])->name('index');
         Route::get('/exportar', [CommercialClientController::class, 'exportExcel'])->name('export');
+        Route::get('/plantilla-importacion', [CommercialClientController::class, 'importTemplate'])->name('import-template');
+        Route::get('/plantilla-importacion/exportar', [CommercialClientController::class, 'exportImportTemplate'])->name('export-import-template');
+        Route::post('/importar', [CommercialClientController::class, 'import'])->name('import');
+        Route::get('/importar/reporte/{token}', [CommercialClientController::class, 'downloadImportReport'])->name('import-report');
         Route::get('/checklist-documental', [CommercialClientChecklistController::class, 'index'])->name('checklist.index');
         Route::get('/checklist-documental/exportar', [CommercialClientChecklistController::class, 'exportExcel'])->name('checklist.export');
         Route::get('/buscar', [CommercialClientController::class, 'search'])->name('search');

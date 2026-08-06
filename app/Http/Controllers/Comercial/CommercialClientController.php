@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Comercial;
 
 use App\Exports\BaseExport;
+use App\Exports\CommercialMatrixImportTemplateExport;
+use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Comercial\ImportCommercialMatrixRequest;
 use App\Http\Requests\Comercial\StoreCommercialClientRequest;
 use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
+use App\Services\Comercial\CommercialMatrixImportService;
 use App\Support\DisplayDate;
 use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
@@ -19,7 +23,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CommercialClientController extends Controller
 {
+    use HandlesImportFailureReports;
     use HasGestionClientesTabs;
+
+    public function __construct(
+        private readonly CommercialMatrixImportTemplateExport $importTemplateExport,
+        private readonly CommercialMatrixImportService $importService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -240,6 +250,97 @@ class CommercialClientController extends Controller
             ->with('status', 'Cliente actualizado.');
     }
 
+    public function importTemplate(): StreamedResponse
+    {
+        $this->authorizeManage();
+
+        return $this->importTemplateExport->download();
+    }
+
+    public function exportImportTemplate(Request $request): StreamedResponse|RedirectResponse
+    {
+        $this->authorizeManage();
+
+        $q = trim($request->string('q')->toString());
+        $city = trim($request->string('city')->toString());
+        $status = $this->resolveClientStatusFilter($request);
+
+        $services = $this->serviceImportQuery($q, $city, $status)->get();
+
+        if ($services->isEmpty()) {
+            return redirect()
+                ->route('comercial.matriz.clients.index', $request->only(['q', 'city', 'status']))
+                ->withErrors(['export' => 'No hay servicios para exportar con los filtros seleccionados.']);
+        }
+
+        return $this->importTemplateExport->downloadWithData(
+            $services,
+            'plantilla_importacion_matriz_comercial_'.now()->format('Y-m-d').'.xlsx'
+        );
+    }
+
+    public function import(ImportCommercialMatrixRequest $request): RedirectResponse
+    {
+        $this->authorizeManage();
+
+        $path = $request->file('import_file')?->getRealPath();
+
+        if ($path === false || $path === null) {
+            return back()->withErrors(['import_file' => 'No se pudo leer el archivo subido.']);
+        }
+
+        try {
+            $stats = $this->importService->import($path, $request->user()->id);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['import_file' => $e->getMessage()]);
+        }
+
+        $message = sprintf(
+            'Importacion finalizada: %d clientes nuevos, %d clientes actualizados, %d servicios nuevos, %d servicios actualizados.',
+            $stats['clients_created'],
+            $stats['clients_updated'],
+            $stats['services_created'],
+            $stats['services_updated']
+        );
+
+        if ($stats['skipped'] > 0) {
+            $message .= sprintf(' %d filas con error u omision.', $stats['skipped']);
+        }
+
+        if ($stats['empty_rows'] > 0) {
+            $message .= sprintf(' %d filas vacias ignoradas.', $stats['empty_rows']);
+        }
+
+        $importResult = $this->buildImportResultPayload(
+            $request->user(),
+            $stats,
+            'commercial_matrix',
+            'Matriz comercial',
+            [
+                'Clientes nuevos' => $stats['clients_created'],
+                'Clientes actualizados' => $stats['clients_updated'],
+                'Servicios nuevos' => $stats['services_created'],
+                'Servicios actualizados' => $stats['services_updated'],
+                'Filas omitidas o con error' => $stats['skipped'],
+                'Filas vacias' => $stats['empty_rows'],
+            ],
+            array_keys(config('commercial_matrix.import_columns', [])),
+            'reporte_importacion_matriz_comercial',
+        );
+
+        return redirect()
+            ->route('comercial.matriz.clients.index', $request->only(['q', 'city', 'status']))
+            ->with('status', $message)
+            ->with('import_result', $importResult);
+    }
+
+    public function downloadImportReport(Request $request, string $token): StreamedResponse
+    {
+        $this->authorizeManage();
+
+        return $this->downloadImportFailureReport($request->user(), $token, 'commercial_matrix');
+    }
+
     /**
      * @return array<string, string>
      */
@@ -291,6 +392,36 @@ class CommercialClientController extends Controller
             ->when($status === 'active', fn ($query) => $query->whereHas('activeOperationalServices'))
             ->when($status === 'inactive', fn ($query) => $query->whereDoesntHave('activeOperationalServices'))
             ->orderBy('name');
+    }
+
+    /**
+     * @return Builder<CommercialService>
+     */
+    private function serviceImportQuery(string $q, string $city, string $status): Builder
+    {
+        return CommercialService::query()
+            ->with([
+                'client.documentItems',
+                'sector:id,name',
+                'clientType:id,name',
+                'serviceType:id,name',
+            ])
+            ->whereHas('client', function (Builder $query) use ($q, $city, $status): void {
+                $query
+                    ->when($q !== '', function (Builder $inner) use ($q): void {
+                        $inner->where(function (Builder $search) use ($q): void {
+                            $search->where('nit', 'like', "%{$q}%")
+                                ->orWhere('name', 'like', "%{$q}%")
+                                ->orWhere('legal_rep_name', 'like', "%{$q}%");
+                        });
+                    })
+                    ->when($city !== '', fn (Builder $inner) => $inner->where('city', 'like', "%{$city}%"))
+                    ->when($status === 'active', fn (Builder $inner) => $inner->whereHas('activeOperationalServices'))
+                    ->when($status === 'inactive', fn (Builder $inner) => $inner->whereDoesntHave('activeOperationalServices'));
+            })
+            ->orderBy('commercial_client_id')
+            ->orderBy('portfolio')
+            ->orderBy('contract_number');
     }
 
     private function authorizeView(): void

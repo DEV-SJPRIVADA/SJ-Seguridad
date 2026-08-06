@@ -1099,6 +1099,27 @@ a {
     color: #64748b;
 }
 
+.import-failure-result {
+    margin-bottom: 1rem;
+}
+
+.import-failure-result__errors {
+    margin: 0;
+    padding-left: 1.2rem;
+    max-height: 16rem;
+    overflow: auto;
+    line-height: 1.45;
+    color: #334155;
+}
+
+.import-failure-result__errors li + li {
+    margin-top: 0.35rem;
+}
+
+.import-failure-result__actions {
+    margin-top: 1rem;
+}
+
 @media (min-width: 768px) {
     .ficha-empleados-filters__toolbar {
         display: grid;

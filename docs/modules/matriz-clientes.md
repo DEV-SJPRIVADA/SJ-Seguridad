@@ -40,28 +40,33 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - Adjuntos PDF / documentos Calidad
 - Historial de envios de correo en admin
 
-## Importacion desde Excel
+## Importacion masiva (plantilla unificada)
 
-El archivo **MT-CO-01 Matriz de clientes.xlsx** no se versiona en el repositorio (datos sensibles / copia maestra fuera de Git). Guardelo en una ruta local o de red accesible al servidor.
+Una sola plantilla Excel (**Matriz comercial**) con clientes, servicios y checklist documental. Una fila = un servicio; los datos del cliente y del checklist se repiten o actualizan por NIT.
 
-Comando (ruta **obligatoria**):
+### Web (usuarios con `comercial.matriz.manage`)
 
-```powershell
-php artisan comercial:import-mt-co-01 "C:\ruta\MT-CO-01 Matriz de clientes.xlsx"
-```
+En **Comercial → Clientes**, boton de carga masiva (icono upload):
 
-Opciones:
+1. **Descargar plantilla vacia** — `GET /comercial/clientes/plantilla-importacion`
+2. **Exportar datos para actualizar** — `GET /comercial/clientes/plantilla-importacion/exportar` (respeta filtros del listado)
+3. **Importar** — `POST /comercial/clientes/importar` (`.xlsx`, max. 10 MB)
 
-- `--fresh` elimina clientes/servicios comerciales y vuelve a cargar (destructivo)
+Formato: fila 1 = claves tecnicas, fila 2 = etiquetas, datos desde fila 3. Hoja `Matriz comercial`.
 
-Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
+Reglas:
 
 - Cliente: upsert por NIT normalizado
-- Servicio: upsert por cliente + portafolio + numero de contrato
+- Servicio: upsert por cliente + portafolio + numero de contrato (o descripcion si no hay contrato)
+- Checklist: estados por cliente (`ok`, `x`, `pending`, `na`, `incomplete` o etiquetas OK/X/Pendiente/N/A/Incompleto)
 - Catalogos sector/tipo se crean si no existen
-- Implementacion: `App\Services\Comercial\MtCo01Importer` + `comercial:import-mt-co-01`
-- Al importar/guardar se descartan duraciones > 600 meses y fechas de contrato anteriores a 1980 (artefactos de Excel); al editar un servicio con datos corruptos, el guardado los normaliza automaticamente
-- Si el Excel trae columnas de vencimiento documental reconocidas (ej. `vencimiento rut`, `fecha vencimiento fo-co-02`, `vencimiento contrato documental`), se asigna `*_tracks_expiry=true` y `*_expires_on`. No confundir con `fecha de terminacion contrato` (`contract_end`). Sin columna reconocida, no se inventan fechas.
+- Implementacion: `config/commercial_matrix.php`, `CommercialMatrixImportService`, `CommercialMatrixImportTemplateExport`
+- Duraciones > 600 meses y fechas anteriores a 1980 se descartan
+- Resultado en sesion: `import_result` con contadores y errores por fila
+
+El reporte excluye filas vacias; incluye errores y omisiones con datos originales para corregir y reimportar. Disponible 24 h tras la importacion.
+
+El comando CLI `comercial:import-mt-co-01` fue **retirado**; usar la plantilla web unificada.
 
 ## Rutas
 
@@ -74,6 +79,10 @@ Importa hojas `SEG. FISICA`, `MONITOREO`, `OCASIONALES`, `INACTIVOS`.
 ### Clientes — prefijo `comercial/clientes`
 
 - `GET /` listado
+- `GET /exportar` export Excel listado
+- `GET /plantilla-importacion` plantilla vacia importacion
+- `GET /plantilla-importacion/exportar` plantilla con datos actuales
+- `POST /importar` carga masiva `.xlsx`
 - `GET /checklist-documental` checklist documental (FEAT-014)
 - `GET /checklist-documental/exportar` export Excel checklist
 - `PATCH /{client}/checklist-documental` actualizar estados + vencimiento/dias

@@ -27,6 +27,11 @@
                 <div class="alert alert--success comercial-clients-page__alert">{{ session('status') }}</div>
             @endif
 
+            @include('partials.import-failure-report', [
+                'importResult' => session('import_result'),
+                'downloadRoute' => 'comercial.matriz.clients.import-report',
+            ])
+
             <div class="panel comercial-clients-panel">
                 <div class="panel__body panel__body--compact">
                     <div class="req-manage-filters comercial-clients-filters">
@@ -37,6 +42,18 @@
                             </div>
                             <div class="req-manage-filters__actions comercial-clients-filters__actions">
                                 <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
+                                @if ($canManage)
+                                    <button
+                                        type="button"
+                                        class="btn btn--secondary btn--sm"
+                                        title="Carga masiva"
+                                        aria-label="Carga masiva"
+                                        x-data=""
+                                        x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
+                                    >
+                                        <x-lucide-icon name="upload" :size="16" />
+                                    </button>
+                                @endif
                                 @if ($hasActiveFilters)
                                     <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
                                 @endif
@@ -167,6 +184,44 @@
                     </div>
                 </div>
             </div>
+
+            @if ($canManage)
+                @include('areas.comercial.matriz-clientes.partials.masivos-modal', [
+                    'filters' => $filters,
+                    'canManage' => $canManage,
+                    'show' => $errors->has('export') || $errors->has('import_file') || (is_array(session('import_result')) && ((session('import_result.failures_count') ?? 0) > 0 || session('import_result.report_token'))),
+                ])
+            @endif
         </div>
     </div>
+
+    @if ($canManage)
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var fileInput = document.querySelector('[data-comercial-import-file]');
+                    var fileName = document.querySelector('[data-comercial-import-name]');
+                    var submitBtn = document.querySelector('[data-comercial-import-submit]');
+                    var form = document.querySelector('[data-comercial-import-form]');
+                    var loading = document.querySelector('[data-comercial-import-loading]');
+
+                    if (fileInput && fileName && submitBtn) {
+                        fileInput.addEventListener('change', function () {
+                            var name = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : 'Sin archivo seleccionado';
+                            fileName.textContent = name;
+                            submitBtn.disabled = !fileInput.files || fileInput.files.length === 0;
+                        });
+                    }
+
+                    if (form && loading && submitBtn) {
+                        form.addEventListener('submit', function () {
+                            loading.hidden = false;
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
+                        });
+                    }
+                });
+            </script>
+        @endpush
+    @endif
 </x-app-layout>

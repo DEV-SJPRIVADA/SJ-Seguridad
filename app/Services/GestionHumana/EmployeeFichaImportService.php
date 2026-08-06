@@ -6,6 +6,7 @@ use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Support\ImportFailureRow;
 use App\Support\SpreadsheetCellReader;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class EmployeeFichaImportService
 {
     /**
-     * @return array{imported: int, updated: int, skipped: int, empty_rows: int, errors: list<string>}
+     * @return array{imported: int, updated: int, skipped: int, empty_rows: int, errors: list<string>, failures: list<array<string, mixed>>}
      */
     public function import(string $path, bool $dryRun = false, ?int $userId = null): array
     {
@@ -25,7 +26,7 @@ class EmployeeFichaImportService
             throw new \InvalidArgumentException('No se puede leer el archivo: '.$path);
         }
 
-        $stats = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'empty_rows' => 0, 'errors' => []];
+        $stats = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'empty_rows' => 0, 'errors' => [], 'failures' => []];
         $spreadsheet = IOFactory::load($path);
         $sheet = $spreadsheet->getActiveSheet();
         $headers = $this->readHeaders($sheet);
@@ -42,6 +43,14 @@ class EmployeeFichaImportService
 
             if ($cedula === '') {
                 $stats['empty_rows']++;
+                $stats['failures'][] = ImportFailureRow::make(
+                    $row,
+                    null,
+                    'Cedula',
+                    ImportFailureRow::SEVERITY_EMPTY,
+                    'Fila sin cedula (ignorada).',
+                    $data,
+                );
 
                 continue;
             }
@@ -71,7 +80,16 @@ class EmployeeFichaImportService
                     }
                 });
             } catch (\Throwable $e) {
-                $stats['errors'][] = "Fila {$row} ({$cedula}): {$e->getMessage()}";
+                $failure = ImportFailureRow::make(
+                    $row,
+                    $cedula,
+                    'Cedula',
+                    ImportFailureRow::SEVERITY_ERROR,
+                    $e->getMessage(),
+                    $data,
+                );
+                $stats['failures'][] = $failure;
+                $stats['errors'][] = ImportFailureRow::message($failure);
                 $stats['skipped']++;
             }
         }
