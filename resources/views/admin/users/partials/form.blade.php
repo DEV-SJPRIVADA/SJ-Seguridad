@@ -275,9 +275,7 @@
             @endunless
             <div class="form-actions__group">
                 <a href="{{ route('admin.users.index') }}" class="btn btn--secondary btn--sm">Cancelar</a>
-                @unless ($compactCreate)
-                    <button type="submit" class="btn btn--primary btn--sm">{{ $buttonLabel }}</button>
-                @endunless
+                <button type="submit" class="btn btn--primary btn--sm">{{ $buttonLabel }}</button>
             </div>
         </div>
     </div>

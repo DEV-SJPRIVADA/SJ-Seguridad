@@ -1167,3 +1167,48 @@ input:checked + .toggle-slider:before {
         grid-template-columns: 1fr;
     }
 }
+
+/* Admin — editar usuario (cabecera compacta) */
+.admin-user-edit__header {
+    align-items: flex-start;
+    padding: 0.55rem 0;
+    gap: 0.75rem;
+}
+
+.admin-user-edit__header .panel-title--page {
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.admin-user-edit__meta {
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--color-text-soft);
+}
+
+.admin-user-edit__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.admin-user-edit__header .status-pill {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.68rem;
+}
+
+.admin-user-edit {
+    padding: 0.45rem 0 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .admin-user-edit__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-user-edit__actions {
+        justify-content: flex-start;
+    }
+}

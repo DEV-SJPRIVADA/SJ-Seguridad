@@ -13,9 +13,6 @@
                     <a href="{{ route('admin.users.index') }}" class="btn btn--secondary btn--sm">
                         Volver
                     </a>
-                    <button type="submit" form="user-permissions-form" class="btn btn--primary btn--sm">
-                        Guardar usuario
-                    </button>
                 </div>
             </div>
         </div>
@@ -31,7 +28,7 @@
                     'allSites' => $allSites,
                     'roles' => $roles,
                     'permissionForm' => $permissionForm,
-                    'buttonLabel' => 'Guardar usuario',
+                    'buttonLabel' => 'Crear usuario',
                     'method' => 'POST',
                     'selectedPermissions' => old('permissions', []),
                     'selectedRole' => old('role'),
