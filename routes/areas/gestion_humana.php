@@ -39,6 +39,5 @@ Route::middleware(['password.changed'])
         Route::get('/', [ArchivoController::class, 'index'])->name('index');
         Route::post('/importar', [ArchivoController::class, 'import'])->name('import');
         Route::get('/importar/reporte/{token}', [ArchivoController::class, 'downloadImportReport'])->name('import-report');
-        Route::get('/{fichaEntry}/editar', [ArchivoController::class, 'edit'])->name('edit');
         Route::patch('/{fichaEntry}', [ArchivoController::class, 'update'])->name('update');
     });

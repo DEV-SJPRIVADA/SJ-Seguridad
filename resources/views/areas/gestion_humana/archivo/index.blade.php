@@ -25,6 +25,14 @@
                 <div class="alert alert--danger archivo-page__alert">{{ $errors->first('import_file') }}</div>
             @endif
 
+            @if ($errors->any() && ! $errors->has('import_file'))
+                <div class="alert alert--danger archivo-page__alert">
+                    @foreach ($errors->all() as $error)
+                        <p class="archivo-page__inline-error">{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="panel">
                 <div class="panel__body panel__body--compact">
                     <div class="req-manage-filters">
@@ -103,6 +111,9 @@
                             </thead>
                             <tbody>
                                 @forelse ($entries as $entry)
+                                    @php
+                                        $rowFormId = 'archivo-row-'.$entry->id;
+                                    @endphp
                                     <tr>
                                         <td>{{ $entry->profile?->document_number ?: $entry->hired_document }}</td>
                                         <td>{{ $entry->profile?->full_name ?: $entry->hired_full_name }}</td>
@@ -111,12 +122,41 @@
                                         <td>{{ $entry->cityName() ?: '—' }}</td>
                                         <td><x-date-table :value="$entry->hireDate()" /></td>
                                         <td><x-date-table :value="$entry->terminationDate()" /></td>
-                                        <td>{{ $entry->profile?->archive_shelf ?: '—' }}</td>
-                                        <td>{{ $entry->profile?->archive_box ?: '—' }}</td>
                                         @if ($canManage)
-                                            <td class="table-actions">
-                                                <a href="{{ route('gestion-humana.archivo.edit', $entry) }}" class="btn btn--secondary btn--sm">Editar</a>
+                                            <td class="archivo-page__field-cell">
+                                                <label class="sr-only" for="{{ $rowFormId }}-shelf">Estante</label>
+                                                <input
+                                                    id="{{ $rowFormId }}-shelf"
+                                                    form="{{ $rowFormId }}"
+                                                    type="text"
+                                                    name="archive_shelf"
+                                                    class="form-input archivo-page__inline-input"
+                                                    maxlength="100"
+                                                    value="{{ old('archive_shelf', $entry->profile?->archive_shelf) }}"
+                                                    placeholder="Estante"
+                                                >
                                             </td>
+                                            <td class="archivo-page__field-cell">
+                                                <label class="sr-only" for="{{ $rowFormId }}-box">Caja</label>
+                                                <input
+                                                    id="{{ $rowFormId }}-box"
+                                                    form="{{ $rowFormId }}"
+                                                    type="text"
+                                                    name="archive_box"
+                                                    class="form-input archivo-page__inline-input"
+                                                    maxlength="100"
+                                                    value="{{ old('archive_box', $entry->profile?->archive_box) }}"
+                                                    placeholder="Caja"
+                                                >
+                                            </td>
+                                            <td class="table-actions archivo-page__actions-cell">
+                                                <button type="submit" form="{{ $rowFormId }}" class="btn btn--primary btn--sm">
+                                                    Actualizar
+                                                </button>
+                                            </td>
+                                        @else
+                                            <td>{{ $entry->profile?->archive_shelf ?: '—' }}</td>
+                                            <td>{{ $entry->profile?->archive_box ?: '—' }}</td>
                                         @endif
                                     </tr>
                                 @empty
@@ -127,6 +167,24 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if ($canManage)
+                        @foreach ($entries as $entry)
+                            <form
+                                id="archivo-row-{{ $entry->id }}"
+                                method="POST"
+                                action="{{ route('gestion-humana.archivo.update', $entry) }}"
+                                class="archivo-page__row-form"
+                                hidden
+                            >
+                                @csrf
+                                @method('PATCH')
+                                @if ($filters['q'] ?? '')
+                                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
+                                @endif
+                            </form>
+                        @endforeach
+                    @endif
                 </div>
             </div>
 

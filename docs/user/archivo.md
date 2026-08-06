@@ -28,9 +28,8 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 
 ### Registrar o corregir ubicacion
 
-1. En el listado, pulse **Editar** en la fila del empleado.
-2. Complete **Estantes** y **Cajas** (ej. `A-03`, `Caja 12`).
-3. Guarde. El empleado permanece en ficha; solo se actualiza su ubicacion documental.
+1. En el listado de **Archivo**, edite **Estante** y **Caja** directamente en la fila del empleado.
+2. Pulse **Actualizar** en esa fila para guardar.
 
 ### Importar ubicaciones masivamente
 
@@ -57,3 +56,4 @@ Use ese Excel para trabajo offline del area de archivo. Complete estantes/cajas 
 | --- | --- | --- | --- |
 | 1.0 | 2026-08-06 | Modulo Archivo | Campos estantes/cajas, tablero Archivo, export dedicado |
 | 1.1 | 2026-08-06 | Import archivo | Carga masiva de estantes/cajas separada del masivo de nomina |
+| 1.2 | 2026-08-06 | Edicion inline | Tabla editable; eliminada vista `/editar` |

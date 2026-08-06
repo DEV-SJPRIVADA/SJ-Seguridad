@@ -123,21 +123,6 @@ class ArchivoController extends Controller
         return $this->downloadImportFailureReport($request->user(), $token, 'employee_archive');
     }
 
-    public function edit(PersonalRequisitionFichaEntry $fichaEntry): View
-    {
-        abort_unless($this->canManage(), 403);
-
-        $fichaEntry->load(['profile', 'requisition.position', 'requisition.client']);
-
-        if ($fichaEntry->moved_to_ficha_at === null) {
-            abort(404);
-        }
-
-        return view('areas.gestion_humana.archivo.edit', [
-            'entry' => $fichaEntry,
-        ]);
-    }
-
     public function update(UpdateEmployeeArchiveRequest $request, PersonalRequisitionFichaEntry $fichaEntry): RedirectResponse
     {
         abort_unless($this->canManage(), 403);
@@ -166,7 +151,7 @@ class ArchivoController extends Controller
             ->route('gestion-humana.archivo.index', array_filter([
                 'q' => $request->string('q')->toString() ?: null,
             ]))
-            ->with('status', 'Ubicacion de archivo actualizada correctamente.');
+            ->with('status', 'Ubicacion actualizada correctamente.');
     }
 
     private function authorizeView(): void

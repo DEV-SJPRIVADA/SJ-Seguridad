@@ -51,7 +51,6 @@ Export archivo en Ficha empleados: usuarios con `archivo.view` **o** permisos de
 | Metodo | URI | Nombre | Permiso |
 | --- | --- | --- | --- |
 | GET | `/gestion-humana/archivo` | `gestion-humana.archivo.index` | `archivo.view` |
-| GET | `/gestion-humana/archivo/{fichaEntry}/editar` | `gestion-humana.archivo.edit` | `archivo.manage` |
 | PATCH | `/gestion-humana/archivo/{fichaEntry}` | `gestion-humana.archivo.update` | `archivo.manage` |
 | POST | `/gestion-humana/archivo/importar` | `gestion-humana.archivo.import` | `archivo.manage` |
 | GET | `/gestion-humana/archivo/importar/reporte/{token}` | `gestion-humana.archivo.import-report` | `archivo.manage` |
@@ -66,7 +65,7 @@ Export archivo en Ficha empleados: usuarios con `archivo.view` **o** permisos de
 
 ## Controlador
 
-`App\Http\Controllers\GestionHumana\ArchivoController` — listado, edicion y actualizacion de `archive_shelf` / `archive_box`. Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
+`App\Http\Controllers\GestionHumana\ArchivoController` — listado con edicion inline de `archive_shelf` / `archive_box` (PATCH por fila). Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
 
 ## Tests
 

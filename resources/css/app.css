@@ -1132,6 +1132,35 @@ a {
     margin-top: 0.5rem;
 }
 
+.archivo-page__alert {
+    margin-bottom: 0.75rem;
+}
+
+.archivo-page__inline-error {
+    margin: 0;
+}
+
+.archivo-page__inline-error + .archivo-page__inline-error {
+    margin-top: 0.35rem;
+}
+
+.archivo-page__field-cell {
+    min-width: 6.5rem;
+    vertical-align: middle;
+}
+
+.archivo-page__inline-input {
+    width: 100%;
+    min-width: 5.5rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.84rem;
+}
+
+.archivo-page__actions-cell {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .ficha-empleados-row--clickable {
     cursor: pointer;
 }
