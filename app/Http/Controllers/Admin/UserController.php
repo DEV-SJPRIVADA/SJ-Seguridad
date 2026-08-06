@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Mail\UserWelcomeMail;
 use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\Admin\UserAccessSummary;
@@ -15,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -38,7 +40,8 @@ class UserController extends Controller
                 $builder->where(function ($inner) use ($search): void {
                     $inner
                         ->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('document_number', 'like', "%{$search}%");
                 });
             })
             ->orderBy('name');
@@ -92,14 +95,17 @@ class UserController extends Controller
         $permissions = $request->input('permissions', []);
         $areaKey = $request->input('area_key');
         $warnings = $this->permissionValidator->warnings($areaKey, $permissions);
+        $documentNumber = $request->string('document_number')->toString();
+        $temporaryPassword = $documentNumber;
 
-        DB::transaction(function () use ($request, $permissions): void {
+        $user = DB::transaction(function () use ($request, $permissions, $documentNumber, $temporaryPassword): User {
             $user = User::create([
                 'name' => $request->string('name')->toString(),
+                'document_number' => $documentNumber,
                 'area_key' => $request->input('area_key'),
                 'sede_id' => $request->input('sede_id'),
                 'email' => Str::lower($request->string('email')->toString()),
-                'password' => $request->string('password')->toString(),
+                'password' => $temporaryPassword,
                 'is_active' => $request->boolean('is_active', true),
                 'must_change_password' => $request->boolean('must_change_password', true),
                 'created_by' => $request->user()->id,
@@ -108,7 +114,11 @@ class UserController extends Controller
 
             $user->assignRole($request->string('role')->toString());
             $user->syncPermissions($permissions);
+
+            return $user;
         });
+
+        Mail::to($user->email)->send(new UserWelcomeMail($user, $temporaryPassword));
 
         return redirect()
             ->route('admin.users.index')
@@ -139,6 +149,7 @@ class UserController extends Controller
         DB::transaction(function () use ($request, $user, $permissions): void {
             $attributes = [
                 'name' => $request->string('name')->toString(),
+                'document_number' => $request->string('document_number')->toString(),
                 'area_key' => $request->input('area_key'),
                 'sede_id' => $request->input('sede_id'),
                 'email' => Str::lower($request->string('email')->toString()),

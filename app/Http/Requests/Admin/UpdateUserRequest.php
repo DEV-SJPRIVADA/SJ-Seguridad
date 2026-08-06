@@ -31,6 +31,12 @@ class UpdateUserRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
+            'document_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('users', 'document_number')->ignore($user?->getKey()),
+            ],
             'area_key' => ['nullable', 'string', Rule::in(array_keys(config('access.areas', [])))],
             'sede_id' => ['nullable', 'integer', Rule::exists('supply_sites', 'id')],
             'email' => [
@@ -59,6 +65,8 @@ class UpdateUserRequest extends FormRequest
             'email.email' => 'El correo electronico no tiene un formato valido.',
             'email.unique' => 'Ese correo electronico ya esta registrado por otro usuario.',
             'name.required' => 'El nombre completo es obligatorio.',
+            'document_number.required' => 'La cedula es obligatoria.',
+            'document_number.unique' => 'Esa cedula ya esta registrada por otro usuario.',
             'role.required' => 'Debes seleccionar un rol.',
             'role.exists' => 'El rol seleccionado no es valido.',
             'sede_id.exists' => 'La sede seleccionada ya no existe. Elige otra sede o deja el campo vacio.',
@@ -75,6 +83,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => 'nombre completo',
+            'document_number' => 'cedula',
             'email' => 'correo electronico',
             'password' => 'nueva contrasena',
             'role' => 'rol',
@@ -89,6 +98,7 @@ class UpdateUserRequest extends FormRequest
 
         $this->merge([
             'name' => trim((string) $this->input('name', '')),
+            'document_number' => trim((string) $this->input('document_number', '')),
             'email' => Str::lower(trim((string) $this->input('email', ''))),
             'area_key' => blank($this->input('area_key')) ? null : $this->string('area_key')->toString(),
             'sede_id' => blank($this->input('sede_id')) ? null : $this->integer('sede_id'),

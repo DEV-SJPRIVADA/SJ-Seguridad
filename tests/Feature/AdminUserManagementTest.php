@@ -2,9 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\UserWelcomeMail;
 use App\Models\User;
 use App\Services\Admin\UserPermissionFormBuilder;
+use App\Services\Admin\UserPermissionValidator;
+use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AdminUserManagementTest extends TestCase
@@ -15,18 +20,20 @@ class AdminUserManagementTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\RoleAndPermissionSeeder::class);
+        $this->seed(RoleAndPermissionSeeder::class);
     }
 
     public function test_admin_can_create_a_user(): void
     {
+        Mail::fake();
+
         $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
         $admin->update(['must_change_password' => false]);
 
         $response = $this->actingAs($admin)->post(route('admin.users.store'), [
             'name' => 'Usuario Operativo',
+            'document_number' => '1234567890',
             'email' => 'operativo@example.com',
-            'password' => 'Temporal123!',
             'role' => 'usuario',
             'is_active' => '1',
             'must_change_password' => '1',
@@ -36,9 +43,18 @@ class AdminUserManagementTest extends TestCase
         $response->assertRedirect(route('admin.users.index'));
         $this->assertDatabaseHas('users', [
             'email' => 'operativo@example.com',
+            'document_number' => '1234567890',
             'is_active' => true,
             'must_change_password' => true,
         ]);
+
+        $createdUser = User::query()->where('email', 'operativo@example.com')->firstOrFail();
+        $this->assertTrue(Hash::check('1234567890', $createdUser->password));
+
+        Mail::assertSent(UserWelcomeMail::class, function (UserWelcomeMail $mail) use ($createdUser): bool {
+            return $mail->hasTo($createdUser->email)
+                && $mail->temporaryPassword === '1234567890';
+        });
     }
 
     public function test_non_admin_cannot_access_user_management(): void
@@ -73,6 +89,7 @@ class AdminUserManagementTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.users.create'));
 
         $response->assertOk();
+        $response->assertSee('Cedula');
         $response->assertSee('En su area asignada');
         $response->assertSee('Funcionalidades transversales');
         $response->assertSee('Activa visualizacion de otras areas');
@@ -189,7 +206,7 @@ class AdminUserManagementTest extends TestCase
 
     public function test_permission_validator_warns_when_compras_catalog_lacks_supply_board(): void
     {
-        $warnings = app(\App\Services\Admin\UserPermissionValidator::class)->warnings('compras', [
+        $warnings = app(UserPermissionValidator::class)->warnings('compras', [
             'supply.tab.catalog',
         ]);
 
@@ -247,6 +264,7 @@ class AdminUserManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->patch(route('admin.users.update', $user), [
             'name' => $user->name,
+            'document_number' => $user->document_number,
             'email' => $user->email,
             'password' => '',
             'role' => 'usuario',

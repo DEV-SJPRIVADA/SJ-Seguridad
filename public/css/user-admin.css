@@ -1035,3 +1035,135 @@ input:checked + .toggle-slider:before {
         flex-wrap: nowrap;
     }
 }
+
+/* Admin — crear usuario (vista compacta) */
+.admin-user-create {
+    padding: 0.55rem 0 0.85rem;
+}
+
+.admin-user-create__header {
+    align-items: flex-start;
+}
+
+.admin-user-create__header .panel-title--page {
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.admin-user-create__header .panel-text {
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    color: var(--color-text-soft);
+}
+
+.admin-user-create .panel--compact {
+    padding: 0;
+    overflow: hidden;
+}
+
+.admin-user-create .panel--compact .panel__body,
+.admin-user-create .user-form.panel__body {
+    padding: 0.85rem 1rem 0.75rem;
+}
+
+.admin-user-create .module-subnav {
+    margin: -0.85rem -1rem 0.75rem;
+    padding: 0.45rem 1rem 0;
+}
+
+.admin-user-create__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem 0.85rem;
+}
+
+.admin-user-create__security {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1.25rem;
+    margin-top: 0.85rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface-muted, rgba(148, 163, 184, 0.08));
+}
+
+.admin-user-create__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.user-form--create .user-form__body {
+    padding: 0.85rem 1rem 1rem;
+}
+
+.user-form--create .section-header--compact {
+    margin-bottom: 0.65rem;
+}
+
+.user-form--create .section-header--compact .section-header__title {
+    font-size: 0.95rem;
+}
+
+.user-form--create .section-header--compact .section-header__desc {
+    font-size: 0.78rem;
+}
+
+.user-form--create .user-permissions-toolbar {
+    margin-bottom: 0.65rem;
+}
+
+.user-form--create .user-permissions-layout--compact {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.user-form--create .user-form__footer--compact {
+    margin-top: 0;
+    padding: 0.75rem 1rem;
+}
+
+.user-form--create .user-form__footer--compact .form-actions {
+    justify-content: flex-end;
+}
+
+.user-form--create .form-label {
+    font-size: 0.78rem;
+}
+
+.user-form--create .form-input,
+.user-form--create .form-select {
+    min-height: 38px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.86rem;
+}
+
+.user-form--create .text-small.text-muted {
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+@media (max-width: 1100px) {
+    .admin-user-create__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-user-create__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-user-create__header .form-actions__group {
+        justify-content: flex-end;
+    }
+
+    .admin-user-create__grid {
+        grid-template-columns: 1fr;
+    }
+}

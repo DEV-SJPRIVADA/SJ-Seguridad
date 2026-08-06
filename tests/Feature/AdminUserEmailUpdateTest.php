@@ -32,6 +32,7 @@ class AdminUserEmailUpdateTest extends TestCase
 
         $response = $this->actingAs($admin)->patch(route('admin.users.update', $user), [
             'name' => $user->name,
+            'document_number' => $user->document_number,
             'email' => 'updated@example.com',
             'password' => '',
             'role' => 'usuario',
@@ -59,6 +60,7 @@ class AdminUserEmailUpdateTest extends TestCase
 
         $response = $this->actingAs($admin)->from(route('admin.users.edit', $user))->patch(route('admin.users.update', $user), [
             'name' => $user->name,
+            'document_number' => $user->document_number,
             'email' => 'taken@example.com',
             'password' => '',
             'role' => 'usuario',
@@ -110,6 +112,7 @@ class AdminUserEmailUpdateTest extends TestCase
 
         $response = $this->actingAs($admin)->patch(route('admin.users.update', $user), [
             'name' => $user->name,
+            'document_number' => $user->document_number,
             'email' => 'permissions-check@example.com',
             'password' => '',
             'role' => 'usuario',
