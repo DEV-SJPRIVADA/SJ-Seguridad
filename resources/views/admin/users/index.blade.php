@@ -41,7 +41,7 @@
                                         type="text"
                                         name="q"
                                         value="{{ $filters['q'] ?? '' }}"
-                                        placeholder="Buscar por nombre o correo"
+                                        placeholder="Buscar por nombre, cedula o correo"
                                         class="form-input"
                                     >
                                     <button type="submit" class="btn btn--secondary">
@@ -129,6 +129,9 @@
                                             <p class="text-caption">Resumen del usuario</p>
                                             <h3 class="page-title page-title--sm title-spaced">{{ $selectedUser->name }}</h3>
                                             <p class="page-subtitle">{{ $selectedUser->email }}</p>
+                                            @if ($selectedUser->document_number)
+                                                <p class="page-subtitle">Cedula: {{ $selectedUser->document_number }}</p>
+                                            @endif
                                         </div>
 
                                         <div class="form-actions__group">
@@ -152,6 +155,10 @@
                                         <div class="card card--muted">
                                             <h4 class="panel-title">Ficha operativa</h4>
                                             <div class="detail-grid block-spaced">
+                                                <div class="card">
+                                                    <p class="text-caption">Cedula</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->document_number ?: 'Sin cedula registrada' }}</p>
+                                                </div>
                                                 <div class="card">
                                                     <p class="text-caption">Area base</p>
                                                     <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin area asignada' }}</p>

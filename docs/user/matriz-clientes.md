@@ -74,15 +74,14 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 3. Actualice estados de documentos, **fecha de vencimiento** y **dias de anticipacion** en el checklist segun corresponda.
 4. El aviso se envia **una vez** cuando el cliente entra en ventana «por vencer» y **una vez** cuando pasa a «vencida» (misma fecha de vencimiento); no hay recordatorios diarios repetidos mientras sigue en ventana.
 
-### Importacion masiva (soporte TI)
+### Carga masiva (clientes + servicios + checklist)
 
-La carga desde Excel MT-CO-01 la ejecuta soporte con comando de consola y una copia del archivo **fuera del repositorio**:
+1. En **Comercial → Clientes**, pulse el icono de **carga masiva** (requiere permiso de gestion).
+2. **Descargar plantilla vacia** para conocer columnas y formato.
+3. Opcional: **Exportar datos para actualizar** (respeta filtros del listado), edite el Excel y vuelva a subirlo.
+4. **Elegir archivo** (.xlsx) y **Importar**. Revise el resumen en pantalla y, si hubo filas no cargadas, use **Descargar reporte de filas fallidas (.xlsx)**.
 
-```powershell
-php artisan comercial:import-mt-co-01 "C:\ruta\MT-CO-01 Matriz de clientes.xlsx"
-```
-
-No es una accion de usuario final en pantalla.
+Una fila del Excel corresponde a **un servicio**. Incluye NIT, datos del cliente, portafolio (`seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`), datos del contrato/servicio y columnas del checklist (P. economica, FO-CO-02, RUT, etc.) con valores OK, X, Pendiente, N/A o Incompleto.
 
 ## Control de cambios
 
@@ -91,4 +90,4 @@ No es una accion de usuario final en pantalla.
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-07-22 | Documentacion | Excel MT-CO-01 fuera del repo; import con ruta explicita |
 | 1.2 | 2026-07-27 | FEAT-007 | Vencimiento opcional por documento del checklist; badges de vigencia incluyen documentos |
-| 1.3 | 2026-07-27 | FEAT-010 | Dashboard comercial con graficos ApexCharts unificados (sin Chart.js) |
+| 1.4 | 2026-08-05 | Carga masiva web | Plantilla unificada clientes/servicios/checklist; retirado CLI import-mt-co-01 |

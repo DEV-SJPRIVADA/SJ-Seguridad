@@ -30,6 +30,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-024 | Preview HTML informe PPTX FO-GI-39 (narrativas editables) | orquestado | Si | [`docs/runs/FEAT-024-run-log.md`](runs/FEAT-024-run-log.md) | 2026-08-04 |
 | FEAT-023 | Captura delegada indicadores (suplencia vacaciones) | orquestado | Si | [`docs/runs/FEAT-023-run-log.md`](runs/FEAT-023-run-log.md) | 2026-08-04 |
 | FEAT-022 | Pendientes ficha: Gestionar Empleado con formulario precargado desde requisicion | orquestado | Si | [`docs/runs/FEAT-022-run-log.md`](runs/FEAT-022-run-log.md) | 2026-08-03 |
 | FEAT-021 | Audit log central del sistema | orquestado | Si | [`docs/runs/FEAT-021-run-log.md`](runs/FEAT-021-run-log.md) | 2026-08-03 |

@@ -1,29 +1,26 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="app-container">
-            <div class="panel">
-                <div class="panel__body panel__body--soft">
-                    <div class="action-row">
-                        <div>
-                            <p class="eyebrow">Accesos de Usuarios</p>
-                            <h2 class="page-title title-spaced">Crear usuario</h2>
-                            <p class="page-subtitle">Define datos base, rol y permisos iniciales del nuevo usuario.</p>
-                        </div>
-
-                        <div class="form-actions__group">
-                            <a href="{{ route('admin.users.index') }}" class="btn btn--secondary">
-                                Volver al listado
-                            </a>
-                        </div>
+            <div class="admin-user-create__header action-row action-row--compact">
+                <div class="panel-heading-row panel-heading-row--wrap">
+                    <div>
+                        <p class="eyebrow">Accesos de usuarios</p>
+                        <h2 class="panel-title panel-title--page">Crear usuario</h2>
+                        <p class="panel-text">Datos base, rol y permisos. La contrasena temporal sera la cedula.</p>
                     </div>
+                </div>
+                <div class="form-actions__group">
+                    <a href="{{ route('admin.users.index') }}" class="btn btn--secondary btn--sm">
+                        Volver
+                    </a>
                 </div>
             </div>
         </div>
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section admin-user-create">
         <div class="app-container">
-            <div class="panel">
+            <div class="panel panel--compact">
                 @include('admin.users.partials.form', [
                     'action' => route('admin.users.store'),
                     'areas' => $areas,
@@ -31,11 +28,12 @@
                     'allSites' => $allSites,
                     'roles' => $roles,
                     'permissionForm' => $permissionForm,
-                    'buttonLabel' => 'Guardar usuario',
+                    'buttonLabel' => 'Crear usuario',
                     'method' => 'POST',
                     'selectedPermissions' => old('permissions', []),
                     'selectedRole' => old('role'),
                     'user' => null,
+                    'compactCreate' => true,
                 ])
             </div>
         </div>

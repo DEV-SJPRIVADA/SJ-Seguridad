@@ -161,6 +161,32 @@ class PersonalRequisition extends Model
         return $this->hasMany(PersonalRequisitionStatusLog::class);
     }
 
+    public function managementApprovalDecisionLog(): ?PersonalRequisitionStatusLog
+    {
+        $logs = $this->relationLoaded('statusLogs')
+            ? $this->statusLogs
+            : $this->statusLogs()->with('author')->get();
+
+        return $logs
+            ->where('from_status', self::STATUS_PENDIENTE_AUTORIZACION_GERENCIA)
+            ->whereIn('to_status', [self::STATUS_SOLICITADA, self::STATUS_CANCELADA])
+            ->sortByDesc('id')
+            ->first();
+    }
+
+    public function managementRejectionComment(): ?string
+    {
+        $log = $this->managementApprovalDecisionLog();
+
+        if ($log === null || $log->to_status !== self::STATUS_CANCELADA) {
+            return null;
+        }
+
+        $comment = trim((string) $log->comment);
+
+        return $comment !== '' ? $comment : null;
+    }
+
     public function changeLogs(): HasMany
     {
         return $this->hasMany(PersonalRequisitionChangeLog::class);

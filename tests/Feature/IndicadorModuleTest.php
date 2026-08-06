@@ -2,19 +2,23 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Operaciones\IndicadorController;
 use App\Models\AuditLog;
 use App\Models\Improvement;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
 use App\Models\Period;
 use App\Models\User;
+use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
+use App\Services\Indicadores\IndicatorCapturePdfPresenter;
 use App\Services\Indicadores\IndicatorMetricCalculator;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DashboardWeightSeeder;
 use Database\Seeders\IndicadorDemoDataSeeder;
 use Database\Seeders\IndicadorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -452,6 +456,193 @@ class IndicadorModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertGreaterThan(5000, strlen($response->streamedContent()));
+    }
+
+    public function test_operations_export_user_can_download_consolidado_excel_with_sheet_content(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.consolidado.excel', [
+            'indicator' => $indicator->code,
+            'year' => $year,
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertGreaterThan(5000, strlen($response->streamedContent()));
+    }
+
+    public function test_consolidado_excel_export_contains_ficha_sections_on_single_sheet(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.consolidado.excel', [
+            'indicator' => $indicator->code,
+            'year' => $year,
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+
+        $content = $response->streamedContent();
+        $temp = tempnam(sys_get_temp_dir(), 'consolidado-xlsx-');
+        file_put_contents($temp, $content);
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($temp));
+        $sheetXml = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+        $sharedStrings = (string) $zip->getFromName('xl/sharedStrings.xml');
+        $workbookXml = (string) $zip->getFromName('xl/workbook.xml');
+        $zip->close();
+
+        if (is_file($temp)) {
+            unlink($temp);
+        }
+
+        $this->assertStringContainsString('FICHA DEL INDICADOR DE GESTION', $sharedStrings);
+        $this->assertStringContainsString('GRAFICOS', $sharedStrings);
+        $this->assertStringContainsString('ANALISIS DE RESULTADOS', $sharedStrings);
+        $this->assertStringContainsString('<drawing', $sheetXml);
+        $this->assertSame(1, substr_count($workbookXml, '<sheet '));
+    }
+
+    public function test_operations_export_user_can_download_capture_pdf_with_sheet_content(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.capture']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.leader.pdf', [
+            'indicator' => $indicator->code,
+            'year' => $year,
+            'month' => 7,
+            'user_id' => $user->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+        $this->assertGreaterThan(5000, strlen($response->getContent()));
+    }
+
+    public function test_capture_pdf_view_includes_sheet_and_metrics_sections(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false, 'area_key' => 'operaciones']);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.capture']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+        $controller = app(IndicadorController::class);
+        $request = Request::create('/', 'GET', [
+            'year' => $year,
+            'month' => 7,
+            'user_id' => $user->id,
+        ]);
+        $request->setUserResolver(fn () => $user);
+
+        $reportMethod = new \ReflectionMethod($controller, 'buildLeaderReport');
+        $reportMethod->setAccessible(true);
+        $report = $reportMethod->invoke($controller, $request, $indicator);
+
+        $html = view('areas.operaciones.exports.capture-pdf', app(IndicatorCapturePdfPresenter::class)->present($report))->render();
+
+        $this->assertStringContainsString('FICHA DEL INDICADOR DE GESTION', $html);
+        $this->assertStringContainsString('Resultado %', $html);
+        $this->assertStringContainsString('ANALISIS DE RESULTADOS', $html);
+    }
+
+    public function test_operations_export_user_can_download_consolidado_pdf_with_sheet_content(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.consolidado.pdf', [
+            'indicator' => $indicator->code,
+            'year' => $year,
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_consolidado_pdf_view_uses_portrait_split_at_charts(): void
+    {
+        $manager = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $manager->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $indicator = Indicator::query()->where('code', 'FT-OP-01')->firstOrFail();
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $controller = app(IndicadorController::class);
+        $request = Request::create('/', 'GET', ['year' => $year, 'month' => 7]);
+        $request->setUserResolver(fn () => $manager);
+
+        $reportMethod = new \ReflectionMethod($controller, 'buildConsolidadoReport');
+        $reportMethod->setAccessible(true);
+        $report = $reportMethod->invoke($controller, $request, $indicator);
+
+        $html = view(
+            'areas.operaciones.exports.capture-pdf',
+            app(IndicatorCapturePdfPresenter::class)->present($report, consolidadoPortrait: true)
+        )->render();
+
+        $chartPos = strpos($html, 'class="chart-title">GRAFICOS');
+        $pageBreakPos = strpos($html, 'class="pdf-sheet-page-2"');
+        $analysisPos = strpos($html, 'ANALISIS DE RESULTADOS');
+
+        $this->assertNotFalse($chartPos);
+        $this->assertNotFalse($pageBreakPos);
+        $this->assertNotFalse($analysisPos);
+        $this->assertTrue($chartPos < $pageBreakPos, 'GRAFICOS debe ir antes del salto de pagina.');
+        $this->assertTrue($analysisPos > $pageBreakPos, 'Analisis debe ir en la hoja 2.');
+        $this->assertStringContainsString('Pagina 1 de 2', $html);
+        $this->assertStringContainsString('Pagina 2 de 2', $html);
+    }
+
+    public function test_operations_export_user_can_download_dashboard_pdf_with_ranking_and_critical_sections(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $year = (int) config('indicators.base_year', now()->year);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.dashboard.pdf', [
+            'year' => $year,
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_dashboard_pdf_view_includes_ranking_and_critical_sections(): void
+    {
+        $year = (int) config('indicators.base_year', now()->year);
+        $month = 7;
+        $dashboard = app(OperationsDashboardService::class)->build($year, $month);
+        $html = view('areas.operaciones.dashboard.pdf', compact('year', 'month', 'dashboard'))->render();
+
+        $this->assertStringContainsString('Ranking de usuarios', $html);
+        $this->assertStringContainsString('Indicadores criticos', $html);
+        $this->assertStringContainsString('Score global ponderado', $html);
     }
 
     public function test_operations_export_user_can_download_management_pptx(): void
@@ -500,6 +691,42 @@ class IndicadorModuleTest extends TestCase
         $this->assertStringNotContainsString('externalData', (string) $chart);
         $this->assertDoesNotMatchRegularExpression('/<c:extLst>\s*<\/c:extLst>/', (string) $chart);
         $this->assertStringContainsString('<c:v>684</c:v>', (string) $chart);
+    }
+
+    public function test_management_pptx_replaces_slide_text_and_produces_valid_slide_xml(): void
+    {
+        $user = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $user->givePermissionTo(['view.dashboard', 'operations.export', 'operations.view']);
+
+        $response = $this->actingAs($user)->get(route('indicadores.export.management.pptx', [
+            'year' => (int) config('indicators.base_year', now()->year),
+            'month' => 7,
+        ]));
+
+        $response->assertOk();
+
+        $file = $response->baseResponse->getFile();
+        $this->assertNotNull($file);
+
+        $zip = new \ZipArchive;
+        $zip->open($file->getPathname());
+
+        $slide1 = (string) $zip->getFromName('ppt/slides/slide1.xml');
+        $slide2 = (string) $zip->getFromName('ppt/slides/slide2.xml');
+
+        $zip->close();
+
+        $this->assertStringNotContainsString('{{REPORT_TITLE}}', $slide1);
+        $this->assertStringNotContainsString('{{INDICATOR_TITLE_FT_OP_01}}', $slide2);
+        $this->assertStringNotContainsString('{{INDICATOR_NARRATIVE_FT_OP_01}}', $slide2);
+        $this->assertStringNotContainsString('ns3:', $slide2);
+        $this->assertStringNotContainsString('ns4:', $slide2);
+        $this->assertStringContainsString('PERSONAL CAPACITADO SJ', $slide2);
+
+        $previous = libxml_use_internal_errors(true);
+        $this->assertNotFalse(simplexml_load_string($slide1));
+        $this->assertNotFalse(simplexml_load_string($slide2));
+        libxml_use_internal_errors($previous);
     }
 
     public function test_critical_result_detects_below_threshold_for_gte_operator(): void

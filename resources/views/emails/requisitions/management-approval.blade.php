@@ -14,11 +14,11 @@ Se registro una solicitud de personal que **requiere autorizacion de gerencia** 
 @endif
 </x-mail::panel>
 
-<x-mail::button :url="route('requisitions.management-approval.show', ['module' => 'gestion_humana', 'requisition' => $requisition->id])">
-Ingresar y revisar
+<x-mail::button :url="$emailApprovalUrl">
+Autorizar por correo
 </x-mail::button>
 
-Tambien puede autorizar desde **Requisiciones → Autorizacion gerencia** en el tablero de Gestion humana.
+Tambien puede ingresar a la plataforma: [Revisar en el tablero]({{ $platformUrl }})
 
 Atentamente,  
 **{{ config('app.name') }}**

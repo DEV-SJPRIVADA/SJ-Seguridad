@@ -655,3 +655,15 @@
     width: 100% !important;
 }
 
+.indicadores-mgmt-report-chart {
+    width: 100%;
+    min-height: 280px;
+    height: 280px;
+    margin-top: 0.75rem;
+}
+
+.indicadores-mgmt-report-chart .apexcharts-canvas,
+.indicadores-mgmt-report-chart svg {
+    width: 100% !important;
+}
+

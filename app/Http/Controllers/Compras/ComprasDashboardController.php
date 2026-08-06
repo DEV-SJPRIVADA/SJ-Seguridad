@@ -40,7 +40,6 @@ class ComprasDashboardController extends Controller
         abort_unless(
             auth()->user()?->can('view.board.compras.dashboard')
             || auth()->user()?->can('purchase.tab.processing')
-            || auth()->user()?->can('purchase.tab.approval')
             || auth()->user()?->can('view.area.compras')
             || auth()->user()?->can('manage.area.compras')
             || auth()->user()?->can('manage.users'),

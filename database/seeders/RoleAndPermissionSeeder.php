@@ -21,12 +21,15 @@ class RoleAndPermissionSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
         $roles = [
             'super-admin' => $allPermissions,
-            'administrador' => ['view.dashboard', 'manage.requisition.parameters', 'requisitions.approve.management'],
+            'administrador' => [
+                'view.dashboard',
+                'manage.requisition.parameters',
+                'requisitions.approve.management',
+                'view.board.gestion_humana.requisiciones',
+            ],
             'director' => [
                 'view.dashboard',
                 'purchase.tab.approval',
-                'requisitions.approve.management',
-                'view.board.gestion_humana.requisiciones',
                 'view.board.compras.solicitudes_compra',
             ],
             'usuario' => ['view.dashboard'],
@@ -59,6 +62,7 @@ class RoleAndPermissionSeeder extends Seeder
             ['email' => env('ADMIN_EMAIL', 'admin@sjseguridad.local')],
             [
                 'name' => env('ADMIN_NAME', 'Administrador SJ Seguridad'),
+                'document_number' => env('ADMIN_DOCUMENT_NUMBER', '9000000001'),
                 'password' => Hash::make(env('ADMIN_PASSWORD', 'ChangeMe123!')),
                 'is_active' => true,
                 'must_change_password' => false,
@@ -68,6 +72,7 @@ class RoleAndPermissionSeeder extends Seeder
 
         $admin->forceFill([
             'name' => env('ADMIN_NAME', $admin->name),
+            'document_number' => $admin->document_number ?: env('ADMIN_DOCUMENT_NUMBER', '9000000001'),
             'is_active' => true,
             'must_change_password' => false,
             'email_verified_at' => $admin->email_verified_at ?? now(),

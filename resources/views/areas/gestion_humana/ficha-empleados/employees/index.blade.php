@@ -44,43 +44,17 @@
             @if (session('status'))
                 @php
                     $importResult = session('import_result');
-                    $importHasErrors = is_array($importResult) && ($importResult['failed'] ?? 0) > 0;
+                    $importHasErrors = is_array($importResult) && (($importResult['failures_count'] ?? $importResult['failed'] ?? 0) > 0);
                 @endphp
                 <div class="alert {{ $importHasErrors ? 'alert--warning' : 'alert--success' }} ficha-empleados-page__alert">
                     {{ session('status') }}
                 </div>
             @endif
 
-            @if (is_array(session('import_result')) && (session('import_result.failed') ?? 0) > 0)
-                @php
-                    $importResult = session('import_result');
-                @endphp
-                <div class="panel ficha-empleados-import-result">
-                    <div class="panel__header">
-                        <h3 class="panel-title">Detalle de errores de importacion</h3>
-                        <p class="panel-text">
-                            Se procesaron {{ number_format(($importResult['imported'] ?? 0) + ($importResult['updated'] ?? 0)) }} filas correctamente.
-                            {{ number_format($importResult['failed'] ?? 0) }} filas fallaron.
-                            @if (($importResult['empty_rows'] ?? 0) > 0)
-                                {{ number_format($importResult['empty_rows']) }} filas sin cedula fueron ignoradas.
-                            @endif
-                        </p>
-                    </div>
-                    <div class="panel__body">
-                        <ul class="ficha-empleados-import-result__errors">
-                            @foreach ($importResult['errors'] ?? [] as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        @if ($importResult['errors_truncated'] ?? false)
-                            <p class="ficha-empleados-import-result__truncated">
-                                Mostrando {{ count($importResult['errors'] ?? []) }} de {{ number_format($importResult['errors_total'] ?? 0) }} errores.
-                                El resto quedo registrado en el log de la aplicacion.
-                            </p>
-                        @endif
-                    </div>
-                </div>
-            @endif
+            @include('partials.import-failure-report', [
+                'importResult' => session('import_result'),
+                'downloadRoute' => 'gestion-humana.ficha-empleados.employees.import-report',
+            ])
 
             @if ($errors->has('export'))
                 <div class="alert alert--danger ficha-empleados-page__alert">{{ $errors->first('export') }}</div>
@@ -118,6 +92,14 @@
                                     >
                                         <x-lucide-icon name="upload" :size="20" />
                                     </button>
+
+                                    @if ($canExportArchive ?? false)
+                                        <x-export-excel
+                                            route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
+                                            label="Exportar archivo"
+                                            class="btn btn--secondary btn--sm"
+                                        />
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -272,7 +254,7 @@
                 @include('areas.gestion_humana.ficha-empleados.partials.masivos-modal', [
                     'filters' => $filters,
                     'canManage' => $canManage,
-                    'show' => $errors->has('export') || $errors->has('import_file') || (is_array(session('import_result')) && (session('import_result.failed') ?? 0) > 0),
+                    'show' => $errors->has('export') || $errors->has('import_file') || (is_array(session('import_result')) && ((session('import_result.failures_count') ?? 0) > 0 || session('import_result.report_token'))),
                 ])
             @endif
         </div>

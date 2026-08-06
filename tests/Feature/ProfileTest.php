@@ -20,6 +20,10 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+        $response->assertSee('form-password-field__toggle', false);
+        $response->assertSee('update_password_current_password', false);
+        $response->assertSee('update_password_password', false);
+        $response->assertSee('update_password_password_confirmation', false);
     }
 
     public function test_delete_account_option_is_hidden_for_non_super_admin_users(): void

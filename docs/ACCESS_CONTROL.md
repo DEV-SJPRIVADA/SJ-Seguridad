@@ -7,8 +7,8 @@ El proyecto usa `spatie/laravel-permission` con guard `web`.
 ## Roles base
 
 - `super-admin` — acceso total; único rol con `manage.users` por defecto
-- `administrador` — plataforma/GH (`manage.requisition.parameters`, `requisitions.approve.management`); **sin** `manage.users`
-- `director` — autoriza solicitudes de compra y cargo nuevo en requisiciones (`purchase.tab.approval`, `requisitions.approve.management`)
+- `administrador` — plataforma/GH (`manage.requisition.parameters`, `requisitions.approve.management`, tablero GH requisiciones); **sin** `manage.users`
+- `director` — autoriza solicitudes de compra (`purchase.tab.approval`); **sin** autorizacion de requisiciones cargo nuevo
 - `usuario`
 
 Los roles antiguos `coordinador` y `consulta` fueron eliminados; el seeder migra a `usuario` cualquier usuario que aun los tenga.
@@ -30,7 +30,7 @@ Definidos en [`config/access.php`](c:/laragon/www/SJSEGURIDAD/config/access.php)
 
 `manage.requisitions` permanece en codigo por compatibilidad con asignaciones legacy, pero **no aparece en Admin**. Usar `requisitions.tab.gestion` + tablero visible en alcance.
 
-**Autorizacion gerencia (`requisitions.approve.management`):** pestaña **Autorizacion gerencia** en Requisiciones; aprueba o rechaza solicitudes con motivo **Cargo nuevo** (`pendiente_autorizacion_gerencia` → `solicitada` o `cancelada`). Rol `administrador` lo incluye por seeder. Correo de aviso configurable en Parametros → tipos de notificacion.
+**Autorizacion gerencia (`requisitions.approve.management`):** pestaña **Autorizacion gerencia** en Requisiciones; aprueba o rechaza solicitudes con motivo **Cargo nuevo** (`pendiente_autorizacion_gerencia` → `solicitada` o `cancelada`). Rol **`administrador`** (gerencia) lo incluye por seeder; el rol **`director`** no lo incluye. Correo de aviso configurable en Parametros → tipos de notificacion.
 
 **Encargado de seleccion (`requisitions.selection_officer`):** define quien puede aparecer en el select **Reclutador** al gestionar requisiciones. No se asigna por defecto a roles base. La via operativa es el toggle en **Requisiciones → Gestion humana → Parametros → Encargados de seleccion** (permiso `manage.requisition.parameters`). El permiso figura en Admin bajo **Requisiciones — Gestion humana** para visibilidad; la asignacion manual alli es excepcional (p. ej. super-admin). Servicio: `RequisitionSelectionOfficerAccessService`. Tras la migracion `2026_07_28_112704_requisition_recruiter_id_references_users_drop_catalog`, ejecutar `php artisan migrate` y reactivar toggles en GH.
 
@@ -187,8 +187,8 @@ Adicionalmente, un documento puede asignarse a usuarios especificos mediante la 
 Sembrada en [`database/seeders/RoleAndPermissionSeeder.php`](c:/laragon/www/SJSEGURIDAD/database/seeders/RoleAndPermissionSeeder.php):
 
 - `super-admin`: todos los permisos (sidebar compacto via `SidebarVisibilityService`)
-- `administrador`: `view.dashboard`, `manage.requisition.parameters`, `requisitions.approve.management`
-- `director`: autorizacion compras + cargo nuevo; menu en GH y Compras (ver hogares canonicos)
+- `administrador`: `view.dashboard`, `manage.requisition.parameters`, `requisitions.approve.management`, `view.board.gestion_humana.requisiciones`
+- `director`: autorizacion compras; menu en Compras → Solicitudes de compra (ver hogares canonicos)
 - `usuario`: `view.dashboard`
 
 Los roles antiguos `coordinador` y `consulta` se migran a `usuario` durante el seeder si existen. Los permisos de areas que ya no esten definidos en `config/access.php` se eliminan para evitar accesos obsoletos.

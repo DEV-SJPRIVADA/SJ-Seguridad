@@ -22,6 +22,8 @@ return [
         'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
         'ficha_empleados.view' => 'Ficha empleados: Ver lista de espera y ficha',
         'ficha_empleados.manage' => 'Ficha empleados: Agregar a ficha empleados',
+        'archivo.view' => 'Archivo: Ver ubicacion documental de empleados',
+        'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -54,6 +56,7 @@ return [
     ],
 
     'areas' => [
+        'gerencia' => 'Gerencia',
         'gestion_humana' => 'Gestion humana',
         'operaciones' => 'Operaciones',
         'programacion' => 'Programacion',
@@ -80,6 +83,7 @@ return [
         'bandeja_compras' => 'Bandeja compras',
         'documentos' => 'Documentos',
         'ficha_empleados' => 'Ficha empleados',
+        'archivo' => 'Archivo',
     ],
 
     /*
@@ -111,6 +115,10 @@ return [
             'base_area_tab' => true,
         ],
         'ficha_empleados' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'archivo' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
@@ -195,8 +203,9 @@ return [
 
     'admin_ui' => [
         'tabs' => [
-            'user' => 'Usuario',
-            'capabilities' => 'Que puede hacer',
+            'user' => 'Identidad',
+            'capabilities' => 'Acceso y permisos',
+            'security' => 'Seguridad',
         ],
         'sections' => [
             'assigned_area' => 'En su area asignada',
@@ -206,7 +215,7 @@ return [
         'help' => [
             'area_key' => 'Contexto operativo del usuario. Las acciones de esta seccion solo aplican en el area seleccionada aqui.',
             'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, tableros y funciones exclusivas por area.',
-            'assigned_area' => 'Operan unicamente en el area base definida en la pestana Usuario.',
+            'assigned_area' => 'Operan unicamente en el area base definida en la pestana Identidad.',
             'global' => 'Acciones que no dependen del area base. Combinelas con tableros visibles en la seccion inferior.',
             'other_areas' => 'Tableros visibles y modulos propios de cada area (GH, Compras, Operaciones, Comercial, Calidad).',
         ],
@@ -261,10 +270,9 @@ return [
                 ],
             ],
             'directores' => [
-                'label' => 'Directores — Autorizacion',
+                'label' => 'Directores — Autorizacion compras',
                 'permissions' => [
                     'purchase.tab.approval',
-                    'requisitions.approve.management',
                 ],
             ],
             'documents' => [
@@ -285,6 +293,7 @@ return [
                             'view.board.gestion_humana.requisiciones',
                             'view.board.gestion_humana.dashboard',
                             'view.board.gestion_humana.ficha_empleados',
+                            'view.board.gestion_humana.archivo',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -292,6 +301,13 @@ return [
                         'permissions' => [
                             'ficha_empleados.view',
                             'ficha_empleados.manage',
+                        ],
+                    ],
+                    'archivo' => [
+                        'label' => 'Archivo',
+                        'permissions' => [
+                            'archivo.view',
+                            'archivo.manage',
                         ],
                     ],
                 ],

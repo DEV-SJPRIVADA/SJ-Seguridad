@@ -3,6 +3,7 @@
 namespace App\Services\Navigation;
 
 use App\Models\User;
+use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
@@ -20,6 +21,7 @@ class NavigationResolver
         private readonly BoardAccessService $boardAccess,
         private readonly CommercialAccessService $commercialAccess,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly ArchivoAccessService $archivoAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
@@ -176,6 +178,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'archivo') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->archivoAccess->canViewArchivoBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.archivo.index',
+                                'url' => $user->defaultArchivoBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.archivo.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -268,6 +287,7 @@ class NavigationResolver
                                 || str_starts_with((string) $routeName, 'comercial.parameters.')
                             ) && $key === 'comercial',
                             $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
+                            $boardKey === 'archivo' => str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
@@ -353,6 +373,8 @@ class NavigationResolver
                     ) && $key === 'compras'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana'
                 );
 
                 return [

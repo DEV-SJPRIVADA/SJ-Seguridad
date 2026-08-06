@@ -13,8 +13,8 @@ class ManagementReportDataBuilder
         private readonly OperationsDashboardService $dashboardService,
         private readonly IndicatorConsolidadoService $consolidadoService,
         private readonly ManagementReportNarrativeBuilder $narrativeBuilder,
-    ) {
-    }
+        private readonly ManagementReportDraftService $draftService,
+    ) {}
 
     public function build(int $year, int $month): array
     {
@@ -55,13 +55,17 @@ class ManagementReportDataBuilder
             ];
         }
 
-        return [
+        $report = [
             'year' => $year,
             'month' => $month,
             'month_name' => $monthName,
             'report_title' => config('indicators.management_report.cover.default_title', 'INFORME DE GESTION DE RIESGOS'),
             'indicators' => $indicators,
         ];
+
+        $draft = $this->draftService->getDraft($year, $month);
+
+        return $this->draftService->applyDraftToReport($report, $draft);
     }
 
     /**

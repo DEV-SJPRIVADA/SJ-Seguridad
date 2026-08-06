@@ -3,28 +3,35 @@
 <head>
     <meta charset="utf-8">
     <title>Dashboard Operaciones {{ $year }}-{{ $month }}</title>
-    <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1e293b; }
-        h1 { font-size: 18px; color: #003366; margin-bottom: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
-        th { background: #003366; color: #fff; }
-    </style>
+    @include('areas.operaciones.exports.partials.pdf-base-styles')
 </head>
 <body>
     <h1>Dashboard General de Operaciones — {{ config('indicators.months')[$month] ?? $month }} {{ $year }}</h1>
-    <p><strong>Score global:</strong> {{ number_format($dashboard['global_score'], 2) }}% — {{ $dashboard['global_state'] }}</p>
 
-    @if ($summary?->summary_text)
-        <p><strong>Resumen ejecutivo:</strong> {{ $summary->summary_text }}</p>
-    @endif
+    <table class="dashboard-stats">
+        <tr>
+            <td>
+                <div class="caption">Score global ponderado</div>
+                <div class="value">{{ number_format($dashboard['global_score'], 2) }}%</div>
+            </td>
+            <td>
+                <div class="caption">Estado general</div>
+                <div class="value">{{ $dashboard['global_state'] }}</div>
+            </td>
+            <td>
+                <div class="caption">Regla</div>
+                <div style="font-size:10px;">>=90 ESTABLE | 75-89 ATENCION | &lt;75 CRITICO</div>
+            </td>
+        </tr>
+    </table>
 
-    <table>
+    <h4 class="section-title">KPIs del mes</h4>
+    <table class="dashboard-table">
         <thead>
             <tr>
                 <th>Codigo</th>
                 <th>Indicador</th>
-                <th>Mes anterior ({{ config('indicators.months')[$dashboard['previous_period']['month'] ?? 0] ?? '' }})</th>
+                <th>Mes anterior ({{ $dashboard['previous_period']['label'] ?? '' }})</th>
                 <th>Resultado</th>
                 <th>Meta</th>
                 <th>Estado</th>
@@ -42,6 +49,61 @@
                 </tr>
             @endforeach
         </tbody>
+    </table>
+
+    <table class="split-table">
+        <tr>
+            <td>
+                <h4 class="section-title">Ranking de usuarios</h4>
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Usuario</th>
+                            <th>Indicadores gestionados</th>
+                            <th>% gestionado</th>
+                            <th>Mejoras ingresadas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($dashboard['zone_ranking'] as $index => $row)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $row['user']->name }}</td>
+                                <td>{{ $row['indicators_managed'] }}</td>
+                                <td>{{ $row['management_percentage'] }}%</td>
+                                <td>{{ $row['improvements_count'] }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5">No hay usuarios con capturas registradas en este periodo.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <h4 class="section-title">Indicadores criticos</h4>
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Indicador</th>
+                            <th>Valor critico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($dashboard['critical_indicators'] as $row)
+                            <tr>
+                                <td>{{ $row['user']->name }}</td>
+                                <td>{{ $row['indicator']->code }} — {{ $row['indicator']->name }}</td>
+                                <td>{{ number_format((float) $row['critical_value'], 2) }}%</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="3">No hay indicadores en estado critico para este periodo.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </td>
+        </tr>
     </table>
 </body>
 </html>

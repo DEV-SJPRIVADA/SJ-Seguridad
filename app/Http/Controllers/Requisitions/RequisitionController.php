@@ -323,8 +323,7 @@ class RequisitionController extends Controller
             )
             ->with(['client', 'position', 'requester', 'city', 'recruiter'])
             ->tap(fn ($query) => $filters->applyCommonFilters($query))
-            ->orderByDesc('request_date')
-            ->orderByDesc('id')
+            ->orderByDesc('code')
             ->get();
 
         return view('modules.requisitions.manage', [
@@ -373,8 +372,7 @@ class RequisitionController extends Controller
             )
             ->with(PersonalRequisitionFullExport::relationNames())
             ->tap(fn ($query) => $filters->applyCommonFilters($query))
-            ->orderByDesc('request_date')
-            ->orderByDesc('id')
+            ->orderByDesc('code')
             ->get();
 
         return PersonalRequisitionFullExport::download(
@@ -392,7 +390,7 @@ class RequisitionController extends Controller
         $filters = PersonalRequisitionFilterBag::fromTrackingRequest($request);
 
         $requisitions = PersonalRequisition::query()
-            ->with(['client', 'position', 'requester', 'city'])
+            ->with(['client', 'position', 'requester', 'city', 'statusLogs.author'])
             ->where('requesting_area_key', $this->trackingAreaScope($user))
             ->tap(fn ($query) => $filters->applyCommonFilters($query, includeRequesterInSearch: true))
             ->when($filters->mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
@@ -406,6 +404,30 @@ class RequisitionController extends Controller
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
             'requisitions' => $requisitions,
+            'statusLabels' => PersonalRequisition::statuses(),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'seguimiento'),
+        ]);
+    }
+
+    public function trackingShow(string $module, PersonalRequisition $requisition): View
+    {
+        $this->abortIfUnknownModule($module);
+        abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
+
+        return view('modules.requisitions.tracking.show', [
+            'moduleKey' => $module,
+            'moduleLabel' => config("access.areas.{$module}"),
+            'requisition' => $requisition->load([
+                'client',
+                'city',
+                'clientType',
+                'position',
+                'programmingType',
+                'requestReason',
+                'requester',
+                'uniform',
+                'statusLogs.author',
+            ]),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'seguimiento'),
         ]);
@@ -537,7 +559,14 @@ class RequisitionController extends Controller
 
                 if (filled($requesterEmail)) {
                     Mail::to($requisition->requester)->send(
-                        new PersonalRequisitionStatusChangedMail($requisition->fresh(), $oldStatus, $newStatus)
+                        new PersonalRequisitionStatusChangedMail(
+                            $requisition->fresh(),
+                            $oldStatus,
+                            $newStatus,
+                            filled($request->input('human_resources_observation'))
+                                ? (string) $request->input('human_resources_observation')
+                                : null,
+                        )
                     );
                 }
             } catch (\Exception $e) {

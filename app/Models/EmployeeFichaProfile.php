@@ -69,6 +69,8 @@ class EmployeeFichaProfile extends Model
         'economic_activity_code',
         'economic_activity_name',
         'payroll_extra',
+        'archive_shelf',
+        'archive_box',
     ];
 
     protected function casts(): array

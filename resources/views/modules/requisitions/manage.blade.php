@@ -113,7 +113,7 @@
                     <div class="data-table-wrap">
                         <table
                             class="data-table js-datatable"
-                            data-order='[[1, "desc"]]'
+                            data-order='[[0, "desc"]]'
                         >
                             <thead>
                                 <tr>

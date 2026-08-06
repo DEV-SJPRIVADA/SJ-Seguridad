@@ -166,6 +166,7 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.
 - Mapeo técnico: [`docs/Contratacion/MAPEO-PLANTILLA-MASIVOS.md`](../Contratacion/MAPEO-PLANTILLA-MASIVOS.md).
 - Columna `linkage_type` (`tipo_vinculacion` en import): `VARCHAR(100)` — valores de nómina como `Contrato Laboral(Dependiente Asociado)` superaban el limite anterior de 30 caracteres.
+- **Archivo (2026-08-06):** campos `archive_shelf` / `archive_box` en perfil; ver [`docs/modules/archivo.md`](archivo.md). No forman parte del import masivo.
 
 ## Export listado simple (legacy)
 

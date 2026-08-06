@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\GestionHumana;
 
+use App\Exports\EmployeeFichaArchiveTemplateExport;
 use App\Exports\EmployeeFichaImportTemplateExport;
 use App\Exports\PlantillaMasivosExport;
+use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
@@ -11,6 +13,7 @@ use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
@@ -27,12 +30,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FichaEmpleadosController extends Controller
 {
+    use HandlesImportFailureReports;
     use HasFichaEmpleadosTabs;
 
     public function __construct(
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillaMasivosExport $plantillaMasivosExport,
         private readonly EmployeeFichaImportTemplateExport $importTemplateExport,
+        private readonly EmployeeFichaArchiveTemplateExport $archiveTemplateExport,
         private readonly EmployeeFichaImportService $importService,
         private readonly EmployeeFichaProfilePrefill $profilePrefill,
         private readonly EmployeeFichaCatalogService $catalogService,
@@ -60,6 +66,7 @@ class FichaEmpleadosController extends Controller
             'employmentStatusLabels' => self::employmentStatusFilterLabels(),
             'pendingCount' => $pendingCount,
             'canManage' => $this->canManage(),
+            'canExportArchive' => $this->canExportArchive(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
     }
@@ -135,6 +142,38 @@ class FichaEmpleadosController extends Controller
         );
     }
 
+    public function exportArchiveTemplate(Request $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->canExportArchive(), 403);
+
+        $q = trim($request->string('q')->toString());
+        $fechaDesde = $request->date('fecha_desde')?->toDateString();
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString();
+        $hasDateRange = $fechaDesde !== null && $fechaHasta !== null;
+
+        $query = $this->entryListQuery($q, 'en_ficha')
+            ->with(['profile', 'requisition.position', 'requisition.client']);
+
+        if ($hasDateRange) {
+            $query->hireDateBetween($fechaDesde, $fechaHasta);
+        } else {
+            $query->withActiveProfile();
+        }
+
+        $entries = $query->get();
+
+        if ($entries->isEmpty()) {
+            return redirect()
+                ->route('gestion-humana.ficha-empleados.employees.index')
+                ->withErrors(['export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.']);
+        }
+
+        return $this->archiveTemplateExport->downloadWithData(
+            $entries,
+            'exportacion_archivo_empleados_'.now()->format('Y-m-d').'.xlsx'
+        );
+    }
+
     public function import(ImportEmployeeFichaRequest $request): RedirectResponse
     {
         $path = $request->file('import_file')?->getRealPath();
@@ -171,20 +210,37 @@ class FichaEmpleadosController extends Controller
             ]);
         }
 
-        $errorsForSession = array_slice($stats['errors'], 0, 100);
+        $importResult = $this->buildImportResultPayload(
+            $request->user(),
+            $stats,
+            'employee_ficha',
+            'Ficha empleados',
+            [
+                'Filas nuevas' => $stats['imported'],
+                'Filas actualizadas' => $stats['updated'],
+                'Filas con error' => $stats['skipped'],
+                'Filas vacias' => $stats['empty_rows'],
+            ],
+            array_keys(config('employee_ficha.import_columns', [])),
+            'reporte_importacion_ficha_empleados',
+        );
+
+        $errorsForSession = array_slice($importResult['errors'], 0, 100);
+        $importResult['failed'] = $importResult['failures_count'];
+        $importResult['errors'] = $errorsForSession;
+        $importResult['errors_truncated'] = ($importResult['errors_total'] ?? 0) > count($errorsForSession);
 
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.index')
             ->with('status', $message)
-            ->with('import_result', [
-                'imported' => $stats['imported'],
-                'updated' => $stats['updated'],
-                'failed' => $stats['skipped'],
-                'empty_rows' => $stats['empty_rows'],
-                'errors' => $errorsForSession,
-                'errors_total' => count($stats['errors']),
-                'errors_truncated' => count($stats['errors']) > count($errorsForSession),
-            ]);
+            ->with('import_result', $importResult);
+    }
+
+    public function downloadImportReport(Request $request, string $token): StreamedResponse
+    {
+        abort_unless($this->canManage(), 403);
+
+        return $this->downloadImportFailureReport($request->user(), $token, 'employee_ficha');
     }
 
     public function create(Request $request): View
@@ -469,5 +525,10 @@ class FichaEmpleadosController extends Controller
     private function canManage(): bool
     {
         return $this->fichaEmpleadosAccess->canManage(auth()->user());
+    }
+
+    private function canExportArchive(): bool
+    {
+        return $this->archivoAccess->canExportArchiveTemplate(auth()->user());
     }
 }

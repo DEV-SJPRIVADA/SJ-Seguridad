@@ -8,11 +8,11 @@ Registrar, consultar y consolidar indicadores de desempeno (KPI) del area de Ope
 
 Modulo exclusivo del area **Operaciones**. Segun permisos:
 
-- **Dashboard:** ver indicadores globales y resumen del periodo.
+- **Dashboard:** ver indicadores globales, KPIs y ranking del periodo.
 - **Captura:** registrar valores mensuales de indicadores; la captura puede ser propia (jefe capturador) o **por suplencia** (a nombre de otro capturador autorizado). Graficos interactivos unificados (ApexCharts) en la ficha del indicador.
 - **Ajustes:** administrar periodos, metas, capturadores y suplentes del area, y consultar auditoria (gestores).
 - **Consolidado:** vista consolidada de capturas del equipo (gestores).
-- **Exportaciones:** PDF, Excel y PowerPoint (informe FO-GI-39) segun permiso de exportacion.
+- **Exportaciones:** PDF, Excel y PowerPoint (informe FO-GI-39, con vista previa editable) segun permiso de exportacion.
 
 ## Definiciones
 
@@ -90,7 +90,15 @@ Use este procedimiento cuando un jefe capturador esta ausente y usted fue habili
 3. Revise KPIs y tabla resumen (incluye resultado del mes anterior junto al del periodo seleccionado).
 4. Revise **Ranking de usuarios**: posicion, nombre, indicadores gestionados en el mes, porcentaje gestionado sobre el total FT-OP activos, y mejoras registradas (solo quienes capturaron datos en el periodo).
 5. Revise **Indicadores criticos**: solo aparecen usuarios cuyo resultado supera el umbral critico configurado en Metas.
-6. Exporte a PDF o descargue el **Informe PPTX** (FO-GI-39) si tiene permiso de exportacion.
+6. Exporte a PDF o abra **Preparar informe PPTX** (FO-GI-39) si tiene permiso de exportacion.
+
+### Preparar el informe de gestion PPTX (FO-GI-39)
+
+1. Desde el Dashboard, haga clic en **Preparar informe PPTX** (o navegue directo a la vista previa) y seleccione ano/mes.
+2. Revise la vista previa: titulo de portada, **graficos mensuales** (denominador, numerador, resultado y meta, igual que en el PowerPoint) y las narrativas de los 9 indicadores FT-OP-01…09, precargadas con el analisis registrado en captura o con un texto generado automaticamente.
+3. Edite el titulo o cualquier narrativa y haga clic en **Guardar borrador**. El borrador queda asociado al ano/mes seleccionado y persiste al recargar la pagina.
+4. Haga clic en **Descargar PPTX** para generar el PowerPoint con los textos guardados.
+5. Si desea descartar sus cambios y volver a los textos automaticos, use **Regenerar textos**: elimina el borrador guardado para ese periodo.
 
 ### Administrar periodos (Ajustes)
 
@@ -132,3 +140,5 @@ Use este procedimiento cuando un jefe capturador esta ausente y usted fue habili
 | 1.1 | 2026-07-23 | FEAT-003 | Seccion Capturadores en Ajustes para habilitar captura FT-OP |
 | 1.2 | 2026-07-27 | FEAT-010 | Graficos de captura unificados en ApexCharts (sin ECharts) |
 | 1.3 | 2026-08-04 | FEAT-023 | Captura delegada (suplencia vacaciones): permiso Suplencia, selector Capturador, procedimiento titular/digitador |
+| 1.4 | 2026-08-04 | FEAT-024 | Vista previa HTML del informe PPTX FO-GI-39 con narrativas y titulo editables; borrador por ano/mes; boton Regenerar textos |
+| 1.5 | 2026-08-04 | FEAT-025 | Graficos ApexCharts en vista previa del informe PPTX (serie mensual por indicador) |

@@ -31,14 +31,16 @@
     </div>
 </div>
 
-<div class="indicadores-actions">
-    @can('operations.export')
-        @if (($isConsolidadoView ?? false) && empty($exportUserId))
-            <a href="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
-            <a href="{{ route('indicadores.export.consolidado.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
-        @else
-            <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId ?? auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
-            <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId ?? auth()->id()]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
-        @endif
-    @endcan
-</div>
+@if ($isConsolidadoView ?? false)
+    <div class="indicadores-actions">
+        @can('operations.export')
+            @if (empty($exportUserId))
+                <a href="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+                <a href="{{ route('indicadores.export.consolidado.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
+            @else
+                <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+                <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
+            @endif
+        @endcan
+    </div>
+@endif

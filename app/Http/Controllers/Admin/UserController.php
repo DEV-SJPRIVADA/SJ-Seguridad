@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Mail\UserWelcomeMail;
 use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\Admin\UserAccessSummary;
@@ -13,7 +14,9 @@ use App\Services\Admin\UserPermissionValidator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -37,7 +40,8 @@ class UserController extends Controller
                 $builder->where(function ($inner) use ($search): void {
                     $inner
                         ->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('document_number', 'like', "%{$search}%");
                 });
             })
             ->orderBy('name');
@@ -79,7 +83,7 @@ class UserController extends Controller
     {
         return view('admin.users.create', [
             'areas' => config('access.areas', []),
-            'sites' => SupplySite::query()->active()->ordered()->get(),
+            'sites' => $this->sitesForForm(),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'roles' => $this->roles(),
             'permissionForm' => $this->permissionFormBuilder->build(),
@@ -91,14 +95,17 @@ class UserController extends Controller
         $permissions = $request->input('permissions', []);
         $areaKey = $request->input('area_key');
         $warnings = $this->permissionValidator->warnings($areaKey, $permissions);
+        $documentNumber = $request->string('document_number')->toString();
+        $temporaryPassword = $documentNumber;
 
-        DB::transaction(function () use ($request, $permissions): void {
+        $user = DB::transaction(function () use ($request, $permissions, $documentNumber, $temporaryPassword): User {
             $user = User::create([
                 'name' => $request->string('name')->toString(),
+                'document_number' => $documentNumber,
                 'area_key' => $request->input('area_key'),
                 'sede_id' => $request->input('sede_id'),
                 'email' => Str::lower($request->string('email')->toString()),
-                'password' => $request->string('password')->toString(),
+                'password' => $temporaryPassword,
                 'is_active' => $request->boolean('is_active', true),
                 'must_change_password' => $request->boolean('must_change_password', true),
                 'created_by' => $request->user()->id,
@@ -107,7 +114,11 @@ class UserController extends Controller
 
             $user->assignRole($request->string('role')->toString());
             $user->syncPermissions($permissions);
+
+            return $user;
         });
+
+        Mail::to($user->email)->send(new UserWelcomeMail($user, $temporaryPassword));
 
         return redirect()
             ->route('admin.users.index')
@@ -119,10 +130,10 @@ class UserController extends Controller
     {
         return view('admin.users.edit', [
             'areas' => config('access.areas', []),
-            'sites' => SupplySite::query()->active()->ordered()->get(),
+            'sites' => $this->sitesForForm($user),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'permissionForm' => $this->permissionFormBuilder->build(),
-            'roles' => $this->roles(),
+            'roles' => $this->roles($user),
             'selectedPermissions' => $user->permissions->pluck('name')->all(),
             'selectedRole' => old('role', $user->roles->pluck('name')->first()),
             'user' => $user->load(['roles', 'permissions']),
@@ -138,6 +149,7 @@ class UserController extends Controller
         DB::transaction(function () use ($request, $user, $permissions): void {
             $attributes = [
                 'name' => $request->string('name')->toString(),
+                'document_number' => $request->string('document_number')->toString(),
                 'area_key' => $request->input('area_key'),
                 'sede_id' => $request->input('sede_id'),
                 'email' => Str::lower($request->string('email')->toString()),
@@ -161,14 +173,37 @@ class UserController extends Controller
             ->with('permission_warnings', $warnings);
     }
 
-    private function roles()
+    private function roles(?User $forUser = null)
     {
         $orderedNames = ['super-admin', 'administrador', 'director', 'usuario'];
+        $currentRole = $forUser?->roles->pluck('name')->first();
+
+        if (is_string($currentRole) && $currentRole !== '' && ! in_array($currentRole, $orderedNames, true)) {
+            $orderedNames[] = $currentRole;
+        }
 
         return Role::query()
             ->whereIn('name', $orderedNames)
             ->get()
             ->sortBy(fn (Role $role) => array_search($role->name, $orderedNames, true))
             ->values();
+    }
+
+    /**
+     * @return Collection<int, SupplySite>
+     */
+    private function sitesForForm(?User $user = null)
+    {
+        $sites = SupplySite::query()->active()->ordered()->get();
+
+        if ($user?->sede_id && ! $sites->contains('id', $user->sede_id)) {
+            $currentSite = SupplySite::query()->find($user->sede_id);
+
+            if ($currentSite) {
+                $sites->prepend($currentSite);
+            }
+        }
+
+        return $sites;
     }
 }

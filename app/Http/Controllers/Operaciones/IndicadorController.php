@@ -5,18 +5,21 @@ namespace App\Http\Controllers\Operaciones;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operaciones\StoreIndicatorCaptureRequest;
 use App\Models\AuditLog;
-use App\Models\DashboardSummary;
 use App\Models\Indicator;
 use App\Models\IndicatorCapture;
+use App\Models\ManagementReportDraft;
 use App\Models\Period;
 use App\Models\User;
 use App\Services\Indicadores\AuditLogService;
 use App\Services\Indicadores\Dashboard\OperationsDashboardService;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
+use App\Services\Indicadores\IndicatorCaptureExcelExporter;
+use App\Services\Indicadores\IndicatorCapturePdfPresenter;
 use App\Services\Indicadores\IndicatorCaptureService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorReportExporter;
 use App\Services\Indicadores\ManagementReport\ManagementReportDataBuilder;
+use App\Services\Indicadores\ManagementReport\ManagementReportDraftService;
 use App\Services\Indicadores\ManagementReport\ManagementReportPptxExporter;
 use App\Services\Indicadores\YearRangeService;
 use App\Support\IndicadorNavigation;
@@ -38,7 +41,10 @@ class IndicadorController extends Controller
         private readonly IndicatorCaptureService $captureService,
         private readonly ManagementReportDataBuilder $managementReportDataBuilder,
         private readonly ManagementReportPptxExporter $managementReportPptxExporter,
+        private readonly ManagementReportDraftService $managementReportDraftService,
         private readonly IndicatorCaptureAccessService $captureAccessService,
+        private readonly IndicatorCapturePdfPresenter $capturePdfPresenter,
+        private readonly IndicatorCaptureExcelExporter $captureExcelExporter,
     ) {}
 
     public function dashboard(Request $request): View
@@ -46,7 +52,6 @@ class IndicadorController extends Controller
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
         $dashboard = $this->dashboardService->build($year, $month);
-        $summary = DashboardSummary::query()->where(['year' => $year, 'month' => $month])->first();
 
         $this->auditLogService->logEvent(
             eventType: 'admin_action',
@@ -62,7 +67,6 @@ class IndicadorController extends Controller
             'years' => $this->yearRangeService->years(),
             'months' => config('indicators.months'),
             'dashboard' => $dashboard,
-            'summary' => $summary,
         ]);
     }
 
@@ -551,49 +555,11 @@ class IndicadorController extends Controller
         ]));
     }
 
-    public function saveSummary(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'year' => $this->yearRangeService->validationRules(),
-            'month' => ['required', 'integer', 'min:1', 'max:12'],
-            'summary_text' => ['required', 'string'],
-        ]);
-
-        $year = (int) $validated['year'];
-        $month = (int) $validated['month'];
-
-        $summary = DashboardSummary::query()->firstOrNew(['year' => $year, 'month' => $month]);
-        $before = $summary->exists ? $summary->toArray() : null;
-
-        if (! $summary->exists) {
-            $summary->generated_by_user_id = auth()->id();
-        }
-
-        $summary->summary_text = $validated['summary_text'];
-        $summary->updated_by_user_id = auth()->id();
-        $summary->save();
-
-        $this->auditLogService->logModelChange(
-            eventType: 'dashboard_summary',
-            action: 'save',
-            model: $summary,
-            before: $before,
-            after: $summary->fresh()->toArray(),
-            reason: 'Actualizacion de resumen ejecutivo',
-            metadata: ['year' => $year, 'month' => $month]
-        );
-
-        return redirect()
-            ->route('indicadores.dashboard', ['year' => $year, 'month' => $month])
-            ->with('status', 'Resumen ejecutivo guardado.');
-    }
-
     public function exportDashboardPdf(Request $request)
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
         $dashboard = $this->dashboardService->build($year, $month);
-        $summary = DashboardSummary::query()->where(['year' => $year, 'month' => $month])->first();
 
         $this->auditLogService->logEvent(
             eventType: 'export',
@@ -602,7 +568,7 @@ class IndicadorController extends Controller
             metadata: ['year' => $year, 'month' => $month]
         );
 
-        $pdf = Pdf::loadView('areas.operaciones.dashboard.pdf', compact('year', 'month', 'dashboard', 'summary'))
+        $pdf = Pdf::loadView('areas.operaciones.dashboard.pdf', compact('year', 'month', 'dashboard'))
             ->setPaper('a4', 'landscape');
 
         return $pdf->download('dashboard-ejecutivo-'.$year.'-'.$month.'.pdf');
@@ -624,6 +590,97 @@ class IndicadorController extends Controller
         return $this->managementReportPptxExporter->downloadResponse($report);
     }
 
+    public function managementReportPreview(Request $request): View
+    {
+        $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
+        $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
+        $report = $this->managementReportDataBuilder->build($year, $month);
+        $draft = $this->managementReportDraftService->getDraft($year, $month);
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_report_preview',
+            reason: 'Vista previa informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return view('areas.operaciones.dashboard.management-report-preview', [
+            'subTabs' => IndicadorNavigation::subTabs(),
+            'year' => $year,
+            'month' => $month,
+            'years' => $this->yearRangeService->years(),
+            'months' => config('indicators.months'),
+            'report' => $report,
+            'draft' => $draft,
+            'hasDraft' => $draft instanceof ManagementReportDraft,
+        ]);
+    }
+
+    public function storeManagementReportDraft(Request $request): RedirectResponse
+    {
+        $indicatorCodes = collect(config('indicators.management_report.indicators', []))
+            ->pluck('code')
+            ->all();
+
+        $validated = $request->validate([
+            'year' => $this->yearRangeService->validationRules(),
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'report_title' => ['nullable', 'string', 'max:255'],
+            'narratives' => ['nullable', 'array'],
+            'narratives.*' => ['nullable', 'string'],
+        ]);
+
+        $year = (int) $validated['year'];
+        $month = (int) $validated['month'];
+        $narratives = array_intersect_key(
+            (array) ($validated['narratives'] ?? []),
+            array_flip($indicatorCodes)
+        );
+
+        $this->managementReportDraftService->saveDraft(
+            $year,
+            $month,
+            $request->user(),
+            $validated['report_title'] ?? null,
+            $narratives
+        );
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_report_draft_save',
+            reason: 'Guardado de borrador informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return redirect()
+            ->route('indicadores.export.management.preview', ['year' => $year, 'month' => $month])
+            ->with('status', 'Borrador del informe guardado correctamente.');
+    }
+
+    public function regenerateManagementReportDraft(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'year' => $this->yearRangeService->validationRules(),
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $year = (int) $validated['year'];
+        $month = (int) $validated['month'];
+
+        $this->managementReportDraftService->clearDraft($year, $month);
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'management_report_draft_regenerate',
+            reason: 'Regeneracion de textos automaticos del informe de gestion FO-GI-39',
+            metadata: ['year' => $year, 'month' => $month]
+        );
+
+        return redirect()
+            ->route('indicadores.export.management.preview', ['year' => $year, 'month' => $month])
+            ->with('status', 'Textos regenerados automaticamente.');
+    }
+
     public function exportLeaderExcel(Request $request, Indicator $indicator)
     {
         abort_unless($indicator->is_active, 404);
@@ -640,6 +697,19 @@ class IndicadorController extends Controller
                 'month' => $report['month'],
             ]
         );
+
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            return $this->captureExcelExporter->download(
+                $this->capturePdfPresenter->present($report),
+                sprintf(
+                    'captura-%s-%d-%d-%02d.xlsx',
+                    $indicator->code,
+                    $report['user']->id,
+                    $report['year'],
+                    $report['month']
+                ),
+            );
+        }
 
         return $this->reportExporter->leaderExcelResponse($report);
     }
@@ -661,7 +731,8 @@ class IndicadorController extends Controller
             ]
         );
 
-        $pdf = Pdf::loadView('areas.operaciones.exports.leader-pdf', $report)->setPaper('a4', 'portrait');
+        $pdfContext = $this->capturePdfPresenter->present($report);
+        $pdf = Pdf::loadView('areas.operaciones.exports.capture-pdf', $pdfContext)->setPaper('a4', 'landscape');
 
         return $pdf->download(sprintf(
             'captura-%s-%d-%d-%02d.pdf',
@@ -684,6 +755,13 @@ class IndicadorController extends Controller
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            return $this->captureExcelExporter->download(
+                $this->capturePdfPresenter->present($report),
+                sprintf('consolidado-%s-%d-%02d.xlsx', $indicator->code, $report['year'], $report['month']),
+            );
+        }
+
         return $this->reportExporter->consolidadoExcelResponse($report);
     }
 
@@ -699,6 +777,13 @@ class IndicadorController extends Controller
             metadata: ['indicator' => $indicator->code, 'year' => $report['year'], 'month' => $report['month']]
         );
 
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            $pdfContext = $this->capturePdfPresenter->present($report, consolidadoPortrait: true);
+            $pdf = Pdf::loadView('areas.operaciones.exports.capture-pdf', $pdfContext)->setPaper('a4', 'portrait');
+
+            return $pdf->download(sprintf('consolidado-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
+        }
+
         $pdf = Pdf::loadView('areas.operaciones.exports.consolidado-pdf', $report)->setPaper('a4', 'landscape');
 
         return $pdf->download(sprintf('consolidado-%s-%d-%02d.pdf', $indicator->code, $report['year'], $report['month']));
@@ -712,27 +797,27 @@ class IndicadorController extends Controller
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
         $user = User::query()->findOrFail((int) $request->integer('user_id', $request->user()->id));
+        $actor = $request->user();
 
-        $period = Period::query()->where(['year' => $year, 'month' => $month])->first();
+        abort_unless($actor instanceof User, 403);
+
+        $context = $this->captureService->buildShowContext($indicator, $year, $month, $user, $actor);
+
         $capture = null;
-        if ($period) {
+        if (($context['captureId'] ?? null) !== null) {
             $capture = IndicatorCapture::query()
                 ->with('improvement')
-                ->where('indicator_id', $indicator->id)
-                ->where('user_id', $user->id)
-                ->where('period_id', $period->id)
-                ->first();
+                ->find($context['captureId']);
         }
 
-        return [
-            'indicator' => $indicator,
+        return array_merge($context, [
             'user' => $user,
             'operations_leader' => $user,
             'year' => $year,
             'month' => $month,
             'capture' => $capture,
-            'display' => $capture?->input_data ?? [],
-        ];
+            'display' => $context['form'] ?? [],
+        ]);
     }
 
     /**
@@ -742,13 +827,35 @@ class IndicadorController extends Controller
     {
         $year = $this->yearRangeService->normalize((int) $request->integer('year', now()->year));
         $month = $this->normalizeMonth((int) $request->integer('month', now()->month));
+        $monthly = $this->consolidadoService->getMonthlyData($indicator, $year, $month);
+
+        if ($this->usesConsolidadoCapturePdf($indicator)) {
+            $selectedUser = null;
+            if ($request->filled('user_id')) {
+                $selectedUser = User::query()->findOrFail((int) $request->integer('user_id'));
+            }
+
+            return array_merge(
+                $this->captureService->buildConsolidadoShowContext($indicator, $year, $month, $selectedUser),
+                [
+                    'year' => $year,
+                    'month' => $month,
+                    'monthly' => $monthly,
+                ],
+            );
+        }
 
         return [
             'indicator' => $indicator,
             'year' => $year,
             'month' => $month,
-            'monthly' => $this->consolidadoService->getMonthlyData($indicator, $year, $month),
+            'monthly' => $monthly,
         ];
+    }
+
+    private function usesConsolidadoCapturePdf(Indicator $indicator): bool
+    {
+        return in_array($indicator->code, config('indicators.consolidado_capture_view_codes', []), true);
     }
 
     private function normalizeMonth(int $month): int

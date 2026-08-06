@@ -51,7 +51,7 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
 | Detalle / export (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel` |
-| Dashboard Compras | `view.board.compras.dashboard` u otros permisos compras | `compras.dashboard` (ver `routes/areas/compras.php`) |
+| Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
 
 Rutas publicas (URLs firmadas, sin login):
 
@@ -80,7 +80,7 @@ Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccess
 - `approve`: director asignado + pendiente
 - `process`: compras + solicitud aprobada
 
-Directores: rol `director` incluye `view.board.gestion_humana.requisiciones` (GH) y `view.board.compras.solicitudes_compra` (compras).
+Directores: rol `director` incluye `view.board.compras.solicitudes_compra` (compras). No incluye autorizacion de requisiciones cargo nuevo (rol `administrador`).
 
 ## Navegacion (sidebar)
 
@@ -144,7 +144,9 @@ Acciones por fila: **Ver detalle** (compra → `purchase-requests.show`; suminis
 
 ## Dashboard Compras (`compras.dashboard`)
 
-Ruta: `GET /compras/dashboard`. Filtros globales: **ano**, **mes** (opcional), **area solicitante**, **tipo**.
+Ruta: `GET /compras/dashboard`. Acceso: permiso `view.board.compras.dashboard`, `purchase.tab.processing`, `view.area.compras` o `manage.area.compras`. El rol **director** (`purchase.tab.approval` solo) **no** accede al dashboard; usa Solicitudes de compra → Pendientes autorizacion.
+
+Filtros globales: **ano**, **mes** (opcional), **area solicitante**, **tipo**.
 
 ### KPIs visibles (2026-08-03)
 
@@ -237,6 +239,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | Dashboard Compras: retirados KPIs Solicitudes en periodo y Urgentes en bandeja |
 | 2026-08-03 | Detalle suministro alineado a solicitud compra; export PDF/Excel FO-AD-44 en `supplies.show` |
 | 2026-08-03 | PDF suministro FO-AD-44: mismo layout visual que PDF solicitud de compra |
+| 2026-08-04 | Dashboard Compras restringido: director (`purchase.tab.approval`) ya no accede; requiere permiso dashboard, processing o area Compras |
 
 ## Referencias
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GestionHumana\ArchivoController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +25,23 @@ Route::middleware(['password.changed'])
         Route::get('/exportar', [FichaEmpleadosController::class, 'exportExcel'])->name('export');
         Route::get('/plantilla-importacion', [FichaEmpleadosController::class, 'importTemplate'])->name('import-template');
         Route::get('/plantilla-importacion/exportar', [FichaEmpleadosController::class, 'exportImportTemplate'])->name('export-import-template');
+        Route::get('/exportar-archivo', [FichaEmpleadosController::class, 'exportArchiveTemplate'])->name('export-archive-template');
         Route::post('/importar', [FichaEmpleadosController::class, 'import'])->name('import');
+        Route::get('/importar/reporte/{token}', [FichaEmpleadosController::class, 'downloadImportReport'])->name('import-report');
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/archivo')
+    ->name('gestion-humana.archivo.')
+    ->group(function (): void {
+        Route::get('/', [ArchivoController::class, 'index'])->name('index');
+        Route::get('/historias-laborales', [ArchivoController::class, 'laborHistories'])->name('labor-histories.index');
+        Route::get('/historial-consultas', [ArchivoController::class, 'consultationHistory'])->name('consultation-history.index');
+        Route::post('/consultar', [ArchivoController::class, 'consult'])->name('consult');
+        Route::patch('/historial-consultas/{consultationItem}', [ArchivoController::class, 'updateConsultationItem'])->name('consultation-history.update');
+        Route::post('/importar', [ArchivoController::class, 'import'])->name('import');
+        Route::get('/importar/reporte/{token}', [ArchivoController::class, 'downloadImportReport'])->name('import-report');
+        Route::patch('/{fichaEntry}', [ArchivoController::class, 'update'])->name('update');
     });

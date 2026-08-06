@@ -12,8 +12,8 @@ class ManagementReportPptxExporter
         private readonly ManagementReportChartInjector $chartInjector,
         private readonly ManagementReportChartSanitizer $chartSanitizer,
         private readonly ManagementReportPptxArchive $archive,
-    ) {
-    }
+        private readonly ManagementReportPptxTextFormatter $textFormatter,
+    ) {}
 
     public function downloadResponse(array $report): BinaryFileResponse
     {
@@ -28,9 +28,9 @@ class ManagementReportPptxExporter
         try {
             $cover = config('indicators.management_report.cover.placeholders', []);
             $this->replaceInWorkDir($workDir, 'ppt/slides/slide1.xml', [
-                $cover['report_title'] ?? '{{REPORT_TITLE}}' => (string) $report['report_title'],
-                $cover['month_name'] ?? '{{MONTH_NAME}}' => strtoupper((string) $report['month_name']),
-                $cover['year'] ?? '{{YEAR}}' => (string) $report['year'],
+                $cover['report_title'] ?? '{{REPORT_TITLE}}' => $this->textFormatter->escape((string) $report['report_title']),
+                $cover['month_name'] ?? '{{MONTH_NAME}}' => $this->textFormatter->escape(strtoupper((string) $report['month_name'])),
+                $cover['year'] ?? '{{YEAR}}' => $this->textFormatter->escape((string) $report['year']),
             ]);
 
             $contentTypesXml = $this->archive->read($workDir, '[Content_Types].xml');
@@ -42,8 +42,8 @@ class ManagementReportPptxExporter
                 $chartPath = 'ppt/charts/chart'.$chartNumber.'.xml';
 
                 $slideXml = strtr($this->archive->read($workDir, $slidePath), [
-                    '{{INDICATOR_TITLE_'.$token.'}}' => (string) $indicator['title'],
-                    '{{INDICATOR_NARRATIVE_'.$token.'}}' => (string) $indicator['narrative'],
+                    '{{INDICATOR_TITLE_'.$token.'}}' => $this->textFormatter->escape((string) $indicator['title']),
+                    '{{INDICATOR_NARRATIVE_'.$token.'}}' => $this->textFormatter->escape((string) $indicator['narrative']),
                 ]);
 
                 [$slideXml, $chartXml, $contentTypesXml] = $this->chartInjector->ensureChartInWorkDir(

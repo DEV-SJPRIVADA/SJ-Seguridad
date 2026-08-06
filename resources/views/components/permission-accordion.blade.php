@@ -13,6 +13,7 @@
 <div
     class="perm-accordion__item js-perm-accordion {{ $open ? 'is-open' : '' }}"
     data-search="{{ $search }}"
+    data-section="{{ $id }}"
     id="perm-section-{{ $id }}"
 >
     <button type="button" class="perm-accordion__header js-perm-accordion-toggle" aria-expanded="{{ $open ? 'true' : 'false' }}">

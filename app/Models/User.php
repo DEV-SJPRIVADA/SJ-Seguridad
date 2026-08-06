@@ -33,6 +33,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'document_number',
         'area_key',
         'sede_id',
         'email',
@@ -324,5 +325,10 @@ class User extends Authenticatable
             'empleados' => route('gestion-humana.ficha-empleados.employees.index'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
+    }
+
+    public function defaultArchivoBoardUrl(): string
+    {
+        return route('gestion-humana.archivo.index');
     }
 }
