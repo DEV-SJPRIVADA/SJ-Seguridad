@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = window.userPermissionsFormConfig ?? {};
     const areaLabels = config.areaLabels ?? {};
     const initialTab = config.initialTab ?? 'section-user';
+    const initialNavKey = config.initialNavKey ?? '_global';
     const navItems = form.querySelectorAll('.js-user-form-tab');
     const sections = form.querySelectorAll('.user-form__section');
     const areaKeySelect = document.getElementById('user-area-key');
@@ -18,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewCount = document.getElementById('permission-preview-count');
     const previewEmpty = document.getElementById('permission-preview-empty');
     const advancedToggle = document.getElementById('toggle-advanced-permissions');
-    const filterChips = form.querySelectorAll('.js-perm-filter-chip');
+    const areaNavItems = form.querySelectorAll('.js-perm-area-nav');
+    const areaPanels = form.querySelectorAll('.js-perm-area-panel');
 
     function activateTab(targetId) {
         navItems.forEach((item) => {
@@ -42,6 +44,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function activateAreaPanel(areaKey) {
+        areaNavItems.forEach((item) => {
+            const isActive = item.getAttribute('data-area-key') === areaKey;
+            item.classList.toggle('is-active', isActive);
+            item.setAttribute('aria-current', isActive ? 'true' : 'false');
+        });
+
+        areaPanels.forEach((panel) => {
+            const isActive = panel.getAttribute('data-area-key') === areaKey;
+            panel.classList.toggle('is-active', isActive);
+            panel.hidden = ! isActive;
+        });
+    }
+
+    areaNavItems.forEach((item) => {
+        item.addEventListener('click', () => {
+            activateAreaPanel(item.getAttribute('data-area-key'));
+        });
+    });
+
     function refreshAssignedAreaLabel() {
         if (! areaKeySelect || ! assignedAreaLabel) {
             return;
@@ -51,17 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
         assignedAreaLabel.textContent = key ? (areaLabels[key] || key) : 'Sin area fija';
     }
 
-    areaKeySelect?.addEventListener('change', refreshAssignedAreaLabel);
-    refreshAssignedAreaLabel();
+    areaKeySelect?.addEventListener('change', () => {
+        refreshAssignedAreaLabel();
 
-    form.querySelectorAll('.js-perm-accordion-toggle').forEach((toggle) => {
-        toggle.addEventListener('click', () => {
-            const item = toggle.closest('.js-perm-accordion');
-            const isOpen = item.classList.contains('is-open');
-            item.classList.toggle('is-open', ! isOpen);
-            toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-        });
+        if (areaKeySelect.value && form.querySelector('.js-perm-area-nav[data-area-key="_assigned"]')) {
+            activateAreaPanel('_assigned');
+        }
     });
+    refreshAssignedAreaLabel();
 
     function updateSubgroupCount(subgroup) {
         const countEl = subgroup.querySelector('.js-perm-subgroup-count');
@@ -74,15 +93,28 @@ document.addEventListener('DOMContentLoaded', () => {
         countEl.textContent = checked > 0 ? `${checked}/${boxes.length}` : `${boxes.length}`;
     }
 
-    function updateSectionBadge(accordion) {
-        const badge = accordion.querySelector('.js-perm-badge');
+    function updateNavBadge(navItem) {
+        const badge = navItem.querySelector('.js-perm-nav-badge');
         if (! badge) {
             return;
         }
 
+        const areaKey = navItem.getAttribute('data-area-key');
+        const panel = form.querySelector(`.js-perm-area-panel[data-area-key="${areaKey}"]`);
         const total = parseInt(badge.getAttribute('data-total') || '0', 10);
-        const checked = accordion.querySelectorAll('.js-permission-checkbox:checked').length;
+        const checked = panel?.querySelectorAll('.js-permission-checkbox:checked').length ?? 0;
         badge.textContent = `${checked}/${total}`;
+    }
+
+    function updatePanelCount(panel) {
+        const countEl = panel.querySelector('.js-perm-panel-count');
+        if (! countEl) {
+            return;
+        }
+
+        const total = parseInt(countEl.getAttribute('data-total') || '0', 10);
+        const checked = panel.querySelectorAll('.js-permission-checkbox:checked').length;
+        countEl.textContent = `${checked}/${total} activos`;
     }
 
     function updatePreview() {
@@ -122,7 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.toggle('switch-item--active', checkbox?.checked ?? false);
         });
 
-        form.querySelectorAll('.js-perm-accordion').forEach(updateSectionBadge);
+        areaNavItems.forEach(updateNavBadge);
+        areaPanels.forEach(updatePanelCount);
         form.querySelectorAll('.js-permission-group, .js-permission-area').forEach(updateSubgroupCount);
         updatePreview();
     }
@@ -135,13 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.querySelectorAll('.js-perm-bulk').forEach((button) => {
         button.addEventListener('click', () => {
-            const accordion = button.closest('.js-perm-accordion');
-            if (! accordion) {
+            const panel = button.closest('.js-perm-area-panel');
+            if (! panel) {
                 return;
             }
 
             const enable = button.getAttribute('data-action') === 'enable';
-            accordion.querySelectorAll('.js-permission-checkbox').forEach((checkbox) => {
+            panel.querySelectorAll('.js-permission-checkbox').forEach((checkbox) => {
                 checkbox.checked = enable;
             });
 
@@ -150,11 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function applySearch(query) {
-        form.querySelectorAll('.js-perm-accordion').forEach((accordion) => {
-            const sectionVisible = query === '' || (accordion.getAttribute('data-search') || '').includes(query);
+        let firstMatchKey = null;
+
+        areaPanels.forEach((panel) => {
             let hasVisibleItem = false;
 
-            accordion.querySelectorAll('.js-permission-item').forEach((item) => {
+            panel.querySelectorAll('.js-permission-item').forEach((item) => {
                 const itemSearch = item.getAttribute('data-search') || '';
                 const match = query === '' || itemSearch.includes(query);
                 item.style.display = match ? '' : 'none';
@@ -163,14 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            accordion.querySelectorAll('.js-permission-group, .js-permission-area').forEach((group) => {
+            panel.querySelectorAll('.js-permission-group, .js-permission-area').forEach((group) => {
                 const groupSearch = group.getAttribute('data-search') || '';
                 const visibleItems = Array.from(group.querySelectorAll('.js-permission-item'))
                     .some((item) => item.style.display !== 'none');
-
-                if (query !== '' && (groupSearch.includes(query) || visibleItems)) {
-                    group.open = true;
-                }
 
                 group.style.display = (query === '' || groupSearch.includes(query) || visibleItems) ? '' : 'none';
                 if (group.style.display !== 'none') {
@@ -178,37 +208,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            if (query !== '' && hasVisibleItem) {
-                accordion.classList.add('is-open');
-                accordion.querySelector('.js-perm-accordion-toggle')?.setAttribute('aria-expanded', 'true');
-            }
+            const panelSearch = panel.getAttribute('data-search') || '';
+            const panelMatches = query === '' || panelSearch.includes(query) || hasVisibleItem;
+            const areaKey = panel.getAttribute('data-area-key');
 
-            accordion.style.display = (sectionVisible || hasVisibleItem) ? '' : 'none';
+            areaNavItems.forEach((navItem) => {
+                if (navItem.getAttribute('data-area-key') !== areaKey) {
+                    return;
+                }
+
+                navItem.classList.toggle('has-search-match', query !== '' && panelMatches);
+                navItem.style.display = panelMatches ? '' : 'none';
+            });
+
+            if (query !== '' && panelMatches && firstMatchKey === null) {
+                firstMatchKey = areaKey;
+            }
         });
+
+        if (query !== '' && firstMatchKey !== null) {
+            activateAreaPanel(firstMatchKey);
+        }
+
+        if (query === '') {
+            areaNavItems.forEach((navItem) => {
+                navItem.style.display = '';
+                navItem.classList.remove('has-search-match');
+            });
+        }
     }
 
     searchInput?.addEventListener('input', () => {
         applySearch(searchInput.value.trim().toLowerCase());
-    });
-
-    filterChips.forEach((chip) => {
-        chip.addEventListener('click', () => {
-            const filter = chip.getAttribute('data-filter') || 'all';
-
-            filterChips.forEach((item) => {
-                item.classList.toggle('module-tab--active', item === chip);
-            });
-
-            form.querySelectorAll('.js-perm-accordion').forEach((accordion) => {
-                const section = accordion.getAttribute('data-section') || '';
-                const visible = filter === 'all' || section === filter;
-                accordion.style.display = visible ? '' : 'none';
-            });
-
-            if (searchInput?.value.trim()) {
-                applySearch(searchInput.value.trim().toLowerCase());
-            }
-        });
     });
 
     advancedToggle?.addEventListener('change', () => {
@@ -219,6 +250,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (advancedToggle && localStorage.getItem('userPermissionsAdvanced') === '1') {
         advancedToggle.checked = true;
         form.classList.add('user-form--advanced');
+    }
+
+    if (areaNavItems.length > 0) {
+        const hasInitial = Array.from(areaNavItems).some(
+            (item) => item.getAttribute('data-area-key') === initialNavKey,
+        );
+        activateAreaPanel(hasInitial ? initialNavKey : areaNavItems[0].getAttribute('data-area-key'));
     }
 
     refreshPermissionUi();

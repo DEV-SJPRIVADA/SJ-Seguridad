@@ -9,11 +9,9 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Panel lateral con listado paginado y busqueda de usuarios
 - Por defecto el listado muestra solo usuarios activos; checkbox **Mostrar usuarios inactivos** amplia la lista
 - Resumen del usuario seleccionado: ficha operativa, notas de acceso efectivo por rol y lista plana de permisos directos asignados
-- Formulario en dos pestanas: **Usuario** y **Que puede hacer**
-- Tres bloques de permisos sin repeticion por area:
-  1. **En su area asignada** (solicitar, mis requisiciones, mis solicitudes suministros)
-  2. **Funcionalidades transversales** (requisiciones GH, suministros Calidad/Compras, admin, biblioteca documentos)
-  3. **Activa visualizacion de otras areas** (tableros y funciones por area: GH, Compras, Operaciones, Comercial, Calidad)
+- Formulario en pestanas: **Identidad**, **Acceso y permisos**, **Seguridad** (edicion)
+- **Acceso y permisos:** layout maestro–detalle — sidebar con **Mi area base**, **Transversal** y cada area del negocio; panel derecho con subgrupos y toggles de la seleccion
+- La estructura logica sigue en tres bloques (`assigned_area`, `global_groups`, `other_areas`); la UI los navega por area via `sections.navigation`
 - Avisos de coherencia al guardar (soft warnings)
 
 ## Rutas
@@ -35,7 +33,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 ## Servicios
 
-- `UserPermissionFormBuilder` — estructura del formulario
+- `UserPermissionFormBuilder` — estructura del formulario (`sections` + `sections.navigation` para sidebar)
 - `UserPermissionValidator` — avisos de coherencia (GH, Compras, Calidad, Operaciones, Comercial)
 - `UserAccessSummary` — notas de acceso efectivo en el listado
 - `NavigationResolver` + `SidebarVisibilityService` — sidebar de la app con hogares canonicos (sin preview en Admin)

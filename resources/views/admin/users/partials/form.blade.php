@@ -6,6 +6,12 @@
     $areaLabels = $areas ?? [];
     $compactCreate = ($compactCreate ?? false) || $user === null;
 
+    $navKeys = collect($sections['navigation'] ?? [])->pluck('key')->all();
+    $areaKeyForNav = old('area_key', $user?->area_key);
+    $initialNavKey = filled($areaKeyForNav) && in_array('_assigned', $navKeys, true)
+        ? '_assigned'
+        : (in_array('_global', $navKeys, true) ? '_global' : ($navKeys[0] ?? '_global'));
+
     $initialTab = 'section-user';
     if ($errors->any()) {
         $hasUserFieldError = $errors->hasAny(['name', 'email', 'document_number', 'area_key', 'sede_id', 'role']);
@@ -175,7 +181,7 @@
         </div>
 
         <div id="section-capabilities" class="user-form__section" @if ($initialTab !== 'section-capabilities') hidden @endif>
-            <div class="section-header section-header--split {{ $compactCreate ? 'section-header--compact' : '' }}">
+            <div class="section-header section-header--split section-header--permissions {{ $compactCreate ? 'section-header--compact' : '' }}">
                 <div>
                     @unless ($compactCreate)
                         <h3 class="section-header__title">{{ $tabs['capabilities'] ?? 'Acceso y permisos' }}</h3>
@@ -185,22 +191,6 @@
                         <p class="section-header__desc">Opcional. Se suman al rol seleccionado.</p>
                     @endunless
                 </div>
-                <div class="perm-search-bar">
-                    <input type="text" id="search-permissions" class="form-input" placeholder="Buscar permiso...">
-                </div>
-            </div>
-
-            <div class="user-permissions-toolbar">
-                <div class="module-tabs user-permissions-filters" aria-label="Filtrar permisos">
-                    <button type="button" class="module-tab module-tab--active js-perm-filter-chip" data-filter="all">Todos</button>
-                    <button type="button" class="module-tab js-perm-filter-chip" data-filter="assigned">Su area</button>
-                    <button type="button" class="module-tab js-perm-filter-chip" data-filter="global">Transversales</button>
-                    <button type="button" class="module-tab js-perm-filter-chip" data-filter="other">Otras areas</button>
-                </div>
-                <label class="user-permissions-advanced">
-                    <input type="checkbox" id="toggle-advanced-permissions" class="form-check">
-                    <span class="text-small">Mostrar identificadores tecnicos</span>
-                </label>
             </div>
 
             <div class="user-permissions-layout {{ $compactCreate ? 'user-permissions-layout--compact' : '' }}">
@@ -209,6 +199,7 @@
                         'sections' => $sections,
                         'selectedPermissions' => $selectedPermissions,
                         'help' => $help,
+                        'initialNavKey' => $initialNavKey,
                     ])
 
                     <x-input-error :messages="$errors->get('permissions')" />
@@ -288,6 +279,7 @@
         window.userPermissionsFormConfig = {
             areaLabels: @json($areaLabels),
             initialTab: @json($initialTab),
+            initialNavKey: @json($initialNavKey),
         };
     </script>
     @vite('resources/js/admin/user-permissions-form.js')

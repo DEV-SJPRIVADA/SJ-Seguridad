@@ -164,27 +164,82 @@ class UserPermissionFormBuilder
             ->values()
             ->all();
 
-        return [
-            'sections' => [
-                'assigned_area' => [
-                    'label' => $sectionLabels['assigned_area'] ?? 'En su area asignada',
-                    'help' => config('access.admin_ui.help.assigned_area'),
-                    'permissions' => $assignedArea,
-                ],
-                'global' => [
-                    'label' => $sectionLabels['global'] ?? 'Funcionalidades transversales',
-                    'help' => config('access.admin_ui.help.global'),
-                    'groups' => $globalGroups,
-                ],
-                'other_areas' => [
-                    'label' => $sectionLabels['other_areas'] ?? 'Activa visualizacion de otras areas',
-                    'help' => config('access.admin_ui.help.other_areas'),
-                    'areas' => $otherAreas,
-                ],
+        $sections = [
+            'assigned_area' => [
+                'label' => $sectionLabels['assigned_area'] ?? 'En su area asignada',
+                'help' => config('access.admin_ui.help.assigned_area'),
+                'permissions' => $assignedArea,
             ],
+            'global' => [
+                'label' => $sectionLabels['global'] ?? 'Funcionalidades transversales',
+                'help' => config('access.admin_ui.help.global'),
+                'groups' => $globalGroups,
+            ],
+            'other_areas' => [
+                'label' => $sectionLabels['other_areas'] ?? 'Activa visualizacion de otras areas',
+                'help' => config('access.admin_ui.help.other_areas'),
+                'areas' => $otherAreas,
+            ],
+            'navigation' => [],
+        ];
+
+        $sections['navigation'] = $this->buildNavigation($sections);
+
+        return [
+            'sections' => $sections,
             'tabs' => config('access.admin_ui.tabs', []),
             'help' => config('access.admin_ui.help', []),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $sections
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildNavigation(array $sections): array
+    {
+        $navigation = [];
+
+        $assignedPermissions = $sections['assigned_area']['permissions'] ?? [];
+        if ($assignedPermissions !== []) {
+            $navigation[] = [
+                'key' => '_assigned',
+                'type' => 'assigned',
+                'label' => 'Mi area base',
+                'help' => $sections['assigned_area']['help'] ?? '',
+                'permissions' => $assignedPermissions,
+            ];
+        }
+
+        $globalGroups = $sections['global']['groups'] ?? [];
+        if ($globalGroups !== []) {
+            $globalPermissions = collect($globalGroups)
+                ->flatMap(fn (array $group) => $group['permissions'] ?? [])
+                ->values()
+                ->all();
+
+            $navigation[] = [
+                'key' => '_global',
+                'type' => 'global',
+                'label' => $sections['global']['label'] ?? 'Transversal',
+                'help' => $sections['global']['help'] ?? '',
+                'groups' => $globalGroups,
+                'permissions' => $globalPermissions,
+            ];
+        }
+
+        foreach ($sections['other_areas']['areas'] ?? [] as $area) {
+            $navigation[] = [
+                'key' => $area['key'],
+                'type' => 'area',
+                'label' => $area['label'],
+                'help' => '',
+                'subgroups' => $area['subgroups'] ?? [],
+                'permissions' => $area['permissions'] ?? [],
+            ];
+        }
+
+        return $navigation;
     }
 
     /**
