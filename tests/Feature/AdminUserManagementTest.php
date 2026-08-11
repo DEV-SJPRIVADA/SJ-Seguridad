@@ -96,6 +96,8 @@ class AdminUserManagementTest extends TestCase
         $response->assertSee('Solicitar requisiciones de personal');
         $response->assertSee('Suministros — Calidad (aprobacion)');
         $response->assertSee('Suministros — Compras (catalogo)');
+        $response->assertSee('Documentos de Calidad');
+        $response->assertDontSee('Biblioteca en Operaciones');
         $response->assertSee('Compras');
         $response->assertSee('Gestion humana');
         $response->assertDontSee('Ver Suministros (Gestion humana)');
@@ -158,11 +160,13 @@ class AdminUserManagementTest extends TestCase
         ]));
     }
 
-    public function test_user_with_area_permission_gets_default_documents_board(): void
+    public function test_user_with_assigned_area_gets_default_documents_board(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.area.gestion_humana');
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 

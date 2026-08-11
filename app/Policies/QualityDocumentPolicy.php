@@ -18,7 +18,7 @@ class QualityDocumentPolicy
             return false;
         }
 
-        return $user->can("view.area.{$module}") || $user->can("manage.area.{$module}");
+        return $user->canViewDocumentsBoardFor($module);
     }
 
     public function viewPersonal(User $user, QualityDocument $document): bool

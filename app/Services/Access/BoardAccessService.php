@@ -2,18 +2,17 @@
 
 namespace App\Services\Access;
 
-use App\Models\QualityDocument;
 use App\Models\User;
 
 class BoardAccessService
 {
     public function canViewDocumentsBoard(User $user, string $areaKey): bool
     {
-        if ($user->can("view.area.{$areaKey}") || $user->can("manage.area.{$areaKey}")) {
+        if ($user->can('manage.quality.documents') && $areaKey === 'calidad') {
             return true;
         }
 
-        return $user->area_key === $areaKey && QualityDocument::hasActiveForUser($user->id);
+        return $user->hasAssignedArea() && $user->area_key === $areaKey;
     }
 
     public function canViewDocumentsBoardForSidebar(User $user, string $areaKey): bool
@@ -26,14 +25,6 @@ class BoardAccessService
             return $user->hasAssignedArea() && $user->area_key === $areaKey;
         }
 
-        if ($user->can('manage.quality.documents') && $areaKey === 'calidad') {
-            return true;
-        }
-
-        if ($user->can("view.area.{$areaKey}") || $user->can("manage.area.{$areaKey}")) {
-            return true;
-        }
-
-        return $user->area_key === $areaKey && QualityDocument::hasActiveForUser($user->id);
+        return $this->canViewDocumentsBoard($user, $areaKey);
     }
 }

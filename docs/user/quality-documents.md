@@ -6,11 +6,11 @@ Consultar documentos del sistema de gestion de calidad, recibir documentos asign
 
 ## Alcance
 
-El tablero **Documentos** aparece en el menu en **su area asignada** (consulta de biblioteca) y, si administra documentos, tambien en **Calidad**. Segun permisos dentro del tablero:
+El tablero **Documentos** aparece al final de los tableros de **su area asignada** para todos los usuarios con area base. Quien administra documentos tambien lo ve en **Calidad**. Dentro del tablero:
 
-- **Biblioteca:** consultar documentos activos asignados a su area.
-- **Mis documentos:** ver descargas/enlaces de documentos asignados directamente a su usuario.
-- **Administrar:** crear, editar, activar/inactivar documentos (solo Calidad con permiso de gestion documental).
+- **Biblioteca:** consultar documentos activos asignados a su area (sin permiso adicional).
+- **Mis documentos:** visible cuando tiene documentos activos asignados directamente a su usuario.
+- **Administrar:** crear, editar, activar/inactivar documentos (solo Calidad; requiere permiso `manage.quality.documents` asignado en Admin usuarios).
 
 Tipos de recurso: archivo (Word/Excel) o enlace externo.
 

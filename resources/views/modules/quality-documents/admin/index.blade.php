@@ -22,12 +22,12 @@
                 </div>
 
                 <div class="panel__body">
-                    <div class="block-spaced data-table-wrap">
-                        <table class="supply-table js-datatable">
+                    <div class="block-spaced data-table-wrap quality-documents-admin-table-wrap">
+                        <table class="supply-table js-datatable quality-documents-admin-table">
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
-                                    <th>Nombre</th>
+                                    <th class="quality-documents-admin-table__col-code">Codigo</th>
+                                    <th class="quality-documents-admin-table__col-title">Nombre</th>
                                     <th>Proceso</th>
                                     <th>Tipo</th>
                                     <th>Origen</th>
@@ -37,7 +37,6 @@
                                     <th>Version</th>
                                     <th>Ult. actualizacion</th>
                                     <th>Areas con acceso</th>
-                                    <th>Usuarios</th>
                                     <th>Activo</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -45,8 +44,8 @@
                             <tbody>
                                 @forelse ($documents as $document)
                                     <tr>
-                                        <td><strong>{{ $document->code ?? '—' }}</strong></td>
-                                        <td>
+                                        <td class="quality-documents-admin-table__col-code"><strong>{{ $document->code ?? '—' }}</strong></td>
+                                        <td class="quality-documents-admin-table__col-title">
                                             {{ $document->title }}
                                             @if ($document->original_name)
                                                 <p class="text-small text-muted block-spaced-sm">{{ $document->original_name }}</p>
@@ -63,13 +62,6 @@
                                         <td>
                                             @forelse ($document->areas as $area)
                                                 <span class="status-pill status-pill--info">{{ config("access.areas.{$area->area_key}") }}</span>
-                                            @empty
-                                                <span class="text-muted">—</span>
-                                            @endforelse
-                                        </td>
-                                        <td>
-                                            @forelse ($document->assignedUsers as $assignment)
-                                                <span class="status-pill status-pill--warning">{{ $assignment->user?->name ?? 'Usuario' }}</span>
                                             @empty
                                                 <span class="text-muted">—</span>
                                             @endforelse
@@ -99,7 +91,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="14" class="text-muted">No hay documentos registrados.</td>
+                                        <td colspan="13" class="text-muted">No hay documentos registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
