@@ -9,6 +9,9 @@
             || ($filters['date_from'] ?? null)
             || ($filters['date_to'] ?? null);
 
+        $hasDateFilters = ($filters['date_from'] ?? null) || ($filters['date_to'] ?? null);
+        $hasQueryFilters = ($filters['q'] ?? '') !== '' || $hasDateFilters;
+
         $manageQuery = fn (array $overrides = []) => array_filter([
             'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
             'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
@@ -17,16 +20,16 @@
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
-    <div class="page-section">
+    <div class="page-section req-manage-page">
         <div class="app-container">
             <div class="panel">
-                <div class="panel__header">
+                <div class="panel__header panel__header--compact">
                     <h3 class="panel-title">Gestion de requisiciones</h3>
-                    <p class="panel-text">Seguimiento centralizado para actualizacion de datos y cambios de estado.</p>
+                    <p class="panel-text panel-text--compact">Seguimiento centralizado para actualizacion de datos y cambios de estado.</p>
                 </div>
 
-                <div class="panel__body">
-                    <div class="req-manage-filters">
+                <div class="panel__body req-manage-shell">
+                    <div class="req-manage-shell__filters req-manage-filters">
                         <div class="req-manage-filters__head">
                             <h4 class="req-manage-filters__title">Filtros</h4>
                             <div class="req-manage-filters__actions">
@@ -42,41 +45,40 @@
                                 @if ($filters['status'] ?? '')
                                     <input type="hidden" name="status" value="{{ $filters['status'] }}">
                                 @endif
-                                @if ($filters['date_from'] ?? null)
-                                    <input type="hidden" name="date_from" value="{{ $filters['date_from'] }}">
-                                @endif
-                                @if ($filters['date_to'] ?? null)
-                                    <input type="hidden" name="date_to" value="{{ $filters['date_to'] }}">
-                                @endif
 
-                                <label class="req-manage-filters__label" for="manage-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group">
-                                    <input
-                                        id="manage-search-input"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="Codigo, lider, cargo..."
-                                    >
-                                    <button type="submit" class="btn btn--primary">Buscar</button>
-                                </div>
-
-                                <div class="req-manage-filters__row" style="margin-top:0.75rem;">
-                                    <div class="req-manage-filters__field">
-                                        <label class="req-manage-filters__label" for="manage-date-from">Fecha inicio</label>
-                                        <input type="date" id="manage-date-from" name="date_from" class="form-input" value="{{ $filters['date_from'] ?? '' }}">
+                                <details class="req-manage-filters__query-panel" @if ($hasQueryFilters) open @endif>
+                                    <summary class="req-manage-filters__query-toggle">Busqueda y fechas</summary>
+                                    <div class="req-manage-filters__query-row">
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--search">
+                                            <label class="req-manage-filters__label" for="manage-search-input">Buscar</label>
+                                            <input
+                                                id="manage-search-input"
+                                                type="search"
+                                                name="q"
+                                                class="form-input"
+                                                value="{{ $filters['q'] }}"
+                                                placeholder="Codigo, lider, cargo..."
+                                            >
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
+                                            <label class="req-manage-filters__label" for="manage-date-from">Desde</label>
+                                            <input type="date" id="manage-date-from" name="date_from" class="form-input" value="{{ $filters['date_from'] ?? '' }}">
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
+                                            <label class="req-manage-filters__label" for="manage-date-to">Hasta</label>
+                                            <input type="date" id="manage-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
+                                        </div>
+                                        <div class="req-manage-filters__query-submit">
+                                            <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
+                                            <button type="submit" class="btn btn--primary">Buscar</button>
+                                        </div>
                                     </div>
-                                    <div class="req-manage-filters__field">
-                                        <label class="req-manage-filters__label" for="manage-date-to">Fecha fin</label>
-                                        <input type="date" id="manage-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
-                                    </div>
-                                </div>
+                                </details>
                             </form>
 
-                            <div class="req-manage-filters__status-col">
+                            <div class="req-manage-filters__status-row">
                                 <p class="req-manage-filters__status-label">Estado</p>
-                                <div class="req-manage-filters__pills">
+                                <div class="req-manage-filters__pills req-manage-filters__pills--scroll">
                                     <a
                                         href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => null])]) }}"
                                         class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
@@ -91,7 +93,7 @@
                             </div>
                         </div>
 
-                        <p class="req-manage-filters__meta">
+                        <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($requisitions->count()) }} {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}">
                             <strong>{{ number_format($requisitions->count()) }}</strong>
                             {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}
                             @if ($filters['status'] ?? '')
@@ -100,7 +102,7 @@
                             @if ($filters['q'] ?? '')
                                 · Busqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
-                            @if (($filters['date_from'] ?? null) || ($filters['date_to'] ?? null))
+                            @if ($hasDateFilters)
                                 · Fecha solicitud:
                                 <strong>{{ $filters['date_from'] ?? '…' }}</strong>
                                 —
@@ -110,61 +112,66 @@
                         </p>
                     </div>
 
-                    <div class="data-table-wrap">
-                        <table
-                            class="data-table js-datatable"
-                            data-order='[[0, "desc"]]'
-                        >
-                            <thead>
-                                <tr>
-                                    <th>Codigo</th>
-                                    <th>Fecha</th>
-                                    <th>Lider</th>
-                                    <th>Cargo</th>
-                                    <th>Cliente</th>
-                                    <th>Ciudad</th>
-                                    <th>Reemplaza a</th>
-                                    <th>Reclutador</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($requisitions as $requisition)
+                    <div class="req-manage-shell__table-zone">
+                        <div class="data-table-wrap req-manage-shell__table-scroll">
+                            <table
+                                class="data-table js-datatable"
+                                data-order='[[0, "desc"]]'
+                                data-dt-responsive="false"
+                                data-dt-compact="true"
+                                data-dt-scroll-y="calc(50vh - 5rem)"
+                            >
+                                <thead>
                                     <tr>
-                                        <td>{{ $requisition->code }}</td>
-                                        <td><x-date-table :value="$requisition->request_date" /></td>
-                                        <td>{{ $requisition->leader_name }}</td>
-                                        <td>{{ $requisition->position?->name }}</td>
-                                        <td>{{ $requisition->client?->name }}</td>
-                                        <td>{{ $requisition->city?->name }}</td>
-                                        <td>{{ $requisition->replacement_name ?? 'N/A' }}</td>
-                                        <td>
-                                            @if ($requisition->recruiter_id || filled($requisition->recruiter_name))
-                                                {{ $requisition->displayRecruiterName() }}
-                                            @else
-                                                sin asignar
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="status-pill status-pill--req-{{ $requisition->status }}">
-                                                {{ $statusLabels[$requisition->status] ?? $requisition->status }}
-                                            </span>
-                                        </td>
-                                        <td class="table-actions">
-                                            <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary btn--sm">Abrir</a>
-                                            <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary btn--sm" title="Previsualizar e Imprimir">
-                                                Imprimir
-                                            </a>
-                                        </td>
+                                        <th>Codigo</th>
+                                        <th>Fecha</th>
+                                        <th>Lider</th>
+                                        <th>Cargo</th>
+                                        <th>Cliente</th>
+                                        <th>Ciudad</th>
+                                        <th>Reemplaza a</th>
+                                        <th>Reclutador</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="10">No hay requisiciones con los filtros seleccionados.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @forelse ($requisitions as $requisition)
+                                        <tr>
+                                            <td>{{ $requisition->code }}</td>
+                                            <td><x-date-table :value="$requisition->request_date" /></td>
+                                            <td>{{ $requisition->leader_name }}</td>
+                                            <td>{{ $requisition->position?->name }}</td>
+                                            <td>{{ $requisition->client?->name }}</td>
+                                            <td>{{ $requisition->city?->name }}</td>
+                                            <td>{{ $requisition->replacement_name ?? 'N/A' }}</td>
+                                            <td>
+                                                @if ($requisition->recruiter_id || filled($requisition->recruiter_name))
+                                                    {{ $requisition->displayRecruiterName() }}
+                                                @else
+                                                    sin asignar
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="status-pill status-pill--req-{{ $requisition->status }}">
+                                                    {{ $statusLabels[$requisition->status] ?? $requisition->status }}
+                                                </span>
+                                            </td>
+                                            <td class="table-actions">
+                                                <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary btn--sm">Abrir</a>
+                                                <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary btn--sm" title="Previsualizar e Imprimir">
+                                                    Imprimir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10">No hay requisiciones con los filtros seleccionados.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

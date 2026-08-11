@@ -95,6 +95,16 @@
                             config.responsive = false;
                         }
 
+                        if ($(this).data('dt-compact')) {
+                            $(this).closest('.req-manage-shell__table-zone, .data-table-wrap').addClass('data-table-wrap--dt-compact');
+                        }
+
+                        var scrollY = $(this).data('dt-scroll-y');
+                        if (scrollY) {
+                            config.scrollY = scrollY;
+                            config.scrollCollapse = true;
+                        }
+
                         $(this).DataTable(config);
                     }
                 });
@@ -212,6 +222,14 @@
             .dataTables_wrapper .dataTables_filter {
                 margin-bottom: 1.5rem !important;
                 text-align: right !important;
+            }
+
+            .req-manage-shell .dataTables_wrapper .dataTables_filter {
+                margin-bottom: 0.35rem !important;
+            }
+
+            .req-manage-shell .dataTables_wrapper .dataTables_length {
+                margin-bottom: 0.35rem !important;
             }
             .dataTables_wrapper .dataTables_filter input {
                 border: 1px solid var(--color-border) !important;

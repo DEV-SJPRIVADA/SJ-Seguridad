@@ -3252,6 +3252,248 @@ a {
     justify-content: flex-start;
 }
 
+/* Requisiciones — gestion: layout tabla protagonista */
+.req-manage-page .panel__header--compact {
+    padding: 0.45rem 0.65rem;
+}
+
+.req-manage-page .panel-text--compact {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.req-manage-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+}
+
+.req-manage-shell__filters {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+.req-manage-shell__table-zone {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 50vh;
+}
+
+.req-manage-shell__table-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_scrollHead thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_scroll {
+    margin-bottom: 0.25rem;
+}
+
+.req-manage-filters__dates {
+    margin-top: 0.5rem;
+}
+
+.req-manage-page .req-manage-filters__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    align-items: stretch;
+}
+
+.req-manage-filters__query-panel {
+    margin-top: 0.35rem;
+}
+
+.req-manage-filters__query-toggle,
+.req-manage-filters__dates-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand-blue);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.req-manage-filters__query-toggle::-webkit-details-marker,
+.req-manage-filters__dates-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.req-manage-filters__query-toggle::before,
+.req-manage-filters__dates-toggle::before {
+    content: '▸';
+    font-size: 0.65rem;
+    transition: transform 0.15s ease;
+}
+
+.req-manage-filters__query-panel[open] .req-manage-filters__query-toggle::before,
+.req-manage-filters__dates[open] .req-manage-filters__dates-toggle::before {
+    transform: rotate(90deg);
+}
+
+.req-manage-filters__query-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: flex-end;
+    margin-top: 0.5rem;
+}
+
+.req-manage-filters__query-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.req-manage-filters__query-field--search {
+    flex: 1 1 12rem;
+}
+
+.req-manage-filters__query-field--date {
+    flex: 0 1 9.5rem;
+}
+
+.req-manage-filters__query-submit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.req-manage-filters__query-submit .btn {
+    min-height: var(--control-height-chrome);
+    padding: 0.35rem 0.85rem;
+    font-size: var(--control-font-size);
+    line-height: var(--control-line-height);
+    border-radius: 10px;
+}
+
+.req-manage-filters__label--spacer {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.req-manage-filters__status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.req-manage-page .req-manage-filters__status-row .req-manage-filters__status-label {
+    margin: 0;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.req-manage-page .req-manage-filters__status-row .req-manage-filters__pills--scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.req-manage-filters__row--dates {
+    margin-top: 0.5rem;
+}
+
+.req-manage-filters__pills--scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.1rem;
+    scrollbar-width: thin;
+}
+
+.req-manage-filters__pills--scroll .req-manage-filters__pill {
+    flex: 0 0 auto;
+}
+
+.req-manage-filters__meta--compact {
+    margin-top: 0.35rem;
+    font-size: 0.76rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* DataTables compacto en gestion (conserva buscador) */
+.req-manage-shell .dataTables_wrapper .dataTables_length,
+.req-manage-shell .dataTables_wrapper .dataTables_filter {
+    margin: 0 0 0.35rem;
+    padding: 0;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_length label,
+.req-manage-shell .dataTables_wrapper .dataTables_filter label {
+    margin: 0;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_filter input {
+    min-width: 10rem !important;
+    max-width: 14rem;
+    min-height: var(--control-height-chrome) !important;
+    padding: 0.35rem 0.65rem !important;
+    margin-left: 0.35rem !important;
+    font-size: var(--control-font-size) !important;
+    border-radius: var(--control-radius) !important;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_length select {
+    min-height: var(--control-height-chrome);
+    padding: 0.2rem 1.5rem 0.2rem 0.45rem;
+    font-size: var(--control-font-size);
+    border-radius: var(--control-radius);
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_info,
+.req-manage-shell .dataTables_wrapper .dataTables_paginate {
+    margin-top: 0.35rem !important;
+    font-size: 0.78rem !important;
+}
+
+@media (max-height: 900px), (max-width: 1366px) {
+    .req-manage-page .panel-text--compact {
+        display: none;
+    }
+
+    .req-manage-page .req-manage-filters {
+        padding: 0.45rem 0.85rem;
+    }
+
+    .req-manage-page .req-manage-filters__toolbar {
+        gap: 0.65rem;
+    }
+
+    .req-manage-shell__filters {
+        max-height: 38vh;
+        overflow-y: auto;
+    }
+}
+
 /* Requisiciones — filtros: tablet en adelante, fechas en 2 columnas */
 @media (min-width: 480px) {
     .req-manage-filters__row {
