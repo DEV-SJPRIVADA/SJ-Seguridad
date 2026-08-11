@@ -12,6 +12,7 @@ use App\Policies\PurchaseRequestPolicy;
 use App\Policies\QualityDocumentPolicy;
 use App\Policies\SupplyRequestPolicy;
 use App\Services\Navigation\NavigationResolver;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -32,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::defaultView('vendor.pagination.sj');
+
         Gate::before(function (User $user, string $ability): ?bool {
             if ($ability === 'system.view.audit') {
                 return null;

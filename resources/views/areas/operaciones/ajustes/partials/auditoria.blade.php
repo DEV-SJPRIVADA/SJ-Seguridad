@@ -53,5 +53,9 @@
             </tbody>
         </table>
     </div>
-    {{ $logs->links() }}
+    @if ($logs->hasPages())
+        <div class="pagination-wrap indicadores-subpanel__pagination">
+            {{ $logs->links() }}
+        </div>
+    @endif
 </div>

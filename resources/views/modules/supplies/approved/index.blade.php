@@ -92,9 +92,11 @@
                         </tbody>
                     </table>
 
-                    <div class="block-spaced">
-                        {{ $requests->links() }}
-                    </div>
+                    @if ($requests->hasPages())
+                        <div class="pagination-wrap">
+                            {{ $requests->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

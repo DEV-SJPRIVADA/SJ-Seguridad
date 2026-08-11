@@ -84,7 +84,7 @@
                     var $bottom = $wrapper.find('.req-manage-dt-bottom').first();
 
                     if (!$bottom.length) {
-                        $bottom = $shell.find('.req-manage-shell__pagination').first();
+                        $bottom = $shell.find('.req-manage-shell__pagination, .pagination-wrap').first();
                     }
 
                     if (!$scroll.length) {
@@ -364,16 +364,6 @@
                 text-transform: uppercase;
                 font-size: 0.75rem;
                 letter-spacing: 0.05em;
-            }
-            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-                background: var(--brand-primary) !important;
-                color: white !important;
-                border: 1px solid var(--brand-primary) !important;
-            }
-            .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
-                color: var(--text-muted) !important;
-                font-size: 0.875rem;
-                margin-top: 1rem;
             }
 
             /* Sistema de Toasts */
