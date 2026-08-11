@@ -3253,7 +3253,21 @@ a {
 }
 
 /* Requisiciones — gestion: layout tabla protagonista */
+.req-manage-page .panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 8.5rem);
+}
+
+.req-manage-page .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 .req-manage-page .panel__header--compact {
+    flex-shrink: 0;
     padding: 0.45rem 0.65rem;
 }
 
@@ -3271,37 +3285,142 @@ a {
 }
 
 .req-manage-shell__filters {
-    position: sticky;
-    top: 0;
-    z-index: 20;
     flex-shrink: 0;
-    margin-bottom: 0;
 }
 
-.req-manage-shell__table-zone {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    min-height: 50vh;
-}
-
-.req-manage-shell__table-scroll {
+.req-manage-shell__table {
     flex: 1 1 auto;
     min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-.req-manage-shell .dataTables_wrapper .dataTables_scrollHead thead th {
-    position: sticky;
-    top: 0;
-    z-index: 5;
+.req-manage-shell__table .dataTables_wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
-.req-manage-shell .dataTables_wrapper .dataTables_scroll {
-    margin-bottom: 0.25rem;
+.req-manage-dt-top {
+    flex-shrink: 0;
+    background: var(--color-bg, #f4f7fb);
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--color-border, #dbe3ef);
 }
 
-.req-manage-filters__dates {
-    margin-top: 0.5rem;
+.req-manage-dt-bottom {
+    flex-shrink: 0;
+}
+
+.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.req-manage-table-scroll {
+    flex: 1 1 auto;
+    min-height: 220px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    position: relative;
+}
+
+.req-manage-table-scroll > table.dataTable,
+.req-manage-table-scroll > .data-table,
+.req-manage-table-scroll table.dataTable,
+.req-manage-table-scroll .data-table {
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.req-manage-page .req-manage-table-scroll table.dataTable thead th,
+.req-manage-page .req-manage-table-scroll .data-table thead th {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 12 !important;
+    background-color: #003366 !important;
+    background-clip: padding-box;
+    box-shadow: 0 2px 0 #002244;
+}
+
+.req-manage-filters__panel {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 0.45rem 0.85rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.req-manage-filters__panel-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    width: 100%;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-blue);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.req-manage-filters__panel-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.req-manage-filters__panel-toggle::before {
+    content: '▸';
+    margin-right: 0.35rem;
+    font-size: 0.65rem;
+    transition: transform 0.15s ease;
+}
+
+.req-manage-filters__panel[open] .req-manage-filters__panel-toggle::before {
+    transform: rotate(90deg);
+}
+
+.req-manage-filters__panel-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--brand-blue-soft);
+    color: var(--brand-blue);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.req-manage-filters__panel-body {
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.req-manage-filters__panel .req-manage-filters__head {
+    margin-bottom: 0.5rem;
+}
+
+.req-manage-filters__panel .req-manage-filters__actions {
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.req-manage-page .req-manage-filters__panel.req-manage-filters {
+    margin-bottom: 0;
 }
 
 .req-manage-page .req-manage-filters__toolbar {
@@ -3486,11 +3605,6 @@ a {
 
     .req-manage-page .req-manage-filters__toolbar {
         gap: 0.65rem;
-    }
-
-    .req-manage-shell__filters {
-        max-height: 38vh;
-        overflow-y: auto;
     }
 }
 
