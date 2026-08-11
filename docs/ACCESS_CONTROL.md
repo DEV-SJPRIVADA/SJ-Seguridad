@@ -200,9 +200,10 @@ Comando artisan `app:sync-permissions`:
 - Crea o actualiza permisos de sistema, areas y tableros segun `config/access.php`
 - Excluye `view.board.{area}.documentos` (el tablero Documentos no usa ese permiso)
 - Elimina permisos huerfanos de areas/tableros obsoletos
-- **No** modifica roles ni permisos asignados a usuarios
+- **Actualiza rol `super-admin`** con el catalogo completo (incluye permisos nuevos como `system.view.audit`)
+- **No** modifica otros roles ni permisos directos de usuarios
 
-Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo.
+Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo. Tras ejecutarlo, conviene **cerrar sesion y volver a entrar** para refrescar cache de permisos Spatie.
 
 ## Configuracion en Admin de usuarios
 

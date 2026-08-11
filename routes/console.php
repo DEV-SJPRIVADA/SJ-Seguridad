@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -129,15 +132,22 @@ Artisan::command('app:sync-permissions', function () {
 
     $result = PermissionCatalog::sync();
 
+    $superAdminRole = Role::findOrCreate('super-admin', 'web');
+    $allPermissions = Permission::query()->pluck('name')->all();
+    $superAdminRole->syncPermissions($allPermissions);
+
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
     $this->table(
         ['Metrica', 'Valor'],
         [
             ['Permisos configurados', (string) $result['synced']],
             ['Permisos huerfanos eliminados', (string) $result['deleted']],
+            ['Permisos en super-admin', (string) count($allPermissions)],
         ]
     );
 
-    $this->info('Permisos sincronizados sin modificar roles ni usuarios.');
+    $this->info('Permisos sincronizados. Rol super-admin actualizado con el catalogo completo.');
 
     return self::SUCCESS;
-})->purpose('Sincroniza permisos de areas y tableros desde config sin resetear roles');
+})->purpose('Sincroniza permisos desde config y actualiza rol super-admin');

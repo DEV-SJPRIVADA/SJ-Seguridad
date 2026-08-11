@@ -225,9 +225,11 @@
                     </section>
                 </div>
 
-                <div class="panel__body panel__body--compact panel-divider-top">
-                    {{ $users->links() }}
-                </div>
+                @if ($users->hasPages())
+                    <div class="panel__body panel__body--compact panel-divider-top users-panel__pagination">
+                        {{ $users->links('vendor.pagination.sj') }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>

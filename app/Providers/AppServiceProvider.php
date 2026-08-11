@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function (User $user, string $ability): ?bool {
+            if ($ability === 'system.view.audit') {
+                return null;
+            }
+
             if ($user->hasRole('super-admin')) {
                 return true;
             }

@@ -46,13 +46,57 @@ class AuditEventCatalog
         ],
     ];
 
+    /**
+     * @var array<string, array<string, array{severity: string, log_by_default: bool}>>
+     */
+    private const ADMIN_EVENTS = [
+        'user_management' => [
+            'create' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'update' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'activate' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'deactivate' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'role_sync' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'permissions_sync' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'password_reset' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+        ],
+        'notification_config' => [
+            'email_attach' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'email_detach' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+        ],
+    ];
+
+    /**
+     * @var array<string, array<string, array{severity: string, log_by_default: bool}>>
+     */
+    private const REQUISITIONS_EVENTS = [
+        'requisition' => [
+            'create' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'status_change' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+        ],
+        'management_approval' => [
+            'approve' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'reject' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+        ],
+        'export' => [
+            'manage_excel' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+            'tracking_excel' => ['severity' => self::SEVERITY_AUDIT, 'log_by_default' => true],
+        ],
+    ];
+
     public static function severityFor(string $module, string $eventType, string $action): string
     {
-        if ($module === 'indicadores') {
-            return self::INDICADORES_EVENTS[$eventType][$action]['severity'] ?? self::SEVERITY_AUDIT;
+        $catalog = match ($module) {
+            'indicadores' => self::INDICADORES_EVENTS,
+            'admin' => self::ADMIN_EVENTS,
+            'requisitions' => self::REQUISITIONS_EVENTS,
+            default => null,
+        };
+
+        if ($catalog === null) {
+            return self::SEVERITY_AUDIT;
         }
 
-        return self::SEVERITY_AUDIT;
+        return $catalog[$eventType][$action]['severity'] ?? self::SEVERITY_AUDIT;
     }
 
     /**

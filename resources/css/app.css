@@ -3585,6 +3585,52 @@ a {
     text-overflow: ellipsis;
 }
 
+/* Admin — auditoria global (patron req-manage) */
+.audit-page.req-manage-page .audit-filters__query-row {
+    margin-top: 0;
+}
+
+.audit-page.req-manage-page .audit-filters__query-row--footer {
+    margin-top: 0.5rem;
+}
+
+.audit-page.req-manage-page .audit-filters__field {
+    flex: 1 1 9.5rem;
+    min-width: min(100%, 9.5rem);
+}
+
+.audit-page.req-manage-page .audit-filters__field--wide {
+    flex: 1.4 1 12rem;
+    min-width: min(100%, 12rem);
+}
+
+.audit-page.req-manage-page .audit-filters__field--checkbox {
+    flex: 1 1 auto;
+    min-width: min(100%, 16rem);
+}
+
+.audit-page.req-manage-page .audit-filters__checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: var(--control-height-chrome);
+    font-size: 0.82rem;
+    color: #475569;
+    cursor: pointer;
+}
+
+.audit-page.req-manage-page .audit-filters__checkbox input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+}
+
+.audit-page.req-manage-page .audit-table td:last-child {
+    max-width: 18rem;
+    white-space: normal;
+    word-break: break-word;
+}
+
 /* DataTables compacto en gestion (conserva buscador) */
 .req-manage-shell .dataTables_wrapper .dataTables_length,
 .req-manage-shell .dataTables_wrapper .dataTables_filter {
@@ -3754,6 +3800,78 @@ table.dataTable thead td {
 .pagination-wrap {
     display: flex;
     justify-content: flex-end;
+}
+
+.sj-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem 0.75rem;
+    width: 100%;
+}
+
+.sj-pagination__meta {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+}
+
+.sj-pagination__strong {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.sj-pagination__list {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sj-pagination__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.85rem;
+    min-height: 1.85rem;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--color-text-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+a.sj-pagination__item:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-muted);
+}
+
+.sj-pagination__item--current {
+    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.sj-pagination__item--disabled,
+.sj-pagination__item--ellipsis {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.sj-pagination__icon {
+    width: 0.95rem;
+    height: 0.95rem;
 }
 
 .status-pill {
@@ -5414,13 +5532,20 @@ table.dataTable thead td {
     gap: 1.15rem;
 }
 
+/* Usuarios admin: base amigable para portatil; en monitor alto llena hasta 0.5rem del fondo */
 .admin-users-page {
-    padding: 0.65rem 0 0.9rem;
+    box-sizing: border-box;
+    padding: 0.5rem 0;
 }
 
 .admin-users-page__stack,
 .admin-users-page__summary {
     gap: 0.9rem;
+}
+
+.admin-users-page__stack {
+    display: flex;
+    flex-direction: column;
 }
 
 .admin-users-page .card,
@@ -5525,9 +5650,11 @@ table.dataTable thead td {
 .users-panel {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
-    min-height: max(34rem, calc(100vh - 12.25rem));
-    height: max(34rem, calc(100vh - 12.25rem));
-    max-height: max(34rem, calc(100vh - 12.25rem));
+    min-height: 0;
+    height: calc(100vh - 11rem);
+    height: calc(100dvh - 11rem);
+    max-height: calc(100vh - 11rem);
+    max-height: calc(100dvh - 11rem);
 }
 
 .users-panel .users-grid {
@@ -5543,8 +5670,45 @@ table.dataTable thead td {
     overflow: hidden;
 }
 
-.users-panel .panel__body--compact {
+.users-panel .panel__body--compact,
+.admin-users-page .users-panel .users-panel__pagination {
     min-height: 0;
+    padding: 0.5rem 1.1rem;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.admin-users-page .users-panel .users-panel__pagination {
+    display: flex;
+    align-items: center;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Escritorio (portatil y monitor): llena el alto disponible con 0.5rem al fondo */
+@media (min-width: 1101px) {
+    .app-main:has(.admin-users-page) {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-users-page {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .admin-users-page__stack {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .users-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        max-height: none;
+    }
 }
 
 @media (max-width: 1100px) {
@@ -5576,6 +5740,15 @@ table.dataTable thead td {
         justify-self: stretch;
         max-width: none;
         grid-template-columns: 1fr;
+    }
+
+    .admin-users-page {
+        padding: 0.5rem 0;
+    }
+
+    .admin-users-page__stack {
+        display: flex;
+        min-height: 0;
     }
 
     .users-panel {

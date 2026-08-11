@@ -16,6 +16,26 @@ class SystemAuditController extends Controller
     {
         $lookbackDays = (int) config('audit.filter_lookback_days', 90);
         $lookbackFrom = Carbon::now()->subDays($lookbackDays);
+        $defaultRangeDays = (int) config('audit.default_date_range_days', 30);
+
+        $hasExplicitDateFrom = $request->filled('date_from');
+        $hasExplicitDateTo = $request->filled('date_to');
+
+        if (! $hasExplicitDateFrom && ! $hasExplicitDateTo) {
+            $effectiveDateFrom = Carbon::now()->subDays($defaultRangeDays)->startOfDay();
+            $effectiveDateTo = Carbon::now()->endOfDay();
+            $dateFrom = $effectiveDateFrom->toDateString();
+            $dateTo = Carbon::now()->toDateString();
+        } else {
+            $effectiveDateFrom = $hasExplicitDateFrom
+                ? Carbon::parse($request->string('date_from'))->startOfDay()
+                : null;
+            $effectiveDateTo = $hasExplicitDateTo
+                ? Carbon::parse($request->string('date_to'))->endOfDay()
+                : null;
+            $dateFrom = $hasExplicitDateFrom ? (string) $request->string('date_from') : '';
+            $dateTo = $hasExplicitDateTo ? (string) $request->string('date_to') : '';
+        }
 
         $logs = AuditLog::query()
             ->with('user')
@@ -25,12 +45,12 @@ class SystemAuditController extends Controller
             ->when($request->filled('action'), fn ($query) => $query->where('action', $request->string('action')))
             ->when($request->filled('user_id'), fn ($query) => $query->where('user_id', $request->integer('user_id')))
             ->when(
-                $request->filled('date_from'),
-                fn ($query) => $query->where('created_at', '>=', Carbon::parse($request->string('date_from'))->startOfDay())
+                $effectiveDateFrom !== null,
+                fn ($query) => $query->where('created_at', '>=', $effectiveDateFrom)
             )
             ->when(
-                $request->filled('date_to'),
-                fn ($query) => $query->where('created_at', '<=', Carbon::parse($request->string('date_to'))->endOfDay())
+                $effectiveDateTo !== null,
+                fn ($query) => $query->where('created_at', '<=', $effectiveDateTo)
             )
             ->when(! $request->boolean('show_info'), function ($query): void {
                 foreach (AuditEventCatalog::globalUiExcludedEventTypes() as $excluded) {
@@ -61,6 +81,8 @@ class SystemAuditController extends Controller
             ),
             'areaLabels' => config('access.areas', []),
             'lookbackDays' => $lookbackDays,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
         ]);
     }
 }

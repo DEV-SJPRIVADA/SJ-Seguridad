@@ -20,6 +20,23 @@ class NavigationVisibilityTest extends TestCase
         $this->seed(DatabaseSeeder::class);
     }
 
+    public function test_super_admin_sees_audit_tab_in_administracion_module(): void
+    {
+        $user = User::query()->whereHas('roles', fn ($q) => $q->where('name', 'super-admin'))->firstOrFail();
+
+        $this->assertTrue($user->can('system.view.audit'));
+
+        $nav = app(NavigationResolver::class)->resolve($user, 'admin.audit.index');
+
+        $adminModule = collect($nav['appNavigation'])->firstWhere('key', 'administracion');
+
+        $this->assertNotNull($adminModule);
+
+        $tabLabels = collect($adminModule['items'] ?? [])->pluck('label')->all();
+
+        $this->assertContains('Auditoria del sistema', $tabLabels);
+    }
+
     public function test_super_admin_sees_canonical_requisitions_board_once(): void
     {
         $user = User::query()->whereHas('roles', fn ($q) => $q->where('name', 'super-admin'))->firstOrFail();
