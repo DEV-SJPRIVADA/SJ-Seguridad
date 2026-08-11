@@ -31,9 +31,9 @@
             margin-bottom: 2px;
         }
         .filter-grid .form-select, .filter-grid .btn {
-            min-height: 36px !important; /* Más compactos */
-            padding: 0.5rem 0.75rem !important;
-            font-size: 0.85rem !important;
+            min-height: var(--control-height-chrome);
+            padding: 0.35rem 0.75rem;
+            font-size: var(--control-font-size);
         }
         .dashboard-stat-grid {
             margin-bottom: 0.5rem !important;

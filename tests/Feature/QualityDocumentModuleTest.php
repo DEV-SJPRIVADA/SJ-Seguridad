@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\QualityDocument;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class QualityDocumentModuleTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
         Storage::fake('local');
     }
 
@@ -217,7 +218,26 @@ class QualityDocumentModuleTest extends TestCase
         $response->assertRedirect('https://example.com/norma');
     }
 
-    public function test_documents_board_visible_for_any_area_with_access(): void
+    public function test_user_can_access_library_without_view_area_permission(): void
+    {
+        $manager = $this->qualityManager();
+        $viewer = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $viewer->assignRole('usuario');
+        $document = $this->createDocument($manager, ['operaciones'], true);
+
+        $this->assertTrue($viewer->canViewDocumentsBoardFor('operaciones'));
+        $this->assertTrue($viewer->qualityDocumentBoardTabsFor('operaciones')->contains('biblioteca'));
+
+        $this->actingAs($viewer)
+            ->get(route('quality-documents.library.index', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSee($document->title);
+    }
+
+    public function test_documents_board_visible_for_user_in_assigned_area(): void
     {
         $viewer = $this->areaUser('operaciones');
 
@@ -240,7 +260,6 @@ class QualityDocumentModuleTest extends TestCase
         ]);
         $manager->assignRole('usuario');
         $manager->givePermissionTo('manage.area.calidad');
-        $manager->givePermissionTo('view.area.calidad');
 
         $this->assertFalse($manager->can('manage.quality.documents'));
 
@@ -397,7 +416,6 @@ class QualityDocumentModuleTest extends TestCase
         ]);
         $user->assignRole('usuario');
         $user->givePermissionTo('manage.quality.documents');
-        $user->givePermissionTo('view.area.calidad');
 
         return $user;
     }
@@ -409,7 +427,6 @@ class QualityDocumentModuleTest extends TestCase
             'must_change_password' => false,
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo("view.area.{$areaKey}");
 
         return $user;
     }

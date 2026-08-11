@@ -92,9 +92,11 @@
                         </tbody>
                     </table>
 
-                    <div class="block-spaced">
-                        {{ $requests->links() }}
-                    </div>
+                    @if ($requests->hasPages())
+                        <div class="pagination-wrap">
+                            {{ $requests->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -109,10 +111,11 @@
         }
 
         .approved-filters__control {
-            min-height: 38px;
+            min-height: var(--control-height-chrome);
             min-width: 0;
-            padding: 0.4rem 0.65rem;
-            font-size: 0.875rem;
+            padding: 0.35rem 0.65rem;
+            font-size: var(--control-font-size);
+            line-height: var(--control-line-height);
         }
 
         .approved-filters__search {

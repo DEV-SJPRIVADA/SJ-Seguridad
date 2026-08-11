@@ -3,22 +3,22 @@
         @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section req-manage-page">
         <div class="app-container">
             <div class="panel">
-                <div class="panel__header">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="panel__header panel__header--compact">
+                    <div class="purchase-requests-index-header">
                         <div>
                             <h3 class="panel-title">Mis solicitudes de compra</h3>
-                            <p class="panel-text">Historial de solicitudes registradas por tu usuario en el area seleccionada.</p>
+                            <p class="panel-text panel-text--compact">Historial de solicitudes registradas por tu usuario en el area seleccionada.</p>
                         </div>
-                        <a href="{{ route('purchase-requests.create', ['module' => $module]) }}" class="btn btn--primary">
+                        <a href="{{ route('purchase-requests.create', ['module' => $module]) }}" class="btn btn--primary btn--sm">
                             Nueva solicitud
                         </a>
                     </div>
                 </div>
 
-                <div class="panel__body">
+                <div class="panel__body req-manage-shell">
                     @if (session('status'))
                         <div class="alert alert--success bottom-spaced" role="alert">{{ session('status') }}</div>
                     @endif
@@ -27,8 +27,14 @@
                         <div class="alert alert--warning bottom-spaced" role="alert">{{ session('warning') }}</div>
                     @endif
 
-                    <div class="block-spaced">
-                        <table class="supply-table js-datatable">
+                    <div class="data-table-wrap req-manage-shell__table">
+                        <table
+                            class="supply-table js-datatable"
+                            style="width:100%"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                        >
                             <thead>
                                 <tr>
                                     <th>Folio</th>
@@ -107,6 +113,14 @@
 
     @push('styles')
         <style>
+            .purchase-requests-index-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.75rem;
+                flex-wrap: wrap;
+            }
+
             .purchase-request-actions-col {
                 width: 1%;
                 min-width: 11.5rem;

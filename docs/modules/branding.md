@@ -52,6 +52,26 @@ Los tres niveles de navegacion autenticada usan **el mismo look de pill**:
 - No crear otra familia visual para tableros/subnavs; reutilizar estas clases.
 - Regla Cursor: [`.cursor/rules/nav-chrome-ui.mdc`](../../.cursor/rules/nav-chrome-ui.mdc).
 
+## Controles de formulario (altura compacta)
+
+Inputs, selects y botones secundarios (`btn--sm`) comparten altura con las pills de navegacion:
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `--control-height-chrome` | `2rem` (32px) | `.form-input`, `.form-select`, `.btn--sm`, filtros |
+| `--control-padding-x` | `0.65rem` | Padding horizontal de controles |
+| `--control-font-size` | `0.8125rem` | Texto en controles compactos |
+| `--control-line-height` | `1.35` | Evita recorte de texto en altura fija |
+| `--control-radius` | `12px` | Borde de inputs/selects |
+
+Excepciones documentadas:
+
+- `.form-textarea`: altura libre (multilinea).
+- `.form-input--auth`: `52px` en login y pantallas de invitado.
+- `.btn` (primario): `44px` para acciones principales.
+
+No reintroducir `min-height` fijos (38px, 42px, etc.) en modulos; usar los tokens anteriores.
+
 ## Regla de mantenimiento
 
 Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero en el componente `application-logo` para evitar inconsistencias entre pantallas.

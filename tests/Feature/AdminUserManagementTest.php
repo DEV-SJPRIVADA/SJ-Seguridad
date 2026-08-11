@@ -81,7 +81,7 @@ class AdminUserManagementTest extends TestCase
         $response->assertDontSee('>Nuevo usuario<', false);
     }
 
-    public function test_admin_user_form_uses_three_permission_sections_without_presets_or_preview(): void
+    public function test_admin_user_form_uses_area_master_detail_permissions_layout(): void
     {
         $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
         $admin->update(['must_change_password' => false]);
@@ -90,12 +90,14 @@ class AdminUserManagementTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Cedula');
-        $response->assertSee('En su area asignada');
+        $response->assertSee('perm-master-detail', false);
+        $response->assertSee('Mi area base');
         $response->assertSee('Funcionalidades transversales');
-        $response->assertSee('Activa visualizacion de otras areas');
         $response->assertSee('Solicitar requisiciones de personal');
         $response->assertSee('Suministros — Calidad (aprobacion)');
         $response->assertSee('Suministros — Compras (catalogo)');
+        $response->assertSee('Documentos de Calidad');
+        $response->assertDontSee('Biblioteca en Operaciones');
         $response->assertSee('Compras');
         $response->assertSee('Gestion humana');
         $response->assertDontSee('Ver Suministros (Gestion humana)');
@@ -103,6 +105,17 @@ class AdminUserManagementTest extends TestCase
         $response->assertDontSee('Plantilla de perfil');
         $response->assertDontSee('Vista previa del menu');
         $response->assertDontSee('value="manage.requisitions"', false);
+    }
+
+    public function test_permission_form_builder_exposes_area_navigation(): void
+    {
+        $form = app(UserPermissionFormBuilder::class)->build();
+        $navigation = $form['sections']['navigation'] ?? [];
+
+        $this->assertNotEmpty($navigation);
+        $this->assertContains('_assigned', collect($navigation)->pluck('key')->all());
+        $this->assertContains('_global', collect($navigation)->pluck('key')->all());
+        $this->assertContains('gestion_humana', collect($navigation)->pluck('key')->all());
     }
 
     public function test_permission_form_builder_lists_global_requisition_actions_once(): void
@@ -115,7 +128,8 @@ class AdminUserManagementTest extends TestCase
         $names = collect($requisitionGroup['permissions'])->pluck('name')->all();
         $this->assertContains('requisitions.tab.gestion', $names);
         $this->assertContains('manage.requisition.parameters', $names);
-        $this->assertCount(3, $names);
+        $this->assertContains('requisitions.approve.management', $names);
+        $this->assertCount(5, $names);
     }
 
     public function test_user_with_board_permission_sees_its_module_and_tab(): void
@@ -146,11 +160,13 @@ class AdminUserManagementTest extends TestCase
         ]));
     }
 
-    public function test_user_with_area_permission_gets_default_documents_board(): void
+    public function test_user_with_assigned_area_gets_default_documents_board(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('view.area.gestion_humana');
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 

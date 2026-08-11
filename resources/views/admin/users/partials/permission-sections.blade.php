@@ -1,103 +1,113 @@
-@props(['sections', 'selectedPermissions', 'help'])
+@props(['sections', 'selectedPermissions', 'help', 'initialNavKey' => '_global'])
 
 @php
-    $assigned = $sections['assigned_area'] ?? [];
-    $global = $sections['global'] ?? [];
-    $otherAreas = $sections['other_areas'] ?? [];
+    $navigation = $sections['navigation'] ?? [];
 
     $countSelected = fn (array $permissions) => collect($permissions)
         ->filter(fn (array $perm) => in_array($perm['name'], $selectedPermissions, true))
         ->count();
 
-    $assignedPermissions = $assigned['permissions'] ?? [];
-    $assignedSelected = $countSelected($assignedPermissions);
-
-    $globalPermissions = collect($global['groups'] ?? [])
-        ->flatMap(fn (array $group) => $group['permissions'] ?? [])
-        ->values()
-        ->all();
-    $globalSelected = $countSelected($globalPermissions);
-
-    $otherPermissions = collect($otherAreas['areas'] ?? [])
-        ->flatMap(fn (array $area) => $area['permissions'] ?? [])
-        ->values()
-        ->all();
-    $otherSelected = $countSelected($otherPermissions);
-
-    $otherGroups = collect($otherAreas['areas'] ?? [])
-        ->flatMap(function (array $area): array {
-            $subgroups = $area['subgroups'] ?? [];
-
-            if ($subgroups !== []) {
-                return collect($subgroups)
-                    ->map(fn (array $subgroup) => [
-                        'label' => ($area['label'] ?? '').' — '.($subgroup['label'] ?? ''),
-                        'permissions' => $subgroup['permissions'] ?? [],
-                    ])
-                    ->all();
-            }
-
-            return [[
-                'label' => $area['label'] ?? '',
-                'permissions' => $area['permissions'] ?? [],
-            ]];
-        })
-        ->all();
+    $navKeys = collect($navigation)->pluck('key')->all();
+    $activeNavKey = in_array($initialNavKey, $navKeys, true)
+        ? $initialNavKey
+        : ($navKeys[0] ?? '_global');
 @endphp
 
-<div class="perm-accordion permission-sections">
-    <x-permission-accordion
-        id="assigned"
-        icon="SA"
-        :title="$assigned['label'] ?? 'En su area asignada'"
-        :help="$assigned['help'] ?? ''"
-        meta='Area base: <strong id="assigned-area-label">Sin area fija</strong>'
-        :open="true"
-        :search="'area asignada '.Str::lower($assigned['label'] ?? '')"
-        :badge="$assignedSelected"
-        :total="count($assignedPermissions)"
-    >
-        @include('admin.users.partials.permission-bulk-actions')
-        @include('admin.users.partials.permission-modules.switch-list', [
-            'permissions' => $assignedPermissions,
-            'selectedPermissions' => $selectedPermissions,
-        ])
-    </x-permission-accordion>
+@if ($navigation === [])
+    <p class="panel-text">No hay permisos configurados para asignar.</p>
+@else
+    <div class="perm-master-detail">
+        <nav class="perm-area-nav" aria-label="Areas y permisos">
+            @foreach ($navigation as $item)
+                @php
+                    $itemPermissions = $item['permissions'] ?? [];
+                    $itemSelected = $countSelected($itemPermissions);
+                    $itemTotal = count($itemPermissions);
+                    $isActive = $item['key'] === $activeNavKey;
+                @endphp
+                <button
+                    type="button"
+                    class="perm-area-nav__item js-perm-area-nav {{ $isActive ? 'is-active' : '' }}"
+                    data-area-key="{{ $item['key'] }}"
+                    data-search="{{ Str::lower($item['label'].' '.$item['key']) }}"
+                    aria-current="{{ $isActive ? 'true' : 'false' }}"
+                >
+                    <span class="perm-area-nav__label">{{ $item['label'] }}</span>
+                    <span
+                        class="perm-area-nav__badge js-perm-nav-badge"
+                        data-total="{{ $itemTotal }}"
+                    >{{ $itemSelected }}/{{ $itemTotal }}</span>
+                </button>
+            @endforeach
+        </nav>
 
-    <x-permission-accordion
-        id="global"
-        icon="GL"
-        :title="$global['label'] ?? 'Funcionalidades transversales'"
-        :help="$global['help'] ?? ''"
-        :open="false"
-        :search="'transversales global '.Str::lower($global['label'] ?? '')"
-        :badge="$globalSelected"
-        :total="count($globalPermissions)"
-    >
-        @include('admin.users.partials.permission-bulk-actions')
-        @include('admin.users.partials.permission-modules.subgroup-list', [
-            'groups' => $global['groups'] ?? [],
-            'selectedPermissions' => $selectedPermissions,
-            'firstOpen' => true,
-        ])
-    </x-permission-accordion>
+        <div class="perm-area-panels">
+            <div class="perm-area-panels__toolbar">
+                <div class="perm-search-bar perm-search-bar--panel">
+                    <input type="search" id="search-permissions" class="form-input" placeholder="Buscar permiso...">
+                </div>
+                <label class="user-permissions-advanced">
+                    <input type="checkbox" id="toggle-advanced-permissions" class="form-check">
+                    <span class="text-small">Mostrar identificadores tecnicos</span>
+                </label>
+            </div>
 
-    <x-permission-accordion
-        id="other"
-        icon="OA"
-        :title="$otherAreas['label'] ?? 'Activa visualizacion de otras areas'"
-        :help="$otherAreas['help'] ?? ''"
-        :open="false"
-        :search="'otras areas '.Str::lower($otherAreas['label'] ?? '')"
-        :badge="$otherSelected"
-        :total="count($otherPermissions)"
-    >
-        @include('admin.users.partials.permission-bulk-actions')
-        @include('admin.users.partials.permission-modules.subgroup-list', [
-            'groups' => $otherGroups,
-            'selectedPermissions' => $selectedPermissions,
-            'firstOpen' => false,
-            'areaStyle' => true,
-        ])
-    </x-permission-accordion>
-</div>
+            @foreach ($navigation as $item)
+                @php
+                    $itemPermissions = $item['permissions'] ?? [];
+                    $itemSelected = $countSelected($itemPermissions);
+                    $itemTotal = count($itemPermissions);
+                    $isActive = $item['key'] === $activeNavKey;
+                @endphp
+                <section
+                    class="perm-area-panel js-perm-area-panel {{ $isActive ? 'is-active' : '' }}"
+                    data-area-key="{{ $item['key'] }}"
+                    data-search="{{ Str::lower($item['label'].' '.$item['key']) }}"
+                    @unless ($isActive) hidden @endunless
+                >
+                    <header class="perm-area-panel__header">
+                        <div>
+                            <h4 class="perm-area-panel__title">{{ $item['label'] }}</h4>
+                            @if (! empty($item['help']))
+                                <p class="perm-area-panel__help">{{ $item['help'] }}</p>
+                            @endif
+                            @if ($item['type'] === 'assigned')
+                                <p class="perm-area-panel__meta">
+                                    Aplican en el area base:
+                                    <strong id="assigned-area-label">Sin area fija</strong>
+                                </p>
+                            @endif
+                        </div>
+                        <span
+                            class="perm-area-panel__count js-perm-panel-count"
+                            data-total="{{ $itemTotal }}"
+                        >{{ $itemSelected }}/{{ $itemTotal }} activos</span>
+                    </header>
+
+                    @include('admin.users.partials.permission-bulk-actions')
+
+                    @if ($item['type'] === 'assigned')
+                        @include('admin.users.partials.permission-modules.switch-list', [
+                            'permissions' => $itemPermissions,
+                            'selectedPermissions' => $selectedPermissions,
+                        ])
+                    @elseif ($item['type'] === 'global')
+                        @include('admin.users.partials.permission-modules.subgroup-list', [
+                            'groups' => $item['groups'] ?? [],
+                            'selectedPermissions' => $selectedPermissions,
+                        ])
+                    @else
+                        @include('admin.users.partials.permission-modules.subgroup-list', [
+                            'groups' => collect($item['subgroups'] ?? [])->map(fn (array $subgroup) => [
+                                'label' => $subgroup['label'] ?? '',
+                                'permissions' => $subgroup['permissions'] ?? [],
+                            ])->all(),
+                            'selectedPermissions' => $selectedPermissions,
+                            'areaStyle' => true,
+                        ])
+                    @endif
+                </section>
+            @endforeach
+        </div>
+    </div>
+@endif

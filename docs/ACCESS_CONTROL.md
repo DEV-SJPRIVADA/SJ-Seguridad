@@ -178,9 +178,9 @@ Esto produce permisos como:
 - `view.board.gestion_humana.requisiciones`
 - `view.board.compras.suministros` (tablero de suministros; area **Compras**, no GH)
 
-El tablero `documentos` **no** usa `view.board.{area}.documentos`. En el **sidebar**, aparece en el `area_key` del usuario, en areas con `view.area.*` / `manage.area.*` explicito, o en **Calidad** para quien administra documentos. Super-admin ve Documentos solo en Calidad + su area base (no en las 8 areas). La biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
+El tablero `documentos` **no** usa `view.board.{area}.documentos` ni `view.area.*` para consulta. En el **sidebar**, aparece al final de los tableros del `area_key` del usuario. Super-admin ve Documentos solo en Calidad + su area base (no en las 8 areas). Quien administra documentos (`manage.quality.documents`) tambien ve el tablero en Calidad. La biblioteca filtra por documentos activos asignados al area. La administracion requiere el permiso funcional `manage.quality.documents`.
 
-Adicionalmente, un documento puede asignarse a usuarios especificos mediante la tabla `quality_document_users`. Esos destinatarios lo consultan en la pestaña `Mis documentos` del tablero `Documentos` de su area (`/quality-documents/{module}/mis-documentos`). No se requiere permiso adicional para ver esa pestaña.
+Adicionalmente, un documento puede asignarse a usuarios especificos mediante la tabla `quality_document_users`. Esos destinatarios lo consultan en la pestaña `Mis documentos` del tablero `Documentos` de su area (`/quality-documents/{module}/mis-documentos`).
 
 ## Asignacion base de roles
 
@@ -200,16 +200,17 @@ Comando artisan `app:sync-permissions`:
 - Crea o actualiza permisos de sistema, areas y tableros segun `config/access.php`
 - Excluye `view.board.{area}.documentos` (el tablero Documentos no usa ese permiso)
 - Elimina permisos huerfanos de areas/tableros obsoletos
-- **No** modifica roles ni permisos asignados a usuarios
+- **Actualiza rol `super-admin`** con el catalogo completo (incluye permisos nuevos como `system.view.audit`)
+- **No** modifica otros roles ni permisos directos de usuarios
 
-Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo.
+Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo. Tras ejecutarlo, conviene **cerrar sesion y volver a entrar** para refrescar cache de permisos Spatie.
 
 ## Configuracion en Admin de usuarios
 
 El formulario en **Administracion → Usuarios** usa tres bloques (`config/access.php` → `admin_ui`):
 
 1. **En su area asignada:** solicitar, mis requisiciones, mis solicitudes suministros (operan en `users.area_key`).
-2. **Funcionalidades transversales:** requisiciones GH, suministros Calidad/Compras, admin, biblioteca documentos por area.
+2. **Funcionalidades transversales:** requisiciones GH, suministros Calidad/Compras, admin documentos (`manage.quality.documents`).
 3. **Activa visualizacion de otras areas:** tableros y modulos por area (GH, **Compras**, Operaciones, Comercial, Calidad) con subgrupos *Ver tableros* / *funciones*.
 
 El listado de usuarios muestra permisos **directos** y notas de acceso efectivo por rol (`UserAccessSummary`).

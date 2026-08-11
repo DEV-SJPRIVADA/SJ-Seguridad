@@ -20,6 +20,7 @@ class SystemAuditService
         array $metadata = [],
         ?string $area = null,
         ?string $changeBatch = null,
+        ?int $userId = null,
     ): void {
         if (! config('audit.enabled', true)) {
             return;
@@ -36,6 +37,7 @@ class SystemAuditService
             reason: $reason,
             metadata: $metadata,
             changeBatch: $changeBatch,
+            userId: $userId,
         );
 
         $this->persist($payload);
@@ -50,6 +52,7 @@ class SystemAuditService
         ?Model $model = null,
         ?string $area = null,
         ?string $changeBatch = null,
+        ?int $userId = null,
     ): void {
         $this->logModelChange(
             module: $module,
@@ -62,6 +65,7 @@ class SystemAuditService
             metadata: $metadata,
             area: $area,
             changeBatch: $changeBatch,
+            userId: $userId,
         );
     }
 
@@ -79,6 +83,7 @@ class SystemAuditService
         ?string $reason,
         array $metadata,
         ?string $changeBatch,
+        ?int $userId = null,
     ): array {
         $truncatedFields = [];
         $before = $this->truncateJsonField($before, $truncatedFields, 'old_values');
@@ -92,7 +97,7 @@ class SystemAuditService
         return [
             'module' => $module,
             'area' => $area,
-            'user_id' => auth()->id(),
+            'user_id' => $userId ?? auth()->id(),
             'event_type' => $eventType,
             'action' => $action,
             'auditable_type' => $model ? $model::class : null,

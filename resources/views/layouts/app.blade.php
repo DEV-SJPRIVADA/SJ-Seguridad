@@ -65,6 +65,74 @@
                 // Silenciar alertas de DataTables (mejor UX)
                 $.fn.dataTable.ext.errMode = 'throw';
 
+                function debounce(fn, wait) {
+                    var timer = null;
+
+                    return function () {
+                        if (timer) {
+                            clearTimeout(timer);
+                        }
+
+                        timer = setTimeout(fn, wait);
+                    };
+                }
+
+                function setupManageTableScroll($table, api) {
+                    var $shell = $table.closest('.req-manage-shell');
+                    var $wrapper = $table.closest('.dataTables_wrapper');
+                    var $scroll = $wrapper.find('.req-manage-table-scroll').first();
+                    var $bottom = $wrapper.find('.req-manage-dt-bottom').first();
+
+                    if (!$bottom.length) {
+                        $bottom = $shell.find('.req-manage-shell__pagination, .pagination-wrap').first();
+                    }
+
+                    if (!$scroll.length) {
+                        return;
+                    }
+
+                    var updateScrollArea = function () {
+                        var bottomHeight = $bottom.outerHeight(true) || 0;
+                        var rect = $scroll[0].getBoundingClientRect();
+                        var maxHeight = window.innerHeight - rect.top - bottomHeight - 16;
+
+                        $scroll.css('max-height', Math.max(220, maxHeight) + 'px');
+                    };
+
+                    var scheduleUpdate = function () {
+                        updateScrollArea();
+                        setTimeout(updateScrollArea, 0);
+                        setTimeout(updateScrollArea, 150);
+
+                        $scroll.find('thead th').css({
+                            position: 'sticky',
+                            top: '0',
+                            zIndex: '12',
+                            backgroundColor: '#003366',
+                        });
+
+                        $scroll.find('table').css({
+                            borderCollapse: 'separate',
+                            borderSpacing: '0',
+                        });
+                    };
+
+                    scheduleUpdate();
+
+                    $(window).on('resize orientationchange', debounce(updateScrollArea, 100));
+                    api.on('draw.dt-table-scroll', updateScrollArea);
+
+                    var $filtersPanel = $shell.find('.req-manage-filters__panel');
+
+                    if ($filtersPanel.length) {
+                        $filtersPanel.on('toggle', debounce(scheduleUpdate, 50));
+                    }
+
+                    if (typeof ResizeObserver !== 'undefined') {
+                        new ResizeObserver(debounce(updateScrollArea, 100)).observe($shell[0]);
+                    }
+                }
+
                 $('.js-datatable').each(function() {
                     if (!$.fn.DataTable.isDataTable(this)) {
                         var config = {
@@ -83,19 +151,70 @@
                             config.order = tableOrder;
                         }
 
-                        if ($(this).is('[data-server-pagination]')) {
+                        var serverPagination = $(this).is('[data-server-pagination]');
+
+                        if (serverPagination) {
                             config.paging = false;
                             config.lengthChange = false;
                             config.info = false;
                             config.searching = false;
-                            config.dom = 'rt';
                         }
 
                         if ($(this).attr('data-dt-responsive') === 'false') {
                             config.responsive = false;
                         }
 
-                        $(this).DataTable(config);
+                        if ($(this).data('dt-compact')) {
+                            $(this).closest('.req-manage-shell__table, .data-table-wrap').addClass('data-table-wrap--dt-compact');
+                        }
+
+                        var useBodyScroll = $(this).data('dt-body-scroll');
+
+                        if (useBodyScroll && serverPagination) {
+                            config.dom = '<"req-manage-table-scroll"t>';
+                        } else if (useBodyScroll) {
+                            config.dom = '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>';
+                        } else if (serverPagination) {
+                            config.dom = 'rt';
+                        }
+
+                        var scrollY = $(this).data('dt-scroll-y');
+                        if (scrollY) {
+                            config.scrollY = scrollY;
+                            config.scrollCollapse = true;
+                            config.scrollX = true;
+                            config.autoWidth = false;
+                        }
+
+                        var $table = $(this);
+                        var api = $table.DataTable(config);
+
+                        if ($table.data('dt-body-scroll')) {
+                            setupManageTableScroll($(api.table().node()), api);
+                        }
+
+                        if (scrollY) {
+                            var adjustScrollTable = function () {
+                                api.columns.adjust();
+                            };
+
+                            var debounceScrollAdjust = (function () {
+                                var timer = null;
+
+                                return function () {
+                                    if (timer) {
+                                        clearTimeout(timer);
+                                    }
+
+                                    timer = setTimeout(adjustScrollTable, 80);
+                                };
+                            })();
+
+                            adjustScrollTable();
+                            setTimeout(adjustScrollTable, 200);
+                            api.on('draw.dt-scroll-sync', adjustScrollTable);
+                            $(window).on('resize orientationchange', debounceScrollAdjust);
+                        }
                     }
                 });
 
@@ -213,6 +332,14 @@
                 margin-bottom: 1.5rem !important;
                 text-align: right !important;
             }
+
+            .req-manage-shell .dataTables_wrapper .dataTables_filter {
+                margin-bottom: 0.35rem !important;
+            }
+
+            .req-manage-shell .dataTables_wrapper .dataTables_length {
+                margin-bottom: 0.35rem !important;
+            }
             .dataTables_wrapper .dataTables_filter input {
                 border: 1px solid var(--color-border) !important;
                 border-radius: 12px !important;
@@ -237,16 +364,6 @@
                 text-transform: uppercase;
                 font-size: 0.75rem;
                 letter-spacing: 0.05em;
-            }
-            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-                background: var(--brand-primary) !important;
-                color: white !important;
-                border: 1px solid var(--brand-primary) !important;
-            }
-            .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
-                color: var(--text-muted) !important;
-                font-size: 0.875rem;
-                margin-top: 1rem;
             }
 
             /* Sistema de Toasts */

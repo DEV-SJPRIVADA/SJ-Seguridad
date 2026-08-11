@@ -115,10 +115,10 @@ class UserPermissionValidator
         }
 
         if ($permissionSet->contains('manage.quality.documents')
-            && ! $permissionSet->contains('view.area.calidad')
-            && ! $permissionSet->contains('manage.area.calidad')
+            && ! $permissionSet->contains('manage.users')
+            && $areaKey !== 'calidad'
         ) {
-            $warnings[] = 'Marco administrar documentos de Calidad, pero no habilito acceso al area Calidad (biblioteca o gestion).';
+            $warnings[] = 'Marco administrar documentos de Calidad; confirme que el usuario opera desde el area Calidad para la pestaña Administrar.';
         }
 
         return array_values(array_unique($warnings));

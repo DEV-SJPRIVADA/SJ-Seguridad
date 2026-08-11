@@ -71,7 +71,7 @@ class QualityDocumentController extends Controller
         $this->authorizeManage($module);
 
         $documents = QualityDocument::query()
-            ->with(['uploader', 'areas', 'assignedUsers.user'])
+            ->with(['uploader', 'areas'])
             ->latest()
             ->get();
 
@@ -329,10 +329,7 @@ class QualityDocumentController extends Controller
     {
         $user = auth()->user();
 
-        abort_unless(
-            $user?->can("view.area.{$module}") || $user?->can("manage.area.{$module}") || $user?->can('manage.quality.documents'),
-            403
-        );
+        abort_unless($user instanceof User && $user->canViewDocumentsBoardFor($module), 403);
     }
 
     private function authorizeDocumentView(QualityDocument $document, string $module): void

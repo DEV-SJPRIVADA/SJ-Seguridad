@@ -88,5 +88,9 @@
             </tbody>
         </table>
     </div>
-    {{ $periods->links() }}
+    @if ($periods->hasPages())
+        <div class="pagination-wrap indicadores-subpanel__pagination">
+            {{ $periods->links() }}
+        </div>
+    @endif
 </div>

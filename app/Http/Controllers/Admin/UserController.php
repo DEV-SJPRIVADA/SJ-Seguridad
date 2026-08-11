@@ -9,6 +9,7 @@ use App\Mail\UserWelcomeMail;
 use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\Admin\UserAccessSummary;
+use App\Services\Admin\UserManagementAuditService;
 use App\Services\Admin\UserPermissionFormBuilder;
 use App\Services\Admin\UserPermissionValidator;
 use Illuminate\Contracts\View\View;
@@ -26,6 +27,7 @@ class UserController extends Controller
         private readonly UserPermissionFormBuilder $permissionFormBuilder,
         private readonly UserPermissionValidator $permissionValidator,
         private readonly UserAccessSummary $accessSummary,
+        private readonly UserManagementAuditService $userManagementAuditService,
     ) {}
 
     public function index(Request $request): View
@@ -98,7 +100,9 @@ class UserController extends Controller
         $documentNumber = $request->string('document_number')->toString();
         $temporaryPassword = $documentNumber;
 
-        $user = DB::transaction(function () use ($request, $permissions, $documentNumber, $temporaryPassword): User {
+        $role = $request->string('role')->toString();
+
+        $user = DB::transaction(function () use ($request, $permissions, $documentNumber, $temporaryPassword, $role): User {
             $user = User::create([
                 'name' => $request->string('name')->toString(),
                 'document_number' => $documentNumber,
@@ -112,11 +116,17 @@ class UserController extends Controller
                 'email_verified_at' => now(),
             ]);
 
-            $user->assignRole($request->string('role')->toString());
+            $user->assignRole($role);
             $user->syncPermissions($permissions);
 
             return $user;
         });
+
+        $this->userManagementAuditService->logUserCreated(
+            user: $user,
+            role: $role,
+            permissionsCount: count($permissions),
+        );
 
         Mail::to($user->email)->send(new UserWelcomeMail($user, $temporaryPassword));
 
@@ -145,8 +155,17 @@ class UserController extends Controller
         $permissions = $request->input('permissions', []);
         $areaKey = $request->input('area_key');
         $warnings = $this->permissionValidator->warnings($areaKey, $permissions);
+        $newRole = $request->string('role')->toString();
+        $newPermissions = collect($permissions)->sort()->values()->all();
+        $passwordReset = $request->filled('password');
 
-        DB::transaction(function () use ($request, $user, $permissions): void {
+        $user->load(['roles', 'permissions']);
+        $beforeProfile = $this->userManagementAuditService->captureProfileState($user);
+        $beforeIsActive = (bool) $user->is_active;
+        $beforeRole = $this->userManagementAuditService->captureRole($user);
+        $beforePermissions = $this->userManagementAuditService->captureDirectPermissions($user);
+
+        DB::transaction(function () use ($request, $user, $permissions, $newRole, $passwordReset): void {
             $attributes = [
                 'name' => $request->string('name')->toString(),
                 'document_number' => $request->string('document_number')->toString(),
@@ -157,15 +176,26 @@ class UserController extends Controller
                 'must_change_password' => $request->boolean('must_change_password'),
             ];
 
-            if ($request->filled('password')) {
+            if ($passwordReset) {
                 $attributes['password'] = $request->string('password')->toString();
                 $attributes['must_change_password'] = false;
             }
 
             $user->update($attributes);
-            $user->syncRoles([$request->string('role')->toString()]);
+            $user->syncRoles([$newRole]);
             $user->syncPermissions($permissions);
         });
+
+        $this->userManagementAuditService->logUserUpdated(
+            user: $user,
+            beforeProfile: $beforeProfile,
+            beforeIsActive: $beforeIsActive,
+            beforeRole: $beforeRole,
+            beforePermissions: $beforePermissions,
+            newRole: $newRole,
+            newPermissions: $newPermissions,
+            passwordReset: $passwordReset,
+        );
 
         return redirect()
             ->route('admin.users.edit', $user)

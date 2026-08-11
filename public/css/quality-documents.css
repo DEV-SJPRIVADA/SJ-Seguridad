@@ -463,9 +463,35 @@
     font-weight: 600;
 }
 
+/* Admin index — column widths */
+.quality-documents-admin-table__col-code {
+    min-width: 8rem;
+    width: 8rem;
+    white-space: nowrap;
+}
+
+.quality-documents-admin-table__col-title {
+    min-width: 18rem;
+    width: 18rem;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.quality-documents-admin-table-wrap .quality-documents-admin-table {
+    table-layout: auto;
+}
+
 @media (max-width: 768px) {
     .doc-form__check-grid {
         grid-template-columns: 1fr;
+    }
+
+    .quality-documents-admin-table__col-code {
+        min-width: 6rem;
+    }
+
+    .quality-documents-admin-table__col-title {
+        min-width: 14rem;
     }
 
     .doc-form__area-grid {

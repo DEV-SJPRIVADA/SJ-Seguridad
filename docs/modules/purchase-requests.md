@@ -130,7 +130,7 @@ Vistas: `resources/views/modules/purchase-requests/` (create, index, show, appro
 
 | Filtro | Campo / efecto |
 | --- | --- |
-| Fecha inicio / fin | Compras: `COALESCE(fecha_aprobacion, created_at)`; suministros: `updated_at` |
+| Fecha inicio / fin | Compras y suministros: `created_at` (fecha de solicitud) |
 | Area solicitante | `area_key` |
 | Tipo | `purchase` \| `supply` |
 | Estado (pills) | `estado_compras`: pendiente, en_curso, completado, rechazado |

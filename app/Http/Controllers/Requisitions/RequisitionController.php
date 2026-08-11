@@ -29,6 +29,7 @@ use App\Services\Requisitions\CommercialClientBridge;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Services\Requisitions\PersonalRequisitionFichaSync;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
+use App\Services\Requisitions\RequisitionAuditLogService;
 use App\Services\Requisitions\RequisitionRequestReasonCatalog;
 use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
 use App\Traits\HasRequisitionTabs;
@@ -56,6 +57,7 @@ class RequisitionController extends Controller
         private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
         private readonly NotificationConfigService $notificationConfig,
         private readonly PersonalRequisitionFichaSync $fichaSync,
+        private readonly RequisitionAuditLogService $auditLogService,
     ) {}
 
     /**
@@ -277,6 +279,24 @@ class RequisitionController extends Controller
             return $created;
         });
 
+        if (! empty($requisitions)) {
+            $mainRequisition = $requisitions[0];
+
+            $this->auditLogService->logModelChange(
+                eventType: 'requisition',
+                action: 'create',
+                model: $mainRequisition,
+                before: null,
+                after: null,
+                metadata: [
+                    'batch_size' => count($requisitions),
+                    'codes' => collect($requisitions)->pluck('code')->values()->all(),
+                    'requesting_area_key' => $module,
+                    'initial_status' => $mainRequisition->status,
+                ],
+            );
+        }
+
         // Envío de notificaciones por correo (Un solo correo consolidado por solicitud)
         try {
             if (! empty($requisitions)) {
@@ -352,6 +372,12 @@ class RequisitionController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'tracking_excel',
+            metadata: $this->exportAuditMetadata($module, $filters, $requisitions->count()),
+        );
+
         return PersonalRequisitionFullExport::download(
             $requisitions,
             'mis_requisiciones_'.now()->format('Y-m-d').'.xlsx',
@@ -374,6 +400,12 @@ class RequisitionController extends Controller
             ->tap(fn ($query) => $filters->applyCommonFilters($query))
             ->orderByDesc('code')
             ->get();
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'manage_excel',
+            metadata: $this->exportAuditMetadata($module, $filters, $requisitions->count()),
+        );
 
         return PersonalRequisitionFullExport::download(
             $requisitions,
@@ -553,6 +585,23 @@ class RequisitionController extends Controller
         });
 
         if ($oldStatus !== $newStatus) {
+            $statusLabels = PersonalRequisition::statuses();
+
+            $this->auditLogService->logModelChange(
+                eventType: 'requisition',
+                action: 'status_change',
+                model: $requisition->fresh(),
+                before: ['status' => $oldStatus],
+                after: ['status' => $newStatus],
+                metadata: [
+                    'code' => $requisition->code,
+                    'from_label' => $statusLabels[$oldStatus] ?? $oldStatus,
+                    'to_label' => $statusLabels[$newStatus] ?? $newStatus,
+                ],
+            );
+        }
+
+        if ($oldStatus !== $newStatus) {
             try {
                 $requisition->loadMissing('requester');
                 $requesterEmail = $requisition->requester?->email;
@@ -683,6 +732,29 @@ class RequisitionController extends Controller
         return redirect()
             ->route('requisitions.parameters', ['module' => $module])
             ->with('status', 'requisition-parameter-deleted');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function exportAuditMetadata(string $module, PersonalRequisitionFilterBag $filters, int $rowCount): array
+    {
+        $filterSummary = array_filter([
+            'q' => $filters->search !== '' ? $filters->search : null,
+            'status' => $filters->status !== '' ? $filters->status : null,
+            'date_from' => $filters->dateFrom,
+            'date_to' => $filters->dateTo,
+            'client_id' => $filters->clientId,
+            'city_id' => $filters->cityId,
+            'mine_only' => $filters->mineOnly ? true : null,
+        ], fn ($value) => $value !== null && $value !== false);
+
+        return [
+            'module' => $module,
+            'filters' => $filterSummary,
+            'filter_hash' => md5((string) json_encode($filterSummary)),
+            'row_count' => $rowCount,
+        ];
     }
 
     private function trackingAreaScope(?User $user): string

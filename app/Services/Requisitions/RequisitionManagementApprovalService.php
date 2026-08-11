@@ -10,11 +10,16 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Spatie\Permission\Models\Permission;
 
 class RequisitionManagementApprovalService
 {
+    public function __construct(
+        private readonly RequisitionAuditLogService $auditLogService,
+    ) {}
+
     public const FILTER_PENDIENTE = 'pendiente';
 
     public const FILTER_APROBADA = 'aprobada';
@@ -150,6 +155,20 @@ class RequisitionManagementApprovalService
                 'comment' => $comment,
             ]);
         });
+
+        $this->auditLogService->logModelChange(
+            eventType: 'management_approval',
+            action: $action === 'approve' ? 'approve' : 'reject',
+            model: $requisition->fresh(),
+            before: null,
+            after: null,
+            metadata: [
+                'code' => $requisition->code,
+                'channel' => $actor !== null ? 'web' : 'email',
+                'comment' => Str::limit($comment, 500),
+            ],
+            userId: $logUserId,
+        );
 
         if ($newStatus === PersonalRequisition::STATUS_CANCELADA) {
             try {

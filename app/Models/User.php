@@ -209,35 +209,36 @@ class User extends Authenticatable
      */
     public function qualityDocumentBoardTabsFor(string $moduleKey): Collection
     {
-        $tabs = collect([]);
-        $canManage = $this->can('manage.quality.documents');
-        $hasAreaAccess = $this->can("view.area.{$moduleKey}") || $this->can("manage.area.{$moduleKey}");
-        $hasPersonalDocuments = QualityDocument::hasActiveForUser($this->id);
-
-        if ($canManage && $moduleKey === 'calidad') {
-            $tabs->push('administrar');
+        if (! $this->canViewDocumentsBoardFor($moduleKey)) {
+            return collect([]);
         }
 
-        if ($hasAreaAccess) {
-            $tabs->push('biblioteca');
-        }
+        $tabs = collect(['biblioteca']);
 
-        if ($hasPersonalDocuments) {
+        if (QualityDocument::hasActiveForUser($this->id)) {
             $tabs->push('mis_documentos');
         }
 
-        return $tabs->unique()->values();
+        if ($this->can('manage.quality.documents') && $moduleKey === 'calidad') {
+            $tabs->push('administrar');
+        }
+
+        return $tabs->values();
     }
 
     public function defaultQualityDocumentBoardUrl(string $moduleKey): string
     {
+        if ($this->can('manage.quality.documents') && $moduleKey === 'calidad') {
+            return route('quality-documents.admin.index', ['module' => $moduleKey]);
+        }
+
         $tabs = $this->qualityDocumentBoardTabsFor($moduleKey);
         $firstTab = $tabs->first();
 
         return match ($firstTab) {
-            'administrar' => route('quality-documents.admin.index', ['module' => $moduleKey]),
             'biblioteca' => route('quality-documents.library.index', ['module' => $moduleKey]),
             'mis_documentos' => route('quality-documents.mine.index', ['module' => $moduleKey]),
+            'administrar' => route('quality-documents.admin.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }

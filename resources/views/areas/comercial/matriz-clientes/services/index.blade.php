@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
-        <div class="app-container comercial-services-page__workspace-header">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Servicios</h2>
-                <p class="panel-text">Comercial — contratos y portafolios vinculados a clientes</p>
-            </div>
-        </div>
     </x-slot>
 
     @php
@@ -31,98 +25,127 @@
         };
     @endphp
 
-    <div class="page-section comercial-services-page">
+    <div class="page-section comercial-services-page req-manage-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success comercial-services-page__alert">{{ session('status') }}</div>
             @endif
 
             <div class="panel comercial-services-panel">
-                <div class="panel__body panel__body--compact">
-                    <div class="req-manage-filters comercial-services-filters">
-                        <div class="req-manage-filters__head">
-                            <div class="panel-heading-row panel-heading-row--wrap">
-                                <h3 class="panel-title">Listado de servicios</h3>
-                                <p class="panel-text">Contrato, asesor, NIT o portafolio · cada servicio pertenece a un cliente</p>
-                            </div>
-                            <div class="req-manage-filters__actions comercial-services-filters__actions">
-                                <x-export-excel route="{{ route('comercial.matriz.services.export', request()->query()) }}" />
-                                @if ($hasActiveFilters)
-                                    <a href="{{ route('comercial.matriz.services.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                @endif
-                                @if ($canManage)
-                                    <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary btn--sm">Nuevo servicio</a>
-                                @endif
-                            </div>
-                        </div>
+                <div class="panel__header panel__header--compact">
+                    <h3 class="panel-title">Listado de servicios</h3>
+                    <p class="panel-text panel-text--compact">Contrato, asesor, NIT o portafolio · cada servicio pertenece a un cliente</p>
+                </div>
 
-                        <div class="req-manage-filters__toolbar comercial-services-filters__toolbar">
-                            <form method="GET" class="comercial-services-filters__form comercial-services-filters__search-col req-manage-filters__search-col">
-                                @if ($filters['status'] ?? '')
-                                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
-                                @endif
-                                <label class="req-manage-filters__label" for="services-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group comercial-services-filters__search-group">
-                                    <input
-                                        id="services-search-input"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="Cliente, NIT, contrato o asesor"
-                                    >
-                                    <select name="portfolio" class="form-select">
-                                        <option value="">Todos los portafolios</option>
-                                        @foreach ($portfolios as $key => $label)
-                                            <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                    <select name="vigencia" class="form-select form-select--wide">
-                                        <option value="">Toda vigencia</option>
-                                        <option value="expiring" @selected(($filters['vigencia'] ?? '') === 'expiring')>Por vencer (30 días)</option>
-                                        <option value="expired" @selected(($filters['vigencia'] ?? '') === 'expired')>Vencido (contrato)</option>
-                                    </select>
-                                    <button type="submit" class="btn btn--primary">Filtrar</button>
+                <div class="panel__body req-manage-shell">
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+
+                        <div class="req-manage-filters__panel-body">
+                            <div class="req-manage-filters__head">
+                                <div class="req-manage-filters__actions comercial-services-filters__actions">
+                                    <x-export-excel route="{{ route('comercial.matriz.services.export', request()->query()) }}" />
+                                    @if ($hasActiveFilters)
+                                        <a href="{{ route('comercial.matriz.services.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                    @endif
+                                    @if ($canManage)
+                                        <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary btn--sm">Nuevo servicio</a>
+                                    @endif
                                 </div>
-                            </form>
+                            </div>
 
-                            <div class="req-manage-filters__status-col comercial-services-filters__status-col">
-                                <p class="req-manage-filters__status-label">Estado</p>
-                                <div class="req-manage-filters__pills">
-                                    <a
-                                        href="{{ route('comercial.matriz.services.index', $servicesQuery(['status' => null])) }}"
-                                        class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
-                                    >Todos</a>
-                                    @foreach ($statusLabels as $statusKey => $statusLabel)
+                            <div class="req-manage-filters__toolbar">
+                                <form method="GET" class="req-manage-filters__search-col">
+                                    @if ($filters['status'] ?? '')
+                                        <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                    @endif
+
+                                    <div class="req-manage-filters__query-row">
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--search">
+                                            <label class="req-manage-filters__label" for="services-search-input">Buscar</label>
+                                            <input
+                                                id="services-search-input"
+                                                type="search"
+                                                name="q"
+                                                class="form-input"
+                                                value="{{ $filters['q'] }}"
+                                                placeholder="Cliente, NIT, contrato o asesor"
+                                            >
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
+                                            <label class="req-manage-filters__label" for="services-portfolio-select">Portafolio</label>
+                                            <select id="services-portfolio-select" name="portfolio" class="form-select">
+                                                <option value="">Todos</option>
+                                                @foreach ($portfolios as $key => $label)
+                                                    <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
+                                            <label class="req-manage-filters__label" for="services-vigencia-select">Vigencia</label>
+                                            <select id="services-vigencia-select" name="vigencia" class="form-select">
+                                                <option value="">Todas</option>
+                                                <option value="expiring" @selected(($filters['vigencia'] ?? '') === 'expiring')>Por vencer (30 días)</option>
+                                                <option value="expired" @selected(($filters['vigencia'] ?? '') === 'expired')>Vencido</option>
+                                            </select>
+                                        </div>
+                                        <div class="req-manage-filters__query-submit">
+                                            <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
+                                            <button type="submit" class="btn btn--primary">Filtrar</button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <div class="req-manage-filters__status-row">
+                                    <p class="req-manage-filters__status-label">Estado</p>
+                                    <div class="req-manage-filters__pills req-manage-filters__pills--scroll">
                                         <a
-                                            href="{{ route('comercial.matriz.services.index', $servicesQuery(['status' => $statusKey])) }}"
-                                            class="req-manage-filters__pill {{ $serviceStatusPillClass($statusKey) }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
-                                        >{{ $statusLabel }}</a>
-                                    @endforeach
+                                            href="{{ route('comercial.matriz.services.index', $servicesQuery(['status' => null])) }}"
+                                            class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
+                                        >Todos</a>
+                                        @foreach ($statusLabels as $statusKey => $statusLabel)
+                                            <a
+                                                href="{{ route('comercial.matriz.services.index', $servicesQuery(['status' => $statusKey])) }}"
+                                                class="req-manage-filters__pill {{ $serviceStatusPillClass($statusKey) }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
+                                            >{{ $statusLabel }}</a>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
+
+                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($services->count()) }} {{ $services->count() === 1 ? 'servicio' : 'servicios' }}">
+                                <strong>{{ number_format($services->count()) }}</strong>
+                                {{ $services->count() === 1 ? 'servicio' : 'servicios' }}
+                                @if ($filters['q'] ?? '')
+                                    · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                @endif
+                                @if ($filters['portfolio'] ?? '')
+                                    · Portafolio: <strong>{{ $portfolios[$filters['portfolio']] ?? $filters['portfolio'] }}</strong>
+                                @endif
+                                @if ($filters['vigencia'] ?? '')
+                                    · Vigencia: <strong>{{ $filters['vigencia'] === 'expiring' ? 'Por vencer (30 días)' : 'Vencido' }}</strong>
+                                @endif
+                                @if ($filters['status'] ?? '')
+                                    · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
+                                @endif
+                                · El Excel exporta el detalle completo segun estos filtros
+                            </p>
                         </div>
+                    </details>
 
-                        <p class="req-manage-filters__meta comercial-services-filters__meta">
-                            <strong>{{ number_format($services->count()) }}</strong>
-                            {{ $services->count() === 1 ? 'servicio' : 'servicios' }}
-                            @if ($filters['q'] ?? '')
-                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
-                            @endif
-                            @if ($filters['portfolio'] ?? '')
-                                · Portafolio: <strong>{{ $portfolios[$filters['portfolio']] ?? $filters['portfolio'] }}</strong>
-                            @endif
-                            @if ($filters['vigencia'] ?? '')
-                                · Vigencia: <strong>{{ $filters['vigencia'] === 'expiring' ? 'Por vencer (30 días)' : 'Vencido' }}</strong>
-                            @endif
-                            @if ($filters['status'] ?? '')
-                                · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
-                            @endif
-                        </p>
-                    </div>
-
-                    <div class="data-table-wrap comercial-services-page__table-wrap">
-                        <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
+                    <div class="data-table-wrap req-manage-shell__table comercial-services-page__table-wrap">
+                        <table
+                            class="data-table js-datatable"
+                            style="width:100%"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                        >
                             <thead>
                                 <tr>
                                     <th>NIT</th>

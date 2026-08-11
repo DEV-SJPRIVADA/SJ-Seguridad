@@ -81,9 +81,9 @@ return [
         'suministros' => 'Suministros',
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
-        'documentos' => 'Documentos',
         'ficha_empleados' => 'Ficha empleados',
         'archivo' => 'Archivo',
+        'documentos' => 'Biblioteca Calidad',
     ],
 
     /*
@@ -280,7 +280,6 @@ return [
                 'permissions' => [
                     'manage.quality.documents',
                 ],
-                'view_area_access' => true,
             ],
         ],
         'other_areas' => [

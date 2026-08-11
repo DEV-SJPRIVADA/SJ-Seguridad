@@ -3,27 +3,33 @@
         @include('modules.supplies.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section req-manage-page">
         <div class="app-container">
             <div class="panel">
-                <div class="panel__header">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="panel__header panel__header--compact">
+                    <div class="supply-catalog-header">
                         <div>
                             <h3 class="panel-title">Catalogo de Suministros</h3>
-                            <p class="panel-text">Gestiona los productos disponibles para que el personal realice sus pedidos.</p>
+                            <p class="panel-text panel-text--compact">Gestiona los productos disponibles para que el personal realice sus pedidos.</p>
                         </div>
-                        <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <div class="supply-catalog-header__actions">
                             <x-export-excel route="{{ route('supplies.products.export', ['module' => $module]) }}" />
-                            <button type="button" class="btn btn--primary" onclick="openCreateModal()">
+                            <button type="button" class="btn btn--primary btn--sm" onclick="openCreateModal()">
                                 + Nuevo Producto
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="panel__body">
-                    <div class="block-spaced">
-                        <table class="supply-table js-datatable">
+                <div class="panel__body req-manage-shell">
+                    <div class="data-table-wrap req-manage-shell__table">
+                        <table
+                            class="supply-table js-datatable"
+                            style="width:100%"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                        >
                             <thead>
                                 <tr>
                                     <th>Categoria</th>
@@ -49,7 +55,7 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn--secondary btn--sm" 
+                                            <button type="button" class="btn btn--secondary btn--sm"
                                                 onclick='openEditModal(@json($product))'>
                                                 Editar
                                             </button>
@@ -74,7 +80,7 @@
                 <form id="product-form" method="POST" action="{{ route('supplies.products.store', ['module' => $module]) }}">
                     @csrf
                     <div id="method-field"></div>
-                    
+
                     <div class="form-stack">
                         <div class="form-field">
                             <label class="form-label">Nombre del Producto</label>
@@ -109,44 +115,64 @@
         </div>
     </div>
 
-    <script>
-        const modal = document.getElementById('product-modal');
-        const form = document.getElementById('product-form');
-        const title = document.getElementById('modal-title');
-        const methodField = document.getElementById('method-field');
-        const statusField = document.getElementById('status-field');
-        const baseUrl = "{{ route('supplies.products.store', ['module' => $module]) }}";
+    @push('styles')
+        <style>
+            .supply-catalog-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.75rem;
+                flex-wrap: wrap;
+            }
 
-        function openCreateModal() {
-            title.innerText = 'Nuevo Producto';
-            form.action = baseUrl;
-            methodField.innerHTML = '';
-            statusField.style.display = 'none';
-            form.reset();
-            modal.style.display = 'flex';
-        }
+            .supply-catalog-header__actions {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+        </style>
+    @endpush
 
-        function openEditModal(product) {
-            title.innerText = 'Editar Producto';
-            form.action = `{{ url('supplies/'.$module.'/catalogo') }}/${product.id}`;
-            methodField.innerHTML = '@method("PATCH")';
-            statusField.style.display = 'block';
-            
-            document.getElementById('p-name').value = product.name;
-            document.getElementById('p-category').value = product.category;
-            document.getElementById('p-description').value = product.description;
-            document.getElementById('p-status').value = product.is_active ? "1" : "0";
-            
-            modal.style.display = 'flex';
-        }
+    @push('scripts')
+        <script>
+            const modal = document.getElementById('product-modal');
+            const form = document.getElementById('product-form');
+            const title = document.getElementById('modal-title');
+            const methodField = document.getElementById('method-field');
+            const statusField = document.getElementById('status-field');
+            const baseUrl = "{{ route('supplies.products.store', ['module' => $module]) }}";
 
-        function closeModal() {
-            modal.style.display = 'none';
-        }
+            function openCreateModal() {
+                title.innerText = 'Nuevo Producto';
+                form.action = baseUrl;
+                methodField.innerHTML = '';
+                statusField.style.display = 'none';
+                form.reset();
+                modal.style.display = 'flex';
+            }
 
-        // Cerrar al hacer click fuera
-        window.onclick = function(event) {
-            if (event.target == modal) closeModal();
-        }
-    </script>
+            function openEditModal(product) {
+                title.innerText = 'Editar Producto';
+                form.action = `{{ url('supplies/'.$module.'/catalogo') }}/${product.id}`;
+                methodField.innerHTML = '@method("PATCH")';
+                statusField.style.display = 'block';
+
+                document.getElementById('p-name').value = product.name;
+                document.getElementById('p-category').value = product.category;
+                document.getElementById('p-description').value = product.description;
+                document.getElementById('p-status').value = product.is_active ? "1" : "0";
+
+                modal.style.display = 'flex';
+            }
+
+            function closeModal() {
+                modal.style.display = 'none';
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) closeModal();
+            }
+        </script>
+    @endpush
 </x-app-layout>

@@ -4,10 +4,15 @@ namespace App\Services\Notifications;
 
 use App\Models\NotificationEmail;
 use App\Models\NotificationType;
+use App\Services\Admin\AdminAuditLogService;
 use Illuminate\Database\Eloquent\Collection;
 
 class NotificationConfigService
 {
+    public function __construct(
+        private readonly AdminAuditLogService $adminAuditLogService,
+    ) {}
+
     /**
      * @return list<string>
      */
@@ -157,6 +162,15 @@ class NotificationConfigService
         }
 
         $type->notificationEmails()->attach($email->id);
+
+        $this->adminAuditLogService->logModelChange(
+            eventType: 'notification_config',
+            action: 'email_attach',
+            model: $type,
+            before: null,
+            after: null,
+            metadata: $this->notificationConfigAuditMetadata($type, $normalized),
+        );
     }
 
     public function removeEmailFromType(NotificationType $type, NotificationEmail $email): void
@@ -165,11 +179,35 @@ class NotificationConfigService
             return;
         }
 
+        $emailAddress = (string) $email->name;
+
         $type->notificationEmails()->detach($email->id);
 
         if ($email->notificationTypes()->doesntExist()) {
             $email->delete();
         }
+
+        $this->adminAuditLogService->logModelChange(
+            eventType: 'notification_config',
+            action: 'email_detach',
+            model: $type,
+            before: null,
+            after: null,
+            metadata: $this->notificationConfigAuditMetadata($type, $emailAddress),
+        );
+    }
+
+    /**
+     * @return array{notification_module: string, type_slug: string, type_label: string, email: string}
+     */
+    private function notificationConfigAuditMetadata(NotificationType $type, string $email): array
+    {
+        return [
+            'notification_module' => $type->module,
+            'type_slug' => $type->slug,
+            'type_label' => $type->label,
+            'email' => $email,
+        ];
     }
 
     private function fallbackEmail(): string
