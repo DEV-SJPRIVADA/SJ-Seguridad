@@ -70,9 +70,10 @@
             opacity: 0.6;
         }
         .filter-grid .form-select {
-            min-height: 38px;
-            padding: 0.5rem 2rem 0.5rem 0.75rem;
-            font-size: 0.85rem;
+            min-height: var(--control-height-chrome);
+            padding: 0.35rem 2rem 0.35rem 0.75rem;
+            font-size: var(--control-font-size);
+            line-height: var(--control-line-height);
             border-radius: 10px;
             border: 1.5px solid #e2e8f0;
             background-color: #fff;
@@ -95,9 +96,9 @@
             border-color: #94a3b8;
         }
         .btn--clean {
-            min-height: 38px;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
+            min-height: var(--control-height-chrome);
+            padding: 0.35rem 1rem;
+            font-size: var(--control-font-size);
             border-radius: 10px;
             border: 1.5px solid #e2e8f0;
             background: #fff;
