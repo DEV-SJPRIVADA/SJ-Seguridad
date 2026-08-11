@@ -593,6 +593,29 @@ a {
     overflow-x: auto;
 }
 
+.comercial-clients-page.req-manage-page .req-manage-shell__table.data-table-wrap,
+.comercial-services-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.comercial-services-page {
+    padding-top: 0.35rem;
+    padding-bottom: 0.5rem;
+}
+
+.comercial-services-page__workspace-header {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
+
+.comercial-services-page__alert {
+    margin-bottom: 0.5rem;
+}
+
+.comercial-services-panel .panel__body--compact {
+    padding: 0.65rem 0.85rem;
+}
+
 /* Comercial — checklist documental */
 .comercial-checklist-page__workspace-header {
     padding-top: 0.75rem;

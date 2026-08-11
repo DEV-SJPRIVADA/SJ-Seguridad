@@ -1,12 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
-        <div class="app-container comercial-clients-page__workspace-header">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Clientes</h2>
-                <p class="panel-text">Comercial — maestro de clientes (NIT)</p>
-            </div>
-        </div>
+
     </x-slot>
 
     @php
@@ -21,7 +16,7 @@
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
-    <div class="page-section comercial-clients-page">
+    <div class="page-section comercial-clients-page req-manage-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success comercial-clients-page__alert">{{ session('status') }}</div>
@@ -33,95 +28,124 @@
             ])
 
             <div class="panel comercial-clients-panel">
-                <div class="panel__body panel__body--compact">
-                    <div class="req-manage-filters comercial-clients-filters">
-                        <div class="req-manage-filters__head">
-                            <div class="panel-heading-row panel-heading-row--wrap">
-                                <h3 class="panel-title">Listado de clientes</h3>
-                                <p class="panel-text">NIT, nombre o ciudad · varios servicios por cliente</p>
-                            </div>
-                            <div class="req-manage-filters__actions comercial-clients-filters__actions">
-                                <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
-                                @if ($canManage)
-                                    <button
-                                        type="button"
-                                        class="btn btn--secondary btn--sm"
-                                        title="Carga masiva"
-                                        aria-label="Carga masiva"
-                                        x-data=""
-                                        x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
-                                    >
-                                        <x-lucide-icon name="upload" :size="16" />
-                                    </button>
-                                @endif
-                                @if ($hasActiveFilters)
-                                    <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                @endif
-                                <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary btn--sm">Checklist</a>
-                                @if ($canManage)
-                                    <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary btn--sm">Nuevo cliente</a>
-                                @endif
-                            </div>
-                        </div>
+                <div class="panel__header panel__header--compact">
+                    <h3 class="panel-title">Listado de clientes</h3>
+                    <p class="panel-text panel-text--compact">NIT, nombre o ciudad · varios servicios por cliente</p>
+                </div>
 
-                        <div class="req-manage-filters__toolbar comercial-clients-filters__toolbar">
-                            <form method="GET" class="comercial-clients-filters__form req-manage-filters__search-col">
-                                @if ($filters['status'] ?? '')
-                                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
-                                @endif
-                                <label class="req-manage-filters__label" for="clients-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group comercial-clients-filters__search-group">
-                                    <input
-                                        id="clients-search-input"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="NIT, nombre o representante"
-                                    >
-                                    <input
-                                        id="clients-city-input"
-                                        type="search"
-                                        name="city"
-                                        class="form-input comercial-clients-filters__city"
-                                        value="{{ $filters['city'] }}"
-                                        placeholder="Ciudad"
-                                    >
-                                    <button type="submit" class="btn btn--primary">Buscar</button>
+                <div class="panel__body req-manage-shell">
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+
+                        <div class="req-manage-filters__panel-body">
+                            <div class="req-manage-filters__head">
+                                <div class="req-manage-filters__actions comercial-clients-filters__actions">
+                                    <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
+                                    @if ($canManage)
+                                        <button
+                                            type="button"
+                                            class="btn btn--secondary btn--sm"
+                                            title="Carga masiva"
+                                            aria-label="Carga masiva"
+                                            x-data=""
+                                            x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
+                                        >
+                                            <x-lucide-icon name="upload" :size="16" />
+                                        </button>
+                                    @endif
+                                    @if ($hasActiveFilters)
+                                        <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                    @endif
+                                    <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary btn--sm">Checklist</a>
+                                    @if ($canManage)
+                                        <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary btn--sm">Nuevo cliente</a>
+                                    @endif
                                 </div>
-                            </form>
+                            </div>
 
-                            <div class="req-manage-filters__status-col comercial-clients-filters__status-col">
-                                <p class="req-manage-filters__status-label">Estado</p>
-                                <div class="req-manage-filters__pills">
-                                    <a
-                                        href="{{ route('comercial.matriz.clients.index', $clientsQuery(['status' => null])) }}"
-                                        class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
-                                    >Todos</a>
-                                    @foreach ($statusLabels as $statusKey => $statusLabel)
+                            <div class="req-manage-filters__toolbar">
+                                <form method="GET" class="req-manage-filters__search-col">
+                                    @if ($filters['status'] ?? '')
+                                        <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                    @endif
+
+                                    <div class="req-manage-filters__query-row">
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--search">
+                                            <label class="req-manage-filters__label" for="clients-search-input">Buscar</label>
+                                            <input
+                                                id="clients-search-input"
+                                                type="search"
+                                                name="q"
+                                                class="form-input"
+                                                value="{{ $filters['q'] }}"
+                                                placeholder="NIT, nombre o representante"
+                                            >
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
+                                            <label class="req-manage-filters__label" for="clients-city-input">Ciudad</label>
+                                            <input
+                                                id="clients-city-input"
+                                                type="search"
+                                                name="city"
+                                                class="form-input"
+                                                value="{{ $filters['city'] }}"
+                                                placeholder="Ciudad"
+                                            >
+                                        </div>
+                                        <div class="req-manage-filters__query-submit">
+                                            <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
+                                            <button type="submit" class="btn btn--primary">Buscar</button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <div class="req-manage-filters__status-row">
+                                    <p class="req-manage-filters__status-label">Estado</p>
+                                    <div class="req-manage-filters__pills req-manage-filters__pills--scroll">
                                         <a
-                                            href="{{ route('comercial.matriz.clients.index', $clientsQuery(['status' => $statusKey])) }}"
-                                            class="req-manage-filters__pill {{ $statusKey === 'active' ? 'status-pill--success' : 'status-pill--danger' }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
-                                        >{{ $statusLabel }}</a>
-                                    @endforeach
+                                            href="{{ route('comercial.matriz.clients.index', $clientsQuery(['status' => null])) }}"
+                                            class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
+                                        >Todos</a>
+                                        @foreach ($statusLabels as $statusKey => $statusLabel)
+                                            <a
+                                                href="{{ route('comercial.matriz.clients.index', $clientsQuery(['status' => $statusKey])) }}"
+                                                class="req-manage-filters__pill {{ $statusKey === 'active' ? 'status-pill--success' : 'status-pill--danger' }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
+                                            >{{ $statusLabel }}</a>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
+
+                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($clients->count()) }} {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}">
+                                <strong>{{ number_format($clients->count()) }}</strong>
+                                {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}
+                                @if ($filters['q'] ?? '')
+                                    · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                @endif
+                                @if ($filters['city'] ?? '')
+                                    · Ciudad: <strong>{{ $filters['city'] }}</strong>
+                                @endif
+                                @if ($filters['status'] ?? '')
+                                    · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
+                                @endif
+                                · El Excel exporta el detalle completo segun estos filtros
+                            </p>
                         </div>
+                    </details>
 
-                        <p class="req-manage-filters__meta comercial-clients-filters__meta">
-                            <strong>{{ number_format($clients->count()) }}</strong>
-                            {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}
-                            @if ($filters['q'] ?? '')
-                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
-                            @endif
-                            @if ($filters['city'] ?? '')
-                                · Ciudad: <strong>{{ $filters['city'] }}</strong>
-                            @endif
-                        </p>
-                    </div>
-
-                    <div class="data-table-wrap comercial-clients-page__table-wrap">
-                        <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
+                    <div class="data-table-wrap req-manage-shell__table comercial-clients-page__table-wrap">
+                        <table
+                            class="data-table js-datatable"
+                            style="width:100%"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                        >
                             <thead>
                                 <tr>
                                     <th>NIT</th>
