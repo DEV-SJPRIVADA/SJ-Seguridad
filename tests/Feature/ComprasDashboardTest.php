@@ -127,6 +127,7 @@ class ComprasDashboardTest extends TestCase
             'area_key' => 'operaciones',
             'sede_id' => SupplySite::query()->value('id'),
             'status' => 'completada',
+            'created_at' => Carbon::parse($august),
             'updated_at' => Carbon::parse($august),
         ]);
 
@@ -160,14 +161,16 @@ class ComprasDashboardTest extends TestCase
         User $requester,
         User $director,
         int $numero,
-        string $fechaAprobacion,
+        string $fechaSolicitud,
         string $estadoCompras,
     ): void {
-        PurchaseRequest::query()->create([
+        $submittedAt = Carbon::parse($fechaSolicitud)->setTime(10, 30, 0);
+
+        $purchaseRequest = PurchaseRequest::query()->create([
             'numero_solicitud' => $numero,
             'user_id' => $requester->id,
             'area_key' => 'operaciones',
-            'fecha_solicitud' => $fechaAprobacion,
+            'fecha_solicitud' => $fechaSolicitud,
             'descripcion' => "Solicitud {$numero}",
             'cantidad' => 1,
             'justificacion' => 'Prueba',
@@ -176,7 +179,12 @@ class ComprasDashboardTest extends TestCase
             'aprobador_id' => $director->id,
             'estado' => PurchaseRequest::ESTADO_APROBADO,
             'estado_compras' => $estadoCompras,
-            'fecha_aprobacion' => $fechaAprobacion,
+            'fecha_aprobacion' => $fechaSolicitud,
         ]);
+
+        $purchaseRequest->forceFill([
+            'created_at' => $submittedAt,
+            'updated_at' => $submittedAt,
+        ])->saveQuietly();
     }
 }

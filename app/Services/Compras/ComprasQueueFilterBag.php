@@ -7,7 +7,6 @@ use App\Models\SupplyRequest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ComprasQueueFilterBag
@@ -134,11 +133,11 @@ class ComprasQueueFilterBag
         }
 
         if ($this->dateFrom !== null) {
-            $query->whereDate(DB::raw('COALESCE(fecha_aprobacion, created_at)'), '>=', $this->dateFrom);
+            $query->whereDate('created_at', '>=', $this->dateFrom);
         }
 
         if ($this->dateTo !== null) {
-            $query->whereDate(DB::raw('COALESCE(fecha_aprobacion, created_at)'), '<=', $this->dateTo);
+            $query->whereDate('created_at', '<=', $this->dateTo);
         }
     }
 
@@ -162,11 +161,11 @@ class ComprasQueueFilterBag
         }
 
         if ($this->dateFrom !== null) {
-            $query->whereDate('updated_at', '>=', $this->dateFrom);
+            $query->whereDate('created_at', '>=', $this->dateFrom);
         }
 
         if ($this->dateTo !== null) {
-            $query->whereDate('updated_at', '<=', $this->dateTo);
+            $query->whereDate('created_at', '<=', $this->dateTo);
         }
     }
 

@@ -725,6 +725,65 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertSame('9101', $items->first()['folio']);
     }
 
+    public function test_bandeja_queue_uses_created_at_as_fecha_solicitud_for_both_tipos(): void
+    {
+        $director = $this->director();
+        $requester = $this->purchaseRequester('operaciones');
+        $submittedAt = now()->setTime(9, 15, 40);
+
+        $purchaseRequest = PurchaseRequest::query()->create([
+            'numero_solicitud' => 9301,
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => $submittedAt->toDateString(),
+            'descripcion' => 'Hora solicitud bandeja compra',
+            'cantidad' => 1,
+            'justificacion' => 'Prueba',
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+            'fecha_aprobacion' => now()->toDateString(),
+        ]);
+
+        $purchaseRequest->forceFill([
+            'created_at' => $submittedAt,
+            'updated_at' => $submittedAt,
+        ])->saveQuietly();
+
+        $supplyRequest = SupplyRequest::query()->create([
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'sede_id' => $requester->sede_id,
+            'status' => 'aprobada_calidad',
+        ]);
+
+        $supplyRequest->forceFill([
+            'created_at' => $submittedAt->copy()->setTime(11, 20, 5),
+            'updated_at' => now()->setTime(16, 45, 0),
+        ])->saveQuietly();
+
+        $items = app(ComprasQueueService::class)->items(new ComprasQueueFilterBag(
+            estadoCompras: '',
+            tipo: null,
+            areaKey: null,
+            dateFrom: null,
+            dateTo: null,
+        ));
+
+        $purchaseItem = $items->firstWhere('folio', '9301');
+        $supplyItem = $items->firstWhere('folio', $supplyRequest->folio());
+
+        $this->assertNotNull($purchaseItem);
+        $this->assertSame($submittedAt->timestamp, $purchaseItem['fecha']->getTimestamp());
+
+        $this->assertNotNull($supplyItem);
+        $this->assertSame(11, $supplyItem['fecha']->hour);
+        $this->assertSame(20, $supplyItem['fecha']->minute);
+        $this->assertNotSame(16, $supplyItem['fecha']->hour);
+    }
+
     public function test_compras_analyst_can_open_purchase_detail_from_bandeja(): void
     {
         Mail::fake();
