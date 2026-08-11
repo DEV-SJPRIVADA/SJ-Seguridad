@@ -83,6 +83,10 @@
                     var $scroll = $wrapper.find('.req-manage-table-scroll').first();
                     var $bottom = $wrapper.find('.req-manage-dt-bottom').first();
 
+                    if (!$bottom.length) {
+                        $bottom = $shell.find('.req-manage-shell__pagination').first();
+                    }
+
                     if (!$scroll.length) {
                         return;
                     }
@@ -147,12 +151,13 @@
                             config.order = tableOrder;
                         }
 
-                        if ($(this).is('[data-server-pagination]')) {
+                        var serverPagination = $(this).is('[data-server-pagination]');
+
+                        if (serverPagination) {
                             config.paging = false;
                             config.lengthChange = false;
                             config.info = false;
                             config.searching = false;
-                            config.dom = 'rt';
                         }
 
                         if ($(this).attr('data-dt-responsive') === 'false') {
@@ -165,8 +170,12 @@
 
                         var useBodyScroll = $(this).data('dt-body-scroll');
 
-                        if (useBodyScroll) {
+                        if (useBodyScroll && serverPagination) {
+                            config.dom = '<"req-manage-table-scroll"t>';
+                        } else if (useBodyScroll) {
                             config.dom = '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>';
+                        } else if (serverPagination) {
+                            config.dom = 'rt';
                         }
 
                         var scrollY = $(this).data('dt-scroll-y');

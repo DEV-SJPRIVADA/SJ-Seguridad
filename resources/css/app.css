@@ -3315,6 +3315,11 @@ a {
     flex-shrink: 0;
 }
 
+.req-manage-shell__pagination {
+    flex-shrink: 0;
+    padding-top: 0.35rem;
+}
+
 .req-manage-page .req-manage-shell__table.data-table-wrap {
     overflow: visible;
 }
