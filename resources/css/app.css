@@ -3368,7 +3368,8 @@ a {
 }
 
 .req-manage-page .req-manage-table-scroll table.dataTable thead th,
-.req-manage-page .req-manage-table-scroll .data-table thead th {
+.req-manage-page .req-manage-table-scroll .data-table thead th,
+.req-manage-page .req-manage-table-scroll .supply-table thead th {
     position: -webkit-sticky !important;
     position: sticky !important;
     top: 0 !important;
@@ -3568,6 +3569,7 @@ a {
     -webkit-overflow-scrolling: touch;
     padding-bottom: 0.1rem;
     scrollbar-width: thin;
+    justify-content: flex-start;
 }
 
 .req-manage-filters__pills--scroll .req-manage-filters__pill {
@@ -3928,11 +3930,11 @@ table.dataTable thead td {
 }
 
 .req-manage-filters--bandeja .req-manage-filters__status-col--right {
-    align-items: flex-end;
+    align-items: center;
     text-align: right;
 }
 
-.req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills {
+.req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills:not(.req-manage-filters__pills--scroll) {
     justify-content: flex-end;
 }
 
@@ -3954,7 +3956,7 @@ table.dataTable thead td {
 
 @media (max-width: 991px) {
     .req-manage-filters--bandeja .req-manage-filters__status-col--right,
-    .req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills {
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills:not(.req-manage-filters__pills--scroll) {
         align-items: flex-start;
         text-align: left;
         justify-content: flex-start;

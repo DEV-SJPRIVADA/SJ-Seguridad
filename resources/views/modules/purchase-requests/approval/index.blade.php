@@ -13,52 +13,60 @@
         ];
     @endphp
 
-    <div class="page-section">
+    <div class="page-section req-manage-page">
         <div class="app-container">
             <div class="panel">
-                <div class="panel__header">
+                <div class="panel__header panel__header--compact">
                     <h3 class="panel-title">Pendientes de autorizacion</h3>
-                    <p class="panel-text">Solicitudes asignadas a ti. Por defecto se muestran solo las pendientes; cambia la vista para consultar el historial.</p>
+                    <p class="panel-text panel-text--compact">Solicitudes asignadas a ti. Por defecto se muestran solo las pendientes; cambia la vista para consultar el historial.</p>
                 </div>
 
-                <div class="panel__body">
-                    <div class="req-manage-filters req-manage-filters--approval">
-                        <form
-                            method="GET"
-                            action="{{ route('purchase-requests.approval.index', ['module' => $module]) }}"
-                            class="req-manage-filters__toolbar req-manage-filters__toolbar--approval"
-                        >
-                            <div class="req-manage-filters__field req-manage-filters__field--approval">
-                                <label class="req-manage-filters__label req-manage-filters__label--inline" for="approval-filter-estado">Vista</label>
-                                <select
-                                    id="approval-filter-estado"
-                                    name="estado"
-                                    class="form-select req-manage-filters__select--inline"
-                                    onchange="this.form.submit()"
-                                >
-                                    <option value="{{ \App\Models\PurchaseRequest::ESTADO_PENDIENTE }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE)>
-                                        Pendientes por autorizar
-                                    </option>
-                                    <option value="todos" @selected($currentEstado === 'todos')>Historial completo</option>
-                                    <option value="{{ \App\Models\PurchaseRequest::ESTADO_APROBADO }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_APROBADO)>
-                                        Aprobadas
-                                    </option>
-                                    <option value="{{ \App\Models\PurchaseRequest::ESTADO_RECHAZADO }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_RECHAZADO)>
-                                        Rechazadas
-                                    </option>
-                                </select>
-                            </div>
+                <div class="panel__body req-manage-shell">
+                    <div class="req-manage-shell__filters">
+                        <div class="req-manage-filters req-manage-filters--approval">
+                            <form
+                                method="GET"
+                                action="{{ route('purchase-requests.approval.index', ['module' => $module]) }}"
+                                class="req-manage-filters__toolbar req-manage-filters__toolbar--approval"
+                            >
+                                <div class="req-manage-filters__field req-manage-filters__field--approval">
+                                    <label class="req-manage-filters__label req-manage-filters__label--inline" for="approval-filter-estado">Vista</label>
+                                    <select
+                                        id="approval-filter-estado"
+                                        name="estado"
+                                        class="form-select req-manage-filters__select--inline"
+                                        onchange="this.form.submit()"
+                                    >
+                                        <option value="{{ \App\Models\PurchaseRequest::ESTADO_PENDIENTE }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE)>
+                                            Pendientes por autorizar
+                                        </option>
+                                        <option value="todos" @selected($currentEstado === 'todos')>Historial completo</option>
+                                        <option value="{{ \App\Models\PurchaseRequest::ESTADO_APROBADO }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_APROBADO)>
+                                            Aprobadas
+                                        </option>
+                                        <option value="{{ \App\Models\PurchaseRequest::ESTADO_RECHAZADO }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_RECHAZADO)>
+                                            Rechazadas
+                                        </option>
+                                    </select>
+                                </div>
 
-                            <p class="req-manage-filters__meta req-manage-filters__meta--approval">
-                                <strong>{{ number_format($purchaseRequests->count()) }}</strong>
-                                {{ $purchaseRequests->count() === 1 ? 'solicitud' : 'solicitudes' }}
-                                {{ $estadoMetaLabels[$currentEstado] ?? '' }}
-                            </p>
-                        </form>
+                                <p class="req-manage-filters__meta req-manage-filters__meta--approval">
+                                    <strong>{{ number_format($purchaseRequests->count()) }}</strong>
+                                    {{ $purchaseRequests->count() === 1 ? 'solicitud' : 'solicitudes' }}
+                                    {{ $estadoMetaLabels[$currentEstado] ?? '' }}
+                                </p>
+                            </form>
+                        </div>
                     </div>
 
-                    <div class="data-table-wrap">
-                        <table class="supply-table js-datatable">
+                    <div class="data-table-wrap req-manage-shell__table">
+                        <table
+                            class="supply-table js-datatable"
+                            style="width:100%"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                        >
                             <thead>
                                 <tr>
                                     <th>Folio</th>
