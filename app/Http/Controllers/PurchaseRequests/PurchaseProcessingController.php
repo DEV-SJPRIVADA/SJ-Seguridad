@@ -9,6 +9,7 @@ use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use App\Services\Compras\ComprasQueueFilterBag;
 use App\Services\Compras\ComprasQueueService;
+use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
@@ -61,10 +62,12 @@ class PurchaseProcessingController extends Controller
         string $module,
         PurchaseRequest $purchaseRequest,
         PurchaseRequestNotificationService $notifications,
+        PurchaseRequestAuditLogService $auditLogService,
     ): RedirectResponse {
         Gate::authorize('process', $purchaseRequest);
 
         $estadoCompras = $request->validated('estado_compras');
+        $previousEstadoCompras = $purchaseRequest->estado_compras;
 
         $purchaseRequest->update([
             'estado_compras' => $estadoCompras,
@@ -72,6 +75,19 @@ class PurchaseProcessingController extends Controller
             'procesado_compras_at' => $estadoCompras === PurchaseRequest::COMPRAS_COMPLETADO ? now() : $purchaseRequest->procesado_compras_at,
             'procesado_compras_por' => auth()->id(),
         ]);
+
+        if ($previousEstadoCompras !== $estadoCompras) {
+            $auditLogService->logModelChange(
+                eventType: 'compras_processing',
+                action: 'status_change',
+                model: $purchaseRequest->fresh(),
+                before: ['estado_compras' => $previousEstadoCompras],
+                after: ['estado_compras' => $estadoCompras],
+                metadata: [
+                    'folio' => $purchaseRequest->folio(),
+                ],
+            );
+        }
 
         $notifications->notifyRequesterProcessed($purchaseRequest->fresh());
 
@@ -100,9 +116,16 @@ class PurchaseProcessingController extends Controller
         ]);
     }
 
-    public function updateSupply(ProcessSupplyComprasRequest $request, string $module, SupplyRequest $supplyRequest): RedirectResponse
-    {
+    public function updateSupply(
+        ProcessSupplyComprasRequest $request,
+        string $module,
+        SupplyRequest $supplyRequest,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): RedirectResponse {
         abort_unless(in_array($supplyRequest->status, ['en_compras', 'aprobada_calidad'], true), 403);
+
+        $previousStatus = $supplyRequest->status;
+        $action = $request->input('action') === 'complete' ? 'complete' : 'save';
 
         DB::transaction(function () use ($request, $supplyRequest): void {
             foreach ($request->input('items', []) as $itemId => $data) {
@@ -131,14 +154,49 @@ class PurchaseProcessingController extends Controller
             }
         });
 
+        $supplyRequest->refresh();
+
+        if ($previousStatus !== $supplyRequest->status) {
+            $metadata = [
+                'action' => $action,
+                'folio' => $supplyRequest->folio(),
+            ];
+
+            if ($action === 'complete') {
+                $metadata['total_cost'] = $supplyRequest->total_cost;
+            }
+
+            $auditLogService->logModelChange(
+                eventType: 'supply_compras',
+                action: 'status_change',
+                model: $supplyRequest,
+                before: ['status' => $previousStatus],
+                after: ['status' => $supplyRequest->status],
+                metadata: $metadata,
+            );
+        }
+
         return redirect()
             ->route('purchase-requests.processing.index', ['module' => $module])
             ->with('status', 'Suministro #'.$supplyRequest->id.' actualizado.');
     }
 
-    public function exportSupplyPdf(string $module, SupplyRequest $supplyRequest, SupplyPurchasePdfExporter $exporter): Response
-    {
+    public function exportSupplyPdf(
+        string $module,
+        SupplyRequest $supplyRequest,
+        SupplyPurchasePdfExporter $exporter,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): Response {
         abort_unless(in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true), 403);
+
+        $auditLogService->logEvent(
+            eventType: 'export',
+            action: 'supply_pdf',
+            metadata: [
+                'supply_request_id' => $supplyRequest->id,
+            ],
+            model: $supplyRequest,
+        );
 
         return response($exporter->generate($supplyRequest), 200, [
             'Content-Type' => 'application/pdf',
@@ -146,8 +204,12 @@ class PurchaseProcessingController extends Controller
         ]);
     }
 
-    public function exportSupplyExcel(string $module, SupplyRequest $supplyRequest, SupplyPurchaseReportExporter $exporter): Response
-    {
+    public function exportSupplyExcel(
+        string $module,
+        SupplyRequest $supplyRequest,
+        SupplyPurchaseReportExporter $exporter,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): Response {
         abort_unless(in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true), 403);
 
         $rows = $exporter->buildMergedRowsForRequest($supplyRequest);
@@ -155,6 +217,16 @@ class PurchaseProcessingController extends Controller
         if (! $supplyRequest->exported_at) {
             $supplyRequest->update(['exported_at' => now()]);
         }
+
+        $auditLogService->logEvent(
+            eventType: 'export',
+            action: 'supply_excel',
+            metadata: [
+                'supply_request_id' => $supplyRequest->id,
+                'rows_exported' => count($rows),
+            ],
+            model: $supplyRequest,
+        );
 
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
     }

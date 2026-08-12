@@ -8,6 +8,7 @@ use App\Http\Requests\QualityDocuments\StoreQualityDocumentRequest;
 use App\Http\Requests\QualityDocuments\UpdateQualityDocumentRequest;
 use App\Models\QualityDocument;
 use App\Models\User;
+use App\Services\QualityDocuments\QualityDocumentAuditLogService;
 use App\Support\DisplayDate;
 use App\Traits\HasQualityDocumentTabs;
 use App\Traits\ValidatesModule;
@@ -23,6 +24,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class QualityDocumentController extends Controller
 {
     use HasQualityDocumentTabs, ValidatesModule;
+
+    public function __construct(
+        private readonly QualityDocumentAuditLogService $auditLogService,
+    ) {}
 
     public function myDocuments(string $module): View
     {
@@ -106,6 +111,12 @@ class QualityDocumentController extends Controller
             ['key' => fn ($d) => $d->is_active ? 'Activo' : 'Inactivo', 'label' => 'Activo'],
         ];
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'admin_excel',
+            metadata: ['row_count' => $documents->count()],
+        );
+
         return (new BaseExport($documents, $columns, 'documentos_calidad_'.now()->format('Y-m-d').'.xlsx', 'Documentos de Calidad'))->download();
     }
 
@@ -129,6 +140,15 @@ class QualityDocumentController extends Controller
             ['key' => fn ($d) => $d->isFile() ? 'Archivo' : 'Enlace', 'label' => 'Recurso'],
             ['key' => fn ($d) => DisplayDate::date($d->created_at), 'label' => 'Publicado'],
         ];
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'library_excel',
+            metadata: [
+                'row_count' => $documents->count(),
+                'area' => $module,
+            ],
+        );
 
         return (new BaseExport($documents, $columns, 'biblioteca_calidad_'.now()->format('Y-m-d').'.xlsx', 'Biblioteca de Documentos'))->download();
     }
@@ -157,6 +177,12 @@ class QualityDocumentController extends Controller
             ['key' => fn ($d) => DisplayDate::date($d->created_at), 'label' => 'Publicado'],
         ];
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'mine_excel',
+            metadata: ['row_count' => $documents->count()],
+        );
+
         return (new BaseExport($documents, $columns, 'mis_documentos_'.now()->format('Y-m-d').'.xlsx', 'Mis Documentos'))->download();
     }
 
@@ -180,7 +206,9 @@ class QualityDocumentController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeManage($module);
 
-        DB::transaction(function () use ($request): void {
+        $document = null;
+
+        DB::transaction(function () use ($request, &$document): void {
             $document = QualityDocument::create($this->metadataFromRequest($request) + [
                 'type' => $request->string('type')->toString(),
                 'external_url' => $request->input('type') === QualityDocument::TYPE_LINK
@@ -197,6 +225,22 @@ class QualityDocumentController extends Controller
             $this->syncAreas($document, $request->input('areas', []));
             $this->syncUsers($document, $request->input('users', []));
         });
+
+        $this->auditLogService->logModelChange(
+            eventType: 'document',
+            action: 'create',
+            model: $document,
+            before: null,
+            after: [
+                'code' => $document->code,
+                'title' => $document->title,
+                'type' => $document->type,
+            ],
+            metadata: [
+                'areas_count' => $document->areas()->count(),
+                'users_count' => $document->assignedUsers()->count(),
+            ],
+        );
 
         return redirect()
             ->route('quality-documents.admin.index', ['module' => $module])
@@ -227,6 +271,8 @@ class QualityDocumentController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeManage($module);
 
+        $before = $this->documentAuditSnapshot($qualityDocument);
+
         DB::transaction(function () use ($request, $qualityDocument): void {
             $qualityDocument->update($this->metadataFromRequest($request) + [
                 'type' => $request->string('type')->toString(),
@@ -253,6 +299,20 @@ class QualityDocumentController extends Controller
             $this->syncUsers($qualityDocument, $request->input('users', []));
         });
 
+        $qualityDocument->refresh();
+        $after = $this->documentAuditSnapshot($qualityDocument);
+        [$oldValues, $newValues] = $this->diffAuditFields($before, $after);
+
+        if ($oldValues !== []) {
+            $this->auditLogService->logModelChange(
+                eventType: 'document',
+                action: 'update',
+                model: $qualityDocument,
+                before: $oldValues,
+                after: $newValues,
+            );
+        }
+
         return redirect()
             ->route('quality-documents.admin.index', ['module' => $module])
             ->with('success', 'Documento actualizado correctamente.');
@@ -263,9 +323,18 @@ class QualityDocumentController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeManage($module);
 
+        $previousIsActive = (bool) $qualityDocument->is_active;
+
         $qualityDocument->update([
             'is_active' => ! $qualityDocument->is_active,
         ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'document',
+            action: $previousIsActive ? 'deactivate' : 'activate',
+            model: $qualityDocument,
+            metadata: ['code' => $qualityDocument->code],
+        );
 
         return redirect()
             ->route('quality-documents.admin.index', ['module' => $module])
@@ -277,10 +346,23 @@ class QualityDocumentController extends Controller
         $this->abortIfUnknownModule($module);
         $this->authorizeManage($module);
 
+        $code = $qualityDocument->code;
+        $title = $qualityDocument->title;
+
         DB::transaction(function () use ($qualityDocument): void {
             $this->deleteStoredFile($qualityDocument);
             $qualityDocument->delete();
         });
+
+        $this->auditLogService->logEvent(
+            eventType: 'document',
+            action: 'delete',
+            model: $qualityDocument,
+            metadata: [
+                'code' => $code,
+                'title' => $title,
+            ],
+        );
 
         return redirect()
             ->route('quality-documents.admin.index', ['module' => $module])
@@ -469,5 +551,41 @@ class QualityDocumentController extends Controller
             'retention_period' => $request->input('retention_period'),
             'final_disposition' => $request->input('final_disposition'),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function documentAuditSnapshot(QualityDocument $document): array
+    {
+        return [
+            'code' => $document->code,
+            'title' => $document->title,
+            'process_key' => $document->process_key,
+            'document_type' => $document->document_type,
+            'current_version' => $document->current_version,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function diffAuditFields(array $before, array $after): array
+    {
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($before as $field => $beforeValue) {
+            $afterValue = $after[$field] ?? null;
+
+            if ($beforeValue !== $afterValue) {
+                $oldValues[$field] = $beforeValue;
+                $newValues[$field] = $afterValue;
+            }
+        }
+
+        return [$oldValues, $newValues];
     }
 }

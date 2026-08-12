@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Comercial\UpdateCommercialClientChecklistRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialClientDocumentItem;
+use App\Services\Comercial\CommercialAuditLogService;
 use App\Support\CommercialDocumentCatalog;
 use App\Support\DisplayDate;
 use App\Traits\HasGestionClientesTabs;
@@ -19,6 +20,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CommercialClientChecklistController extends Controller
 {
     use HasGestionClientesTabs;
+
+    public function __construct(
+        private readonly CommercialAuditLogService $auditLogService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -83,6 +88,19 @@ class CommercialClientChecklistController extends Controller
         $columns[] = ['key' => 'documentation_expires_on', 'label' => 'Vencimiento'];
         $columns[] = ['key' => 'alert_days_before', 'label' => 'Dias anticipacion'];
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'checklist_excel',
+            metadata: [
+                'row_count' => $exportRows->count(),
+                'filters' => array_filter([
+                    'q' => $filters['q'] !== '' ? $filters['q'] : null,
+                    'city' => $filters['city'] !== '' ? $filters['city'] : null,
+                    'doc_vigencia' => $filters['doc_vigencia'] !== '' ? $filters['doc_vigencia'] : null,
+                ], fn ($value) => $value !== null),
+            ],
+        );
+
         return (new BaseExport(
             $exportRows,
             $columns,
@@ -110,6 +128,8 @@ class CommercialClientChecklistController extends Controller
         ]);
 
         $documents = $validated['documents'] ?? [];
+        $documentsUpdatedCount = 0;
+
         foreach (CommercialDocumentCatalog::documentKeys() as $documentKey) {
             if (! array_key_exists($documentKey, $documents)) {
                 continue;
@@ -120,11 +140,29 @@ class CommercialClientChecklistController extends Controller
                 continue;
             }
 
-            CommercialClientDocumentItem::query()
+            $updated = CommercialClientDocumentItem::query()
                 ->where('commercial_client_id', $client->id)
                 ->where('document_key', $documentKey)
                 ->update(['status' => $status]);
+
+            if ($updated > 0) {
+                $documentsUpdatedCount++;
+            }
         }
+
+        $client->refresh();
+
+        $this->auditLogService->logModelChange(
+            eventType: 'checklist',
+            action: 'update',
+            model: $client,
+            before: null,
+            after: null,
+            metadata: [
+                'documents_updated_count' => $documentsUpdatedCount,
+                'documentation_expires_on' => $client->documentation_expires_on?->toDateString(),
+            ],
+        );
 
         return redirect()
             ->route('comercial.matriz.clients.checklist.index', $request->only(['q', 'city', 'doc_vigencia']))

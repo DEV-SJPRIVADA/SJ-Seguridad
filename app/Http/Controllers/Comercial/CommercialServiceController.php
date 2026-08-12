@@ -11,6 +11,7 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialSector;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
+use App\Services\Comercial\CommercialAuditLogService;
 use App\Support\DisplayDate;
 use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
@@ -22,6 +23,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CommercialServiceController extends Controller
 {
     use HasGestionClientesTabs;
+
+    public function __construct(
+        private readonly CommercialAuditLogService $auditLogService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -69,6 +74,12 @@ class CommercialServiceController extends Controller
             ['key' => fn ($s) => $s->serviceEstadoLabel(), 'label' => 'Estado'],
         ];
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'services_excel',
+            metadata: $this->serviceExportAuditMetadata($q, $portfolio, $vigencia, $status, $services->count()),
+        );
+
         return (new BaseExport($services, $columns, 'servicios_'.now()->format('Y-m-d').'.xlsx', 'Servicios - SJ Seguridad'))->download();
     }
 
@@ -93,11 +104,22 @@ class CommercialServiceController extends Controller
     {
         $this->authorizeManage();
 
-        CommercialService::query()->create([
+        $service = CommercialService::query()->create([
             ...$request->validated(),
             'created_by' => $request->user()->id,
             'updated_by' => $request->user()->id,
         ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'service',
+            action: 'create',
+            model: $service,
+            metadata: [
+                'commercial_client_id' => $service->commercial_client_id,
+                'contract_number' => $service->contract_number,
+                'portfolio' => $service->portfolio,
+            ],
+        );
 
         return redirect()
             ->route('comercial.matriz.services.index')
@@ -123,10 +145,26 @@ class CommercialServiceController extends Controller
     {
         $this->authorizeManage();
 
+        $before = $this->serviceAuditSnapshot($service);
+
         $service->update([
             ...$request->validated(),
             'updated_by' => $request->user()->id,
         ]);
+
+        $service->refresh();
+        $after = $this->serviceAuditSnapshot($service);
+        [$oldValues, $newValues] = $this->diffAuditFields($before, $after);
+
+        if ($oldValues !== []) {
+            $this->auditLogService->logModelChange(
+                eventType: 'service',
+                action: 'update',
+                model: $service,
+                before: $oldValues,
+                after: $newValues,
+            );
+        }
 
         return redirect()
             ->route('comercial.matriz.services.index')
@@ -137,10 +175,19 @@ class CommercialServiceController extends Controller
     {
         $this->authorizeManage();
 
+        $previousIsActive = (bool) $service->is_active;
+
         $service->update([
             'is_active' => false,
             'updated_by' => auth()->id(),
         ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'service',
+            action: 'deactivate',
+            model: $service,
+            metadata: ['previous_is_active' => $previousIsActive],
+        );
 
         return redirect()
             ->route('comercial.matriz.services.index')
@@ -151,10 +198,19 @@ class CommercialServiceController extends Controller
     {
         $this->authorizeManage();
 
+        $previousIsActive = (bool) $service->is_active;
+
         $service->update([
             'is_active' => true,
             'updated_by' => auth()->id(),
         ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'service',
+            action: 'activate',
+            model: $service,
+            metadata: ['previous_is_active' => $previousIsActive],
+        );
 
         return redirect()
             ->back()
@@ -256,5 +312,65 @@ class CommercialServiceController extends Controller
     private function canManage(): bool
     {
         return (bool) (auth()->user()?->can('comercial.matriz.manage') || auth()->user()?->can('manage.users'));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serviceAuditSnapshot(CommercialService $service): array
+    {
+        return [
+            'contract_number' => $service->contract_number,
+            'portfolio' => $service->portfolio,
+            'contract_start' => $service->contract_start?->toDateString(),
+            'contract_end' => $service->contract_end?->toDateString(),
+            'advisor_name' => $service->advisor_name,
+            'is_active' => (bool) $service->is_active,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function diffAuditFields(array $before, array $after): array
+    {
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($before as $field => $beforeValue) {
+            $afterValue = $after[$field] ?? null;
+
+            if ($beforeValue !== $afterValue) {
+                $oldValues[$field] = $beforeValue;
+                $newValues[$field] = $afterValue;
+            }
+        }
+
+        return [$oldValues, $newValues];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serviceExportAuditMetadata(
+        string $q,
+        string $portfolio,
+        string $vigencia,
+        string $status,
+        int $rowCount,
+    ): array {
+        $filters = array_filter([
+            'q' => $q !== '' ? $q : null,
+            'portfolio' => $portfolio !== '' ? $portfolio : null,
+            'vigencia' => $vigencia !== '' ? $vigencia : null,
+            'status' => $status !== '' ? $status : null,
+        ], fn ($value) => $value !== null);
+
+        return [
+            'row_count' => $rowCount,
+            'filters' => $filters,
+        ];
     }
 }

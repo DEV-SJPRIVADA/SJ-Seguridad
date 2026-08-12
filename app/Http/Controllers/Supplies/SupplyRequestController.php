@@ -11,6 +11,7 @@ use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\Notifications\NotificationConfigService;
+use App\Services\Supplies\SupplyAuditLogService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
 use App\Support\DisplayDate;
@@ -33,6 +34,7 @@ class SupplyRequestController extends Controller
 
     public function __construct(
         private readonly NotificationConfigService $notificationConfig,
+        private readonly SupplyAuditLogService $auditLogService,
     ) {}
 
     public function index(string $module)
@@ -64,6 +66,16 @@ class SupplyRequestController extends Controller
             ['key' => fn ($r) => $r->statusLabel(), 'label' => 'Estado'],
             ['key' => fn ($r) => $r->items->count().' productos', 'label' => 'Items'],
         ];
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'my_requests_excel',
+            metadata: [
+                'row_count' => $requests->count(),
+                'area_key' => $module,
+            ],
+            area: $module,
+        );
 
         return (new BaseExport($requests, $columns, 'mis_solicitudes_'.now()->format('Y-m-d').'.xlsx', 'Mis Solicitudes de Insumos'))->download();
     }
@@ -112,6 +124,16 @@ class SupplyRequestController extends Controller
         if (! $supplyRequest->exported_at) {
             $supplyRequest->update(['exported_at' => now()]);
         }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'request_detail_excel',
+            model: $supplyRequest,
+            metadata: [
+                'rows_exported' => $rows->count(),
+            ],
+            area: $module,
+        );
 
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
     }
@@ -182,6 +204,22 @@ class SupplyRequestController extends Controller
             return $supplyRequest;
         });
 
+        $supplyRequest->loadCount('items');
+
+        $this->auditLogService->logModelChange(
+            eventType: 'supply_request',
+            action: 'create',
+            model: $supplyRequest,
+            before: null,
+            after: null,
+            metadata: [
+                'area_key' => $module,
+                'items_count' => $supplyRequest->items_count,
+                'sede_id' => $supplyRequest->sede_id,
+            ],
+            area: $module,
+        );
+
         $this->notifyApprovalReviewers($supplyRequest);
 
         return redirect()->route('supplies.index', ['module' => $module])
@@ -221,6 +259,16 @@ class SupplyRequestController extends Controller
             ['key' => fn ($r) => $r->statusLabel(), 'label' => 'Estado'],
         ];
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'approval_queue_excel',
+            metadata: [
+                'row_count' => $requests->count(),
+                'area_key' => $module,
+            ],
+            area: $module,
+        );
+
         return (new BaseExport($requests, $columns, 'aprobacion_insumos_'.now()->format('Y-m-d').'.xlsx', 'Aprobación de Insumos'))->download();
     }
 
@@ -255,7 +303,10 @@ class SupplyRequestController extends Controller
 
         abort_unless($supplyRequest->area_key === $module, 404);
 
-        DB::transaction(function () use ($request, $supplyRequest) {
+        $previousStatus = $supplyRequest->status;
+        $itemsApprovedCount = 0;
+
+        DB::transaction(function () use ($request, $supplyRequest, &$itemsApprovedCount) {
             $isApprove = $request->action === 'approve';
 
             $supplyRequest->update([
@@ -266,14 +317,31 @@ class SupplyRequestController extends Controller
 
             if ($isApprove) {
                 foreach ($request->items as $itemId => $data) {
+                    $approvedQuantity = (int) ($data['approved_quantity'] ?? 0);
+                    $itemsApprovedCount += $approvedQuantity > 0 ? 1 : 0;
+
                     $supplyRequest->items()->where('id', $itemId)->update([
-                        'approved_quantity' => $data['approved_quantity'],
+                        'approved_quantity' => $approvedQuantity,
                     ]);
                 }
 
                 $this->notifyComprasSupplyApproved($supplyRequest->fresh(['user', 'items.product']));
             }
         });
+
+        $newStatus = $request->action === 'approve' ? 'aprobada_calidad' : 'rechazada_calidad';
+
+        $this->auditLogService->logModelChange(
+            eventType: 'supply_request',
+            action: $request->action === 'approve' ? 'quality_approve' : 'quality_reject',
+            model: $supplyRequest,
+            before: ['status' => $previousStatus],
+            after: ['status' => $newStatus],
+            metadata: $request->action === 'approve'
+                ? ['items_approved_count' => $itemsApprovedCount]
+                : [],
+            area: $module,
+        );
 
         return redirect()->route('supplies.approval.index', ['module' => $module])
             ->with('success', 'Solicitud procesada correctamente.');
@@ -373,6 +441,22 @@ class SupplyRequestController extends Controller
             ['key' => fn ($r) => $r->exported_at ? 'Exportada' : 'Pendiente', 'label' => 'Exportación'],
         ];
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'approved_list_excel',
+            metadata: [
+                'row_count' => $requests->count(),
+                'filters' => array_filter([
+                    'sede_id' => $filters['sede_id'] ?? null,
+                    'date_from' => $filters['date_from'] ?? null,
+                    'date_to' => $filters['date_to'] ?? null,
+                    'export_status' => $exportStatus,
+                    'requester' => $filters['requester'] ?? null,
+                ], fn ($value) => $value !== null && $value !== ''),
+            ],
+            area: $module,
+        );
+
         return (new BaseExport($requests, $columns, 'insumos_aprobados_'.now()->format('Y-m-d').'.xlsx', 'Insumos Aprobados'))->download();
     }
 
@@ -390,6 +474,16 @@ class SupplyRequestController extends Controller
         if ($supplyRequest->exported_at === null) {
             $supplyRequest->update(['exported_at' => now()]);
         }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'approved_request_excel',
+            model: $supplyRequest,
+            metadata: [
+                'rows_exported' => $rows->count(),
+            ],
+            area: $module,
+        );
 
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
     }

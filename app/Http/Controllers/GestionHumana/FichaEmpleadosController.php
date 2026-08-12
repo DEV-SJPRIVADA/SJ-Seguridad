@@ -15,6 +15,7 @@ use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\GestionHumana\EmployeeFichaAuditLogService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
@@ -42,6 +43,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaImportService $importService,
         private readonly EmployeeFichaProfilePrefill $profilePrefill,
         private readonly EmployeeFichaCatalogService $catalogService,
+        private readonly EmployeeFichaAuditLogService $auditLogService,
     ) {}
 
     public function index(Request $request): View
@@ -97,6 +99,12 @@ class FichaEmpleadosController extends Controller
                 ->withErrors(['export' => 'No hay empleados activos en ficha para exportar con los filtros seleccionados.']);
         }
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'masivos_excel',
+            metadata: $this->masivosExportAuditMetadata($entries->count(), $hasDateRange, $fechaDesde, $fechaHasta),
+        );
+
         return $this->plantillaMasivosExport->download(
             $entries,
             'plantilla_masivos_'.now()->format('Y-m-d').'.xlsx'
@@ -135,6 +143,12 @@ class FichaEmpleadosController extends Controller
                 ->route('gestion-humana.ficha-empleados.employees.index')
                 ->withErrors(['export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.']);
         }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'import_template_data',
+            metadata: ['row_count' => $entries->count()],
+        );
 
         return $this->importTemplateExport->downloadWithData(
             $entries,
@@ -230,6 +244,17 @@ class FichaEmpleadosController extends Controller
         $importResult['errors'] = $errorsForSession;
         $importResult['errors_truncated'] = ($importResult['errors_total'] ?? 0) > count($errorsForSession);
 
+        $this->auditLogService->logEvent(
+            eventType: 'import',
+            action: 'profiles',
+            metadata: [
+                'imported' => $stats['imported'],
+                'updated' => $stats['updated'],
+                'skipped' => $stats['skipped'],
+                'empty_rows' => $stats['empty_rows'],
+            ],
+        );
+
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.index')
             ->with('status', $message)
@@ -279,7 +304,7 @@ class FichaEmpleadosController extends Controller
         $fichaEntryId = $validated['ficha_entry_id'] ?? null;
 
         if ($fichaEntryId !== null) {
-            DB::transaction(function () use ($validated, $userId, $fichaEntryId): void {
+            $entry = DB::transaction(function () use ($validated, $userId, $fichaEntryId): PersonalRequisitionFichaEntry {
                 $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
 
                 $hiredDocument = trim($validated['hired_document']);
@@ -312,7 +337,25 @@ class FichaEmpleadosController extends Controller
                 $profile->save();
 
                 $this->syncCatalogNamesFromCodes($profile);
+
+                return $entry->fresh(['requisition']);
             });
+
+            $metadata = [
+                'hired_document' => $entry->hired_document,
+                'source' => 'waiting_list',
+            ];
+
+            if ($entry->personal_requisition_id !== null) {
+                $metadata['requisition_id'] = $entry->personal_requisition_id;
+            }
+
+            $this->auditLogService->logEvent(
+                eventType: 'ficha_entry',
+                action: 'promote',
+                metadata: $metadata,
+                model: $entry,
+            );
 
             return redirect()
                 ->route('gestion-humana.ficha-empleados.employees.index')
@@ -356,6 +399,16 @@ class FichaEmpleadosController extends Controller
             return $entry;
         });
 
+        $this->auditLogService->logEvent(
+            eventType: 'ficha_entry',
+            action: 'create',
+            metadata: [
+                'hired_document' => $entry->hired_document,
+                'source' => 'manual',
+            ],
+            model: $entry,
+        );
+
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
             ->with('status', 'Empleado creado en ficha correctamente.');
@@ -380,6 +433,7 @@ class FichaEmpleadosController extends Controller
     {
         $fichaEntry->load('profile');
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
+        $before = $this->profileAuditSnapshot($profile);
 
         $attributes = $request->validated();
         $attributes['phone_secondary'] = $request->input('phone_secondary');
@@ -389,6 +443,32 @@ class FichaEmpleadosController extends Controller
         $profile->save();
 
         $this->syncCatalogNamesFromCodes($profile);
+
+        $profile->refresh();
+        $after = $this->profileAuditSnapshot($profile);
+
+        if ($before['employment_status'] !== $after['employment_status']) {
+            $this->auditLogService->logModelChange(
+                eventType: 'ficha_profile',
+                action: 'status_change',
+                model: $profile,
+                before: ['employment_status' => $before['employment_status']],
+                after: ['employment_status' => $after['employment_status']],
+                metadata: ['document_number' => $profile->document_number],
+            );
+        } else {
+            [$oldValues, $newValues] = $this->diffProfileAuditFields($before, $after);
+
+            if ($oldValues !== []) {
+                $this->auditLogService->logModelChange(
+                    eventType: 'ficha_profile',
+                    action: 'update',
+                    model: $profile,
+                    before: $oldValues,
+                    after: $newValues,
+                );
+            }
+        }
 
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $fichaEntry)
@@ -530,5 +610,65 @@ class FichaEmpleadosController extends Controller
     private function canExportArchive(): bool
     {
         return $this->archivoAccess->canExportArchiveTemplate(auth()->user());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function profileAuditSnapshot(EmployeeFichaProfile $profile): array
+    {
+        return [
+            'document_number' => $profile->document_number,
+            'employment_status' => $profile->employment_status,
+            'hire_date' => $profile->hire_date?->toDateString(),
+            'termination_date' => $profile->termination_date?->toDateString(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function diffProfileAuditFields(array $before, array $after): array
+    {
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($before as $field => $beforeValue) {
+            if ($field === 'employment_status') {
+                continue;
+            }
+
+            $afterValue = $after[$field] ?? null;
+
+            if ($beforeValue !== $afterValue) {
+                $oldValues[$field] = $beforeValue;
+                $newValues[$field] = $afterValue;
+            }
+        }
+
+        return [$oldValues, $newValues];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function masivosExportAuditMetadata(
+        int $rowCount,
+        bool $hasDateRange,
+        ?string $fechaDesde,
+        ?string $fechaHasta,
+    ): array {
+        $metadata = ['row_count' => $rowCount];
+
+        if ($hasDateRange && $fechaDesde !== null && $fechaHasta !== null) {
+            $metadata['date_range'] = [
+                'from' => $fechaDesde,
+                'to' => $fechaHasta,
+            ];
+        }
+
+        return $metadata;
     }
 }
