@@ -1,4 +1,4 @@
-{{-- Variables: $profile, $catalogs --}}
+{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false --}}
 <section class="ficha-empleados-form__section">
     <header class="ficha-empleados-form__section-head">
         <h3 class="ficha-empleados-form__section-title">Datos personales</h3>
@@ -16,7 +16,7 @@
         </div>
         <div class="form-field">
             <label class="form-label" for="birth_date">Fecha nacimiento</label>
-            <input id="birth_date" type="date" name="birth_date" class="form-input" value="{{ old('birth_date', optional($profile->birth_date)->format('Y-m-d')) }}">
+            <input id="birth_date" type="date" name="birth_date" class="form-input" value="{{ old('birth_date', optional($profile->birth_date)->format('Y-m-d')) }}" @readonly($lockIdentityFields ?? false)>
         </div>
         <div class="form-field">
             <label class="form-label" for="sex">Género</label>
@@ -105,10 +105,6 @@
                     <option value="{{ $item['code'] }}" @selected(old('cost_center_code', $profile->cost_center_code) === $item['code'])>{{ $item['code'] }} — {{ $item['name'] }}</option>
                 @endforeach
             </select>
-        </div>
-        <div class="form-field">
-            <label class="form-label" for="termination_date">Fecha retiro (desvinculado)</label>
-            <input id="termination_date" type="date" name="termination_date" class="form-input" value="{{ old('termination_date', optional($profile->termination_date)->format('Y-m-d')) }}">
         </div>
     </div>
 </section>

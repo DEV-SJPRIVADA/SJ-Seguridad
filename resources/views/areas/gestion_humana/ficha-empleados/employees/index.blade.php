@@ -229,10 +229,13 @@
                                         @else
                                             <td class="table-actions ficha-empleados-row__actions">
                                                 @if ($canManage)
+                                                    @if ($entry->isRehirePending())
+                                                        <span class="status-pill status-pill--req-en_gestion ficha-empleados-row__rehire-badge">Reingreso</span>
+                                                    @endif
                                                     <a
                                                         href="{{ route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]) }}"
                                                         class="btn btn--primary btn--sm"
-                                                    >Gestionar Empleado</a>
+                                                    >{{ $entry->isRehirePending() ? 'Gestionar reingreso' : 'Gestionar Empleado' }}</a>
                                                 @else
                                                     —
                                                 @endif

@@ -25,7 +25,6 @@ trait EmployeeFichaProfileFieldRules
             'salary' => ['nullable', 'numeric', 'min:0'],
             'hire_date' => ['nullable', 'date'],
             'contract_end_date' => ['nullable', 'date'],
-            'termination_date' => ['nullable', 'date'],
             'work_center_name' => ['nullable', 'string', 'max:150'],
             'cost_center_code' => ['nullable', 'string', 'max:50'],
             'cost_center_name' => ['nullable', 'string', 'max:150'],

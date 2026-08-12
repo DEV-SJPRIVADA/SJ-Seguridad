@@ -74,6 +74,7 @@ Invocado desde `RequisitionController::update` dentro de la misma transaccion, c
 | `view.board.gestion_humana.ficha_empleados` | Ver el tablero **Ficha empleados** en el sidebar de Gestion Humana |
 | `ficha_empleados.view` | Ver pestaña Empleados (Pendientes + En ficha), usar filtros, exportar Excel |
 | `ficha_empleados.manage` | Todo lo de `ficha_empleados.view` + `create`/`store` de empleados (alta manual y **Gestionar Empleado** desde un pendiente) |
+| `ficha_empleados.terminate` | Registrar desvinculacion formal (causal, fechas, recontratable) — cierra el vinculo activo |
 
 - `ficha_empleados.manage` **implica** `ficha_empleados.view` en `FichaEmpleadosAccessService` (no via herencia Spatie).
 - Ambos son **independientes** de `requisitions.tab.gestion`: un usuario puede tener cualquier combinacion (Gestion sin Ficha empleados, Ficha empleados sin Gestion, o ambos).
@@ -97,6 +98,7 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | POST | `/gestion-humana/ficha-empleados/empleados/importar` | `gestion-humana.ficha-empleados.employees.import` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
+| POST | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/desvincular` | `gestion-humana.ficha-empleados.employees.ficha.terminate` | `ficha_empleados.terminate` |
 | GET | `/gestion-humana/ficha-empleados/catalogos` | `gestion-humana.ficha-empleados.catalogs.index` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/catalogos/{type}` | `gestion-humana.ficha-empleados.catalogs.store` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/catalogos/{type}/{item}` | `gestion-humana.ficha-empleados.catalogs.update` | `ficha_empleados.manage` |
@@ -145,7 +147,27 @@ Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agrega
 
 ## Modelo `employee_ficha_profiles`
 
-Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date`.
+Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date` (snapshot del ultimo cierre).
+
+### `employee_ficha_employment_periods` (vinculos laborales)
+
+Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un periodo `activo` por empleado.
+
+| Campo clave | Notas |
+| --- | --- |
+| `personal_requisition_id` | Requisicion origen del vinculo (reingreso siempre por requisicion) |
+| `status` | `activo` \| `cerrado` |
+| Condiciones variables | cargo, salario, centro de costo, EPS, AFP, cliente, etc. |
+| Cierre | `termination_cause_code`, `is_rehireable`, `last_work_day`, `termination_date`, `termination_notes` |
+| Cartas (fase 2) | `termination_letter_type`, `termination_letter_path` reservados |
+
+Servicio: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService`.
+
+Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
+
+Reingreso: requisicion Contratado con cedula desvinculada **recontratable** devuelve el registro a **Pendientes** (badge Reingreso); **Gestionar reingreso** abre nuevo periodo al guardar.
+
+Catálogo **Causal desvinculacion** (`termination_cause`) en pestaña Catalogos.
 
 Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catalogos** en Ficha empleados; seed alternativo: `php artisan employee-ficha:seed-catalogs`.
 

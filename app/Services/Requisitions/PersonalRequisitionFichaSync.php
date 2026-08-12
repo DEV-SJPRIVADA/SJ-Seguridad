@@ -2,23 +2,20 @@
 
 namespace App\Services\Requisitions;
 
+use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 
 class PersonalRequisitionFichaSync
 {
+    public function __construct(
+        private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
+    ) {}
+
     /**
      * Mantiene sincronizada la entrada 1:1 de `personal_requisition_ficha_entries`
      * con el estado y los datos de contratacion capturados en la requisicion.
-     *
-     * Reglas de negocio (ver docs/briefs/FEAT-020.md #3-6):
-     * - status != contratado: si la entrada propia esta pendiente se elimina; si ya
-     *   esta en ficha se conserva intacta.
-     * - status == contratado sin duplicado: upsert normal de la entrada propia.
-     * - status == contratado con duplicado confirmado: la entrada de la otra
-     *   requisicion se reasigna a la actual (sin crear una fila nueva); si la
-     *   requisicion actual ya tenia su propia entrada, se descarta para respetar
-     *   la relacion 1:1.
      */
     public function syncOnUpdate(
         PersonalRequisition $requisition,
@@ -42,6 +39,30 @@ class PersonalRequisitionFichaSync
 
         $document = trim((string) $document);
         $fullName = trim((string) $fullName);
+
+        $existingByDocument = PersonalRequisitionFichaEntry::query()
+            ->where('hired_document', $document)
+            ->with('profile')
+            ->first();
+
+        if ($existingByDocument !== null
+            && ($ownEntry === null || $existingByDocument->id !== $ownEntry->id)
+            && $existingByDocument->moved_to_ficha_at !== null
+            && $existingByDocument->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
+            && $this->employmentPeriodService->isRehireable($existingByDocument)) {
+            if ($ownEntry !== null && $ownEntry->id !== $existingByDocument->id) {
+                $ownEntry->delete();
+            }
+
+            $existingByDocument->update([
+                'personal_requisition_id' => $requisition->id,
+                'hired_full_name' => $fullName,
+                'moved_to_ficha_at' => null,
+                'moved_to_ficha_by' => null,
+            ]);
+
+            return;
+        }
 
         $otherEntry = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', $document)

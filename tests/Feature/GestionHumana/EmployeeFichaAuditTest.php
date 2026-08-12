@@ -3,6 +3,7 @@
 namespace Tests\Feature\GestionHumana;
 
 use App\Models\AuditLog;
+use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
@@ -100,9 +101,9 @@ class EmployeeFichaAuditTest extends TestCase
         $this->assertSame('manual', $log->metadata['source']);
     }
 
-    public function test_update_ficha_status_change_writes_status_change_audit_event(): void
+    public function test_terminate_ficha_writes_status_change_audit_event(): void
     {
-        $manager = $this->managerUser();
+        $terminator = $this->terminatorUser();
         $entry = $this->createInFichaEntry('900333003', 'Status Change Audit');
         $profile = EmployeeFichaProfile::query()->create([
             'personal_requisition_ficha_entry_id' => $entry->id,
@@ -111,11 +112,22 @@ class EmployeeFichaAuditTest extends TestCase
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
             'hire_date' => now()->subYear()->toDateString(),
         ]);
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'personal_requisition_id' => $entry->personal_requisition_id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+            'hire_date' => now()->subYear()->toDateString(),
+            'opened_by' => $terminator->id,
+        ]);
 
-        $this->actingAs($manager)->patch(
-            route('gestion-humana.ficha-empleados.employees.ficha.update', $entry),
+        $this->actingAs($terminator)->post(
+            route('gestion-humana.ficha-empleados.employees.ficha.terminate', $entry),
             [
-                'termination_date' => now()->subDay()->toDateString(),
+                'termination_cause_code' => 'RENUNCIA',
+                'is_rehireable' => '1',
+                'last_work_day' => now()->subDay()->toDateString(),
+                'termination_date' => now()->toDateString(),
             ],
         )->assertRedirect();
 
@@ -196,6 +208,15 @@ class EmployeeFichaAuditTest extends TestCase
         $user = User::factory()->create(['must_change_password' => false]);
         $user->assignRole('usuario');
         $user->givePermissionTo(['ficha_empleados.view', 'ficha_empleados.manage']);
+
+        return $user;
+    }
+
+    private function terminatorUser(): User
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo(['ficha_empleados.view', 'ficha_empleados.manage', 'ficha_empleados.terminate']);
 
         return $user;
     }

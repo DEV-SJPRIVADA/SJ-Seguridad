@@ -42,6 +42,15 @@ class FichaEmpleadosAccessService
         return $user->can('ficha_empleados.manage');
     }
 
+    public function canTerminate(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('ficha_empleados.terminate');
+    }
+
     /**
      * @return array<int, string>
      */

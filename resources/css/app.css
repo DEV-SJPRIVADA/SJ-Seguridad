@@ -1500,6 +1500,75 @@ a {
     min-height: 0;
 }
 
+.ficha-empleados-form__section--history {
+    margin-bottom: 1rem;
+}
+
+.ficha-empleados-periods-table {
+    overflow-x: auto;
+}
+
+.ficha-empleados-row__rehire-badge {
+    margin-right: 0.35rem;
+    vertical-align: middle;
+}
+
+.ficha-empleados-page__title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.ficha-empleados-page__history-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--control-radius);
+    background: var(--color-surface);
+    color: var(--brand-blue);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.ficha-empleados-page__history-icon:hover {
+    background: var(--brand-blue-pale);
+    border-color: var(--color-sky);
+}
+
+.ficha-empleados-history-modal {
+    padding: 0;
+}
+
+.ficha-empleados-history-modal .ficha-empleados-periods-table {
+    padding: 0 1rem 1rem;
+    max-height: min(70vh, 520px);
+    overflow: auto;
+}
+
+.ficha-empleados-terminate-modal {
+    padding: 0;
+}
+
+.ficha-empleados-terminate-modal__form {
+    padding: 0 1rem;
+}
+
+.ficha-empleados-terminate-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid var(--color-border);
+    margin-top: 0.75rem;
+}
+
 .ficha-empleados-form .select2-container--default .select2-selection--single {
     min-height: var(--control-height-chrome);
     border: 1px solid var(--color-border-strong);

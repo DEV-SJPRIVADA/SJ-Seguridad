@@ -22,6 +22,7 @@ return [
         'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
         'ficha_empleados.view' => 'Ficha empleados: Ver lista de espera y ficha',
         'ficha_empleados.manage' => 'Ficha empleados: Agregar a ficha empleados',
+        'ficha_empleados.terminate' => 'Ficha empleados: Registrar desvinculacion de empleados',
         'archivo.view' => 'Archivo: Ver ubicacion documental de empleados',
         'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
 
@@ -300,6 +301,7 @@ return [
                         'permissions' => [
                             'ficha_empleados.view',
                             'ficha_empleados.manage',
+                            'ficha_empleados.terminate',
                         ],
                     ],
                     'archivo' => [
