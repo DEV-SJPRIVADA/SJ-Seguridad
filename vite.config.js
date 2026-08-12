@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/management-report-preview-charts.js',
                 'resources/js/purchase-request-form.js',
                 'resources/js/admin/user-permissions-form.js',
+                'resources/js/admin/user-copy-access-select.js',
             ],
             refresh: true,
         }),

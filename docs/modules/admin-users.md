@@ -10,6 +10,8 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Por defecto el listado muestra solo usuarios activos; checkbox **Mostrar usuarios inactivos** amplia la lista
 - Resumen del usuario seleccionado: ficha operativa, notas de acceso efectivo por rol y lista plana de permisos directos asignados
 - Formulario en pestanas: **Identidad**, **Acceso y permisos**, **Seguridad** (edicion)
+- **Crear usuario:** selector opcional **Copiar acceso de otro usuario** (precarga rol, permisos directos, area base y sede)
+- **Editar usuario:** accion **Aplicar acceso de otro usuario** con confirmacion (reemplaza rol y permisos directos del destino)
 - **Acceso y permisos:** layout maestro–detalle — sidebar con **Mi area base**, **Transversal** y cada area del negocio; panel derecho con subgrupos y toggles de la seleccion
 - La estructura logica sigue en tres bloques (`assigned_area`, `global_groups`, `other_areas`); la UI los navega por area via `sections.navigation`
 - Avisos de coherencia al guardar (soft warnings)
@@ -17,10 +19,11 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 ## Rutas
 
 - `GET /admin/users`
-- `GET /admin/users/create`
+- `GET /admin/users/create` (query opcional: `copy_from`, `include_area`, `include_sede`, `tab=capabilities`)
 - `POST /admin/users`
 - `GET /admin/users/{user}/edit`
 - `PUT/PATCH /admin/users/{user}`
+- `POST /admin/users/{user}/apply-access`
 
 ## Configuracion UI
 
@@ -36,6 +39,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - `UserPermissionFormBuilder` — estructura del formulario (`sections` + `sections.navigation` para sidebar)
 - `UserPermissionValidator` — avisos de coherencia (GH, Compras, Calidad, Operaciones, Comercial)
 - `UserAccessSummary` — notas de acceso efectivo en el listado
+- `UserAccessProfileService` — extraccion y aplicacion de perfil de acceso entre usuarios
 - `NavigationResolver` + `SidebarVisibilityService` — sidebar de la app con hogares canonicos (sin preview en Admin)
 
 ## Reglas de negocio
@@ -44,12 +48,15 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Tablero `view.board.gestion_humana.suministros` migrado a `view.board.compras.suministros`
 - Suministros: aprobacion = Calidad; catalogo = Compras
 - **Hogares canonicos:** no asigne `view.board.{area}.requisiciones` en multiples areas a roles transversales; use funcionalidades transversales + hogar GH/Compras (ver `docs/ACCESS_CONTROL.md`)
-- El motor Spatie no cambia; solo la presentacion en Admin y el filtro del sidebar
+- Solo `super-admin` puede copiar acceso desde o hacia usuarios con rol `super-admin`
+- La copia replica rol + permisos directos; no modifica nombre, correo, cedula ni contrasena
+- Evento de auditoria `access_copied` en cambios por **Aplicar acceso**
 
 ## Control de cambios
 
 | Version | Fecha | Descripcion |
 | --- | --- | --- |
+| 1.2 | 2026-08-12 | Copiar acceso al crear usuario y aplicar acceso desde edicion |
 | 1.1 | 2026-08-03 | Hogares canonicos del sidebar (`SidebarVisibilityService`); avisos en validador de permisos |
 
 ## Referencias

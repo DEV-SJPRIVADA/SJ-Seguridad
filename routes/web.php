@@ -216,6 +216,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('supply-sites/{supply_site}', [SupplySiteController::class, 'update'])->name('supply-sites.update');
         Route::delete('supply-sites/{supply_site}', [SupplySiteController::class, 'destroy'])->name('supply-sites.destroy');
 
+        Route::post('users/{user}/apply-access', [UserController::class, 'applyAccess'])->name('users.apply-access');
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
     });
 

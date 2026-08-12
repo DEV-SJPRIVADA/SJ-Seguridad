@@ -1372,3 +1372,81 @@ input:checked + .toggle-slider:before {
         justify-content: flex-start;
     }
 }
+
+/* Select2 — copiar / aplicar acceso de usuario */
+.copy-access-panel .select2-container,
+#apply-access-modal .select2-container {
+    width: 100% !important;
+    max-width: 100%;
+}
+
+.copy-access-panel .select2-container--default .select2-selection--single,
+#apply-access-modal .select2-container--default .select2-selection--single {
+    min-height: var(--control-height-chrome, 2.5rem);
+    border: 1px solid var(--color-border-strong, #cbd5e1);
+    border-radius: var(--control-radius, 0.5rem);
+    display: flex;
+    align-items: center;
+}
+
+.copy-access-panel .select2-container--default .select2-selection--single .select2-selection__rendered,
+#apply-access-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: var(--control-line-height, 1.4);
+    padding-left: var(--control-padding-x, 0.75rem);
+    color: var(--color-text, #0f172a);
+    font-size: var(--control-font-size, 0.875rem);
+}
+
+.copy-access-panel .select2-container--default .select2-selection--single .select2-selection__arrow,
+#apply-access-modal .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: var(--control-height-chrome, 2.5rem);
+    right: 0.5rem;
+}
+
+.copy-access-panel .select2-container--default.select2-container--focus .select2-selection--single,
+.copy-access-panel .select2-container--default.select2-container--open .select2-selection--single,
+#apply-access-modal .select2-container--default.select2-container--focus .select2-selection--single,
+#apply-access-modal .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--color-sky, #0e7490);
+    box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.12);
+}
+
+.copy-access-panel .select2-dropdown,
+#apply-access-modal .select2-dropdown {
+    border-color: var(--color-border-strong, #cbd5e1);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 10050;
+}
+
+#apply-access-modal .select2-container {
+    z-index: 10051;
+}
+
+.copy-access-panel__fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.copy-access-panel__select {
+    flex: 1 1 16rem;
+    min-width: min(100%, 16rem);
+}
+
+.copy-access-panel__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: center;
+}
+
+.copy-access-panel__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--color-text-soft);
+    cursor: pointer;
+}

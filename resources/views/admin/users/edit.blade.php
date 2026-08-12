@@ -36,9 +36,21 @@
 
     <div class="page-section admin-user-edit">
         <div class="app-container">
+            @if ($errors->has('source_user_id'))
+                <div class="notice notice--danger bottom-spaced">
+                    <p class="text-small">{{ $errors->first('source_user_id') }}</p>
+                </div>
+            @endif
+
             @if (session('status') === 'user-updated')
                 <div class="notice notice--success bottom-spaced">
                     Usuario actualizado correctamente.
+                </div>
+            @endif
+
+            @if (session('status') === 'access-applied')
+                <div class="notice notice--success bottom-spaced">
+                    Acceso aplicado correctamente desde {{ session('access_copy_source_name') }}.
                 </div>
             @endif
 
@@ -65,6 +77,7 @@
                     'method' => 'PATCH',
                     'selectedPermissions' => old('permissions', $selectedPermissions),
                     'selectedRole' => old('role', $selectedRole),
+                    'copyCandidates' => $copyCandidates,
                     'user' => $user,
                 ])
             </div>

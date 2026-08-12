@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ApplyUserAccessRequest;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Mail\UserWelcomeMail;
 use App\Models\SupplySite;
 use App\Models\User;
+use App\Services\Admin\UserAccessProfileService;
 use App\Services\Admin\UserAccessSummary;
 use App\Services\Admin\UserManagementAuditService;
 use App\Services\Admin\UserPermissionFormBuilder;
@@ -26,6 +28,7 @@ class UserController extends Controller
     public function __construct(
         private readonly UserPermissionFormBuilder $permissionFormBuilder,
         private readonly UserPermissionValidator $permissionValidator,
+        private readonly UserAccessProfileService $accessProfileService,
         private readonly UserAccessSummary $accessSummary,
         private readonly UserManagementAuditService $userManagementAuditService,
     ) {}
@@ -81,14 +84,26 @@ class UserController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $copyContext = $this->resolveCopyContext($request);
+        $copyProfile = $copyContext['profile'] ?? null;
+        $copySource = $copyContext['source'] ?? null;
+
         return view('admin.users.create', [
             'areas' => config('access.areas', []),
-            'sites' => $this->sitesForForm(),
+            'sites' => $this->sitesForForm($copySource),
             'allSites' => SupplySite::query()->ordered()->withCount(['users', 'supplyRequests'])->get(),
             'roles' => $this->roles(),
             'permissionForm' => $this->permissionFormBuilder->build(),
+            'copyCandidates' => $this->accessProfileService->copyCandidates(actor: $request->user()),
+            'copyFromUser' => $copyContext['source'] ?? null,
+            'copyDefaults' => $copyProfile,
+            'copyError' => $request->filled('copy_from') && $copyContext === []
+                ? 'No se pudo cargar el acceso del usuario seleccionado.'
+                : null,
+            'selectedPermissions' => old('permissions', $copyProfile['permissions'] ?? []),
+            'selectedRole' => old('role', $copyProfile['role'] ?? null),
         ]);
     }
 
@@ -136,8 +151,10 @@ class UserController extends Controller
             ->with('permission_warnings', $warnings);
     }
 
-    public function edit(User $user): View
+    public function edit(Request $request, User $user): View
     {
+        $user->load(['roles', 'permissions']);
+
         return view('admin.users.edit', [
             'areas' => config('access.areas', []),
             'sites' => $this->sitesForForm($user),
@@ -146,8 +163,58 @@ class UserController extends Controller
             'roles' => $this->roles($user),
             'selectedPermissions' => $user->permissions->pluck('name')->all(),
             'selectedRole' => old('role', $user->roles->pluck('name')->first()),
-            'user' => $user->load(['roles', 'permissions']),
+            'user' => $user,
+            'copyCandidates' => $this->accessProfileService->copyCandidates($user, $request->user()),
         ]);
+    }
+
+    public function applyAccess(ApplyUserAccessRequest $request, User $user): RedirectResponse
+    {
+        $source = User::query()
+            ->with(['roles', 'permissions'])
+            ->findOrFail($request->integer('source_user_id'));
+
+        $includeArea = $request->boolean('include_area');
+        $includeSede = $request->boolean('include_sede');
+
+        $user->load(['roles', 'permissions']);
+        $beforeRole = $this->userManagementAuditService->captureRole($user);
+        $beforePermissions = $this->userManagementAuditService->captureDirectPermissions($user);
+
+        DB::transaction(function () use ($request, $user, $source, $includeArea, $includeSede): void {
+            $this->accessProfileService->applyToUser(
+                target: $user,
+                source: $source,
+                actor: $request->user(),
+                includeArea: $includeArea,
+                includeSede: $includeSede,
+            );
+        });
+
+        $user->refresh();
+        $user->load(['roles', 'permissions']);
+
+        $newRole = $this->userManagementAuditService->captureRole($user);
+        $newPermissions = $this->userManagementAuditService->captureDirectPermissions($user);
+
+        $this->userManagementAuditService->logAccessCopied(
+            target: $user,
+            source: $source,
+            beforeRole: $beforeRole,
+            beforePermissions: $beforePermissions,
+            newRole: $newRole,
+            newPermissions: $newPermissions,
+            includeArea: $includeArea,
+            includeSede: $includeSede,
+        );
+
+        $warnings = $this->permissionValidator->warnings($user->area_key, $newPermissions);
+
+        return redirect()
+            ->route('admin.users.edit', $user)
+            ->with('status', 'access-applied')
+            ->with('access_copy_source_name', $source->name)
+            ->with('permission_warnings', $warnings);
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
@@ -201,6 +268,39 @@ class UserController extends Controller
             ->route('admin.users.edit', $user)
             ->with('status', 'user-updated')
             ->with('permission_warnings', $warnings);
+    }
+
+    /**
+     * @return array{source?: User, profile?: array{role: string, area_key: ?string, sede_id: ?int, permissions: array<int, string>}}|array{}
+     */
+    private function resolveCopyContext(Request $request): array
+    {
+        $copyFromId = $request->integer('copy_from');
+
+        if ($copyFromId <= 0) {
+            return [];
+        }
+
+        $source = User::query()
+            ->with(['roles', 'permissions'])
+            ->find($copyFromId);
+
+        if ($source === null || $request->user() === null) {
+            return [];
+        }
+
+        if (! $this->accessProfileService->canCopyFrom($request->user(), $source)) {
+            return [];
+        }
+
+        return [
+            'source' => $source,
+            'profile' => $this->accessProfileService->extractProfile(
+                $source,
+                $request->boolean('include_area', true),
+                $request->boolean('include_sede', true),
+            ),
+        ];
     }
 
     private function roles(?User $forUser = null)
