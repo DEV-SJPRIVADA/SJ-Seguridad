@@ -1499,12 +1499,20 @@ a {
     max-width: 100%;
 }
 
+/* Scroll contenido: overrides definitivos en layouts/app.blade.php (inline, después de Vite) */
 .app-shell:has(.ficha-empleados-page--form) {
     overflow: hidden;
 }
 
-.app-workspace:has(.ficha-empleados-page--form) {
+.app-frame:has(.ficha-empleados-page--form) {
     min-height: 0;
+    overflow: hidden;
+}
+
+.app-workspace:has(.ficha-empleados-page--form) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .app-main:has(.ficha-empleados-page--form) {
@@ -1512,32 +1520,6 @@ a {
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
-}
-
-@media (max-width: 1024px) {
-    .app-shell:has(.ficha-empleados-page--form) {
-        height: auto !important;
-        min-height: 0 !important;
-        overflow: visible !important;
-    }
-
-    .app-frame:has(.ficha-empleados-page--form) {
-        flex: none !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-
-    .app-workspace:has(.ficha-empleados-page--form) {
-        flex: none !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-
-    .app-main:has(.ficha-empleados-page--form) {
-        flex: none !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
 }
 
 .ficha-empleados-form__section--history {

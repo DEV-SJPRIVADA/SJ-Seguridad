@@ -758,6 +758,72 @@
                 height: 1.25rem !important;
                 display: inline-block !important;
             }
+
+            /* Ficha empleados — crear/editar: scroll solo en .app-main, no en toda la página */
+            html:has(.ficha-empleados-page--form),
+            body:has(.ficha-empleados-page--form) {
+                height: 100% !important;
+                overflow: hidden !important;
+            }
+
+            .app-shell:has(.ficha-empleados-page--form) {
+                height: 100vh !important;
+                height: 100dvh !important;
+                min-height: 0 !important;
+                max-height: 100dvh !important;
+                overflow: hidden !important;
+            }
+
+            .app-frame:has(.ficha-empleados-page--form) {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            .app-workspace:has(.ficha-empleados-page--form) {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            .app-main:has(.ficha-empleados-page--form) {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+
+            @media (max-width: 1024px) {
+                .app-shell:has(.ficha-empleados-page--form) {
+                    height: 100vh !important;
+                    height: 100dvh !important;
+                    min-height: 0 !important;
+                    max-height: 100dvh !important;
+                    overflow: hidden !important;
+                }
+
+                .app-frame:has(.ficha-empleados-page--form) {
+                    flex: 1 1 auto !important;
+                    min-height: 0 !important;
+                    overflow: hidden !important;
+                    height: auto !important;
+                }
+
+                .app-workspace:has(.ficha-empleados-page--form) {
+                    flex: 1 1 auto !important;
+                    min-height: 0 !important;
+                    overflow: hidden !important;
+                    height: auto !important;
+                }
+
+                .app-main:has(.ficha-empleados-page--form) {
+                    flex: 1 1 auto !important;
+                    min-height: 0 !important;
+                    overflow-x: hidden !important;
+                    overflow-y: auto !important;
+                    height: auto !important;
+                }
+            }
         </style>
 
         <script>
