@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
-        <div class="app-container ficha-empleados-page__workspace-header">
+        <div class="app-container ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
             <div class="panel-heading-row">
                 <h2 class="panel-title panel-title--page">Ficha — {{ $entry->hired_full_name }}</h2>
                 <p class="panel-text">
@@ -16,7 +16,7 @@
         <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
     @endpush
 
-    <div class="page-section ficha-empleados-page">
+    <div class="page-section ficha-empleados-page ficha-empleados-page--form">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success ficha-empleados-page__alert">{{ session('status') }}</div>

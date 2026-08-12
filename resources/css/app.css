@@ -1475,6 +1475,31 @@ a {
     margin: 0.5rem;
 }
 
+/* Ficha empleados — formulario crear/editar: ancho contenido y sin hueco bajo el panel */
+.ficha-empleados-page--form > .app-container {
+    width: min(920px, calc(100% - 2rem));
+    max-width: 920px;
+}
+
+.ficha-empleados-page__workspace-header--form {
+    width: min(920px, calc(100% - 2rem));
+    max-width: 920px;
+}
+
+.ficha-empleados-page--form .ficha-empleados-form .panel__body--compact {
+    padding: 0.75rem 1rem;
+}
+
+.ficha-empleados-page--form .ficha-empleados-form .select2-container {
+    width: 100% !important;
+    max-width: 100%;
+}
+
+.app-main:has(.ficha-empleados-page--form) {
+    flex: 0 1 auto;
+    min-height: 0;
+}
+
 .ficha-empleados-form .select2-container--default .select2-selection--single {
     min-height: var(--control-height-chrome);
     border: 1px solid var(--color-border-strong);
