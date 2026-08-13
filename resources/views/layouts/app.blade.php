@@ -77,6 +77,30 @@
                     };
                 }
 
+                function revealDataTableWrap($table) {
+                    var $wrap = $table.closest('.data-table-wrap--booting');
+
+                    if (!$wrap.length) {
+                        return;
+                    }
+
+                    $wrap.removeClass('data-table-wrap--booting');
+                    $wrap.find('.data-table-wrap__loader').attr('aria-busy', 'false');
+                }
+
+                function bindDataTableLoader($table) {
+                    if (!$table.closest('.data-table-wrap--booting').length) {
+                        return;
+                    }
+
+                    $table.one('init.dt', function () {
+                        revealDataTableWrap($table);
+                    });
+                    window.setTimeout(function () {
+                        revealDataTableWrap($table);
+                    }, 8000);
+                }
+
                 function setupManageTableScroll($table, api) {
                     var $shell = $table.closest('.req-manage-shell');
                     var $wrapper = $table.closest('.dataTables_wrapper');
@@ -134,8 +158,17 @@
                 }
 
                 $('.js-datatable').each(function() {
-                    if (!$.fn.DataTable.isDataTable(this)) {
-                        var config = {
+                    var $tableEl = $(this);
+
+                    if ($.fn.DataTable.isDataTable(this)) {
+                        revealDataTableWrap($tableEl);
+
+                        return;
+                    }
+
+                    bindDataTableLoader($tableEl);
+
+                    var config = {
                             language: {
                                 url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
                             },
@@ -186,7 +219,7 @@
                             config.autoWidth = false;
                         }
 
-                        var $table = $(this);
+                        var $table = $tableEl;
                         var api = $table.DataTable(config);
 
                         if ($table.data('dt-body-scroll')) {
@@ -215,7 +248,6 @@
                             api.on('draw.dt-scroll-sync', adjustScrollTable);
                             $(window).on('resize orientationchange', debounceScrollAdjust);
                         }
-                    }
                 });
 
                 $('.js-datatable-permissions').each(function() {

@@ -38,6 +38,10 @@
     }
 @endphp
 
+@if ($compactCreate && $copyCandidates->isNotEmpty())
+    @include('admin.users.partials.copy-access-create')
+@endif
+
 <form method="POST" action="{{ $action }}" class="user-form panel__body {{ $compactCreate ? 'user-form--create' : '' }}" id="user-permissions-form">
     @csrf
     @if ($method !== 'POST')
@@ -94,10 +98,6 @@
         @endif
 
         <div id="section-user" class="user-form__section" @if ($initialTab !== 'section-user') hidden @endif>
-            @if ($compactCreate && $copyCandidates->isNotEmpty())
-                @include('admin.users.partials.copy-access-create')
-            @endif
-
             @unless ($compactCreate)
                 <div class="section-header">
                     <h3 class="section-header__title">Datos generales</h3>

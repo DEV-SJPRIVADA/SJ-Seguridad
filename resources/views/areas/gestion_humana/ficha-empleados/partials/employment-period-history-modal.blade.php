@@ -1,4 +1,4 @@
-{{-- Variables: $employmentHistory --}}
+{{-- Variables: $employmentHistory, $canGenerateLetters, $supportedLetterCauses --}}
 @if ($employmentHistory->isNotEmpty())
     <x-modal name="ficha-employment-history" maxWidth="2xl">
         <div class="modal-card ficha-empleados-history-modal">
@@ -36,6 +36,9 @@
                             <th>Desvinculacion</th>
                             <th>Causal</th>
                             <th>Recontratable</th>
+                            @if ($canGenerateLetters ?? false)
+                                <th>Cartas</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -63,6 +66,22 @@
                                         No
                                     @endif
                                 </td>
+                                @if ($canGenerateLetters ?? false)
+                                    <td>
+                                        @if (
+                                            ! $period->isActive()
+                                            && in_array((string) $period->termination_cause_code, $supportedLetterCauses ?? [], true)
+                                        )
+                                            @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
+                                                'period' => $period,
+                                                'canGenerateLetters' => true,
+                                                'compact' => true,
+                                            ])
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>

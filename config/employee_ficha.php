@@ -193,4 +193,50 @@ return [
         ['code' => 'MUTUO_ACUERDO', 'name' => 'Terminacion por mutuo acuerdo', 'sort_order' => 4],
         ['code' => 'PERIODO_PRUEBA', 'name' => 'No supera periodo de prueba', 'sort_order' => 5],
     ],
+
+    /**
+     * Causales con generacion de cartas habilitada en v1.
+     *
+     * @var list<string>
+     */
+    'termination_letter_supported_causes' => [
+        'RENUNCIA',
+    ],
+
+    'termination_letter_signatory' => [
+        'name' => env('FICHA_LETTER_SIGNATORY_NAME', 'Directora de Gestion Humana'),
+        'title' => env('FICHA_LETTER_SIGNATORY_TITLE', 'Directora de Gestion Humana'),
+    ],
+
+    /**
+     * Paquetes de documentos por causal (document_key + etiqueta).
+     *
+     * @var array<string, list<array{key: string, label: string, sort: int}>>
+     */
+    'termination_letter_packs' => [
+        'RENUNCIA' => [
+            ['key' => 'aceptacion_renuncia', 'label' => 'Aceptacion Carta de Renuncia', 'sort' => 1],
+            ['key' => 'autorizacion_examen_retiro', 'label' => 'Autorizacion examen de retiro', 'sort' => 2],
+            ['key' => 'certificado_laboral', 'label' => 'Certificado Laboral', 'sort' => 3],
+        ],
+    ],
+
+    /**
+     * Placeholders soportados en plantillas Word ([NOMBRE], [CEDULA], ...).
+     *
+     * @var array<string, string>
+     */
+    'termination_letter_placeholders' => [
+        'FECHA' => 'Fecha de la carta',
+        'NOMBRE' => 'Nombre completo del empleado',
+        'CEDULA' => 'Documento de identidad',
+        'CARGO' => 'Cargo',
+        'CIUDAD' => 'Ciudad (centro de trabajo o residencia)',
+        'FECHA_TERMINACION' => 'Ultimo dia de labores',
+        'FECHA_INGRESO' => 'Fecha de ingreso',
+        'SALARIO' => 'Salario base',
+        'TIPO_CONTRATO' => 'Tipo de contrato',
+        'FIRMA' => 'Nombre del firmante GH',
+        'CARGO_FIRMA' => 'Cargo del firmante GH',
+    ],
 ];

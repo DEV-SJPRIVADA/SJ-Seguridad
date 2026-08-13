@@ -55,6 +55,25 @@ class AdminUserCopyAccessTest extends TestCase
         $response->assertSee('selected', false);
     }
 
+    public function test_create_form_does_not_nest_copy_access_form_inside_post_form(): void
+    {
+        $admin = $this->adminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.users.create'));
+
+        $response->assertOk();
+
+        $html = $response->getContent();
+        $mainFormStart = strpos($html, 'id="user-permissions-form"');
+        $mainFormEnd = strpos($html, '</form>', $mainFormStart);
+
+        $this->assertNotFalse($mainFormStart);
+        $this->assertNotFalse($mainFormEnd);
+
+        $mainFormChunk = substr($html, $mainFormStart, $mainFormEnd - $mainFormStart);
+        $this->assertStringNotContainsString('<form', $mainFormChunk);
+    }
+
     public function test_admin_can_apply_access_from_one_user_to_another(): void
     {
         $admin = $this->adminUser();
