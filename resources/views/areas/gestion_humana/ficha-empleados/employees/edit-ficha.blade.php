@@ -80,6 +80,12 @@
 
                 <div class="panel__footer panel__footer--actions ficha-empleados-form__footer">
                     <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary">Volver</a>
+                    @if ($canGenerateLetters ?? false)
+                        @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
+                            'period' => $letterPeriod,
+                            'canGenerateLetters' => $canGenerateLetters,
+                        ])
+                    @endif
                     @if ($canTerminate ?? false)
                         <button
                             type="button"
@@ -101,6 +107,8 @@
 
             @include('areas.gestion_humana.ficha-empleados.partials.employment-period-history-modal', [
                 'employmentHistory' => $employmentHistory,
+                'canGenerateLetters' => $canGenerateLetters ?? false,
+                'supportedLetterCauses' => config('employee_ficha.termination_letter_supported_causes', []),
             ])
         </div>
     </div>

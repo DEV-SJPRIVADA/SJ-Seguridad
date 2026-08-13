@@ -34,7 +34,7 @@
         <div class="copy-access-panel__fields">
             <div class="form-field copy-access-panel__select">
                 <label class="form-label" for="copy-from-user">Usuario origen</label>
-                <select name="copy_from" id="copy-from-user" class="form-select js-copy-access-select" required>
+                <select name="copy_from" id="copy-from-user" class="form-select js-copy-access-select">
                     <option value="">Seleccione un usuario</option>
                     @foreach ($copyCandidates as $candidate)
                         <option value="{{ $candidate->id }}" @selected($selectedCopyFrom === $candidate->id)>

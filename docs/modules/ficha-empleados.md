@@ -159,9 +159,23 @@ Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un p
 | `status` | `activo` \| `cerrado` |
 | Condiciones variables | cargo, salario, centro de costo, EPS, AFP, cliente, etc. |
 | Cierre | `termination_cause_code`, `is_rehireable`, `last_work_day`, `termination_date`, `termination_notes` |
-| Cartas (fase 2) | `termination_letter_type`, `termination_letter_path` reservados |
+| Cartas generadas | `termination_letter_type` (`zip`), `termination_letter_path` (ZIP en disco privado) |
 
-Servicio: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService`.
+Servicio periodos: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService`.
+
+## Cartas de desvinculacion Word (FEAT-027)
+
+- **V1:** causal `RENUNCIA` — paquete de 3 documentos Word en ZIP (aceptacion, autorizacion examen retiro, certificado laboral).
+- Plantillas maestras en tabla `termination_letter_document_templates` (admin en **Catalogos → Causal desvinculacion**).
+- Placeholders en corchetes: `[NOMBRE]`, `[CEDULA]`, `[FECHA_TERMINACION]`, etc. — ver `config/employee_ficha.php` → `termination_letter_placeholders`.
+- Firmante GH: `termination_letter_signatory` (env `FICHA_LETTER_SIGNATORY_NAME` / `FICHA_LETTER_SIGNATORY_TITLE`).
+- Dependencia: `phpoffice/phpword` (`TemplateProcessor` con `setMacroChars('[', ']')`).
+- Servicios: `App\Services\GestionHumana\TerminationLetter\*`.
+- Controlador: `TerminationLetterController`.
+- Rutas empleados: `POST .../periodos/{period}/cartas/generar`, `GET .../periodos/{period}/cartas/descargar` — permiso `ficha_empleados.terminate`.
+- Rutas catalogos: subir/descargar/eliminar plantilla por `causeCode` + `documentKey` — permiso `ficha_empleados.manage`.
+- Audit: `termination_letter_pack` (generate/download), `termination_letter_template` (upload/delete).
+- Tests: `tests/Feature/GestionHumana/TerminationLetterPackTest.php`.
 
 Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
 

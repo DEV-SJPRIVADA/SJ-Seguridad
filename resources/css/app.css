@@ -681,64 +681,66 @@ a {
     padding: 0.65rem 0.85rem !important;
 }
 
-.ficha-empleados-filters__head {
-    margin-bottom: 0.5rem;
-    gap: 0.5rem;
-}
-
-.ficha-empleados-filters__head-actions {
+.ficha-empleados-filters__bar {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.75rem 1rem;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
-.ficha-empleados-filters__form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.ficha-empleados-filters__toolbar {
-    gap: 0.75rem 1.25rem !important;
-}
-
-@media (min-width: 1280px) {
-    .ficha-empleados-filters__toolbar {
-        grid-template-columns: minmax(0, 1fr) auto;
-    }
+.ficha-empleados-filters__search {
+    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .ficha-empleados-filters__search-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
     flex-wrap: nowrap;
 }
 
 .ficha-empleados-filters__search-group .form-input {
-    flex: 1 1 auto;
-    min-width: 0;
+    width: 14rem;
+    min-width: 9rem;
+    flex: 0 1 14rem;
+    height: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
 }
 
 .ficha-empleados-filters__search-group .btn {
     flex-shrink: 0;
+    min-height: var(--control-height-chrome);
 }
 
-.ficha-empleados-filters__status-col {
-    width: auto;
+.ficha-empleados-filters__status {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ficha-empleados-page .ficha-empleados-filters__status .req-manage-filters__status-label {
+    margin: 0;
     flex: 0 0 auto;
-    align-self: flex-end;
+    white-space: nowrap;
 }
 
-.ficha-empleados-filters__status-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 2rem;
+.ficha-empleados-page .ficha-empleados-filters__status .req-manage-filters__pills--scroll {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.ficha-empleados-filters__employment-filters {
+.ficha-empleados-filters__actions {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.35rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    margin-left: auto;
 }
 
 .ficha-empleados-filters__pending-link {
@@ -777,12 +779,49 @@ a {
 }
 
 .ficha-empleados-filters__pills {
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: auto;
 }
 
 .ficha-empleados-filters__meta {
     margin-top: 0.5rem !important;
+}
+
+@media (max-width: 1100px) {
+    .ficha-empleados-filters__bar {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .ficha-empleados-filters__actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 768px) {
+    .ficha-empleados-filters__search-group {
+        flex-direction: row !important;
+    }
+
+    .ficha-empleados-filters__search-group .form-input {
+        flex: 1 1 auto;
+        width: auto;
+    }
+
+    .ficha-empleados-filters__search-group .btn {
+        width: auto !important;
+    }
+
+    .ficha-empleados-filters__search {
+        flex: 1 1 100%;
+    }
+
+    .ficha-empleados-filters__status {
+        flex: 1 1 100%;
+    }
 }
 
 .ficha-empleados-filters__bulk-icon {
@@ -1147,16 +1186,30 @@ a {
     margin-top: 1rem;
 }
 
-@media (min-width: 768px) {
-    .ficha-empleados-filters__toolbar {
-        display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-        align-items: end;
-    }
-}
-
 .ficha-empleados-page__table-wrap {
     margin-top: 0.5rem;
+}
+
+.ficha-empleados-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.archivo-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.archivo-page__table-wrap {
+    margin-top: 0.5rem;
+}
+
+.archivo-page__search-col {
+    max-width: 50%;
+}
+
+@media (max-width: 767px) {
+    .archivo-page__search-col {
+        max-width: 100%;
+    }
 }
 
 .archivo-page__alert {
@@ -1473,6 +1526,59 @@ a {
 
 .ficha-empleados-form__footer .btn {
     margin: 0.5rem;
+}
+
+.ficha-empleados-letter-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ficha-empleados-letter-actions--compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+}
+
+.ficha-empleados-letter-actions__form {
+    display: inline;
+    margin: 0;
+}
+
+.ficha-empleados-letter-templates {
+    margin-top: 1rem;
+}
+
+.ficha-empleados-letter-templates__placeholders {
+    margin-bottom: 0.75rem;
+}
+
+.ficha-empleados-letter-templates__placeholder-list {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+    font-size: 0.85rem;
+}
+
+.ficha-empleados-letter-templates__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.ficha-empleados-letter-templates__upload-form {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.ficha-empleados-letter-templates__upload-form .form-input--sm {
+    max-width: 11rem;
+    padding: 0.25rem 0.4rem;
+    font-size: 0.75rem;
 }
 
 /* Ficha empleados — formulario crear/editar: ancho contenido y scroll contenido */
@@ -3866,6 +3972,51 @@ a {
 
 .data-table-wrap {
     overflow-x: auto;
+    position: relative;
+}
+
+.data-table-wrap--booting {
+    min-height: 14rem;
+}
+
+.data-table-wrap--booting > table,
+.data-table-wrap--booting > .dataTables_wrapper {
+    visibility: hidden;
+}
+
+.data-table-wrap__loader {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 14rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.92);
+    pointer-events: none;
+}
+
+.data-table-wrap--booting .data-table-wrap__loader {
+    display: flex;
+}
+
+.data-table-wrap__spinner {
+    display: inline-block;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 2px solid rgba(0, 51, 102, 0.15);
+    border-top-color: var(--brand-blue);
+    border-radius: 999px;
+    animation: ficha-import-spin 0.75s linear infinite;
+}
+
+.data-table-wrap__loader-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
 }
 
 .data-table {

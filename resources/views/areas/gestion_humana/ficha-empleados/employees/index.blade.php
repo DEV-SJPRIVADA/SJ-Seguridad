@@ -39,7 +39,7 @@
             : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => 'pendientes', 'employment_status' => null]));
     @endphp
 
-    <div class="page-section ficha-empleados-page">
+    <div class="page-section ficha-empleados-page req-manage-page">
         <div class="app-container">
             @if (session('status'))
                 @php
@@ -65,14 +65,59 @@
             @endif
 
             <div class="panel ficha-empleados-panel">
-                <div class="panel__body panel__body--compact">
+                <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-filters ficha-empleados-filters">
-                        <div class="req-manage-filters__head ficha-empleados-filters__head">
-                            <div class="panel-heading-row panel-heading-row--wrap">
-                                <h3 class="panel-title">Listado de empleados</h3>
-                                <p class="panel-text">Cedula, nombre o codigo de requisicion</p>
+                        <div class="ficha-empleados-filters__bar">
+                            <form method="GET" class="ficha-empleados-filters__search">
+                                @if ($currentEstado !== 'en_ficha')
+                                    <input type="hidden" name="estado" value="{{ $currentEstado }}">
+                                @endif
+                                @if ($employmentStatusQueryParam !== null)
+                                    <input type="hidden" name="employment_status" value="{{ $employmentStatusQueryParam }}">
+                                @endif
+                                <label class="sr-only" for="ficha-search-input">Buscar</label>
+                                <div class="ficha-empleados-filters__search-group">
+                                    <input
+                                        id="ficha-search-input"
+                                        type="search"
+                                        name="q"
+                                        class="form-input"
+                                        value="{{ $filters['q'] }}"
+                                        placeholder="Cedula, nombre o codigo de requisicion"
+                                    >
+                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
+                                </div>
+                            </form>
+
+                            <div class="ficha-empleados-filters__status">
+                                <a
+                                    href="{{ $pendingHref }}"
+                                    class="ficha-empleados-filters__pending-link {{ $pendingActive ? 'is-active' : '' }}"
+                                    title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
+                                    aria-label="Pendientes: {{ number_format($pendingCount) }}"
+                                >
+                                    <x-ri-pass-pending-fill :size="24" />
+                                    <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
+                                </a>
+
+                                @if ($currentEstado === 'en_ficha')
+                                    <p class="req-manage-filters__status-label">Estado</p>
+                                    <div class="req-manage-filters__pills req-manage-filters__pills--scroll ficha-empleados-filters__pills">
+                                        <a
+                                            href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => 'todos'])) }}"
+                                            class="req-manage-filters__pill {{ $employmentStatusMode === 'todos' ? 'is-active' : '' }}"
+                                        >Todos</a>
+                                        @foreach ($employmentStatusLabels as $statusKey => $statusLabel)
+                                            <a
+                                                href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => $statusKey])) }}"
+                                                class="req-manage-filters__pill status-pill--ficha-{{ $statusKey }} {{ ($statusKey === 'activo' && in_array($employmentStatusMode, ['activo', 'default_activo'], true)) || $employmentStatusMode === $statusKey ? 'is-active' : '' }}"
+                                            >{{ $statusLabel }}</a>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
-                            <div class="ficha-empleados-filters__head-actions">
+
+                            <div class="ficha-empleados-filters__actions">
                                 @if ($canManage)
                                     <a href="{{ route('gestion-humana.ficha-empleados.employees.create') }}" class="btn btn--primary btn--sm">Nuevo empleado</a>
                                 @endif
@@ -104,61 +149,6 @@
                             </div>
                         </div>
 
-                        <div class="req-manage-filters__toolbar ficha-empleados-filters__toolbar">
-                            <form method="GET" class="ficha-empleados-filters__form req-manage-filters__search-col">
-                                @if ($currentEstado !== 'en_ficha')
-                                    <input type="hidden" name="estado" value="{{ $currentEstado }}">
-                                @endif
-                                @if ($employmentStatusQueryParam !== null)
-                                    <input type="hidden" name="employment_status" value="{{ $employmentStatusQueryParam }}">
-                                @endif
-                                <label class="req-manage-filters__label" for="ficha-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group ficha-empleados-filters__search-group">
-                                    <input
-                                        id="ficha-search-input"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="Cedula, nombre o codigo de requisicion"
-                                    >
-                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
-                                </div>
-                            </form>
-
-                            <div class="req-manage-filters__status-col ficha-empleados-filters__status-col">
-                                <div class="ficha-empleados-filters__status-row">
-                                    <a
-                                        href="{{ $pendingHref }}"
-                                        class="ficha-empleados-filters__pending-link {{ $pendingActive ? 'is-active' : '' }}"
-                                        title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
-                                        aria-label="Pendientes: {{ number_format($pendingCount) }}"
-                                    >
-                                        <x-ri-pass-pending-fill :size="24" />
-                                        <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
-                                    </a>
-
-                                    @if ($currentEstado === 'en_ficha')
-                                        <div class="ficha-empleados-filters__employment-filters">
-                                            <p class="req-manage-filters__status-label">Estado</p>
-                                            <div class="req-manage-filters__pills ficha-empleados-filters__pills">
-                                                <a
-                                                    href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => 'todos'])) }}"
-                                                    class="req-manage-filters__pill {{ $employmentStatusMode === 'todos' ? 'is-active' : '' }}"
-                                                >Todos</a>
-                                                @foreach ($employmentStatusLabels as $statusKey => $statusLabel)
-                                                    <a
-                                                        href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => $statusKey])) }}"
-                                                        class="req-manage-filters__pill status-pill--ficha-{{ $statusKey }} {{ ($statusKey === 'activo' && in_array($employmentStatusMode, ['activo', 'default_activo'], true)) || $employmentStatusMode === $statusKey ? 'is-active' : '' }}"
-                                                    >{{ $statusLabel }}</a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
                         <p class="req-manage-filters__meta ficha-empleados-filters__meta">
                             <strong>{{ number_format($entries->count()) }}</strong>
                             {{ $entries->count() === 1 ? 'registro' : 'registros' }}
@@ -171,8 +161,15 @@
                         </p>
                     </div>
 
-                    <div class="data-table-wrap ficha-empleados-page__table-wrap">
-                        <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
+                    <div class="data-table-wrap req-manage-shell__table ficha-empleados-page__table-wrap data-table-wrap--booting">
+                        @include('partials.data-table-loader')
+                        <table
+                            class="data-table js-datatable"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                            style="width:100%"
+                        >
                             <thead>
                                 <tr>
                                     <th>Cedula</th>

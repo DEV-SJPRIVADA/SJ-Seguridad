@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\StorePayrollCatalogItemRequest;
 use App\Http\Requests\GestionHumana\UpdatePayrollCatalogItemRequest;
 use App\Models\PayrollCatalogItem;
+use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Traits\HasFichaEmpleadosTabs;
@@ -27,6 +28,8 @@ class FichaEmpleadosCatalogController extends Controller
 
         return view('areas.gestion_humana.ficha-empleados.catalogs.index', [
             'catalogs' => $this->catalogService->catalogsForAdmin(),
+            'terminationLetterTemplates' => TerminationLetterDocumentTemplate::query()->ordered()->get()->groupBy('termination_cause_code'),
+            'terminationLetterPlaceholders' => config('employee_ficha.termination_letter_placeholders', []),
             'subTabs' => $this->getFichaEmpleadosSubTabs('catalogos'),
         ]);
     }

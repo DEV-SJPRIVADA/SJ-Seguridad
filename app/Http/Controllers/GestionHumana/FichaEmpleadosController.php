@@ -11,6 +11,7 @@ use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\TerminateEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
+use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
@@ -27,6 +28,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -444,12 +446,16 @@ class FichaEmpleadosController extends Controller
         $fichaEntry->load(['requisition.position', 'requisition.city', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
+        $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
+        $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
             'profile' => $profile->fresh(),
             'activePeriod' => $activePeriod,
-            'employmentHistory' => $this->employmentPeriodService->historyForEntry($fichaEntry),
+            'employmentHistory' => $employmentHistory,
+            'letterPeriod' => $letterPeriod,
+            'canGenerateLetters' => $this->canGenerateLetters($letterPeriod),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
@@ -687,6 +693,29 @@ class FichaEmpleadosController extends Controller
     private function canTerminate(): bool
     {
         return $this->fichaEmpleadosAccess->canTerminate(auth()->user());
+    }
+
+    /**
+     * @param  Collection<int, EmployeeFichaEmploymentPeriod>  $employmentHistory
+     */
+    private function resolveLetterPeriod(Collection $employmentHistory, EmployeeFichaProfile $profile): ?EmployeeFichaEmploymentPeriod
+    {
+        if ($profile->employment_status !== EmployeeFichaProfile::STATUS_DESVINCULADO) {
+            return null;
+        }
+
+        $supportedCauses = config('employee_ficha.termination_letter_supported_causes', []);
+
+        return $employmentHistory
+            ->first(function (EmployeeFichaEmploymentPeriod $period) use ($supportedCauses): bool {
+                return $period->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO
+                    && in_array((string) $period->termination_cause_code, $supportedCauses, true);
+            });
+    }
+
+    private function canGenerateLetters(?EmployeeFichaEmploymentPeriod $letterPeriod): bool
+    {
+        return $this->canTerminate() && $letterPeriod !== null;
     }
 
     private function canExportArchive(): bool

@@ -83,6 +83,18 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 3. Complete causal, si es recontratable, ultimo dia de trabajo y fecha de desvinculacion.
 4. Al confirmar, el vinculo activo se cierra y el empleado queda **desvinculado** (no sale en export masivos sin rango de fechas).
 
+### Generar cartas de desvinculacion (Renuncia)
+
+1. Tras desvincular por causal **Renuncia voluntaria**, abra la ficha del empleado.
+2. Pulse **Generar cartas** (permiso de desvincular). El sistema descarga un **ZIP** con 3 Word editables:
+   - Aceptacion Carta de Renuncia
+   - Autorizacion examen de retiro
+   - Certificado Laboral
+3. Si ya genero el paquete, use **Descargar cartas** o **Regenerar cartas** (reemplaza el ZIP anterior).
+4. Tambien puede generar/descargar desde el **Historial de vinculos** (icono historial en la ficha).
+
+**Plantillas (administrador de catalogos):** en **Catalogos → Causal desvinculacion**, suba un `.docx` por cada documento. Use variables en corchetes (`[NOMBRE]`, `[CEDULA]`, `[SALARIO]`, etc.). Las plantillas se cargan una sola vez; cada desvinculacion solo genera la copia con datos del empleado.
+
 ### Reingreso por requisicion
 
 1. Cree una requisicion **Contratado** con la misma cedula de un empleado desvinculado **recontratable**.

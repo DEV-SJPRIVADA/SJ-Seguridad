@@ -3,6 +3,7 @@
 use App\Http\Controllers\GestionHumana\ArchivoController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
+use App\Http\Controllers\GestionHumana\TerminationLetterController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['password.changed'])
@@ -13,6 +14,9 @@ Route::middleware(['password.changed'])
         Route::post('/{type}', [FichaEmpleadosCatalogController::class, 'store'])->name('store');
         Route::patch('/{type}/{item}', [FichaEmpleadosCatalogController::class, 'update'])->name('update');
         Route::delete('/{type}/{item}', [FichaEmpleadosCatalogController::class, 'destroy'])->name('destroy');
+        Route::post('/termination-cause/{causeCode}/cartas/{documentKey}/plantilla', [TerminationLetterController::class, 'uploadTemplate'])->name('termination-letter-template.upload');
+        Route::get('/termination-cause/{causeCode}/cartas/{documentKey}/plantilla', [TerminationLetterController::class, 'downloadMasterTemplate'])->name('termination-letter-template.download');
+        Route::delete('/termination-cause/{causeCode}/cartas/{documentKey}/plantilla', [TerminationLetterController::class, 'deleteTemplate'])->name('termination-letter-template.delete');
     });
 
 Route::middleware(['password.changed'])
@@ -31,6 +35,8 @@ Route::middleware(['password.changed'])
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
         Route::post('/{fichaEntry}/desvincular', [FichaEmpleadosController::class, 'terminate'])->name('ficha.terminate');
+        Route::post('/periodos/{period}/cartas/generar', [TerminationLetterController::class, 'generate'])->name('period.letters.generate');
+        Route::get('/periodos/{period}/cartas/descargar', [TerminationLetterController::class, 'download'])->name('period.letters.download');
     });
 
 Route::middleware(['password.changed'])

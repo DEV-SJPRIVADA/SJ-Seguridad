@@ -9,7 +9,7 @@
         </div>
     </x-slot>
 
-    <div class="page-section archivo-page">
+    <div class="page-section archivo-page req-manage-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert {{ ($importHasFailures ?? false) ? 'alert--warning' : 'alert--success' }} archivo-page__alert">
@@ -35,7 +35,7 @@
             @endif
 
             <div class="panel">
-                <div class="panel__body panel__body--compact">
+                <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-filters">
                         <div class="req-manage-filters__head">
                             <div class="panel-heading-row panel-heading-row--wrap">
@@ -78,7 +78,7 @@
                         </div>
 
                         <div class="req-manage-filters__toolbar">
-                            <form method="GET" class="req-manage-filters__search-col">
+                            <form method="GET" class="req-manage-filters__search-col archivo-page__search-col">
                                 @if ($filters['consultation'] ?? null)
                                     <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
                                 @endif
@@ -146,8 +146,15 @@
                         </div>
                     @endif
 
-                    <div class="data-table-wrap">
-                        <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
+                    <div class="data-table-wrap req-manage-shell__table archivo-page__table-wrap data-table-wrap--booting">
+                        @include('partials.data-table-loader')
+                        <table
+                            class="data-table js-datatable"
+                            data-dt-responsive="false"
+                            data-dt-compact="true"
+                            data-dt-body-scroll="true"
+                            style="width:100%"
+                        >
                             <thead>
                                 <tr>
                                     <th>Cedula</th>
