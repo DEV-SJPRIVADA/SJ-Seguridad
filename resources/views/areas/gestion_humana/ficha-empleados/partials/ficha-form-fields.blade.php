@@ -92,8 +92,8 @@
                     inputmode="numeric"
                     autocomplete="off"
                     class="form-input js-ficha-currency"
-                    value="{{ old('salary', $profile->salary) }}"
-                    data-initial-value="{{ old('salary', $profile->salary) }}"
+                    value="{{ old('salary', $profile->salary !== null ? (int) $profile->salary : '') }}"
+                    data-initial-value="{{ old('salary', $profile->salary !== null ? (int) $profile->salary : '') }}"
                 >
             </div>
         </div>

@@ -2,8 +2,19 @@
 
 namespace App\Http\Requests\GestionHumana\Concerns;
 
+use App\Support\ColombianCurrencyParser;
+
 trait EmployeeFichaProfileFieldRules
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('salary')) {
+            $this->merge([
+                'salary' => ColombianCurrencyParser::parse($this->input('salary')),
+            ]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -22,7 +33,7 @@ trait EmployeeFichaProfileFieldRules
             'phone_secondary' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:100'],
             'sex' => ['nullable', 'string', 'max:5'],
-            'salary' => ['nullable', 'numeric', 'min:0'],
+            'salary' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
             'hire_date' => ['nullable', 'date'],
             'contract_end_date' => ['nullable', 'date'],
             'work_center_name' => ['nullable', 'string', 'max:150'],

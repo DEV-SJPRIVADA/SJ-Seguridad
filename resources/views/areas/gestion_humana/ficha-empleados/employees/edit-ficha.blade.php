@@ -80,12 +80,6 @@
 
                 <div class="panel__footer panel__footer--actions ficha-empleados-form__footer">
                     <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary">Volver</a>
-                    @if ($canGenerateLetters ?? false)
-                        @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
-                            'period' => $letterPeriod,
-                            'canGenerateLetters' => $canGenerateLetters,
-                        ])
-                    @endif
                     @if ($canTerminate ?? false)
                         <button
                             type="button"
@@ -97,6 +91,15 @@
                     <button type="submit" class="btn btn--primary">Guardar ficha</button>
                 </div>
             </form>
+
+            @if ($canGenerateLetters ?? false)
+                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters">
+                    @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
+                        'period' => $letterPeriod,
+                        'canGenerateLetters' => $canGenerateLetters,
+                    ])
+                </div>
+            @endif
 
             @include('areas.gestion_humana.ficha-empleados.partials.terminate-modal', [
                 'entry' => $entry,
