@@ -136,7 +136,6 @@ class EmployeeFichaImportService
     private function mapImportPayload(array $data, string $cedula): array
     {
         $parsed = EmployeeFichaNameParser::parse(trim((string) ($data['nombre'] ?? '')));
-        $terminationDate = $this->parseDate($data['fecha_retiro'] ?? null);
 
         $payload = [
             'document_number' => $cedula,
@@ -165,7 +164,6 @@ class EmployeeFichaImportService
             'contributor_type' => $this->stringOrNull($data['tipo_cotizante'] ?? null),
             'hire_date' => $this->parseDate($data['fecha_ingreso'] ?? null),
             'contract_end_date' => $this->parseDate($data['fecha_vencimiento_contrato'] ?? null),
-            'termination_date' => $terminationDate,
             'work_center_name' => $this->stringOrNull($data['nombre_centro_trabajo'] ?? null),
             'cost_center_code' => $this->stringOrNull($data['ccosto'] ?? null),
             'cost_center_name' => $this->stringOrNull($data['nombre_ccosto'] ?? null),
@@ -188,10 +186,6 @@ class EmployeeFichaImportService
             'economic_activity_code' => $this->stringOrNull($data['actividad_economica'] ?? null),
             'economic_activity_name' => $this->stringOrNull($data['nombre_actividad_economica'] ?? null),
         ];
-
-        $profile = new EmployeeFichaProfile($payload);
-        $profile->syncEmploymentStatusFromTerminationDate();
-        $payload['employment_status'] = $profile->employment_status;
 
         $this->seedCatalogPairsFromRow($data);
 

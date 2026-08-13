@@ -4,6 +4,7 @@ namespace App\Services\PurchaseRequests;
 
 use App\Models\PurchaseRequest;
 use App\Services\Notifications\NotificationConfigService;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class PurchaseApprovalService
@@ -11,6 +12,7 @@ class PurchaseApprovalService
     public function __construct(
         private readonly PurchaseRequestNotificationService $notifications,
         private readonly NotificationConfigService $notificationConfig,
+        private readonly PurchaseRequestAuditLogService $auditLogService,
     ) {}
 
     public function resolve(
@@ -18,6 +20,7 @@ class PurchaseApprovalService
         string $estado,
         int $aprobadorId,
         ?string $comentariosDirector = null,
+        string $channel = 'web',
     ): PurchaseRequest {
         if ((int) $purchaseRequest->aprobador_id !== $aprobadorId) {
             throw new InvalidArgumentException('El director no esta asignado a esta solicitud.');
@@ -56,6 +59,24 @@ class PurchaseApprovalService
         if ($estado === PurchaseRequest::ESTADO_APROBADO) {
             $this->notifications->notifyComprasApproved($purchaseRequest);
         }
+
+        $auditAction = $estado === PurchaseRequest::ESTADO_APROBADO ? 'approve' : 'reject';
+        $auditUserId = $channel === 'email' ? $aprobadorId : null;
+
+        $this->auditLogService->logModelChange(
+            eventType: 'director_approval',
+            action: $auditAction,
+            model: $purchaseRequest,
+            before: null,
+            after: null,
+            metadata: [
+                'folio' => $purchaseRequest->folio(),
+                'numero_solicitud' => $purchaseRequest->numero_solicitud,
+                'channel' => $channel,
+                'comentarios_director' => Str::limit((string) $comentariosDirector, 500),
+            ],
+            userId: $auditUserId,
+        );
 
         return $purchaseRequest;
     }

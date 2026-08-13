@@ -23,5 +23,25 @@ return [
             'label' => 'Requisiciones',
             'area' => 'gestion_humana',
         ],
+        'commercial' => [
+            'label' => 'Comercial',
+            'area' => 'comercial',
+        ],
+        'supplies' => [
+            'label' => 'Suministros',
+            'area' => null,
+        ],
+        'purchase_requests' => [
+            'label' => 'Compras',
+            'area' => 'compras',
+        ],
+        'quality_documents' => [
+            'label' => 'Documentos calidad',
+            'area' => 'calidad',
+        ],
+        'ficha_empleados' => [
+            'label' => 'Ficha empleados',
+            'area' => 'gestion_humana',
+        ],
     ],
 ];

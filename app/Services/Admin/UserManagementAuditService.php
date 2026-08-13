@@ -43,6 +43,44 @@ class UserManagementAuditService
      * @param  array<int, string>  $beforePermissions
      * @param  array<int, string>  $newPermissions
      */
+    public function logAccessCopied(
+        User $target,
+        User $source,
+        string $beforeRole,
+        array $beforePermissions,
+        string $newRole,
+        array $newPermissions,
+        bool $includeArea,
+        bool $includeSede,
+    ): void {
+        $target->refresh();
+        $target->load(['roles', 'permissions']);
+
+        $this->auditLogService->logModelChange(
+            eventType: self::EVENT_TYPE,
+            action: 'access_copied',
+            model: $target,
+            before: [
+                'role' => $beforeRole,
+                'permissions_count' => count($beforePermissions),
+            ],
+            after: [
+                'role' => $newRole,
+                'permissions_count' => count($newPermissions),
+            ],
+            metadata: [
+                'source_user_id' => $source->getKey(),
+                'source_user_name' => $source->name,
+                'include_area' => $includeArea,
+                'include_sede' => $includeSede,
+                'permissions_diff' => $this->buildPermissionsMetadata(
+                    array_values(array_diff($newPermissions, $beforePermissions)),
+                    array_values(array_diff($beforePermissions, $newPermissions)),
+                ),
+            ],
+        );
+    }
+
     public function logUserUpdated(
         User $user,
         array $beforeProfile,

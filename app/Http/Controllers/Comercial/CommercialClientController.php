@@ -11,6 +11,7 @@ use App\Http\Requests\Comercial\StoreCommercialClientRequest;
 use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
+use App\Services\Comercial\CommercialAuditLogService;
 use App\Services\Comercial\CommercialMatrixImportService;
 use App\Support\DisplayDate;
 use App\Traits\HasGestionClientesTabs;
@@ -29,6 +30,7 @@ class CommercialClientController extends Controller
     public function __construct(
         private readonly CommercialMatrixImportTemplateExport $importTemplateExport,
         private readonly CommercialMatrixImportService $importService,
+        private readonly CommercialAuditLogService $auditLogService,
     ) {}
 
     public function index(Request $request): View
@@ -124,6 +126,12 @@ class CommercialClientController extends Controller
             return $client;
         });
 
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'clients_excel',
+            metadata: $this->clientExportAuditMetadata($q, $city, $status, $clients->count()),
+        );
+
         $columns = [
             ['key' => 'nit', 'label' => 'NIT'],
             ['key' => 'name', 'label' => 'Cliente'],
@@ -195,6 +203,24 @@ class CommercialClientController extends Controller
             'updated_by' => $request->user()->id,
         ]);
 
+        $metadata = [];
+        if ($client->legal_rep_name !== null && $client->legal_rep_name !== '') {
+            $metadata['legal_rep_name'] = $client->legal_rep_name;
+        }
+
+        $this->auditLogService->logModelChange(
+            eventType: 'client',
+            action: 'create',
+            model: $client,
+            before: null,
+            after: [
+                'nit' => $client->nit,
+                'name' => $client->name,
+                'city' => $client->city,
+            ],
+            metadata: $metadata,
+        );
+
         return redirect()
             ->route('comercial.matriz.clients.show', $client)
             ->with('status', 'Cliente creado.');
@@ -240,10 +266,26 @@ class CommercialClientController extends Controller
     {
         $this->authorizeManage();
 
+        $before = $this->clientAuditSnapshot($client);
+
         $client->update([
             ...$request->validated(),
             'updated_by' => $request->user()->id,
         ]);
+
+        $client->refresh();
+        $after = $this->clientAuditSnapshot($client);
+        [$oldValues, $newValues] = $this->diffAuditFields($before, $after);
+
+        if ($oldValues !== []) {
+            $this->auditLogService->logModelChange(
+                eventType: 'client',
+                action: 'update',
+                model: $client,
+                before: $oldValues,
+                after: $newValues,
+            );
+        }
 
         return redirect()
             ->route('comercial.matriz.clients.show', $client)
@@ -272,6 +314,12 @@ class CommercialClientController extends Controller
                 ->route('comercial.matriz.clients.index', $request->only(['q', 'city', 'status']))
                 ->withErrors(['export' => 'No hay servicios para exportar con los filtros seleccionados.']);
         }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'import_template_data',
+            metadata: ['row_count' => $services->count()],
+        );
 
         return $this->importTemplateExport->downloadWithData(
             $services,
@@ -326,6 +374,19 @@ class CommercialClientController extends Controller
             ],
             array_keys(config('commercial_matrix.import_columns', [])),
             'reporte_importacion_matriz_comercial',
+        );
+
+        $this->auditLogService->logEvent(
+            eventType: 'import',
+            action: 'matrix',
+            metadata: [
+                'clients_created' => $stats['clients_created'],
+                'clients_updated' => $stats['clients_updated'],
+                'services_created' => $stats['services_created'],
+                'services_updated' => $stats['services_updated'],
+                'skipped' => $stats['skipped'],
+                'empty_rows' => $stats['empty_rows'],
+            ],
         );
 
         return redirect()
@@ -447,5 +508,59 @@ class CommercialClientController extends Controller
     private function canManage(): bool
     {
         return (bool) (auth()->user()?->can('comercial.matriz.manage') || auth()->user()?->can('manage.users'));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function clientAuditSnapshot(CommercialClient $client): array
+    {
+        return [
+            'nit' => $client->nit,
+            'name' => $client->name,
+            'city' => $client->city,
+            'legal_rep_name' => $client->legal_rep_name,
+            'phone' => $client->phone,
+            'address' => $client->address,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function diffAuditFields(array $before, array $after): array
+    {
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($before as $field => $beforeValue) {
+            $afterValue = $after[$field] ?? null;
+
+            if ($beforeValue !== $afterValue) {
+                $oldValues[$field] = $beforeValue;
+                $newValues[$field] = $afterValue;
+            }
+        }
+
+        return [$oldValues, $newValues];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function clientExportAuditMetadata(string $q, string $city, string $status, int $rowCount): array
+    {
+        $filters = array_filter([
+            'q' => $q !== '' ? $q : null,
+            'city' => $city !== '' ? $city : null,
+            'status' => $status !== '' ? $status : null,
+        ], fn ($value) => $value !== null);
+
+        return [
+            'row_count' => $rowCount,
+            'filters' => $filters,
+        ];
     }
 }

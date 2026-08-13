@@ -78,6 +78,7 @@ class PurchaseEmailApprovalController extends Controller
                 $request->validated('estado'),
                 $director->id,
                 $request->validated('comentarios_director'),
+                'email',
             );
         } catch (\InvalidArgumentException $exception) {
             return redirect($urlBuilder->showUrl($purchaseRequest, $director))

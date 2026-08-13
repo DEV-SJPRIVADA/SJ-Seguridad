@@ -166,6 +166,7 @@ return [
         'salary_type',
         'economic_activity',
         'branch',
+        'termination_cause',
     ],
 
     'catalog_type_labels' => [
@@ -182,5 +183,14 @@ return [
         'salary_type' => 'Tipo salario',
         'economic_activity' => 'Actividad economica',
         'branch' => 'Sucursal',
+        'termination_cause' => 'Causal desvinculacion',
+    ],
+
+    'termination_cause_defaults' => [
+        ['code' => 'RENUNCIA', 'name' => 'Renuncia voluntaria', 'sort_order' => 1],
+        ['code' => 'FIN_CONTRATO', 'name' => 'Fin de contrato', 'sort_order' => 2],
+        ['code' => 'DESPIDO', 'name' => 'Despido', 'sort_order' => 3],
+        ['code' => 'MUTUO_ACUERDO', 'name' => 'Terminacion por mutuo acuerdo', 'sort_order' => 4],
+        ['code' => 'PERIODO_PRUEBA', 'name' => 'No supera periodo de prueba', 'sort_order' => 5],
     ],
 ];

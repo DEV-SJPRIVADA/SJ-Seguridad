@@ -156,6 +156,8 @@
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
                                     <th>Fecha ingreso</th>
+                                    <th>Estado vinculo</th>
+                                    <th>Recontratable</th>
                                     <th>Fecha retiro</th>
                                     <th>Estante</th>
                                     <th>Caja</th>
@@ -176,6 +178,8 @@
                                         <td>{{ $entry->clientName() ?: '—' }}</td>
                                         <td>{{ $entry->cityName() ?: '—' }}</td>
                                         <td><x-date-table :value="$entry->hireDate()" /></td>
+                                        <td>{{ $entry->employmentStatusLabel() ?: '—' }}</td>
+                                        <td>{{ $entry->rehireableLabel() ?: '—' }}</td>
                                         <td><x-date-table :value="$entry->terminationDate()" /></td>
                                         @if ($canManage)
                                             <td class="archivo-page__field-cell">

@@ -28,11 +28,44 @@ class EmployeeFichaProfilePrefill
     {
         $entry->loadMissing(['requisition.position', 'requisition.city', 'requisition.contractType', 'requisition.client', 'profile']);
 
+        $prefillAttributes = $this->attributesForEntry($entry);
+
         if ($entry->profile !== null) {
+            if ($entry->isRehirePending()) {
+                return $this->mergeRehireProfile($entry->profile, $prefillAttributes);
+            }
+
             return $entry->profile;
         }
 
-        return new EmployeeFichaProfile($this->attributesForEntry($entry));
+        return new EmployeeFichaProfile($prefillAttributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $prefillAttributes
+     */
+    private function mergeRehireProfile(EmployeeFichaProfile $existing, array $prefillAttributes): EmployeeFichaProfile
+    {
+        $merged = $existing->replicate();
+        $merged->exists = true;
+        $merged->id = $existing->id;
+
+        $merged->fill(collect($prefillAttributes)->only([
+            'salary',
+            'hire_date',
+            'cost_center_code',
+            'position_code',
+            'position_name',
+            'contract_type_name',
+            'residence_city_name',
+            'work_center_name',
+            'employment_status',
+        ])->all());
+
+        $merged->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
+        $merged->termination_date = null;
+
+        return $merged;
     }
 
     /**

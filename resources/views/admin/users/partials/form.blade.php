@@ -5,6 +5,10 @@
     $selectedPermissions = $selectedPermissions ?? [];
     $areaLabels = $areas ?? [];
     $compactCreate = ($compactCreate ?? false) || $user === null;
+    $copyDefaults = $copyDefaults ?? null;
+    $copyFromUser = $copyFromUser ?? null;
+    $copyCandidates = $copyCandidates ?? collect();
+    $copyError = $copyError ?? null;
 
     $navKeys = collect($sections['navigation'] ?? [])->pluck('key')->all();
     $areaKeyForNav = old('area_key', $user?->area_key);
@@ -90,6 +94,10 @@
         @endif
 
         <div id="section-user" class="user-form__section" @if ($initialTab !== 'section-user') hidden @endif>
+            @if ($compactCreate && $copyCandidates->isNotEmpty())
+                @include('admin.users.partials.copy-access-create')
+            @endif
+
             @unless ($compactCreate)
                 <div class="section-header">
                     <h3 class="section-header__title">Datos generales</h3>
@@ -136,7 +144,7 @@
                     <select name="area_key" id="user-area-key" class="form-select @error('area_key') form-input--invalid @enderror">
                         <option value="">Sin area fija</option>
                         @foreach ($areas as $key => $label)
-                            <option value="{{ $key }}" @selected(old('area_key', $user?->area_key) === $key)>{{ $label }}</option>
+                            <option value="{{ $key }}" @selected(old('area_key', $copyDefaults['area_key'] ?? $user?->area_key) === $key)>{{ $label }}</option>
                         @endforeach
                     </select>
                     <x-input-error :messages="$errors->get('area_key')" />
@@ -150,7 +158,7 @@
                         <select name="sede_id" id="user-sede-id" class="form-select @error('sede_id') form-input--invalid @enderror">
                             <option value="">Sin sede asignada</option>
                             @foreach ($sites ?? [] as $site)
-                                <option value="{{ $site->id }}" @selected((string) old('sede_id', $user?->sede_id) === (string) $site->id)>
+                                <option value="{{ $site->id }}" @selected((string) old('sede_id', $copyDefaults['sede_id'] ?? $user?->sede_id) === (string) $site->id)>
                                     {{ $site->utilization }} ({{ $site->city }})
                                 </option>
                             @endforeach
@@ -191,6 +199,11 @@
                         <p class="section-header__desc">Opcional. Se suman al rol seleccionado.</p>
                     @endunless
                 </div>
+                @if (! $compactCreate && $user && $copyCandidates->isNotEmpty())
+                    <button type="button" class="btn btn--secondary btn--sm" id="open-apply-access-modal">
+                        Aplicar acceso de otro usuario
+                    </button>
+                @endif
             </div>
 
             <div class="user-permissions-layout {{ $compactCreate ? 'user-permissions-layout--compact' : '' }}">
@@ -273,6 +286,24 @@
 </form>
 
 @include('admin.users.partials.sites-modal')
+
+@if (! ($compactCreate ?? false) && ($user ?? null) && ($copyCandidates ?? collect())->isNotEmpty())
+    @include('admin.users.partials.apply-access-modal', [
+        'user' => $user,
+        'copyCandidates' => $copyCandidates,
+    ])
+@endif
+
+@if (($copyCandidates ?? collect())->isNotEmpty())
+    @push('styles')
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
+    @endpush
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+        @vite('resources/js/admin/user-copy-access-select.js')
+    @endpush
+@endif
 
 @push('scripts')
     <script>

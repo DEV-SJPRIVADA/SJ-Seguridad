@@ -9,13 +9,16 @@ use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
+use App\Http\Requests\GestionHumana\TerminateEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\GestionHumana\EmployeeFichaAuditLogService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
+use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
@@ -42,6 +45,8 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaImportService $importService,
         private readonly EmployeeFichaProfilePrefill $profilePrefill,
         private readonly EmployeeFichaCatalogService $catalogService,
+        private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
+        private readonly EmployeeFichaAuditLogService $auditLogService,
     ) {}
 
     public function index(Request $request): View
@@ -66,6 +71,7 @@ class FichaEmpleadosController extends Controller
             'employmentStatusLabels' => self::employmentStatusFilterLabels(),
             'pendingCount' => $pendingCount,
             'canManage' => $this->canManage(),
+            'canTerminate' => $this->canTerminate(),
             'canExportArchive' => $this->canExportArchive(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -96,6 +102,12 @@ class FichaEmpleadosController extends Controller
                 ->route('gestion-humana.ficha-empleados.employees.index')
                 ->withErrors(['export' => 'No hay empleados activos en ficha para exportar con los filtros seleccionados.']);
         }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'masivos_excel',
+            metadata: $this->masivosExportAuditMetadata($entries->count(), $hasDateRange, $fechaDesde, $fechaHasta),
+        );
 
         return $this->plantillaMasivosExport->download(
             $entries,
@@ -135,6 +147,12 @@ class FichaEmpleadosController extends Controller
                 ->route('gestion-humana.ficha-empleados.employees.index')
                 ->withErrors(['export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.']);
         }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'import_template_data',
+            metadata: ['row_count' => $entries->count()],
+        );
 
         return $this->importTemplateExport->downloadWithData(
             $entries,
@@ -230,6 +248,17 @@ class FichaEmpleadosController extends Controller
         $importResult['errors'] = $errorsForSession;
         $importResult['errors_truncated'] = ($importResult['errors_total'] ?? 0) > count($errorsForSession);
 
+        $this->auditLogService->logEvent(
+            eventType: 'import',
+            action: 'profiles',
+            metadata: [
+                'imported' => $stats['imported'],
+                'updated' => $stats['updated'],
+                'skipped' => $stats['skipped'],
+                'empty_rows' => $stats['empty_rows'],
+            ],
+        );
+
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.index')
             ->with('status', $message)
@@ -267,6 +296,7 @@ class FichaEmpleadosController extends Controller
         return view('areas.gestion_humana.ficha-empleados.employees.create-ficha', [
             'fichaEntry' => $fichaEntry,
             'profile' => $profile,
+            'isRehire' => $fichaEntry?->isRehirePending() ?? false,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -279,7 +309,7 @@ class FichaEmpleadosController extends Controller
         $fichaEntryId = $validated['ficha_entry_id'] ?? null;
 
         if ($fichaEntryId !== null) {
-            DB::transaction(function () use ($validated, $userId, $fichaEntryId): void {
+            $entry = DB::transaction(function () use ($validated, $userId, $fichaEntryId): PersonalRequisitionFichaEntry {
                 $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
 
                 $hiredDocument = trim($validated['hired_document']);
@@ -308,15 +338,46 @@ class FichaEmpleadosController extends Controller
 
                 $profile = $entry->profile ?? new EmployeeFichaProfile(['personal_requisition_ficha_entry_id' => $entry->id]);
                 $profile->fill($profileAttributes);
-                $profile->syncEmploymentStatusFromTerminationDate();
+                $profile->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
+                $profile->termination_date = null;
                 $profile->save();
 
                 $this->syncCatalogNamesFromCodes($profile);
+
+                $this->employmentPeriodService->openPeriod(
+                    $entry,
+                    $profileAttributes,
+                    $userId,
+                    $entry->personal_requisition_id,
+                );
+                $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
+
+                return $entry->fresh(['requisition']);
             });
+
+            $isRehire = ($entry->employmentPeriods()->count() ?? 0) > 1;
+
+            $metadata = [
+                'hired_document' => $entry->hired_document,
+                'source' => $isRehire ? 'rehire' : 'waiting_list',
+            ];
+
+            if ($entry->personal_requisition_id !== null) {
+                $metadata['requisition_id'] = $entry->personal_requisition_id;
+            }
+
+            $this->auditLogService->logEvent(
+                eventType: 'ficha_entry',
+                action: $isRehire ? 'rehire' : 'promote',
+                metadata: $metadata,
+                model: $entry,
+            );
 
             return redirect()
                 ->route('gestion-humana.ficha-empleados.employees.index')
-                ->with('status', 'Empleado movido a Ficha empleados correctamente.');
+                ->with('status', $isRehire
+                    ? 'Reingreso registrado correctamente.'
+                    : 'Empleado movido a Ficha empleados correctamente.');
         }
 
         $entry = DB::transaction(function () use ($validated, $userId): PersonalRequisitionFichaEntry {
@@ -348,13 +409,28 @@ class FichaEmpleadosController extends Controller
                 ->all();
 
             $profile = EmployeeFichaProfile::query()->create($profileAttributes);
-            $profile->syncEmploymentStatusFromTerminationDate();
-            $profile->save();
-
             $this->syncCatalogNamesFromCodes($profile);
+
+            $this->employmentPeriodService->openPeriod(
+                $entry,
+                $profileAttributes,
+                $userId,
+                null,
+            );
+            $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
 
             return $entry;
         });
+
+        $this->auditLogService->logEvent(
+            eventType: 'ficha_entry',
+            action: 'create',
+            metadata: [
+                'hired_document' => $entry->hired_document,
+                'source' => 'manual',
+            ],
+            model: $entry,
+        );
 
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
@@ -365,12 +441,16 @@ class FichaEmpleadosController extends Controller
     {
         abort_unless($this->canManage(), 403);
 
-        $fichaEntry->load(['requisition.position', 'requisition.city', 'profile']);
+        $fichaEntry->load(['requisition.position', 'requisition.city', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
+        $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
             'profile' => $profile->fresh(),
+            'activePeriod' => $activePeriod,
+            'employmentHistory' => $this->employmentPeriodService->historyForEntry($fichaEntry),
+            'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -380,19 +460,96 @@ class FichaEmpleadosController extends Controller
     {
         $fichaEntry->load('profile');
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
+        $before = $this->profileAuditSnapshot($profile);
 
         $attributes = $request->validated();
         $attributes['phone_secondary'] = $request->input('phone_secondary');
 
         $profile->fill($attributes);
-        $profile->syncEmploymentStatusFromTerminationDate();
         $profile->save();
 
         $this->syncCatalogNamesFromCodes($profile);
+        $this->employmentPeriodService->syncActivePeriodFromProfileAttributes(
+            $fichaEntry,
+            $profile->getAttributes(),
+            (int) $request->user()->id,
+        );
+        $this->employmentPeriodService->syncProfileFromActivePeriod($fichaEntry, $profile)->save();
+
+        $profile->refresh();
+        $after = $this->profileAuditSnapshot($profile);
+
+        if ($before['employment_status'] !== $after['employment_status']) {
+            $this->auditLogService->logModelChange(
+                eventType: 'ficha_profile',
+                action: 'status_change',
+                model: $profile,
+                before: ['employment_status' => $before['employment_status']],
+                after: ['employment_status' => $after['employment_status']],
+                metadata: ['document_number' => $profile->document_number],
+            );
+        } else {
+            [$oldValues, $newValues] = $this->diffProfileAuditFields($before, $after);
+
+            if ($oldValues !== []) {
+                $this->auditLogService->logModelChange(
+                    eventType: 'ficha_profile',
+                    action: 'update',
+                    model: $profile,
+                    before: $oldValues,
+                    after: $newValues,
+                );
+            }
+        }
 
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $fichaEntry)
             ->with('status', 'Ficha de empleado actualizada.');
+    }
+
+    public function terminate(TerminateEmployeeFichaRequest $request, PersonalRequisitionFichaEntry $fichaEntry): RedirectResponse
+    {
+        abort_unless($this->canTerminate(), 403);
+
+        $fichaEntry->load('profile');
+        $beforeStatus = $fichaEntry->profile?->employment_status;
+
+        DB::transaction(function () use ($request, $fichaEntry): void {
+            $this->employmentPeriodService->closeActivePeriod(
+                $fichaEntry,
+                $request->validated(),
+                (int) $request->user()->id,
+            );
+            $this->employmentPeriodService->syncProfileAfterTermination($fichaEntry);
+        });
+
+        $fichaEntry->load('profile');
+
+        if ($beforeStatus !== EmployeeFichaProfile::STATUS_DESVINCULADO) {
+            $this->auditLogService->logModelChange(
+                eventType: 'ficha_profile',
+                action: 'status_change',
+                model: $fichaEntry->profile,
+                before: ['employment_status' => $beforeStatus ?? EmployeeFichaProfile::STATUS_ACTIVO],
+                after: ['employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO],
+                metadata: ['document_number' => $fichaEntry->hired_document],
+            );
+        }
+
+        $this->auditLogService->logEvent(
+            eventType: 'employment_period',
+            action: 'close',
+            metadata: [
+                'document_number' => $fichaEntry->hired_document,
+                'termination_cause_code' => $request->validated('termination_cause_code'),
+                'is_rehireable' => (bool) $request->validated('is_rehireable'),
+            ],
+            model: $fichaEntry,
+        );
+
+        return redirect()
+            ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $fichaEntry)
+            ->with('status', 'Desvinculacion registrada correctamente.');
     }
 
     /**
@@ -527,8 +684,73 @@ class FichaEmpleadosController extends Controller
         return $this->fichaEmpleadosAccess->canManage(auth()->user());
     }
 
+    private function canTerminate(): bool
+    {
+        return $this->fichaEmpleadosAccess->canTerminate(auth()->user());
+    }
+
     private function canExportArchive(): bool
     {
         return $this->archivoAccess->canExportArchiveTemplate(auth()->user());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function profileAuditSnapshot(EmployeeFichaProfile $profile): array
+    {
+        return [
+            'document_number' => $profile->document_number,
+            'employment_status' => $profile->employment_status,
+            'hire_date' => $profile->hire_date?->toDateString(),
+            'termination_date' => $profile->termination_date?->toDateString(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function diffProfileAuditFields(array $before, array $after): array
+    {
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($before as $field => $beforeValue) {
+            if ($field === 'employment_status') {
+                continue;
+            }
+
+            $afterValue = $after[$field] ?? null;
+
+            if ($beforeValue !== $afterValue) {
+                $oldValues[$field] = $beforeValue;
+                $newValues[$field] = $afterValue;
+            }
+        }
+
+        return [$oldValues, $newValues];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function masivosExportAuditMetadata(
+        int $rowCount,
+        bool $hasDateRange,
+        ?string $fechaDesde,
+        ?string $fechaHasta,
+    ): array {
+        $metadata = ['row_count' => $rowCount];
+
+        if ($hasDateRange && $fechaDesde !== null && $fechaHasta !== null) {
+            $metadata['date_range'] = [
+                'from' => $fechaDesde,
+                'to' => $fechaHasta,
+            ];
+        }
+
+        return $metadata;
     }
 }

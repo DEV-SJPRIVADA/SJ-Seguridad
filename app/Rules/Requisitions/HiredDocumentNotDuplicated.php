@@ -2,7 +2,9 @@
 
 namespace App\Rules\Requisitions;
 
+use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -29,10 +31,26 @@ class HiredDocumentNotDuplicated implements ValidationRule
         $conflict = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', $document)
             ->when($this->requisitionId !== null, fn ($query) => $query->where('personal_requisition_id', '!=', $this->requisitionId))
-            ->with('requisition:id,code')
+            ->with(['requisition:id,code', 'profile'])
             ->first();
 
         if ($conflict === null) {
+            return;
+        }
+
+        $periodService = app(EmployeeFichaEmploymentPeriodService::class);
+
+        if ($conflict->moved_to_ficha_at !== null
+            && $conflict->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
+            && $periodService->isRehireable($conflict)) {
+            return;
+        }
+
+        if ($conflict->moved_to_ficha_at !== null
+            && $conflict->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
+            && ! $periodService->isRehireable($conflict)) {
+            $fail('REHIRE_NOT_ALLOWED: Esta cedula corresponde a un empleado desvinculado no recontratable.');
+
             return;
         }
 

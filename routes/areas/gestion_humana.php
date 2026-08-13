@@ -30,6 +30,7 @@ Route::middleware(['password.changed'])
         Route::get('/importar/reporte/{token}', [FichaEmpleadosController::class, 'downloadImportReport'])->name('import-report');
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
+        Route::post('/{fichaEntry}/desvincular', [FichaEmpleadosController::class, 'terminate'])->name('ficha.terminate');
     });
 
 Route::middleware(['password.changed'])

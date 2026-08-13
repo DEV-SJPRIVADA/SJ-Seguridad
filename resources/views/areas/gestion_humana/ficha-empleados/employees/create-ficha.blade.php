@@ -1,13 +1,21 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
-        <div class="app-container ficha-empleados-page__workspace-header">
+        <div class="app-container ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
             <div class="panel-heading-row">
                 <h2 class="panel-title panel-title--page">
-                    {{ $fichaEntry ? 'Gestionar empleado — '.$fichaEntry->hired_full_name : 'Nuevo empleado' }}
+                    @if ($isRehire ?? false)
+                        Reingreso — {{ $fichaEntry->hired_full_name }}
+                    @elseif ($fichaEntry)
+                        Gestionar empleado — {{ $fichaEntry->hired_full_name }}
+                    @else
+                        Nuevo empleado
+                    @endif
                 </h2>
                 <p class="panel-text">
-                    @if ($fichaEntry)
+                    @if ($isRehire ?? false)
+                        Nuevo vinculo laboral desde requisicion. Los datos personales se conservan; actualice las condiciones laborales.
+                    @elseif ($fichaEntry)
                         Completa o corrige los datos antes de moverlo a Ficha empleados.
                     @else
                         Registro manual sin requisición — empleados históricos o carga directa en ficha.
@@ -21,7 +29,7 @@
         <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
     @endpush
 
-    <div class="page-section ficha-empleados-page">
+    <div class="page-section ficha-empleados-page ficha-empleados-page--form">
         <div class="app-container">
             @if ($errors->any())
                 <div class="alert alert--danger ficha-empleados-page__alert">
@@ -84,6 +92,7 @@
                                     value="{{ old('hired_document', $fichaEntry->hired_document ?? '') }}"
                                     required
                                     autocomplete="off"
+                                    @readonly($isRehire ?? false)
                                 >
                             </div>
                             <div class="form-field">
@@ -95,6 +104,7 @@
                                     value="{{ old('hired_full_name', $fichaEntry->hired_full_name ?? '') }}"
                                     required
                                     autocomplete="off"
+                                    @readonly($isRehire ?? false)
                                 >
                             </div>
                         </div>
@@ -103,12 +113,13 @@
                     @include('areas.gestion_humana.ficha-empleados.partials.ficha-form-fields', [
                         'profile' => $profile,
                         'catalogs' => $catalogs,
+                        'lockIdentityFields' => $isRehire ?? false,
                     ])
                 </div>
 
                 <div class="panel__footer panel__footer--actions ficha-empleados-form__footer">
                     <a href="{{ route('gestion-humana.ficha-empleados.employees.index', $fichaEntry ? ['estado' => 'pendientes'] : []) }}" class="btn btn--secondary">Volver</a>
-                    <button type="submit" class="btn btn--primary">Crear empleado</button>
+                    <button type="submit" class="btn btn--primary">{{ ($isRehire ?? false) ? 'Confirmar reingreso' : ($fichaEntry ? 'Crear empleado' : 'Crear empleado') }}</button>
                 </div>
             </form>
         </div>

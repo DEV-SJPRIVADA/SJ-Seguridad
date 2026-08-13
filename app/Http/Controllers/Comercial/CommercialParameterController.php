@@ -8,6 +8,7 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialPortfolio;
 use App\Models\CommercialSector;
 use App\Models\CommercialServiceType;
+use App\Services\Comercial\CommercialAuditLogService;
 use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,10 @@ class CommercialParameterController extends Controller
         'service-types' => ['label' => 'Tipos de servicio', 'model' => CommercialServiceType::class],
         'portfolios' => ['label' => 'Portafolios', 'model' => CommercialPortfolio::class],
     ];
+
+    public function __construct(
+        private readonly CommercialAuditLogService $auditLogService,
+    ) {}
 
     public function index(): View
     {
@@ -59,21 +64,42 @@ class CommercialParameterController extends Controller
         $name = Str::of($request->string('name')->toString())->trim()->squish()->toString();
 
         if ($type === 'portfolios') {
-            $modelClass::query()->create([
-                'slug' => Str::of($request->string('slug')->toString())->trim()->lower()->toString(),
+            $slug = Str::of($request->string('slug')->toString())->trim()->lower()->toString();
+            $record = $modelClass::query()->create([
+                'slug' => $slug,
                 'name' => $name,
                 'is_active' => $request->boolean('is_active', true),
                 'sort_order' => (int) ($request->input('sort_order') ?? 0),
             ]);
+
+            $metadata = [
+                'parameter_type' => $type,
+                'name' => $name,
+                'slug' => $slug,
+            ];
         } else {
-            $modelClass::query()->firstOrCreate(
+            $record = $modelClass::query()->firstOrCreate(
                 ['name' => $name],
                 [
                     'is_active' => $request->boolean('is_active', true),
                     'sort_order' => (int) ($request->input('sort_order') ?? 0),
                 ]
             );
+
+            $metadata = [
+                'parameter_type' => $type,
+                'name' => $name,
+            ];
         }
+
+        $this->auditLogService->logModelChange(
+            eventType: 'parameter',
+            action: 'create',
+            model: $record,
+            before: null,
+            after: null,
+            metadata: $metadata,
+        );
 
         return redirect()
             ->route('comercial.parameters.index')
@@ -89,11 +115,47 @@ class CommercialParameterController extends Controller
 
         $record = $definition['model']::query()->findOrFail($parameterId);
 
+        $before = [
+            'name' => $record->name,
+            'is_active' => (bool) $record->is_active,
+            'sort_order' => (int) ($record->sort_order ?? 0),
+        ];
+
         $record->update([
             'name' => Str::of($request->string('name')->toString())->trim()->squish()->toString(),
             'is_active' => $request->boolean('is_active'),
             'sort_order' => (int) ($request->input('sort_order') ?? $record->sort_order ?? 0),
         ]);
+
+        $record->refresh();
+
+        $after = [
+            'name' => $record->name,
+            'is_active' => (bool) $record->is_active,
+            'sort_order' => (int) ($record->sort_order ?? 0),
+        ];
+
+        $oldValues = [];
+        $newValues = [];
+
+        foreach ($before as $field => $beforeValue) {
+            $afterValue = $after[$field] ?? null;
+
+            if ($beforeValue !== $afterValue) {
+                $oldValues[$field] = $beforeValue;
+                $newValues[$field] = $afterValue;
+            }
+        }
+
+        if ($oldValues !== []) {
+            $this->auditLogService->logModelChange(
+                eventType: 'parameter',
+                action: 'update',
+                model: $record,
+                before: $oldValues,
+                after: $newValues,
+            );
+        }
 
         return redirect()
             ->route('comercial.parameters.index')
@@ -107,7 +169,19 @@ class CommercialParameterController extends Controller
         $definition = self::PARAMETER_TYPES[$type] ?? null;
         abort_unless($definition !== null, 404);
 
-        $definition['model']::query()->findOrFail($parameterId)->delete();
+        $record = $definition['model']::query()->findOrFail($parameterId);
+        $name = $record->name;
+
+        $record->delete();
+
+        $this->auditLogService->logEvent(
+            eventType: 'parameter',
+            action: 'delete',
+            metadata: [
+                'parameter_type' => $type,
+                'name' => $name,
+            ],
+        );
 
         return redirect()
             ->route('comercial.parameters.index')

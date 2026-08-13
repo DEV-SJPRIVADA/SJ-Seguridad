@@ -59,6 +59,7 @@ class PurchaseApprovalController extends Controller
                 $request->validated('estado'),
                 (int) auth()->id(),
                 $request->validated('comentarios_director'),
+                'web',
             );
         } catch (\InvalidArgumentException $exception) {
             return back()->withErrors(['estado' => $exception->getMessage()]);

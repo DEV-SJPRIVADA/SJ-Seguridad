@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
@@ -47,6 +48,46 @@ class PersonalRequisitionFichaEntry extends Model
     public function profile(): HasOne
     {
         return $this->hasOne(EmployeeFichaProfile::class, 'personal_requisition_ficha_entry_id');
+    }
+
+    public function employmentPeriods(): HasMany
+    {
+        return $this->hasMany(EmployeeFichaEmploymentPeriod::class, 'personal_requisition_ficha_entry_id');
+    }
+
+    public function activeEmploymentPeriod(): HasOne
+    {
+        return $this->hasOne(EmployeeFichaEmploymentPeriod::class, 'personal_requisition_ficha_entry_id')
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO);
+    }
+
+    public function isRehirePending(): bool
+    {
+        return $this->moved_to_ficha_at === null
+            && $this->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO;
+    }
+
+    public function rehireableLabel(): ?string
+    {
+        if ($this->employmentStatus() !== EmployeeFichaProfile::STATUS_DESVINCULADO) {
+            return null;
+        }
+
+        $latestClosed = $this->employmentPeriods()
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+            ->orderByDesc('sequence')
+            ->first();
+
+        if ($latestClosed === null) {
+            return null;
+        }
+
+        return $latestClosed->is_rehireable ? 'Si' : 'No';
+    }
+
+    public function employmentPeriodsCount(): int
+    {
+        return $this->employmentPeriods()->count();
     }
 
     public function scopeWithActiveProfile(Builder $query): Builder

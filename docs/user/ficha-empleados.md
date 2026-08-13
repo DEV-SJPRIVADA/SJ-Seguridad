@@ -30,7 +30,8 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 | --- | --- |
 | Gestion Humana (gestiona requisiciones) | Marcar **Contratado** en la requisicion con cedula y nombre completo del contratado; resolver alertas de cedula duplicada. |
 | Gestion Humana (Ficha empleados, lectura) | Consultar la lista de espera y la ficha, exportar a Excel. |
-| Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** (revisar/completar datos y mover un pendiente a ficha) y el alta manual de empleados sin requisicion. |
+| Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** / **Gestionar reingreso** y alta manual. |
+| Gestion Humana (desvinculacion) | Usuarios con permiso **Desvincular** registran cierre formal de vinculo (causal, fechas, recontratable). |
 | Administrador | Asignar los permisos de Ficha empleados (lectura/edicion) a los usuarios de Gestion Humana que corresponda; puede coincidir o no con quien gestiona requisiciones. |
 
 ## Desarrollo
@@ -71,9 +72,23 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 ### Completar ficha de empleado
 
-1. En **Pendientes** o **En ficha**, pulse **Completar ficha** (permiso de edición).
+1. En **Pendientes** o **En ficha**, abra la ficha (permiso de edición).
 2. Diligencie datos de contacto, nómina, EPS/AFP, centro de costo, etc.
-3. Si indica **fecha retiro**, el empleado queda como **desvinculado** y no saldrá en exportaciones masivas sin rango de fechas.
+3. La **desvinculacion** ya no se hace con un campo suelto de fecha retiro: use **Registrar desvinculacion** (permiso `ficha_empleados.terminate`).
+
+### Registrar desvinculacion
+
+1. Abra la ficha del empleado **activo**.
+2. Pulse **Registrar desvinculacion** (solo usuarios con permiso de desvincular).
+3. Complete causal, si es recontratable, ultimo dia de trabajo y fecha de desvinculacion.
+4. Al confirmar, el vinculo activo se cierra y el empleado queda **desvinculado** (no sale en export masivos sin rango de fechas).
+
+### Reingreso por requisicion
+
+1. Cree una requisicion **Contratado** con la misma cedula de un empleado desvinculado **recontratable**.
+2. El registro vuelve a **Pendientes** con badge **Reingreso**.
+3. Pulse **Gestionar reingreso**, revise condiciones laborales nuevas (cedula, nombre y fecha nacimiento no cambian) y confirme.
+4. Se abre un nuevo vinculo; el historial de vinculos anteriores queda visible en la ficha.
 
 ### Exportar plantilla masivos (nómina)
 

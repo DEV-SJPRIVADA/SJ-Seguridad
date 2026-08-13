@@ -8,6 +8,7 @@ use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\PurchaseRequests\PurchaseRequestPdfService;
@@ -53,6 +54,7 @@ class PurchaseRequestController extends Controller
         string $module,
         PurchaseAccessService $accessService,
         PurchaseRequestNotificationService $notifications,
+        PurchaseRequestAuditLogService $auditLogService,
     ): RedirectResponse {
         $validated = $request->validated();
 
@@ -115,6 +117,21 @@ class PurchaseRequestController extends Controller
             return $purchaseRequest;
         });
 
+        $purchaseRequest->loadCount('items');
+
+        $auditLogService->logEvent(
+            eventType: 'purchase_request',
+            action: 'create',
+            metadata: [
+                'numero_solicitud' => $purchaseRequest->numero_solicitud,
+                'area_key' => $purchaseRequest->area_key,
+                'items_count' => $purchaseRequest->items_count,
+                'urgente' => $purchaseRequest->urgente,
+                'aprobador_id' => $purchaseRequest->aprobador_id,
+            ],
+            model: $purchaseRequest,
+        );
+
         $notifications->notifyDirectorAssignedAfterResponse($purchaseRequest, $aprobador);
 
         return redirect()
@@ -150,8 +167,11 @@ class PurchaseRequestController extends Controller
         PurchaseAccessService $accessService,
         PurchaseRequestResubmitService $resubmitService,
         PurchaseRequestNotificationService $notifications,
+        PurchaseRequestAuditLogService $auditLogService,
     ): RedirectResponse {
         $validated = $request->validated();
+
+        $previousEstado = $purchaseRequest->estado;
 
         $aprobador = $accessService->approversQuery()
             ->whereKey($validated['aprobador_id'])
@@ -168,6 +188,17 @@ class PurchaseRequestController extends Controller
             $validated,
             $request,
             $aprobador,
+        );
+
+        $auditLogService->logEvent(
+            eventType: 'purchase_request',
+            action: 'resubmit',
+            metadata: [
+                'numero_solicitud' => $purchaseRequest->numero_solicitud,
+                'items_count' => $purchaseRequest->items()->count(),
+                'previous_estado' => $previousEstado,
+            ],
+            model: $purchaseRequest,
         );
 
         $notifications->notifyDirectorAssignedAfterResponse($purchaseRequest, $aprobador);
