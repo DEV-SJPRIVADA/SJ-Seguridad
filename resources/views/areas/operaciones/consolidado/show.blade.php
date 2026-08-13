@@ -14,7 +14,10 @@
                         </div>
                         <div class="indicadores-filter-bar">
                             @can('operations.export')
-                                <a href="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">Excel</a>
+                                <x-export-excel
+                                    route="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}"
+                                    label="Excel"
+                                />
                                 <a href="{{ route('indicadores.export.consolidado.pdf', ['indicator' => $indicator->code, 'year' => $year, 'month' => $month]) }}" class="btn btn--secondary btn--sm">PDF</a>
                             @endcan
                             <form method="GET" class="indicadores-inline-form" style="margin:0;">

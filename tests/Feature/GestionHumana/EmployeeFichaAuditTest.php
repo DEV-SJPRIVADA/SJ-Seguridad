@@ -23,10 +23,12 @@ use Illuminate\Support\Facades\Config;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Tests\Support\EmployeeFichaMasivosPayload;
 use Tests\TestCase;
 
 class EmployeeFichaAuditTest extends TestCase
 {
+    use EmployeeFichaMasivosPayload;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -35,6 +37,7 @@ class EmployeeFichaAuditTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
+        $this->seedFe028CatalogFixtures();
         Config::set('audit.enabled', true);
         Config::set('audit.queue', false);
     }
@@ -49,14 +52,15 @@ class EmployeeFichaAuditTest extends TestCase
             'hired_full_name' => 'Promote Audit Test',
         ]);
 
-        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => '900111001',
-            'hired_full_name' => 'Promote Audit Test',
-            'document_type' => 'C',
-            'sex' => 'M',
-            'salary' => '2500000',
-        ])->assertRedirect();
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(),
+            [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900111001',
+                'hired_full_name' => 'Promote Audit Test',
+                'document_type' => 'C',
+            ],
+        ))->assertRedirect();
 
         $log = AuditLog::query()
             ->where('module', 'ficha_empleados')
@@ -76,13 +80,14 @@ class EmployeeFichaAuditTest extends TestCase
     {
         $manager = $this->managerUser();
 
-        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'hired_document' => '900222002',
-            'hired_full_name' => 'Manual Audit Test',
-            'document_type' => 'C',
-            'sex' => 'F',
-            'salary' => '1800000',
-        ])->assertRedirect();
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(['sex' => 'F', 'salary' => '1800000']),
+            [
+                'hired_document' => '900222002',
+                'hired_full_name' => 'Manual Audit Test',
+                'document_type' => 'C',
+            ],
+        ))->assertRedirect();
 
         $entry = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', '900222002')

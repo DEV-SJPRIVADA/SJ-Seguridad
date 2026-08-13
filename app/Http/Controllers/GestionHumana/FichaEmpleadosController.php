@@ -13,7 +13,6 @@ use App\Http\Requests\GestionHumana\TerminateEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
-use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
@@ -22,6 +21,7 @@ use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
+use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
@@ -49,6 +49,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaCatalogService $catalogService,
         private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
         private readonly EmployeeFichaAuditLogService $auditLogService,
+        private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
     ) {}
 
     public function index(Request $request): View
@@ -299,6 +300,9 @@ class FichaEmpleadosController extends Controller
             'fichaEntry' => $fichaEntry,
             'profile' => $profile,
             'isRehire' => $fichaEntry?->isRehirePending() ?? false,
+            'requisitionReference' => $fichaEntry?->requisition
+                ? $this->profilePrefill->requisitionReferenceForEntry($fichaEntry)
+                : null,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
@@ -325,30 +329,34 @@ class FichaEmpleadosController extends Controller
                     'moved_to_ficha_by' => $userId,
                 ]);
 
-                $profileAttributes = collect($validated)
-                    ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
-                    ->merge([
-                        'personal_requisition_ficha_entry_id' => $entry->id,
-                        'document_number' => $hiredDocument,
-                        'full_name' => $parsed['full_name'] ?: $hiredFullName,
-                        'first_surname' => $parsed['first_surname'],
-                        'second_surname' => $parsed['second_surname'],
-                        'first_name' => $parsed['first_name'],
-                        'second_name' => $parsed['second_name'],
-                    ])
-                    ->all();
-
                 $profile = $entry->profile ?? new EmployeeFichaProfile(['personal_requisition_ficha_entry_id' => $entry->id]);
+
+                $profileAttributes = $this->mergeProfilePayrollExtra(
+                    $profile,
+                    collect($validated)
+                        ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
+                        ->merge([
+                            'personal_requisition_ficha_entry_id' => $entry->id,
+                            'document_number' => $hiredDocument,
+                            'full_name' => $parsed['full_name'] ?: $hiredFullName,
+                            'first_surname' => $parsed['first_surname'],
+                            'second_surname' => $parsed['second_surname'],
+                            'first_name' => $parsed['first_name'],
+                            'second_name' => $parsed['second_name'],
+                        ])
+                        ->all(),
+                );
+
                 $profile->fill($profileAttributes);
                 $profile->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
                 $profile->termination_date = null;
                 $profile->save();
 
-                $this->syncCatalogNamesFromCodes($profile);
+                $this->profileCatalogSync->syncAndSave($profile);
 
                 $this->employmentPeriodService->openPeriod(
                     $entry,
-                    $profileAttributes,
+                    $profile->fresh()->getAttributes(),
                     $userId,
                     $entry->personal_requisition_id,
                 );
@@ -411,11 +419,11 @@ class FichaEmpleadosController extends Controller
                 ->all();
 
             $profile = EmployeeFichaProfile::query()->create($profileAttributes);
-            $this->syncCatalogNamesFromCodes($profile);
+            $this->profileCatalogSync->syncAndSave($profile);
 
             $this->employmentPeriodService->openPeriod(
                 $entry,
-                $profileAttributes,
+                $profile->fresh()->getAttributes(),
                 $userId,
                 null,
             );
@@ -443,7 +451,7 @@ class FichaEmpleadosController extends Controller
     {
         abort_unless($this->canManage(), 403);
 
-        $fichaEntry->load(['requisition.position', 'requisition.city', 'profile', 'activeEmploymentPeriod']);
+        $fichaEntry->load(['requisition.position', 'requisition.city', 'requisition.client', 'requisition.contractType', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
         $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
@@ -452,6 +460,9 @@ class FichaEmpleadosController extends Controller
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
             'profile' => $profile->fresh(),
+            'requisitionReference' => $fichaEntry->requisition
+                ? $this->profilePrefill->requisitionReferenceForEntry($fichaEntry)
+                : null,
             'activePeriod' => $activePeriod,
             'employmentHistory' => $employmentHistory,
             'letterPeriod' => $letterPeriod,
@@ -468,13 +479,13 @@ class FichaEmpleadosController extends Controller
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
         $before = $this->profileAuditSnapshot($profile);
 
-        $attributes = $request->validated();
+        $attributes = $this->mergeProfilePayrollExtra($profile, $request->validated());
         $attributes['phone_secondary'] = $request->input('phone_secondary');
 
         $profile->fill($attributes);
         $profile->save();
 
-        $this->syncCatalogNamesFromCodes($profile);
+        $this->profileCatalogSync->syncAndSave($profile);
         $this->employmentPeriodService->syncActivePeriodFromProfileAttributes(
             $fichaEntry,
             $profile->getAttributes(),
@@ -639,50 +650,25 @@ class FichaEmpleadosController extends Controller
             ->orderByDesc('created_at');
     }
 
-    private function syncCatalogNamesFromCodes(EmployeeFichaProfile $profile): void
-    {
-        $map = [
-            'eps_code' => 'eps_name',
-            'afp_code' => 'afp_name',
-            'position_code' => 'position_name',
-            'cost_center_code' => 'cost_center_name',
-            'bank_code' => 'bank_name',
-            'economic_activity_code' => 'economic_activity_name',
-            'residence_city_code' => 'residence_city_name',
-        ];
-
-        foreach ($map as $codeField => $nameField) {
-            $code = $profile->{$codeField};
-            if ($code === null || $code === '') {
-                continue;
-            }
-
-            $catalogType = match ($codeField) {
-                'eps_code' => 'eps',
-                'afp_code' => 'afp',
-                'position_code' => 'position',
-                'cost_center_code' => 'cost_center',
-                'bank_code' => 'bank',
-                'economic_activity_code' => 'economic_activity',
-                default => 'city',
-            };
-
-            $name = PayrollCatalogItem::query()
-                ->ofType($catalogType)
-                ->where('code', $code)
-                ->value('name');
-
-            if ($name !== null) {
-                $profile->{$nameField} = $name;
-            }
-        }
-
-        $profile->save();
-    }
-
     private function authorizeView(): void
     {
         abort_unless($this->fichaEmpleadosAccess->canView(auth()->user()), 403);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function mergeProfilePayrollExtra(EmployeeFichaProfile $profile, array $attributes): array
+    {
+        if (! isset($attributes['payroll_extra']) || ! is_array($attributes['payroll_extra'])) {
+            return $attributes;
+        }
+
+        $existing = is_array($profile->payroll_extra) ? $profile->payroll_extra : [];
+        $attributes['payroll_extra'] = array_merge($existing, $attributes['payroll_extra']);
+
+        return $attributes;
     }
 
     private function canManage(): bool

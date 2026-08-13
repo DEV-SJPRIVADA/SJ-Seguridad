@@ -2,7 +2,7 @@
     <x-slot name="header">
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
         <div class="app-container ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
-            <div class="panel-heading-row ficha-empleados-page__title-row">
+            <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
                 <div>
                     <h2 class="panel-title panel-title--page">Ficha — {{ $entry->hired_full_name }}</h2>
                     <p class="panel-text">
@@ -71,6 +71,12 @@
                 @method('PATCH')
 
                 <div class="panel__body panel__body--compact">
+                    @if ($requisitionReference ?? null)
+                        @include('areas.gestion_humana.ficha-empleados.partials.ficha-requisition-reference', [
+                            'reference' => $requisitionReference,
+                        ])
+                    @endif
+
                     @include('areas.gestion_humana.ficha-empleados.partials.ficha-form-fields', [
                         'profile' => $profile,
                         'catalogs' => $catalogs,

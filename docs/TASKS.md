@@ -22,7 +22,6 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Prioridad | Feature | Modulo | Dependencias |
 | --- | --- | --- | --- | --- |
-| | | | | |
 
 ---
 
@@ -30,6 +29,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-028 | Formulario ficha completo alineado a Plantilla masivos | orquestado | Si | [`docs/runs/FEAT-028-run-log.md`](runs/FEAT-028-run-log.md) | 2026-08-13 |
 | FEAT-027 | Cartas desvinculacion Word (paquete RENUNCIA) | orquestado | Si | [`docs/runs/FEAT-027-run-log.md`](runs/FEAT-027-run-log.md) | 2026-08-13 |
 | FEAT-026 | Audit log fase 2: Comercial, Suministros, Compras, Calidad, Ficha empleados | orquestado | Si | [`docs/runs/FEAT-026-run-log.md`](runs/FEAT-026-run-log.md) | 2026-08-12 |
 | FEAT-025 | Log general admin cross-modulo (sync, sin cola async) | orquestado | Si | [`docs/runs/FEAT-025-run-log.md`](runs/FEAT-025-run-log.md) | 2026-08-11 |

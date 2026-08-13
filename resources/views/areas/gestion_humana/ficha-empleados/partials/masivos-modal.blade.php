@@ -54,7 +54,7 @@
                         </div>
                     </div>
                     <button type="submit" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
-                        <x-lucide-icon name="download" :size="15" />
+                        <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
                         Exportar plantilla
                     </button>
                 </form>
@@ -74,7 +74,7 @@
 
                     <div class="ficha-empleados-masivos-modal__import">
                         <a href="{{ route('gestion-humana.ficha-empleados.employees.import-template') }}" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
-                            <x-lucide-icon name="file-spreadsheet" :size="15" />
+                            <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
                             Descargar plantilla vacia
                         </a>
 
@@ -92,7 +92,7 @@
                                 </div>
                             </div>
                             <button type="submit" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
-                                <x-lucide-icon name="download" :size="15" />
+                                <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
                                 Exportar datos para actualizar
                             </button>
                         </form>

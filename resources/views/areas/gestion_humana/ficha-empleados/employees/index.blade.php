@@ -141,7 +141,7 @@
                                     @if ($canExportArchive ?? false)
                                         <x-export-excel
                                             route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
-                                            label="Exportar archivo"
+                                            label=""
                                             class="btn btn--secondary btn--sm"
                                         />
                                     @endif

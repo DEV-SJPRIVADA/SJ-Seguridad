@@ -55,6 +55,7 @@ class EmployeeFichaPlantillasTest extends TestCase
             'personal_requisition_ficha_entry_id' => $entry->id,
             'document_number' => '111111111',
             'full_name' => 'Juan Perez',
+            'document_type' => 'C',
             'salary' => 1500000,
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
         ]);

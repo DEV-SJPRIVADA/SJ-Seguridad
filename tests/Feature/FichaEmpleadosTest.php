@@ -20,10 +20,12 @@ use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Tests\Support\EmployeeFichaMasivosPayload;
 use Tests\TestCase;
 
 class FichaEmpleadosTest extends TestCase
 {
+    use EmployeeFichaMasivosPayload;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -32,6 +34,7 @@ class FichaEmpleadosTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
+        $this->seedFe028CatalogFixtures();
     }
 
     public function test_personal_requisitions_table_has_hired_columns(): void
@@ -564,8 +567,8 @@ class FichaEmpleadosTest extends TestCase
             ->get(route('gestion-humana.ficha-empleados.employees.create'))
             ->assertOk()
             ->assertSee('id="document_type"', false)
-            ->assertSee('C — Cedula')
-            ->assertSee('TI — Tarjeta de Identidad');
+            ->assertSee('C — Cedula de ciudadania', false)
+            ->assertSee('TI — Tarjeta de identidad', false);
     }
 
     public function test_manual_employee_create_stores_entry_without_requisition(): void
@@ -574,13 +577,14 @@ class FichaEmpleadosTest extends TestCase
         $manager->assignRole('usuario');
         $manager->givePermissionTo('ficha_empleados.manage');
 
-        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'hired_document' => '801234567',
-            'hired_full_name' => 'Empleado Manual Prueba',
-            'document_type' => 'C',
-            'sex' => 'M',
-            'salary' => '2500000',
-        ]);
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(),
+            [
+                'hired_document' => '801234567',
+                'hired_full_name' => 'Empleado Manual Prueba',
+                'document_type' => 'C',
+            ],
+        ));
 
         $entry = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', '801234567')
@@ -609,10 +613,13 @@ class FichaEmpleadosTest extends TestCase
         ]);
 
         $this->actingAs($manager)
-            ->post(route('gestion-humana.ficha-empleados.employees.store'), [
-                'hired_document' => '809999999',
-                'hired_full_name' => 'Duplicado',
-            ])
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+                $this->masivosCorePayload(),
+                [
+                    'hired_document' => '809999999',
+                    'hired_full_name' => 'Duplicado',
+                ],
+            ))
             ->assertSessionHasErrors('hired_document');
     }
 
@@ -726,14 +733,15 @@ class FichaEmpleadosTest extends TestCase
             'hired_full_name' => 'Gestionar Ahora',
         ]);
 
-        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => '900000404',
-            'hired_full_name' => 'Gestionar Ahora Corregido',
-            'document_type' => 'C',
-            'sex' => 'F',
-            'salary' => '3000000',
-        ]);
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(['sex' => 'F', 'salary' => '3000000']),
+            [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900000404',
+                'hired_full_name' => 'Gestionar Ahora Corregido',
+                'document_type' => 'C',
+            ],
+        ));
 
         $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
 
@@ -759,11 +767,14 @@ class FichaEmpleadosTest extends TestCase
             'hired_full_name' => 'Redirect Test',
         ]);
 
-        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => '900000405',
-            'hired_full_name' => 'Redirect Test',
-        ]);
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(),
+            [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900000405',
+                'hired_full_name' => 'Redirect Test',
+            ],
+        ));
 
         $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
     }
@@ -785,11 +796,14 @@ class FichaEmpleadosTest extends TestCase
             'hired_full_name' => 'Nombre Original Requisicion',
         ]);
 
-        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => '900000499',
-            'hired_full_name' => 'Nombre Corregido En Ficha',
-        ]);
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(),
+            [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900000499',
+                'hired_full_name' => 'Nombre Corregido En Ficha',
+            ],
+        ));
 
         $requisition->refresh();
         $this->assertSame('900000406', $requisition->hired_document);
@@ -809,11 +823,14 @@ class FichaEmpleadosTest extends TestCase
             'hired_full_name' => 'Mantiene Cedula',
         ]);
 
-        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => '900000407',
-            'hired_full_name' => 'Mantiene Cedula',
-        ])->assertSessionHasNoErrors();
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload(),
+            [
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '900000407',
+                'hired_full_name' => 'Mantiene Cedula',
+            ],
+        ))->assertSessionHasNoErrors();
 
         $this->assertNotNull($entry->fresh()->moved_to_ficha_at);
     }
@@ -839,11 +856,14 @@ class FichaEmpleadosTest extends TestCase
         ]);
 
         $this->actingAs($manager)
-            ->post(route('gestion-humana.ficha-empleados.employees.store'), [
-                'ficha_entry_id' => $entry->id,
-                'hired_document' => '900000408',
-                'hired_full_name' => 'Pendiente Con Cedula Propia',
-            ])
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+                $this->masivosCorePayload(),
+                [
+                    'ficha_entry_id' => $entry->id,
+                    'hired_document' => '900000408',
+                    'hired_full_name' => 'Pendiente Con Cedula Propia',
+                ],
+            ))
             ->assertSessionHasErrors('hired_document');
 
         $this->assertNull($entry->fresh()->moved_to_ficha_at);
@@ -865,11 +885,14 @@ class FichaEmpleadosTest extends TestCase
         ]);
 
         $this->actingAs($manager)
-            ->post(route('gestion-humana.ficha-empleados.employees.store'), [
-                'ficha_entry_id' => $entry->id,
-                'hired_document' => '900000410',
-                'hired_full_name' => 'Ya Movido Doble Envio',
-            ])
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+                $this->masivosCorePayload(),
+                [
+                    'ficha_entry_id' => $entry->id,
+                    'hired_document' => '900000410',
+                    'hired_full_name' => 'Ya Movido Doble Envio',
+                ],
+            ))
             ->assertSessionHasErrors('ficha_entry_id');
     }
 

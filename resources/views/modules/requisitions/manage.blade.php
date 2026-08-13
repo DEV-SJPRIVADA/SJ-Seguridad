@@ -37,14 +37,7 @@
                         </summary>
 
                         <div class="req-manage-filters__panel-body">
-                            <div class="req-manage-filters__head">
-                                <div class="req-manage-filters__actions">
-                                    <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
-                                    @if ($hasActiveFilters)
-                                        <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                    @endif
-                                </div>
-                            </div>
+
 
                             <div class="req-manage-filters__toolbar">
                                 <form method="GET" id="manage-filters-form" class="req-manage-filters__search-col">
@@ -92,6 +85,14 @@
                                                 class="req-manage-filters__pill status-pill--req-{{ $statusKey }} {{ ($filters['status'] ?? '') === $statusKey ? 'is-active' : '' }}"
                                             >{{ $statusLabel }}</a>
                                         @endforeach
+                                    </div>
+                                    <div class="req-manage-filters__head">
+                                        <div class="req-manage-filters__actions">
+                                            <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
+                                            @if ($hasActiveFilters)
+                                                <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -12,7 +12,7 @@ class ExportExcel extends Component
     public string $label;
     public string $class;
 
-    public function __construct(string $route, string $label = 'Exportar a Excel', string $class = 'btn btn--secondary btn--sm')
+    public function __construct(string $route, string $label = '', string $class = 'btn btn--secondary btn--sm')
     {
         $this->route = $route;
         $this->label = $label;

@@ -54,27 +54,10 @@
                 @endif
 
                 <div class="panel__body panel__body--compact">
-                    @if ($fichaEntry && $fichaEntry->requisition)
-                        <section class="ficha-empleados-form__section">
-                            <header class="ficha-empleados-form__section-head">
-                                <h3 class="ficha-empleados-form__section-title">Referencia de requisición</h3>
-                                <p class="ficha-empleados-form__section-lead">Datos de solo lectura tomados de la requisición contratada.</p>
-                            </header>
-                            <div class="form-grid form-grid--two ficha-empleados-form__grid">
-                                <div class="form-field">
-                                    <label class="form-label">Código requisición</label>
-                                    <input class="form-input" value="{{ $fichaEntry->requisitionCode() ?: '—' }}" disabled readonly>
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label">Cliente</label>
-                                    <input class="form-input" value="{{ $fichaEntry->clientName() ?: '—' }}" disabled readonly>
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label">Cargo</label>
-                                    <input class="form-input" value="{{ $fichaEntry->positionName() ?: '—' }}" disabled readonly>
-                                </div>
-                            </div>
-                        </section>
+                    @if ($requisitionReference)
+                        @include('areas.gestion_humana.ficha-empleados.partials.ficha-requisition-reference', [
+                            'reference' => $requisitionReference,
+                        ])
                     @endif
 
                     <section class="ficha-empleados-form__section">

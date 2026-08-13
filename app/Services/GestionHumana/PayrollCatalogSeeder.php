@@ -13,9 +13,41 @@ class PayrollCatalogSeeder
     /**
      * @return array<string, int>
      */
-    public function seedFromDirectory(string $directory, bool $dryRun = false): array
+    public function seedStaticDefaults(bool $dryRun = false): array
     {
         $stats = [];
+
+        foreach (config('employee_ficha.document_type_defaults', []) as $item) {
+            $stats = $this->countOrUpsertPair(
+                $stats,
+                'document_type',
+                $item['code'] ?? null,
+                $item['name'] ?? null,
+                $dryRun,
+            );
+        }
+
+        foreach (config('employee_ficha.catalog_static_defaults', []) as $catalogType => $items) {
+            foreach ($items as $item) {
+                $stats = $this->countOrUpsertPair(
+                    $stats,
+                    (string) $catalogType,
+                    $item['code'] ?? null,
+                    $item['name'] ?? null,
+                    $dryRun,
+                );
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    public function seedFromDirectory(string $directory, bool $dryRun = false): array
+    {
+        $stats = $this->seedStaticDefaults($dryRun);
         $files = [
             'activos' => $this->findFile($directory, 'ACTIVOS'),
             'empleados' => $directory.DIRECTORY_SEPARATOR.'EMPLEADOS.xlsx',
@@ -67,6 +99,7 @@ class PayrollCatalogSeeder
                 ['city', $rowData['codigo_lugar_residencia'] ?? null, $rowData['lugar_residencia'] ?? null],
                 ['position', $rowData['cargo'] ?? null, $rowData['nombre_cargo'] ?? null],
                 ['cost_center', $rowData['ccosto'] ?? null, $rowData['nombre_ccosto'] ?? null],
+                ['work_center', $rowData['nombre_centro_trabajo'] ?? null, $rowData['nombre_centro_trabajo'] ?? null],
                 ['eps', $rowData['codigo_eps'] ?? null, $rowData['nombre_eps'] ?? null],
                 ['afp', $rowData['codigo_afp'] ?? null, $rowData['nombre_afp'] ?? null],
                 ['arp', null, $rowData['nombre_arp'] ?? null],
@@ -75,22 +108,38 @@ class PayrollCatalogSeeder
                 ['contract_type', $rowData['tipo_contrato'] ?? null, $rowData['tipo_contrato'] ?? null],
                 ['salary_type', $rowData['tipo_salario'] ?? null, $rowData['tipo_salario'] ?? null],
                 ['economic_activity', $rowData['actividad_economica'] ?? null, $rowData['nombre_actividad_economica'] ?? null],
+                ['linkage_type', $rowData['tipo_vinculacion'] ?? null, $rowData['tipo_vinculacion'] ?? null],
+                ['account_type', $rowData['tipo_de_cuenta'] ?? null, $rowData['tipo_de_cuenta'] ?? null],
+                ['risk_level', $rowData['nivel_riesgo_arp'] ?? null, $rowData['nivel_riesgo_arp'] ?? null],
+                ['ccf', $rowData['nombre_caja_compensacion'] ?? null, $rowData['nombre_caja_compensacion'] ?? null],
             ];
 
             foreach ($pairs as [$type, $code, $name]) {
-                if ($dryRun) {
-                    if (trim((string) $code) !== '' || trim((string) $name) !== '') {
-                        $stats[$type] = ($stats[$type] ?? 0) + 1;
-                    }
-
-                    continue;
-                }
-
-                $item = PayrollCatalogItem::upsertPair($type, $code !== null ? (string) $code : null, $name !== null ? (string) $name : null);
-                if ($item !== null) {
-                    $stats[$type] = ($stats[$type] ?? 0) + 1;
-                }
+                $stats = $this->countOrUpsertPair($stats, $type, $code, $name, $dryRun);
             }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * @param  array<string, int>  $stats
+     * @return array<string, int>
+     */
+    private function countOrUpsertPair(array $stats, string $type, mixed $code, mixed $name, bool $dryRun): array
+    {
+        if ($dryRun) {
+            if (trim((string) $code) !== '' || trim((string) $name) !== '') {
+                $stats[$type] = ($stats[$type] ?? 0) + 1;
+            }
+
+            return $stats;
+        }
+
+        $item = PayrollCatalogItem::upsertPair($type, $code !== null ? (string) $code : null, $name !== null ? (string) $name : null);
+
+        if ($item !== null) {
+            $stats[$type] = ($stats[$type] ?? 0) + 1;
         }
 
         return $stats;

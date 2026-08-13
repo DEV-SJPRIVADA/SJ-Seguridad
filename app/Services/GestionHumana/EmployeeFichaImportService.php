@@ -18,6 +18,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class EmployeeFichaImportService
 {
+    public function __construct(
+        private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
+    ) {}
+
     /**
      * @return array{imported: int, updated: int, skipped: int, empty_rows: int, errors: list<string>, failures: list<array<string, mixed>>}
      */
@@ -74,9 +78,11 @@ class EmployeeFichaImportService
 
                     if ($existing !== null) {
                         $existing->update($payload);
+                        $this->profileCatalogSync->syncAndSave($existing);
                         $stats['updated']++;
                     } else {
-                        EmployeeFichaProfile::query()->create($payload);
+                        $profile = EmployeeFichaProfile::query()->create($payload);
+                        $this->profileCatalogSync->syncAndSave($profile);
                         $stats['imported']++;
                     }
                 });

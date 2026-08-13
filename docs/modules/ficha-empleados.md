@@ -131,8 +131,8 @@ Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agrega
 
 1. **Entrada:** en el listado de Pendientes, el boton **"Gestionar Empleado"** es un enlace `GET` (no un formulario) a `gestion-humana/ficha-empleados/empleados/nuevo?desde={fichaEntryId}`.
 2. **`create()` con `desde`:** resuelve la fila con `PersonalRequisitionFichaEntry::query()->pending()->findOrFail($desde)`. Si el `id` no existe o la fila ya esta **en ficha**, responde **404** (protege contra reprocesar un registro ya movido).
-3. **Prefill sin persistir:** `App\Services\GestionHumana\EmployeeFichaProfilePrefill::buildForEntry($fichaEntry)` arma un `EmployeeFichaProfile` **en memoria** con la misma logica de mapeo requisicion → perfil que `prefillForEntry()` (documento, nombre parseado, sexo, salario, fecha de ingreso, centro de costo, cargo, tipo de contrato, ciudad, cliente), extraida a un metodo privado comun `attributesForEntry()`. Si el pendiente ya tiene un perfil **persistido** (por ejemplo, porque antes se visito `/{id}/ficha`), se reutiliza ese perfil real tal cual esta, sin sobrescribirlo. Visitar la pantalla en este modo **no** crea ningun `EmployeeFichaProfile` ni toca `moved_to_ficha_at` cuando no habia perfil previo.
-4. **Formulario:** `create-ficha.blade.php` muestra un bloque de referencia de solo lectura (codigo de requisicion, cliente, cargo, via `$fichaEntry->requisitionCode()`/`clientName()`/`positionName()`), titulo dinamico **"Gestionar empleado — {hired_full_name}"**, campo oculto `ficha_entry_id`, y los mismos campos de `ficha-form-fields.blade.php` que el alta manual. `hired_document`/`hired_full_name` quedan **editables**; el link "Volver" apunta a `employees.index?estado=pendientes`.
+3. **Prefill sin persistir (FEAT-028 — honesto):** `EmployeeFichaProfilePrefill::buildForEntry()` sugiere en el formulario solo campos editables no exportables de forma silenciosa: sexo, salario, fecha ingreso, cargo (mapeo nómina si existe). **No** precarga centro de costo, ciudad residencia, centro de trabajo ni tipo contrato desde requisición — esos datos van al bloque **Referencia de requisición** (`ficha-requisition-reference.blade.php`, solo lectura). Si el pendiente ya tiene perfil persistido, se reutiliza tal cual.
+4. **Formulario:** `create-ficha.blade.php` muestra referencia readonly (código requisición, cliente, cargo, salario/fecha sugeridos, texto centro costo, ciudad), titulo dinamico **"Gestionar empleado — {hired_full_name}"**, campo oculto `ficha_entry_id`, y el formulario completo FEAT-028 (`ficha-form-fields.blade.php`). `hired_document`/`hired_full_name` editables; **Volver** → Pendientes.
 5. **`store()` con `ficha_entry_id`:** dentro de una transaccion, revalida `pending()->findOrFail()` (protege contra doble envio/doble pestaña — si ya fue movida, falla en vez de sobrescribir), actualiza `hired_document`, `hired_full_name`, `moved_to_ficha_at = now()`, `moved_to_ficha_by = auth user` en la fila **existente**, y crea/actualiza su `EmployeeFichaProfile` con los datos del formulario. Redirige a `gestion-humana.ficha-empleados.employees.index` (estado por defecto `en_ficha`) con mensaje de exito.
 6. **Cedula duplicada:** `StoreManualEmployeeFichaRequest` valida `hired_document` con `Rule::unique('personal_requisition_ficha_entries', 'hired_document')->ignore($fichaEntryId)` — permite guardar sin cambiar la cedula propia, pero bloquea si se cambia a una cedula que ya pertenece a **otra** fila (mismo mensaje de validacion que el alta manual, sin flujo de confirmacion tipo SweetAlert).
 7. **No propagacion:** ninguna escritura de este flujo toca `personal_requisitions.hired_document`/`hired_full_name`; esos campos siguen reflejando lo capturado al marcar Contratado en la requisicion.
@@ -185,13 +185,44 @@ Catálogo **Causal desvinculacion** (`termination_cause`) en pestaña Catalogos.
 
 Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catalogos** en Ficha empleados; seed alternativo: `php artisan employee-ficha:seed-catalogs`.
 
+## Formulario ficha alineado a Plantilla masivos (FEAT-028)
+
+**Principio:** captura = exportación. El mismo formulario completo se usa en alta manual, **Gestionar empleado** y editar ficha.
+
+### UI (`ficha-form-fields.blade.php`)
+
+Siete secciones: Identificación, Contacto, Contrato y nómina, Centros, Seguridad social, Pagos, Nómina avanzada. Partial reutilizable `ficha-catalog-select.blade.php` (Select2, formato `codigo — nombre`). Campos con par código/nombre **no** tienen input duplicado para el nombre — el sistema completa el homólogo al guardar.
+
+### Campos obligatorios (store + update)
+
+Cédula, nombre (create), sexo, fecha ingreso, cargo (`position_code`), salario, centro de costo (`cost_center_code`), EPS, AFP, caja compensación (`payroll_extra.ccf_code`), forma de pago, banco, tipo cuenta, número cuenta.
+
+Validación: trait `EmployeeFichaProfileFieldRules` + regla `PayrollCatalogCode`.
+
+### Sync catálogo
+
+`App\Services\GestionHumana\EmployeeFichaProfileCatalogSync` — tras store/update/import sincroniza nombres desde códigos (perfil + pares en `payroll_extra`). Config: `catalog_profile_code_name_pairs`, `catalog_payroll_extra_code_name_pairs` en `config/employee_ficha.php`.
+
+### Prefill honesto
+
+`EmployeeFichaProfilePrefill::requisitionReferenceForEntry()` alimenta el bloque readonly; `attributesForEntry()` ya no escribe valores exportables desde texto de requisición.
+
+### JSON `payroll_extra`
+
+Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursal, etc.). El controller fusiona claves existentes en update (`mergeProfilePayrollExtra`).
+
+### Catálogos nuevos (FEAT-028)
+
+`work_center`, `linkage_type`, `account_type`, `risk_level`, `workday`, `ccf`, `withholding_type`, `expense_type`, `destination`, `zone`, `severance_admin`. Tipo documento incluye **CE**. Migración/seed: `2026_08_13_162235_seed_fe028_payroll_catalog_defaults.php`.
+
 ## Export Excel — Plantilla masivos (nómina externa)
 
 - Clase: `App\Exports\PlantillaMasivosExport` — carga `storage/templates/plantilla-masivos.xlsx`, conserva filas 1–2, datos desde fila 3.
-- Mapper: `App\Services\GestionHumana\PlantillaMasivosMapper`.
-- Config: `config/employee_ficha.php`.
+- Mapper: `App\Services\GestionHumana\PlantillaMasivosMapper` — **solo** `employee_ficha_profiles` + `payroll_extra` guardados; sin fallbacks de requisición (excepto cédula/nombre mínimo desde entry); columna **NITCENTROTB** siempre `null`; sin defaults numéricos en jornada/retención/gasto/horas extra.
+- Import row mapper: `EmployeeFichaImportRowMapper` — misma regla (solo perfil persistido).
+- Config: `config/employee_ficha.php` (`plantilla_masivos_columns`, `plantilla_masivos_excluded_columns`).
 - **Sin rango de fechas:** solo empleados activos en ficha.
-- **Con `fecha_desde` + `fecha_hasta`:** filtra por `hire_date` (perfil o requisición).
+- **Con `fecha_desde` + `fecha_hasta`:** filtra por `hire_date` del perfil.
 - Archivo: `plantilla_masivos_{Y-m-d}.xlsx`.
 
 ## Importación masiva SJ
@@ -217,15 +248,28 @@ Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). 
 ## Vistas
 
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha; en pill **Pendientes**, boton **Gestionar Empleado** por fila (enlace `GET` a `create` con `?desde={id}`, sin formulario ni SweetAlert).
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — formulario unico con **dos modos**: alta manual (sin requisición, titulo "Nuevo empleado") y **Gestionar Empleado** (`$fichaEntry` presente: titulo dinamico, bloque de referencia de requisicion de solo lectura, campo oculto `ficha_entry_id`).
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — formulario unico (alta manual / Gestionar empleado / reingreso).
+- `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-form-fields.blade.php` — formulario completo FEAT-028 (7 secciones).
+- `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-catalog-select.blade.php` — selector catalogo reutilizable.
+- `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-requisition-reference.blade.php` — referencia readonly requisicion.
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/edit-ficha.blade.php` — formulario perfil empleado.
 - `resources/views/areas/gestion_humana/ficha-empleados/catalogs/index.blade.php` — admin catalogos nómina (EPS, AFP, cargo, etc.).
 - `resources/views/areas/gestion_humana/partials/ficha-empleados-subnav.blade.php` — subnav `.module-tab`.
 
 ## Tests
 
-`tests/Feature/FichaEmpleadosTest.php` + `tests/Feature/EmployeeFichaPlantillasTest.php`:
+`tests/Feature/FichaEmpleadosTest.php` + `tests/Feature/EmployeeFichaPlantillasTest.php` + suite FEAT-028:
 
+- `tests/Feature/GestionHumana/EmployeeFichaCatalogFe028Test.php`
+- `tests/Feature/GestionHumana/EmployeeFichaCatalogSyncFe028Test.php`
+- `tests/Feature/GestionHumana/EmployeeFichaFormFe028Test.php`
+- `tests/Feature/GestionHumana/EmployeeFichaPrefillFe028Test.php`
+- `tests/Feature/GestionHumana/EmployeeFichaMasivosExportFe028Test.php`
+- `tests/Feature/GestionHumana/EmployeeFichaSalaryTest.php`
+
+Cobertura FEAT-028: catalogos, sync codigo→nombre, obligatorios, formulario UI, prefill honesto, export sin fallbacks, NIT vacio, round-trip guardar→export.
+
+Cobertura general:
 - Columnas de migracion (`personal_requisitions.hired_*`, `personal_requisition_ficha_entries.*`).
 - Relaciones/accessors del modelo `PersonalRequisitionFichaEntry`; scopes `pending`/`inFicha`.
 - `FichaEmpleadosAccessService`: bypass admin, sin permisos, solo view, manage implica view, board sin tab, independencia de `requisitions.tab.gestion`.

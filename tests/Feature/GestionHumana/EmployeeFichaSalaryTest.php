@@ -18,10 +18,12 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\EmployeeFichaMasivosPayload;
 use Tests\TestCase;
 
 class EmployeeFichaSalaryTest extends TestCase
 {
+    use EmployeeFichaMasivosPayload;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -30,6 +32,7 @@ class EmployeeFichaSalaryTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
+        $this->seedFe028CatalogFixtures();
     }
 
     public function test_edit_ficha_form_does_not_nest_letter_form_inside_patch_form(): void
@@ -60,9 +63,10 @@ class EmployeeFichaSalaryTest extends TestCase
         $entry = $this->createInFichaEntry();
 
         $this->actingAs($manager)
-            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), [
-                'salary' => '2.180.000',
-            ])
+            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), array_merge(
+                $this->masivosCorePayload(),
+                ['salary' => '2.180.000'],
+            ))
             ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
 
         $entry->profile->refresh();
@@ -76,9 +80,10 @@ class EmployeeFichaSalaryTest extends TestCase
         $entry = $this->createInFichaEntry();
 
         $this->actingAs($manager)
-            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), [
-                'salary' => '2180000000000',
-            ])
+            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), array_merge(
+                $this->masivosCorePayload(),
+                ['salary' => '2180000000000'],
+            ))
             ->assertSessionHasErrors('salary');
 
         $this->assertNull($entry->profile->fresh()->salary);
