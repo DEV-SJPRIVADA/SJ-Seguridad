@@ -72,6 +72,18 @@ Excepciones documentadas:
 
 No reintroducir `min-height` fijos (38px, 42px, etc.) en modulos; usar los tokens anteriores.
 
+## Iconos (Blade Icons)
+
+Toda la UI usa [Blade Icons](https://github.com/blade-ui-kit/blade-icons). No agregar SVG embebidos ni un componente local tipo `<x-lucide-icon name="...">`.
+
+| Uso | Paquete / set | Ejemplo |
+| --- | --- | --- |
+| Iconos de interfaz | `mallardduck/blade-lucide-icons` | `<x-lucide-search width="18" height="18" aria-hidden="true" />` |
+| Marca Excel | `robertboes/blade-selfhst-icons` | `<x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />` |
+| Iconos puntuales Remix (pendiente / reabrir) | set local `resources/svg/remix` (prefijo `ri`) | `<x-ri-pass-pending-fill width="24" height="24" aria-hidden="true" />` |
+
+El set Remix local se registra en `AppServiceProvider`. Para un icono Lucide nuevo, usar el componente del paquete (`<x-lucide-{nombre} />`); no copiar paths SVG a Blade.
+
 ## Regla de mantenimiento
 
 Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero en el componente `application-logo` para evitar inconsistencias entre pantallas.

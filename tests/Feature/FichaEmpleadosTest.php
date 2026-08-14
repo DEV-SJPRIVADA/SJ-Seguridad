@@ -248,6 +248,8 @@ class FichaEmpleadosTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('datatableUrl');
+        $response->assertSee('aria-label="Buscar"', false);
+        $response->assertDontSee('aria-label="Limpiar filtros"', false);
 
         $datatable = $this->getFichaEmpleadosDatatable($viewer);
         $datatable->assertOk()
@@ -285,6 +287,8 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
 
         $response->assertOk();
+        $response->assertSee('aria-label="Limpiar filtros"', false);
+        $response->assertSee(route('gestion-humana.ficha-empleados.employees.index'), false);
 
         $datatable = $this->getFichaEmpleadosDatatable($viewer, ['estado' => 'pendientes']);
         $datatable->assertOk()
@@ -494,6 +498,63 @@ class FichaEmpleadosTest extends TestCase
                 'length' => 10,
             ]))
             ->assertForbidden();
+    }
+
+    public function test_ficha_empleados_datatable_search_filters_by_name_and_client(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $mover = User::factory()->create(['must_change_password' => false]);
+        $uniqueClient = RequisitionClient::query()->create([
+            'name' => 'Cliente Unico Datatable',
+            'is_active' => true,
+            'sort_order' => 99,
+        ]);
+
+        $matching = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-DT-01', [
+                'client_id' => $uniqueClient->id,
+            ])->id,
+            'hired_document' => '900000801',
+            'hired_full_name' => 'Ana Datatable Search',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-DT-02')->id,
+            'hired_document' => '900000802',
+            'hired_full_name' => 'Otro Empleado Lista',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $matching->id,
+            'document_number' => '900000801',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'work_center_name' => 'Cliente Unico Datatable',
+        ]);
+
+        $byName = $this->getFichaEmpleadosDatatable($viewer, [
+            'search' => ['value' => 'Ana Datatable'],
+        ]);
+        $byName->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Ana Datatable Search', $this->datatableRowTexts($byName->json()));
+        $this->assertStringNotContainsString('Otro Empleado Lista', $this->datatableRowTexts($byName->json()));
+
+        $byClient = $this->getFichaEmpleadosDatatable($viewer, [
+            'search' => ['value' => 'Cliente Unico Datatable'],
+        ]);
+        $byClient->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Ana Datatable Search', $this->datatableRowTexts($byClient->json()));
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertOk()
+            ->assertDontSee('preXhr.dt', false);
     }
 
     public function test_ficha_empleados_board_hidden_without_board_permission(): void

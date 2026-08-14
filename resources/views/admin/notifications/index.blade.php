@@ -89,7 +89,7 @@
                         @click="openModule(group.module)"
                     >
                         <span class="notif-config-module-card__icon" aria-hidden="true">
-                            <x-lucide-icon name="mail" :size="22" />
+                            <x-lucide-mail width="22" height="22" aria-hidden="true" />
                         </span>
                         <span class="notif-config-module-card__title" x-text="group.module_label"></span>
                         <span class="notif-config-module-card__meta">
@@ -107,7 +107,7 @@
             {{-- Detalle modulo --}}
             <div class="notif-config-detail" x-show="screen === 'detail'" x-cloak>
                 <button type="button" class="notif-config-detail__back" @click="backToGrid()">
-                    <x-lucide-icon name="arrow-left" :size="18" />
+                    <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     Volver a modulos
                 </button>
 

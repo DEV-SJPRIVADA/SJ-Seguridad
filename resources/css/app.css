@@ -715,6 +715,38 @@ a {
     min-height: var(--control-height-chrome);
 }
 
+.ficha-empleados-filters__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height-chrome);
+    height: var(--control-height-chrome);
+    min-width: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.ficha-empleados-filters__icon-btn--ghost {
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--brand-blue);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ficha-empleados-filters__icon-btn--ghost:hover {
+    background: rgba(0, 51, 102, 0.08);
+    color: #002244;
+}
+
+.ficha-empleados-filters__icon-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
 .ficha-empleados-filters__status {
     display: flex;
     align-items: center;

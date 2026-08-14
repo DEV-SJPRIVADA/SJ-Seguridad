@@ -12,6 +12,7 @@ use App\Policies\PurchaseRequestPolicy;
 use App\Policies\QualityDocumentPolicy;
 use App\Policies\SupplyRequestPolicy;
 use App\Services\Navigation\NavigationResolver;
+use BladeUI\Icons\Factory;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +26,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->callAfterResolving(Factory::class, function (Factory $factory): void {
+            $factory->add('remix', [
+                'path' => resource_path('svg/remix'),
+                'prefix' => 'ri',
+            ]);
+        });
     }
 
     /**

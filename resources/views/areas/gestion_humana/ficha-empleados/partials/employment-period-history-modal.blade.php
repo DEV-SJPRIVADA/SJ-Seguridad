@@ -5,7 +5,7 @@
             <div class="ficha-empleados-masivos-modal__header">
                 <div class="ficha-empleados-masivos-modal__heading">
                     <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                        <x-lucide-icon name="history" :size="20" />
+                        <x-lucide-history width="20" height="20" aria-hidden="true" />
                     </span>
                     <div>
                         <h3 class="ficha-empleados-masivos-modal__title">Historial de vinculos</h3>
@@ -18,7 +18,7 @@
                     aria-label="Cerrar"
                     x-on:click="$dispatch('close-modal', 'ficha-employment-history')"
                 >
-                    <x-lucide-icon name="x" :size="18" />
+                    <x-lucide-x width="18" height="18" aria-hidden="true" />
                 </button>
             </div>
 

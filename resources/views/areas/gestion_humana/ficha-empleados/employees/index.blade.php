@@ -85,7 +85,24 @@
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cedula, nombre o codigo de requisicion"
                                     >
-                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
+                                    <button
+                                        type="submit"
+                                        class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
+                                        title="Buscar"
+                                        aria-label="Buscar"
+                                    >
+                                        <x-lucide-search width="30" height="30" aria-hidden="true" />
+                                    </button>
+                                    @if ($hasActiveFilters)
+                                        <a
+                                            href="{{ route('gestion-humana.ficha-empleados.employees.index') }}"
+                                            class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
+                                            title="Limpiar filtros"
+                                            aria-label="Limpiar filtros"
+                                        >
+                                            <x-lucide-filter-x width="20" height="20" aria-hidden="true" />
+                                        </a>
+                                    @endif
                                 </div>
                             </form>
 
@@ -96,7 +113,7 @@
                                     title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
                                     aria-label="Pendientes: {{ number_format($pendingCount) }}"
                                 >
-                                    <x-ri-pass-pending-fill :size="24" />
+                                    <x-ri-pass-pending-fill width="24" height="24" aria-hidden="true" />
                                     <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
                                 </a>
 
@@ -122,10 +139,6 @@
                                     <a href="{{ route('gestion-humana.ficha-empleados.employees.create') }}" class="btn btn--primary btn--sm">Nuevo empleado</a>
                                 @endif
 
-                                @if ($hasActiveFilters)
-                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                @endif
-
                                 @if ($currentEstado === 'en_ficha')
                                     <button
                                         type="button"
@@ -135,7 +148,7 @@
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'ficha-masivos')"
                                     >
-                                        <x-lucide-icon name="upload" :size="20" />
+                                        <x-lucide-upload width="20" height="20" aria-hidden="true" />
                                     </button>
 
                                     @if ($canExportArchive ?? false)
@@ -312,13 +325,6 @@
                             row.tabIndex = 0;
                             row.setAttribute('role', 'link');
                         },
-                    });
-
-                    api.on('preXhr.dt', function () {
-                        if ($wrap.length) {
-                            $wrap.addClass('data-table-wrap--booting');
-                            $wrap.find('.data-table-wrap__loader').attr('aria-busy', 'true');
-                        }
                     });
 
                     api.on('xhr.dt', function (_event, _settings, json) {

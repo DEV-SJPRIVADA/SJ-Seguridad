@@ -7,6 +7,7 @@ use App\Support\DisplayDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 final class EmployeeFichaEntryDatatableService
@@ -63,11 +64,74 @@ final class EmployeeFichaEntryDatatableService
             return;
         }
 
-        $query->where(function (Builder $inner) use ($search): void {
-            $inner->where('hired_document', 'like', "%{$search}%")
-                ->orWhere('hired_full_name', 'like', "%{$search}%")
-                ->orWhereHas('requisition', fn (Builder $requisition) => $requisition->where('code', 'like', "%{$search}%"));
+        $like = "%{$search}%";
+        $statusKeys = $this->employmentStatusKeysMatching($search);
+        $searchDate = $this->parsedSearchDate($search);
+
+        $query->where(function (Builder $inner) use ($like, $statusKeys, $searchDate): void {
+            $inner->where('hired_document', 'like', $like)
+                ->orWhere('hired_full_name', 'like', $like)
+                ->orWhereHas('movedBy', fn (Builder $user) => $user->where('name', 'like', $like))
+                ->orWhereHas('profile', function (Builder $profile) use ($like, $statusKeys, $searchDate): void {
+                    $profile->where('position_name', 'like', $like)
+                        ->orWhere('work_center_name', 'like', $like)
+                        ->orWhere('residence_city_name', 'like', $like);
+
+                    if ($statusKeys !== []) {
+                        $profile->orWhereIn('employment_status', $statusKeys);
+                    }
+
+                    if ($searchDate !== null) {
+                        $profile->orWhereDate('hire_date', $searchDate)
+                            ->orWhereDate('termination_date', $searchDate);
+                    }
+                })
+                ->orWhereHas('requisition', function (Builder $requisition) use ($like, $searchDate): void {
+                    $requisition->where('code', 'like', $like)
+                        ->orWhereHas('position', fn (Builder $position) => $position->where('name', 'like', $like))
+                        ->orWhereHas('client', fn (Builder $client) => $client->where('name', 'like', $like))
+                        ->orWhereHas('city', fn (Builder $city) => $city->where('name', 'like', $like));
+
+                    if ($searchDate !== null) {
+                        $requisition->orWhereDate('hiring_date', $searchDate);
+                    }
+                });
         });
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function employmentStatusKeysMatching(string $search): array
+    {
+        $needle = mb_strtolower($search);
+
+        /** @var array<string, string> $labels */
+        $labels = config('employee_ficha.employment_status', []);
+
+        return collect($labels)
+            ->filter(fn (string $label, string $key): bool => str_contains(mb_strtolower($label), $needle)
+                || str_contains(mb_strtolower($key), $needle))
+            ->keys()
+            ->values()
+            ->all();
+    }
+
+    private function parsedSearchDate(string $search): ?string
+    {
+        foreach (['d/m/y', 'd/m/Y'] as $format) {
+            try {
+                $date = Carbon::createFromFormat('!'.$format, $search);
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if ($date !== false && $date->format($format) === $search) {
+                return $date->toDateString();
+            }
+        }
+
+        return null;
     }
 
     /**
