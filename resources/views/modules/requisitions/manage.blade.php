@@ -133,7 +133,8 @@
                         </div>
                     </details>
 
-                    <div class="data-table-wrap req-manage-shell__table">
+                    <div class="data-table-wrap req-manage-shell__table data-table-wrap--booting">
+                        @include('partials.data-table-loader')
                         <table
                             class="data-table js-datatable"
                             style="width:100%"

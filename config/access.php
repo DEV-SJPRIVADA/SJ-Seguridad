@@ -12,8 +12,8 @@ return [
         'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
         'system.view.audit' => 'Ver auditoria global del sistema',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
-        'manage.requisition.parameters' => 'Administrar parametros de requisiciones',
-        'manage.commercial.parameters' => 'Administrar parametros comerciales',
+        'manage.requisition.parameters' => 'Administrar catalogos de requisiciones',
+        'manage.commercial.parameters' => 'Administrar catalogos comerciales',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
@@ -143,7 +143,7 @@ return [
     'gestion_clientes_tabs' => [
         'clientes' => 'Clientes',
         'servicios' => 'Servicios',
-        'parametros' => 'Parametros',
+        'parametros' => 'Catalogos',
     ],
 
     'ficha_empleados_tabs' => [
@@ -162,7 +162,7 @@ return [
         'seguimiento' => 'Mis requisiciones',
         'gestion' => 'Gestion',
         'autorizacion_gerencia' => 'Autorizacion gerencia',
-        'parametros' => 'Parametros',
+        'parametros' => 'Catalogos',
     ],
 
     'supply_tabs' => [
