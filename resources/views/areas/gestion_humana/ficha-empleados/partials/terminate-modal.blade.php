@@ -15,7 +15,7 @@
                     aria-label="Cerrar"
                     x-on:click="$dispatch('close-modal', 'ficha-terminate')"
                 >
-                    <x-lucide-icon name="x" :size="18" />
+                    <x-lucide-x width="18" height="18" aria-hidden="true" />
                 </button>
             </div>
 

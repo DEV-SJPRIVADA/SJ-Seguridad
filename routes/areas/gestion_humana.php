@@ -26,6 +26,7 @@ Route::middleware(['password.changed'])
         Route::get('/nuevo', [FichaEmpleadosController::class, 'create'])->name('create');
         Route::post('/nuevo', [FichaEmpleadosController::class, 'store'])->name('store');
         Route::get('/', [FichaEmpleadosController::class, 'index'])->name('index');
+        Route::get('/datatable', [FichaEmpleadosController::class, 'datatable'])->name('datatable');
         Route::get('/exportar', [FichaEmpleadosController::class, 'exportExcel'])->name('export');
         Route::get('/plantilla-importacion', [FichaEmpleadosController::class, 'importTemplate'])->name('import-template');
         Route::get('/plantilla-importacion/exportar', [FichaEmpleadosController::class, 'exportImportTemplate'])->name('export-import-template');

@@ -19,6 +19,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaAuditLogService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
+use App\Services\GestionHumana\EmployeeFichaEntryDatatableService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
@@ -26,6 +27,7 @@ use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -50,6 +52,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
         private readonly EmployeeFichaAuditLogService $auditLogService,
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
+        private readonly EmployeeFichaEntryDatatableService $entryDatatableService,
     ) {}
 
     public function index(Request $request): View
@@ -60,11 +63,10 @@ class FichaEmpleadosController extends Controller
         $estado = $this->resolveEstadoFilter($request);
         [$employmentStatus, $employmentStatusMode] = $this->resolveEmploymentStatusFilter($request, $estado);
 
-        $entries = $this->entryListQuery($q, $estado, $employmentStatus)->get();
         $pendingCount = PersonalRequisitionFichaEntry::query()->pending()->count();
 
         return view('areas.gestion_humana.ficha-empleados.employees.index', [
-            'entries' => $entries,
+            'datatableUrl' => route('gestion-humana.ficha-empleados.employees.datatable', $request->query()),
             'filters' => [
                 'q' => $q,
                 'estado' => $estado,
@@ -78,6 +80,24 @@ class FichaEmpleadosController extends Controller
             'canExportArchive' => $this->canExportArchive(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
         ]);
+    }
+
+    public function datatable(Request $request): JsonResponse
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+        $estado = $this->resolveEstadoFilter($request);
+        [$employmentStatus] = $this->resolveEmploymentStatusFilter($request, $estado);
+
+        $query = $this->entryListQuery($q, $estado, $employmentStatus);
+
+        return $this->entryDatatableService->respond(
+            $request,
+            $query,
+            $estado,
+            $this->canManage(),
+        );
     }
 
     public function exportExcel(Request $request): StreamedResponse|RedirectResponse
@@ -98,7 +118,7 @@ class FichaEmpleadosController extends Controller
             $query->withActiveProfile();
         }
 
-        $entries = $query->get();
+        $entries = $query->orderByDesc('created_at')->get();
 
         if ($entries->isEmpty()) {
             return redirect()
@@ -143,7 +163,7 @@ class FichaEmpleadosController extends Controller
             $query->withActiveProfile();
         }
 
-        $entries = $query->get();
+        $entries = $query->orderByDesc('created_at')->get();
 
         if ($entries->isEmpty()) {
             return redirect()
@@ -181,7 +201,7 @@ class FichaEmpleadosController extends Controller
             $query->withActiveProfile();
         }
 
-        $entries = $query->get();
+        $entries = $query->orderByDesc('created_at')->get();
 
         if ($entries->isEmpty()) {
             return redirect()
@@ -646,8 +666,7 @@ class FichaEmpleadosController extends Controller
                         ->orWhere('hired_full_name', 'like', "%{$q}%")
                         ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
                 });
-            })
-            ->orderByDesc('created_at');
+            });
     }
 
     private function authorizeView(): void

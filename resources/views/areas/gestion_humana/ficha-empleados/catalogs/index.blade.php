@@ -19,7 +19,7 @@
                     @foreach ($catalogs as $catalog)
                         <button type="button" class="ficha-empleados-catalogs-page__card" data-catalog-key="{{ $catalog['key'] }}">
                             <span class="ficha-empleados-catalogs-page__card-icon" aria-hidden="true">
-                                <x-lucide-icon name="list" :size="22" />
+                                <x-lucide-list width="22" height="22" aria-hidden="true" />
                             </span>
                             <span class="ficha-empleados-catalogs-page__card-title">{{ $catalog['label'] }}</span>
                             <span class="ficha-empleados-catalogs-page__card-count">{{ count($catalog['items']) }} registrados</span>
@@ -30,7 +30,7 @@
 
             <div id="ficha-catalog-management-screen" class="ficha-empleados-catalogs-page__manage" hidden>
                 <button type="button" class="ficha-empleados-catalogs-page__back" data-catalog-back>
-                    <x-lucide-icon name="arrow-left" :size="18" />
+                    <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     Volver al tablero
                 </button>
 

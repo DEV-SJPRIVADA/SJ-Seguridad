@@ -85,7 +85,24 @@
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cedula, nombre o codigo de requisicion"
                                     >
-                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
+                                    <button
+                                        type="submit"
+                                        class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
+                                        title="Buscar"
+                                        aria-label="Buscar"
+                                    >
+                                        <x-lucide-search width="30" height="30" aria-hidden="true" />
+                                    </button>
+                                    @if ($hasActiveFilters)
+                                        <a
+                                            href="{{ route('gestion-humana.ficha-empleados.employees.index') }}"
+                                            class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
+                                            title="Limpiar filtros"
+                                            aria-label="Limpiar filtros"
+                                        >
+                                            <x-lucide-filter-x width="20" height="20" aria-hidden="true" />
+                                        </a>
+                                    @endif
                                 </div>
                             </form>
 
@@ -96,7 +113,7 @@
                                     title="{{ $pendingActive ? 'Volver a empleados en ficha' : 'Ver pendientes' }}"
                                     aria-label="Pendientes: {{ number_format($pendingCount) }}"
                                 >
-                                    <x-ri-pass-pending-fill :size="24" />
+                                    <x-ri-pass-pending-fill width="24" height="24" aria-hidden="true" />
                                     <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount) }}</span>
                                 </a>
 
@@ -122,10 +139,6 @@
                                     <a href="{{ route('gestion-humana.ficha-empleados.employees.create') }}" class="btn btn--primary btn--sm">Nuevo empleado</a>
                                 @endif
 
-                                @if ($hasActiveFilters)
-                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                @endif
-
                                 @if ($currentEstado === 'en_ficha')
                                     <button
                                         type="button"
@@ -135,7 +148,7 @@
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'ficha-masivos')"
                                     >
-                                        <x-lucide-icon name="upload" :size="20" />
+                                        <x-lucide-upload width="20" height="20" aria-hidden="true" />
                                     </button>
 
                                     @if ($canExportArchive ?? false)
@@ -150,8 +163,8 @@
                         </div>
 
                         <p class="req-manage-filters__meta ficha-empleados-filters__meta">
-                            <strong>{{ number_format($entries->count()) }}</strong>
-                            {{ $entries->count() === 1 ? 'registro' : 'registros' }}
+                            <strong id="ficha-entries-count">…</strong>
+                            <span id="ficha-entries-count-label">registros</span>
                             @if ($currentEstado === 'en_ficha' && $employmentStatusMode !== 'todos')
                                 · Estado: <strong>{{ $employmentStatusLabels[$employmentStatusMode === 'default_activo' ? 'activo' : $employmentStatusMode] ?? $employmentStatusMode }}</strong>
                             @endif
@@ -164,7 +177,10 @@
                     <div class="data-table-wrap req-manage-shell__table ficha-empleados-page__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')
                         <table
-                            class="data-table js-datatable"
+                            id="ficha-empleados-datatable"
+                            class="data-table js-ficha-empleados-datatable"
+                            data-dt-url="{{ $datatableUrl }}"
+                            data-dt-estado="{{ $currentEstado }}"
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
@@ -186,65 +202,10 @@
                                     @else
                                         <th>Acciones</th>
                                     @endif
+                                    <th class="sr-only">Enlace ficha</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse ($entries as $entry)
-                                    @php
-                                        $fichaHref = $canManage
-                                            ? route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
-                                            : null;
-                                    @endphp
-                                    <tr
-                                        @if ($fichaHref)
-                                            class="ficha-empleados-row--clickable"
-                                            data-ficha-href="{{ $fichaHref }}"
-                                            tabindex="0"
-                                            role="link"
-                                            aria-label="Ver ficha de {{ $entry->hired_full_name }}"
-                                        @endif
-                                    >
-                                        <td>{{ $entry->hired_document }}</td>
-                                        <td>{{ $entry->hired_full_name }}</td>
-                                        <td>{{ $entry->positionName() ?: '—' }}</td>
-                                        <td>{{ $entry->clientName() ?: '—' }}</td>
-                                        <td>{{ $entry->cityName() ?: '—' }}</td>
-                                        <td><x-date-table :value="$entry->contractDate()" /></td>
-                                        <td><x-date-table :value="$entry->hireDate()" /></td>
-                                        <td><x-date-table :value="$entry->terminationDate()" /></td>
-                                        <td>
-                                            @if ($entry->employmentStatusLabel())
-                                                <span class="status-pill status-pill--ficha-{{ $entry->employmentStatus() }}">
-                                                    {{ $entry->employmentStatusLabel() }}
-                                                </span>
-                                            @else
-                                                —
-                                            @endif
-                                        </td>
-                                        @if ($currentEstado === 'en_ficha')
-                                            <td>{{ $entry->movedBy?->name ?: '—' }}</td>
-                                        @else
-                                            <td class="table-actions ficha-empleados-row__actions">
-                                                @if ($canManage)
-                                                    @if ($entry->isRehirePending())
-                                                        <span class="status-pill status-pill--req-en_gestion ficha-empleados-row__rehire-badge">Reingreso</span>
-                                                    @endif
-                                                    <a
-                                                        href="{{ route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]) }}"
-                                                        class="btn btn--primary btn--sm"
-                                                    >{{ $entry->isRehirePending() ? 'Gestionar reingreso' : 'Gestionar Empleado' }}</a>
-                                                @else
-                                                    —
-                                                @endif
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ $currentEstado === 'en_ficha' ? 10 : 9 }}">No hay registros para este filtro.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
@@ -263,7 +224,19 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('.ficha-empleados-page__table-wrap tbody').forEach(function (tbody) {
+                var $table = $('#ficha-empleados-datatable');
+                var $wrap = $table.closest('.data-table-wrap--booting');
+
+                function revealFichaTableWrap() {
+                    if (!$wrap.length) {
+                        return;
+                    }
+
+                    $wrap.removeClass('data-table-wrap--booting');
+                    $wrap.find('.data-table-wrap__loader').attr('aria-busy', 'false');
+                }
+
+                function bindClickableFichaRows(tbody) {
                     tbody.addEventListener('click', function (event) {
                         if (event.target.closest('button, a, form, input, label, select, textarea')) {
                             return;
@@ -290,7 +263,144 @@
                         event.preventDefault();
                         window.location.assign(row.dataset.fichaHref);
                     });
-                });
+                }
+
+                function updateFichaEntriesMeta(recordsFiltered) {
+                    var countEl = document.getElementById('ficha-entries-count');
+                    var labelEl = document.getElementById('ficha-entries-count-label');
+
+                    if (!countEl || !labelEl) {
+                        return;
+                    }
+
+                    var count = Number(recordsFiltered) || 0;
+                    countEl.textContent = count.toLocaleString('es-CO');
+                    labelEl.textContent = count === 1 ? 'registro' : 'registros';
+                }
+
+                if ($table.length && typeof $.fn.DataTable !== 'undefined') {
+                    if ($.fn.DataTable.isDataTable($table[0])) {
+                        $table.DataTable().destroy();
+                    }
+
+                    $table.closest('.req-manage-shell__table, .data-table-wrap').addClass('data-table-wrap--dt-compact');
+
+                    var hrefColumnIndex = $table.find('thead th').length - 1;
+
+                    var api = $table.DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: {
+                            url: $table.data('dt-url'),
+                            data: function (data) {
+                                data.q = @json($filters['q'] ?? '');
+                                data.estado = @json($filters['estado'] ?? 'en_ficha');
+                                @if ($employmentStatusQueryParam !== null)
+                                data.employment_status = @json($employmentStatusQueryParam);
+                                @endif
+                            },
+                        },
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                            emptyTable: 'No hay registros para este filtro.',
+                        },
+                        dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
+                        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
+                        pageLength: 10,
+                        responsive: false,
+                        order: [],
+                        columnDefs: [
+                            { targets: hrefColumnIndex, visible: false, searchable: false, orderable: false },
+                            { targets: -2, orderable: false },
+                        ],
+                        createdRow: function (row, data) {
+                            var href = data[hrefColumnIndex];
+
+                            if (!href) {
+                                return;
+                            }
+
+                            row.classList.add('ficha-empleados-row--clickable');
+                            row.dataset.fichaHref = href;
+                            row.tabIndex = 0;
+                            row.setAttribute('role', 'link');
+                        },
+                    });
+
+                    api.on('xhr.dt', function (_event, _settings, json) {
+                        revealFichaTableWrap();
+
+                        if (json && typeof json.recordsFiltered !== 'undefined') {
+                            updateFichaEntriesMeta(json.recordsFiltered);
+                        }
+                    });
+
+                    api.on('draw.dt', function () {
+                        var tbody = $table.find('tbody')[0];
+
+                        if (tbody && !tbody.dataset.fichaRowsBound) {
+                            bindClickableFichaRows(tbody);
+                            tbody.dataset.fichaRowsBound = '1';
+                        }
+                    });
+
+                    (function setupFichaTableScroll() {
+                        var $shell = $table.closest('.req-manage-shell');
+                        var $wrapper = $table.closest('.dataTables_wrapper');
+                        var $scroll = $wrapper.find('.req-manage-table-scroll').first();
+                        var $bottom = $wrapper.find('.req-manage-dt-bottom').first();
+
+                        if (!$scroll.length) {
+                            return;
+                        }
+
+                        var updateScrollArea = function () {
+                            var bottomHeight = $bottom.outerHeight(true) || 0;
+                            var rect = $scroll[0].getBoundingClientRect();
+                            var maxHeight = window.innerHeight - rect.top - bottomHeight - 16;
+
+                            $scroll.css('max-height', Math.max(220, maxHeight) + 'px');
+                        };
+
+                        var debounce = function (fn, wait) {
+                            var timer = null;
+
+                            return function () {
+                                if (timer) {
+                                    clearTimeout(timer);
+                                }
+
+                                timer = setTimeout(fn, wait);
+                            };
+                        };
+
+                        var scheduleUpdate = function () {
+                            updateScrollArea();
+                            setTimeout(updateScrollArea, 0);
+                            setTimeout(updateScrollArea, 150);
+
+                            $scroll.find('thead th').css({
+                                position: 'sticky',
+                                top: '0',
+                                zIndex: '12',
+                                backgroundColor: '#003366',
+                            });
+
+                            $scroll.find('table').css({
+                                borderCollapse: 'separate',
+                                borderSpacing: '0',
+                            });
+                        };
+
+                        scheduleUpdate();
+                        $(window).on('resize orientationchange', debounce(updateScrollArea, 100));
+                        api.on('draw.dt-table-scroll', updateScrollArea);
+
+                        if (typeof ResizeObserver !== 'undefined') {
+                            new ResizeObserver(debounce(updateScrollArea, 100)).observe($shell[0]);
+                        }
+                    })();
+                }
 
                 document.querySelectorAll('[data-ficha-import-file]').forEach(function (input) {
                     var form = input.closest('[data-ficha-import-form]');

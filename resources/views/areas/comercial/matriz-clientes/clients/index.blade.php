@@ -55,7 +55,7 @@
                                             x-data=""
                                             x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
                                         >
-                                            <x-lucide-icon name="upload" :size="16" />
+                                            <x-lucide-upload width="16" height="16" aria-hidden="true" />
                                         </button>
                                     @endif
                                     @if ($hasActiveFilters)

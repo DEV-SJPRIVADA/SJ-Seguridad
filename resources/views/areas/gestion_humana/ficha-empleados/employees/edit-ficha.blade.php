@@ -24,7 +24,7 @@
                         x-data=""
                         x-on:click="$dispatch('open-modal', 'ficha-employment-history')"
                     >
-                        <x-lucide-icon name="history" :size="20" />
+                        <x-lucide-history width="20" height="20" aria-hidden="true" />
                     </button>
                 @endif
             </div>

@@ -20,6 +20,7 @@ use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Testing\TestResponse;
 use Tests\Support\EmployeeFichaMasivosPayload;
 use Tests\TestCase;
 
@@ -133,7 +134,7 @@ class FichaEmpleadosTest extends TestCase
         $this->assertTrue($service->canViewFichaEmpleadosBoard($admin));
         $this->assertTrue($service->canView($admin));
         $this->assertTrue($service->canManage($admin));
-        $this->assertSame(['empleados'], $service->visibleTabsFor($admin));
+        $this->assertSame(['empleados', 'catalogos'], $service->visibleTabsFor($admin));
     }
 
     public function test_user_without_permissions_cannot_view_or_manage_ficha_empleados(): void
@@ -246,9 +247,17 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index'));
 
         $response->assertOk();
-        $response->assertViewHas('entries', function ($entries) use ($inFicha): bool {
-            return $entries->pluck('id')->contains($inFicha->id) && $entries->count() === 1;
-        });
+        $response->assertViewHas('datatableUrl');
+        $response->assertSee('aria-label="Buscar"', false);
+        $response->assertDontSee('aria-label="Limpiar filtros"', false);
+
+        $datatable = $this->getFichaEmpleadosDatatable($viewer);
+        $datatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        $payload = $datatable->json();
+        $this->assertStringContainsString('En Ficha Indice', $this->datatableRowTexts($payload));
+        $this->assertStringNotContainsString('Pendiente Indice', $this->datatableRowTexts($payload));
     }
 
     public function test_ficha_empleados_index_pendientes_filter(): void
@@ -278,9 +287,16 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
 
         $response->assertOk();
-        $response->assertViewHas('entries', function ($entries) use ($pending): bool {
-            return $entries->pluck('id')->contains($pending->id) && $entries->count() === 1;
-        });
+        $response->assertSee('aria-label="Limpiar filtros"', false);
+        $response->assertSee(route('gestion-humana.ficha-empleados.employees.index'), false);
+
+        $datatable = $this->getFichaEmpleadosDatatable($viewer, ['estado' => 'pendientes']);
+        $datatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        $payload = $datatable->json();
+        $this->assertStringContainsString('Pendiente Filtro', $this->datatableRowTexts($payload));
+        $this->assertStringNotContainsString('En Ficha Filtro', $this->datatableRowTexts($payload));
     }
 
     public function test_ficha_empleados_index_shows_hire_termination_and_status_columns(): void
@@ -334,13 +350,19 @@ class FichaEmpleadosTest extends TestCase
             ->assertSee('Fecha ingreso', false)
             ->assertSee('Fecha retiro', false)
             ->assertSee('Estado', false)
-            ->assertDontSee('Agregado a ficha', false)
-            ->assertSee('Empleado Activo Tabla')
-            ->assertSee('Empleado Retirado Tabla')
-            ->assertSee('Activo')
-            ->assertSee('Desvinculado')
-            ->assertSee('15/03/24')
-            ->assertSee('30/06/25');
+            ->assertDontSee('Agregado a ficha', false);
+
+        $datatable = $this->getFichaEmpleadosDatatable($viewer, ['employment_status' => 'todos']);
+        $datatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 2);
+
+        $rowText = $this->datatableRowTexts($datatable->json());
+        $this->assertStringContainsString('Empleado Activo Tabla', $rowText);
+        $this->assertStringContainsString('Empleado Retirado Tabla', $rowText);
+        $this->assertStringContainsString('Activo', $rowText);
+        $this->assertStringContainsString('Desvinculado', $rowText);
+        $this->assertStringContainsString('15/03/24', $rowText);
+        $this->assertStringContainsString('30/06/25', $rowText);
     }
 
     public function test_ficha_empleados_index_defaults_to_active_employment_status(): void
@@ -382,23 +404,23 @@ class FichaEmpleadosTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('gestion-humana.ficha-empleados.employees.index'))
             ->assertOk()
-            ->assertViewHas('entries', function ($entries) use ($activeEntry, $retiredEntry): bool {
-                $ids = $entries->pluck('id');
+            ->assertViewHas('filters', fn (array $filters): bool => ($filters['employment_status_mode'] ?? '') === 'default_activo');
 
-                return $ids->contains($activeEntry->id) && ! $ids->contains($retiredEntry->id);
-            })
-            ->assertViewHas('filters', fn (array $filters): bool => ($filters['employment_status_mode'] ?? '') === 'default_activo')
-            ->assertSee('Default Activo')
-            ->assertDontSee('Default Desvinculado');
+        $defaultDatatable = $this->getFichaEmpleadosDatatable($viewer);
+        $defaultDatatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
 
-        $this->actingAs($viewer)
-            ->get(route('gestion-humana.ficha-empleados.employees.index', ['employment_status' => 'todos']))
-            ->assertOk()
-            ->assertViewHas('entries', function ($entries) use ($activeEntry, $retiredEntry): bool {
-                $ids = $entries->pluck('id');
+        $defaultRows = $this->datatableRowTexts($defaultDatatable->json());
+        $this->assertStringContainsString('Default Activo', $defaultRows);
+        $this->assertStringNotContainsString('Default Desvinculado', $defaultRows);
 
-                return $ids->contains($activeEntry->id) && $ids->contains($retiredEntry->id);
-            });
+        $todosDatatable = $this->getFichaEmpleadosDatatable($viewer, ['employment_status' => 'todos']);
+        $todosDatatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 2);
+
+        $todosRows = $this->datatableRowTexts($todosDatatable->json());
+        $this->assertStringContainsString('Default Activo', $todosRows);
+        $this->assertStringContainsString('Default Desvinculado', $todosRows);
     }
 
     public function test_ficha_empleados_index_filters_by_employment_status(): void
@@ -445,30 +467,94 @@ class FichaEmpleadosTest extends TestCase
             'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
         ]);
 
+        $desvinculadoDatatable = $this->getFichaEmpleadosDatatable($viewer, ['employment_status' => 'desvinculado']);
+        $desvinculadoDatatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        $desvinculadoRows = $this->datatableRowTexts($desvinculadoDatatable->json());
+        $this->assertStringContainsString('Solo Desvinculado Filtro', $desvinculadoRows);
+        $this->assertStringNotContainsString('Solo Activo Filtro', $desvinculadoRows);
+        $this->assertStringNotContainsString('Activo Sin Perfil Filtro', $desvinculadoRows);
+
+        $activoDatatable = $this->getFichaEmpleadosDatatable($viewer, ['employment_status' => 'activo']);
+        $activoDatatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 2);
+
+        $activoRows = $this->datatableRowTexts($activoDatatable->json());
+        $this->assertStringContainsString('Solo Activo Filtro', $activoRows);
+        $this->assertStringContainsString('Activo Sin Perfil Filtro', $activoRows);
+        $this->assertStringNotContainsString('Solo Desvinculado Filtro', $activoRows);
+    }
+
+    public function test_ficha_empleados_datatable_forbidden_without_view_permission(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+        $user->assignRole('usuario');
+
+        $this->actingAs($user)
+            ->getJson(route('gestion-humana.ficha-empleados.employees.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_ficha_empleados_datatable_search_filters_by_name_and_client(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $mover = User::factory()->create(['must_change_password' => false]);
+        $uniqueClient = RequisitionClient::query()->create([
+            'name' => 'Cliente Unico Datatable',
+            'is_active' => true,
+            'sort_order' => 99,
+        ]);
+
+        $matching = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-DT-01', [
+                'client_id' => $uniqueClient->id,
+            ])->id,
+            'hired_document' => '900000801',
+            'hired_full_name' => 'Ana Datatable Search',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-DT-02')->id,
+            'hired_document' => '900000802',
+            'hired_full_name' => 'Otro Empleado Lista',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $matching->id,
+            'document_number' => '900000801',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'work_center_name' => 'Cliente Unico Datatable',
+        ]);
+
+        $byName = $this->getFichaEmpleadosDatatable($viewer, [
+            'search' => ['value' => 'Ana Datatable'],
+        ]);
+        $byName->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Ana Datatable Search', $this->datatableRowTexts($byName->json()));
+        $this->assertStringNotContainsString('Otro Empleado Lista', $this->datatableRowTexts($byName->json()));
+
+        $byClient = $this->getFichaEmpleadosDatatable($viewer, [
+            'search' => ['value' => 'Cliente Unico Datatable'],
+        ]);
+        $byClient->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Ana Datatable Search', $this->datatableRowTexts($byClient->json()));
+
         $this->actingAs($viewer)
-            ->get(route('gestion-humana.ficha-empleados.employees.index', ['employment_status' => 'desvinculado']))
+            ->get(route('gestion-humana.ficha-empleados.employees.index'))
             ->assertOk()
-            ->assertViewHas('entries', function ($entries) use ($retiredEntry, $activeEntry, $defaultActiveEntry): bool {
-                $ids = $entries->pluck('id');
-
-                return $ids->contains($retiredEntry->id)
-                    && ! $ids->contains($activeEntry->id)
-                    && ! $ids->contains($defaultActiveEntry->id);
-            })
-            ->assertSee('Solo Desvinculado Filtro')
-            ->assertDontSee('Solo Activo Filtro')
-            ->assertDontSee('Activo Sin Perfil Filtro');
-
-        $this->actingAs($viewer)
-            ->get(route('gestion-humana.ficha-empleados.employees.index', ['employment_status' => 'activo']))
-            ->assertOk()
-            ->assertViewHas('entries', function ($entries) use ($retiredEntry, $activeEntry, $defaultActiveEntry): bool {
-                $ids = $entries->pluck('id');
-
-                return $ids->contains($activeEntry->id)
-                    && $ids->contains($defaultActiveEntry->id)
-                    && ! $ids->contains($retiredEntry->id);
-            });
+            ->assertDontSee('preXhr.dt', false);
     }
 
     public function test_ficha_empleados_board_hidden_without_board_permission(): void
@@ -912,10 +998,18 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
 
-        $response->assertOk()
-            ->assertSee('Gestionar Empleado')
-            ->assertDontSee('Agregar a ficha empleados')
-            ->assertSee(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]), false);
+        $response->assertOk();
+
+        $datatable = $this->getFichaEmpleadosDatatable($manager, ['estado' => 'pendientes']);
+        $datatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        $rowText = $this->datatableRowTexts($datatable->json());
+        $createUrl = route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]);
+
+        $this->assertStringContainsString('Gestionar Empleado', $rowText);
+        $this->assertStringNotContainsString('Agregar a ficha empleados', $rowText);
+        $this->assertStringContainsString($createUrl, $rowText);
     }
 
     public function test_catalogs_tab_visible_only_for_manage_users(): void
@@ -992,6 +1086,28 @@ class FichaEmpleadosTest extends TestCase
             ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
 
         $this->assertDatabaseMissing('payroll_catalog_items', ['id' => $item->id]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function getFichaEmpleadosDatatable(User $user, array $query = []): TestResponse
+    {
+        return $this->actingAs($user)->getJson(route('gestion-humana.ficha-empleados.employees.datatable', array_merge([
+            'draw' => 1,
+            'start' => 0,
+            'length' => 100,
+        ], $query)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function datatableRowTexts(array $payload): string
+    {
+        return collect($payload['data'] ?? [])
+            ->flatten()
+            ->implode(' ');
     }
 
     /**

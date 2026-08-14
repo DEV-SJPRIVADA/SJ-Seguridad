@@ -4,7 +4,7 @@
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                    <x-lucide-icon name="search" :size="20" />
+                    <x-lucide-search width="20" height="20" aria-hidden="true" />
                 </span>
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Consulta multiple de archivo</h3>
@@ -17,7 +17,7 @@
                 aria-label="Cerrar"
                 x-on:click="$dispatch('close-modal', 'archivo-consult')"
             >
-                <x-lucide-icon name="x" :size="18" />
+                <x-lucide-x width="18" height="18" aria-hidden="true" />
             </button>
         </div>
 
@@ -101,7 +101,7 @@
                     Cancelar
                 </button>
                 <button type="submit" class="btn btn--primary btn--sm">
-                    <x-lucide-icon name="search" :size="15" />
+                    <x-lucide-search width="15" height="15" aria-hidden="true" />
                     Consultar
                 </button>
             </div>

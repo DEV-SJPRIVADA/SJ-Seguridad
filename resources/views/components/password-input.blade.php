@@ -15,10 +15,10 @@
         x-bind:aria-pressed="show.toString()"
     >
         <span x-show="! show" x-cloak>
-            <x-lucide-icon name="eye" :size="20" />
+            <x-lucide-eye width="20" height="20" aria-hidden="true" />
         </span>
         <span x-show="show" x-cloak>
-            <x-lucide-icon name="eye-off" :size="20" />
+            <x-lucide-eye-off width="20" height="20" aria-hidden="true" />
         </span>
     </button>
 </div>

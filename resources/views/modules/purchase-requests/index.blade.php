@@ -92,7 +92,7 @@
                                                         title="Reabrir y editar"
                                                         aria-label="Reabrir y editar"
                                                     >
-                                                        <x-ri-issues-reopen-fill :size="18" />
+                                                        <x-ri-issues-reopen-fill width="18" height="18" aria-hidden="true" />
                                                     </a>
                                                 @endcan
                                             </div>

@@ -4,7 +4,7 @@
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                    <x-lucide-icon name="users" :size="20" />
+                    <x-lucide-users width="20" height="20" aria-hidden="true" />
                 </span>
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Plantilla masivos</h3>
@@ -17,7 +17,7 @@
                 aria-label="Cerrar"
                 x-on:click="$dispatch('close-modal', 'ficha-masivos')"
             >
-                <x-lucide-icon name="x" :size="18" />
+                <x-lucide-x width="18" height="18" aria-hidden="true" />
             </button>
         </div>
 
@@ -33,7 +33,7 @@
             <section class="ficha-empleados-masivos-modal__card">
                 <div class="ficha-empleados-masivos-modal__card-head">
                     <span class="ficha-empleados-masivos-modal__card-icon ficha-empleados-masivos-modal__card-icon--export" aria-hidden="true">
-                        <x-lucide-icon name="file-spreadsheet" :size="18" />
+                        <x-lucide-file-spreadsheet width="18" height="18" aria-hidden="true" />
                     </span>
                     <div>
                         <h4 class="ficha-empleados-masivos-modal__card-title">Exportar</h4>
@@ -64,7 +64,7 @@
                 <section class="ficha-empleados-masivos-modal__card ficha-empleados-masivos-modal__card--import">
                     <div class="ficha-empleados-masivos-modal__card-head">
                         <span class="ficha-empleados-masivos-modal__card-icon ficha-empleados-masivos-modal__card-icon--import" aria-hidden="true">
-                            <x-lucide-icon name="upload" :size="18" />
+                            <x-lucide-upload width="18" height="18" aria-hidden="true" />
                         </span>
                         <div>
                             <h4 class="ficha-empleados-masivos-modal__card-title">Importar</h4>
@@ -118,11 +118,11 @@
                             <span class="ficha-empleados-masivos-modal__file-name" data-ficha-import-name>Sin archivo seleccionado</span>
                             <div class="ficha-empleados-masivos-modal__import-actions">
                                 <label for="ficha-import-file" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action" data-ficha-import-choose>
-                                    <x-lucide-icon name="upload" :size="15" />
+                                    <x-lucide-upload width="15" height="15" aria-hidden="true" />
                                     Elegir archivo
                                 </label>
                                 <button type="submit" class="btn btn--primary btn--sm ficha-empleados-masivos-modal__action ficha-empleados-masivos-modal__action--primary" data-ficha-import-submit disabled>
-                                    <x-lucide-icon name="upload" :size="15" />
+                                    <x-lucide-upload width="15" height="15" aria-hidden="true" />
                                     Importar
                                 </button>
                             </div>
