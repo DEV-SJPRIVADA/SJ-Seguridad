@@ -747,6 +747,8 @@ class RequisitionController extends Controller
             'client_id' => $filters->clientId,
             'city_id' => $filters->cityId,
             'mine_only' => $filters->mineOnly ? true : null,
+            'exclude_closed' => $filters->excludeClosedStatuses ? true : null,
+            'include_closed' => $filters->includeClosed ? true : null,
         ], fn ($value) => $value !== null && $value !== false);
 
         return [

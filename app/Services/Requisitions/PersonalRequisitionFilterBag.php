@@ -2,6 +2,7 @@
 
 namespace App\Services\Requisitions;
 
+use App\Models\PersonalRequisition;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -15,19 +16,25 @@ class PersonalRequisitionFilterBag
         public readonly ?int $clientId,
         public readonly ?int $cityId,
         public readonly bool $mineOnly,
-    ) {
-    }
+        public readonly bool $includeClosed = false,
+        public readonly bool $excludeClosedStatuses = false,
+    ) {}
 
     public static function fromManageRequest(Request $request): self
     {
+        $status = $request->string('status')->toString();
+        $includeClosed = $request->boolean('include_closed');
+
         return new self(
             search: trim($request->string('q')->toString()),
-            status: $request->string('status')->toString(),
+            status: $status,
             dateFrom: self::normalizeDate($request->input('date_from')),
             dateTo: self::normalizeDate($request->input('date_to')),
             clientId: null,
             cityId: null,
             mineOnly: false,
+            includeClosed: $includeClosed,
+            excludeClosedStatuses: $status === '' && ! $includeClosed,
         );
     }
 
@@ -60,6 +67,8 @@ class PersonalRequisitionFilterBag
             'client_id' => $this->clientId,
             'city_id' => $this->cityId,
             'mine_only' => $this->mineOnly,
+            'include_closed' => $this->includeClosed,
+            'exclude_closed' => $this->excludeClosedStatuses,
         ];
     }
 
@@ -75,7 +84,7 @@ class PersonalRequisitionFilterBag
     }
 
     /**
-     * @param  Builder<\App\Models\PersonalRequisition>  $query
+     * @param  Builder<PersonalRequisition>  $query
      */
     public function applyCommonFilters(Builder $query, bool $includeRequesterInSearch = false): void
     {
@@ -114,6 +123,10 @@ class PersonalRequisitionFilterBag
 
         if ($this->cityId !== null) {
             $query->where('city_id', $this->cityId);
+        }
+
+        if ($this->excludeClosedStatuses) {
+            $query->whereNotIn('status', PersonalRequisition::closedStatuses());
         }
     }
 

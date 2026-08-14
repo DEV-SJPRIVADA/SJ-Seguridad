@@ -7,7 +7,8 @@
         $hasActiveFilters = ($filters['q'] ?? '') !== ''
             || ($filters['status'] ?? '') !== ''
             || ($filters['date_from'] ?? null)
-            || ($filters['date_to'] ?? null);
+            || ($filters['date_to'] ?? null)
+            || ($filters['include_closed'] ?? false);
 
         $hasDateFilters = ($filters['date_from'] ?? null) || ($filters['date_to'] ?? null);
 
@@ -16,6 +17,9 @@
             'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
             'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
             'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
+            'include_closed' => array_key_exists('include_closed', $overrides)
+                ? ($overrides['include_closed'] ? '1' : null)
+                : (($filters['include_closed'] ?? false) ? '1' : null),
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
@@ -43,6 +47,9 @@
                                 <form method="GET" id="manage-filters-form" class="req-manage-filters__search-col">
                                     @if ($filters['status'] ?? '')
                                         <input type="hidden" name="status" value="{{ $filters['status'] }}">
+                                    @endif
+                                    @if ($filters['include_closed'] ?? false)
+                                        <input type="hidden" name="include_closed" value="1">
                                     @endif
 
                                     <div class="req-manage-filters__query-row">
@@ -76,8 +83,12 @@
                                     <p class="req-manage-filters__status-label">Estado</p>
                                     <div class="req-manage-filters__pills req-manage-filters__pills--scroll">
                                         <a
-                                            href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => null])]) }}"
-                                            class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' ? 'is-active' : '' }}"
+                                            href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => null, 'include_closed' => false])]) }}"
+                                            class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' && ($filters['exclude_closed'] ?? false) ? 'is-active' : '' }}"
+                                        >En curso</a>
+                                        <a
+                                            href="{{ route('requisitions.manage', ['module' => $moduleKey, ...$manageQuery(['status' => null, 'include_closed' => true])]) }}"
+                                            class="req-manage-filters__pill {{ ($filters['status'] ?? '') === '' && ($filters['include_closed'] ?? false) ? 'is-active' : '' }}"
                                         >Todos</a>
                                         @foreach ($statusLabels as $statusKey => $statusLabel)
                                             <a
@@ -111,6 +122,11 @@
                                     <strong>{{ $filters['date_from'] ?? '…' }}</strong>
                                     —
                                     <strong>{{ $filters['date_to'] ?? '…' }}</strong>
+                                @endif
+                                @if ($filters['exclude_closed'] ?? false)
+                                    · Alcance: <strong>En curso</strong> (sin Contratado ni Cancelada)
+                                @elseif ($filters['include_closed'] ?? false)
+                                    · Alcance: <strong>Todos</strong> los estados
                                 @endif
                                 · El Excel exporta el detalle completo segun estos filtros
                             </p>

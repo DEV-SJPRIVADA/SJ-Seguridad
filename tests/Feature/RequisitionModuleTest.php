@@ -1317,6 +1317,64 @@ class RequisitionModuleTest extends TestCase
             ->assertDontSee('REQ-2026-DATE-OLD');
     }
 
+    public function test_manage_excludes_contratado_and_cancelada_by_default(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $active = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-OPEN-01', 'operaciones', 'Perfil activo'),
+            ['status' => PersonalRequisition::STATUS_EN_GESTION]
+        ));
+        $contratado = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-CLOSED-01', 'operaciones', 'Perfil contratado'),
+            ['status' => PersonalRequisition::STATUS_CONTRATADO]
+        ));
+        $cancelada = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-CLOSED-02', 'operaciones', 'Perfil cancelada'),
+            ['status' => PersonalRequisition::STATUS_CANCELADA]
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertSee($active->code)
+            ->assertDontSee($contratado->code)
+            ->assertDontSee($cancelada->code);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', [
+                'module' => 'gestion_humana',
+                'status' => PersonalRequisition::STATUS_CONTRATADO,
+            ]))
+            ->assertOk()
+            ->assertSee($contratado->code)
+            ->assertDontSee($active->code);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', [
+                'module' => 'gestion_humana',
+                'include_closed' => 1,
+            ]))
+            ->assertOk()
+            ->assertSee($active->code)
+            ->assertSee($contratado->code)
+            ->assertSee($cancelada->code);
+    }
+
     public function test_gestion_export_uses_full_export_columns(): void
     {
         $labels = collect(PersonalRequisitionFullExport::columns())->pluck('label');
