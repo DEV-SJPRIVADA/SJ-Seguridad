@@ -45,7 +45,7 @@
 
                     <div class="ficha-empleados-masivos-modal__import">
                         <a href="{{ route('comercial.matriz.clients.import-template') }}" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
-                            <x-lucide-icon name="file-spreadsheet" :size="15" />
+                            <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
                             Descargar plantilla vacia
                         </a>
 
@@ -57,7 +57,7 @@
                             @endif
                             <p class="ficha-empleados-masivos-modal__card-note ficha-empleados-masivos-modal__export-note">Exporte datos actuales (respeta filtros del listado), edite y vuelva a subir.</p>
                             <button type="submit" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
-                                <x-lucide-icon name="download" :size="15" />
+                                <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
                                 Exportar datos para actualizar
                             </button>
                         </form>

@@ -55,9 +55,9 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. En la pestaña **Empleados**, pill **Pendientes**, ubique el registro a mover.
 2. Pulse **Gestionar Empleado** (visible solo con permiso de edicion). Se abre el formulario de ficha; no se ejecuta ningun cambio todavia.
-3. Revise el encabezado **"Gestionar empleado — {nombre}"** y el bloque de referencia de solo lectura con el codigo de requisicion, cliente y cargo.
-4. Revise y, si es necesario, corrija los campos ya precargados desde la requisicion: **cedula**, **nombre completo**, sexo, salario, fecha de ingreso, centro de costo, cargo, tipo de contrato, ciudad y cliente. Complete los demas datos de la ficha (contacto, nomina, EPS/AFP, etc.) igual que en el alta manual.
-   - Si corrige la cedula o el nombre aqui, el cambio queda **solo** en la ficha del empleado; **no** se refleja en la requisicion original.
+3. Revise el encabezado **"Gestionar empleado — {nombre}"** y el bloque **Referencia de requisición** (solo lectura): código, cliente, cargo, salario/fecha sugeridos, texto de centro de costo y ciudad de la requisición. Esos datos de referencia **no** se exportan automáticamente a nómina.
+4. Complete el formulario de ficha con los **catálogos obligatorios**: sexo, fecha ingreso, cargo, salario, centro de costo (catálogo nómina), EPS, AFP, caja de compensación, forma de pago, banco, tipo y número de cuenta. Elija un valor por campo de catálogo (formato `código — nombre`); el sistema guarda código y nombre homólogo.
+   - Si corrige cédula o nombre aqui, el cambio queda **solo** en la ficha del empleado; **no** se refleja en la requisicion original.
 5. Para descartar los cambios y dejar el registro intacto en **Pendientes**, pulse **Volver** (regresa a la pill Pendientes sin guardar nada).
 6. Para confirmar, pulse **Crear empleado**. Si la cedula ingresada ya pertenece a **otro** registro de ficha, el sistema bloquea el guardado con un mensaje de error; corrija la cedula e intente de nuevo.
 7. Al guardar con exito, el registro desaparece de **Pendientes**, queda con fecha y usuario que lo movio (**moved_to_ficha_at**/**moved_to_ficha_by**), y usted es redirigido al **listado principal** (pill **En ficha**), donde ya aparece el nuevo registro.
@@ -72,9 +72,11 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 ### Completar ficha de empleado
 
-1. En **Pendientes** o **En ficha**, abra la ficha (permiso de edición).
-2. Diligencie datos de contacto, nómina, EPS/AFP, centro de costo, etc.
-3. La **desvinculacion** ya no se hace con un campo suelto de fecha retiro: use **Registrar desvinculacion** (permiso `ficha_empleados.terminate`).
+1. En **Pendientes**, **En ficha** o **Nuevo empleado**, abra el formulario de ficha (permiso de edición).
+2. Diligencie las siete secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
+3. Los campos marcados con **\*** son obligatorios para guardar.
+4. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.
+5. La **desvinculación** se registra con **Registrar desvinculación** (permiso `ficha_empleados.terminate`), no con un campo suelto de fecha retiro.
 
 ### Registrar desvinculacion
 
@@ -108,7 +110,8 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. Opcional: indique **fecha desde** y **fecha hasta** para filtrar por ingreso.
 3. Pulse **Exportar plantilla masivos**.
 4. Sin rango de fechas solo se exportan empleados **activos** (no desvinculados).
-5. El archivo conserva el formato legacy de nómina (filas 1–2 de encabezado).
+5. El archivo refleja **únicamente lo guardado** en la ficha (perfil + datos avanzados). No incluye valores inferidos de la requisición. La columna NIT de centro de trabajo **no** se exporta.
+6. El archivo conserva el formato legacy de nómina (filas 1–2 de encabezado).
 
 ### Importar empleados masivamente
 
@@ -123,7 +126,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 ### Administrar catalogos (selectores de ficha)
 
 1. Vaya a la pestaña **Catalogos** (solo usuarios con permiso de edicion de ficha).
-2. Elija el catalogo (EPS, AFP, Ciudad, Cargo, Centro de costo, etc.).
+2. Elija el catalogo (EPS, AFP, Ciudad, Cargo, Centro de costo, Centro de trabajo, Caja compensacion, Banco, Forma de pago, Tipo cuenta, Jornada, etc.).
 3. Agregue registros con **codigo**, **nombre**, orden y estado activo.
 4. Edite o elimine entradas existentes; los inactivos no aparecen en los selectores de crear/editar empleado.
 
@@ -133,6 +136,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.5 | 2026-08-13 | FEAT-028 | Formulario ficha completo alineado a plantilla masivos (62 cols): selectores de catalogo, campos obligatorios, referencia de requisicion separada de datos exportables, export/import solo con datos guardados, NIT centro trabajo no exportado, tipo documento CE. |
 | 1.4 | 2026-08-03 | FEAT-022 | **Gestionar Empleado** reemplaza a "Agregar a ficha empleados": el boton ahora abre el formulario de ficha precargado desde la requisicion (cedula, nombre y demas datos editables) y el registro solo se mueve a ficha al guardar con **Crear empleado**; se elimino el movimiento inmediato de un clic con confirmacion emergente. |
 | 1.3 | 2026-07-31 | Catalogos UI | Pestaña Catalogos: CRUD de payroll_catalog_items para selectores de ficha. |
 | 1.2 | 2026-07-31 | Import round-trip | Export plantilla import con datos actuales para actualización masiva. |

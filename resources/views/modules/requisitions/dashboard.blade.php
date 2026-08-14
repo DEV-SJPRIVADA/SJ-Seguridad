@@ -157,7 +157,7 @@
 
             {{-- KPIs --}}
             @if ($dashboardGlobalScope ?? false)
-                <p class="form-hint" style="margin-bottom: 0.5rem;">Vista consolidada de todas las areas solicitantes.</p>
+                <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis req-dashboard-kpis bottom-spaced"></div>
             @endif
             <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis req-dashboard-kpis bottom-spaced">
                 <article class="req-dashboard-kpi req-dashboard-kpi--total">

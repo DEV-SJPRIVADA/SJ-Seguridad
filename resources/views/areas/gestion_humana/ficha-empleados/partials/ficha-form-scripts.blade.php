@@ -28,7 +28,17 @@
         });
 
         function parseCurrency(value) {
-            var digits = String(value || '').replace(/[^\d]/g, '');
+            var raw = String(value || '').trim();
+            if (raw === '') {
+                return '';
+            }
+
+            var plainNumeric = raw.replace(/,/g, '');
+            if (/^-?\d+(\.\d+)?$/.test(plainNumeric)) {
+                return String(Math.round(parseFloat(plainNumeric)));
+            }
+
+            var digits = raw.replace(/[^\d]/g, '');
             return digits === '' ? '' : digits;
         }
 

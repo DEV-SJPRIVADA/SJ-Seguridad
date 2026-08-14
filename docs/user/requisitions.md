@@ -85,7 +85,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 ### Gestionar requisiciones (Gestion Humana)
 
 1. Abra la pestaña **Gestion**.
-2. Filtre por estado, busqueda y rango de **Fecha inicio / Fecha fin** (fecha de solicitud); pulse **Buscar**.
+2. Por defecto el listado muestra requisiciones **En curso** (sin **Contratado** ni **Cancelada**). Use la pastilla **Todos** para ver todos los estados, las pastillas de estado para filtrar uno concreto, o busqueda y rango de **Fecha inicio / Fecha fin**; pulse **Buscar**.
 3. En la tabla, la columna **Reclutador** (despues de **Reemplaza a**) muestra el encargado asignado o **sin asignar** si aun no hay reclutador.
 4. Edite una fila para completar compensacion, **Reclutador** (encargado de seleccion) y observaciones de GH.
 5. Revise o edite **Estructura del servicio** si necesita corregir horarios, descansos o condiciones del puesto; el campo es obligatorio al guardar. Los cambios quedan en el **Historial de cambios**.

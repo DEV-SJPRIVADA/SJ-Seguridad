@@ -12,7 +12,7 @@ class EmployeeFichaImportRowMapper
      */
     public function mapRow(PersonalRequisitionFichaEntry $entry): array
     {
-        $entry->loadMissing(['profile', 'requisition']);
+        $entry->loadMissing(['profile']);
         $profile = $entry->profile;
 
         return [
@@ -36,14 +36,14 @@ class EmployeeFichaImportRowMapper
             'email' => $profile?->email,
             'tipo_vinculacion' => $profile?->linkage_type,
             'tipo_cotizante' => $profile?->contributor_type,
-            'fecha_ingreso' => $this->dateString($profile?->hire_date ?? $entry->requisition?->hiring_date),
+            'fecha_ingreso' => $this->dateString($profile?->hire_date),
             'fecha_vencimiento_contrato' => $this->dateString($profile?->contract_end_date),
             'fecha_retiro' => $this->dateString($profile?->termination_date),
-            'nombre_centro_trabajo' => $profile?->work_center_name ?: $entry->requisition?->client?->name,
-            'ccosto' => $profile?->cost_center_code ?: $entry->requisition?->cost_center,
+            'nombre_centro_trabajo' => $profile?->work_center_name,
+            'ccosto' => $profile?->cost_center_code,
             'nombre_ccosto' => $profile?->cost_center_name,
             'cargo' => $profile?->position_code,
-            'nombre_cargo' => $profile?->position_name ?: $entry->requisition?->position?->name,
+            'nombre_cargo' => $profile?->position_name,
             'escala' => $profile?->salary_scale,
             'tipo_salario' => $profile?->salary_type_code,
             'tipo_contrato' => $profile?->contract_type_code,

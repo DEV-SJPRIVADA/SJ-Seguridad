@@ -36,7 +36,7 @@ class StoreManualEmployeeFichaRequest extends FormRequest
                 Rule::unique('personal_requisition_ficha_entries', 'hired_document')->ignore($fichaEntryId),
             ],
             'hired_full_name' => ['required', 'string', 'max:255'],
-        ], $this->employeeFichaProfileFieldRules());
+        ], $this->employeeFichaProfileFieldRules(requireCore: true));
     }
 
     /**
@@ -49,6 +49,16 @@ class StoreManualEmployeeFichaRequest extends FormRequest
             'hired_document' => 'cédula',
             'hired_full_name' => 'nombre completo',
             'sex' => 'género',
+            'hire_date' => 'fecha ingreso',
+            'position_code' => 'cargo',
+            'cost_center_code' => 'centro de costo',
+            'eps_code' => 'EPS',
+            'afp_code' => 'AFP',
+            'bank_code' => 'banco',
+            'account_type' => 'tipo de cuenta',
+            'account_number' => 'número de cuenta',
+            'payment_method_code' => 'forma de pago',
+            'payroll_extra.ccf_code' => 'caja de compensación',
         ];
     }
 }

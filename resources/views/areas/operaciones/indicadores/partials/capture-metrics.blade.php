@@ -35,10 +35,16 @@
     <div class="indicadores-actions">
         @can('operations.export')
             @if (empty($exportUserId))
-                <a href="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+                <x-export-excel
+                    route="{{ route('indicadores.export.consolidado.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}"
+                    label="Exportar Excel"
+                />
                 <a href="{{ route('indicadores.export.consolidado.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
             @else
-                <a href="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId]) }}" class="btn btn--secondary btn--sm">Exportar Excel</a>
+                <x-export-excel
+                    route="{{ route('indicadores.export.leader.excel', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId]) }}"
+                    label="Exportar Excel"
+                />
                 <a href="{{ route('indicadores.export.leader.pdf', ['indicator' => $indicator->code, 'year' => $selectedYear, 'month' => $selectedMonth, 'user_id' => $exportUserId]) }}" class="btn btn--secondary btn--sm">Exportar PDF</a>
             @endif
         @endcan

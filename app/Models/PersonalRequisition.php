@@ -94,6 +94,17 @@ class PersonalRequisition extends Model
         ];
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public static function closedStatuses(): array
+    {
+        return [
+            self::STATUS_CONTRATADO,
+            self::STATUS_CANCELADA,
+        ];
+    }
+
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');

@@ -12,17 +12,116 @@ return [
      * @var list<array{code: string, name: string, sort_order: int}>
      */
     'document_type_defaults' => [
-        ['code' => 'C', 'name' => 'Cedula', 'sort_order' => 1],
-        ['code' => 'N', 'name' => 'Nit', 'sort_order' => 2],
-        ['code' => 'TI', 'name' => 'Tarjeta de Identidad', 'sort_order' => 3],
-        ['code' => 'PT', 'name' => 'Permiso temporal', 'sort_order' => 4],
+        ['code' => 'C', 'name' => 'Cedula de ciudadania', 'sort_order' => 1],
+        ['code' => 'CE', 'name' => 'Cedula de extranjeria', 'sort_order' => 2],
+        ['code' => 'N', 'name' => 'NIT', 'sort_order' => 3],
+        ['code' => 'TI', 'name' => 'Tarjeta de identidad', 'sort_order' => 4],
+        ['code' => 'PT', 'name' => 'Permiso temporal', 'sort_order' => 5],
+    ],
+
+    /**
+     * Valores base para catalogos de formulario / plantilla masivos (upsert en migrate o artisan).
+     *
+     * @var array<string, list<array{code: string, name: string, sort_order: int}>>
+     */
+    'catalog_static_defaults' => [
+        'account_type' => [
+            ['code' => '1', 'name' => 'Ahorros', 'sort_order' => 1],
+            ['code' => '2', 'name' => 'Corriente', 'sort_order' => 2],
+        ],
+        'workday' => [
+            ['code' => '1', 'name' => 'Tiempo completo', 'sort_order' => 1],
+            ['code' => '2', 'name' => 'Medio tiempo', 'sort_order' => 2],
+        ],
+        'risk_level' => [
+            ['code' => '1', 'name' => 'Riesgo I', 'sort_order' => 1],
+            ['code' => '2', 'name' => 'Riesgo II', 'sort_order' => 2],
+            ['code' => '3', 'name' => 'Riesgo III', 'sort_order' => 3],
+            ['code' => '4', 'name' => 'Riesgo IV', 'sort_order' => 4],
+            ['code' => '5', 'name' => 'Riesgo V', 'sort_order' => 5],
+        ],
+        'withholding_type' => [
+            ['code' => '1', 'name' => 'Retencion en la fuente procedimiento 1', 'sort_order' => 1],
+            ['code' => '2', 'name' => 'Retencion en la fuente procedimiento 2', 'sort_order' => 2],
+        ],
+        'expense_type' => [
+            ['code' => '1', 'name' => 'Gasto personal', 'sort_order' => 1],
+            ['code' => '2', 'name' => 'Gasto general', 'sort_order' => 2],
+            ['code' => '3', 'name' => 'Gasto ventas', 'sort_order' => 3],
+            ['code' => '4', 'name' => 'Gasto operacional', 'sort_order' => 4],
+        ],
+    ],
+
+    /**
+     * Columnas de plantilla masivos que no se capturan ni exportan (FEAT-028).
+     *
+     * @var list<string>
+     */
+    'plantilla_masivos_excluded_columns' => [
+        'NITCENTROTB.C15',
+    ],
+
+    /**
+     * Selector UI (catalog_type) por columna plantilla masivos con catálogo (FEAT-028).
+     *
+     * @var array<string, string>
+     */
+    'plantilla_masivos_catalog_columns' => [
+        'CLASEDOC.C1' => 'document_type',
+        'TIPOVNC.N1' => 'linkage_type',
+        'FORPAGO.C10' => 'payment_method',
+        'CODBANCO.C10' => 'bank',
+        'TIPOCUENTA.N1' => 'account_type',
+        'CODCENTROTB.C10' => 'work_center',
+        'NOMCENTROTB.C30' => 'work_center',
+        'TASAARP.C10' => 'risk_level',
+        'CODTPSALAR.C10' => 'salary_type',
+        'CODTPCONTR.C10' => 'contract_type',
+        'JORNADA.N1' => 'workday',
+        'CODCCOSTO.C10' => 'cost_center',
+        'CODEPS.C10' => 'eps',
+        'CODAFP.C10' => 'afp',
+        'CODCCF.C10' => 'ccf',
+        'TPRTFTE.N1' => 'withholding_type',
+        'TPGASTO.N1' => 'expense_type',
+    ],
+
+    /**
+     * Pares codigo → nombre en columnas de employee_ficha_profiles.
+     *
+     * @var list<array{code: string, name: string, type: string}>
+     */
+    'catalog_profile_code_name_pairs' => [
+        ['code' => 'eps_code', 'name' => 'eps_name', 'type' => 'eps'],
+        ['code' => 'afp_code', 'name' => 'afp_name', 'type' => 'afp'],
+        ['code' => 'position_code', 'name' => 'position_name', 'type' => 'position'],
+        ['code' => 'cost_center_code', 'name' => 'cost_center_name', 'type' => 'cost_center'],
+        ['code' => 'bank_code', 'name' => 'bank_name', 'type' => 'bank'],
+        ['code' => 'salary_type_code', 'name' => 'salary_type_name', 'type' => 'salary_type'],
+        ['code' => 'contract_type_code', 'name' => 'contract_type_name', 'type' => 'contract_type'],
+        ['code' => 'economic_activity_code', 'name' => 'economic_activity_name', 'type' => 'economic_activity'],
+        ['code' => 'residence_city_code', 'name' => 'residence_city_name', 'type' => 'city'],
+    ],
+
+    /**
+     * Pares codigo (payroll_extra) → nombre. target: profile | payroll_extra
+     *
+     * @var list<array{code: string, name: string, type: string, target: string}>
+     */
+    'catalog_payroll_extra_code_name_pairs' => [
+        ['code' => 'work_center_code', 'name' => 'work_center_name', 'type' => 'work_center', 'target' => 'profile'],
+        ['code' => 'ccf_code', 'name' => 'compensation_fund_name', 'type' => 'ccf', 'target' => 'profile'],
+        ['code' => 'branch_code', 'name' => 'branch_name', 'type' => 'branch', 'target' => 'payroll_extra'],
+        ['code' => 'destination_code', 'name' => 'destination_name', 'type' => 'destination', 'target' => 'payroll_extra'],
+        ['code' => 'zone_code', 'name' => 'zone_name', 'type' => 'zone', 'target' => 'payroll_extra'],
+        ['code' => 'severance_admin_code', 'name' => 'severance_admin_name', 'type' => 'severance_admin', 'target' => 'payroll_extra'],
     ],
 
     'import_columns' => [
         'cedula' => 'Cédula (obligatorio)',
         'nombre' => 'Nombre completo',
         'fecha_nac' => 'Fecha nacimiento (YYYY-MM-DD)',
-        'tipo_documento' => 'Tipo documento (C, TI, etc.)',
+        'tipo_documento' => 'Tipo documento (C, CE, N, TI, PT)',
         'codigo_lugar_exp_cedula' => 'Código lugar expedición',
         'lugar_exp_cedula' => 'Lugar expedición',
         'fecha_expedicion' => 'Fecha expedición',
@@ -157,6 +256,7 @@ return [
         'city',
         'position',
         'cost_center',
+        'work_center',
         'eps',
         'afp',
         'arp',
@@ -166,6 +266,16 @@ return [
         'salary_type',
         'economic_activity',
         'branch',
+        'destination',
+        'zone',
+        'severance_admin',
+        'linkage_type',
+        'account_type',
+        'risk_level',
+        'workday',
+        'ccf',
+        'withholding_type',
+        'expense_type',
         'termination_cause',
     ],
 
@@ -174,6 +284,7 @@ return [
         'city' => 'Ciudad',
         'position' => 'Cargo',
         'cost_center' => 'Centro de costo',
+        'work_center' => 'Centro de trabajo',
         'eps' => 'EPS',
         'afp' => 'AFP',
         'arp' => 'ARP',
@@ -183,6 +294,16 @@ return [
         'salary_type' => 'Tipo salario',
         'economic_activity' => 'Actividad economica',
         'branch' => 'Sucursal',
+        'destination' => 'Destino',
+        'zone' => 'Zona',
+        'severance_admin' => 'Administradora de cesantias',
+        'linkage_type' => 'Tipo vinculacion',
+        'account_type' => 'Tipo de cuenta',
+        'risk_level' => 'Nivel riesgo ARP',
+        'workday' => 'Jornada',
+        'ccf' => 'Caja de compensacion',
+        'withholding_type' => 'Tipo retencion en la fuente',
+        'expense_type' => 'Tipo gasto',
         'termination_cause' => 'Causal desvinculacion',
     ],
 

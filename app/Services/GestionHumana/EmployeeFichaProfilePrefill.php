@@ -42,6 +42,33 @@ class EmployeeFichaProfilePrefill
     }
 
     /**
+     * Datos de solo lectura para el bloque "Referencia de requisicion" (no se persisten como exportables).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function requisitionReferenceForEntry(PersonalRequisitionFichaEntry $entry): ?array
+    {
+        $entry->loadMissing(['requisition.position', 'requisition.city', 'requisition.contractType', 'requisition.client']);
+
+        $requisition = $entry->requisition;
+
+        if ($requisition === null) {
+            return null;
+        }
+
+        return [
+            'code' => $requisition->code,
+            'client_name' => $requisition->client?->name,
+            'position_name' => $requisition->position?->name,
+            'contract_type_name' => $requisition->contractType?->name,
+            'base_salary' => $requisition->base_salary,
+            'hiring_date' => $requisition->hiring_date?->format('Y-m-d') ?? $requisition->request_date?->format('Y-m-d'),
+            'cost_center_hint' => $requisition->cost_center,
+            'city_name' => $requisition->city?->name,
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $prefillAttributes
      */
     private function mergeRehireProfile(EmployeeFichaProfile $existing, array $prefillAttributes): EmployeeFichaProfile
@@ -53,12 +80,8 @@ class EmployeeFichaProfilePrefill
         $merged->fill(collect($prefillAttributes)->only([
             'salary',
             'hire_date',
-            'cost_center_code',
             'position_code',
             'position_name',
-            'contract_type_name',
-            'residence_city_name',
-            'work_center_name',
             'employment_status',
         ])->all());
 
@@ -69,6 +92,9 @@ class EmployeeFichaProfilePrefill
     }
 
     /**
+     * Atributos editables sugeridos desde requisicion. No incluye campos exportables a plantilla
+     * masivos que deban salir exclusivamente del catalogo (centro costo, ciudad, centro trabajo).
+     *
      * @return array<string, mixed>
      */
     private function attributesForEntry(PersonalRequisitionFichaEntry $entry): array
@@ -97,12 +123,8 @@ class EmployeeFichaProfilePrefill
             'hire_date' => $requisition?->hiring_date ?? $requisition?->request_date,
             'contract_end_date' => null,
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
-            'cost_center_code' => $requisition?->cost_center,
             'position_code' => $payrollPositionCode,
             'position_name' => $requisition?->position?->name,
-            'contract_type_name' => $requisition?->contractType?->name,
-            'residence_city_name' => $requisition?->city?->name,
-            'work_center_name' => $requisition?->client?->name,
         ];
     }
 

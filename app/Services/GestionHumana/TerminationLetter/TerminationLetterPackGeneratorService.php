@@ -151,10 +151,14 @@ class TerminationLetterPackGeneratorService
         Storage::disk('local')->makeDirectory(dirname($relativePath));
         Storage::disk('local')->put($relativePath, (string) file_get_contents($zipAbsolutePath));
 
-        $period->update([
-            'termination_letter_path' => $relativePath,
-            'termination_letter_type' => 'zip',
-        ]);
+        EmployeeFichaEmploymentPeriod::query()
+            ->whereKey($period->getKey())
+            ->update([
+                'termination_letter_path' => $relativePath,
+                'termination_letter_type' => 'zip',
+            ]);
+
+        $period->refresh();
 
         return $relativePath;
     }

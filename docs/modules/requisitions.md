@@ -178,7 +178,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 - **Layout Fijo**: barras de navegacion (Modulo y Sub-tableros) fijas en la parte superior.
 - **Formulario Solicitar**: secciones numeradas (motivo, cargo, servicio, perfil, administrativo); cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas motivos envian 1); barra lateral con checklist y acciones destacadas al pie.
 - **Formulario Edicion (Gestion)**: mismo layout de secciones numeradas que Solicitar, mas bloques de compensacion/contrato y gestion humana; panel lateral con historial de estados, historial de cambios de campos y guia operativa.
-- **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
+- **Gestion**: panel de filtros (busqueda servidor + pills de estado a la derecha); por defecto **En curso** (excluye `contratado` y `cancelada`); pill **Todos** (`include_closed=1`) muestra todos los estados; las pastillas de estado concretas filtran un solo estado; tabla con DataTables (busqueda en tabla, selector de registros, orden por fecha desc).
 - **Seguimiento**: mismo panel de filtros que Gestion (busqueda, pills de estado, cliente, ciudad, alcance mis/todas); resumen de resultados y exportacion Excel en la cabecera del panel.
 - **Dashboard Compacto**: indicadores KPI en una sola fila (Total, Solicitadas, En gestion, Contratadas, Canceladas); alcance consolidado de todas las areas via `usesGlobalDashboardScope`.
 - **Toasts**: feedback UI en esquina inferior derecha (aparte del correo).

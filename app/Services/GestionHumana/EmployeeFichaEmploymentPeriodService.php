@@ -243,6 +243,7 @@ class EmployeeFichaEmploymentPeriodService
             'afp_code' => ['afp', 'afp_name'],
             'position_code' => ['position', 'position_name'],
             'cost_center_code' => ['cost_center', 'cost_center_name'],
+            'contract_type_code' => ['contract_type', 'contract_type_name'],
         ];
 
         $dirty = false;

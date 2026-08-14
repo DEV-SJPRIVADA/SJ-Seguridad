@@ -6,6 +6,7 @@ use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Support\ColombianCurrencyParser;
 use App\Support\ImportFailureRow;
 use App\Support\SpreadsheetCellReader;
 use Carbon\Carbon;
@@ -17,6 +18,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class EmployeeFichaImportService
 {
+    public function __construct(
+        private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
+    ) {}
+
     /**
      * @return array{imported: int, updated: int, skipped: int, empty_rows: int, errors: list<string>, failures: list<array<string, mixed>>}
      */
@@ -73,9 +78,11 @@ class EmployeeFichaImportService
 
                     if ($existing !== null) {
                         $existing->update($payload);
+                        $this->profileCatalogSync->syncAndSave($existing);
                         $stats['updated']++;
                     } else {
-                        EmployeeFichaProfile::query()->create($payload);
+                        $profile = EmployeeFichaProfile::query()->create($payload);
+                        $this->profileCatalogSync->syncAndSave($profile);
                         $stats['imported']++;
                     }
                 });
@@ -257,19 +264,7 @@ class EmployeeFichaImportService
 
     private function numericOrNull(mixed $value): ?float
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (is_numeric($value)) {
-            return (float) $value;
-        }
-
-        $normalized = preg_replace('/[^\d,.-]/', '', (string) $value) ?? '';
-        $normalized = str_replace('.', '', $normalized);
-        $normalized = str_replace(',', '.', $normalized);
-
-        return is_numeric($normalized) ? (float) $normalized : null;
+        return ColombianCurrencyParser::parse($value);
     }
 
     private function intOrNull(mixed $value): ?int
