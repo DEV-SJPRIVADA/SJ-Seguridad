@@ -46,6 +46,7 @@ Route::middleware(['password.changed'])
     ->group(function (): void {
         Route::get('/', [ArchivoController::class, 'index'])->name('index');
         Route::get('/historias-laborales', [ArchivoController::class, 'laborHistories'])->name('labor-histories.index');
+        Route::get('/historias-laborales/datatable', [ArchivoController::class, 'laborHistoriesDatatable'])->name('labor-histories.datatable');
         Route::get('/historial-consultas', [ArchivoController::class, 'consultationHistory'])->name('consultation-history.index');
         Route::post('/consultar', [ArchivoController::class, 'consult'])->name('consult');
         Route::patch('/historial-consultas/{consultationItem}', [ArchivoController::class, 'updateConsultationItem'])->name('consultation-history.update');

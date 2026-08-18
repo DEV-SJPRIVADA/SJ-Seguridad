@@ -23,7 +23,7 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 ### Consultar ubicaciones
 
 1. Entre al area **Gestion Humana** → **Archivo** → pestaña **Historias Laborales**.
-2. Use la busqueda por cedula, nombre o codigo de requisicion.
+2. Use la busqueda por cedula, nombre o codigo de requisicion (el listado se pagina en el servidor; no carga todos los empleados de una vez).
 3. Revise columnas **Estantes** y **Cajas**.
 
 ### Consultar varias cedulas a la vez
@@ -74,4 +74,4 @@ Use ese Excel para trabajo offline del area de archivo. Complete estantes/cajas 
 | 1.1 | 2026-08-06 | Import archivo | Carga masiva de estantes/cajas separada del masivo de nomina |
 | 1.2 | 2026-08-06 | Edicion inline | Tabla editable; eliminada vista `/editar` |
 | 1.3 | 2026-08-06 | Consulta multiple | Modal con cedulas y motivos; historial y filtro por consulta |
-| 1.4 | 2026-08-06 | Pestañas Archivo | Historias Laborales + Historial de consultas; campo Entregada a; recibida/observacion |
+| 1.5 | 2026-08-18 | Rendimiento | Historias Laborales: DataTables server-side (paginacion AJAX) |

@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="page-section">
-        <div class="app-container dashboard-shell">
+        <div class="  dashboard-shell">
             <section class="panel dashboard-hero">
                 <div class="panel__body">
                     @if ($selectedModule)
