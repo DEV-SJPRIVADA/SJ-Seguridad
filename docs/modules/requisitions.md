@@ -90,6 +90,7 @@ Post-despliegue: GH debe reactivar encargados en toggles; trazabilidad previa so
 - Clase: `App\Mail\PersonalRequisitionNotification` (cola)
 - Vista: `resources/views/emails/requisitions/requested.blade.php`
 - Destinatarios: `RequisitionNotificationRecipientService::emailsForType('new_requisition')` — pivot `req_notif_type_email` + Parametros → **Tipos de notificacion**
+- CTA: `GET /requisitions/abrir/{requisition}` (`requisitions.open`) redirige segun permisos del usuario logueado: **Gestion** GH si tiene `requisitions.tab.gestion` + tablero GH; si no, **Seguimiento** de su `area_key`. Sin ninguno de los dos, 403.
 - Fallback si el tipo no tiene correos: `desarrollo.tic@sjsp.com.co`
 
 ### Autorizacion gerencia (cargo nuevo)
@@ -187,6 +188,7 @@ El formulario incluye matriz de compensacion y seguimiento, con visibilidad rest
 
 Definidas en [`routes/modules/requisitions.php`](../../routes/modules/requisitions.php):
 
+- `GET /requisitions/abrir/{requisition}` — CTA correo de alta; redirige a Gestion GH o Seguimiento del area del usuario
 - `GET /requisitions/{module}/dashboard`
 - `GET /requisitions/{module}/solicitar`
 - `POST /requisitions/{module}/solicitar`

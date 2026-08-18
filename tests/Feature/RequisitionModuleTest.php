@@ -758,6 +758,137 @@ class RequisitionModuleTest extends TestCase
         $response->assertDontSee('REQ-2026-0103');
     }
 
+    public function test_notification_open_redirects_gh_operator_to_manage(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0801',
+            'operaciones',
+            'Perfil abrir correo gestion'
+        ));
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.open', $requisition))
+            ->assertRedirect(route('requisitions.manage', [
+                'module' => 'gestion_humana',
+                'q' => $requisition->code,
+            ]));
+    }
+
+    public function test_notification_open_redirects_area_user_to_tracking(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+        $requester->givePermissionTo('requisitions.tab.seguimiento');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0802',
+            'operaciones',
+            'Perfil abrir correo seguimiento'
+        ));
+
+        $this->actingAs($requester)
+            ->get(route('requisitions.open', $requisition))
+            ->assertRedirect(route('requisitions.tracking', [
+                'module' => 'operaciones',
+                'q' => $requisition->code,
+            ]));
+    }
+
+    public function test_notification_open_redirects_gh_tracking_user_to_gh_seguimiento(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $tracker = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $tracker->assignRole('usuario');
+        $tracker->givePermissionTo('requisitions.tab.seguimiento');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0805',
+            'operaciones',
+            'Perfil abrir correo gh seguimiento'
+        ));
+
+        $this->actingAs($tracker)
+            ->get(route('requisitions.open', $requisition))
+            ->assertRedirect(route('requisitions.tracking', [
+                'module' => 'gestion_humana',
+                'q' => $requisition->code,
+            ]));
+    }
+
+    public function test_notification_open_is_forbidden_without_manage_or_tracking(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0803',
+            'operaciones',
+            'Perfil abrir correo prohibido'
+        ));
+
+        $this->actingAs($requester)
+            ->get(route('requisitions.open', $requisition))
+            ->assertForbidden();
+    }
+
+    public function test_new_requisition_mail_button_uses_open_route(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0804',
+            'operaciones',
+            'Perfil correo cta abrir'
+        ));
+
+        $mailable = new PersonalRequisitionNotification($requisition->fresh(['position', 'client', 'requester']));
+
+        $mailable->assertSeeInHtml(route('requisitions.open', $requisition));
+        $mailable->assertDontSeeInHtml(route('requisitions.manage', [
+            'module' => 'gestion_humana',
+            'q' => $requisition->code,
+        ]));
+    }
+
     public function test_requester_with_seguimiento_can_view_tracking_detail(): void
     {
         PermissionCatalog::sync();

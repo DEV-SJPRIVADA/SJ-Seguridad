@@ -73,6 +73,17 @@ class RequisitionController extends Controller
         'contract-types' => ['label' => 'Tipos de contrato', 'model' => RequisitionContractType::class],
     ];
 
+    public function openFromNotification(PersonalRequisition $requisition): RedirectResponse
+    {
+        $user = auth()->user();
+        abort_unless($user !== null, 403);
+
+        $url = $this->requisitionAccess->notificationOpenUrl($user, $requisition);
+        abort_unless($url !== null, 403);
+
+        return redirect()->to($url);
+    }
+
     public function dashboard(Request $request, string $module): View
     {
         $this->abortIfUnknownModule($module);

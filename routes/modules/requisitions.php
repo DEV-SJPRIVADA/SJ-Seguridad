@@ -4,6 +4,11 @@ use App\Http\Controllers\Requisitions\RequisitionController;
 use App\Http\Controllers\Requisitions\RequisitionManagementApprovalController;
 use Illuminate\Support\Facades\Route;
 
+Route::middleware(['auth', 'active', 'password.changed'])->group(function (): void {
+    Route::get('/requisitions/abrir/{requisition}', [RequisitionController::class, 'openFromNotification'])
+        ->name('requisitions.open');
+});
+
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/{module}')->name('requisitions.')->group(function () {
     Route::middleware('requisition.tab:dashboard')->group(function () {
         Route::get('/dashboard', [RequisitionController::class, 'dashboard'])->name('dashboard');
