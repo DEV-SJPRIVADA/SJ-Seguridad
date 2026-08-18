@@ -15,9 +15,11 @@ use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\GestionHumana\EmployeeArchiveConsultationParser;
 use App\Services\GestionHumana\EmployeeArchiveImportService;
+use App\Services\GestionHumana\EmployeeArchiveLaborHistoryDatatableService;
 use App\Traits\HasArchivoTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -34,6 +36,7 @@ class ArchivoController extends Controller
         private readonly ArchivoAccessService $archivoAccess,
         private readonly EmployeeArchiveImportService $importService,
         private readonly EmployeeArchiveConsultationParser $consultationParser,
+        private readonly EmployeeArchiveLaborHistoryDatatableService $laborHistoryDatatable,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -52,41 +55,10 @@ class ArchivoController extends Controller
         $importResult = session('import_result');
         $importHasFailures = is_array($importResult) && (($importResult['failures_count'] ?? 0) > 0 || ! empty($importResult['report_token']));
 
-        $activeConsultation = null;
-        if ($consultationId !== null) {
-            $activeConsultation = EmployeeArchiveConsultation::query()
-                ->with('user')
-                ->find($consultationId);
-        }
-
-        $entriesQuery = PersonalRequisitionFichaEntry::query()
-            ->inFicha()
-            ->with(['profile', 'requisition.position', 'requisition.client', 'requisition.city'])
-            ->when($q !== '', function (Builder $query) use ($q): void {
-                $query->where(function (Builder $inner) use ($q): void {
-                    $inner->where('hired_document', 'like', "%{$q}%")
-                        ->orWhere('hired_full_name', 'like', "%{$q}%")
-                        ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
-                });
-            })
-            ->when($activeConsultation !== null, function (Builder $query) use ($activeConsultation): void {
-                $normalizedDocuments = $this->normalizedConsultationDocuments($activeConsultation);
-
-                if ($normalizedDocuments === []) {
-                    $query->whereRaw('1 = 0');
-
-                    return;
-                }
-
-                $query->where(function (Builder $inner) use ($normalizedDocuments): void {
-                    $inner->whereIn('hired_document', $normalizedDocuments)
-                        ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
-                });
-            })
-            ->orderByDesc('moved_to_ficha_at');
+        $activeConsultation = $this->resolveActiveConsultation($consultationId);
 
         return view('areas.gestion_humana.archivo.labor-histories', [
-            'entries' => $entriesQuery->get(),
+            'datatableUrl' => route('gestion-humana.archivo.labor-histories.datatable', $request->query()),
             'filters' => [
                 'q' => $q,
                 'consultation' => $consultationId,
@@ -99,6 +71,26 @@ class ArchivoController extends Controller
             'activeConsultation' => $activeConsultation,
             'consultationTypes' => config('employee_ficha.archive_consultation_types', []),
         ]);
+    }
+
+    public function laborHistoriesDatatable(Request $request): JsonResponse
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+        $consultationId = $request->integer('consultation') ?: null;
+        $activeConsultation = $this->resolveActiveConsultation($consultationId);
+        $filters = [
+            'q' => $q,
+            'consultation' => $consultationId,
+        ];
+
+        return $this->laborHistoryDatatable->respond(
+            $request,
+            $this->laborHistoriesQuery($q, $activeConsultation),
+            $filters,
+            $this->canManage(),
+        );
     }
 
     public function consultationHistory(Request $request): View
@@ -390,6 +382,47 @@ class ArchivoController extends Controller
             fn (string $document): string => $this->consultationParser->normalizeDocument($document),
             $consultation->document_numbers ?? [],
         )));
+    }
+
+    private function resolveActiveConsultation(?int $consultationId): ?EmployeeArchiveConsultation
+    {
+        if ($consultationId === null) {
+            return null;
+        }
+
+        return EmployeeArchiveConsultation::query()
+            ->with('user')
+            ->find($consultationId);
+    }
+
+    /**
+     * @return Builder<PersonalRequisitionFichaEntry>
+     */
+    private function laborHistoriesQuery(string $q, ?EmployeeArchiveConsultation $activeConsultation): Builder
+    {
+        return PersonalRequisitionFichaEntry::query()
+            ->inFicha()
+            ->when($q !== '', function (Builder $query) use ($q): void {
+                $query->where(function (Builder $inner) use ($q): void {
+                    $inner->where('hired_document', 'like', "%{$q}%")
+                        ->orWhere('hired_full_name', 'like', "%{$q}%")
+                        ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
+                });
+            })
+            ->when($activeConsultation !== null, function (Builder $query) use ($activeConsultation): void {
+                $normalizedDocuments = $this->normalizedConsultationDocuments($activeConsultation);
+
+                if ($normalizedDocuments === []) {
+                    $query->whereRaw('1 = 0');
+
+                    return;
+                }
+
+                $query->where(function (Builder $inner) use ($normalizedDocuments): void {
+                    $inner->whereIn('hired_document', $normalizedDocuments)
+                        ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
+                });
+            });
     }
 
     private function authorizeView(): void

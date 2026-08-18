@@ -13,6 +13,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Testing\TestResponse;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -275,8 +276,18 @@ class EmployeeArchiveTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('gestion-humana.archivo.labor-histories.index', ['consultation' => $consultationId]))
             ->assertOk()
-            ->assertSee('CONSULTA MATCH')
+            ->assertViewHas('datatableUrl')
+            ->assertSee('Consulta activa #'.$consultationId, false)
+            ->assertDontSee('CONSULTA MATCH')
             ->assertDontSee('CONSULTA OTHER');
+
+        $datatable = $this->getArchivoLaborHistoriesDatatable($viewer, ['consultation' => $consultationId]);
+        $datatable->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        $rowText = $this->datatableRowTexts($datatable->json());
+        $this->assertStringContainsString('CONSULTA MATCH', $rowText);
+        $this->assertStringNotContainsString('CONSULTA OTHER', $rowText);
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.archivo.consultation-history.index'))
@@ -338,6 +349,128 @@ class EmployeeArchiveTest extends TestCase
             ->assertSessionHasErrors([
                 'consultation_types' => 'Debe seleccionar un motivo de consulta.',
             ]);
+    }
+
+    public function test_archivo_labor_histories_index_does_not_embed_rows(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '3030303030',
+            'hired_full_name' => 'ARCHIVO INDEX SIN FILAS',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.labor-histories.index'))
+            ->assertOk()
+            ->assertViewHas('datatableUrl')
+            ->assertSee('js-archivo-labor-histories-datatable', false)
+            ->assertDontSee('ARCHIVO INDEX SIN FILAS');
+    }
+
+    public function test_archivo_labor_histories_datatable_forbidden_without_view_permission(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+
+        $this->actingAs($user)
+            ->getJson(route('gestion-humana.archivo.labor-histories.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_archivo_labor_histories_datatable_search_filters_by_name(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '4040404040',
+            'hired_full_name' => 'Ana Datatable Archivo',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '5050505050',
+            'hired_full_name' => 'Otro Empleado Archivo',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        $byName = $this->getArchivoLaborHistoriesDatatable($viewer, [
+            'search' => ['value' => 'Ana Datatable'],
+        ]);
+
+        $byName->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Ana Datatable Archivo', $this->datatableRowTexts($byName->json()));
+        $this->assertStringNotContainsString('Otro Empleado Archivo', $this->datatableRowTexts($byName->json()));
+    }
+
+    public function test_archivo_labor_histories_datatable_includes_inline_edit_for_managers(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo(['archivo.manage', 'view.board.gestion_humana.archivo']);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '6060606060',
+            'hired_full_name' => 'Manager Inline Archivo',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'archive_shelf' => 'E-9',
+            'archive_box' => 'Caja 3',
+        ]);
+
+        $payload = $this->getArchivoLaborHistoriesDatatable($manager)->assertOk()->json();
+        $rowText = $this->datatableRowTexts($payload);
+
+        $this->assertStringContainsString('Manager Inline Archivo', $rowText);
+        $this->assertStringContainsString('name="archive_shelf"', $rowText);
+        $this->assertStringContainsString('name="archive_box"', $rowText);
+        $this->assertStringContainsString('E-9', $rowText);
+        $this->assertStringContainsString('Actualizar', $rowText);
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function getArchivoLaborHistoriesDatatable(User $user, array $query = []): TestResponse
+    {
+        return $this->actingAs($user)->getJson(route('gestion-humana.archivo.labor-histories.datatable', array_merge([
+            'draw' => 1,
+            'start' => 0,
+            'length' => 100,
+        ], $query)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function datatableRowTexts(array $payload): string
+    {
+        return collect($payload['data'] ?? [])
+            ->flatten()
+            ->implode(' ');
     }
 
     /**

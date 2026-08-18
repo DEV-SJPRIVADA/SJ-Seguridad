@@ -73,10 +73,15 @@ class PersonalRequisitionFichaEntry extends Model
             return null;
         }
 
-        $latestClosed = $this->employmentPeriods()
-            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
-            ->orderByDesc('sequence')
-            ->first();
+        $latestClosed = $this->relationLoaded('employmentPeriods')
+            ? $this->employmentPeriods
+                ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+                ->sortByDesc('sequence')
+                ->first()
+            : $this->employmentPeriods()
+                ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+                ->orderByDesc('sequence')
+                ->first();
 
         if ($latestClosed === null) {
             return null;

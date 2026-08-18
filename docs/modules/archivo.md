@@ -96,6 +96,7 @@ Filtros: busqueda, mes, semana. PATCH por fila para `received` y `observation`.
 | --- | --- | --- | --- |
 | GET | `/gestion-humana/archivo` | `gestion-humana.archivo.index` | `archivo.view` (redirect) |
 | GET | `/gestion-humana/archivo/historias-laborales` | `gestion-humana.archivo.labor-histories.index` | `archivo.view` |
+| GET | `/gestion-humana/archivo/historias-laborales/datatable` | `gestion-humana.archivo.labor-histories.datatable` | `archivo.view` |
 | GET | `/gestion-humana/archivo/historial-consultas` | `gestion-humana.archivo.consultation-history.index` | `archivo.view` |
 | POST | `/gestion-humana/archivo/consultar` | `gestion-humana.archivo.consult` | `archivo.view` |
 | PATCH | `/gestion-humana/archivo/historial-consultas/{item}` | `gestion-humana.archivo.consultation-history.update` | `archivo.view` |
@@ -113,7 +114,7 @@ Filtros: busqueda, mes, semana. PATCH por fila para `received` y `observation`.
 
 ## Controlador
 
-`App\Http\Controllers\GestionHumana\ArchivoController` — listado con edicion inline de `archive_shelf` / `archive_box` (PATCH por fila). Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
+`App\Http\Controllers\GestionHumana\ArchivoController` — `laborHistories()` pinta layout, filtros y tabla vacia. El listado llega por AJAX (`laborHistoriesDatatable()` + `EmployeeArchiveLaborHistoryDatatableService`): paginacion, busqueda y orden en MySQL (mismo patron que Ficha empleados). Edicion inline de `archive_shelf` / `archive_box` via PATCH por fila (HTML de inputs/formulario en el JSON). Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
 
 ## Tests
 

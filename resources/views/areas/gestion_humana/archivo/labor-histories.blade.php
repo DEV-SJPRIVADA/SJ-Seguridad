@@ -98,8 +98,8 @@
                         </div>
 
                         <p class="req-manage-filters__meta">
-                            <strong>{{ number_format($entries->count()) }}</strong>
-                            {{ $entries->count() === 1 ? 'empleado' : 'empleados' }}
+                            <strong id="archivo-entries-count">…</strong>
+                            <span id="archivo-entries-count-label">empleados</span>
                             @if ($filters['q'] ?? '')
                                 · Busqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
@@ -149,7 +149,9 @@
                     <div class="data-table-wrap req-manage-shell__table archivo-page__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')
                         <table
-                            class="data-table js-datatable"
+                            id="archivo-labor-histories-datatable"
+                            class="data-table js-archivo-labor-histories-datatable"
+                            data-dt-url="{{ $datatableUrl }}"
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
@@ -173,87 +175,9 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse ($entries as $entry)
-                                    @php
-                                        $rowFormId = 'archivo-row-'.$entry->id;
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $entry->profile?->document_number ?: $entry->hired_document }}</td>
-                                        <td>{{ $entry->profile?->full_name ?: $entry->hired_full_name }}</td>
-                                        <td>{{ $entry->positionName() ?: '—' }}</td>
-                                        <td>{{ $entry->clientName() ?: '—' }}</td>
-                                        <td>{{ $entry->cityName() ?: '—' }}</td>
-                                        <td><x-date-table :value="$entry->hireDate()" /></td>
-                                        <td>{{ $entry->employmentStatusLabel() ?: '—' }}</td>
-                                        <td>{{ $entry->rehireableLabel() ?: '—' }}</td>
-                                        <td><x-date-table :value="$entry->terminationDate()" /></td>
-                                        @if ($canManage)
-                                            <td class="archivo-page__field-cell">
-                                                <label class="sr-only" for="{{ $rowFormId }}-shelf">Estante</label>
-                                                <input
-                                                    id="{{ $rowFormId }}-shelf"
-                                                    form="{{ $rowFormId }}"
-                                                    type="text"
-                                                    name="archive_shelf"
-                                                    class="form-input archivo-page__inline-input"
-                                                    maxlength="100"
-                                                    value="{{ old('archive_shelf', $entry->profile?->archive_shelf) }}"
-                                                    placeholder="Estante"
-                                                >
-                                            </td>
-                                            <td class="archivo-page__field-cell">
-                                                <label class="sr-only" for="{{ $rowFormId }}-box">Caja</label>
-                                                <input
-                                                    id="{{ $rowFormId }}-box"
-                                                    form="{{ $rowFormId }}"
-                                                    type="text"
-                                                    name="archive_box"
-                                                    class="form-input archivo-page__inline-input"
-                                                    maxlength="100"
-                                                    value="{{ old('archive_box', $entry->profile?->archive_box) }}"
-                                                    placeholder="Caja"
-                                                >
-                                            </td>
-                                            <td class="table-actions archivo-page__actions-cell">
-                                                <button type="submit" form="{{ $rowFormId }}" class="btn btn--primary btn--sm">
-                                                    Actualizar
-                                                </button>
-                                            </td>
-                                        @else
-                                            <td>{{ $entry->profile?->archive_shelf ?: '—' }}</td>
-                                            <td>{{ $entry->profile?->archive_box ?: '—' }}</td>
-                                        @endif
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="{{ $canManage ? 10 : 9 }}">No hay empleados en ficha.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
-
-                    @if ($canManage)
-                        @foreach ($entries as $entry)
-                            <form
-                                id="archivo-row-{{ $entry->id }}"
-                                method="POST"
-                                action="{{ route('gestion-humana.archivo.update', $entry) }}"
-                                class="archivo-page__row-form"
-                                hidden
-                            >
-                                @csrf
-                                @method('PATCH')
-                                @if ($filters['q'] ?? '')
-                                    <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                                @endif
-                                @if ($filters['consultation'] ?? null)
-                                    <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
-                                @endif
-                            </form>
-                        @endforeach
-                    @endif
                 </div>
             </div>
 
@@ -272,33 +196,159 @@
         </div>
     </div>
 
-    @if ($canManage)
-        @push('scripts')
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    var fileInput = document.querySelector('[data-archivo-import-file]');
-                    var fileName = document.querySelector('[data-archivo-import-name]');
-                    var submitBtn = document.querySelector('[data-archivo-import-submit]');
-                    var form = document.querySelector('[data-archivo-import-form]');
-                    var loading = document.querySelector('[data-archivo-import-loading]');
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var $table = $('#archivo-labor-histories-datatable');
+                var $wrap = $table.closest('.data-table-wrap--booting');
 
-                    if (fileInput && fileName && submitBtn) {
-                        fileInput.addEventListener('change', function () {
-                            var name = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
-                            fileName.textContent = name ? name.name : 'Sin archivo seleccionado';
-                            submitBtn.disabled = !name;
-                        });
+                function revealArchivoTableWrap() {
+                    if (!$wrap.length) {
+                        return;
                     }
 
-                    if (form && loading && submitBtn) {
-                        form.addEventListener('submit', function () {
-                            loading.hidden = false;
-                            submitBtn.disabled = true;
-                            submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
-                        });
+                    $wrap.removeClass('data-table-wrap--booting');
+                    $wrap.find('.data-table-wrap__loader').attr('aria-busy', 'false');
+                }
+
+                function updateArchivoEntriesMeta(recordsFiltered) {
+                    var countEl = document.getElementById('archivo-entries-count');
+                    var labelEl = document.getElementById('archivo-entries-count-label');
+
+                    if (!countEl || !labelEl) {
+                        return;
                     }
-                });
-            </script>
-        @endpush
-    @endif
+
+                    var count = Number(recordsFiltered) || 0;
+                    countEl.textContent = count.toLocaleString('es-CO');
+                    labelEl.textContent = count === 1 ? 'empleado' : 'empleados';
+                }
+
+                if ($table.length && typeof $.fn.DataTable !== 'undefined') {
+                    if ($.fn.DataTable.isDataTable($table[0])) {
+                        $table.DataTable().destroy();
+                    }
+
+                    $table.closest('.req-manage-shell__table, .data-table-wrap').addClass('data-table-wrap--dt-compact');
+
+                    var columnDefs = [];
+                    @if ($canManage)
+                    columnDefs.push({ targets: -1, orderable: false, searchable: false });
+                    columnDefs.push({ targets: [-3, -2], orderable: false });
+                    @endif
+
+                    var api = $table.DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: {
+                            url: $table.data('dt-url'),
+                            data: function (data) {
+                                data.q = @json($filters['q'] ?? '');
+                                @if ($filters['consultation'] ?? null)
+                                data.consultation = @json($filters['consultation']);
+                                @endif
+                            },
+                        },
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                            emptyTable: 'No hay empleados en ficha.',
+                        },
+                        dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
+                        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']],
+                        pageLength: 10,
+                        responsive: false,
+                        order: [],
+                        columnDefs: columnDefs,
+                    });
+
+                    api.on('xhr.dt', function (_event, _settings, json) {
+                        revealArchivoTableWrap();
+
+                        if (json && typeof json.recordsFiltered !== 'undefined') {
+                            updateArchivoEntriesMeta(json.recordsFiltered);
+                        }
+                    });
+
+                    (function setupArchivoTableScroll() {
+                        var $shell = $table.closest('.req-manage-shell');
+                        var $wrapper = $table.closest('.dataTables_wrapper');
+                        var $scroll = $wrapper.find('.req-manage-table-scroll').first();
+                        var $bottom = $wrapper.find('.req-manage-dt-bottom').first();
+
+                        if (!$scroll.length) {
+                            return;
+                        }
+
+                        var updateScrollArea = function () {
+                            var bottomHeight = $bottom.outerHeight(true) || 0;
+                            var rect = $scroll[0].getBoundingClientRect();
+                            var maxHeight = window.innerHeight - rect.top - bottomHeight - 16;
+
+                            $scroll.css('max-height', Math.max(220, maxHeight) + 'px');
+                        };
+
+                        var debounce = function (fn, wait) {
+                            var timer = null;
+
+                            return function () {
+                                if (timer) {
+                                    clearTimeout(timer);
+                                }
+
+                                timer = setTimeout(fn, wait);
+                            };
+                        };
+
+                        var scheduleUpdate = function () {
+                            updateScrollArea();
+                            setTimeout(updateScrollArea, 0);
+                            setTimeout(updateScrollArea, 150);
+
+                            $scroll.find('thead th').css({
+                                position: 'sticky',
+                                top: '0',
+                                zIndex: '12',
+                                backgroundColor: '#003366',
+                            });
+
+                            $scroll.find('table').css({
+                                borderCollapse: 'separate',
+                                borderSpacing: '0',
+                            });
+                        };
+
+                        scheduleUpdate();
+                        $(window).on('resize orientationchange', debounce(updateScrollArea, 100));
+                        api.on('draw.dt-table-scroll', updateScrollArea);
+
+                        if (typeof ResizeObserver !== 'undefined' && $shell.length) {
+                            new ResizeObserver(debounce(updateScrollArea, 100)).observe($shell[0]);
+                        }
+                    })();
+                }
+
+                var fileInput = document.querySelector('[data-archivo-import-file]');
+                var fileName = document.querySelector('[data-archivo-import-name]');
+                var submitBtn = document.querySelector('[data-archivo-import-submit]');
+                var form = document.querySelector('[data-archivo-import-form]');
+                var loading = document.querySelector('[data-archivo-import-loading]');
+
+                if (fileInput && fileName && submitBtn) {
+                    fileInput.addEventListener('change', function () {
+                        var name = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+                        fileName.textContent = name ? name.name : 'Sin archivo seleccionado';
+                        submitBtn.disabled = !name;
+                    });
+                }
+
+                if (form && loading && submitBtn) {
+                    form.addEventListener('submit', function () {
+                        loading.hidden = false;
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
+                    });
+                }
+            });
+        </script>
+    @endpush
 </x-app-layout>
