@@ -12,7 +12,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - Formulario en pestanas: **Identidad**, **Acceso y permisos**, **Seguridad** (edicion)
 - **Crear usuario:** selector opcional **Copiar acceso de otro usuario** (precarga rol, permisos directos, area base y sede)
 - **Editar usuario:** accion **Aplicar acceso de otro usuario** con confirmacion (reemplaza rol y permisos directos del destino)
-- **Acceso y permisos:** layout maestro–detalle — sidebar con **Mi area base**, **Transversal** y cada area del negocio; panel derecho con subgrupos y toggles de la seleccion
+- **Acceso y permisos:** layout maestro–detalle — sidebar con **Solicitar en su area**, **Transversal** y cada area del negocio; panel derecho con subgrupos y toggles de la seleccion
 - La estructura logica sigue en tres bloques (`assigned_area`, `global_groups`, `other_areas`); la UI los navega por area via `sections.navigation`
 - Avisos de coherencia al guardar (soft warnings)
 
@@ -56,6 +56,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 | Version | Fecha | Descripcion |
 | --- | --- | --- |
+| 1.3 | 2026-08-19 | Admin: bloque **Solicitar en su area**; crear/mis compras solo ahi, no en transversal |
 | 1.2 | 2026-08-12 | Copiar acceso al crear usuario y aplicar acceso desde edicion |
 | 1.1 | 2026-08-03 | Hogares canonicos del sidebar (`SidebarVisibilityService`); avisos en validador de permisos |
 

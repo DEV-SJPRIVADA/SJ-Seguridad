@@ -61,7 +61,7 @@ return [
         'gestion_humana' => 'Gestion humana',
         'juridico' => 'Juridico',
         'operaciones' => 'Operaciones',
-        'programacion' => 'Plan. y Programación',        
+        'programacion' => 'Plan. y Programación',
         'comercial' => 'Comercial',
         'calidad' => 'Calidad',
         'admin_financiero' => 'Admin y Financiero',
@@ -209,14 +209,14 @@ return [
             'security' => 'Seguridad',
         ],
         'sections' => [
-            'assigned_area' => 'En su area asignada',
+            'assigned_area' => 'Solicitar en su area',
             'global' => 'Funcionalidades transversales',
             'other_areas' => 'Activa visualizacion de otras areas',
         ],
         'help' => [
             'area_key' => 'Contexto operativo del usuario. Las acciones de esta seccion solo aplican en el area seleccionada aqui.',
             'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, tableros y funciones exclusivas por area.',
-            'assigned_area' => 'Operan unicamente en el area base definida en la pestana Identidad.',
+            'assigned_area' => 'Pedir personal, insumos o compras en el area de Identidad. Los modulos del departamento (ficha, archivo, indicadores) estan en cada area.',
             'global' => 'Acciones que no dependen del area base. Combinelas con tableros visibles en la seccion inferior.',
             'other_areas' => 'Tableros visibles y modulos propios de cada area (GH, Compras, Operaciones, Comercial, Calidad).',
         ],
@@ -264,8 +264,6 @@ return [
             'purchases' => [
                 'label' => 'Solicitudes de compra',
                 'permissions' => [
-                    'purchase.tab.create',
-                    'purchase.tab.my_requests',
                     'purchase.tab.approval',
                     'purchase.tab.processing',
                 ],

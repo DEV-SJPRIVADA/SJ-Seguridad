@@ -91,7 +91,8 @@ class AdminUserManagementTest extends TestCase
         $response->assertOk();
         $response->assertSee('Cedula');
         $response->assertSee('perm-master-detail', false);
-        $response->assertSee('Mi area base');
+        $response->assertSee('Solicitar en su area');
+        $response->assertDontSee('Mi area base');
         $response->assertSee('Funcionalidades transversales');
         $response->assertSee('Solicitar requisiciones de personal');
         $response->assertSee('Suministros — Calidad (aprobacion)');
@@ -116,6 +117,16 @@ class AdminUserManagementTest extends TestCase
         $this->assertContains('_assigned', collect($navigation)->pluck('key')->all());
         $this->assertContains('_global', collect($navigation)->pluck('key')->all());
         $this->assertContains('gestion_humana', collect($navigation)->pluck('key')->all());
+
+        $assignedNames = collect($form['sections']['assigned_area']['permissions'] ?? [])->pluck('name');
+        $globalNames = collect($form['sections']['global']['groups'] ?? [])
+            ->flatMap(fn (array $group) => collect($group['permissions'] ?? [])->pluck('name'));
+
+        $this->assertContains('purchase.tab.create', $assignedNames);
+        $this->assertContains('purchase.tab.my_requests', $assignedNames);
+        $this->assertNotContains('purchase.tab.create', $globalNames);
+        $this->assertNotContains('purchase.tab.my_requests', $globalNames);
+        $this->assertContains('purchase.tab.approval', $globalNames);
     }
 
     public function test_permission_form_builder_lists_global_requisition_actions_once(): void

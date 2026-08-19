@@ -28,7 +28,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 | Permiso directo | Permiso adicional asignado a un usuario concreto, mas alla de su rol. |
 | Area asignada | Departamento base del usuario (gestion humana, operaciones, comercial, etc.). |
 | Cambio obligatorio de contrasena | El usuario debe definir una nueva clave antes de usar el sistema. |
-| Permisos en su area | Acciones que el usuario puede hacer dentro de su area asignada (por ejemplo solicitar requisiciones). |
+| Permisos en su area | Pedir en el area de Identidad (requisiciones, suministros, solicitudes de compra propias). |
 | Funcionalidades transversales | Permisos que aplican en varias areas (gestion de requisiciones GH, suministros Calidad/Compras, administracion). |
 | Visualizacion de otras areas | Permite ver tableros de otras areas del negocio segun la matriz configurada. |
 
@@ -61,9 +61,9 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 2. En la pestana **Usuario**, complete: nombre, correo, area asignada, rol y contrasena temporal si aplica.
 3. Indique si el usuario debe **cambiar la contrasena** en el primer ingreso.
 4. En la pestana **Que puede hacer**, asigne permisos en tres bloques:
-   - **En su area asignada:** acciones propias de su departamento.
-   - **Funcionalidades transversales:** gestion GH, Calidad, Compras, admin, documentos, etc.
-   - **Activa visualizacion de otras areas:** tableros adicionales por area.
+   - **Solicitar en su area:** pedir personal, insumos o compras en el area de Identidad (no son ficha, archivo ni otros modulos del departamento).
+   - **Funcionalidades transversales:** gestion GH, Calidad, autorizacion/bandeja de compras, admin, documentos, etc.
+   - **Activa visualizacion de otras areas:** tableros y modulos de cada departamento.
 5. Revise los avisos de coherencia que muestre el sistema (son recomendaciones, no bloqueos).
 6. Guarde el formulario.
 
@@ -94,4 +94,5 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 | --- | --- | --- | --- |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial — guia de usuario Admin Users |
 | 1.1 | 2026-07-22 | Alineacion documental | Sincronizada con matriz DOCUMENTATION.md |
+| 1.3 | 2026-08-19 | Alineacion documental | Bloque **Solicitar en su area**; crear/mis compras no se marcan en transversal |
 | 1.2 | 2026-08-03 | Navegacion canonica | Hogares canonicos del sidebar; guia para no duplicar tableros |
