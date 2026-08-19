@@ -175,6 +175,26 @@ class NavigationVisibilityTest extends TestCase
         $this->assertNotContains('operaciones', collect($nav['appNavigation'])->pluck('key')->all());
     }
 
+    public function test_authenticated_layout_shows_sidebar_session_footer(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Ana Sidebar',
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+
+        $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('app-sidebar-footer', false)
+            ->assertSee('Ana Sidebar')
+            ->assertSee('Operaciones')
+            ->assertSee('Usuario')
+            ->assertSee('Cerrar sesion')
+            ->assertSee(config('app.name').' Logo', false);
+    }
+
     /**
      * @param  array<string, mixed>  $nav
      */

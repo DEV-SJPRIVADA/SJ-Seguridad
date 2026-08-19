@@ -1,7 +1,7 @@
 <x-mail::message>
 # Nueva solicitud de suministros
 
-Se registro una nueva solicitud de suministros en **SJ Seguridad**. A continuacion, los detalles principales:
+Se registro una nueva solicitud de suministros en **{{ config('app.name') }}**. A continuacion, los detalles principales:
 
 <x-mail::panel>
 **Solicitud:** #{{ $supplyRequest->id }}  

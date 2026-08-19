@@ -105,7 +105,7 @@ class CommercialClientChecklistController extends Controller
             $exportRows,
             $columns,
             'checklist_documental_'.now()->format('Y-m-d').'.xlsx',
-            'Checklist documental - SJ Seguridad'
+            'Checklist documental - '.config('app.name')
         ))->download();
     }
 

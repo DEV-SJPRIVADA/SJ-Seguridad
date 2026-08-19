@@ -1,6 +1,6 @@
-# SJ Seguridad
+# SJ StatFlow
 
-Base de plataforma web modular para `SJ Seguridad`, construida con `Laravel 13`, `PHP 8.3`, `MySQL` y `Blade`.
+Plataforma web modular de `SJ Seguridad`, construida con `Laravel 13`, `PHP 8.3`, `MySQL` y `Blade`. El nombre de la aplicacion es `SJ StatFlow` (`APP_NAME`).
 
 ## Objetivo
 

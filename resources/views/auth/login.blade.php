@@ -8,7 +8,7 @@
         <div class="auth-form__header">
             <h1 class="auth-title">{{ __('Iniciar sesion') }}</h1>
             <p class="auth-subtitle">
-                {{ __('Accede a la plataforma administrativa de SJ Seguridad con tus credenciales asignadas.') }}
+                Accede a {{ config('app.name') }} con tus credenciales asignadas.
             </p>
         </div>
 

@@ -2,13 +2,14 @@
 
 ## Objetivo
 
-Centralizar la identidad visual base de `SJ Seguridad` para que cabecera, accesos y futuras vistas reutilicen la misma marca.
+Centralizar la identidad visual base de `SJ StatFlow` (marca corporativa SJ Seguridad) para que cabecera, accesos y futuras vistas reutilicen la misma marca.
 
 ## Implementacion actual
 
 - Componente reutilizable: [`resources/views/components/application-logo.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/components/application-logo.blade.php)
 - Uso en layout de invitados: [`resources/views/layouts/guest.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/layouts/guest.blade.php)
 - Uso en navegacion autenticada: [`resources/views/layouts/navigation.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/layouts/navigation.blade.php)
+- Pie de sidebar (desktop): [`resources/views/components/app-sidebar-footer.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/components/app-sidebar-footer.blade.php) — nombre, rol, area asignada, cerrar sesion y logo compacto
 - Tokens globales de color: [`resources/css/app.css`](c:/laragon/www/SJSEGURIDAD/resources/css/app.css)
 
 ## Paleta corporativa base

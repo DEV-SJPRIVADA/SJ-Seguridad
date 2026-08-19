@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -291,6 +291,8 @@
 
             .app-sidebar {
                 flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
                 background: #e9eef5;
                 border-right: 1px solid var(--color-border, #dbe3ef);
                 padding: 1.5rem 1rem;
@@ -341,6 +343,9 @@
                     border-right: none !important;
                     border-bottom: 1px solid var(--color-border) !important;
                     padding: 1rem !important;
+                }
+                .app-sidebar-footer {
+                    display: none !important;
                 }
                 .app-workspace {
                     height: auto !important;
@@ -955,6 +960,8 @@
                             </a>
                         @endforeach
                     </nav>
+
+                    <x-app-sidebar-footer />
                 </aside>
 
                 <div class="app-workspace">

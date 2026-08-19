@@ -80,7 +80,7 @@ class CommercialServiceController extends Controller
             metadata: $this->serviceExportAuditMetadata($q, $portfolio, $vigencia, $status, $services->count()),
         );
 
-        return (new BaseExport($services, $columns, 'servicios_'.now()->format('Y-m-d').'.xlsx', 'Servicios - SJ Seguridad'))->download();
+        return (new BaseExport($services, $columns, 'servicios_'.now()->format('Y-m-d').'.xlsx', 'Servicios - '.config('app.name')))->download();
     }
 
     public function create(Request $request): View
