@@ -2,6 +2,7 @@
 
 namespace App\Services\Access;
 
+use App\Models\PersonalRequisition;
 use App\Models\User;
 use App\Services\Navigation\SidebarVisibilityService;
 
@@ -115,6 +116,31 @@ class RequisitionAccessService
     {
         return $this->canAccessTab($user, $module, 'dashboard')
             || $this->usesGlobalManagementScope($user, $module);
+    }
+
+    /**
+     * Destino del boton "Ver requisicion" en el correo de alta:
+     * Gestion de GH si el usuario puede abrirla; si no, Seguimiento de su area.
+     */
+    public function notificationOpenUrl(User $user, PersonalRequisition $requisition): ?string
+    {
+        if ($this->canAccessTab($user, 'gestion_humana', 'gestion')) {
+            return route('requisitions.manage', [
+                'module' => 'gestion_humana',
+                'q' => $requisition->code,
+            ]);
+        }
+
+        $areaKey = $user->area_key;
+
+        if (is_string($areaKey) && $areaKey !== '' && $this->canAccessTab($user, $areaKey, 'seguimiento')) {
+            return route('requisitions.tracking', [
+                'module' => $areaKey,
+                'q' => $requisition->code,
+            ]);
+        }
+
+        return null;
     }
 
     /**

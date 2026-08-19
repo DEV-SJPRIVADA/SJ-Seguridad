@@ -13,11 +13,11 @@ Se ha registrado una nueva solicitud de personal en el sistema **SJ Seguridad**.
 **Fecha de Solicitud:** {{ $requisition->request_date?->format('d/m/Y') }}
 </x-mail::panel>
 
-<x-mail::button :url="route('requisitions.manage', ['module' => 'gestion_humana', 'q' => $requisition->code])">
+<x-mail::button :url="route('requisitions.open', $requisition)">
 Ver Requisición
 </x-mail::button>
 
-Si deseas gestionar esta solicitud, puedes ingresar al tablero de Gestión Humana.
+Si el enlace no abre la vista esperada, ingrese al tablero de Requisiciones con su usuario.
 
 Atentamente,  
 Sistema de Notificaciones **{{ config('app.name') }}**

@@ -105,6 +105,7 @@ La matriz de **Clientes** se administra en Comercial, no en Parametros de requis
 1. Mantenga el catalogo de direcciones en **Correos de notificacion**.
 2. Abra **Tipos de notificacion**.
 3. Para **Nueva requisicion** y **Autorizacion requisicion cargo nuevo**, marque los correos que deben recibir cada aviso y guarde.
+4. El boton **Ver Requisicion** del correo de alta abre Gestion (si su usuario puede gestionar en GH) o **Mis requisiciones** de su area.
 
 ### Autorizar requisiciones cargo nuevo (Gerencia)
 
@@ -139,4 +140,4 @@ Esta seccion aparece **unicamente** en el tablero **Requisiciones** del area **G
 | 1.4 | 2026-07-28 | FEAT-011 | Encargados de seleccion por toggles en Parametros GH; Reclutador desde usuarios habilitados; checklist post-actualizacion |
 | 1.5 | 2026-07-30 | FEAT-020 | Campos **Cedula/Nombre persona contratada** al marcar Contratado; alerta de confirmacion por cedula duplicada; enlace al tablero **Ficha empleados** |
 | 1.6 | 2026-08-03 | Navegacion canonica | Tabla de entrada al menu por perfil (GH vs area solicitante) |
-| 1.7 | 2026-08-04 | Roles director/administrador | Autorizacion cargo nuevo solo rol administrador; director solo compras |
+| 1.8 | 2026-08-18 | Correo alta | El boton Ver Requisicion redirige a Gestion o a Mis requisiciones segun el permiso del usuario |
