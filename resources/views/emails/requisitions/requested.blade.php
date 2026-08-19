@@ -1,7 +1,7 @@
 <x-mail::message>
 # Nueva Requisición de Personal
 
-Se ha registrado una nueva solicitud de personal en el sistema **SJ Seguridad**. A continuación, los detalles principales:
+Se ha registrado una nueva solicitud de personal en el sistema **{{ config('app.name') }}**. A continuación, los detalles principales:
 
 <x-mail::panel>
 **Código:** {{ $requisition->code }} {{ $totalQuantity > 1 ? '(Lote de ' . $totalQuantity . ' registros)' : '' }}  

@@ -36,7 +36,7 @@ class CommercialServiceContractExpiringDigestMail extends Mailable
         $dateLabel = DisplayDate::date($this->asOf);
 
         return new Envelope(
-            subject: "[SJ Seguridad] Contratos de servicio por vencer — {$count} servicio(s) ({$dateLabel})",
+            subject: '['.config('app.name')."] Contratos de servicio por vencer — {$count} servicio(s) ({$dateLabel})",
         );
     }
 

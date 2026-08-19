@@ -144,7 +144,7 @@ class CommercialClientController extends Controller
             ['key' => fn ($c) => ($c->active_operational_services_count ?? 0) > 0 ? 'Activo' : 'Inactivo', 'label' => 'Estado'],
         ];
 
-        return (new BaseExport($clients, $columns, 'clientes_'.now()->format('Y-m-d').'.xlsx', 'Clientes - SJ Seguridad'))->download();
+        return (new BaseExport($clients, $columns, 'clientes_'.now()->format('Y-m-d').'.xlsx', 'Clientes - '.config('app.name')))->download();
     }
 
     public function search(Request $request): JsonResponse

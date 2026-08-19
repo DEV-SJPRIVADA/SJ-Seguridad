@@ -36,7 +36,7 @@ class CommercialDocumentationDigestMail extends Mailable
         $dateLabel = DisplayDate::date($this->asOf);
 
         return new Envelope(
-            subject: "[SJ Seguridad] Documentacion comercial — {$count} cliente(s) ({$dateLabel})",
+            subject: '['.config('app.name')."] Documentacion comercial — {$count} cliente(s) ({$dateLabel})",
         );
     }
 
