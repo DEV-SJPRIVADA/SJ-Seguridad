@@ -209,8 +209,8 @@ Util cuando se agregan areas o permisos nuevos sin ejecutar el seeder completo. 
 
 El formulario en **Administracion → Usuarios** usa tres bloques (`config/access.php` → `admin_ui`):
 
-1. **En su area asignada:** solicitar, mis requisiciones, mis solicitudes suministros (operan en `users.area_key`).
-2. **Funcionalidades transversales:** requisiciones GH, suministros Calidad/Compras, admin documentos (`manage.quality.documents`).
+1. **Solicitar en su area:** solicitar, mis requisiciones, mis suministros, crear/mis solicitudes de compra (operan en `users.area_key`).
+2. **Funcionalidades transversales:** requisiciones GH, suministros Calidad/Compras, autorizacion y bandeja de compras, admin documentos (`manage.quality.documents`).
 3. **Activa visualizacion de otras areas:** tableros y modulos por area (GH, **Compras**, Operaciones, Comercial, Calidad) con subgrupos *Ver tableros* / *funciones*.
 
 El listado de usuarios muestra permisos **directos** y notas de acceso efectivo por rol (`UserAccessSummary`).

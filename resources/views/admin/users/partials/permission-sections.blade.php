@@ -73,7 +73,7 @@
                             @endif
                             @if ($item['type'] === 'assigned')
                                 <p class="perm-area-panel__meta">
-                                    Aplican en el area base:
+                                    Aplican en el area de Identidad:
                                     <strong id="assigned-area-label">Sin area fija</strong>
                                 </p>
                             @endif

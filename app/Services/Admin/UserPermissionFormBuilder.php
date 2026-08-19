@@ -166,7 +166,7 @@ class UserPermissionFormBuilder
 
         $sections = [
             'assigned_area' => [
-                'label' => $sectionLabels['assigned_area'] ?? 'En su area asignada',
+                'label' => $sectionLabels['assigned_area'] ?? 'Solicitar en su area',
                 'help' => config('access.admin_ui.help.assigned_area'),
                 'permissions' => $assignedArea,
             ],
@@ -205,7 +205,7 @@ class UserPermissionFormBuilder
             $navigation[] = [
                 'key' => '_assigned',
                 'type' => 'assigned',
-                'label' => 'Mi area base',
+                'label' => $sections['assigned_area']['label'] ?? 'Solicitar en su area',
                 'help' => $sections['assigned_area']['help'] ?? '',
                 'permissions' => $assignedPermissions,
             ];
