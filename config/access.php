@@ -59,6 +59,7 @@ return [
     'areas' => [
         'gerencia' => 'Gerencia',
         'gestion_humana' => 'Gestion humana',
+        'juridico' => 'Juridico',
         'operaciones' => 'Operaciones',
         'programacion' => 'Plan. y Programación',        
         'comercial' => 'Comercial',
