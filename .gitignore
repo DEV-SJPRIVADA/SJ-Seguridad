@@ -22,5 +22,8 @@ yarn-error.log
 /.vscode
 /.zed
 
+# Clon anidado accidental (no versionar; el codigo vive en la raiz)
+/SJ-Seguridad/
+
 # Excel maestro comercial (no versionar; copia local o de red)
 /docs/MT-CO-01 Matriz de clientes.xlsx
