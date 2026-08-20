@@ -72,6 +72,7 @@
                         <div class="users-list">
                             @forelse ($users as $user)
                                 <a
+                                    id="user-list-item-{{ $user->id }}"
                                     href="{{ route('admin.users.index', array_filter([
                                         'q' => $filters['q'] ?? null,
                                         'include_inactive' => ($filters['include_inactive'] ?? false) ? '1' : null,
@@ -233,4 +234,29 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const list = document.querySelector('.users-list');
+                if (! list) {
+                    return;
+                }
+
+                const storageKey = 'admin-users-list-scroll';
+                const savedScroll = sessionStorage.getItem(storageKey);
+
+                if (savedScroll !== null) {
+                    list.scrollTop = Number.parseInt(savedScroll, 10) || 0;
+                    sessionStorage.removeItem(storageKey);
+                }
+
+                list.querySelectorAll('a.users-list-item').forEach((link) => {
+                    link.addEventListener('click', () => {
+                        sessionStorage.setItem(storageKey, String(list.scrollTop));
+                    });
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

@@ -249,6 +249,9 @@ class AdminUserManagementTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('El rol super-admin otorga acceso total al sistema');
+        $response->assertSee('id="user-list-item-'.$admin->id.'"', false);
+        $response->assertSee('users-list-item--active', false);
+        $response->assertSee('admin-users-list-scroll', false);
     }
 
     public function test_admin_user_index_shows_flat_assigned_permissions_without_section_groups(): void
