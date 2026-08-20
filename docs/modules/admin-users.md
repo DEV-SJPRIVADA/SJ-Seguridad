@@ -6,7 +6,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 ## Alcance actual
 
-- Panel lateral con listado paginado y busqueda de usuarios
+- Panel lateral con listado paginado y busqueda de usuarios; al seleccionar, se restaura el scroll del listado (misma posicion visual)
 - Por defecto el listado muestra solo usuarios activos; checkbox **Mostrar usuarios inactivos** amplia la lista
 - Resumen del usuario seleccionado: ficha operativa, notas de acceso efectivo por rol y lista plana de permisos directos asignados
 - Formulario en pestanas: **Identidad**, **Acceso y permisos**, **Seguridad** (edicion)
@@ -56,6 +56,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 | Version | Fecha | Descripcion |
 | --- | --- | --- |
+| 1.4 | 2026-08-20 | Lista de usuarios: scroll al ítem activo tras seleccionar |
 | 1.3 | 2026-08-19 | Admin: bloque **Solicitar en su area**; crear/mis compras solo ahi, no en transversal |
 | 1.2 | 2026-08-12 | Copiar acceso al crear usuario y aplicar acceso desde edicion |
 | 1.1 | 2026-08-03 | Hogares canonicos del sidebar (`SidebarVisibilityService`); avisos en validador de permisos |

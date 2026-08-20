@@ -50,7 +50,7 @@ El workflow multi-agente actualiza estas capas al cerrar features ([`docs/AGENT_
 ## Entidades base ya presentes
 
 - `users`, `roles`, `permissions`, tablas pivote Spatie
-- **Requisiciones:** `personal_requisitions`, `personal_requisition_status_logs`, `personal_requisition_change_logs`, catalogos en `requisition_*`, `requisition_notification_emails`
+- **Requisiciones:** `personal_requisitions`, `personal_requisition_status_logs`, `personal_requisition_change_logs`, catalogos en `requisition_*`; correos via tablas globales `notification_types` / `notification_emails` (modulo `requisitions`)
 - **Suministros:** `supply_products`, `supply_requests`, `supply_request_items`, `supply_sites`
 - **Calidad documentos:** `quality_documents`, `quality_document_areas`, `quality_document_users`
 - **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `improvements`
