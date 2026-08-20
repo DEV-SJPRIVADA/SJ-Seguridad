@@ -337,7 +337,7 @@
 </head>
 <body>
     <header id="header">
-        <img src="{{ asset('images/logoSj.png') }}" alt="SJ Seguridad" class="logo">
+        <img src="{{ asset('images/logo_web.png') }}" alt="SJ Seguridad" class="logo">
         <nav class="nav-links">
             <a href="#inicio">Inicio</a>
             <a href="#quienes-somos">Quiénes Somos</a>
