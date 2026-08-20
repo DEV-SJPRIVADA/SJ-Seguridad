@@ -103,20 +103,6 @@
                         </div>
                     @endif
 
-                    @if (filled($purchaseRequest->descripcion))
-                        <div class="block-spaced">
-                            <h4 class="form-label">Descripcion general</h4>
-                            <p class="purchase-request-text-block">{{ $purchaseRequest->descripcion }}</p>
-                        </div>
-                    @endif
-
-                    @if (filled($purchaseRequest->justificacion))
-                        <div class="block-spaced">
-                            <h4 class="form-label">Justificacion</h4>
-                            <p class="purchase-request-text-block">{{ $purchaseRequest->justificacion }}</p>
-                        </div>
-                    @endif
-
                     <div class="block-spaced">
                         <table class="supply-table purchase-request-items-table">
                             <thead>

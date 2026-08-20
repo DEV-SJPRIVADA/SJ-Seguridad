@@ -27,15 +27,6 @@
                     <p><strong>Productos:</strong> {{ $purchaseRequest->items->count() }}</p>
                 </div>
 
-                @if ($purchaseRequest->descripcion)
-                    <div class="req-approval-letter__panel req-approval-letter__panel--muted">
-                        <p><strong>Descripcion:</strong> {{ $purchaseRequest->descripcion }}</p>
-                        @if ($purchaseRequest->justificacion)
-                            <p><strong>Justificacion:</strong> {{ $purchaseRequest->justificacion }}</p>
-                        @endif
-                    </div>
-                @endif
-
                 <div class="block-spaced">
                     <table class="supply-table">
                         <thead>

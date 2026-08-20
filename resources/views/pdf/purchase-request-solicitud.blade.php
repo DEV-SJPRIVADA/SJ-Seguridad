@@ -301,14 +301,8 @@
         </tbody>
     </table>
 
-    @if ($purchaseRequest->descripcion || $purchaseRequest->justificacion || $purchaseRequest->comentarios_director || $purchaseRequest->comentarios_compras)
+    @if ($purchaseRequest->comentarios_director || $purchaseRequest->comentarios_compras)
         <div class="notes-block">
-            @if ($purchaseRequest->descripcion)
-                <p class="text-inline"><span class="text-inline__label">Descripcion:</span> {{ $purchaseRequest->descripcion }}</p>
-            @endif
-            @if ($purchaseRequest->justificacion)
-                <p class="text-inline"><span class="text-inline__label">Justificacion:</span> {{ $purchaseRequest->justificacion }}</p>
-            @endif
             @if ($purchaseRequest->comentarios_director)
                 <p class="text-inline"><span class="text-inline__label">Comentarios director:</span> {{ $purchaseRequest->comentarios_director }}</p>
             @endif

@@ -190,7 +190,7 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="city_id" value="Ciudad *" />
+                <x-input-label for="city_id" value="Ciudad de trabajo *" />
                 <select id="city_id" name="city_id" class="form-select" required>
                     <option value="">Selecciona una ciudad</option>
                     @foreach ($catalogs['cities'] as $item)
