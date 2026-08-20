@@ -104,18 +104,6 @@
                             </div>
                         </div>
 
-                        <div class="form-field block-spaced">
-                            <label class="form-label" for="descripcion">Descripcion general</label>
-                            <textarea name="descripcion" id="descripcion" class="form-textarea" rows="2" required>{{ old('descripcion') }}</textarea>
-                            <x-input-error :messages="$errors->get('descripcion')" />
-                        </div>
-
-                        <div class="form-field block-spaced">
-                            <label class="form-label" for="justificacion">Justificacion (opcional)</label>
-                            <textarea name="justificacion" id="justificacion" class="form-textarea" rows="2">{{ old('justificacion') }}</textarea>
-                            <x-input-error :messages="$errors->get('justificacion')" />
-                        </div>
-
                         <div class="block-spaced">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                                 <h4 class="form-label" style="margin: 0;">Productos solicitados</h4>

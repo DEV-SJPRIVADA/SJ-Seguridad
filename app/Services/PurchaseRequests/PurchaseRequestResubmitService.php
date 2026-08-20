@@ -32,9 +32,7 @@ class PurchaseRequestResubmitService
             $purchaseRequest->update([
                 'area_key' => $validated['area_key'],
                 'fecha_solicitud' => $validated['fecha_solicitud'],
-                'descripcion' => $validated['descripcion'],
                 'cantidad' => max(1, $totalCantidad),
-                'justificacion' => $validated['justificacion'] ?? null,
                 'archivo_pedido_path' => $archivoPedido,
                 'solicitud_para' => $validated['solicitud_para'],
                 'urgente' => (bool) $validated['urgente'],

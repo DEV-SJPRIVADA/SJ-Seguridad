@@ -39,7 +39,6 @@ class PurchaseRequestAuditTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud audit create',
             'items' => [
                 [
                     'cantidad' => 2,
@@ -88,8 +87,6 @@ class PurchaseRequestAuditTest extends TestCase
                 'solicitud_para' => 'Interno',
                 'urgente' => false,
                 'aprobador_id' => $director->id,
-                'descripcion' => 'Solicitud corregida',
-                'justificacion' => 'Correccion',
                 'items' => [[
                     'cantidad' => 1,
                     'descripcion' => 'Teclado',
@@ -320,9 +317,7 @@ class PurchaseRequestAuditTest extends TestCase
             'user_id' => $requester->id,
             'area_key' => $requester->area_key,
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Prueba audit',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,

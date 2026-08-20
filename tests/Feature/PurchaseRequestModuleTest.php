@@ -53,7 +53,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -89,7 +88,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -117,7 +115,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -151,7 +148,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -179,7 +175,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 2,
@@ -224,7 +219,6 @@ class PurchaseRequestModuleTest extends TestCase
             'solicitud_para' => 'Interno',
             'urgente' => '1',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -252,9 +246,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $requester->id,
             'area_key' => 'operaciones',
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Prueba area distinta',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
@@ -309,9 +301,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $requester->id,
             'area_key' => 'operaciones',
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Equipo de oficina',
             'cantidad' => 2,
-            'justificacion' => 'Reposicion anual',
             'solicitud_para' => 'Interno',
             'urgente' => true,
             'aprobador_id' => $director->id,
@@ -358,7 +348,7 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertStringNotContainsString('Registro de correos', $html);
     }
 
-    public function test_store_persists_descripcion_and_justificacion_from_form(): void
+    public function test_store_persists_items_without_header_descripcion(): void
     {
         Mail::fake();
 
@@ -370,8 +360,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Equipo para area TIC',
-            'justificacion' => 'Renovacion de hardware',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -383,11 +371,9 @@ class PurchaseRequestModuleTest extends TestCase
             ],
         ])->assertRedirect();
 
-        $this->assertDatabaseHas('purchase_requests', [
-            'user_id' => $requester->id,
-            'descripcion' => 'Equipo para area TIC',
-            'justificacion' => 'Renovacion de hardware',
-        ]);
+        $purchaseRequest = PurchaseRequest::query()->where('user_id', $requester->id)->firstOrFail();
+        $this->assertSame(1, $purchaseRequest->items()->count());
+        $this->assertSame('Monitor', $purchaseRequest->items()->first()->descripcion);
     }
 
     public function test_show_displays_uploaded_item_photo(): void
@@ -402,7 +388,6 @@ class PurchaseRequestModuleTest extends TestCase
             'fecha_solicitud' => now()->toDateString(),
             'solicitud_para' => 'Interno',
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud con foto',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -426,8 +411,8 @@ class PurchaseRequestModuleTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee($item->fotoUrl(), false)
-            ->assertSee('Descripcion general', false)
-            ->assertSee('Solicitud con foto', false);
+            ->assertSee('Teclado mecanico', false)
+            ->assertDontSee('Descripcion general', false);
     }
 
     public function test_user_can_upload_item_photo_when_creating_purchase_request(): void
@@ -443,7 +428,6 @@ class PurchaseRequestModuleTest extends TestCase
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud de prueba super-admin',
             'items' => [
                 [
                     'cantidad' => 1,
@@ -547,9 +531,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $requester->id,
             'area_key' => 'operaciones',
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Completada bandeja',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
@@ -610,9 +592,7 @@ class PurchaseRequestModuleTest extends TestCase
                 'user_id' => $requester->id,
                 'area_key' => 'operaciones',
                 'fecha_solicitud' => now()->toDateString(),
-                'descripcion' => "Lote {$i}",
                 'cantidad' => 1,
-                'justificacion' => 'Prueba',
                 'solicitud_para' => 'Interno',
                 'urgente' => false,
                 'aprobador_id' => $director->id,
@@ -648,9 +628,7 @@ class PurchaseRequestModuleTest extends TestCase
                 'user_id' => $requester->id,
                 'area_key' => 'operaciones',
                 'fecha_solicitud' => now()->toDateString(),
-                'descripcion' => "Rango {$i}",
                 'cantidad' => 1,
-                'justificacion' => 'Prueba',
                 'solicitud_para' => 'Interno',
                 'urgente' => false,
                 'aprobador_id' => $director->id,
@@ -684,9 +662,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $operacionesRequester->id,
             'area_key' => 'operaciones',
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Operaciones bandeja',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
@@ -700,9 +676,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $comercialRequester->id,
             'area_key' => 'comercial',
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Comercial bandeja',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
@@ -736,9 +710,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $requester->id,
             'area_key' => 'operaciones',
             'fecha_solicitud' => $submittedAt->toDateString(),
-            'descripcion' => 'Hora solicitud bandeja compra',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
@@ -907,7 +879,6 @@ class PurchaseRequestModuleTest extends TestCase
         $this->actingAs($requester)->patch(
             route('purchase-requests.update', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]),
             $this->resubmitPayload($director, [
-                'descripcion' => 'Solicitud corregida tras rechazo',
                 'items' => [[
                     'cantidad' => 3,
                     'descripcion' => 'Teclado mecanico',
@@ -922,8 +893,8 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertSame(PurchaseRequest::ESTADO_PENDIENTE, $fresh->estado);
         $this->assertNull($fresh->comentarios_director);
         $this->assertNull($fresh->fecha_aprobacion);
-        $this->assertSame('Solicitud corregida tras rechazo', $fresh->descripcion);
         $this->assertCount(1, $fresh->items);
+        $this->assertSame('Teclado mecanico', $fresh->items->first()->descripcion);
         $this->assertSame(3, $fresh->items->first()->cantidad);
 
         Mail::assertSent(PurchaseRequestCreatedMail::class, fn ($mail) => $mail->hasTo($director->email));
@@ -1168,9 +1139,7 @@ class PurchaseRequestModuleTest extends TestCase
             'user_id' => $requester->id,
             'area_key' => $requester->area_key,
             'fecha_solicitud' => now()->toDateString(),
-            'descripcion' => 'Prueba',
             'cantidad' => 1,
-            'justificacion' => 'Prueba',
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
@@ -1192,8 +1161,6 @@ class PurchaseRequestModuleTest extends TestCase
             'solicitud_para' => 'Interno',
             'urgente' => false,
             'aprobador_id' => $director->id,
-            'descripcion' => 'Solicitud reabierta',
-            'justificacion' => 'Correccion tras rechazo',
             'items' => [[
                 'cantidad' => 1,
                 'descripcion' => 'Monitor',

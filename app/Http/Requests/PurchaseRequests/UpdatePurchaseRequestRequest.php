@@ -35,8 +35,6 @@ class UpdatePurchaseRequestRequest extends FormRequest
             'proyecto_nuevo' => ['nullable', 'boolean'],
             'razon_social' => ['nullable', 'string', 'max:255', 'required_if:solicitud_para,Cliente'],
             'asume_cliente' => ['nullable', 'boolean'],
-            'descripcion' => ['required', 'string', 'max:5000'],
-            'justificacion' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
             'items.*.descripcion' => ['required', 'string', 'max:5000'],
