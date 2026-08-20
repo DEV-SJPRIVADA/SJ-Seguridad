@@ -76,9 +76,7 @@
                                                 };
                                             @endphp
                                             <span class="status-pill {{ $estadoPill }}">{{ $estadoLabel }}</span>
-                                            @if ($purchaseRequest->urgente)
-                                                <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Urgente</span>
-                                            @endif
+
                                         </td>
                                         <td class="text-center purchase-request-actions-col">
                                             <div class="purchase-request-row-actions">
