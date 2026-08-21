@@ -49,10 +49,12 @@ class TerminationLetterPackTest extends TestCase
         $entry = $this->createTerminatedEntry($terminator, 'RENUNCIA');
         $period = $this->closedPeriodFor($entry);
         $templates = $this->seedDesvinculacionTemplates(1);
+        $signatory = $this->seedSignatory();
 
         $response = $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id],
+                'signatory_id' => $signatory->id,
             ]);
 
         $response->assertOk();
@@ -71,10 +73,12 @@ class TerminationLetterPackTest extends TestCase
         $entry = $this->createTerminatedEntry($terminator, 'DESPIDO');
         $period = $this->closedPeriodFor($entry);
         $templates = $this->seedDesvinculacionTemplates(2);
+        $signatory = $this->seedSignatory();
 
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id],
+                'signatory_id' => $signatory->id,
             ])
             ->assertOk();
 
@@ -86,6 +90,7 @@ class TerminationLetterPackTest extends TestCase
         $response = $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id, $templates[1]->id],
+                'signatory_id' => $signatory->id,
             ]);
 
         $response->assertOk();
@@ -134,6 +139,7 @@ class TerminationLetterPackTest extends TestCase
     {
         $terminator = $this->terminatorUser();
         $templates = $this->seedDesvinculacionTemplates(1);
+        $signatory = $this->seedSignatory();
         $causes = collect(config('employee_ficha.termination_cause_defaults', []))
             ->pluck('code')
             ->filter()
@@ -149,6 +155,7 @@ class TerminationLetterPackTest extends TestCase
             $this->actingAs($terminator)
                 ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                     'template_ids' => [$templates[0]->id],
+                    'signatory_id' => $signatory->id,
                 ])
                 ->assertOk()
                 ->assertDownload();
@@ -165,10 +172,12 @@ class TerminationLetterPackTest extends TestCase
         $entry = $this->createTerminatedEntry($terminator, 'MUTUO_ACUERDO');
         $period = $this->closedPeriodFor($entry);
         $templates = $this->seedDesvinculacionTemplates(1);
+        $signatory = $this->seedSignatory();
 
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id],
+                'signatory_id' => $signatory->id,
             ])
             ->assertOk();
 
@@ -221,10 +230,12 @@ class TerminationLetterPackTest extends TestCase
         $entry = $this->createTerminatedEntry($terminator, 'RENUNCIA');
         $period = $this->closedPeriodFor($entry);
         $templates = $this->seedDesvinculacionTemplates(1);
+        $signatory = $this->seedSignatory();
 
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id],
+                'signatory_id' => $signatory->id,
             ])
             ->assertOk();
 
@@ -233,6 +244,7 @@ class TerminationLetterPackTest extends TestCase
         $this->actingAs($manager)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id],
+                'signatory_id' => $signatory->id,
             ])
             ->assertForbidden();
 
@@ -251,6 +263,7 @@ class TerminationLetterPackTest extends TestCase
         $entry = $this->createTerminatedEntry($terminator, 'FIN_CONTRATO');
         $period = $this->closedPeriodFor($entry);
         $templates = $this->seedDesvinculacionTemplates(1);
+        $signatory = $this->seedSignatory();
 
         $htmlBefore = $this->actingAs($terminator)
             ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
@@ -264,6 +277,7 @@ class TerminationLetterPackTest extends TestCase
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$templates[0]->id],
+                'signatory_id' => $signatory->id,
             ])
             ->assertOk();
 
@@ -282,10 +296,11 @@ class TerminationLetterPackTest extends TestCase
         $terminator = $this->terminatorUser();
         $entry = $this->createTerminatedEntry($terminator, 'DESPIDO');
         $period = $this->closedPeriodFor($entry);
+        $signatory = $this->seedSignatory();
 
         $otherType = WordDocumentType::query()->create([
-            'code' => 'contratacion',
-            'name' => 'Contratacion',
+            'code' => 'nuevo_tipo',
+            'name' => 'Nuevo Tipo',
             'is_active' => true,
             'sort_order' => 2,
         ]);
@@ -295,7 +310,7 @@ class TerminationLetterPackTest extends TestCase
 
         $otherTemplate = TerminationLetterDocumentTemplate::query()->create([
             'word_document_type_id' => $otherType->id,
-            'label' => 'Plantilla contratacion',
+            'label' => 'Plantilla otro tipo',
             'sort_order' => 1,
             'template_path' => $path,
         ]);
@@ -303,6 +318,7 @@ class TerminationLetterPackTest extends TestCase
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
                 'template_ids' => [$otherTemplate->id],
+                'signatory_id' => $signatory->id,
             ])
             ->assertSessionHasErrors('template_ids');
     }
@@ -345,6 +361,18 @@ class TerminationLetterPackTest extends TestCase
         $user->givePermissionTo(['ficha_empleados.manage', 'ficha_empleados.terminate']);
 
         return $user;
+    }
+
+    private function seedSignatory(): PayrollCatalogItem
+    {
+        return PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'firmas', 'code' => 'DIR_GH'],
+            [
+                'name' => 'Directora de GH',
+                'sort_order' => 1,
+                'is_active' => true,
+            ],
+        );
     }
 
     private function closedPeriodFor(PersonalRequisitionFichaEntry $entry): EmployeeFichaEmploymentPeriod

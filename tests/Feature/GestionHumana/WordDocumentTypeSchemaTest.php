@@ -46,12 +46,14 @@ class WordDocumentTypeSchemaTest extends TestCase
     public function test_template_scopes_for_type_code_and_with_file(): void
     {
         $type = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
-        $other = WordDocumentType::query()->create([
-            'code' => 'contratacion',
-            'name' => 'Contratacion',
-            'is_active' => true,
-            'sort_order' => 2,
-        ]);
+        $other = WordDocumentType::query()->firstOrCreate(
+            ['code' => 'contratacion'],
+            [
+                'name' => 'Contratacion',
+                'is_active' => true,
+                'sort_order' => 2,
+            ],
+        );
 
         $withFile = TerminationLetterDocumentTemplate::query()->create([
             'word_document_type_id' => $type->id,

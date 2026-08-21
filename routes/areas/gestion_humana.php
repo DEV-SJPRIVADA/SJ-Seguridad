@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\GestionHumana\ArchivoController;
+use App\Http\Controllers\GestionHumana\ContratacionLetterController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
@@ -38,6 +39,9 @@ Route::middleware(['password.changed'])
         Route::post('/periodos/{period}/cartas/generar', [TerminationLetterController::class, 'generate'])->name('period.letters.generate');
         Route::get('/periodos/{period}/cartas/descargar', [TerminationLetterController::class, 'download'])->name('period.letters.download');
         Route::get('/periodos/{period}/cartas/firmas', [TerminationLetterController::class, 'firmas'])->name('period.letters.firmas');
+        Route::get('/periodos/{period}/contratacion/plantillas', [ContratacionLetterController::class, 'templates'])->name('contratacion.templates');
+        Route::post('/periodos/{period}/contratacion/generar', [ContratacionLetterController::class, 'generate'])->name('contratacion.generate');
+        Route::get('/periodos/{period}/contratacion/firmas', [ContratacionLetterController::class, 'firmas'])->name('contratacion.firmas');
     });
 
 Route::middleware(['password.changed'])

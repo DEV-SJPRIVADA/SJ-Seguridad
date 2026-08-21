@@ -487,6 +487,7 @@ class FichaEmpleadosController extends Controller
             'employmentHistory' => $employmentHistory,
             'letterPeriod' => $letterPeriod,
             'canGenerateLetters' => $this->canGenerateLetters($letterPeriod),
+            'canGenerateContratacionLetters' => $this->canGenerateContratacionLetters($activePeriod),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
@@ -720,6 +721,13 @@ class FichaEmpleadosController extends Controller
         return $this->canTerminate()
             && $letterPeriod !== null
             && $letterPeriod->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO;
+    }
+
+    private function canGenerateContratacionLetters(?EmployeeFichaEmploymentPeriod $activePeriod): bool
+    {
+        return $this->canManage()
+            && $activePeriod !== null
+            && $activePeriod->status === EmployeeFichaEmploymentPeriod::STATUS_ACTIVO;
     }
 
     private function canExportArchive(): bool

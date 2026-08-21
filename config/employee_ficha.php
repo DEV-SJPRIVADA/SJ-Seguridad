@@ -333,6 +333,7 @@ return [
      */
     'word_document_type_codes' => [
         'desvinculacion' => 'desvinculacion',
+        'contratacion' => 'contratacion',
     ],
 
     'termination_letter_signatory' => [

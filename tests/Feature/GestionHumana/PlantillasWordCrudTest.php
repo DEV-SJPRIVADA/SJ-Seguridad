@@ -65,28 +65,28 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->post(route('gestion-humana.plantillas-word.types.store'), [
-                'code' => 'contratacion',
-                'name' => 'Contratacion',
+                'code' => 'nuevo_tipo',
+                'name' => 'Nuevo Tipo',
                 'is_active' => '1',
-                'sort_order' => 2,
+                'sort_order' => 10,
             ])
             ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']));
 
-        $type = WordDocumentType::query()->where('code', 'contratacion')->firstOrFail();
-        $this->assertSame('Contratacion', $type->name);
+        $type = WordDocumentType::query()->where('code', 'nuevo_tipo')->firstOrFail();
+        $this->assertSame('Nuevo Tipo', $type->name);
         $this->assertTrue($type->is_active);
 
         $this->actingAs($manager)
             ->patch(route('gestion-humana.plantillas-word.types.update', $type), [
-                'code' => 'contratacion',
-                'name' => 'Contratacion laboral',
+                'code' => 'nuevo_tipo',
+                'name' => 'Nuevo Tipo Editado',
                 'is_active' => '0',
                 'sort_order' => 5,
             ])
             ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']));
 
         $type->refresh();
-        $this->assertSame('Contratacion laboral', $type->name);
+        $this->assertSame('Nuevo Tipo Editado', $type->name);
         $this->assertFalse($type->is_active);
         $this->assertSame(5, $type->sort_order);
 

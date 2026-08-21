@@ -70,14 +70,14 @@ class TerminationLetterVariableBuilder
 
         $carbon = Carbon::parse($date);
         $months = [
-            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
-            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
-            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
         ];
 
-        $month = $months[(int) $carbon->format('n')] ?? $carbon->format('F');
+        $month = $months[(int) $carbon->format('n')] ?? ucfirst(mb_strtolower($carbon->format('F')));
 
-        return sprintf('%d de %s de %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
+        return sprintf('%d de %s del %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
     }
 
     private function formatShortDate(mixed $date): string
@@ -86,7 +86,7 @@ class TerminationLetterVariableBuilder
             return '';
         }
 
-        return Carbon::parse($date)->format('d/m/Y');
+        return $this->formatLongDate(Carbon::parse($date));
     }
 
     private function formatSalary(mixed $salary): string
