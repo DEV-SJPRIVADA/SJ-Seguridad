@@ -213,18 +213,45 @@
             var editSort = document.getElementById('ficha-catalog-edit-sort');
             var editActive = document.getElementById('ficha-catalog-edit-active');
 
+            function catalogQueryKey() {
+                var fromQuery = new URLSearchParams(window.location.search).get('catalog');
+                if (fromQuery) {
+                    return fromQuery;
+                }
+
+                var hash = window.location.hash.replace('#', '');
+                if (hash.indexOf('section-') === 0) {
+                    return hash.replace('section-', '');
+                }
+
+                return null;
+            }
+
+            function setCatalogQuery(key) {
+                var url = new URL(window.location.href);
+                if (key) {
+                    url.searchParams.set('catalog', key);
+                } else {
+                    url.searchParams.delete('catalog');
+                }
+                url.hash = '';
+                window.history.replaceState({}, '', url.toString());
+            }
+
             function showSection(key) {
                 selectorScreen.hidden = true;
                 manageScreen.hidden = false;
                 document.querySelectorAll('.ficha-empleados-catalogs-page__section').forEach(function (section) {
                     section.hidden = section.id !== 'section-' + key;
                 });
+                setCatalogQuery(key);
                 window.scrollTo(0, 0);
             }
 
             function showSelector() {
                 selectorScreen.hidden = false;
                 manageScreen.hidden = true;
+                setCatalogQuery(null);
             }
 
             function openModal() {
@@ -268,9 +295,9 @@
                 }
             });
 
-            var hash = window.location.hash.replace('#', '');
-            if (hash.indexOf('section-') === 0) {
-                showSection(hash.replace('section-', ''));
+            var openCatalog = catalogQueryKey();
+            if (openCatalog && document.getElementById('section-' + openCatalog)) {
+                showSection(openCatalog);
             }
         });
     </script>

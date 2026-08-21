@@ -144,7 +144,7 @@ class TerminationLetterPackTest extends TestCase
             ]), [
                 'template' => $docx,
             ])
-            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-termination_cause');
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'termination_cause']));
 
         $template->refresh();
         $this->assertNotNull($template->template_path);

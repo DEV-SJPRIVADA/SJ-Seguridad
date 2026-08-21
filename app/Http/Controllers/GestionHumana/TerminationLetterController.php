@@ -103,9 +103,8 @@ class TerminationLetterController extends Controller
         );
 
         return redirect()
-            ->route('gestion-humana.ficha-empleados.catalogs.index')
-            ->with('status', 'Plantilla Word actualizada correctamente.')
-            ->withFragment('section-termination_cause');
+            ->route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'termination_cause'])
+            ->with('status', 'Plantilla Word actualizada correctamente.');
     }
 
     public function downloadMasterTemplate(string $causeCode, string $documentKey): StreamedResponse
@@ -143,9 +142,8 @@ class TerminationLetterController extends Controller
         );
 
         return redirect()
-            ->route('gestion-humana.ficha-empleados.catalogs.index')
-            ->with('status', 'Plantilla Word eliminada.')
-            ->withFragment('section-termination_cause');
+            ->route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'termination_cause'])
+            ->with('status', 'Plantilla Word eliminada.');
     }
 
     private function authorizeTerminate(): void

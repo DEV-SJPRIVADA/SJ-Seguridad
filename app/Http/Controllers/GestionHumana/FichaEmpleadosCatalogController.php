@@ -48,9 +48,8 @@ class FichaEmpleadosCatalogController extends Controller
         ]);
 
         return redirect()
-            ->route('gestion-humana.ficha-empleados.catalogs.index')
-            ->with('status', 'Catalogo actualizado correctamente.')
-            ->withFragment('section-'.$type);
+            ->route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => $type])
+            ->with('status', 'Catalogo actualizado correctamente.');
     }
 
     public function update(UpdatePayrollCatalogItemRequest $request, string $type, PayrollCatalogItem $item): RedirectResponse
@@ -67,9 +66,8 @@ class FichaEmpleadosCatalogController extends Controller
         ]);
 
         return redirect()
-            ->route('gestion-humana.ficha-empleados.catalogs.index')
-            ->with('status', 'Registro de catalogo actualizado.')
-            ->withFragment('section-'.$type);
+            ->route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => $type])
+            ->with('status', 'Registro de catalogo actualizado.');
     }
 
     public function destroy(string $type, PayrollCatalogItem $item): RedirectResponse
@@ -81,9 +79,8 @@ class FichaEmpleadosCatalogController extends Controller
         $item->delete();
 
         return redirect()
-            ->route('gestion-humana.ficha-empleados.catalogs.index')
-            ->with('status', 'Registro eliminado del catalogo.')
-            ->withFragment('section-'.$type);
+            ->route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => $type])
+            ->with('status', 'Registro eliminado del catalogo.');
     }
 
     private function authorizeManage(): void

@@ -167,6 +167,8 @@ Catalogo `requisition_recruiters` eliminado (migracion `2026_07_28_112704_…`).
 
 `positions`, `reasons`, `cities`, `client-types`, `programming-types`, `uniforms`, `contract-types`.
 
+Tras crear/editar/borrar (o togglear encargados), el redirect vuelve a Parametros con `?catalog={key}` para permanecer en la seccion activa; **Volver al tablero** limpia el query y muestra el grid.
+
 **Fuera de Catalogos:** clientes (Comercial), reclutadores (usuarios + toggle), correos (Admin notificaciones).
 
 ## Formulario — matriz de visibilidad
@@ -243,6 +245,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-08-21 | Catalogos Parametros: persistir seccion activa con `?catalog=` tras CRUD |
 | 2026-08-20 | Doc tecnica alineada al codigo: notificaciones globales (`NotificationConfigService`), rutas export/gerencia/email, acceso Admin «Solicitar en su area», Catalogos sin correos, mail gerencia sincrono |
 | 2026-08-04 | Autorizacion cargo nuevo solo rol `administrador` |
 | 2026-08-03 | Hogares canonicos sidebar |
