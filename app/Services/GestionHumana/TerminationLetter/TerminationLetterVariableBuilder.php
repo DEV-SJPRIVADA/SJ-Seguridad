@@ -4,6 +4,7 @@ namespace App\Services\GestionHumana\TerminationLetter;
 
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -18,11 +19,11 @@ class TerminationLetterVariableBuilder
         PersonalRequisitionFichaEntry $entry,
         ?EmployeeFichaProfile $profile,
         ?CarbonInterface $letterDate = null,
+        ?int $signatoryId = null,
     ): array {
         $letterDate ??= now();
 
-        /** @var array{name: string, title: string} $signatory */
-        $signatory = config('employee_ficha.termination_letter_signatory', []);
+        $firma = $this->resolveSignatory($signatoryId);
 
         $city = $period->work_center_name
             ?: $profile?->residence_city_name
@@ -38,9 +39,27 @@ class TerminationLetterVariableBuilder
             'FECHA_INGRESO' => $this->formatShortDate($period->hire_date),
             'SALARIO' => $this->formatSalary($period->salary),
             'TIPO_CONTRATO' => (string) ($period->contract_type_name ?? ''),
-            'FIRMA' => (string) ($signatory['name'] ?? ''),
-            'CARGO_FIRMA' => (string) ($signatory['title'] ?? ''),
+            'FIRMA' => $firma['name'],
+            'CARGO_FIRMA' => $firma['code'],
         ];
+    }
+
+    private function resolveSignatory(?int $signatoryId): array
+    {
+        if ($signatoryId !== null) {
+            $item = PayrollCatalogItem::query()
+                ->where('id', $signatoryId)
+                ->where('catalog_type', 'firmas')
+                ->first();
+
+            if ($item !== null) {
+                return ['name' => (string) $item->name, 'code' => (string) $item->code];
+            }
+        }
+
+        $fallback = config('employee_ficha.termination_letter_signatory', []);
+
+        return ['name' => (string) ($fallback['name'] ?? ''), 'code' => (string) ($fallback['title'] ?? '')];
     }
 
     private function formatLongDate(?CarbonInterface $date): string

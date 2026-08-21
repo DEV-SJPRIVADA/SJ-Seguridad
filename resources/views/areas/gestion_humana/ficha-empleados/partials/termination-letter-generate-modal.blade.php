@@ -5,7 +5,7 @@
             class="modal-card ficha-empleados-generate-letters-modal"
             x-data="fichaGenerateLettersModal()"
             x-on:ficha-prepare-generate-letters.window="prepare($event.detail)"
-            x-on:open-modal.window="if ($event.detail === 'ficha-generate-letters') { loadTemplates(); }"
+            x-on:open-modal.window="if ($event.detail === 'ficha-generate-letters') { loadTemplates(); loadFirmas(); }"
         >
             <div class="ficha-empleados-masivos-modal__header">
                 <div class="ficha-empleados-masivos-modal__heading">
@@ -55,6 +55,23 @@
                         </template>
                     </div>
                 </template>
+
+                <template x-if="! loading && firmas.length > 0">
+                    <div class="form-field">
+                        <label class="form-label" for="ficha-signatory">Firmante</label>
+                        <select
+                            id="ficha-signatory"
+                            class="form-select"
+                            x-model="selectedSignatoryId"
+                            required
+                        >
+                            <option value="">— Seleccione firmante —</option>
+                            <template x-for="firma in firmas" :key="firma.id">
+                                <option :value="firma.id" x-text="firma.name + ' — ' + firma.code"></option>
+                            </template>
+                        </select>
+                    </div>
+                </template>
             </div>
 
             <div class="ficha-empleados-terminate-modal__actions">
@@ -66,7 +83,7 @@
                 <button
                     type="button"
                     class="btn btn--primary"
-                    x-bind:disabled="loading || submitting || selectedIds.length < 1"
+                    x-bind:disabled="loading || submitting || selectedIds.length < 1 || ! selectedSignatoryId"
                     x-on:click="submitGenerate()"
                 >
                     <span x-show="! submitting">Generar y descargar</span>
@@ -83,8 +100,11 @@
                     return {
                         templatesUrl: '',
                         generateUrl: '',
+                        firmasUrl: '',
                         templates: [],
+                        firmas: [],
                         selectedIds: [],
+                        selectedSignatoryId: '',
                         loading: false,
                         submitting: false,
                         errorMessage: '',
@@ -92,8 +112,11 @@
                         prepare(detail) {
                             this.templatesUrl = detail?.templatesUrl || '';
                             this.generateUrl = detail?.generateUrl || '';
+                            this.firmasUrl = detail?.firmasUrl || '';
                             this.templates = [];
+                            this.firmas = [];
                             this.selectedIds = [];
+                            this.selectedSignatoryId = '';
                             this.errorMessage = '';
                             this.loading = false;
                             this.submitting = false;
@@ -132,8 +155,33 @@
                             }
                         },
 
+                        async loadFirmas() {
+                            if (! this.firmasUrl) {
+                                return;
+                            }
+
+                            try {
+                                const response = await fetch(this.firmasUrl, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                    },
+                                    credentials: 'same-origin',
+                                });
+
+                                if (! response.ok) {
+                                    return;
+                                }
+
+                                const payload = await response.json();
+                                this.firmas = Array.isArray(payload.firmas) ? payload.firmas : [];
+                            } catch {
+                                this.firmas = [];
+                            }
+                        },
+
                         async submitGenerate() {
-                            if (this.selectedIds.length < 1 || ! this.generateUrl || this.submitting) {
+                            if (this.selectedIds.length < 1 || ! this.selectedSignatoryId || ! this.generateUrl || this.submitting) {
                                 return;
                             }
 
@@ -143,6 +191,7 @@
                             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
                             const body = new FormData();
                             this.selectedIds.forEach((id) => body.append('template_ids[]', String(id)));
+                            body.append('signatory_id', String(this.selectedSignatoryId));
 
                             try {
                                 const response = await fetch(this.generateUrl, {

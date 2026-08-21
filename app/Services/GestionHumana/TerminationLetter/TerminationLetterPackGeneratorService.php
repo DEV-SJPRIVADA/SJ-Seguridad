@@ -34,6 +34,7 @@ class TerminationLetterPackGeneratorService
         EmployeeFichaEmploymentPeriod $period,
         PersonalRequisitionFichaEntry $entry,
         array $templateIds,
+        ?int $signatoryId = null,
     ): array {
         $this->assertCanGenerate($period);
 
@@ -41,7 +42,7 @@ class TerminationLetterPackGeneratorService
         $templates = $this->resolveTemplates($normalizedIds);
 
         $entry->loadMissing('profile');
-        $variables = $this->variableBuilder->build($period, $entry, $entry->profile);
+        $variables = $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId);
 
         $workDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ficha-letters-'.Str::uuid()->toString();
         if (! mkdir($workDir) && ! is_dir($workDir)) {

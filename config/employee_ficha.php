@@ -305,6 +305,17 @@ return [
         'withholding_type' => 'Tipo retencion en la fuente',
         'expense_type' => 'Tipo gasto',
         'termination_cause' => 'Causal desvinculacion',
+        'firmas' => 'Firmas',
+    ],
+
+    /**
+     * Etiquetas de columnas personalizadas por tipo de catalogo.
+     * Si un tipo no esta aqui, se usan los defaults "Codigo" y "Nombre".
+     *
+     * @var array<string, array{code: string, name: string}>
+     */
+    'catalog_column_labels' => [
+        'firmas' => ['code' => 'Cargo', 'name' => 'Nombre'],
     ],
 
     'termination_cause_defaults' => [

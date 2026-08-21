@@ -23,6 +23,7 @@ class GenerateTerminationLettersRequest extends FormRequest
         return [
             'template_ids' => ['required', 'array', 'min:1'],
             'template_ids.*' => ['required', 'integer', 'distinct', 'exists:termination_letter_document_templates,id'],
+            'signatory_id' => ['required', 'integer', 'exists:payroll_catalog_items,id'],
         ];
     }
 
@@ -35,6 +36,8 @@ class GenerateTerminationLettersRequest extends FormRequest
             'template_ids.required' => 'Debe seleccionar al menos una plantilla.',
             'template_ids.min' => 'Debe seleccionar al menos una plantilla.',
             'template_ids.*.exists' => 'Una o mas plantillas seleccionadas no existen.',
+            'signatory_id.required' => 'Debe seleccionar un firmante.',
+            'signatory_id.exists' => 'El firmante seleccionado no es valido.',
         ];
     }
 
@@ -47,5 +50,10 @@ class GenerateTerminationLettersRequest extends FormRequest
         $ids = $this->validated('template_ids');
 
         return array_values(array_map(static fn (int|string $id): int => (int) $id, $ids));
+    }
+
+    public function signatoryId(): int
+    {
+        return (int) $this->validated('signatory_id');
     }
 }

@@ -2383,7 +2383,7 @@ a {
 .form-select {
     width: 100%;
     min-height: var(--control-height-chrome);
-    padding: 0.35rem var(--control-padding-x);
+    padding: 0.5rem var(--control-padding-x);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--control-radius);
     background: #fff;

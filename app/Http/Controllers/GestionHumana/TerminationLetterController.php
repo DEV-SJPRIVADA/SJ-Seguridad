@@ -5,6 +5,7 @@ namespace App\Http\Controllers\GestionHumana;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\GenerateTerminationLettersRequest;
 use App\Models\EmployeeFichaEmploymentPeriod;
+use App\Models\PayrollCatalogItem;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaAuditLogService;
@@ -49,6 +50,23 @@ class TerminationLetterController extends Controller
         ]);
     }
 
+    public function firmas(EmployeeFichaEmploymentPeriod $period): JsonResponse
+    {
+        $this->authorizeTerminate();
+        $this->packGenerator->assertCanGenerate($period);
+
+        $firmas = PayrollCatalogItem::query()
+            ->ofType('firmas')
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'code', 'name']);
+
+        return response()->json([
+            'firmas' => $firmas,
+        ]);
+    }
+
     public function generate(
         GenerateTerminationLettersRequest $request,
         EmployeeFichaEmploymentPeriod $period,
@@ -57,7 +75,7 @@ class TerminationLetterController extends Controller
         $entry = $period->fichaEntry;
         abort_unless($entry !== null, 404);
 
-        $result = $this->packGenerator->generate($period, $entry, $request->templateIds());
+        $result = $this->packGenerator->generate($period, $entry, $request->templateIds(), $request->signatoryId());
 
         $this->auditLogService->logEvent(
             eventType: 'termination_letter_pack',

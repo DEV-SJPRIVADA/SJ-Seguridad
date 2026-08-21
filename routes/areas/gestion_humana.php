@@ -37,6 +37,7 @@ Route::middleware(['password.changed'])
         Route::get('/periodos/{period}/cartas/plantillas', [TerminationLetterController::class, 'templates'])->name('period.letters.templates');
         Route::post('/periodos/{period}/cartas/generar', [TerminationLetterController::class, 'generate'])->name('period.letters.generate');
         Route::get('/periodos/{period}/cartas/descargar', [TerminationLetterController::class, 'download'])->name('period.letters.download');
+        Route::get('/periodos/{period}/cartas/firmas', [TerminationLetterController::class, 'firmas'])->name('period.letters.firmas');
     });
 
 Route::middleware(['password.changed'])
