@@ -254,33 +254,46 @@
     </div>
 
     <script>
+    function catalogQueryKey() {
+        return new URLSearchParams(window.location.search).get('catalog');
+    }
+
+    function setCatalogQuery(key) {
+        const url = new URL(window.location.href);
+        if (key) {
+            url.searchParams.set('catalog', key);
+        } else {
+            url.searchParams.delete('catalog');
+        }
+        url.hash = '';
+        window.history.replaceState({}, '', url.toString());
+    }
+
     function showParameterSection(key) {
         document.getElementById('parameter-selector-screen').style.display = 'none';
         document.getElementById('parameter-management-screen').style.display = 'block';
-        
-        // Ocultar todas las secciones
+
         document.querySelectorAll('.parameter-section').forEach(s => s.style.display = 'none');
-        
-        // Mostrar la seleccionada
+
         const section = document.getElementById('section-' + key);
         if (section) section.style.display = 'block';
 
-        // Scroll al inicio
+        setCatalogQuery(key);
         window.scrollTo(0, 0);
     }
 
     function showSelectorScreen() {
         document.getElementById('parameter-selector-screen').style.display = 'block';
         document.getElementById('parameter-management-screen').style.display = 'none';
+        setCatalogQuery(null);
     }
 
     $(document).ready(function() {
-        // Inicializar DataTables solo si no están ya inicializados (evitar errores al ocultar/mostrar)
-        if ($.fn.DataTable.isDataTable('.js-datatable')) {
-            // Ya están, opcionalmente podrías destruirlos y recrearlos o solo ajustar columnas
+        const openCatalog = catalogQueryKey();
+        if (openCatalog && document.getElementById('section-' + openCatalog)) {
+            showParameterSection(openCatalog);
         }
 
-        // Modal de edicion
         const $modal   = $('#param-modal');
         const $form    = $('#param-edit-form');
         const $mTitle  = $('#param-modal-title');

@@ -685,7 +685,7 @@ class RequisitionController extends Controller
         $user->refresh();
 
         return redirect()
-            ->route('requisitions.parameters', ['module' => $module])
+            ->route('requisitions.parameters', ['module' => $module, 'catalog' => 'selection-officers'])
             ->with('status', $request->boolean('enabled')
                 ? 'Encargado de seleccion activado para '.$user->name.'.'
                 : 'Encargado de seleccion desactivado para '.$user->name.'.');
@@ -708,7 +708,7 @@ class RequisitionController extends Controller
         );
 
         return redirect()
-            ->route('requisitions.parameters', ['module' => $module])
+            ->route('requisitions.parameters', ['module' => $module, 'catalog' => $type])
             ->with('status', 'requisition-parameter-created');
     }
 
@@ -727,7 +727,7 @@ class RequisitionController extends Controller
         ]);
 
         return redirect()
-            ->route('requisitions.parameters', ['module' => $module])
+            ->route('requisitions.parameters', ['module' => $module, 'catalog' => $type])
             ->with('status', 'requisition-parameter-updated');
     }
 
@@ -741,7 +741,7 @@ class RequisitionController extends Controller
         $definition['model']::query()->findOrFail($parameterId)->delete();
 
         return redirect()
-            ->route('requisitions.parameters', ['module' => $module])
+            ->route('requisitions.parameters', ['module' => $module, 'catalog' => $type])
             ->with('status', 'requisition-parameter-deleted');
     }
 

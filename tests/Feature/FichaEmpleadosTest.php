@@ -1060,7 +1060,7 @@ class FichaEmpleadosTest extends TestCase
                 'sort_order' => 5,
                 'is_active' => '1',
             ])
-            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'eps']));
 
         $item = PayrollCatalogItem::query()
             ->where('catalog_type', 'eps')
@@ -1077,13 +1077,13 @@ class FichaEmpleadosTest extends TestCase
                 'sort_order' => 10,
                 'is_active' => '1',
             ])
-            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'eps']));
 
         $this->assertSame('EPS Prueba Actualizada', $item->fresh()->name);
 
         $this->actingAs($manager)
             ->delete(route('gestion-humana.ficha-empleados.catalogs.destroy', ['type' => 'eps', 'item' => $item->id]))
-            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index').'#section-eps');
+            ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'eps']));
 
         $this->assertDatabaseMissing('payroll_catalog_items', ['id' => $item->id]);
     }

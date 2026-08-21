@@ -1589,7 +1589,7 @@ class RequisitionModuleTest extends TestCase
             ->patch(route('requisitions.selection-officers.update', ['module' => 'gestion_humana', 'user' => $officer]), [
                 'enabled' => true,
             ])
-            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana']));
+            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana', 'catalog' => 'selection-officers']));
 
         $officer->refresh();
         $this->assertTrue($officer->can('requisitions.selection_officer'));
@@ -1598,7 +1598,7 @@ class RequisitionModuleTest extends TestCase
             ->patch(route('requisitions.selection-officers.update', ['module' => 'gestion_humana', 'user' => $officer]), [
                 'enabled' => false,
             ])
-            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana']));
+            ->assertRedirect(route('requisitions.parameters', ['module' => 'gestion_humana', 'catalog' => 'selection-officers']));
 
         $officer->refresh();
         $this->assertFalse($officer->can('requisitions.selection_officer'));
