@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana\TerminationLetter;
 
 use App\Models\TerminationLetterDocumentTemplate;
+use App\Models\WordDocumentType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -12,21 +13,43 @@ class TerminationLetterTemplateManager
     /**
      * @return list<TerminationLetterDocumentTemplate>
      */
-    public function templatesForCause(string $causeCode): array
+    public function templatesForTypeCode(string $typeCode): array
     {
         return TerminationLetterDocumentTemplate::query()
-            ->forCause($causeCode)
+            ->forTypeCode($typeCode)
             ->ordered()
             ->get()
             ->all();
     }
 
-    public function findTemplate(string $causeCode, string $documentKey): ?TerminationLetterDocumentTemplate
+    /**
+     * @return list<TerminationLetterDocumentTemplate>
+     */
+    public function templatesForType(WordDocumentType|int $type): array
     {
+        $typeId = $type instanceof WordDocumentType ? $type->id : $type;
+
         return TerminationLetterDocumentTemplate::query()
-            ->where('termination_cause_code', $causeCode)
-            ->where('document_key', $documentKey)
-            ->first();
+            ->where('word_document_type_id', $typeId)
+            ->ordered()
+            ->get()
+            ->all();
+    }
+
+    public function createTemplate(
+        WordDocumentType $type,
+        string $label,
+        UploadedFile $file,
+        int $sortOrder = 0,
+    ): TerminationLetterDocumentTemplate {
+        $template = TerminationLetterDocumentTemplate::query()->create([
+            'word_document_type_id' => $type->id,
+            'label' => $label,
+            'sort_order' => $sortOrder,
+            'template_path' => null,
+        ]);
+
+        return $this->storeUploadedTemplate($template, $file);
     }
 
     public function storeUploadedTemplate(
@@ -35,10 +58,11 @@ class TerminationLetterTemplateManager
     ): TerminationLetterDocumentTemplate {
         $this->deleteStoredFile($template);
 
-        $extension = strtolower($file->getClientOriginalExtension());
+        $typeId = (int) $template->word_document_type_id;
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'docx');
         $storedName = Str::uuid()->toString().'.'.$extension;
         $relativePath = $file->storeAs(
-            'ficha-empleados/letter-templates/'.$template->termination_cause_code,
+            'ficha-empleados/letter-templates/'.$typeId,
             $storedName,
             'local',
         );
@@ -47,18 +71,13 @@ class TerminationLetterTemplateManager
             'template_path' => $relativePath,
         ]);
 
-        return $template->fresh();
+        return $template->fresh(['type']) ?? $template;
     }
 
-    public function deleteTemplateFile(TerminationLetterDocumentTemplate $template): TerminationLetterDocumentTemplate
+    public function destroyTemplate(TerminationLetterDocumentTemplate $template): void
     {
         $this->deleteStoredFile($template);
-
-        $template->update([
-            'template_path' => null,
-        ]);
-
-        return $template->fresh();
+        $template->delete();
     }
 
     public function absolutePath(?string $relativePath): ?string

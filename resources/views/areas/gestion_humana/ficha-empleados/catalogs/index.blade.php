@@ -150,13 +150,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-
-                                @if ($catalog['key'] === 'termination_cause')
-                                    @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-templates-admin', [
-                                        'terminationLetterTemplates' => $terminationLetterTemplates ?? collect(),
-                                        'terminationLetterPlaceholders' => $terminationLetterPlaceholders ?? [],
-                                    ])
-                                @endif
                             </div>
                         </div>
                     </section>

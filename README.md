@@ -91,6 +91,8 @@ Documentos principales:
 - [`docs/modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
 - [`docs/modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`docs/modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
+- [`docs/modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)
+- [`docs/modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md)
 - [`docs/modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`docs/modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 

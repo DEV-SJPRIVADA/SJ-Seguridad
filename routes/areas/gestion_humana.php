@@ -3,6 +3,7 @@
 use App\Http\Controllers\GestionHumana\ArchivoController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
+use App\Http\Controllers\GestionHumana\PlantillasWordController;
 use App\Http\Controllers\GestionHumana\TerminationLetterController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,9 +15,6 @@ Route::middleware(['password.changed'])
         Route::post('/{type}', [FichaEmpleadosCatalogController::class, 'store'])->name('store');
         Route::patch('/{type}/{item}', [FichaEmpleadosCatalogController::class, 'update'])->name('update');
         Route::delete('/{type}/{item}', [FichaEmpleadosCatalogController::class, 'destroy'])->name('destroy');
-        Route::post('/termination-cause/{causeCode}/cartas/{documentKey}/plantilla', [TerminationLetterController::class, 'uploadTemplate'])->name('termination-letter-template.upload');
-        Route::get('/termination-cause/{causeCode}/cartas/{documentKey}/plantilla', [TerminationLetterController::class, 'downloadMasterTemplate'])->name('termination-letter-template.download');
-        Route::delete('/termination-cause/{causeCode}/cartas/{documentKey}/plantilla', [TerminationLetterController::class, 'deleteTemplate'])->name('termination-letter-template.delete');
     });
 
 Route::middleware(['password.changed'])
@@ -36,6 +34,7 @@ Route::middleware(['password.changed'])
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
         Route::post('/{fichaEntry}/desvincular', [FichaEmpleadosController::class, 'terminate'])->name('ficha.terminate');
+        Route::get('/periodos/{period}/cartas/plantillas', [TerminationLetterController::class, 'templates'])->name('period.letters.templates');
         Route::post('/periodos/{period}/cartas/generar', [TerminationLetterController::class, 'generate'])->name('period.letters.generate');
         Route::get('/periodos/{period}/cartas/descargar', [TerminationLetterController::class, 'download'])->name('period.letters.download');
     });
@@ -53,4 +52,20 @@ Route::middleware(['password.changed'])
         Route::post('/importar', [ArchivoController::class, 'import'])->name('import');
         Route::get('/importar/reporte/{token}', [ArchivoController::class, 'downloadImportReport'])->name('import-report');
         Route::patch('/{fichaEntry}', [ArchivoController::class, 'update'])->name('update');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/plantillas-word')
+    ->name('gestion-humana.plantillas-word.')
+    ->group(function (): void {
+        Route::get('/', [PlantillasWordController::class, 'index'])->name('index');
+
+        Route::post('/tipos', [PlantillasWordController::class, 'storeType'])->name('types.store');
+        Route::patch('/tipos/{type}', [PlantillasWordController::class, 'updateType'])->name('types.update');
+        Route::delete('/tipos/{type}', [PlantillasWordController::class, 'destroyType'])->name('types.destroy');
+
+        Route::post('/plantillas', [PlantillasWordController::class, 'storeTemplate'])->name('templates.store');
+        Route::post('/plantillas/{template}/reemplazar', [PlantillasWordController::class, 'replaceTemplate'])->name('templates.replace');
+        Route::delete('/plantillas/{template}', [PlantillasWordController::class, 'destroyTemplate'])->name('templates.destroy');
+        Route::get('/plantillas/{template}/descargar', [PlantillasWordController::class, 'downloadTemplate'])->name('templates.download');
     });

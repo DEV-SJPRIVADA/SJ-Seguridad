@@ -114,10 +114,13 @@
                 'show' => $showTerminateModal,
             ])
 
+            @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-generate-modal', [
+                'canGenerateLetters' => $canGenerateLetters ?? false,
+            ])
+
             @include('areas.gestion_humana.ficha-empleados.partials.employment-period-history-modal', [
                 'employmentHistory' => $employmentHistory,
                 'canGenerateLetters' => $canGenerateLetters ?? false,
-                'supportedLetterCauses' => config('employee_ficha.termination_letter_supported_causes', []),
             ])
         </div>
     </div>

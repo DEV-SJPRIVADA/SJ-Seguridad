@@ -1673,6 +1673,39 @@ a {
     font-size: 0.75rem;
 }
 
+.plantillas-word-file-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.plantillas-word-file-picker__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.plantillas-word-file-picker__name {
+    font-size: 0.85rem;
+    color: var(--color-text-soft, #64748b);
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plantillas-word-file-picker--compact .plantillas-word-file-picker__name {
+    max-width: 9rem;
+    font-size: 0.75rem;
+}
+
 /* Ficha empleados — formulario crear/editar: ancho contenido y scroll contenido */
 .ficha-empleados-page--form {
     padding-bottom: 0.25rem;

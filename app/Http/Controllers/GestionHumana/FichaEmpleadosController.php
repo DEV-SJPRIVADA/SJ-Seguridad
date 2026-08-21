@@ -709,18 +709,17 @@ class FichaEmpleadosController extends Controller
             return null;
         }
 
-        $supportedCauses = config('employee_ficha.termination_letter_supported_causes', []);
-
         return $employmentHistory
-            ->first(function (EmployeeFichaEmploymentPeriod $period) use ($supportedCauses): bool {
-                return $period->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO
-                    && in_array((string) $period->termination_cause_code, $supportedCauses, true);
+            ->first(function (EmployeeFichaEmploymentPeriod $period): bool {
+                return $period->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO;
             });
     }
 
     private function canGenerateLetters(?EmployeeFichaEmploymentPeriod $letterPeriod): bool
     {
-        return $this->canTerminate() && $letterPeriod !== null;
+        return $this->canTerminate()
+            && $letterPeriod !== null
+            && $letterPeriod->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO;
     }
 
     private function canExportArchive(): bool

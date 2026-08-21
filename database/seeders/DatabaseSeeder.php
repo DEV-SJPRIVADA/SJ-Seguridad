@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             IndicadorSeeder::class,
             DashboardWeightSeeder::class,
             CommercialMatrixCatalogSeeder::class,
+            WordDocumentTypeSeeder::class,
         ]);
     }
 }

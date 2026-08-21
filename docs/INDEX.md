@@ -36,6 +36,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Notificaciones (admin) | [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md) | [`user/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/user/notifications-config.md) |
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
+| Plantillas Word | [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md) | [`user/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/user/plantillas-word.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
 | Solicitudes de compra | [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md) | [`user/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/purchase-requests.md) |
 | Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | [`user/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/user/quality-documents.md) |
@@ -51,6 +52,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 - [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)
+- [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md)
 - [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md)
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)

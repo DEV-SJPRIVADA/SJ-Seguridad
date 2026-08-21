@@ -74,6 +74,8 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Documentos calidad | [`modules/quality-documents.md`](modules/quality-documents.md) | [`user/quality-documents.md`](user/quality-documents.md) | Compartido |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](modules/indicadores.md) | [`user/indicadores.md`](user/indicadores.md) | Area operaciones |
 | Matriz comercial | [`modules/matriz-clientes.md`](modules/matriz-clientes.md) | [`user/matriz-clientes.md`](user/matriz-clientes.md) | Area comercial |
+| Ficha empleados | [`modules/ficha-empleados.md`](modules/ficha-empleados.md) | [`user/ficha-empleados.md`](user/ficha-empleados.md) | Area gestion_humana |
+| Plantillas Word | [`modules/plantillas-word.md`](modules/plantillas-word.md) | [`user/plantillas-word.md`](user/plantillas-word.md) | Area gestion_humana |
 | Branding / UI | [`modules/branding.md`](modules/branding.md) | — (solo tecnica) | Transversal |
 
 ---

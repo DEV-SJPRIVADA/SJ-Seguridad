@@ -1,18 +1,22 @@
 <?php
 
-namespace App\Http\Requests\GestionHumana;
+namespace App\Http\Requests\GestionHumana\PlantillasWord;
 
+use App\Services\GestionHumana\PlantillasWordAccessService;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UploadTerminationLetterTemplateRequest extends FormRequest
+class ReplaceWordDocumentTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user !== null && app(PlantillasWordAccessService::class)->canManage($user);
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {

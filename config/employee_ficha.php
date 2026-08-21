@@ -316,30 +316,17 @@ return [
     ],
 
     /**
-     * Causales con generacion de cartas habilitada en v1.
+     * Codes estables de tipos de documento Word (seed BD; no hardcodear en servicios).
      *
-     * @var list<string>
+     * @var array<string, string>
      */
-    'termination_letter_supported_causes' => [
-        'RENUNCIA',
+    'word_document_type_codes' => [
+        'desvinculacion' => 'desvinculacion',
     ],
 
     'termination_letter_signatory' => [
         'name' => env('FICHA_LETTER_SIGNATORY_NAME', 'Directora de Gestion Humana'),
         'title' => env('FICHA_LETTER_SIGNATORY_TITLE', 'Directora de Gestion Humana'),
-    ],
-
-    /**
-     * Paquetes de documentos por causal (document_key + etiqueta).
-     *
-     * @var array<string, list<array{key: string, label: string, sort: int}>>
-     */
-    'termination_letter_packs' => [
-        'RENUNCIA' => [
-            ['key' => 'aceptacion_renuncia', 'label' => 'Aceptacion Carta de Renuncia', 'sort' => 1],
-            ['key' => 'autorizacion_examen_retiro', 'label' => 'Autorizacion examen de retiro', 'sort' => 2],
-            ['key' => 'certificado_laboral', 'label' => 'Certificado Laboral', 'sort' => 3],
-        ],
     ],
 
     /**

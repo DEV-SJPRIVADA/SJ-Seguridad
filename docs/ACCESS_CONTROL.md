@@ -170,6 +170,26 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - `indicadores` (solo en area `operaciones`; acceso por permisos `operations.*`, no por `view.board.*`)
 - `gestion_clientes` (etiqueta UI: **Gestion Clientes**; solo en area `comercial`; sidebar por `view.board.comercial.gestion_clientes`, `comercial.matriz.*` o permisos legacy de pestaña; pestañas Clientes/Servicios con permisos `view.board.comercial.matriz_clientes` y `view.board.comercial.servicios_comerciales`)
 - En area `comercial`, el board `dashboard` redirige a `comercial/dashboard` (KPIs de matriz); acceso por `comercial.matriz.*`, `view.board.comercial.dashboard` o `view.area.comercial`
+- En area `gestion_humana`, tableros de area unica (no transversales de solicitante):
+  - `ficha_empleados` — **Ficha empleados** (`view.board.gestion_humana.ficha_empleados` + `ficha_empleados.view` / `manage` / `terminate`)
+  - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
+  - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
+
+### Plantillas Word (Gestion humana)
+
+Permisos funcionales (independientes de Ficha empleados):
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.plantillas_word` | Ver tablero **Plantillas Word** en sidebar GH |
+| `plantillas_word.view` | Ver tipos y plantillas; descargar plantilla maestra |
+| `plantillas_word.manage` | Crear/editar/eliminar tipos; agregar/reemplazar/eliminar plantillas (implica view en servicio de acceso) |
+
+- Generar y descargar **cartas** desde la ficha del empleado usa **solo** `ficha_empleados.terminate` (no requiere `plantillas_word.*`).
+- Bypass: `manage.users`.
+- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Plantillas Word*).
+- Doc: [`docs/modules/plantillas-word.md`](modules/plantillas-word.md), [`docs/user/plantillas-word.md`](user/plantillas-word.md).
 
 Esto produce permisos como:
 

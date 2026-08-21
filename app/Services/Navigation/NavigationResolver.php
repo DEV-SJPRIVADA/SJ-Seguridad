@@ -10,6 +10,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
+use App\Services\GestionHumana\PlantillasWordAccessService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -22,6 +23,7 @@ class NavigationResolver
         private readonly CommercialAccessService $commercialAccess,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly ArchivoAccessService $archivoAccess,
+        private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
@@ -195,6 +197,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'plantillas_word') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->plantillasWordAccess->canViewPlantillasWordBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.plantillas-word.index',
+                                'url' => $user->defaultPlantillasWordBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -288,6 +307,7 @@ class NavigationResolver
                             ) && $key === 'comercial',
                             $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
                             $boardKey === 'archivo' => str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana',
+                            $boardKey === 'plantillas_word' => str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
@@ -375,6 +395,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana'
                 );
 
                 return [

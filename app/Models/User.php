@@ -332,4 +332,9 @@ class User extends Authenticatable
     {
         return route('gestion-humana.archivo.index');
     }
+
+    public function defaultPlantillasWordBoardUrl(): string
+    {
+        return route('gestion-humana.plantillas-word.index');
+    }
 }
