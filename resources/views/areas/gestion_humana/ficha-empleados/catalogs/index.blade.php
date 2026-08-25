@@ -39,7 +39,7 @@
                         <div class="panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">Gestionar: {{ $catalog['label'] }}</h3>
-                                <p class="panel-text">Codigo y nombre usados en formularios de ficha de empleado.</p>
+                                <p class="panel-text">{{ $catalog['columnLabels']['code'] }} y {{ $catalog['columnLabels']['name'] }} usados en formularios de ficha de empleado.</p>
                             </div>
 
                             <div class="panel__body section-stack">
@@ -51,7 +51,7 @@
                                     @csrf
                                     <div class="ficha-empleados-catalogs-page__create-row">
                                         <div class="form-field">
-                                            <label class="form-label" for="code_new_{{ $catalog['key'] }}">Codigo</label>
+                                            <label class="form-label" for="code_new_{{ $catalog['key'] }}">{{ $catalog['columnLabels']['code'] }}</label>
                                             <input
                                                 id="code_new_{{ $catalog['key'] }}"
                                                 name="code"
@@ -59,11 +59,11 @@
                                                 class="form-input"
                                                 maxlength="50"
                                                 required
-                                                placeholder="Ej. EPS001"
+                                                placeholder="{{ $catalog['columnLabels']['code'] }}"
                                             >
                                         </div>
                                         <div class="form-field ficha-empleados-catalogs-page__name-field">
-                                            <label class="form-label" for="name_new_{{ $catalog['key'] }}">Nombre</label>
+                                            <label class="form-label" for="name_new_{{ $catalog['key'] }}">{{ $catalog['columnLabels']['name'] }}</label>
                                             <input
                                                 id="name_new_{{ $catalog['key'] }}"
                                                 name="name"
@@ -71,7 +71,7 @@
                                                 class="form-input"
                                                 maxlength="255"
                                                 required
-                                                placeholder="Nombre visible"
+                                                placeholder="{{ $catalog['columnLabels']['name'] }}"
                                             >
                                         </div>
                                         <div class="form-field ficha-empleados-catalogs-page__sort-field">
@@ -100,8 +100,8 @@
                                     <table class="data-table js-datatable" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Codigo</th>
-                                                <th>Nombre</th>
+                                                <th>{{ $catalog['columnLabels']['code'] }}</th>
+                                                <th>{{ $catalog['columnLabels']['name'] }}</th>
                                                 <th style="width:80px;">Orden</th>
                                                 <th style="width:100px;">Estado</th>
                                                 <th style="width:180px;">Acciones</th>
@@ -127,6 +127,8 @@
                                                             data-name="{{ $item->name }}"
                                                             data-active="{{ $item->is_active ? '1' : '0' }}"
                                                             data-sort="{{ $item->sort_order ?? 0 }}"
+                                                            data-code-label="{{ $catalog['columnLabels']['code'] }}"
+                                                            data-name-label="{{ $catalog['columnLabels']['name'] }}"
                                                             data-update-url="{{ route('gestion-humana.ficha-empleados.catalogs.update', ['type' => $catalog['key'], 'item' => $item->id]) }}"
                                                         >Editar</button>
 
@@ -150,13 +152,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-
-                                @if ($catalog['key'] === 'termination_cause')
-                                    @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-templates-admin', [
-                                        'terminationLetterTemplates' => $terminationLetterTemplates ?? collect(),
-                                        'terminationLetterPlaceholders' => $terminationLetterPlaceholders ?? [],
-                                    ])
-                                @endif
                             </div>
                         </div>
                     </section>
@@ -176,11 +171,11 @@
                 @csrf
                 @method('PATCH')
                 <div class="form-field">
-                    <label class="form-label" for="ficha-catalog-edit-code">Codigo</label>
+                    <label class="form-label" for="ficha-catalog-edit-code"><span id="ficha-modal-code-label">Codigo</span></label>
                     <input id="ficha-catalog-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
                 </div>
                 <div class="form-field">
-                    <label class="form-label" for="ficha-catalog-edit-name">Nombre</label>
+                    <label class="form-label" for="ficha-catalog-edit-name"><span id="ficha-modal-name-label">Nombre</span></label>
                     <input id="ficha-catalog-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
                 </div>
                 <div class="form-field">
@@ -284,6 +279,10 @@
                     editSort.value = button.getAttribute('data-sort') || '0';
                     editActive.checked = button.getAttribute('data-active') === '1';
                     editForm.action = button.getAttribute('data-update-url') || '';
+                    var codeLabel = document.getElementById('ficha-modal-code-label');
+                    var nameLabel = document.getElementById('ficha-modal-name-label');
+                    if (codeLabel) { codeLabel.textContent = button.getAttribute('data-code-label') || 'Codigo'; }
+                    if (nameLabel) { nameLabel.textContent = button.getAttribute('data-name-label') || 'Nombre'; }
                     openModal();
                     editName.focus();
                 });

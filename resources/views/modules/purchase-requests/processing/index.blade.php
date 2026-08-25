@@ -75,12 +75,12 @@
                                             <label class="req-manage-filters__label" for="bandeja-filter-tipo">Tipo</label>
                                             <select id="bandeja-filter-tipo" name="tipo" class="form-select">
                                                 <option value="">Todos</option>
-                                                <option value="purchase" @selected(($filters['tipo'] ?? '') === 'purchase')>Solicitud compra</option>
-                                                <option value="supply" @selected(($filters['tipo'] ?? '') === 'supply')>Suministro</option>
-                                            </select>
+                            <option value="purchase" @selected(($filters['tipo'] ?? '') === 'purchase')>Solicitud compra</option>
+                            <option value="supply" @selected(($filters['tipo'] ?? '') === 'supply')>Suministro</option>
+                        </select>
                                         </div>
                                     </div>
-                                </form>
+                    </form>
 
                                 <div class="req-manage-filters__status-row req-manage-filters__status-col--right">
                                     <p class="req-manage-filters__status-label">Estado</p>
@@ -133,55 +133,55 @@
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
                         >
-                            <thead>
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Folio</th>
+                                <th>Fecha</th>
+                                <th>Solicitante</th>
+                                <th>Area</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($queueItems as $queueItem)
                                 <tr>
-                                    <th>Tipo</th>
-                                    <th>Folio</th>
-                                    <th>Fecha</th>
-                                    <th>Solicitante</th>
-                                    <th>Area</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($queueItems as $queueItem)
-                                    <tr>
-                                        <td>{{ $queueItem['tipo_label'] }}</td>
-                                        <td>{{ $queueItem['folio'] }}</td>
-                                        <td><x-date-table :value="$queueItem['fecha']" datetime /></td>
-                                        <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
-                                        <td>{{ $queueItem['area'] ?? '—' }}</td>
-                                        <td>
+                                    <td>{{ $queueItem['tipo_label'] }}</td>
+                                    <td>{{ $queueItem['folio'] }}</td>
+                                    <td><x-date-table :value="$queueItem['fecha']" datetime /></td>
+                                    <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
+                                    <td>{{ $queueItem['area'] ?? '—' }}</td>
+                                    <td>
                                             <span class="status-pill status-pill--compras-{{ $queueItem['estado'] ?? 'pendiente' }}">
                                                 {{ $queueItem['estado_label'] ?? '—' }}
                                             </span>
-                                        </td>
-                                        <td class="table-actions">
-                                            @if ($queueItem['tipo'] === 'purchase')
+                                    </td>
+                                    <td class="table-actions">
+                                        @if ($queueItem['tipo'] === 'purchase')
                                                 <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
                                                     Ver detalle
                                                 </a>
-                                                <a href="{{ route('purchase-requests.processing.purchase', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
-                                                    Procesar
-                                                </a>
-                                            @else
+                                            <a href="{{ route('purchase-requests.processing.purchase', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
+                                                Procesar
+                                            </a>
+                                        @else
                                                 <a href="{{ route('supplies.show', ['module' => $queueItem['model']->area_key, 'supply_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
                                                     Ver detalle
                                                 </a>
-                                                <a href="{{ route('purchase-requests.processing.supply', ['module' => $module, 'supply_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
-                                                    Procesar
-                                                </a>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-muted">No hay elementos en la bandeja con los filtros seleccionados.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                            <a href="{{ route('purchase-requests.processing.supply', ['module' => $module, 'supply_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
+                                                Procesar
+                                            </a>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-muted">No hay elementos en la bandeja con los filtros seleccionados.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                     </div>
                 </div>
             </div>

@@ -61,6 +61,15 @@
                 </div>
             @endif
 
+            @if ($canGenerateContratacionLetters)
+                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters" style="margin-bottom: 1rem;">
+                    @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-actions', [
+                        'period' => $activePeriod,
+                        'canGenerateContratacionLetters' => $canGenerateContratacionLetters,
+                    ])
+                </div>
+            @endif
+
             <form
                 method="POST"
                 action="{{ route('gestion-humana.ficha-empleados.employees.ficha.update', $entry) }}"
@@ -114,10 +123,17 @@
                 'show' => $showTerminateModal,
             ])
 
+            @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-generate-modal', [
+                'canGenerateLetters' => $canGenerateLetters ?? false,
+            ])
+
+            @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-generate-modal', [
+                'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
+            ])
+
             @include('areas.gestion_humana.ficha-empleados.partials.employment-period-history-modal', [
                 'employmentHistory' => $employmentHistory,
                 'canGenerateLetters' => $canGenerateLetters ?? false,
-                'supportedLetterCauses' => config('employee_ficha.termination_letter_supported_causes', []),
             ])
         </div>
     </div>

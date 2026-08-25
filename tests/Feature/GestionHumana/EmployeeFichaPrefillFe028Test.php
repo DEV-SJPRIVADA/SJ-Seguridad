@@ -45,6 +45,25 @@ class EmployeeFichaPrefillFe028Test extends TestCase
         $this->assertNull($profile->residence_city_name);
         $this->assertNull($profile->work_center_name);
         $this->assertNull($profile->contract_type_name);
+        $this->assertNotEmpty($profile->work_city_name);
+    }
+
+    public function test_build_for_entry_prefills_work_city_from_requisition_city(): void
+    {
+        $city = RequisitionCity::query()->firstOrFail();
+        $entry = $this->createPendingEntry();
+
+        $this->assertSame($city->id, $entry->requisition?->city_id);
+
+        $profile = app(EmployeeFichaProfilePrefill::class)->buildForEntry($entry);
+
+        $this->assertSame($city->name, $profile->work_city_name);
+        $this->assertNotEmpty($profile->work_city_code);
+        $this->assertDatabaseHas('payroll_catalog_items', [
+            'catalog_type' => 'city',
+            'code' => $profile->work_city_code,
+            'name' => $profile->work_city_name,
+        ]);
     }
 
     public function test_build_for_entry_still_suggests_salary_hire_date_and_mapped_position(): void
@@ -101,7 +120,9 @@ class EmployeeFichaPrefillFe028Test extends TestCase
             ->assertSee('Referencia de requisición', false)
             ->assertSee('CC-UI-HINT', false)
             ->assertSee('Centro de costo (texto requisición)', false)
-            ->assertSee('id="cost_center_code"', false);
+            ->assertSee('id="cost_center_code"', false)
+            ->assertSee('Ciudad de trabajo', false)
+            ->assertSee('id="work_city_code"', false);
     }
 
     public function test_store_from_pending_opens_period_with_synced_catalog_names(): void
@@ -140,6 +161,53 @@ class EmployeeFichaPrefillFe028Test extends TestCase
         $this->assertNotNull($period);
         $this->assertSame('Centro Costo Test', $period->cost_center_name);
         $this->assertSame('EPS Test', $period->eps_name);
+    }
+
+    public function test_store_from_pending_persists_work_city_from_requisition_city_id_when_not_posted(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->seedFe028CatalogFixturesForPrefill();
+
+        $city = RequisitionCity::query()->firstOrFail();
+        $city->update(['name' => 'CALI TRABAJO TEST']);
+
+        PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'city', 'code' => '76099'],
+            ['name' => 'CALI TRABAJO TEST', 'sort_order' => 1, 'is_active' => true],
+        );
+
+        $entry = $this->createPendingEntry(['city_id' => $city->id]);
+
+        $payload = [
+            'ficha_entry_id' => $entry->id,
+            'hired_document' => $entry->hired_document,
+            'hired_full_name' => $entry->hired_full_name,
+            'sex' => 'M',
+            'hire_date' => now()->subMonth()->toDateString(),
+            'position_code' => 'VIG',
+            'salary' => '2500000',
+            'cost_center_code' => 'CC01',
+            'eps_code' => 'EPS01',
+            'afp_code' => 'AFP01',
+            'bank_code' => 'B01',
+            'account_type' => '1',
+            'account_number' => '1234567890',
+            'payment_method_code' => '1',
+            'payroll_extra' => ['ccf_code' => 'CCF01'],
+            // work_city_code intentionally omitted — must come from requisition.city_id
+        ];
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), $payload)
+            ->assertRedirect();
+
+        $profile = $entry->fresh('profile')->profile;
+
+        $this->assertNotNull($profile);
+        $this->assertSame('76099', $profile->work_city_code);
+        $this->assertSame('CALI TRABAJO TEST', $profile->work_city_name);
     }
 
     /**

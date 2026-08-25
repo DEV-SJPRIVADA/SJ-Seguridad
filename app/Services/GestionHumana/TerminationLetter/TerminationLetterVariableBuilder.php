@@ -4,6 +4,7 @@ namespace App\Services\GestionHumana\TerminationLetter;
 
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -18,11 +19,11 @@ class TerminationLetterVariableBuilder
         PersonalRequisitionFichaEntry $entry,
         ?EmployeeFichaProfile $profile,
         ?CarbonInterface $letterDate = null,
+        ?int $signatoryId = null,
     ): array {
         $letterDate ??= now();
 
-        /** @var array{name: string, title: string} $signatory */
-        $signatory = config('employee_ficha.termination_letter_signatory', []);
+        $firma = $this->resolveSignatory($signatoryId);
 
         $city = $period->work_center_name
             ?: $profile?->residence_city_name
@@ -38,9 +39,27 @@ class TerminationLetterVariableBuilder
             'FECHA_INGRESO' => $this->formatShortDate($period->hire_date),
             'SALARIO' => $this->formatSalary($period->salary),
             'TIPO_CONTRATO' => (string) ($period->contract_type_name ?? ''),
-            'FIRMA' => (string) ($signatory['name'] ?? ''),
-            'CARGO_FIRMA' => (string) ($signatory['title'] ?? ''),
+            'FIRMA' => $firma['name'],
+            'CARGO_FIRMA' => $firma['code'],
         ];
+    }
+
+    private function resolveSignatory(?int $signatoryId): array
+    {
+        if ($signatoryId !== null) {
+            $item = PayrollCatalogItem::query()
+                ->where('id', $signatoryId)
+                ->where('catalog_type', 'firmas')
+                ->first();
+
+            if ($item !== null) {
+                return ['name' => (string) $item->name, 'code' => (string) $item->code];
+            }
+        }
+
+        $fallback = config('employee_ficha.termination_letter_signatory', []);
+
+        return ['name' => (string) ($fallback['name'] ?? ''), 'code' => (string) ($fallback['title'] ?? '')];
     }
 
     private function formatLongDate(?CarbonInterface $date): string
@@ -51,14 +70,14 @@ class TerminationLetterVariableBuilder
 
         $carbon = Carbon::parse($date);
         $months = [
-            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
-            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
-            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
         ];
 
-        $month = $months[(int) $carbon->format('n')] ?? $carbon->format('F');
+        $month = $months[(int) $carbon->format('n')] ?? ucfirst(mb_strtolower($carbon->format('F')));
 
-        return sprintf('%d de %s de %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
+        return sprintf('%d de %s del %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
     }
 
     private function formatShortDate(mixed $date): string
@@ -67,7 +86,7 @@ class TerminationLetterVariableBuilder
             return '';
         }
 
-        return Carbon::parse($date)->format('d/m/Y');
+        return $this->formatLongDate(Carbon::parse($date));
     }
 
     private function formatSalary(mixed $salary): string

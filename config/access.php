@@ -25,6 +25,8 @@ return [
         'ficha_empleados.terminate' => 'Ficha empleados: Registrar desvinculacion de empleados',
         'archivo.view' => 'Archivo: Ver ubicacion documental de empleados',
         'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
+        'plantillas_word.view' => 'Plantillas Word: Ver tipos y plantillas',
+        'plantillas_word.manage' => 'Plantillas Word: Administrar tipos y plantillas',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -84,6 +86,7 @@ return [
         'bandeja_compras' => 'Bandeja compras',
         'ficha_empleados' => 'Ficha empleados',
         'archivo' => 'Archivo',
+        'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
     ],
 
@@ -120,6 +123,10 @@ return [
             'base_area_tab' => false,
         ],
         'archivo' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'plantillas_word' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
@@ -292,6 +299,7 @@ return [
                             'view.board.gestion_humana.dashboard',
                             'view.board.gestion_humana.ficha_empleados',
                             'view.board.gestion_humana.archivo',
+                            'view.board.gestion_humana.plantillas_word',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -307,6 +315,13 @@ return [
                         'permissions' => [
                             'archivo.view',
                             'archivo.manage',
+                        ],
+                    ],
+                    'plantillas_word' => [
+                        'label' => 'Plantillas Word',
+                        'permissions' => [
+                            'plantillas_word.view',
+                            'plantillas_word.manage',
                         ],
                     ],
                 ],

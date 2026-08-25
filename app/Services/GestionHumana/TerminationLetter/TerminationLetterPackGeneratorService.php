@@ -5,6 +5,7 @@ namespace App\Services\GestionHumana\TerminationLetter;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\TerminationLetterDocumentTemplate;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -20,20 +21,28 @@ class TerminationLetterPackGeneratorService
     ) {}
 
     /**
-     * @return array{storage_path: string, download_name: string, document_count: int}
+     * @param  list<int|string>  $templateIds
+     * @return array{
+     *     storage_path: string,
+     *     download_name: string,
+     *     document_count: int,
+     *     output_type: string,
+     *     template_ids: list<int>
+     * }
      */
     public function generate(
         EmployeeFichaEmploymentPeriod $period,
         PersonalRequisitionFichaEntry $entry,
+        array $templateIds,
+        ?int $signatoryId = null,
     ): array {
         $this->assertCanGenerate($period);
 
-        $causeCode = (string) $period->termination_cause_code;
-        $templates = $this->requiredTemplates($causeCode);
-        $this->assertTemplatesReady($templates);
+        $normalizedIds = $this->normalizeTemplateIds($templateIds);
+        $templates = $this->resolveTemplates($normalizedIds);
 
         $entry->loadMissing('profile');
-        $variables = $this->variableBuilder->build($period, $entry, $entry->profile);
+        $variables = $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId);
 
         $workDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ficha-letters-'.Str::uuid()->toString();
         if (! mkdir($workDir) && ! is_dir($workDir)) {
@@ -55,15 +64,26 @@ class TerminationLetterPackGeneratorService
                 ];
             }
 
-            $zipAbsolutePath = $workDir.DIRECTORY_SEPARATOR.$this->zipFileName($entry);
-            $this->createZip($generatedFiles, $zipAbsolutePath);
+            $outputType = count($generatedFiles) === 1 ? 'docx' : 'zip';
+            $downloadName = $this->downloadFileName($entry, $outputType);
+            $outputAbsolutePath = $workDir.DIRECTORY_SEPARATOR.$downloadName;
 
-            $storageRelativePath = $this->persistZip($period, $zipAbsolutePath);
+            if ($outputType === 'docx') {
+                if (! @copy($generatedFiles[0]['absolute'], $outputAbsolutePath)) {
+                    throw new RuntimeException('No se pudo preparar el archivo Word generado.');
+                }
+            } else {
+                $this->createZip($generatedFiles, $outputAbsolutePath);
+            }
+
+            $storageRelativePath = $this->persistOutput($period, $outputAbsolutePath, $outputType);
 
             return [
                 'storage_path' => $storageRelativePath,
-                'download_name' => basename($zipAbsolutePath),
+                'download_name' => $downloadName,
                 'document_count' => count($generatedFiles),
+                'output_type' => $outputType,
+                'template_ids' => $normalizedIds,
             ];
         } finally {
             $this->deleteDirectory($workDir);
@@ -77,50 +97,76 @@ class TerminationLetterPackGeneratorService
                 'period' => 'Solo se pueden generar cartas para vinculos cerrados.',
             ]);
         }
-
-        $causeCode = (string) $period->termination_cause_code;
-
-        if (! in_array($causeCode, config('employee_ficha.termination_letter_supported_causes', []), true)) {
-            throw ValidationException::withMessages([
-                'termination_cause_code' => 'La generacion de cartas para esta causal aun no esta disponible.',
-            ]);
-        }
     }
 
     /**
-     * @return list<TerminationLetterDocumentTemplate>
+     * @param  list<int|string>  $templateIds
+     * @return list<int>
      */
-    private function requiredTemplates(string $causeCode): array
+    private function normalizeTemplateIds(array $templateIds): array
     {
-        return array_values(array_filter(
-            $this->templateManager->templatesForCause($causeCode),
-            static fn (TerminationLetterDocumentTemplate $template): bool => $template->is_required,
-        ));
+        $normalized = array_values(array_unique(array_map(
+            static fn (int|string $id): int => (int) $id,
+            $templateIds,
+        )));
+
+        if ($normalized === []) {
+            throw ValidationException::withMessages([
+                'template_ids' => 'Debe seleccionar al menos una plantilla.',
+            ]);
+        }
+
+        return $normalized;
     }
 
     /**
-     * @param  list<TerminationLetterDocumentTemplate>  $templates
+     * @param  list<int>  $templateIds
+     * @return Collection<int, TerminationLetterDocumentTemplate>
      */
-    private function assertTemplatesReady(array $templates): void
+    private function resolveTemplates(array $templateIds): Collection
     {
-        if ($templates === []) {
+        $typeCode = (string) config('employee_ficha.word_document_type_codes.desvinculacion');
+
+        $templates = TerminationLetterDocumentTemplate::query()
+            ->with('type')
+            ->whereIn('id', $templateIds)
+            ->ordered()
+            ->get();
+
+        if ($templates->count() !== count($templateIds)) {
             throw ValidationException::withMessages([
-                'templates' => 'No hay plantillas configuradas para esta causal.',
+                'template_ids' => 'Una o mas plantillas seleccionadas no existen.',
             ]);
         }
 
-        $missing = array_values(array_filter(
-            $templates,
-            static fn (TerminationLetterDocumentTemplate $template): bool => ! $template->hasTemplateFile(),
-        ));
+        $invalidType = $templates->first(
+            static fn (TerminationLetterDocumentTemplate $template): bool => $template->type?->code !== $typeCode,
+        );
 
-        if ($missing !== []) {
-            $labels = implode(', ', array_map(static fn ($template) => $template->label, $missing));
-
+        if ($invalidType !== null) {
             throw ValidationException::withMessages([
-                'templates' => 'Faltan plantillas Word por subir: '.$labels.'.',
+                'template_ids' => 'Solo se pueden generar cartas con plantillas de tipo desvinculacion.',
             ]);
         }
+
+        $missingFiles = $templates->filter(
+            static function (TerminationLetterDocumentTemplate $template): bool {
+                return ! $template->hasTemplateFile()
+                    || ! Storage::disk('local')->exists((string) $template->template_path);
+            },
+        );
+
+        if ($missingFiles->isNotEmpty()) {
+            $labels = $missingFiles
+                ->map(static fn (TerminationLetterDocumentTemplate $template): string => $template->label)
+                ->implode(', ');
+
+            throw ValidationException::withMessages([
+                'template_ids' => 'Faltan archivos Word en las plantillas: '.$labels.'.',
+            ]);
+        }
+
+        return $templates->values();
     }
 
     /**
@@ -141,21 +187,24 @@ class TerminationLetterPackGeneratorService
         $zip->close();
     }
 
-    private function persistZip(EmployeeFichaEmploymentPeriod $period, string $zipAbsolutePath): string
-    {
+    private function persistOutput(
+        EmployeeFichaEmploymentPeriod $period,
+        string $absolutePath,
+        string $outputType,
+    ): string {
         if ($period->termination_letter_path && Storage::disk('local')->exists($period->termination_letter_path)) {
             Storage::disk('local')->delete($period->termination_letter_path);
         }
 
-        $relativePath = 'ficha-empleados/termination-letters/'.$period->id.'/'.basename($zipAbsolutePath);
+        $relativePath = 'ficha-empleados/termination-letters/'.$period->id.'/'.basename($absolutePath);
         Storage::disk('local')->makeDirectory(dirname($relativePath));
-        Storage::disk('local')->put($relativePath, (string) file_get_contents($zipAbsolutePath));
+        Storage::disk('local')->put($relativePath, (string) file_get_contents($absolutePath));
 
         EmployeeFichaEmploymentPeriod::query()
             ->whereKey($period->getKey())
             ->update([
                 'termination_letter_path' => $relativePath,
-                'termination_letter_type' => 'zip',
+                'termination_letter_type' => $outputType,
             ]);
 
         $period->refresh();
@@ -163,13 +212,12 @@ class TerminationLetterPackGeneratorService
         return $relativePath;
     }
 
-    private function zipFileName(PersonalRequisitionFichaEntry $entry): string
+    private function downloadFileName(PersonalRequisitionFichaEntry $entry, string $outputType): string
     {
-        return sprintf(
-            'Cartas_Renuncia_%s_%s.zip',
-            preg_replace('/\D+/', '', (string) $entry->hired_document) ?: 'empleado',
-            now()->format('Y-m-d'),
-        );
+        $document = preg_replace('/\D+/', '', (string) $entry->hired_document) ?: 'empleado';
+        $date = now()->format('Y-m-d');
+
+        return sprintf('Cartas_Desvinculacion_%s_%s.%s', $document, $date, $outputType);
     }
 
     private function deleteDirectory(string $directory): void

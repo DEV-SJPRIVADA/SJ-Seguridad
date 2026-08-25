@@ -53,11 +53,12 @@ class EmployeeFichaCatalogService
     }
 
     /**
-     * @return list<array{key: string, label: string, items: Collection<int, PayrollCatalogItem>}>
+     * @return list<array{key: string, label: string, items: Collection<int, PayrollCatalogItem>, columnLabels: array{code: string, name: string}}>
      */
     public function catalogsForAdmin(): array
     {
         $catalogs = [];
+        $columnLabels = config('employee_ficha.catalog_column_labels', []);
 
         foreach ($this->typeLabels() as $type => $label) {
             $catalogs[] = [
@@ -68,6 +69,7 @@ class EmployeeFichaCatalogService
                     ->orderBy('sort_order')
                     ->orderBy('name')
                     ->get(),
+                'columnLabels' => $columnLabels[$type] ?? ['code' => 'Codigo', 'name' => 'Nombre'],
             ];
         }
 

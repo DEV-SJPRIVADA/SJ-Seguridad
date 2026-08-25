@@ -174,6 +174,50 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
         $this->assertNull($row['nombre_centro_trabajo']);
         $this->assertNull($row['nombre_cargo']);
         $this->assertNull($row['salario']);
+        $this->assertArrayHasKey('codigo_ciudad_trabajo', $row);
+        $this->assertArrayHasKey('ciudad_trabajo', $row);
+        $this->assertNull($row['ciudad_trabajo']);
+    }
+
+    public function test_import_row_mapper_exports_work_city_fields(): void
+    {
+        $entry = $this->createInFichaEntryWithRequisition();
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'work_city_code' => '05001',
+            'work_city_name' => 'Medellin',
+        ]);
+
+        $row = app(EmployeeFichaImportRowMapper::class)->mapRow($entry->fresh(['profile']));
+
+        $this->assertSame('05001', $row['codigo_ciudad_trabajo']);
+        $this->assertSame('Medellin', $row['ciudad_trabajo']);
+    }
+
+    public function test_plantilla_masivos_mapper_column_count_unchanged_by_work_city(): void
+    {
+        $entry = $this->createInFichaEntryWithRequisition();
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'work_city_code' => '05001',
+            'work_city_name' => 'Medellin',
+            'residence_city_code' => '11001',
+            'residence_city_name' => 'Bogota',
+        ]);
+
+        $row = app(PlantillaMasivosMapper::class)->mapRow($entry->fresh(['profile']));
+
+        $this->assertCount(count(config('employee_ficha.plantilla_masivos_columns')), $row);
+        $this->assertSame('Bogota', $row[self::COL_RESIDENCE_CITY_NAME]);
+        $this->assertNotContains('Medellin', $row);
     }
 
     public function test_store_profile_and_export_plantilla_masivos_round_trip(): void

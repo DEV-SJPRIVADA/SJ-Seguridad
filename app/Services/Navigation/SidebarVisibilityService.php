@@ -10,6 +10,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SupplyAccessService;
+use App\Services\GestionHumana\PlantillasWordAccessService;
 
 class SidebarVisibilityService
 {
@@ -20,6 +21,7 @@ class SidebarVisibilityService
         private readonly CommercialAccessService $commercialAccess,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly ArchivoAccessService $archivoAccess,
+        private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly PurchaseAccessService $purchaseAccess,
     ) {}
 
@@ -44,6 +46,7 @@ class SidebarVisibilityService
             'documentos' => $this->shouldShowDocumentsBoard($user, $areaKey),
             'ficha_empleados' => $this->shouldShowFichaEmpleadosBoard($user, $areaKey),
             'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
+            'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -141,6 +144,15 @@ class SidebarVisibilityService
         }
 
         return $this->archivoAccess->canViewArchivoBoard($user);
+    }
+
+    private function shouldShowPlantillasWordBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->plantillasWordAccess->canViewPlantillasWordBoard($user);
     }
 
     private function shouldShowIndicadoresBoard(User $user, string $areaKey): bool

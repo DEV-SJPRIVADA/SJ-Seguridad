@@ -99,6 +99,9 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/desvincular` | `gestion-humana.ficha-empleados.employees.ficha.terminate` | `ficha_empleados.terminate` |
+| GET | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/plantillas` | `gestion-humana.ficha-empleados.employees.period.letters.templates` | `ficha_empleados.terminate` |
+| POST | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/generar` | `gestion-humana.ficha-empleados.employees.period.letters.generate` | `ficha_empleados.terminate` |
+| GET | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/descargar` | `gestion-humana.ficha-empleados.employees.period.letters.download` | `ficha_empleados.terminate` |
 | GET | `/gestion-humana/ficha-empleados/catalogos` | `gestion-humana.ficha-empleados.catalogs.index` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/catalogos/{type}` | `gestion-humana.ficha-empleados.catalogs.store` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/catalogos/{type}/{item}` | `gestion-humana.ficha-empleados.catalogs.update` | `ficha_empleados.manage` |
@@ -149,6 +152,8 @@ Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agrega
 
 Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date` (snapshot del ultimo cierre).
 
+**Ciudad de trabajo:** columnas `work_city_code` / `work_city_name` (catalogo `city`). Prefill desde la ciudad de la requisicion (`EmployeeFichaProfilePrefill`; upsert al catalogo Ciudad si no existe). Editable en formulario. Incluidas en plantilla de **importacion / exportar datos para actualizar** (`codigo_ciudad_trabajo`, `ciudad_trabajo`). **No** forman parte de `PlantillaMasivosMapper` / export nómina.
+
 ### `employee_ficha_employment_periods` (vinculos laborales)
 
 Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un periodo `activo` por empleado.
@@ -159,22 +164,24 @@ Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un p
 | `status` | `activo` \| `cerrado` |
 | Condiciones variables | cargo, salario, centro de costo, EPS, AFP, cliente, etc. |
 | Cierre | `termination_cause_code`, `is_rehireable`, `last_work_day`, `termination_date`, `termination_notes` |
-| Cartas generadas | `termination_letter_type` (`zip`), `termination_letter_path` (ZIP en disco privado) |
+| Cartas generadas | `termination_letter_path` (disco `local` privado); `termination_letter_type` = `docx` \| `zip` |
 
 Servicio periodos: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService`.
 
-## Cartas de desvinculacion Word (FEAT-027)
+## Cartas de desvinculacion Word (FEAT-029; evoluciona FEAT-027)
 
-- **V1:** causal `RENUNCIA` — paquete de 3 documentos Word en ZIP (aceptacion, autorizacion examen retiro, certificado laboral).
-- Plantillas maestras en tabla `termination_letter_document_templates` (admin en **Catalogos → Causal desvinculacion**).
-- Placeholders en corchetes: `[NOMBRE]`, `[CEDULA]`, `[FECHA_TERMINACION]`, etc. — ver `config/employee_ficha.php` → `termination_letter_placeholders`.
-- Firmante GH: `termination_letter_signatory` (env `FICHA_LETTER_SIGNATORY_NAME` / `FICHA_LETTER_SIGNATORY_TITLE`).
+- **Generar:** periodo `cerrado` de **cualquier** causal; permiso `ficha_empleados.terminate`. Abre modal con plantillas de tipo `desvinculacion` (code en `config/employee_ficha.word_document_type_codes`) que tengan archivo en disco. Seleccion minima 1.
+- **Salida:** 1 plantilla → descarga y persiste `.docx` (`termination_letter_type = docx`); 2+ → `.zip` (`zip`). Generar **siempre reemplaza** path/tipo previos del periodo (borra archivo anterior si existia).
+- **Descargar:** sirve el ultimo archivo persistido; 404 si no hay path o archivo ausente; **no** regenera. No hay boton **Regenerar** aparte (volver a Generar abre el modal y sobrescribe).
+- **Admin de plantillas:** tablero sidebar **Plantillas Word** (permisos `plantillas_word.*` + board). **Catalogos → Causal** ya **no** administra plantillas; rutas legacy de upload/download/delete → 404.
+- Plantillas: tabla `termination_letter_document_templates` con FK `word_document_type_id` (sin amarre a causal/packs). Contenido legacy RENUNCIA **no** migrado — hay que re-subir. Ver [`plantillas-word.md`](plantillas-word.md).
+- Placeholders en corchetes: `[NOMBRE]`, `[CEDULA]`, `[FECHA_TERMINACION]`, etc. — `termination_letter_placeholders`. Firmante: `termination_letter_signatory` (env `FICHA_LETTER_SIGNATORY_*`). Sin cambio de motor vs FEAT-027.
 - Dependencia: `phpoffice/phpword` (`TemplateProcessor` con `setMacroChars('[', ']')`).
-- Servicios: `App\Services\GestionHumana\TerminationLetter\*`.
-- Controlador: `TerminationLetterController`.
-- Rutas empleados: `POST .../periodos/{period}/cartas/generar`, `GET .../periodos/{period}/cartas/descargar` — permiso `ficha_empleados.terminate`.
-- Rutas catalogos: subir/descargar/eliminar plantilla por `causeCode` + `documentKey` — permiso `ficha_empleados.manage`.
-- Audit: `termination_letter_pack` (generate/download), `termination_letter_template` (upload/delete).
+- Servicios: `App\Services\GestionHumana\TerminationLetter\*` (`TerminationLetterPackGeneratorService` por IDs, sin gate causal).
+- Controlador: `TerminationLetterController` — `templates` (JSON), `generate` (body `template_ids`), `download`.
+- Rutas: `GET .../periodos/{period}/cartas/plantillas`, `POST .../cartas/generar`, `GET .../cartas/descargar` — `ficha_empleados.terminate`.
+- UI: `termination-letter-actions.blade.php` + modal `termination-letter-generate-modal.blade.php` (ficha e historial de vinculos).
+- Audit: `termination_letter_pack` (generate/download, metadata `template_ids` / `output_type`). Mutaciones de plantillas/tipos: audit en modulo Plantillas Word.
 - Tests: `tests/Feature/GestionHumana/TerminationLetterPackTest.php`.
 
 Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
@@ -282,5 +289,6 @@ Tests de regresion en `tests/Feature/RequisitionModuleTest.php` (marcar Contrata
 ## Referencias
 
 - Guia de usuario: [`docs/user/ficha-empleados.md`](../user/ficha-empleados.md)
+- Plantillas Word (admin tablero): [`docs/modules/plantillas-word.md`](plantillas-word.md)
 - Modulo relacionado: [`docs/modules/requisitions.md`](requisitions.md) (captura de `hired_document`/`hired_full_name` al marcar Contratado)
 - Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

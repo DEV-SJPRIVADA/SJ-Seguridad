@@ -17,6 +17,8 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | --- | --- | --- |
 | Admin usuarios | [`modules/admin-users.md`](../modules/admin-users.md) | [`admin-users.md`](admin-users.md) |
 | Requisiciones | [`modules/requisitions.md`](../modules/requisitions.md) | [`requisitions.md`](requisitions.md) |
+| Ficha empleados | [`modules/ficha-empleados.md`](../modules/ficha-empleados.md) | [`ficha-empleados.md`](ficha-empleados.md) |
+| Plantillas Word | [`modules/plantillas-word.md`](../modules/plantillas-word.md) | [`plantillas-word.md`](plantillas-word.md) |
 | Suministros | [`modules/suministros.md`](../modules/suministros.md) | [`suministros.md`](suministros.md) |
 | Documentos calidad | [`modules/quality-documents.md`](../modules/quality-documents.md) | [`quality-documents.md`](quality-documents.md) |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](../modules/indicadores.md) | [`indicadores.md`](indicadores.md) |

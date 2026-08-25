@@ -28,6 +28,8 @@ class EmployeeFichaProfile extends Model
         'expedition_date',
         'residence_city_code',
         'residence_city_name',
+        'work_city_code',
+        'work_city_name',
         'address',
         'phone',
         'phone_secondary',

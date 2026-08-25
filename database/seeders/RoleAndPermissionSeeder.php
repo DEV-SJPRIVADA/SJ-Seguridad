@@ -26,6 +26,9 @@ class RoleAndPermissionSeeder extends Seeder
                 'manage.requisition.parameters',
                 'requisitions.approve.management',
                 'view.board.gestion_humana.requisiciones',
+                'view.board.gestion_humana.plantillas_word',
+                'plantillas_word.view',
+                'plantillas_word.manage',
             ],
             'director' => [
                 'view.dashboard',

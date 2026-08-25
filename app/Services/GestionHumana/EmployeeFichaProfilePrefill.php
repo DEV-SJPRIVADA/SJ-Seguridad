@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana;
 
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionPositionPayrollMap;
 
@@ -35,10 +36,58 @@ class EmployeeFichaProfilePrefill
                 return $this->mergeRehireProfile($entry->profile, $prefillAttributes);
             }
 
-            return $entry->profile;
+            return $this->withMissingWorkCity($entry->profile, $prefillAttributes);
         }
 
         return new EmployeeFichaProfile($prefillAttributes);
+    }
+
+    /**
+     * Resuelve ciudad de trabajo desde requisition.city (city_id) hacia catalogo Ciudad.
+     *
+     * @return array{work_city_code: ?string, work_city_name: ?string}
+     */
+    public function workCityAttributesFromEntry(PersonalRequisitionFichaEntry $entry): array
+    {
+        $entry->loadMissing(['requisition.city']);
+        $workCity = $this->resolveWorkCityFromRequisition($entry->requisition?->city?->name);
+
+        return [
+            'work_city_code' => $workCity['code'],
+            'work_city_name' => $workCity['name'],
+        ];
+    }
+
+    /**
+     * Asegura ciudad de trabajo desde la requisicion (city_id → catalogo Ciudad) cuando el perfil no la tiene.
+     * Persistible: si el perfil existe, actualiza en BD.
+     */
+    public function ensureWorkCityFromRequisition(PersonalRequisitionFichaEntry $entry, ?EmployeeFichaProfile $profile = null): ?EmployeeFichaProfile
+    {
+        $entry->loadMissing(['requisition.city', 'profile']);
+        $profile ??= $entry->profile;
+
+        if ($profile === null) {
+            return null;
+        }
+
+        if (filled($profile->work_city_code) || filled($profile->work_city_name)) {
+            return $profile;
+        }
+
+        $workCity = $this->workCityAttributesFromEntry($entry);
+
+        if ($workCity['work_city_code'] === null && $workCity['work_city_name'] === null) {
+            return $profile;
+        }
+
+        $profile->fill($workCity);
+
+        if ($profile->exists) {
+            $profile->save();
+        }
+
+        return $profile;
     }
 
     /**
@@ -71,6 +120,25 @@ class EmployeeFichaProfilePrefill
     /**
      * @param  array<string, mixed>  $prefillAttributes
      */
+    private function withMissingWorkCity(EmployeeFichaProfile $profile, array $prefillAttributes): EmployeeFichaProfile
+    {
+        if (filled($profile->work_city_code) || filled($profile->work_city_name)) {
+            return $profile;
+        }
+
+        if (! filled($prefillAttributes['work_city_code'] ?? null) && ! filled($prefillAttributes['work_city_name'] ?? null)) {
+            return $profile;
+        }
+
+        $profile->work_city_code = $prefillAttributes['work_city_code'] ?? null;
+        $profile->work_city_name = $prefillAttributes['work_city_name'] ?? null;
+
+        return $profile;
+    }
+
+    /**
+     * @param  array<string, mixed>  $prefillAttributes
+     */
     private function mergeRehireProfile(EmployeeFichaProfile $existing, array $prefillAttributes): EmployeeFichaProfile
     {
         $merged = $existing->replicate();
@@ -82,6 +150,8 @@ class EmployeeFichaProfilePrefill
             'hire_date',
             'position_code',
             'position_name',
+            'work_city_code',
+            'work_city_name',
             'employment_status',
         ])->all());
 
@@ -93,7 +163,8 @@ class EmployeeFichaProfilePrefill
 
     /**
      * Atributos editables sugeridos desde requisicion. No incluye campos exportables a plantilla
-     * masivos que deban salir exclusivamente del catalogo (centro costo, ciudad, centro trabajo).
+     * masivos/nomina que deban salir exclusivamente del catalogo (centro costo, residencia, centro trabajo).
+     * Si incluye ciudad de trabajo (no va a plantilla nomina; viene de la ciudad de la requisicion).
      *
      * @return array<string, mixed>
      */
@@ -108,6 +179,8 @@ class EmployeeFichaProfilePrefill
                 ->where('requisition_position_id', $requisition->position_id)
                 ->value('payroll_position_code');
         }
+
+        $workCity = $this->workCityAttributesFromEntry($entry);
 
         return [
             'personal_requisition_ficha_entry_id' => $entry->id,
@@ -125,6 +198,34 @@ class EmployeeFichaProfilePrefill
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
             'position_code' => $payrollPositionCode,
             'position_name' => $requisition?->position?->name,
+            'work_city_code' => $workCity['work_city_code'],
+            'work_city_name' => $workCity['work_city_name'],
+        ];
+    }
+
+    /**
+     * @return array{code: ?string, name: ?string}
+     */
+    private function resolveWorkCityFromRequisition(?string $cityName): array
+    {
+        $name = trim((string) $cityName);
+
+        if ($name === '') {
+            return ['code' => null, 'name' => null];
+        }
+
+        $catalog = PayrollCatalogItem::query()
+            ->ofType('city')
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->first();
+
+        if ($catalog === null) {
+            $catalog = PayrollCatalogItem::upsertPair('city', null, $name);
+        }
+
+        return [
+            'code' => $catalog?->code,
+            'name' => $catalog?->name ?: $name,
         ];
     }
 

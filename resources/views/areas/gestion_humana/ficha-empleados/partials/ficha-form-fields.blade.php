@@ -52,7 +52,7 @@
 <section class="ficha-empleados-form__section">
     <header class="ficha-empleados-form__section-head">
         <h3 class="ficha-empleados-form__section-title">Contacto y ubicación</h3>
-        <p class="ficha-empleados-form__section-lead">Correo, teléfonos, dirección y ciudad de residencia.</p>
+        <p class="ficha-empleados-form__section-lead">Correo, teléfonos, dirección, ciudad de residencia y ciudad de trabajo.</p>
     </header>
     <div class="form-grid form-grid--two ficha-empleados-form__grid">
         <div class="form-field">
@@ -74,6 +74,14 @@
             'catalogKey' => 'city',
             'catalogs' => $catalogs,
             'value' => old('residence_city_code', $profile->residence_city_code),
+        ])
+        @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
+            'id' => 'work_city_code',
+            'name' => 'work_city_code',
+            'label' => 'Ciudad de trabajo',
+            'catalogKey' => 'city',
+            'catalogs' => $catalogs,
+            'value' => old('work_city_code', $profile->work_city_code),
         ])
         <div class="form-field form-grid__full">
             <label class="form-label" for="address">Dirección</label>
