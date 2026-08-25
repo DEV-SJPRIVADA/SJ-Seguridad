@@ -179,14 +179,12 @@
                     </div>
                     <div class="panel__body section-stack">
                         @if (! empty($placeholders))
-                            <details class="ficha-empleados-letter-templates__placeholders">
-                                <summary class="text-caption">Variables disponibles (placeholders)</summary>
-                                <ul class="ficha-empleados-letter-templates__placeholder-list">
-                                    @foreach ($placeholders as $key => $description)
-                                        <li><code>[{{ $key }}]</code> — {{ $description }}</li>
-                                    @endforeach
-                                </ul>
-                            </details>
+                            <button
+                                type="button"
+                                class="btn btn--link btn-fit-content"
+                                x-data=""
+                                x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
+                            >Ver variables disponibles</button>
                         @endif
 
                         @if ($canManage)
@@ -431,5 +429,43 @@
                 });
             })();
         </script>
+    @endif
+
+    @if (! empty($placeholders))
+        <x-modal name="plantillas-word-variables" maxWidth="lg" focusable>
+            <div class="modal-card">
+                <div class="ficha-empleados-masivos-modal__header">
+                    <div class="ficha-empleados-masivos-modal__heading">
+                        <div>
+                            <h3 class="ficha-empleados-masivos-modal__title">Variables disponibles</h3>
+                            <p class="ficha-empleados-masivos-modal__lead">Placeholders para usar en plantillas Word. Copie el formato ${}.</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="ficha-empleados-masivos-modal__close"
+                        aria-label="Cerrar"
+                        x-on:click="$dispatch('close-modal', 'plantillas-word-variables')"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </button>
+                </div>
+
+                <div class="panel__body">
+                    <div class="ficha-empleados-letter-templates__placeholder-groups">
+                        @foreach ($placeholders as $category => $items)
+                            <div class="ficha-empleados-letter-templates__placeholder-group">
+                                <h4 class="ficha-empleados-letter-templates__category-title">{{ $category }}</h4>
+                                <ul class="ficha-empleados-letter-templates__placeholder-list">
+                                    @foreach ($items as $key => $description)
+                                        <li><code>{{ '${' . $key . '}' }}</code> — {{ $description }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </x-modal>
     @endif
 </x-app-layout>

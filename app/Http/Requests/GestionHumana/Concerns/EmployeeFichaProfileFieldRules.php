@@ -43,6 +43,8 @@ trait EmployeeFichaProfileFieldRules
             'expedition_date' => ['nullable', 'date'],
             'residence_city_code' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('city')],
             'residence_city_name' => ['nullable', 'string', 'max:100'],
+            'work_city_code' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('city')],
+            'work_city_name' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
             'phone_secondary' => ['nullable', 'string', 'max:30'],

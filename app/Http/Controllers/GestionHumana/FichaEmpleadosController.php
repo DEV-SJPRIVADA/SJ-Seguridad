@@ -367,6 +367,8 @@ class FichaEmpleadosController extends Controller
                         ->all(),
                 );
 
+                $profileAttributes = $this->mergeWorkCityFromRequisitionIfMissing($entry, $profileAttributes);
+
                 $profile->fill($profileAttributes);
                 $profile->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
                 $profile->termination_date = null;
@@ -473,6 +475,8 @@ class FichaEmpleadosController extends Controller
 
         $fichaEntry->load(['requisition.position', 'requisition.city', 'requisition.client', 'requisition.contractType', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
+        $this->profilePrefill->ensureWorkCityFromRequisition($fichaEntry, $profile);
+        $profile->refresh();
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
         $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
         $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
@@ -502,6 +506,7 @@ class FichaEmpleadosController extends Controller
 
         $attributes = $this->mergeProfilePayrollExtra($profile, $request->validated());
         $attributes['phone_secondary'] = $request->input('phone_secondary');
+        $attributes = $this->mergeWorkCityFromRequisitionIfMissing($fichaEntry, $attributes);
 
         $profile->fill($attributes);
         $profile->save();
@@ -772,6 +777,29 @@ class FichaEmpleadosController extends Controller
         }
 
         return [$oldValues, $newValues];
+    }
+
+    /**
+     * Si el formulario no envio ciudad de trabajo, completa desde requisition.city_id.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function mergeWorkCityFromRequisitionIfMissing(
+        PersonalRequisitionFichaEntry $entry,
+        array $attributes,
+    ): array {
+        if (filled($attributes['work_city_code'] ?? null) || filled($attributes['work_city_name'] ?? null)) {
+            return $attributes;
+        }
+
+        $fromRequisition = $this->profilePrefill->workCityAttributesFromEntry($entry);
+
+        if ($fromRequisition['work_city_code'] === null && $fromRequisition['work_city_name'] === null) {
+            return $attributes;
+        }
+
+        return array_merge($attributes, $fromRequisition);
     }
 
     /**

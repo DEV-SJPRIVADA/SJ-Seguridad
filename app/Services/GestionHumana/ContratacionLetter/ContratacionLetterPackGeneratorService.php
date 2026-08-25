@@ -44,7 +44,7 @@ class ContratacionLetterPackGeneratorService
         $normalizedIds = $this->normalizeTemplateIds($templateIds);
         $templates = $this->resolveTemplates($normalizedIds);
 
-        $entry->loadMissing('profile.requisition');
+        $entry->loadMissing('profile', 'requisition');
         $variables = $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId);
 
         $workDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ficha-contratacion-'.Str::uuid()->toString();

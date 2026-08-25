@@ -158,6 +158,8 @@ class EmployeeFichaImportService
             'expedition_date' => $this->parseDate($data['fecha_expedicion'] ?? null),
             'residence_city_code' => $this->stringOrNull($data['codigo_lugar_residencia'] ?? null),
             'residence_city_name' => $this->stringOrNull($data['lugar_residencia'] ?? null),
+            'work_city_code' => $this->stringOrNull($data['codigo_ciudad_trabajo'] ?? null),
+            'work_city_name' => $this->stringOrNull($data['ciudad_trabajo'] ?? null),
             'address' => $this->stringOrNull($data['direccion'] ?? null),
             'phone' => $this->stringOrNull($data['telefono'] ?? null),
             'blood_type' => $this->stringOrNull($data['tipo_sangre'] ?? null),
@@ -243,6 +245,7 @@ class EmployeeFichaImportService
     {
         PayrollCatalogItem::upsertPair('document_type', $this->stringOrNull($data['tipo_documento'] ?? null), $this->stringOrNull($data['tipo_documento'] ?? null));
         PayrollCatalogItem::upsertPair('city', $this->stringOrNull($data['codigo_lugar_residencia'] ?? null), $this->stringOrNull($data['lugar_residencia'] ?? null));
+        PayrollCatalogItem::upsertPair('city', $this->stringOrNull($data['codigo_ciudad_trabajo'] ?? null), $this->stringOrNull($data['ciudad_trabajo'] ?? null));
         PayrollCatalogItem::upsertPair('position', $this->stringOrNull($data['cargo'] ?? null), $this->stringOrNull($data['nombre_cargo'] ?? null));
         PayrollCatalogItem::upsertPair('cost_center', $this->stringOrNull($data['ccosto'] ?? null), $this->stringOrNull($data['nombre_ccosto'] ?? null));
         PayrollCatalogItem::upsertPair('eps', $this->stringOrNull($data['codigo_eps'] ?? null), $this->stringOrNull($data['nombre_eps'] ?? null));

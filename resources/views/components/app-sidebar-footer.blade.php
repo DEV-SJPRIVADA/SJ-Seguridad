@@ -22,8 +22,7 @@
         </form>
 
         <div class="app-sidebar-footer__brand">
-            <x-application-logo class="app-sidebar-footer__logo" />
-            <p class="app-sidebar-footer__product">{{ config('app.name') }}</p>
+            <x-application-logo class="app-sidebar-footer__logo" />            
         </div>
     </div>
 @endif

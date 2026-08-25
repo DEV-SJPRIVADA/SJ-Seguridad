@@ -152,6 +152,8 @@ Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agrega
 
 Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date` (snapshot del ultimo cierre).
 
+**Ciudad de trabajo:** columnas `work_city_code` / `work_city_name` (catalogo `city`). Prefill desde la ciudad de la requisicion (`EmployeeFichaProfilePrefill`; upsert al catalogo Ciudad si no existe). Editable en formulario. Incluidas en plantilla de **importacion / exportar datos para actualizar** (`codigo_ciudad_trabajo`, `ciudad_trabajo`). **No** forman parte de `PlantillaMasivosMapper` / export nómina.
+
 ### `employee_ficha_employment_periods` (vinculos laborales)
 
 Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un periodo `activo` por empleado.

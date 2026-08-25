@@ -113,18 +113,22 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 2. Opcional: indique **fecha desde** y **fecha hasta** para filtrar por ingreso.
 3. Pulse **Exportar plantilla masivos**.
 4. Sin rango de fechas solo se exportan empleados **activos** (no desvinculados).
-5. El archivo refleja **únicamente lo guardado** en la ficha (perfil + datos avanzados). No incluye valores inferidos de la requisición. La columna NIT de centro de trabajo **no** se exporta.
+5. El archivo refleja **únicamente lo guardado** en la ficha (perfil + datos avanzados). No incluye valores inferidos de la requisición. La columna NIT de centro de trabajo **no** se exporta. La **ciudad de trabajo** tampoco va en esta plantilla de nómina.
 6. El archivo conserva el formato legacy de nómina (filas 1–2 de encabezado).
 
 ### Importar empleados masivamente
 
 1. Pulse **Descargar plantilla importación** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
-2. Edite filas desde la fila 3; `cedula` es obligatoria.
+2. Edite filas desde la fila 3; `cedula` es obligatoria. Incluye columnas `codigo_ciudad_trabajo` y `ciudad_trabajo`.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
 
 **Exportar datos para actualizar:** sin rango de fechas exporta solo **activos**; con fechas filtra por **fecha de ingreso**. Respeta la búsqueda activa del listado (`q`).
+
+### Ciudad de trabajo
+
+Al gestionar un empleado desde una requisicion, la **ciudad de trabajo** se precarga con la ciudad de la requisicion (y se sincroniza al catalogo Ciudad si hace falta). Puede editarla en el formulario. Va en la plantilla de importacion/actualizacion; **no** en la exportacion de plantilla masivos (nomina).
 
 ### Administrar catalogos (selectores de ficha)
 
@@ -139,6 +143,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-08-25 | Ficha | Ciudad de trabajo en perfil (precarga desde requisicion); columnas en plantilla importar/actualizar; sin cambio en plantilla masivos nomina. |
 | 1.6 | 2026-08-21 | FEAT-029 | Cartas: modal Generar (seleccion 1/N → docx o zip) en cualquier causal de vinculo cerrado; Descargar ultimo archivo; sin Regenerar aparte; plantillas en tablero Plantillas Word (re-subir legacy Renuncia). |
 | 1.5 | 2026-08-13 | FEAT-028 | Formulario ficha completo alineado a plantilla masivos (62 cols): selectores de catalogo, campos obligatorios, referencia de requisicion separada de datos exportables, export/import solo con datos guardados, NIT centro trabajo no exportado, tipo documento CE. |
 | 1.4 | 2026-08-03 | FEAT-022 | **Gestionar Empleado** reemplaza a "Agregar a ficha empleados": el boton ahora abre el formulario de ficha precargado desde la requisicion (cedula, nombre y demas datos editables) y el registro solo se mueve a ficha al guardar con **Crear empleado**; se elimino el movimiento inmediato de un clic con confirmacion emergente. |

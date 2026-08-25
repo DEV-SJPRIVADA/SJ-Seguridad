@@ -118,7 +118,7 @@
                                 </a>
 
                                 @if ($currentEstado === 'en_ficha')
-                                    <p class="req-manage-filters__status-label">Estado</p>
+                                <p class="req-manage-filters__status-label">Estado</p>
                                     <div class="req-manage-filters__pills req-manage-filters__pills--scroll ficha-empleados-filters__pills">
                                         <a
                                             href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => 'todos'])) }}"
@@ -129,8 +129,8 @@
                                                 href="{{ route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['employment_status' => $statusKey])) }}"
                                                 class="req-manage-filters__pill status-pill--ficha-{{ $statusKey }} {{ ($statusKey === 'activo' && in_array($employmentStatusMode, ['activo', 'default_activo'], true)) || $employmentStatusMode === $statusKey ? 'is-active' : '' }}"
                                             >{{ $statusLabel }}</a>
-                                        @endforeach
-                                    </div>
+                                    @endforeach
+                                </div>
                                 @endif
                             </div>
 
@@ -229,7 +229,7 @@
 
                 function revealFichaTableWrap() {
                     if (!$wrap.length) {
-                        return;
+                    return;
                     }
 
                     $wrap.removeClass('data-table-wrap--booting');

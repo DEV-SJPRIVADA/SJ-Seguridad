@@ -70,7 +70,7 @@ class ContratacionLetterController extends Controller
         GenerateContratacionLettersRequest $request,
         EmployeeFichaEmploymentPeriod $period,
     ): BinaryFileResponse {
-        $period->load('fichaEntry.profile.requisition');
+        $period->load('fichaEntry.profile', 'fichaEntry.requisition');
         $entry = $period->fichaEntry;
         abort_unless($entry !== null, 404);
 

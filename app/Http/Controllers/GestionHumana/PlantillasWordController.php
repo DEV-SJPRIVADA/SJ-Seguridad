@@ -54,7 +54,7 @@ class PlantillasWordController extends Controller
             'types' => $types,
             'activeTypes' => $activeTypes,
             'templates' => $templates,
-            'placeholders' => config('employee_ficha.termination_letter_placeholders', []),
+            'placeholders' => config('employee_ficha.letter_placeholders', []),
             'activeTab' => $activeTab,
             'subTabs' => $this->subTabs($activeTab),
         ]);
