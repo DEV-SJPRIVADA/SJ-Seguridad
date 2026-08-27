@@ -16,18 +16,12 @@
             <span class="text-danger">*</span>
         @endif
     </label>
-    <select
-        id="{{ $id }}"
-        name="{{ $name }}"
-        class="form-select js-ficha-select"
-        @disabled($disabled)
-        @if ($required) required @endif
-    >
-        <option value="">—</option>
-        @foreach ($catalogs[$catalogKey] ?? [] as $item)
-            <option value="{{ $item['code'] }}" @selected((string) $value === (string) $item['code'])>
-                {{ $item['code'] }} — {{ $item['name'] }}
-            </option>
-        @endforeach
-    </select>
+    <x-searchable-select
+        :id="$id"
+        :name="$name"
+        :options="$catalogs[$catalogKey] ?? []"
+        :value="$value"
+        :required="$required"
+        :disabled="$disabled"
+    />
 </div>

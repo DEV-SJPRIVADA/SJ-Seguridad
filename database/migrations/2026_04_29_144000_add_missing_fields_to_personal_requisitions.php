@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('non_statutory_bonus', 12, 2)->nullable()->after('statutory_bonus');
             $table->decimal('other_allowances', 12, 2)->nullable()->after('non_statutory_bonus');
             $table->string('leasing_contract')->nullable()->after('other_allowances');
-            
+
             // Campos de gestión GH
             $table->string('recruiter_name')->nullable()->after('human_resources_observation');
             $table->unsignedSmallInteger('hired_quantity')->default(0)->after('recruiter_name');

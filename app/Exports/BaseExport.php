@@ -13,8 +13,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class BaseExport
 {
     protected Collection $data;
+
     protected array $columns;
+
     protected string $fileName;
+
     protected string $title;
 
     public function __construct(Collection $data, array $columns, string $fileName, string $title = '')
@@ -35,14 +38,14 @@ class BaseExport
         if ($this->title) {
             $sheet->setCellValue('A1', $this->title);
             $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-            $sheet->mergeCells('A1:' . $this->columnLetter(count($this->columns) - 1) . '1');
+            $sheet->mergeCells('A1:'.$this->columnLetter(count($this->columns) - 1).'1');
             $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $row = 2;
         }
 
         $headerRow = $row;
         foreach ($this->columns as $index => $column) {
-            $cell = $this->columnLetter($index) . $row;
+            $cell = $this->columnLetter($index).$row;
             $sheet->setCellValue($cell, $column['label']);
             $sheet->getStyle($cell)->getFont()->setBold(true);
             $sheet->getStyle($cell)->getFill()
@@ -55,7 +58,7 @@ class BaseExport
 
         foreach ($this->data as $dataRow) {
             foreach ($this->columns as $index => $column) {
-                $cell = $this->columnLetter($index) . $row;
+                $cell = $this->columnLetter($index).$row;
                 $value = $this->extractValue($dataRow, $column);
                 $sheet->setCellValue($cell, $value);
             }
@@ -64,7 +67,7 @@ class BaseExport
 
         $lastRow = max($row - 1, $headerRow);
         $lastColumn = $this->columnLetter(count($this->columns) - 1);
-        $sheet->getStyle('A' . $headerRow . ':' . $lastColumn . $lastRow)
+        $sheet->getStyle('A'.$headerRow.':'.$lastColumn.$lastRow)
             ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         foreach (range(0, count($this->columns) - 1) as $index) {

@@ -9,7 +9,9 @@ use Illuminate\View\Component;
 class ExportExcel extends Component
 {
     public string $route;
+
     public string $label;
+
     public string $class;
 
     public function __construct(string $route, string $label = '', string $class = 'btn btn--secondary btn--sm')

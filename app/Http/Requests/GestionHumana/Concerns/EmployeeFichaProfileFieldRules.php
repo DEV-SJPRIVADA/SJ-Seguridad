@@ -76,8 +76,6 @@ trait EmployeeFichaProfileFieldRules
             'economic_activity_code' => ['nullable', 'string', 'max:50', new PayrollCatalogCode('economic_activity')],
             'economic_activity_name' => ['nullable', 'string', 'max:150'],
             'linkage_type' => ['nullable', 'string', 'max:100', new PayrollCatalogCode('linkage_type')],
-            'contributor_type' => ['nullable', 'string', 'max:50'],
-            'salary_scale' => ['nullable', 'string', 'max:50'],
             'salary_type_name' => ['nullable', 'string', 'max:100'],
         ];
     }

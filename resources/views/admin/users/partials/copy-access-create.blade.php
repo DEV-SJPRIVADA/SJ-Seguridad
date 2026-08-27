@@ -34,14 +34,20 @@
         <div class="copy-access-panel__fields">
             <div class="form-field copy-access-panel__select">
                 <label class="form-label" for="copy-from-user">Usuario origen</label>
-                <select name="copy_from" id="copy-from-user" class="form-select js-copy-access-select">
-                    <option value="">Seleccione un usuario</option>
-                    @foreach ($copyCandidates as $candidate)
-                        <option value="{{ $candidate->id }}" @selected($selectedCopyFrom === $candidate->id)>
-                            {{ trim($candidate->name.' · '.$candidate->email.($candidate->document_number ? ' · '.$candidate->document_number : '').(! $candidate->is_active ? ' (inactivo)' : '')) }}
-                        </option>
-                    @endforeach
-                </select>
+                @php
+                    $copyCandidateOptions = $copyCandidates->map(fn ($candidate) => [
+                        'value' => (string) $candidate->id,
+                        'label' => trim($candidate->name.' · '.$candidate->email.($candidate->document_number ? ' · '.$candidate->document_number : '').(! $candidate->is_active ? ' (inactivo)' : '')),
+                    ])->all();
+                @endphp
+                <x-searchable-select
+                    id="copy-from-user"
+                    name="copy_from"
+                    :options="$copyCandidateOptions"
+                    :value="$selectedCopyFrom"
+                    placeholder="Seleccione un usuario"
+                    searchPlaceholder="Buscar usuario…"
+                />
             </div>
 
             <div class="copy-access-panel__options">

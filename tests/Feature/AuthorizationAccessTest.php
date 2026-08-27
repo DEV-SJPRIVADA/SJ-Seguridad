@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\SupplyRequest;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Spatie\Permission\Models\Permission;
@@ -17,7 +18,7 @@ class AuthorizationAccessTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     public function test_dashboard_requires_view_dashboard_permission(): void

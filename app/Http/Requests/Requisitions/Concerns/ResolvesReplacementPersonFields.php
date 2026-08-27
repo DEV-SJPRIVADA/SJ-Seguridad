@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Requisitions\Concerns;
 
 use App\Models\RequisitionRequestReason;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
 trait ResolvesReplacementPersonFields
@@ -36,7 +37,7 @@ trait ResolvesReplacementPersonFields
     }
 
     /**
-     * @return list<\Illuminate\Contracts\Validation\ValidationRule|string>
+     * @return list<ValidationRule|string>
      */
     protected function replacementDocumentRules(): array
     {
@@ -49,7 +50,7 @@ trait ResolvesReplacementPersonFields
     }
 
     /**
-     * @return list<\Illuminate\Contracts\Validation\ValidationRule|string>
+     * @return list<ValidationRule|string>
      */
     protected function replacementNameRules(): array
     {

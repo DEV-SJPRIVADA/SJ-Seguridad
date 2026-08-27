@@ -31,10 +31,6 @@
         </div>
     </x-slot>
 
-    @push('styles')
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
-    @endpush
-
     @php
         $showTerminateModal = $errors->hasAny([
             'termination_cause_code',

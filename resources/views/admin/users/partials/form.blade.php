@@ -295,12 +295,7 @@
 @endif
 
 @if (($copyCandidates ?? collect())->isNotEmpty())
-    @push('styles')
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
-    @endpush
-
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
         @vite('resources/js/admin/user-copy-access-select.js')
     @endpush
 @endif

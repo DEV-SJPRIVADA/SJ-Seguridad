@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
 use App\Services\Indicadores\IndicatorConsolidadoService;
 use App\Services\Indicadores\IndicatorMetricCalculator;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class OperationsDashboardService
@@ -18,8 +19,7 @@ class OperationsDashboardService
         private readonly IndicatorConsolidadoService $consolidadoService,
         private readonly IndicatorMetricCalculator $metricCalculator,
         private readonly IndicatorCaptureAccessService $captureAccessService,
-    ) {
-    }
+    ) {}
 
     public function build(int $year, int $month): array
     {
@@ -175,7 +175,7 @@ class OperationsDashboardService
             'FT-OP-02' => [],
         ];
 
-        $date = \Carbon\Carbon::create($year, $month, 1);
+        $date = Carbon::create($year, $month, 1);
         for ($i = 11; $i >= 0; $i--) {
             $d = $date->copy()->subMonths($i);
             $y = (int) $d->year;
@@ -357,7 +357,7 @@ class OperationsDashboardService
      */
     private function previousPeriod(int $year, int $month): array
     {
-        $date = \Carbon\Carbon::create($year, $month, 1)->subMonth();
+        $date = Carbon::create($year, $month, 1)->subMonth();
 
         return [(int) $date->year, (int) $date->month];
     }

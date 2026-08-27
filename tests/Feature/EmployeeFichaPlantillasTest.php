@@ -193,7 +193,6 @@ class EmployeeFichaPlantillasTest extends TestCase
             'cedula' => '18393026',
             'nombre' => 'GOMEZ GARCIA JULIO CESAR',
             'tipo_vinculacion' => $longLinkage,
-            'tipo_cotizante' => 'Dependiente',
             'fecha_ingreso' => '2014-02-15',
         ]);
 
@@ -209,7 +208,6 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->assertDatabaseHas('employee_ficha_profiles', [
             'document_number' => '18393026',
             'linkage_type' => $longLinkage,
-            'contributor_type' => 'Dependiente',
         ]);
     }
 

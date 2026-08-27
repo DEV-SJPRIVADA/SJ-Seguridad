@@ -10,6 +10,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -122,7 +123,7 @@ class SupplyPurchaseReportExporter
         })->values();
     }
 
-    private function buildHeaderForRequest(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, SupplyRequest $request): void
+    private function buildHeaderForRequest(Worksheet $sheet, SupplyRequest $request): void
     {
         $logoPath = public_path('images/logoSj.png');
 

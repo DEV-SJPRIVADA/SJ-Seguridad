@@ -74,7 +74,6 @@ class LetterVariableBuilder
             $variables['NUMERO_HIJOS'] = $profile->children_count !== null ? (string) $profile->children_count : '';
             $variables['EMAIL'] = (string) $profile->email;
             $variables['TIPO_VINCULACION'] = (string) $profile->linkage_type;
-            $variables['TIPO_CONTRIBUYENTE'] = (string) $profile->contributor_type;
             $variables['FECHA_CONTRATO'] = $this->formatLongDate($profile->hire_date);
             $variables['FECHA_TERMINACION_PERFIL'] = $this->formatLongDate($profile->termination_date);
             $variables['ESTADO_LABORAL'] = (string) $profile->employment_status;
@@ -83,7 +82,6 @@ class LetterVariableBuilder
             $variables['CENTRO_COSTO_NOMBRE'] = (string) $profile->cost_center_name;
             $variables['CARGO'] = (string) $profile->position_name;
             $variables['CODIGO_CARGO'] = (string) $profile->position_code;
-            $variables['ESCALA_SALARIO'] = (string) $profile->salary_scale;
             $variables['TIPO_SALARIO'] = (string) $profile->salary_type_name;
             $variables['TIPO_CONTRATO_PERFIL'] = (string) $profile->contract_type_name;
             $variables['EPS'] = (string) $profile->eps_name;

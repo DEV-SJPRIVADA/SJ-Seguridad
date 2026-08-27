@@ -1,80 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof jQuery === 'undefined' || ! jQuery.fn.select2) {
+    const modal = document.getElementById('apply-access-modal');
+    const openBtn = document.getElementById('open-apply-access-modal');
+    const form = document.getElementById('apply-access-form');
+    const applySource = document.getElementById('apply-access-source');
+
+    if (!modal || !openBtn || !form) {
         return;
     }
 
-    const $ = jQuery;
-    const selectLanguage = {
-        noResults: () => 'Sin resultados',
-        searching: () => 'Buscando…',
-        inputTooShort: () => 'Escriba para buscar',
-    };
-
-    const baseSelectOptions = {
-        width: '100%',
-        allowClear: true,
-        language: selectLanguage,
-    };
-
-    const $copyFromUser = $('#copy-from-user');
-
-    if ($copyFromUser.length) {
-        $copyFromUser.select2({
-            ...baseSelectOptions,
-            placeholder: 'Buscar usuario origen…',
-        });
-    }
-
-    const $modal = $('#apply-access-modal');
-    const $applySource = $('#apply-access-source');
-    const $openBtn = $('#open-apply-access-modal');
-    const $form = $('#apply-access-form');
-
-    if ($applySource.length) {
-        $applySource.select2({
-            ...baseSelectOptions,
-            placeholder: 'Buscar usuario origen…',
-            dropdownParent: $modal.length ? $modal : $(document.body),
-        });
-    }
-
-    if (! $modal.length || ! $openBtn.length || ! $form.length) {
-        return;
-    }
-
-    const targetUserName = $modal.data('target-user-name') || 'este usuario';
+    const targetUserName = modal.dataset.targetUserName || 'este usuario';
 
     const openModal = () => {
-        $modal.css('display', 'flex');
-
-        if ($applySource.length) {
-            $applySource.select2('open');
-        }
+        modal.style.display = 'flex';
     };
 
     const closeModal = () => {
-        $modal.css('display', 'none');
-
-        if ($applySource.length) {
-            $applySource.select2('close');
-        }
+        modal.style.display = 'none';
     };
 
-    $openBtn.on('click', openModal);
-    $modal.find('[data-apply-access-close]').on('click', closeModal);
+    openBtn.addEventListener('click', openModal);
 
-    $form.on('submit', (event) => {
-        const sourceLabel = $applySource.find('option:selected').text().trim() || 'el usuario seleccionado';
+    modal.querySelectorAll('[data-apply-access-close]').forEach((el) => {
+        el.addEventListener('click', closeModal);
+    });
+
+    form.addEventListener('submit', (event) => {
+        const sourceInput = document.getElementById('apply-access-source');
+        if (!sourceInput || !sourceInput.value) {
+            event.preventDefault();
+            alert('Por favor seleccione un usuario origen.');
+            return;
+        }
+
         const confirmed = window.confirm(
-            `Se aplicara el acceso de ${sourceLabel} a ${targetUserName}. Esta accion reemplazara rol y permisos directos. ¿Continuar?`,
+            `Se aplicara el acceso del usuario seleccionado a ${targetUserName}. Esta accion reemplazara rol y permisos directos. ¿Continuar?`,
         );
 
-        if (! confirmed) {
+        if (!confirmed) {
             event.preventDefault();
         }
     });
 
-    if ($modal.data('open-on-load') === 1 || $modal.data('open-on-load') === '1') {
+    if (modal.dataset.openOnLoad === '1') {
         openModal();
     }
 });

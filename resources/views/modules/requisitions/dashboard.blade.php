@@ -98,7 +98,7 @@
                 <div class="filter-grid">
                     <div class="form-field">
                         <label class="form-label">Cliente</label>
-                        <select name="client_id" class="form-select select2">
+                        <select name="client_id" class="form-select">
                             <option value="">Todos los clientes</option>
                             @foreach ($catalogs['clients'] as $client)
                                 <option value="{{ $client->id }}" @selected($filters['client_id'] == $client->id)>{{ $client->name }}</option>
@@ -107,7 +107,7 @@
                     </div>
                     <div class="form-field">
                         <label class="form-label">Cargo</label>
-                        <select name="position_id" class="form-select select2">
+                        <select name="position_id" class="form-select">
                             <option value="">Todos los cargos</option>
                             @foreach ($catalogs['positions'] as $pos)
                                 <option value="{{ $pos->id }}" @selected($filters['position_id'] == $pos->id)>{{ $pos->name }}</option>

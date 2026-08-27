@@ -1,22 +1,5 @@
-<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        if (typeof jQuery !== 'undefined' && jQuery.fn.select2) {
-            jQuery('.ficha-empleados-form .js-ficha-select').select2({
-                width: '100%',
-                placeholder: 'Seleccionar…',
-                allowClear: true,
-                language: {
-                    noResults: function () {
-                        return 'Sin resultados';
-                    },
-                    searching: function () {
-                        return 'Buscando…';
-                    }
-                }
-            });
-        }
-
         var salaryInput = document.getElementById('salary');
         if (!salaryInput) {
             return;
