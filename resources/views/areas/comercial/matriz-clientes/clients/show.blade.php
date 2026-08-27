@@ -40,12 +40,15 @@
                 </div>
                 <div class="panel__body">
                     <form method="GET" class="permission-filter-bar bottom-spaced">
-                        <select name="portfolio" class="form-select permission-filter-bar__select">
-                            <option value="">Todos los portafolios</option>
-                            @foreach ($portfolios as $key => $label)
-                                <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="client-show-portfolio"
+                            name="portfolio"
+                            :options="$portfolios"
+                            :value="$filters['portfolio'] ?? ''"
+                            placeholder="Todos los portafolios"
+                            searchPlaceholder="Buscar portafolio…"
+                            class="permission-filter-bar__select"
+                        />
                         <button type="submit" class="btn btn--secondary">Filtrar</button>
                     </form>
 

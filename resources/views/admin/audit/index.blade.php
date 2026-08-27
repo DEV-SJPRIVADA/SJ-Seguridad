@@ -42,52 +42,58 @@
                                 <div class="req-manage-filters__query-row audit-filters__query-row">
                                     <div class="req-manage-filters__query-field audit-filters__field">
                                         <label class="req-manage-filters__label" for="audit-module">Modulo</label>
-                                        <select id="audit-module" name="module" class="form-select">
-                                            <option value="">Todos</option>
-                                            @foreach ($modules as $module)
-                                                <option value="{{ $module }}" @selected(request('module') === $module)>
-                                                    {{ $moduleLabels[$module] ?? $module }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="audit-module"
+                                            name="module"
+                                            :options="collect($modules)->map(fn($m) => ['value' => $m, 'label' => $moduleLabels[$m] ?? $m])->all()"
+                                            :value="request('module')"
+                                            placeholder="Todos los modulos"
+                                            searchPlaceholder="Buscar modulo…"
+                                        />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field">
                                         <label class="req-manage-filters__label" for="audit-area">Area</label>
-                                        <select id="audit-area" name="area" class="form-select">
-                                            <option value="">Todas</option>
-                                            @foreach ($areas as $area)
-                                                <option value="{{ $area }}" @selected(request('area') === $area)>
-                                                    {{ $areaLabels[$area] ?? $area }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="audit-area"
+                                            name="area"
+                                            :options="collect($areas)->map(fn($a) => ['value' => $a, 'label' => $areaLabels[$a] ?? $a])->all()"
+                                            :value="request('area')"
+                                            placeholder="Todas las areas"
+                                            searchPlaceholder="Buscar area…"
+                                        />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field">
                                         <label class="req-manage-filters__label" for="audit-event-type">Evento</label>
-                                        <select id="audit-event-type" name="event_type" class="form-select">
-                                            <option value="">Todos</option>
-                                            @foreach ($eventTypes as $type)
-                                                <option value="{{ $type }}" @selected(request('event_type') === $type)>{{ $type }}</option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="audit-event-type"
+                                            name="event_type"
+                                            :options="collect($eventTypes)->map(fn($t) => ['value' => $t, 'label' => $t])->all()"
+                                            :value="request('event_type')"
+                                            placeholder="Todos los eventos"
+                                            searchPlaceholder="Buscar evento…"
+                                        />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field">
                                         <label class="req-manage-filters__label" for="audit-action">Accion</label>
-                                        <select id="audit-action" name="action" class="form-select">
-                                            <option value="">Todas</option>
-                                            @foreach ($actions as $action)
-                                                <option value="{{ $action }}" @selected(request('action') === $action)>{{ $action }}</option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="audit-action"
+                                            name="action"
+                                            :options="collect($actions)->map(fn($ac) => ['value' => $ac, 'label' => $ac])->all()"
+                                            :value="request('action')"
+                                            placeholder="Todas las acciones"
+                                            searchPlaceholder="Buscar accion…"
+                                        />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field audit-filters__field--wide">
                                         <label class="req-manage-filters__label" for="audit-user">Usuario</label>
-                                        <select id="audit-user" name="user_id" class="form-select">
-                                            <option value="">Todos</option>
-                                            @foreach ($users as $user)
-                                                <option value="{{ $user->id }}" @selected((string) request('user_id') === (string) $user->id)>{{ $user->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="audit-user"
+                                            name="user_id"
+                                            :options="collect($users)->map(fn($u) => ['value' => (string) $u->id, 'label' => $u->name])->all()"
+                                            :value="request('user_id')"
+                                            placeholder="Todos los usuarios"
+                                            searchPlaceholder="Buscar usuario…"
+                                        />
                                     </div>
                                 </div>
 

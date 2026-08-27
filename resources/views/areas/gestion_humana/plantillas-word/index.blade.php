@@ -211,14 +211,15 @@
                                     </div>
                                     <div class="form-field">
                                         <label class="form-label" for="template_type_new">Tipo</label>
-                                        <select id="template_type_new" name="word_document_type_id" class="form-select" required>
-                                            <option value="">Seleccione…</option>
-                                            @foreach ($activeTypes as $activeType)
-                                                <option value="{{ $activeType->id }}" @selected((string) old('word_document_type_id') === (string) $activeType->id)>
-                                                    {{ $activeType->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="template_type_new"
+                                            name="word_document_type_id"
+                                            :options="$activeTypes"
+                                            :value="old('word_document_type_id')"
+                                            placeholder="Seleccione tipo…"
+                                            searchPlaceholder="Buscar tipo…"
+                                            :required="true"
+                                        />
                                     </div>
                                     <div class="form-field ficha-empleados-catalogs-page__sort-field">
                                         <label class="form-label" for="template_sort_new">Orden</label>

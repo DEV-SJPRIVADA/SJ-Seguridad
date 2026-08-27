@@ -43,12 +43,16 @@
                         <div class="dashboard-stat-grid bottom-spaced">
                             <div class="form-field">
                                 <label class="form-label" for="area_key">Area</label>
-                                <select name="area_key" id="area_key" class="form-select" required>
-                                    <option value="">Seleccione area</option>
-                                    @foreach (config('access.areas', []) as $areaKey => $areaLabel)
-                                        <option value="{{ $areaKey }}" @selected(old('area_key', $purchaseRequest->area_key) === $areaKey)>{{ $areaLabel }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select
+                                    id="area_key"
+                                    name="area_key"
+                                    :options="config('access.areas', [])"
+                                    :value="old('area_key', $purchaseRequest->area_key)"
+                                    placeholder="Seleccione area"
+                                    searchPlaceholder="Buscar area…"
+                                    :required="true"
+                                    :allowClear="false"
+                                />
                                 <x-input-error :messages="$errors->get('area_key')" />
                             </div>
 
@@ -60,21 +64,32 @@
 
                             <div class="form-field">
                                 <label class="form-label" for="solicitud_para">Solicitud para</label>
-                                <select name="solicitud_para" id="solicitud_para" class="form-select" required>
-                                    <option value="Interno" @selected(old('solicitud_para', $purchaseRequest->solicitud_para) === 'Interno')>Interno</option>
-                                    <option value="Cliente" @selected(old('solicitud_para', $purchaseRequest->solicitud_para) === 'Cliente')>Cliente</option>
-                                </select>
+                                <x-searchable-select
+                                    id="solicitud_para"
+                                    name="solicitud_para"
+                                    :options="[
+                                        ['value' => 'Interno', 'label' => 'Interno'],
+                                        ['value' => 'Cliente', 'label' => 'Cliente'],
+                                    ]"
+                                    :value="old('solicitud_para', $purchaseRequest->solicitud_para)"
+                                    placeholder="Seleccione…"
+                                    :required="true"
+                                    :allowClear="false"
+                                />
                                 <x-input-error :messages="$errors->get('solicitud_para')" />
                             </div>
 
                             <div class="form-field">
                                 <label class="form-label" for="aprobador_id">Director aprobador</label>
-                                <select name="aprobador_id" id="aprobador_id" class="form-select" required>
-                                    <option value="">Seleccione director</option>
-                                    @foreach ($directores as $director)
-                                        <option value="{{ $director->id }}" @selected((string) old('aprobador_id', $purchaseRequest->aprobador_id) === (string) $director->id)>{{ $director->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select
+                                    id="aprobador_id"
+                                    name="aprobador_id"
+                                    :options="collect($directores)->map(fn($d) => ['value' => (string) $d->id, 'label' => $d->name])->all()"
+                                    :value="old('aprobador_id', $purchaseRequest->aprobador_id)"
+                                    placeholder="Seleccione director"
+                                    searchPlaceholder="Buscar director…"
+                                    :required="true"
+                                />
                                 <x-input-error :messages="$errors->get('aprobador_id')" />
                             </div>
                         </div>

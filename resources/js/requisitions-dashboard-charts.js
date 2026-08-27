@@ -163,10 +163,8 @@ function bindAutoSubmitFilters() {
         return;
     }
 
-    filterForm.querySelectorAll('select').forEach((input) => {
-        input.addEventListener('change', () => {
-            filterForm.submit();
-        });
+    filterForm.addEventListener('change', () => {
+        filterForm.submit();
     });
 }
 

@@ -37,6 +37,8 @@
             break;
         }
     }
+
+    $dataAttributes = $attributes->filter(fn ($val, $k) => str_starts_with($k, 'data-'));
 @endphp
 
 <div
@@ -63,6 +65,7 @@
         :value="value"
         :disabled="disabled"
         x-ref="hiddenInput"
+        {{ $dataAttributes }}
     >
     <template x-if="required">
         <input

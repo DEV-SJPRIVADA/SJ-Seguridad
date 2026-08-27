@@ -40,25 +40,43 @@
                                 </div>
                                 <div class="archivo-consult-history-filters__field archivo-consult-history-filters__field--sm">
                                     <label class="req-manage-filters__label" for="archivo-history-month">Mes</label>
-                                    <select id="archivo-history-month" name="month" class="form-input">
-                                        <option value="">Todos</option>
-                                        @for ($monthNumber = 1; $monthNumber <= 12; $monthNumber++)
-                                            <option value="{{ $monthNumber }}" @selected(($filters['month'] ?? null) === $monthNumber)>
-                                                {{ \App\Models\EmployeeArchiveConsultationItem::monthLabel($monthNumber) }}
-                                            </option>
-                                        @endfor
-                                    </select>
+                                    @php
+                                        $monthOptions = [];
+                                        for ($monthNumber = 1; $monthNumber <= 12; $monthNumber++) {
+                                            $monthOptions[] = [
+                                                'value' => (string) $monthNumber,
+                                                'label' => \App\Models\EmployeeArchiveConsultationItem::monthLabel($monthNumber),
+                                            ];
+                                        }
+                                    @endphp
+                                    <x-searchable-select
+                                        id="archivo-history-month"
+                                        name="month"
+                                        :options="$monthOptions"
+                                        :value="$filters['month'] ?? ''"
+                                        placeholder="Todos los meses"
+                                        searchPlaceholder="Buscar mes…"
+                                    />
                                 </div>
                                 <div class="archivo-consult-history-filters__field archivo-consult-history-filters__field--sm">
                                     <label class="req-manage-filters__label" for="archivo-history-week">Semana</label>
-                                    <select id="archivo-history-week" name="week" class="form-input">
-                                        <option value="">Todas</option>
-                                        @for ($weekNumber = 1; $weekNumber <= 5; $weekNumber++)
-                                            <option value="{{ $weekNumber }}" @selected(($filters['week'] ?? null) === $weekNumber)>
-                                                Semana {{ $weekNumber }}
-                                            </option>
-                                        @endfor
-                                    </select>
+                                    @php
+                                        $weekOptions = [];
+                                        for ($weekNumber = 1; $weekNumber <= 5; $weekNumber++) {
+                                            $weekOptions[] = [
+                                                'value' => (string) $weekNumber,
+                                                'label' => 'Semana ' . $weekNumber,
+                                            ];
+                                        }
+                                    @endphp
+                                    <x-searchable-select
+                                        id="archivo-history-week"
+                                        name="week"
+                                        :options="$weekOptions"
+                                        :value="$filters['week'] ?? ''"
+                                        placeholder="Todas las semanas"
+                                        searchPlaceholder="Buscar semana…"
+                                    />
                                 </div>
                                 <div class="archivo-consult-history-filters__actions">
                                     <button type="submit" class="btn btn--primary btn--sm">Filtrar</button>

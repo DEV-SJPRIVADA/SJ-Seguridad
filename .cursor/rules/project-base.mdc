@@ -25,6 +25,10 @@ Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
 
 Usar `App\Exports\BaseExport` y `<x-export-excel>`. No reintroducir `excelHtml5`.
 
+## Componentes de Seleccion (Searchable Select)
+
+Todos los selectores en formularios, modales y filtros deben usar `<x-searchable-select>` con Alpine.js (`resources/views/components/searchable-select.blade.php`). Prohibido reintroducir `Select2`.
+
 ## Navegacion chrome (areas / tableros / pestanas)
 
 Mismo estilo pill para sidebar (`.sidebar-link`), tableros y pestanas (`.module-tab`). Padding contenedor ↔ botones: `0.2rem`. Detalle: [`.cursor/rules/nav-chrome-ui.mdc`](nav-chrome-ui.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).

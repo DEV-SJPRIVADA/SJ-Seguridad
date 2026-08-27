@@ -132,21 +132,28 @@
                 </div>
                 <div class="form-field">
                     <label class="form-label">Perfil / Rol principal</label>
-                    <select name="role" class="form-select @error('role') form-input--invalid @enderror" required>
-                        @foreach ($roles as $role)
-                            <option value="{{ $role->name }}" @selected($selectedRole === $role->name)>{{ ucfirst($role->name) }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        id="user-role"
+                        name="role"
+                        :options="collect($roles)->map(fn($r) => ['value' => $r->name, 'label' => ucfirst($r->name)])->all()"
+                        :value="$selectedRole"
+                        placeholder="Seleccionar rol…"
+                        searchPlaceholder="Buscar rol…"
+                        :required="true"
+                        :allowClear="false"
+                    />
                     <x-input-error :messages="$errors->get('role')" />
                 </div>
                 <div class="form-field">
                     <label class="form-label">Area base</label>
-                    <select name="area_key" id="user-area-key" class="form-select @error('area_key') form-input--invalid @enderror">
-                        <option value="">Sin area fija</option>
-                        @foreach ($areas as $key => $label)
-                            <option value="{{ $key }}" @selected(old('area_key', $copyDefaults['area_key'] ?? $user?->area_key) === $key)>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        id="user-area-key"
+                        name="area_key"
+                        :options="$areas"
+                        :value="old('area_key', $copyDefaults['area_key'] ?? $user?->area_key)"
+                        placeholder="Sin area fija"
+                        searchPlaceholder="Buscar area…"
+                    />
                     <x-input-error :messages="$errors->get('area_key')" />
                     @unless ($compactCreate)
                         <p class="text-small text-muted">{{ $help['area_key'] ?? '' }}</p>
@@ -155,14 +162,14 @@
                 <div class="form-field">
                     <label class="form-label">Sede fisica</label>
                     <div class="user-form__sede-row">
-                        <select name="sede_id" id="user-sede-id" class="form-select @error('sede_id') form-input--invalid @enderror">
-                            <option value="">Sin sede asignada</option>
-                            @foreach ($sites ?? [] as $site)
-                                <option value="{{ $site->id }}" @selected((string) old('sede_id', $copyDefaults['sede_id'] ?? $user?->sede_id) === (string) $site->id)>
-                                    {{ $site->utilization }} ({{ $site->city }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="user-sede-id"
+                            name="sede_id"
+                            :options="collect($sites ?? [])->map(fn($s) => ['value' => (string) $s->id, 'label' => $s->utilization . ' (' . $s->city . ')'])->all()"
+                            :value="old('sede_id', $copyDefaults['sede_id'] ?? $user?->sede_id)"
+                            placeholder="Sin sede asignada"
+                            searchPlaceholder="Buscar sede…"
+                        />
                         <button type="button" class="btn btn--secondary btn--sm" id="open-sites-modal" title="Gestionar sedes">
                             Gestionar
                         </button>

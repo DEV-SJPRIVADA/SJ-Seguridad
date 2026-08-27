@@ -79,20 +79,28 @@
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
                                             <label class="req-manage-filters__label" for="services-portfolio-select">Portafolio</label>
-                                            <select id="services-portfolio-select" name="portfolio" class="form-select">
-                                                <option value="">Todos</option>
-                                                @foreach ($portfolios as $key => $label)
-                                                    <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
+                                            <x-searchable-select
+                                                id="services-portfolio-select"
+                                                name="portfolio"
+                                                :options="$portfolios"
+                                                :value="$filters['portfolio'] ?? ''"
+                                                placeholder="Todos los portafolios"
+                                                searchPlaceholder="Buscar portafolio…"
+                                            />
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
                                             <label class="req-manage-filters__label" for="services-vigencia-select">Vigencia</label>
-                                            <select id="services-vigencia-select" name="vigencia" class="form-select">
-                                                <option value="">Todas</option>
-                                                <option value="expiring" @selected(($filters['vigencia'] ?? '') === 'expiring')>Por vencer (30 días)</option>
-                                                <option value="expired" @selected(($filters['vigencia'] ?? '') === 'expired')>Vencido</option>
-                                            </select>
+                                            <x-searchable-select
+                                                id="services-vigencia-select"
+                                                name="vigencia"
+                                                :options="[
+                                                    ['value' => 'expiring', 'label' => 'Por vencer (30 días)'],
+                                                    ['value' => 'expired', 'label' => 'Vencido'],
+                                                ]"
+                                                :value="$filters['vigencia'] ?? ''"
+                                                placeholder="Todas las vigencias"
+                                                searchPlaceholder="Buscar vigencia…"
+                                            />
                                         </div>
                                         <div class="req-manage-filters__query-submit">
                                             <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>

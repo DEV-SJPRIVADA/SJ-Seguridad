@@ -57,11 +57,18 @@
                                     value="{{ $filters['city'] }}"
                                     placeholder="Ciudad"
                                 >
-                                <select id="checklist-doc-vigencia" name="doc_vigencia" class="form-select comercial-checklist-filters__vigencia">
-                                    <option value="">Toda documentación</option>
-                                    <option value="expiring" @selected($filters['doc_vigencia'] === 'expiring')>Por vencer</option>
-                                    <option value="expired" @selected($filters['doc_vigencia'] === 'expired')>Vencida</option>
-                                </select>
+                                <x-searchable-select
+                                    id="checklist-doc-vigencia"
+                                    name="doc_vigencia"
+                                    :options="[
+                                        ['value' => 'expiring', 'label' => 'Por vencer'],
+                                        ['value' => 'expired', 'label' => 'Vencida'],
+                                    ]"
+                                    :value="$filters['doc_vigencia'] ?? ''"
+                                    placeholder="Toda documentación"
+                                    searchPlaceholder="Buscar vigencia…"
+                                    class="comercial-checklist-filters__vigencia"
+                                />
                                 <button type="submit" class="btn btn--primary">Buscar</button>
                             </div>
                         </form>

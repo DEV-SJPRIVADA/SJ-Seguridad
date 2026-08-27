@@ -30,13 +30,18 @@
                                 </select>
                             </div>
                             @if ($headerFilters['showCapturadorSelector'])
-                                <div>
+                                <div style="min-width: 180px;">
                                     <label class="form-label">Capturador</label>
-                                    <select name="capturador_id" onchange="this.form.submit()" class="supply-input supply-select">
-                                        @foreach ($headerFilters['capturableUsers'] as $capturador)
-                                            <option value="{{ $capturador->id }}" @selected($headerFilters['selectedCapturadorId'] === $capturador->id)>{{ $capturador->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-searchable-select
+                                        id="capturador_id"
+                                        name="capturador_id"
+                                        :options="collect($headerFilters['capturableUsers'])->map(fn($c) => ['value' => (string) $c->id, 'label' => $c->name])->all()"
+                                        :value="$headerFilters['selectedCapturadorId'] ?? ''"
+                                        placeholder="Seleccione capturador…"
+                                        searchPlaceholder="Buscar capturador…"
+                                        :allowClear="false"
+                                        onchange="this.form.submit()"
+                                    />
                                 </div>
                             @else
                                 <div>
