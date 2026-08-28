@@ -3770,6 +3770,12 @@ a {
     border-color: #64748b;
 }
 
+.req-manage-filters__pill.is-active.status-pill--req-aprobada,
+.req-manage-filters__pill.status-pill--req-aprobada.is-active {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
 .req-manage-filters__pill.is-active.status-pill--req-en_gestion,
 .req-manage-filters__pill.status-pill--req-en_gestion.is-active {
     background: #0284c7;
@@ -3778,8 +3784,8 @@ a {
 
 .req-manage-filters__pill.is-active.status-pill--req-contratado,
 .req-manage-filters__pill.status-pill--req-contratado.is-active {
-    background: #15803d;
-    border-color: #15803d;
+    background: #166534;
+    border-color: #166534;
 }
 
 .req-manage-filters__pill.is-active.status-pill--req-cancelada,
@@ -4656,14 +4662,19 @@ a.sj-pagination__item:hover {
     color: #7e22ce;
 }
 
+.status-pill--req-aprobada {
+    background: #dcfce7;
+    color: #15803d;
+}
+
 .status-pill--req-en_gestion {
     background: #fef3c7;
     color: #92400e;
 }
 
 .status-pill--req-contratado {
-    background: #dcfce7;
-    color: #15803d;
+    background: #166534;
+    color: #ffffff;
 }
 
 .status-pill--req-cancelada {

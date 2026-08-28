@@ -163,8 +163,14 @@ function bindAutoSubmitFilters() {
         return;
     }
 
+    let submitTimer = null;
     filterForm.addEventListener('change', () => {
-        filterForm.submit();
+        if (submitTimer) {
+            clearTimeout(submitTimer);
+        }
+        submitTimer = setTimeout(() => {
+            filterForm.submit();
+        }, 20);
     });
 }
 

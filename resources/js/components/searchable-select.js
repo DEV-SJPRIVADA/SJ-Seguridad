@@ -13,8 +13,16 @@ export default function searchableSelect(config = {}) {
         highlightedIndex: -1,
 
         init() {
+            if (this.$refs.hiddenInput && this.value !== undefined && this.value !== null) {
+                this.$refs.hiddenInput.value = String(this.value);
+            }
             this.syncLabel();
-            this.$watch('value', () => this.syncLabel());
+            this.$watch('value', (val) => {
+                if (this.$refs.hiddenInput) {
+                    this.$refs.hiddenInput.value = val !== undefined && val !== null ? String(val) : '';
+                }
+                this.syncLabel();
+            });
         },
 
         syncLabel() {
@@ -23,7 +31,7 @@ export default function searchableSelect(config = {}) {
                 return;
             }
             const found = this.options.find(opt => String(opt.value) === String(this.value));
-            this.selectedLabel = found ? found.label : (this.selectedLabel || String(this.value));
+            this.selectedLabel = found && String(found.value) !== '' ? found.label : '';
         },
 
         get filteredOptions() {
@@ -71,17 +79,17 @@ export default function searchableSelect(config = {}) {
         },
 
         selectOption(opt) {
-            this.value = String(opt.value);
-            this.selectedLabel = opt.label;
+            const newVal = String(opt.value);
+            const isCleared = newVal === '';
+            this.value = newVal;
+            this.selectedLabel = isCleared ? '' : opt.label;
             this.close();
             if (this.$refs.hiddenInput) {
                 this.$refs.hiddenInput.value = this.value;
-            }
-            this.$dispatch('change', { value: this.value, label: this.selectedLabel });
-            if (this.$refs.hiddenInput) {
                 this.$refs.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
                 this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
+            this.$dispatch('change', { value: this.value, label: this.selectedLabel });
         },
 
         clear() {
@@ -91,12 +99,10 @@ export default function searchableSelect(config = {}) {
             this.close();
             if (this.$refs.hiddenInput) {
                 this.$refs.hiddenInput.value = '';
-            }
-            this.$dispatch('change', { value: '', label: '' });
-            if (this.$refs.hiddenInput) {
                 this.$refs.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
                 this.$refs.hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
+            this.$dispatch('change', { value: '', label: '' });
         },
 
         highlightNext() {

@@ -16,23 +16,39 @@
 
     // Normalizar opciones a lista de ['value' => string, 'label' => string]
     $normalizedOptions = [];
+    $hasEmptyOption = false;
     foreach ($options as $key => $opt) {
         if (is_array($opt)) {
             $val = (string) ($opt['value'] ?? $opt['code'] ?? $opt['id'] ?? $key);
             $lbl = (string) ($opt['label'] ?? (isset($opt['code'], $opt['name']) ? "{$opt['code']} — {$opt['name']}" : ($opt['name'] ?? $opt['text'] ?? $val)));
+            if ($val === '') {
+                $hasEmptyOption = true;
+            }
             $normalizedOptions[] = ['value' => $val, 'label' => $lbl];
         } elseif (is_object($opt)) {
             $val = (string) ($opt->value ?? $opt->code ?? $opt->id ?? $key);
             $lbl = (string) ($opt->label ?? (isset($opt->code, $opt->name) ? "{$opt->code} — {$opt->name}" : ($opt->name ?? $opt->text ?? $val)));
+            if ($val === '') {
+                $hasEmptyOption = true;
+            }
             $normalizedOptions[] = ['value' => $val, 'label' => $lbl];
         } else {
-            $normalizedOptions[] = ['value' => (string) $key, 'label' => (string) $opt];
+            $val = (string) $key;
+            $lbl = (string) $opt;
+            if ($val === '') {
+                $hasEmptyOption = true;
+            }
+            $normalizedOptions[] = ['value' => $val, 'label' => $lbl];
         }
+    }
+
+    if (! $hasEmptyOption && $allowClear && ! $required && $placeholder) {
+        array_unshift($normalizedOptions, ['value' => '', 'label' => $placeholder]);
     }
 
     $initialLabel = '';
     foreach ($normalizedOptions as $opt) {
-        if ((string) $opt['value'] === (string) $selectedValue) {
+        if ((string) $opt['value'] === (string) $selectedValue && (string) $selectedValue !== '') {
             $initialLabel = $opt['label'];
             break;
         }
@@ -57,11 +73,13 @@
     @click.outside="close()"
     @keydown.escape.stop="close()"
 >
+
     {{-- Campo oculto para envío nativo de formulario --}}
     <input
         type="hidden"
         name="{{ $name }}"
         id="{{ $id }}"
+        value="{{ $selectedValue }}"
         :value="value"
         :disabled="disabled"
         x-ref="hiddenInput"
@@ -150,6 +168,7 @@
                 :placeholder="searchPlaceholder"
                 autocomplete="off"
                 spellcheck="false"
+                @keydown.enter.stop.prevent="selectHighlighted()"
             >
         </div>
 
