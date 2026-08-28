@@ -3,6 +3,7 @@
 namespace Tests\Feature\GestionHumana;
 
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
@@ -113,6 +114,32 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
         $this->assertSame('2', $row[47]);
         $this->assertSame('3', $row[48]);
         $this->assertSame('1', $row[61]);
+    }
+
+    public function test_plantilla_masivos_mapper_resolves_arp_name_from_payroll_extra_code(): void
+    {
+        PayrollCatalogItem::query()->create([
+            'catalog_type' => 'arp',
+            'code' => '14-4',
+            'name' => 'ARL AXA COLPATRIA',
+        ]);
+
+        $entry = $this->createInFichaEntryWithRequisition();
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'payroll_extra' => [
+                'arp_code' => '14-4',
+            ],
+        ]);
+
+        $row = app(PlantillaMasivosMapper::class)->mapRow($entry->fresh(['profile']));
+
+        $this->assertSame('14-4', $row[34]);
+        $this->assertSame('ARL AXA COLPATRIA', $row[35]);
     }
 
     public function test_plantilla_masivos_mapper_always_exports_null_nit_column(): void
@@ -229,6 +256,8 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
 
         $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
             $this->masivosCorePayload([
+                'first_surname' => 'Export',
+                'first_name' => 'Round',
                 'document_type' => 'CE',
                 'payroll_extra' => [
                     'ccf_code' => 'CCF01',
@@ -238,7 +267,7 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
             ]),
             [
                 'hired_document' => $document,
-                'hired_full_name' => 'Round Trip Export Test',
+                'hired_full_name' => 'Export Round',
             ],
         ))->assertRedirect();
 
@@ -259,7 +288,7 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
             if ($value === $document) {
                 $cedulas[] = $value;
                 $this->assertSame('CE', (string) $sheet->getCell('B'.$row)->getValue());
-                $this->assertSame('Round Trip Export Test', $sheet->getCell('C'.$row)->getValue());
+                $this->assertSame('Export Round', $sheet->getCell('C'.$row)->getValue());
                 $this->assertSame('', (string) $sheet->getCell('Z'.$row)->getValue());
                 $this->assertSame('WC01', (string) $sheet->getCell('Y'.$row)->getValue());
                 $this->assertSame('CCF01', (string) $sheet->getCell('AL'.$row)->getValue());

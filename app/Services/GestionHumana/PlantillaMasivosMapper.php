@@ -2,6 +2,7 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -31,6 +32,54 @@ class PlantillaMasivosMapper
             $secondName = $parsed['second_name'];
         }
 
+        $residenceCityCode = $profile?->residence_city_code;
+        $residenceCityName = $profile?->residence_city_name ?: $this->resolveCatalogName('city', $residenceCityCode);
+
+        $positionCode = $profile?->position_code;
+        $positionName = $profile?->position_name ?: $this->resolveCatalogName('position', $positionCode);
+
+        $bankCode = $profile?->bank_code;
+        $bankName = $profile?->bank_name ?: $this->resolveCatalogName('bank', $bankCode);
+
+        $workCenterCode = data_get($extra, 'work_center_code');
+        $workCenterName = $profile?->work_center_name ?: $this->resolveCatalogName('work_center', $workCenterCode);
+
+        $epsCode = $profile?->eps_code;
+        $epsName = $profile?->eps_name ?: $this->resolveCatalogName('eps', $epsCode);
+
+        $afpCode = $profile?->afp_code;
+        $afpName = $profile?->afp_name ?: $this->resolveCatalogName('afp', $afpCode);
+
+        $arpCode = data_get($extra, 'arp_code');
+        $arpName = $profile?->arp_name ?: $this->resolveCatalogName('arp', $arpCode);
+
+        $ccfCode = data_get($extra, 'ccf_code');
+        $ccfName = $profile?->compensation_fund_name ?: $this->resolveCatalogName('ccf', $ccfCode);
+
+        $salaryTypeCode = $profile?->salary_type_code;
+        $salaryTypeName = $profile?->salary_type_name ?: $this->resolveCatalogName('salary_type', $salaryTypeCode);
+
+        $contractTypeCode = $profile?->contract_type_code;
+        $contractTypeName = $profile?->contract_type_name ?: $this->resolveCatalogName('contract_type', $contractTypeCode);
+
+        $severanceAdminCode = data_get($extra, 'severance_admin_code');
+        $severanceAdminName = data_get($extra, 'severance_admin_name') ?: $this->resolveCatalogName('severance_admin', $severanceAdminCode);
+
+        $branchCode = data_get($extra, 'branch_code');
+        $branchName = data_get($extra, 'branch_name') ?: $this->resolveCatalogName('branch', $branchCode);
+
+        $costCenterCode = $profile?->cost_center_code;
+        $costCenterName = $profile?->cost_center_name ?: $this->resolveCatalogName('cost_center', $costCenterCode);
+
+        $destinationCode = data_get($extra, 'destination_code');
+        $destinationName = data_get($extra, 'destination_name') ?: $this->resolveCatalogName('destination', $destinationCode);
+
+        $zoneCode = data_get($extra, 'zone_code');
+        $zoneName = data_get($extra, 'zone_name') ?: $this->resolveCatalogName('zone', $zoneCode);
+
+        $economicActivityCode = $profile?->economic_activity_code;
+        $economicActivityName = $profile?->economic_activity_name ?: $this->resolveCatalogName('economic_activity', $economicActivityCode);
+
         return [
             $profile?->document_number ?: $entry->hired_document,
             $this->documentTypeCode($profile?->document_type),
@@ -43,58 +92,70 @@ class PlantillaMasivosMapper
             $profile?->phone,
             $profile?->phone_secondary ?: data_get($extra, 'phone_secondary'),
             $profile?->email,
-            $profile?->residence_city_code,
-            $profile?->residence_city_name,
+            $residenceCityCode,
+            $residenceCityName,
             $this->excelDate($profile?->birth_date),
             $this->excelDate($profile?->hire_date),
             data_get($extra, 'vacation_base_date'),
             $profile?->linkage_type,
-            $profile?->position_code,
-            $profile?->position_name,
+            $positionCode,
+            $positionName,
             $profile?->payment_method_code,
-            $profile?->bank_code,
-            $profile?->bank_name,
+            $bankCode,
+            $bankName,
             $profile?->account_number,
             $profile?->account_type,
-            data_get($extra, 'work_center_code'),
+            $workCenterCode,
             null,
-            $profile?->work_center_name,
+            $workCenterName,
             $profile?->salary,
-            $profile?->eps_code,
-            $profile?->eps_name,
+            $epsCode,
+            $epsName,
             $this->excelDate(data_get($extra, 'eps_start_date')),
-            $profile?->afp_code,
-            $profile?->afp_name,
+            $afpCode,
+            $afpName,
             $this->excelDate(data_get($extra, 'afp_start_date')),
-            data_get($extra, 'arp_code'),
-            $profile?->arp_name,
+            $arpCode,
+            $arpName,
             $profile?->risk_level,
-            data_get($extra, 'ccf_code'),
-            $profile?->compensation_fund_name,
+            $ccfCode,
+            $ccfName,
             data_get($extra, 'military_book'),
             $profile?->sex,
-            $profile?->salary_type_code,
-            $profile?->salary_type_name,
-            $profile?->contract_type_code,
-            $profile?->contract_type_name,
+            $salaryTypeCode,
+            $salaryTypeName,
+            $contractTypeCode,
+            $contractTypeName,
             $this->excelDate($profile?->contract_end_date),
             data_get($extra, 'workday'),
             data_get($extra, 'withholding_type'),
             data_get($extra, 'expense_type'),
-            data_get($extra, 'severance_admin_code'),
-            data_get($extra, 'severance_admin_name'),
-            data_get($extra, 'branch_code'),
-            data_get($extra, 'branch_name'),
-            $profile?->cost_center_code,
-            $profile?->cost_center_name,
-            data_get($extra, 'destination_code'),
-            data_get($extra, 'destination_name'),
-            data_get($extra, 'zone_code'),
-            data_get($extra, 'zone_name'),
-            $profile?->economic_activity_code,
-            $profile?->economic_activity_name,
+            $severanceAdminCode,
+            $severanceAdminName,
+            $branchCode,
+            $branchName,
+            $costCenterCode,
+            $costCenterName,
+            $destinationCode,
+            $destinationName,
+            $zoneCode,
+            $zoneName,
+            $economicActivityCode,
+            $economicActivityName,
             data_get($extra, 'exclude_overtime'),
         ];
+    }
+
+    private function resolveCatalogName(string $type, ?string $code): ?string
+    {
+        if ($code === null || $code === '') {
+            return null;
+        }
+
+        return PayrollCatalogItem::query()
+            ->ofType($type)
+            ->where('code', $code)
+            ->value('name');
     }
 
     private function documentTypeCode(?string $value): ?string

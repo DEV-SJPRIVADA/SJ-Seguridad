@@ -74,6 +74,7 @@
         <div class="form-field">
             <label class="form-label" for="birth_date">Fecha nacimiento</label>
             <input id="birth_date" type="date" name="birth_date" class="form-input" value="{{ old('birth_date', optional($profile->birth_date)->format('Y-m-d')) }}" @readonly($identityLocked)>
+            <x-input-error :messages="$errors->get('birth_date')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="sex">Género <span class="text-danger">*</span></label>
@@ -88,6 +89,7 @@
                 :required="true"
                 :disabled="$identityLocked"
             />
+            <x-input-error :messages="$errors->get('sex')" />
         </div>
         @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
             'id' => 'expedition_city_code',
@@ -101,6 +103,7 @@
         <div class="form-field">
             <label class="form-label" for="expedition_date">Fecha expedición documento</label>
             <input id="expedition_date" type="date" name="expedition_date" class="form-input" value="{{ old('expedition_date', optional($profile->expedition_date)->format('Y-m-d')) }}" @readonly($identityLocked)>
+            <x-input-error :messages="$errors->get('expedition_date')" />
         </div>
     </div>
 </section>
@@ -114,14 +117,17 @@
         <div class="form-field">
             <label class="form-label" for="email">Correo</label>
             <input id="email" type="email" name="email" class="form-input" value="{{ old('email', $profile->email) }}">
+            <x-input-error :messages="$errors->get('email')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="phone">Teléfono</label>
             <input id="phone" name="phone" class="form-input" value="{{ old('phone', $profile->phone) }}">
+            <x-input-error :messages="$errors->get('phone')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="phone_secondary">Teléfono 2</label>
             <input id="phone_secondary" name="phone_secondary" class="form-input" value="{{ old('phone_secondary', $profile->phone_secondary) }}">
+            <x-input-error :messages="$errors->get('phone_secondary')" />
         </div>
         @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
             'id' => 'residence_city_code',
@@ -142,6 +148,7 @@
         <div class="form-field form-grid__full">
             <label class="form-label" for="address">Dirección</label>
             <input id="address" name="address" class="form-input" value="{{ old('address', $profile->address) }}">
+            <x-input-error :messages="$errors->get('address')" />
         </div>
     </div>
 </section>
@@ -176,6 +183,7 @@
                     required
                 >
             </div>
+            <x-input-error :messages="$errors->get('salary')" />
         </div>
         @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
             'id' => 'salary_type_code',
@@ -204,10 +212,12 @@
         <div class="form-field">
             <label class="form-label" for="hire_date">Fecha ingreso <span class="text-danger">*</span></label>
             <input id="hire_date" type="date" name="hire_date" class="form-input" value="{{ old('hire_date', optional($profile->hire_date)->format('Y-m-d')) }}" required>
+            <x-input-error :messages="$errors->get('hire_date')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="contract_end_date">Fecha vencimiento contrato</label>
             <input id="contract_end_date" type="date" name="contract_end_date" class="form-input" value="{{ old('contract_end_date', optional($profile->contract_end_date)->format('Y-m-d')) }}">
+            <x-input-error :messages="$errors->get('contract_end_date')" />
         </div>
     </div>
 </section>
@@ -290,10 +300,12 @@
         <div class="form-field">
             <label class="form-label" for="payroll_extra_eps_start_date">Fecha ingreso EPS</label>
             <input id="payroll_extra_eps_start_date" type="date" name="payroll_extra[eps_start_date]" class="form-input" value="{{ old('payroll_extra.eps_start_date', $payrollExtra('eps_start_date')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.eps_start_date')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_afp_start_date">Fecha ingreso AFP</label>
             <input id="payroll_extra_afp_start_date" type="date" name="payroll_extra[afp_start_date]" class="form-input" value="{{ old('payroll_extra.afp_start_date', $payrollExtra('afp_start_date')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.afp_start_date')" />
         </div>
     </div>
 </section>
@@ -334,6 +346,7 @@
         <div class="form-field">
             <label class="form-label" for="account_number">Número de cuenta <span class="text-danger">*</span></label>
             <input id="account_number" name="account_number" class="form-input" value="{{ old('account_number', $profile->account_number) }}" required autocomplete="off">
+            <x-input-error :messages="$errors->get('account_number')" />
         </div>
     </div>
 </section>
@@ -411,10 +424,12 @@
         <div class="form-field">
             <label class="form-label" for="payroll_extra_vacation_base_date">Fecha base vacaciones</label>
             <input id="payroll_extra_vacation_base_date" type="date" name="payroll_extra[vacation_base_date]" class="form-input" value="{{ old('payroll_extra.vacation_base_date', $payrollExtra('vacation_base_date')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.vacation_base_date')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_military_book">Libreta militar</label>
             <input id="payroll_extra_military_book" name="payroll_extra[military_book]" class="form-input" value="{{ old('payroll_extra.military_book', $payrollExtra('military_book')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.military_book')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_exclude_overtime">Excluir horas extra</label>
@@ -427,6 +442,7 @@
                 ]"
                 :value="$payrollExtra('exclude_overtime')"
             />
+            <x-input-error :messages="$errors->get('payroll_extra.exclude_overtime')" />
         </div>
     </div>
 </section>

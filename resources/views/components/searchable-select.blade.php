@@ -102,7 +102,7 @@
         class="searchable-select__trigger form-select"
         :class="{
             'searchable-select__trigger--open': open,
-            'searchable-select__trigger--disabled': disabled,
+            'searchable-select__trigger--disabled': isDisabled,
             'searchable-select__trigger--has-value': hasSelection
         }"
         @click="toggle()"
@@ -114,7 +114,7 @@
         role="combobox"
         aria-haspopup="listbox"
         :aria-expanded="open.toString()"
-        :aria-disabled="disabled.toString()"
+        :aria-disabled="isDisabled.toString()"
     >
         <span
             class="searchable-select__label"
@@ -126,7 +126,7 @@
             <button
                 type="button"
                 class="searchable-select__clear"
-                x-show="hasSelection && allowClear && !disabled"
+                x-show="hasSelection && allowClear && !isDisabled"
                 @click.stop="clear()"
                 title="Limpiar selección"
                 tabindex="-1"

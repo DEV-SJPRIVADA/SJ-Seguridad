@@ -24,4 +24,8 @@
         :required="$required"
         :disabled="$disabled"
     />
+    @php
+        $errorKey = str_replace(['[', ']'], ['.', ''], $name);
+    @endphp
+    <x-input-error :messages="$errors->get($errorKey)" />
 </div>
