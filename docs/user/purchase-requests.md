@@ -10,13 +10,14 @@ Aplica al tablero **Solicitudes de compra** y a la **Bandeja compras** (area Com
 
 Segun su perfil puede:
 
-- Crear solicitudes con una o varias lineas de productos (con foto opcional)
-- Consultar el estado de sus propias solicitudes
+- Crear solicitudes con una o varias lineas de productos (con foto opcional por linea)
+- Adjuntar, si lo desea, varios documentos de soporte a **toda** la solicitud (cotizacion, orden, evidencia)
+- Consultar el estado de sus propias solicitudes y descargar esos adjuntos desde el detalle
 - Autorizar o rechazar solicitudes asignadas a usted como director
 - Procesar solicitudes aprobadas e insumos aprobados desde la bandeja unificada de Compras
 - Descargar el formato FO-AD-44 (PDF y Excel) desde el detalle
 
-El director puede autorizar desde el **correo** (enlace personal firmado, sin login) o desde la **plataforma** (Pendientes de autorizacion o detalle).
+El director puede autorizar desde el **correo** (enlace personal firmado, sin login) o desde la **plataforma** (Pendientes de autorizacion o detalle). Los documentos de soporte **no** viajan en el correo ni en el FO-AD-44: para verlos hay que entrar al detalle en la plataforma.
 
 ## Definiciones
 
@@ -32,15 +33,16 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 | Solicitud Interno | Compra para uso interno de la empresa. |
 | Solicitud Cliente | Compra asociada a un cliente (requiere razon social y datos adicionales). |
 | Urgente | Marca de prioridad visible para director y Compras. |
-| FO-AD-44 | Formato estandar de reporte/exportacion de la solicitud. |
+| FO-AD-44 | Formato estandar de reporte/exportacion de la solicitud. No incluye los documentos de soporte adjuntos. |
+| Adjuntos | Archivos opcionales de la solicitud completa (no de cada producto). Se consultan y descargan solo en el detalle de la plataforma. |
 
 ## Responsabilidades
 
 | Rol / perfil | Responsabilidad |
 | --- | --- |
-| Colaborador solicitante | Crear solicitudes en su area, elegir director, consultar mis solicitudes. |
-| Director | Revisar y aprobar o rechazar solo las solicitudes asignadas a el. |
-| Compras | Gestionar bandeja, actualizar estados, procesar insumos aprobados, exportar reportes. |
+| Colaborador solicitante | Crear solicitudes en su area, elegir director, adjuntar documentos de soporte si aplica, consultar mis solicitudes. Si una solicitud es rechazada, puede reenviarla: conservar, agregar o quitar adjuntos. |
+| Director | Revisar y aprobar o rechazar solo las solicitudes asignadas a el. Los adjuntos se revisan en el detalle de la plataforma (no llegan por correo). |
+| Compras | Gestionar bandeja, actualizar estados, procesar insumos aprobados, exportar reportes y descargar adjuntos desde el detalle. |
 | Super-admin / Admin usuarios | Asignar permisos (`purchase.tab.*`) y rol director. |
 
 ## Donde encontrar el modulo en el menu
@@ -59,17 +61,24 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 2. Complete **Area**, **Fecha**, **Solicitud para** (Interno o Cliente) y seleccione el **Director aprobador**.
 3. Marque **Urgente** si aplica.
 4. Si eligio **Cliente**, complete razon social, proyecto nuevo y si asume el cliente.
-5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional.
-6. Opcionalmente adjunte un archivo de pedido.
+5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional de esa linea.
+6. En **Adjuntos** (despues de los productos) puede, si lo desea, seleccionar **varios archivos a la vez** para toda la solicitud: cotizacion, orden de compra, evidencia u otro soporte. Es opcional: puede enviar la solicitud sin ningun archivo. Hasta 5 archivos, 10 MB cada uno. Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
 7. Envie el formulario. Recibira confirmacion con el numero de folio.
-8. El director recibira un correo con enlace para **autorizar por correo** o ingresar a la plataforma.
+8. El director recibira un correo con el PDF FO-AD-44 y un enlace para **autorizar por correo** o ingresar a la plataforma. Ese correo **no** incluye los archivos de Adjuntos; el director los ve al abrir el detalle en la plataforma.
 
 ### Consultar mis solicitudes
 
 1. Abra **Mis solicitudes**.
 2. Revise el listado con estado (Pendiente, Aprobado, Rechazado).
-3. Pulse el folio o **Ver detalle** para consultar lineas, comentarios del director o de Compras.
-4. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44).
+3. Pulse el folio o **Ver detalle** para consultar lineas, comentarios del director o de Compras. Si hay documentos de soporte, aparecen en **Adjuntos** con su nombre y tamano; pulse **Descargar** para guardarlos.
+4. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44). Esos formatos no llevan los adjuntos.
+
+### Reenviar una solicitud rechazada
+
+1. Desde **Mis solicitudes**, abra la solicitud rechazada y entre a reenviar.
+2. Revise o corrija las lineas de producto (la foto por linea sigue siendo opcional).
+3. En **Adjuntos** puede **conservar** los archivos actuales, **quitar** alguno o **agregar** otros (el total no puede pasar de 5). Tambien puede dejar la solicitud sin adjuntos.
+4. Envie de nuevo al director.
 
 ### Autorizar o rechazar (director)
 
@@ -77,7 +86,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 1. Abra el correo de nueva solicitud de compra.
 2. Pulse **Autorizar por correo** (enlace personal con vigencia limitada).
-3. Revise folio, lineas y datos del solicitante; opcionalmente abra el PDF.
+3. Revise folio, lineas y datos del solicitante; opcionalmente abra el PDF. Esta pantalla **no** muestra los documentos de Adjuntos; para verlos use **Ver en la plataforma**.
 4. Escriba comentarios si rechaza (obligatorio al rechazar).
 5. Pulse **Aprobar solicitud** o **Rechazar**.
 6. Confirme en la pantalla de resultado; el solicitante recibe correo con el outcome.
@@ -86,7 +95,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 1. Ingrese a **Compras → Solicitudes de compra → Pendientes de autorizacion**.
 2. Pulse **Autorizar** en la fila deseada (o abra el detalle desde el correo con **Ver en la plataforma**).
-3. Revise el detalle, lineas y datos del solicitante.
+3. Revise el detalle, lineas, datos del solicitante y, si existen, los **Adjuntos** (puede descargarlos).
 4. Opcionalmente escriba comentarios (obligatorios si rechaza).
 5. Pulse **Aprobar solicitud** o **Rechazar**.
 6. La solicitud sale del listado de pendientes; el solicitante recibe correo con el resultado.
@@ -125,3 +134,4 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 | 1.5 | 2026-08-20 | Analista TIC | Sin descripcion general ni justificacion de cabecera; el detalle va en las lineas de producto |
 | 1.4 | 2026-08-03 | Autorizacion por correo | Director puede aprobar/rechazar via enlace firmado sin login; flujo dual correo + plataforma |
 | 1.6 | 2026-08-28 | Bandeja | Listado por fecha mas reciente; filtro tipo/area se aplica al elegir |
+| 1.7 | 2026-08-28 | FEAT-030 | Adjuntos opcionales multiples por solicitud (detalle de la plataforma). El correo de autorizacion y el FO-AD-44 no los incluyen. Al reenviar una rechazada se pueden conservar, agregar o quitar |

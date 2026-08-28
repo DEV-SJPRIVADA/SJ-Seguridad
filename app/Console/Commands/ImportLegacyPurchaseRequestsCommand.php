@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\User;
+use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -17,7 +18,7 @@ class ImportLegacyPurchaseRequestsCommand extends Command
 
     protected $description = 'Importa solicitudes de compra desde la BD legacy de gestion-compras';
 
-    public function handle(): int
+    public function handle(PurchaseRequestAttachmentService $attachmentService): int
     {
         $connection = config('database.connections.legacy_gestion_compras');
 
@@ -67,14 +68,13 @@ class ImportLegacyPurchaseRequestsCommand extends Command
                 continue;
             }
 
-            DB::transaction(function () use ($legacy, $user, $aprobador, $areaKey): void {
+            DB::transaction(function () use ($legacy, $user, $aprobador, $areaKey, $attachmentService): void {
                 $purchaseRequest = PurchaseRequest::query()->create([
                     'numero_solicitud' => (int) $legacy->numero_solicitud,
                     'user_id' => $user->id,
                     'area_key' => $areaKey,
                     'fecha_solicitud' => $legacy->fecha_solicitud ?? $legacy->created_at,
                     'cantidad' => (int) $legacy->cantidad,
-                    'archivo_pedido_path' => $legacy->archivo_pedido_path,
                     'solicitud_para' => $legacy->solicitud_para ?? 'Interno',
                     'urgente' => (bool) ($legacy->urgente ?? false),
                     'aprobador_id' => $aprobador->id,
@@ -111,6 +111,12 @@ class ImportLegacyPurchaseRequestsCommand extends Command
                         'utilizacion' => $item->utilizacion,
                         'ubicacion' => $item->ubicacion,
                     ]);
+                }
+
+                $legacyPath = trim((string) ($legacy->archivo_pedido_path ?? ''));
+
+                if ($legacyPath !== '') {
+                    $attachmentService->recordMappedLegacy($purchaseRequest, $legacyPath);
                 }
             });
 

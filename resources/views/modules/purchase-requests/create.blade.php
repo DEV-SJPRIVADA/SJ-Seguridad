@@ -167,6 +167,44 @@
                             <x-input-error :messages="$errors->get('items')" />
                         </div>
 
+                        @php
+                            $attachmentMimes = config('purchase-requests.attachments.mimes', []);
+                            $attachmentAccept = collect($attachmentMimes)->map(fn ($ext) => '.'.$ext)->implode(',');
+                            $attachmentMaxFiles = (int) config('purchase-requests.attachments.max_files', 5);
+                            $attachmentMaxMb = (int) config('purchase-requests.attachments.max_kilobytes', 10240) / 1024;
+                        @endphp
+                        <div class="block-spaced">
+                            <label class="form-label" for="purchase-attachments">Adjuntos</label>
+                            <p class="form-hint">
+                                Documentos de soporte (cotizacion, orden, evidencia). Opcional.
+                                Maximo {{ $attachmentMaxFiles }} archivos, {{ $attachmentMaxMb }} MB cada uno.
+                                Tipos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
+                            </p>
+                            <div class="purchase-attachments-picker">
+                                <input
+                                    type="file"
+                                    name="attachments[]"
+                                    id="purchase-attachments"
+                                    class="purchase-attachments-picker__input"
+                                    multiple
+                                    accept="{{ $attachmentAccept }}"
+                                >
+                                <div class="purchase-attachments-picker__actions">
+                                    <label for="purchase-attachments" class="btn btn--secondary btn--sm purchase-attachments-picker__btn">
+                                        <x-lucide-upload width="15" height="15" aria-hidden="true" />
+                                        <span>Elegir archivos</span>
+                                    </label>
+                                    <span id="purchase-attachments-count" class="purchase-attachments-picker__status">Sin archivos seleccionados</span>
+                                </div>
+                                <ul id="purchase-attachments-selected" class="purchase-attachments-list"></ul>
+                            </div>
+                            <x-input-error :messages="$errors->get('attachments')" />
+                            @foreach ($errors->getMessages() as $errorKey => $errorMessages)
+                                @continue(! str_starts_with($errorKey, 'attachments.'))
+                                <x-input-error :messages="$errorMessages" />
+                            @endforeach
+                        </div>
+
                         <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
                             <button type="submit" class="btn btn--primary">
                                 Enviar solicitud
