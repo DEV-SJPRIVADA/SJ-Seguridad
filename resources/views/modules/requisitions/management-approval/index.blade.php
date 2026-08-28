@@ -78,12 +78,7 @@
                             <tbody>
                                 @forelse ($requisitions as $requisition)
                                     @php
-                                        $estadoPill = match ($requisition->status) {
-                                            \App\Models\PersonalRequisition::STATUS_SOLICITADA => 'status-pill--success',
-                                            \App\Models\PersonalRequisition::STATUS_CANCELADA => 'status-pill--danger',
-                                            \App\Models\PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA => 'status-pill--req-pendiente_autorizacion_gerencia',
-                                            default => 'status-pill--muted',
-                                        };
+                                        $estadoPill = 'status-pill--req-' . $requisition->status;
                                         $isPending = $requisition->status === \App\Models\PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA;
                                     @endphp
                                     <tr>

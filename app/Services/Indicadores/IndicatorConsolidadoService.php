@@ -10,9 +10,7 @@ use Illuminate\Support\Collection;
 
 class IndicatorConsolidadoService
 {
-    public function __construct(private readonly IndicatorCaptureAccessService $captureAccessService)
-    {
-    }
+    public function __construct(private readonly IndicatorCaptureAccessService $captureAccessService) {}
 
     public function getMonthlyData(Indicator $indicator, int $year, int $month, ?Collection $users = null): array
     {

@@ -25,10 +25,6 @@
         </div>
     </x-slot>
 
-    @push('styles')
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
-    @endpush
-
     <div class="page-section ficha-empleados-page ficha-empleados-page--form">
         <div class="app-container">
             @if ($errors->any())
@@ -62,8 +58,8 @@
 
                     <section class="ficha-empleados-form__section">
                         <header class="ficha-empleados-form__section-head">
-                            <h3 class="ficha-empleados-form__section-title">Identificación</h3>
-                            <p class="ficha-empleados-form__section-lead">Datos mínimos para crear el empleado en ficha.</p>
+                            <h3 class="ficha-empleados-form__section-title">Documento</h3>
+                            <p class="ficha-empleados-form__section-lead">Documento de identidad del empleado.</p>
                         </header>
                         <div class="form-grid form-grid--two ficha-empleados-form__grid">
                             <div class="form-field">
@@ -73,18 +69,6 @@
                                     name="hired_document"
                                     class="form-input"
                                     value="{{ old('hired_document', $fichaEntry->hired_document ?? '') }}"
-                                    required
-                                    autocomplete="off"
-                                    @readonly($isRehire ?? false)
-                                >
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label" for="hired_full_name">Nombre completo <span class="text-danger">*</span></label>
-                                <input
-                                    id="hired_full_name"
-                                    name="hired_full_name"
-                                    class="form-input"
-                                    value="{{ old('hired_full_name', $fichaEntry->hired_full_name ?? '') }}"
                                     required
                                     autocomplete="off"
                                     @readonly($isRehire ?? false)

@@ -1761,11 +1761,6 @@ a {
     padding: 0.75rem 1rem;
 }
 
-.ficha-empleados-page--form .ficha-empleados-form .select2-container {
-    width: 100% !important;
-    max-width: 100%;
-}
-
 /* Scroll contenido: overrides definitivos en layouts/app.blade.php (inline, después de Vite) */
 .app-shell:has(.ficha-empleados-page--form) {
     overflow: hidden;
@@ -1858,36 +1853,217 @@ a {
     margin-top: 0.75rem;
 }
 
-.ficha-empleados-form .select2-container--default .select2-selection--single {
-    min-height: var(--control-height-chrome);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--control-radius);
+/* ==========================================================================
+   Alpine.js Searchable Select (Combobox)
+   ========================================================================== */
+.searchable-select-wrap {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.searchable-select__trigger {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: var(--control-height-chrome, 2rem);
+    padding: 0.25rem var(--control-padding-x, 0.65rem);
+    border: 1px solid var(--color-border-strong, #cbd5e1);
+    border-radius: var(--control-radius, 12px);
+    background-color: #ffffff;
+    color: var(--color-text, #0f172a);
+    font-size: var(--control-font-size, 0.8125rem);
+    line-height: var(--control-line-height, 1.35);
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.ficha-empleados-form .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: var(--control-line-height);
-    padding-left: var(--control-padding-x);
-    color: var(--color-text);
-    font-size: var(--control-font-size);
-}
-
-.ficha-empleados-form .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: var(--control-height-chrome);
-    right: 0.5rem;
-}
-
-.ficha-empleados-form .select2-container--default.select2-container--focus .select2-selection--single,
-.ficha-empleados-form .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: var(--color-sky);
+.searchable-select__trigger:focus,
+.searchable-select__trigger--open {
+    outline: none;
+    border-color: var(--color-sky, #0e7490);
     box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.12);
 }
 
-.ficha-empleados-form .select2-dropdown {
-    border-color: var(--color-border-strong);
-    border-radius: 12px;
+.searchable-select__trigger--disabled {
+    opacity: 0.6;
+    background-color: var(--color-surface, #f8fafc);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.searchable-select__label {
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 0.35rem;
+}
+
+.searchable-select__label--placeholder {
+    color: #94a3b8;
+}
+
+.searchable-select__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.searchable-select__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    padding: 0;
+    border: none;
+    border-radius: 9999px;
+    background-color: #e2e8f0;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.searchable-select__clear:hover {
+    background-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.searchable-select__clear-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.searchable-select__dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 10050;
+    background-color: #ffffff;
+    border: 1px solid var(--color-border-strong, #cbd5e1);
+    border-radius: var(--control-radius, 12px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transform-origin: top;
+}
+
+.searchable-select-enter {
+    transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+.searchable-select-enter-start {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+}
+.searchable-select-enter-end {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+.searchable-select-leave {
+    transition: opacity 0.08s ease-in, transform 0.08s ease-in;
+}
+.searchable-select-leave-start {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+.searchable-select-leave-end {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+}
+
+.searchable-select__search-wrap {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    background-color: #f8fafc;
+    gap: 0.35rem;
+}
+
+.searchable-select__search-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.searchable-select__search-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.25rem 0.35rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-size: var(--control-font-size, 0.8125rem);
+    line-height: var(--control-line-height, 1.35);
+    color: var(--color-text, #0f172a);
+}
+
+.searchable-select__search-input:focus {
+    outline: none;
+    border-color: var(--color-sky, #0e7490);
+    box-shadow: 0 0 0 2px rgba(14, 116, 144, 0.15);
+}
+
+.searchable-select__options {
+    list-style: none;
+    margin: 0;
+    padding: 0.3rem 0;
+    max-height: 220px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.searchable-select__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.75rem;
+    font-size: var(--control-font-size, 0.8125rem);
+    color: var(--color-text, #0f172a);
+    cursor: pointer;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.searchable-select__option--highlighted {
+    background-color: #f1f5f9;
+    color: var(--brand-blue, #003366);
+}
+
+.searchable-select__option--selected {
+    background-color: rgba(14, 116, 144, 0.08);
+    font-weight: 600;
+    color: var(--color-sky, #0e7490);
+}
+
+.searchable-select__option-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.searchable-select__check-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-sky, #0e7490);
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+}
+
+.searchable-select__empty {
+    padding: 0.75rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: var(--control-font-size, 0.8125rem);
 }
 
 .ficha-empleados-catalogs-page__alert {
@@ -3594,6 +3770,12 @@ a {
     border-color: #64748b;
 }
 
+.req-manage-filters__pill.is-active.status-pill--req-aprobada,
+.req-manage-filters__pill.status-pill--req-aprobada.is-active {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
 .req-manage-filters__pill.is-active.status-pill--req-en_gestion,
 .req-manage-filters__pill.status-pill--req-en_gestion.is-active {
     background: #0284c7;
@@ -3602,8 +3784,8 @@ a {
 
 .req-manage-filters__pill.is-active.status-pill--req-contratado,
 .req-manage-filters__pill.status-pill--req-contratado.is-active {
-    background: #15803d;
-    border-color: #15803d;
+    background: #166534;
+    border-color: #166534;
 }
 
 .req-manage-filters__pill.is-active.status-pill--req-cancelada,
@@ -4480,14 +4662,19 @@ a.sj-pagination__item:hover {
     color: #7e22ce;
 }
 
+.status-pill--req-aprobada {
+    background: #dcfce7;
+    color: #15803d;
+}
+
 .status-pill--req-en_gestion {
     background: #fef3c7;
     color: #92400e;
 }
 
 .status-pill--req-contratado {
-    background: #dcfce7;
-    color: #15803d;
+    background: #166534;
+    color: #ffffff;
 }
 
 .status-pill--req-cancelada {

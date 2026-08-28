@@ -51,12 +51,12 @@ class LetterVariableBuilder
 
         // --- From EmployeeFichaProfile ---
         if ($profile !== null) {
-            $variables['DOCUMENTO'] = (string) $profile->document_number;
-            $variables['NOMBRE_COMPLETO'] = (string) $profile->full_name;
-            $variables['PRIMER_APELLIDO'] = (string) $profile->first_surname;
-            $variables['SEGUNDO_APELLIDO'] = (string) $profile->second_surname;
-            $variables['PRIMER_NOMBRE'] = (string) $profile->first_name;
-            $variables['SEGUNDO_NOMBRE'] = (string) $profile->second_name;
+            $variables['DOCUMENTO'] = (string) ($profile->document_number ?: $entry->hired_document);
+            $variables['NOMBRE_COMPLETO'] = (string) ($profile->full_name ?: $entry->hired_full_name);
+            $variables['PRIMER_APELLIDO'] = (string) ($profile->first_surname ?: $entry->first_surname);
+            $variables['SEGUNDO_APELLIDO'] = (string) ($profile->second_surname ?: $entry->second_surname);
+            $variables['PRIMER_NOMBRE'] = (string) ($profile->first_name ?: $entry->first_name);
+            $variables['SEGUNDO_NOMBRE'] = (string) ($profile->second_name ?: $entry->second_name);
             $variables['TIPO_DOCUMENTO'] = (string) $profile->document_type;
             $variables['FECHA_NACIMIENTO'] = $this->formatLongDate($profile->birth_date);
             $variables['EDAD'] = $profile->age !== null ? (string) $profile->age : '';
@@ -74,7 +74,6 @@ class LetterVariableBuilder
             $variables['NUMERO_HIJOS'] = $profile->children_count !== null ? (string) $profile->children_count : '';
             $variables['EMAIL'] = (string) $profile->email;
             $variables['TIPO_VINCULACION'] = (string) $profile->linkage_type;
-            $variables['TIPO_CONTRIBUYENTE'] = (string) $profile->contributor_type;
             $variables['FECHA_CONTRATO'] = $this->formatLongDate($profile->hire_date);
             $variables['FECHA_TERMINACION_PERFIL'] = $this->formatLongDate($profile->termination_date);
             $variables['ESTADO_LABORAL'] = (string) $profile->employment_status;
@@ -83,7 +82,6 @@ class LetterVariableBuilder
             $variables['CENTRO_COSTO_NOMBRE'] = (string) $profile->cost_center_name;
             $variables['CARGO'] = (string) $profile->position_name;
             $variables['CODIGO_CARGO'] = (string) $profile->position_code;
-            $variables['ESCALA_SALARIO'] = (string) $profile->salary_scale;
             $variables['TIPO_SALARIO'] = (string) $profile->salary_type_name;
             $variables['TIPO_CONTRATO_PERFIL'] = (string) $profile->contract_type_name;
             $variables['EPS'] = (string) $profile->eps_name;

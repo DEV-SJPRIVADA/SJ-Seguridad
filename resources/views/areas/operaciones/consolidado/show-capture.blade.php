@@ -29,14 +29,17 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
+                            <div style="min-width: 180px;">
                                 <label class="form-label">Capturador</label>
-                                <select name="user_id" onchange="this.form.submit()" class="supply-input supply-select">
-                                    <option value="" @selected(empty($headerFilters['selectedCapturadorId']))>Todos los capturadores</option>
-                                    @foreach ($headerFilters['capturableUsers'] as $capturador)
-                                        <option value="{{ $capturador->id }}" @selected((int) ($headerFilters['selectedCapturadorId'] ?? 0) === $capturador->id)>{{ $capturador->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select
+                                    id="consolidado-capturador-select"
+                                    name="user_id"
+                                    :options="collect($headerFilters['capturableUsers'])->map(fn($c) => ['value' => (string) $c->id, 'label' => $c->name])->all()"
+                                    :value="$headerFilters['selectedCapturadorId'] ?? ''"
+                                    placeholder="Todos los capturadores"
+                                    searchPlaceholder="Buscar capturador…"
+                                    onchange="this.form.submit()"
+                                />
                             </div>
                             <div>
                                 <span class="status-pill {{ $headerFilters['isPeriodClosed'] ? 'status-pill--req-cancelada' : 'status-pill--req-contratado' }}">

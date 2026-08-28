@@ -53,11 +53,16 @@
     <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
         <div class="form-field">
             <x-input-label for="portfolio" value="Portafolio" />
-            <select id="portfolio" name="portfolio" class="form-select" required>
-                @foreach ($portfolios as $key => $label)
-                    <option value="{{ $key }}" @selected(old('portfolio', $service->portfolio) === $key)>{{ $label }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select
+                id="portfolio"
+                name="portfolio"
+                :options="$portfolios"
+                :value="old('portfolio', $service->portfolio)"
+                placeholder="Seleccione portafolio…"
+                searchPlaceholder="Buscar portafolio…"
+                :required="true"
+                :allowClear="false"
+            />
             <x-input-error :messages="$errors->get('portfolio')" />
         </div>
         <div class="form-field">
@@ -72,30 +77,36 @@
         </div>
         <div class="form-field">
             <x-input-label for="commercial_sector_id" value="Sector" />
-            <select id="commercial_sector_id" name="commercial_sector_id" class="form-select">
-                <option value="">—</option>
-                @foreach ($sectors as $sector)
-                    <option value="{{ $sector->id }}" @selected((string) old('commercial_sector_id', $service->commercial_sector_id) === (string) $sector->id)>{{ $sector->name }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select
+                id="commercial_sector_id"
+                name="commercial_sector_id"
+                :options="$sectors"
+                :value="old('commercial_sector_id', $service->commercial_sector_id)"
+                placeholder="— Seleccione sector —"
+                searchPlaceholder="Buscar sector…"
+            />
         </div>
         <div class="form-field">
             <x-input-label for="commercial_client_type_id" value="Tipo cliente" />
-            <select id="commercial_client_type_id" name="commercial_client_type_id" class="form-select">
-                <option value="">—</option>
-                @foreach ($clientTypes as $type)
-                    <option value="{{ $type->id }}" @selected((string) old('commercial_client_type_id', $service->commercial_client_type_id) === (string) $type->id)>{{ $type->name }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select
+                id="commercial_client_type_id"
+                name="commercial_client_type_id"
+                :options="$clientTypes"
+                :value="old('commercial_client_type_id', $service->commercial_client_type_id)"
+                placeholder="— Seleccione tipo —"
+                searchPlaceholder="Buscar tipo…"
+            />
         </div>
         <div class="form-field">
             <x-input-label for="commercial_service_type_id" value="Tipo de servicio" />
-            <select id="commercial_service_type_id" name="commercial_service_type_id" class="form-select">
-                <option value="">—</option>
-                @foreach ($serviceTypes as $type)
-                    <option value="{{ $type->id }}" @selected((string) old('commercial_service_type_id', $service->commercial_service_type_id) === (string) $type->id)>{{ $type->name }}</option>
-                @endforeach
-            </select>
+            <x-searchable-select
+                id="commercial_service_type_id"
+                name="commercial_service_type_id"
+                :options="$serviceTypes"
+                :value="old('commercial_service_type_id', $service->commercial_service_type_id)"
+                placeholder="— Seleccione servicio —"
+                searchPlaceholder="Buscar servicio…"
+            />
         </div>
     </div>
 

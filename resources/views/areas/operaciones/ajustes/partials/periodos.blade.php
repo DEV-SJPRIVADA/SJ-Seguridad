@@ -21,10 +21,17 @@
             </div>
             <div class="indicadores-field indicadores-field--sm">
                 <label class="form-label">Estado inicial</label>
-                <select name="status" class="supply-input supply-select">
-                    <option value="open">Abierto</option>
-                    <option value="closed">Cerrado</option>
-                </select>
+                <x-searchable-select
+                    id="ajustes-periodo-status"
+                    name="status"
+                    :options="[
+                        ['value' => 'open', 'label' => 'Abierto'],
+                        ['value' => 'closed', 'label' => 'Cerrado'],
+                    ]"
+                    value="open"
+                    placeholder="Estado inicial"
+                    :allowClear="false"
+                />
             </div>
             <div class="indicadores-field indicadores-field--action">
                 <button type="submit" class="btn btn--primary btn--sm">Crear periodo</button>

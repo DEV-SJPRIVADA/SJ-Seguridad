@@ -49,11 +49,16 @@
                         <div class="dashboard-stat-grid block-spaced">
                             <div class="form-field">
                                 <label class="form-label" for="estado_compras">Estado de compras</label>
-                                <select name="estado_compras" id="estado_compras" class="form-select" required>
-                                    @foreach (\App\Models\PurchaseRequest::estadosComprasLabels() as $estadoKey => $estadoLabel)
-                                        <option value="{{ $estadoKey }}" @selected(old('estado_compras', $purchaseRequest->estado_compras) === $estadoKey)>{{ $estadoLabel }}</option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-select
+                                    id="estado_compras"
+                                    name="estado_compras"
+                                    :options="\App\Models\PurchaseRequest::estadosComprasLabels()"
+                                    :value="old('estado_compras', $purchaseRequest->estado_compras)"
+                                    placeholder="Seleccione estado…"
+                                    searchPlaceholder="Buscar estado…"
+                                    :required="true"
+                                    :allowClear="false"
+                                />
                                 <x-input-error :messages="$errors->get('estado_compras')" />
                             </div>
                         </div>

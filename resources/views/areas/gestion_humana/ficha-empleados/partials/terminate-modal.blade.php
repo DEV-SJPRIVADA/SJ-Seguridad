@@ -35,12 +35,15 @@
                 <div class="form-grid form-grid--two ficha-empleados-form__grid">
                     <div class="form-field form-grid__full">
                         <label class="form-label" for="termination_cause_code">Causal <span class="text-danger">*</span></label>
-                        <select id="termination_cause_code" name="termination_cause_code" class="form-select" required>
-                            <option value="">— Seleccione —</option>
-                            @foreach ($catalogs['termination_cause'] ?? [] as $item)
-                                <option value="{{ $item['code'] }}" @selected(old('termination_cause_code') === $item['code'])>{{ $item['code'] }} — {{ $item['name'] }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="termination_cause_code"
+                            name="termination_cause_code"
+                            :options="collect($catalogs['termination_cause'] ?? [])->map(fn($item) => ['value' => $item['code'], 'label' => $item['code'] . ' — ' . $item['name']])->all()"
+                            :value="old('termination_cause_code')"
+                            placeholder="— Seleccione causal —"
+                            searchPlaceholder="Buscar causal…"
+                            :required="true"
+                        />
                     </div>
 
                     <div class="form-field">
@@ -55,10 +58,18 @@
 
                     <div class="form-field form-grid__full">
                         <label class="form-label" for="is_rehireable">Recontratable <span class="text-danger">*</span></label>
-                        <select id="is_rehireable" name="is_rehireable" class="form-select" required>
-                            <option value="1" @selected(old('is_rehireable', '1') === '1')>Si — puede reingresar por requisicion</option>
-                            <option value="0" @selected(old('is_rehireable') === '0')>No</option>
-                        </select>
+                        <x-searchable-select
+                            id="is_rehireable"
+                            name="is_rehireable"
+                            :options="[
+                                ['value' => '1', 'label' => 'Si — puede reingresar por requisicion'],
+                                ['value' => '0', 'label' => 'No'],
+                            ]"
+                            :value="old('is_rehireable', '1')"
+                            placeholder="Seleccione…"
+                            :required="true"
+                            :allowClear="false"
+                        />
                     </div>
 
                     <div class="form-field form-grid__full">

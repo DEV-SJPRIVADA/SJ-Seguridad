@@ -13,6 +13,7 @@ use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
+use App\Services\GestionHumana\EmployeeFichaNameParser;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -273,6 +274,10 @@ class RequisicionesTxtImporter
             'leasing_contract' => $this->cell($row, self::COL_LEASING) ?: null,
             'hiring_date' => $isContratado ? ($hiringDate ?? $requestDate) : null,
             'hired_document' => $isContratado ? $hiredDocument : null,
+            'hired_first_surname' => $isContratado && $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['first_surname'] : null,
+            'hired_second_surname' => $isContratado && $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['second_surname'] : null,
+            'hired_first_name' => $isContratado && $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['first_name'] : null,
+            'hired_second_name' => $isContratado && $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['second_name'] : null,
             'hired_full_name' => $isContratado ? $hiredFullName : null,
             'status' => $status,
             'status_changed_at' => $requestDate,
@@ -283,6 +288,10 @@ class RequisicionesTxtImporter
 
         $ficha = $isContratado ? [
             'hired_document' => $hiredDocument,
+            'first_surname' => $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['first_surname'] : null,
+            'second_surname' => $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['second_surname'] : null,
+            'first_name' => $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['first_name'] : null,
+            'second_name' => $hiredFullName ? EmployeeFichaNameParser::parse($hiredFullName)['second_name'] : null,
             'hired_full_name' => $hiredFullName,
             'created_by' => $userId,
         ] : null;

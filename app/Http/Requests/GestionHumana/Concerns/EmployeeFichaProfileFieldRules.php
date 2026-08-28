@@ -36,6 +36,10 @@ trait EmployeeFichaProfileFieldRules
     private function employeeFichaProfileScalarRules(string $required): array
     {
         return [
+            'first_surname' => [$required, 'string', 'max:100'],
+            'second_surname' => ['nullable', 'string', 'max:100'],
+            'first_name' => [$required, 'string', 'max:100'],
+            'second_name' => ['nullable', 'string', 'max:100'],
             'document_type' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('document_type')],
             'birth_date' => ['nullable', 'date'],
             'expedition_city_code' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('city')],
@@ -76,8 +80,6 @@ trait EmployeeFichaProfileFieldRules
             'economic_activity_code' => ['nullable', 'string', 'max:50', new PayrollCatalogCode('economic_activity')],
             'economic_activity_name' => ['nullable', 'string', 'max:150'],
             'linkage_type' => ['nullable', 'string', 'max:100', new PayrollCatalogCode('linkage_type')],
-            'contributor_type' => ['nullable', 'string', 'max:50'],
-            'salary_scale' => ['nullable', 'string', 'max:50'],
             'salary_type_name' => ['nullable', 'string', 'max:100'],
         ];
     }

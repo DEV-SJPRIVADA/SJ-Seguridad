@@ -64,20 +64,28 @@
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__field--compact">
                                             <label class="req-manage-filters__label" for="bandeja-filter-area">Area solicitante</label>
-                                            <select id="bandeja-filter-area" name="area_key" class="form-select">
-                                                <option value="">Todas</option>
-                                                @foreach ($areas as $areaKey => $areaLabel)
-                                                    <option value="{{ $areaKey }}" @selected(($filters['area_key'] ?? '') === $areaKey)>{{ $areaLabel }}</option>
-                                                @endforeach
-                                            </select>
+                                            <x-searchable-select
+                                                id="bandeja-filter-area"
+                                                name="area_key"
+                                                :options="$areas"
+                                                :value="$filters['area_key'] ?? ''"
+                                                placeholder="Todas las areas"
+                                                searchPlaceholder="Buscar area…"
+                                            />
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__field--compact">
                                             <label class="req-manage-filters__label" for="bandeja-filter-tipo">Tipo</label>
-                                            <select id="bandeja-filter-tipo" name="tipo" class="form-select">
-                                                <option value="">Todos</option>
-                            <option value="purchase" @selected(($filters['tipo'] ?? '') === 'purchase')>Solicitud compra</option>
-                            <option value="supply" @selected(($filters['tipo'] ?? '') === 'supply')>Suministro</option>
-                        </select>
+                                            <x-searchable-select
+                                                id="bandeja-filter-tipo"
+                                                name="tipo"
+                                                :options="[
+                                                    ['value' => 'purchase', 'label' => 'Solicitud compra'],
+                                                    ['value' => 'supply', 'label' => 'Suministro'],
+                                                ]"
+                                                :value="$filters['tipo'] ?? ''"
+                                                placeholder="Todos los tipos"
+                                                searchPlaceholder="Buscar tipo…"
+                                            />
                                         </div>
                                     </div>
                     </form>

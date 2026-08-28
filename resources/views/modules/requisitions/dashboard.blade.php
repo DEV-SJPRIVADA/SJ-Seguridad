@@ -98,39 +98,47 @@
                 <div class="filter-grid">
                     <div class="form-field">
                         <label class="form-label">Cliente</label>
-                        <select name="client_id" class="form-select select2">
-                            <option value="">Todos los clientes</option>
-                            @foreach ($catalogs['clients'] as $client)
-                                <option value="{{ $client->id }}" @selected($filters['client_id'] == $client->id)>{{ $client->name }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="dashboard_filter_client_id"
+                            name="client_id"
+                            :options="$catalogs['clients']"
+                            :value="$filters['client_id'] ?? ''"
+                            placeholder="Todos los clientes"
+                            searchPlaceholder="Buscar cliente…"
+                        />
                     </div>
                     <div class="form-field">
                         <label class="form-label">Cargo</label>
-                        <select name="position_id" class="form-select select2">
-                            <option value="">Todos los cargos</option>
-                            @foreach ($catalogs['positions'] as $pos)
-                                <option value="{{ $pos->id }}" @selected($filters['position_id'] == $pos->id)>{{ $pos->name }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="dashboard_filter_position_id"
+                            name="position_id"
+                            :options="$catalogs['positions']"
+                            :value="$filters['position_id'] ?? ''"
+                            placeholder="Todos los cargos"
+                            searchPlaceholder="Buscar cargo…"
+                        />
                     </div>
                     <div class="form-field">
                         <label class="form-label">Ciudad</label>
-                        <select name="city_id" class="form-select">
-                            <option value="">Todas las ciudades</option>
-                            @foreach ($catalogs['cities'] as $city)
-                                <option value="{{ $city->id }}" @selected($filters['city_id'] == $city->id)>{{ $city->name }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="dashboard_filter_city_id"
+                            name="city_id"
+                            :options="$catalogs['cities']"
+                            :value="$filters['city_id'] ?? ''"
+                            placeholder="Todas las ciudades"
+                            searchPlaceholder="Buscar ciudad…"
+                        />
                     </div>
                     <div class="form-field">
                         <label class="form-label">Estado</label>
-                        <select name="status" class="form-select">
-                            <option value="">Todos los estados</option>
-                            @foreach ($statusLabels as $key => $label)
-                                <option value="{{ $key }}" @selected($filters['status'] == $key)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="dashboard_filter_status"
+                            name="status"
+                            :options="$statusLabels"
+                            :value="$filters['status'] ?? ''"
+                            placeholder="Todos los estados"
+                            searchPlaceholder="Buscar estado…"
+                        />
                     </div>
                     <div class="form-field" style="max-width: 100px;">
                         <label class="form-label">Año</label>
@@ -157,7 +165,7 @@
 
             {{-- KPIs --}}
             @if ($dashboardGlobalScope ?? false)
-                <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis req-dashboard-kpis bottom-spaced"></div>
+                <p class="form-hint" style="margin-bottom: 0.5rem;">Vista consolidada de todas las areas solicitantes.</p>
             @endif
             <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis req-dashboard-kpis bottom-spaced">
                 <article class="req-dashboard-kpi req-dashboard-kpi--total">

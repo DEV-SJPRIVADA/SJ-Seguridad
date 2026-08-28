@@ -24,67 +24,85 @@
 
             <div class="form-field">
                 <label class="form-label" for="process_key">Proceso al que pertenece</label>
-                <select name="process_key" id="process_key" class="form-select" required>
-                    <option value="">Seleccione un proceso</option>
-                    @foreach ($catalogs['processes'] ?? [] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('process_key', $document->process_key ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="process_key"
+                    name="process_key"
+                    :options="$catalogs['processes'] ?? []"
+                    :value="old('process_key', $document->process_key ?? '')"
+                    placeholder="Seleccione un proceso"
+                    searchPlaceholder="Buscar proceso…"
+                    :required="true"
+                />
                 @error('process_key')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="form-field">
                 <label class="form-label" for="document_type">Tipo</label>
-                <select name="document_type" id="document_type" class="form-select" required>
-                    <option value="">Seleccione un tipo</option>
-                    @foreach ($catalogs['types'] ?? [] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('document_type', $document->document_type ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="document_type"
+                    name="document_type"
+                    :options="$catalogs['types'] ?? []"
+                    :value="old('document_type', $document->document_type ?? '')"
+                    placeholder="Seleccione un tipo"
+                    searchPlaceholder="Buscar tipo…"
+                    :required="true"
+                />
                 @error('document_type')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="form-field">
                 <label class="form-label" for="origin">Origen</label>
-                <select name="origin" id="origin" class="form-select" required>
-                    <option value="">Seleccione origen</option>
-                    @foreach ($catalogs['origins'] ?? [] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('origin', $document->origin ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="origin"
+                    name="origin"
+                    :options="$catalogs['origins'] ?? []"
+                    :value="old('origin', $document->origin ?? '')"
+                    placeholder="Seleccione origen"
+                    searchPlaceholder="Buscar origen…"
+                    :required="true"
+                />
                 @error('origin')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="form-field">
                 <label class="form-label" for="document_status">Estado del documento</label>
-                <select name="document_status" id="document_status" class="form-select" required>
-                    <option value="">Seleccione estado</option>
-                    @foreach ($catalogs['document_statuses'] ?? [] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('document_status', $document->document_status ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="document_status"
+                    name="document_status"
+                    :options="$catalogs['document_statuses'] ?? []"
+                    :value="old('document_status', $document->document_status ?? '')"
+                    placeholder="Seleccione estado"
+                    searchPlaceholder="Buscar estado…"
+                    :required="true"
+                />
                 @error('document_status')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="form-field">
                 <label class="form-label" for="activity_status">Estado de la actividad</label>
-                <select name="activity_status" id="activity_status" class="form-select" required>
-                    <option value="">Seleccione estado</option>
-                    @foreach ($catalogs['activity_statuses'] ?? [] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('activity_status', $document->activity_status ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="activity_status"
+                    name="activity_status"
+                    :options="$catalogs['activity_statuses'] ?? []"
+                    :value="old('activity_status', $document->activity_status ?? '')"
+                    placeholder="Seleccione estado"
+                    searchPlaceholder="Buscar estado…"
+                    :required="true"
+                />
                 @error('activity_status')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="form-field">
                 <label class="form-label" for="storage_type">Tipo de almacenamiento</label>
-                <select name="storage_type" id="storage_type" class="form-select" required>
-                    <option value="">Seleccione tipo</option>
-                    @foreach ($catalogs['storage_types'] ?? [] as $key => $label)
-                        <option value="{{ $key }}" @selected(old('storage_type', $document->storage_type ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="storage_type"
+                    name="storage_type"
+                    :options="$catalogs['storage_types'] ?? []"
+                    :value="old('storage_type', $document->storage_type ?? '')"
+                    placeholder="Seleccione tipo"
+                    searchPlaceholder="Buscar tipo…"
+                    :required="true"
+                />
                 @error('storage_type')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
 

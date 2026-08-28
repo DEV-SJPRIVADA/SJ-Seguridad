@@ -99,10 +99,30 @@ class UpdatePersonalRequisitionRequest extends FormRequest
                 'max:50',
                 ...($isHired ? [new HiredDocumentNotDuplicated($requisitionId, $confirmDuplicateHired, $confirmDuplicateHiredDocument ?: null)] : []),
             ],
-            'hired_full_name' => [$isHired ? 'required' : 'nullable', 'string', 'max:255'],
+            'hired_first_surname' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
+            'hired_second_surname' => ['nullable', 'string', 'max:100'],
+            'hired_first_name' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
+            'hired_second_name' => ['nullable', 'string', 'max:100'],
+            'hired_full_name' => ['nullable', 'string', 'max:255'],
             'confirm_duplicate_hired' => ['nullable', 'boolean'],
             'confirm_duplicate_hired_document' => ['nullable', 'string', 'max:50'],
             'status' => ['required', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'hired_document' => 'cédula persona contratada',
+            'hired_first_surname' => 'primer apellido persona contratada',
+            'hired_second_surname' => 'segundo apellido persona contratada',
+            'hired_first_name' => 'primer nombre persona contratada',
+            'hired_second_name' => 'segundo nombre persona contratada',
+            'hired_full_name' => 'nombre persona contratada',
+            'hiring_date' => 'fecha de ingreso',
         ];
     }
 

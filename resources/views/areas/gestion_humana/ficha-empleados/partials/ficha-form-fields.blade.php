@@ -9,10 +9,60 @@
 
 <section class="ficha-empleados-form__section">
     <header class="ficha-empleados-form__section-head">
-        <h3 class="ficha-empleados-form__section-title">Identificación</h3>
-        <p class="ficha-empleados-form__section-lead">Tipo de documento, datos demográficos y expedición.</p>
+        <h3 class="ficha-empleados-form__section-title">Identificación y Nombres</h3>
+        <p class="ficha-empleados-form__section-lead">Nombres completos, tipo de documento, datos demográficos y expedición.</p>
     </header>
     <div class="form-grid form-grid--two ficha-empleados-form__grid">
+        <div class="form-field">
+            <label class="form-label" for="first_surname">Primer apellido <span class="text-danger">*</span></label>
+            <input
+                id="first_surname"
+                name="first_surname"
+                class="form-input"
+                value="{{ old('first_surname', $profile->first_surname) }}"
+                required
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('first_surname')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="second_surname">Segundo apellido</label>
+            <input
+                id="second_surname"
+                name="second_surname"
+                class="form-input"
+                value="{{ old('second_surname', $profile->second_surname) }}"
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('second_surname')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="first_name">Primer nombre <span class="text-danger">*</span></label>
+            <input
+                id="first_name"
+                name="first_name"
+                class="form-input"
+                value="{{ old('first_name', $profile->first_name) }}"
+                required
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('first_name')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="second_name">Segundo nombre</label>
+            <input
+                id="second_name"
+                name="second_name"
+                class="form-input"
+                value="{{ old('second_name', $profile->second_name) }}"
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('second_name')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
         @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
             'id' => 'document_type',
             'name' => 'document_type',
@@ -27,11 +77,17 @@
         </div>
         <div class="form-field">
             <label class="form-label" for="sex">Género <span class="text-danger">*</span></label>
-            <select id="sex" name="sex" class="form-select js-ficha-select" required>
-                <option value="">—</option>
-                <option value="M" @selected(old('sex', $profile->sex) === 'M')>Masculino</option>
-                <option value="F" @selected(old('sex', $profile->sex) === 'F')>Femenino</option>
-            </select>
+            <x-searchable-select
+                id="sex"
+                name="sex"
+                :options="[
+                    ['value' => 'M', 'label' => 'Masculino'],
+                    ['value' => 'F', 'label' => 'Femenino'],
+                ]"
+                :value="old('sex', $profile->sex)"
+                :required="true"
+                :disabled="$identityLocked"
+            />
         </div>
         @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
             'id' => 'expedition_city_code',
@@ -146,20 +202,12 @@
             'value' => old('linkage_type', $profile->linkage_type),
         ])
         <div class="form-field">
-            <label class="form-label" for="salary_scale">Escala salarial</label>
-            <input id="salary_scale" name="salary_scale" class="form-input" value="{{ old('salary_scale', $profile->salary_scale) }}">
-        </div>
-        <div class="form-field">
             <label class="form-label" for="hire_date">Fecha ingreso <span class="text-danger">*</span></label>
             <input id="hire_date" type="date" name="hire_date" class="form-input" value="{{ old('hire_date', optional($profile->hire_date)->format('Y-m-d')) }}" required>
         </div>
         <div class="form-field">
             <label class="form-label" for="contract_end_date">Fecha vencimiento contrato</label>
             <input id="contract_end_date" type="date" name="contract_end_date" class="form-input" value="{{ old('contract_end_date', optional($profile->contract_end_date)->format('Y-m-d')) }}">
-        </div>
-        <div class="form-field">
-            <label class="form-label" for="contributor_type">Tipo cotizante</label>
-            <input id="contributor_type" name="contributor_type" class="form-input" value="{{ old('contributor_type', $profile->contributor_type) }}">
         </div>
     </div>
 </section>
@@ -370,11 +418,15 @@
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_exclude_overtime">Excluir horas extra</label>
-            <select id="payroll_extra_exclude_overtime" name="payroll_extra[exclude_overtime]" class="form-select js-ficha-select">
-                <option value="">—</option>
-                <option value="0" @selected((string) $payrollExtra('exclude_overtime') === '0')>No</option>
-                <option value="1" @selected((string) $payrollExtra('exclude_overtime') === '1')>Sí</option>
-            </select>
+            <x-searchable-select
+                id="payroll_extra_exclude_overtime"
+                name="payroll_extra[exclude_overtime]"
+                :options="[
+                    ['value' => '0', 'label' => 'No'],
+                    ['value' => '1', 'label' => 'Sí'],
+                ]"
+                :value="$payrollExtra('exclude_overtime')"
+            />
         </div>
     </div>
 </section>

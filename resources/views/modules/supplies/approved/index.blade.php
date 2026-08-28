@@ -20,24 +20,34 @@
 
                 <div class="panel__body">
                     <form method="GET" action="{{ route('supplies.approved.index', ['module' => $module]) }}" class="approved-filters bottom-spaced">
-                        <select name="sede_id" class="form-select approved-filters__control" title="Sede">
-                            <option value="">Todas las sedes</option>
-                            @foreach ($sites as $site)
-                                <option value="{{ $site->id }}" @selected((string) ($filters['sede_id'] ?? '') === (string) $site->id)>
-                                    {{ $site->utilization }} ({{ $site->city }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="approved-filter-sede"
+                            name="sede_id"
+                            :options="collect($sites)->map(fn($s) => ['value' => (string) $s->id, 'label' => $s->utilization . ' (' . $s->city . ')'])->all()"
+                            :value="$filters['sede_id'] ?? ''"
+                            placeholder="Todas las sedes"
+                            searchPlaceholder="Buscar sede…"
+                            class="approved-filters__control"
+                        />
 
                         <input type="date" name="date_from" class="form-input approved-filters__control" value="{{ $filters['date_from'] ?? '' }}" title="Desde">
 
                         <input type="date" name="date_to" class="form-input approved-filters__control" value="{{ $filters['date_to'] ?? '' }}" title="Hasta">
 
-                        <select name="export_status" class="form-select approved-filters__control" title="Estado de exportación">
-                            <option value="all" @selected(($filters['export_status'] ?? 'all') === 'all')>Todas</option>
-                            <option value="pending" @selected(($filters['export_status'] ?? '') === 'pending')>Pendientes</option>
-                            <option value="exported" @selected(($filters['export_status'] ?? '') === 'exported')>Exportadas</option>
-                        </select>
+                        <x-searchable-select
+                            id="approved-filter-export-status"
+                            name="export_status"
+                            :options="[
+                                ['value' => 'all', 'label' => 'Todas'],
+                                ['value' => 'pending', 'label' => 'Pendientes'],
+                                ['value' => 'exported', 'label' => 'Exportadas'],
+                            ]"
+                            :value="$filters['export_status'] ?? 'all'"
+                            placeholder="Estado exportación"
+                            searchPlaceholder="Buscar estado…"
+                            class="approved-filters__control"
+                            :allowClear="false"
+                        />
 
                         <input type="text" name="requester" class="form-input approved-filters__control approved-filters__search" value="{{ $filters['requester'] ?? '' }}" placeholder="Solicitante">
 

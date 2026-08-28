@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\SupplySite;
 use App\Models\User;
+use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +16,7 @@ class SupplySiteManagementTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\RoleAndPermissionSeeder::class);
+        $this->seed(RoleAndPermissionSeeder::class);
     }
 
     public function test_admin_can_list_supply_sites_as_json(): void

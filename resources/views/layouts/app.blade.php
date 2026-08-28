@@ -563,14 +563,24 @@
                 color: #0369a1 !important;
             }
 
+            .status-pill--req-pendiente_autorizacion_gerencia {
+                background-color: #f3e8ff !important;
+                color: #7e22ce !important;
+            }
+
+            .status-pill--req-aprobada {
+                background-color: #dcfce7 !important;
+                color: #15803d !important;
+            }
+
             .status-pill--req-en_gestion {
                 background-color: #fef3c7 !important;
                 color: #92400e !important;
             }
 
             .status-pill--req-contratado {
-                background-color: #dcfce7 !important;
-                color: #15803d !important;
+                background-color: #166534 !important;
+                color: #ffffff !important;
             }
 
             .status-pill--req-cancelada {

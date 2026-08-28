@@ -270,24 +270,28 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             Portafolio
                         </label>
-                        <select name="portfolio" class="form-select">
-                            <option value="">Todos</option>
-                            @foreach ($portfolios as $key => $label)
-                                <option value="{{ $key }}" @selected($filters['portfolio'] === $key)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="comercial-dashboard-portfolio"
+                            name="portfolio"
+                            :options="$portfolios"
+                            :value="$filters['portfolio'] ?? ''"
+                            placeholder="Todos los portafolios"
+                            searchPlaceholder="Buscar portafolio…"
+                        />
                     </div>
                     <div class="form-field">
                         <label class="form-label">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             Ciudad
                         </label>
-                        <select name="city" class="form-select">
-                            <option value="">Todas</option>
-                            @foreach ($cities as $city)
-                                <option value="{{ $city }}" @selected($filters['city'] === $city)>{{ $city }}</option>
-                            @endforeach
-                        </select>
+                        <x-searchable-select
+                            id="comercial-dashboard-city"
+                            name="city"
+                            :options="collect($cities)->map(fn($c) => ['value' => $c, 'label' => $c])->all()"
+                            :value="$filters['city'] ?? ''"
+                            placeholder="Todas las ciudades"
+                            searchPlaceholder="Buscar ciudad…"
+                        />
                     </div>
                     <div class="form-field form-field--year">
                         <label class="form-label">

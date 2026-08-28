@@ -7,21 +7,25 @@
         <div class="indicadores-filter-bar">
             <div class="indicadores-field indicadores-field--md">
                 <label class="form-label">Tipo de evento</label>
-                <select name="event_type" class="supply-input supply-select">
-                    <option value="">Todos</option>
-                    @foreach ($eventTypes as $type)
-                        <option value="{{ $type }}" @selected(request('event_type') === $type)>{{ $type }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="ajustes-audit-event-type"
+                    name="event_type"
+                    :options="collect($eventTypes)->map(fn($t) => ['value' => $t, 'label' => $t])->all()"
+                    :value="request('event_type')"
+                    placeholder="Todos los eventos"
+                    searchPlaceholder="Buscar evento…"
+                />
             </div>
             <div class="indicadores-field indicadores-field--md">
                 <label class="form-label">Accion</label>
-                <select name="action" class="supply-input supply-select">
-                    <option value="">Todas</option>
-                    @foreach ($actions as $action)
-                        <option value="{{ $action }}" @selected(request('action') === $action)>{{ $action }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="ajustes-audit-action"
+                    name="action"
+                    :options="collect($actions)->map(fn($ac) => ['value' => $ac, 'label' => $ac])->all()"
+                    :value="request('action')"
+                    placeholder="Todas las acciones"
+                    searchPlaceholder="Buscar accion…"
+                />
             </div>
             <div class="indicadores-field indicadores-field--action">
                 <button type="submit" class="btn btn--secondary btn--sm">Filtrar</button>

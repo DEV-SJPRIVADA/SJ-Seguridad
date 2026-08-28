@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -23,7 +25,7 @@ class AdminFinancieroAreaMigrationTest extends TestCase
 
     public function test_migration_merges_legacy_area_keys_and_permissions(): void
     {
-        $this->seed(\Database\Seeders\RoleAndPermissionSeeder::class);
+        $this->seed(RoleAndPermissionSeeder::class);
 
         Permission::findOrCreate('view.area.remuneraciones', 'web');
         Permission::findOrCreate('manage.area.facturacion', 'web');
@@ -39,7 +41,7 @@ class AdminFinancieroAreaMigrationTest extends TestCase
             'view.board.facturacion.requisiciones',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('migrations')
+        DB::table('migrations')
             ->where('migration', '2026_07_10_120000_merge_remuneraciones_facturacion_into_admin_financiero')
             ->delete();
 

@@ -664,10 +664,13 @@ class FichaEmpleadosTest extends TestCase
         $manager->givePermissionTo('ficha_empleados.manage');
 
         $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
-            $this->masivosCorePayload(),
+            $this->masivosCorePayload([
+                'first_surname' => 'Manual',
+                'first_name' => 'Empleado',
+            ]),
             [
                 'hired_document' => '801234567',
-                'hired_full_name' => 'Empleado Manual Prueba',
+                'hired_full_name' => 'Manual Empleado',
                 'document_type' => 'C',
             ],
         ));
@@ -681,7 +684,7 @@ class FichaEmpleadosTest extends TestCase
         $this->assertNull($entry->personal_requisition_id);
         $this->assertNotNull($entry->moved_to_ficha_at);
         $this->assertTrue($entry->isManualEntry());
-        $this->assertSame('Empleado Manual Prueba', $entry->profile?->full_name);
+        $this->assertSame('Manual Empleado', $entry->profile?->full_name);
     }
 
     public function test_manual_employee_create_rejects_duplicate_document(): void
@@ -820,11 +823,16 @@ class FichaEmpleadosTest extends TestCase
         ]);
 
         $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
-            $this->masivosCorePayload(['sex' => 'F', 'salary' => '3000000']),
+            $this->masivosCorePayload([
+                'first_surname' => 'Ahora',
+                'first_name' => 'Gestionar',
+                'sex' => 'F',
+                'salary' => '3000000',
+            ]),
             [
                 'ficha_entry_id' => $entry->id,
                 'hired_document' => '900000404',
-                'hired_full_name' => 'Gestionar Ahora Corregido',
+                'hired_full_name' => 'Ahora Gestionar',
                 'document_type' => 'C',
             ],
         ));
@@ -834,8 +842,8 @@ class FichaEmpleadosTest extends TestCase
         $entry->refresh();
         $this->assertNotNull($entry->moved_to_ficha_at);
         $this->assertTrue($entry->movedBy->is($manager));
-        $this->assertSame('Gestionar Ahora Corregido', $entry->hired_full_name);
-        $this->assertSame('Gestionar Ahora Corregido', $entry->profile?->full_name);
+        $this->assertSame('Ahora Gestionar', $entry->hired_full_name);
+        $this->assertSame('Ahora Gestionar', $entry->profile?->full_name);
 
         $response->assertSessionHasNoErrors();
     }
@@ -883,11 +891,14 @@ class FichaEmpleadosTest extends TestCase
         ]);
 
         $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
-            $this->masivosCorePayload(),
+            $this->masivosCorePayload([
+                'first_surname' => 'Corregido',
+                'first_name' => 'Nombre',
+            ]),
             [
                 'ficha_entry_id' => $entry->id,
                 'hired_document' => '900000499',
-                'hired_full_name' => 'Nombre Corregido En Ficha',
+                'hired_full_name' => 'Corregido Nombre',
             ],
         ));
 

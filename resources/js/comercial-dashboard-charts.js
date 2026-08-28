@@ -140,10 +140,14 @@ function bindAutoSubmitFilters() {
         return;
     }
 
-    filterForm.querySelectorAll('select').forEach((input) => {
-        input.addEventListener('change', () => {
+    let submitTimer = null;
+    filterForm.addEventListener('change', () => {
+        if (submitTimer) {
+            clearTimeout(submitTimer);
+        }
+        submitTimer = setTimeout(() => {
             filterForm.submit();
-        });
+        }, 20);
     });
 }
 

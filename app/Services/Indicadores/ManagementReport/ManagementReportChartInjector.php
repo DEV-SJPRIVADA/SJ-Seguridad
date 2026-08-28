@@ -8,8 +8,7 @@ class ManagementReportChartInjector
 {
     public function __construct(
         private readonly ManagementReportPptxArchive $archive,
-    ) {
-    }
+    ) {}
 
     public function prototypeDirectory(): string
     {

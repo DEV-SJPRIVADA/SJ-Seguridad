@@ -1,12 +1,16 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Hash;
+
 require __DIR__.'/../vendor/autoload.php';
 
 $app = require __DIR__.'/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
 
-$user = App\Models\User::query()->where('email', 'admin@sjseguridad.local')->first();
+$user = User::query()->where('email', 'admin@sjseguridad.local')->first();
 
 if (! $user) {
     fwrite(STDERR, "missing user\n");
@@ -14,7 +18,7 @@ if (! $user) {
 }
 
 $user->update([
-    'password' => Illuminate\Support\Facades\Hash::make('Admin12345!'),
+    'password' => Hash::make('Admin12345!'),
     'is_active' => true,
     'must_change_password' => false,
 ]);

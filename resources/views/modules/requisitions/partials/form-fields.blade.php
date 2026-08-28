@@ -67,18 +67,16 @@
         <div class="form-grid form-grid--two">
             <div class="form-field">
                 <x-input-label for="request_reason_id" value="Motivo *" />
-                <select
+                <x-searchable-select
                     id="request_reason_id"
                     name="request_reason_id"
-                    class="form-select"
-                    required
-                    data-replacement-ids="{{ implode(',', $replacementReasonIds) }}"
-                >
-                    <option value="">Selecciona un motivo</option>
-                    @foreach ($catalogs['reasons'] as $item)
-                        <option value="{{ $item->id }}" @selected($selectedReasonId === (string) $item->id)>{{ $item->name }}</option>
-                    @endforeach
-                </select>
+                    :options="$catalogs['reasons']"
+                    :value="$selectedReasonId"
+                    placeholder="Selecciona un motivo"
+                    searchPlaceholder="Buscar motivo…"
+                    :required="true"
+                    :data-replacement-ids="implode(',', $replacementReasonIds)"
+                />
                 <x-input-error :messages="$errors->get('request_reason_id')" />
             </div>
         </div>
@@ -110,23 +108,29 @@
         <div class="form-grid form-grid--two">
             <div class="form-field">
                 <x-input-label for="position_id" value="Cargo solicitado *" />
-                <select id="position_id" name="position_id" class="form-select" required>
-                    <option value="">Selecciona un cargo</option>
-                    @foreach ($catalogs['positions'] as $item)
-                        <option value="{{ $item->id }}" @selected((string) old('position_id', $requisition?->position_id) === (string) $item->id)>{{ $item->name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="position_id"
+                    name="position_id"
+                    :options="$catalogs['positions']"
+                    :value="old('position_id', $requisition?->position_id)"
+                    placeholder="Selecciona un cargo"
+                    searchPlaceholder="Buscar cargo…"
+                    :required="true"
+                />
                 <x-input-error :messages="$errors->get('position_id')" />
             </div>
 
             <div class="form-field">
                 <x-input-label for="sex" value="Genero *" />
-                <select id="sex" name="sex" class="form-select" required>
-                    <option value="">Selecciona una opcion</option>
-                    @foreach ($sexOptions as $sexKey => $sexLabel)
-                        <option value="{{ $sexKey }}" @selected(old('sex', $requisition?->sex) === $sexKey)>{{ $sexLabel }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="sex"
+                    name="sex"
+                    :options="$sexOptions"
+                    :value="old('sex', $requisition?->sex)"
+                    placeholder="Selecciona una opcion"
+                    searchPlaceholder="Buscar genero…"
+                    :required="true"
+                />
                 <x-input-error :messages="$errors->get('sex')" />
             </div>
 
@@ -150,30 +154,31 @@
         <div class="form-grid form-grid--two">
             <div class="form-field">
                 <x-input-label for="operating_area_key" value="Area operativa *" />
-                <select id="operating_area_key" name="operating_area_key" class="form-select" required>
-                    <option value="">Selecciona un area</option>
-                    @foreach ($areaOptions as $areaKey => $areaName)
-                        <option value="{{ $areaKey }}" @selected(old('operating_area_key', $requisition?->operating_area_key) === $areaKey)>{{ $areaName }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="operating_area_key"
+                    name="operating_area_key"
+                    :options="$areaOptions"
+                    :value="old('operating_area_key', $requisition?->operating_area_key)"
+                    placeholder="Selecciona un area"
+                    searchPlaceholder="Buscar area…"
+                    :required="true"
+                />
                 <x-input-error :messages="$errors->get('operating_area_key')" />
             </div>
 
             <div class="form-field">
                 <x-input-label for="client_type_id" value="Tipo de cliente *" />
-                <select
+                <x-searchable-select
                     id="client_type_id"
                     name="client_type_id"
-                    class="form-select"
-                    required
-                    data-internal-id="{{ $internalClientTypeId }}"
-                    data-commercial-client-ids="{{ implode(',', $commercialClientTypeIds) }}"
-                >
-                    <option value="">Selecciona un tipo</option>
-                    @foreach ($catalogs['clientTypes'] as $item)
-                        <option value="{{ $item->id }}" @selected($selectedClientTypeId === (string) $item->id)>{{ $item->name }}</option>
-                    @endforeach
-                </select>
+                    :options="$catalogs['clientTypes']"
+                    :value="$selectedClientTypeId"
+                    placeholder="Selecciona un tipo"
+                    searchPlaceholder="Buscar tipo de cliente…"
+                    :required="true"
+                    :data-internal-id="$internalClientTypeId"
+                    :data-commercial-client-ids="implode(',', $commercialClientTypeIds)"
+                />
                 <x-input-error :messages="$errors->get('client_type_id')" />
             </div>
 
@@ -191,23 +196,29 @@
 
             <div class="form-field">
                 <x-input-label for="city_id" value="Ciudad de trabajo *" />
-                <select id="city_id" name="city_id" class="form-select" required>
-                    <option value="">Selecciona una ciudad</option>
-                    @foreach ($catalogs['cities'] as $item)
-                        <option value="{{ $item->id }}" @selected((string) old('city_id', $requisition?->city_id) === (string) $item->id)>{{ $item->name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="city_id"
+                    name="city_id"
+                    :options="$catalogs['cities']"
+                    :value="old('city_id', $requisition?->city_id)"
+                    placeholder="Selecciona una ciudad"
+                    searchPlaceholder="Buscar ciudad…"
+                    :required="true"
+                />
                 <x-input-error :messages="$errors->get('city_id')" />
             </div>
 
             <div class="form-field">
                 <x-input-label for="programming_type_id" value="Tipo de programacion *" />
-                <select id="programming_type_id" name="programming_type_id" class="form-select" required>
-                    <option value="">Selecciona una programacion</option>
-                    @foreach ($catalogs['programmingTypes'] as $item)
-                        <option value="{{ $item->id }}" @selected((string) old('programming_type_id', $requisition?->programming_type_id) === (string) $item->id)>{{ $item->name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="programming_type_id"
+                    name="programming_type_id"
+                    :options="$catalogs['programmingTypes']"
+                    :value="old('programming_type_id', $requisition?->programming_type_id)"
+                    placeholder="Selecciona una programacion"
+                    searchPlaceholder="Buscar programacion…"
+                    :required="true"
+                />
                 <x-input-error :messages="$errors->get('programming_type_id')" />
             </div>
         </div>
@@ -231,12 +242,15 @@
 
             <div class="form-field form-field--full">
                 <x-input-label for="uniform_id" value="Dotacion requerida *" />
-                <select id="uniform_id" name="uniform_id" class="form-select" required>
-                    <option value="">Selecciona una dotacion</option>
-                    @foreach ($catalogs['uniforms'] as $item)
-                        <option value="{{ $item->id }}" @selected((string) old('uniform_id', $requisition?->uniform_id) === (string) $item->id)>{{ $item->name }}</option>
-                    @endforeach
-                </select>
+                <x-searchable-select
+                    id="uniform_id"
+                    name="uniform_id"
+                    :options="$catalogs['uniforms']"
+                    :value="old('uniform_id', $requisition?->uniform_id)"
+                    placeholder="Selecciona una dotacion"
+                    searchPlaceholder="Buscar dotacion…"
+                    :required="true"
+                />
                 <x-input-error :messages="$errors->get('uniform_id')" />
             </div>
 
@@ -245,6 +259,18 @@
                 <textarea id="service_structure" name="service_structure" class="form-textarea" rows="3" required placeholder="Horarios, descansos y condiciones del puesto a tener en cuenta.">{{ old('service_structure', $requisition?->service_structure) }}</textarea>
                 <p class="req-form__hint">Horarios, descansos y condiciones del puesto a tener en cuenta.</p>
                 <x-input-error :messages="$errors->get('service_structure')" />
+            </div>
+
+            <div class="form-field">
+                <x-input-label for="cost_center" value="Centro de costo *" />
+                <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}" required>
+                <x-input-error :messages="$errors->get('cost_center')" />
+            </div>
+
+            <div class="form-field form-field--full">
+                <x-input-label for="requester_observation" value="Observaciones del solicitante" />
+                <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
+                <x-input-error :messages="$errors->get('requester_observation')" />
             </div>
         </div>
     </section>
@@ -262,12 +288,14 @@
             <div class="form-grid form-grid--two">
                 <div class="form-field">
                     <x-input-label for="contract_type_id" value="Tipo de contrato *" />
-                    <select id="contract_type_id" name="contract_type_id" class="form-select">
-                        <option value="">Selecciona un tipo de contrato</option>
-                        @foreach ($catalogs['contractTypes'] as $item)
-                            <option value="{{ $item->id }}" @selected((string) old('contract_type_id', $requisition?->contract_type_id) === (string) $item->id)>{{ $item->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        id="contract_type_id"
+                        name="contract_type_id"
+                        :options="$catalogs['contractTypes']"
+                        :value="old('contract_type_id', $requisition?->contract_type_id)"
+                        placeholder="Selecciona un tipo de contrato"
+                        searchPlaceholder="Buscar tipo de contrato…"
+                    />
                     <x-input-error :messages="$errors->get('contract_type_id')" />
                 </div>
 
@@ -326,65 +354,37 @@
                 <span class="req-form__section-step">6</span>
                 <div>
                     <h4 class="req-form__section-title">Gestion y seguimiento</h4>
-                    <p class="req-form__section-desc">Estado del proceso, reclutador, fechas y observaciones operativas.</p>
+                    <p class="req-form__section-desc">Reclutador, estado y observaciones operativas de gestion humana.</p>
                 </div>
             </header>
 
             <div class="form-grid form-grid--two">
                 <div class="form-field">
-                    <x-input-label for="cost_center" value="Centro de costo *" />
-                    <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}">
-                    <x-input-error :messages="$errors->get('cost_center')" />
-                </div>
-
-                <div class="form-field">
-                    <x-input-label for="status" value="Estado *" />
-                    <select id="status" name="status" class="form-select" required>
-                        @foreach ($statusLabels as $statusKey => $statusLabel)
-                            <option value="{{ $statusKey }}" @selected($currentStatus === $statusKey)>{{ $statusLabel }}</option>
-                        @endforeach
-                    </select>
-                    <x-input-error :messages="$errors->get('status')" />
-                </div>
-
-                <div class="form-field">
                     <x-input-label for="recruiter_id" value="Reclutador" />
-                    <select id="recruiter_id" name="recruiter_id" class="form-select">
-                        <option value="">Selecciona un reclutador</option>
-                        @foreach ($catalogs['recruiters'] as $item)
-                            <option value="{{ $item->id }}" @selected((string) old('recruiter_id', $requisition?->recruiter_id) === (string) $item->id)>{{ $item->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        id="recruiter_id"
+                        name="recruiter_id"
+                        :options="$catalogs['recruiters']"
+                        :value="old('recruiter_id', $requisition?->recruiter_id)"
+                        placeholder="Selecciona un reclutador"
+                        searchPlaceholder="Buscar reclutador…"
+                    />
                     <x-input-error :messages="$errors->get('recruiter_id')" />
                 </div>
 
                 <div class="form-field">
-                    <x-input-label for="hiring_date" value="Fecha de contratacion" />
-                    <input id="hiring_date" name="hiring_date" type="date" class="form-input" value="{{ old('hiring_date', $requisition?->hiring_date?->format('Y-m-d')) }}">
-                    <x-input-error :messages="$errors->get('hiring_date')" />
-                </div>
-
-                <div id="js-hired-group" class="form-grid form-grid--two req-form__field-span" @unless($showHiredFieldsInitially) hidden @endunless>
-                    <div class="form-field">
-                        <x-input-label for="hired_document" value="Cedula persona contratada" />
-                        <input id="hired_document" name="hired_document" type="text" class="form-input" value="{{ old('hired_document', $requisition?->hired_document) }}" placeholder="Documento de identidad">
-                        <x-input-error :messages="$hiredDocumentErrors" />
-                    </div>
-
-                    <div class="form-field">
-                        <x-input-label for="hired_full_name" value="Nombre completo persona contratada" />
-                        <input id="hired_full_name" name="hired_full_name" type="text" class="form-input" value="{{ old('hired_full_name', $requisition?->hired_full_name) }}" placeholder="Nombre del colaborador contratado">
-                        <x-input-error :messages="$errors->get('hired_full_name')" />
-                    </div>
-                </div>
-
-                <input type="hidden" id="confirm_duplicate_hired" name="confirm_duplicate_hired" value="{{ old('confirm_duplicate_hired', '0') }}">
-                <input type="hidden" id="confirm_duplicate_hired_document" name="confirm_duplicate_hired_document" value="{{ old('confirm_duplicate_hired_document', '') }}">
-
-                <div class="form-field form-field--full">
-                    <x-input-label for="requester_observation" value="Observaciones del solicitante" />
-                    <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
-                    <x-input-error :messages="$errors->get('requester_observation')" />
+                    <x-input-label for="status" value="Estado *" />
+                    <x-searchable-select
+                        id="status"
+                        name="status"
+                        :options="$statusLabels"
+                        :value="$currentStatus"
+                        placeholder="Selecciona un estado"
+                        searchPlaceholder="Buscar estado…"
+                        :required="true"
+                        :allowClear="false"
+                    />
+                    <x-input-error :messages="$errors->get('status')" />
                 </div>
 
                 <div class="form-field form-field--full">
@@ -394,29 +394,56 @@
                 </div>
             </div>
         </section>
-    @else
-        <section class="req-form__section">
+
+        <section id="js-hired-group" class="req-form__section" @unless($showHiredFieldsInitially) hidden @endunless>
             <header class="req-form__section-head">
-                <span class="req-form__section-step">5</span>
+                <span class="req-form__section-step">7</span>
                 <div>
-                    <h4 class="req-form__section-title">Datos administrativos</h4>
-                    <p class="req-form__section-desc">Centro de costo y observaciones para gestion humana.</p>
+                    <h4 class="req-form__section-title">Datos de la persona contratada</h4>
+                    <p class="req-form__section-desc">Informacion del colaborador contratado para el cierre de la vacante.</p>
                 </div>
             </header>
 
             <div class="form-grid form-grid--two">
                 <div class="form-field">
-                    <x-input-label for="cost_center" value="Centro de costo *" />
-                    <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}" required>
-                    <x-input-error :messages="$errors->get('cost_center')" />
+                    <x-input-label for="hiring_date" value="Fecha de ingreso *" />
+                    <input id="hiring_date" name="hiring_date" type="date" class="form-input" value="{{ old('hiring_date', $requisition?->hiring_date?->format('Y-m-d')) }}">
+                    <x-input-error :messages="$errors->get('hiring_date')" />
                 </div>
 
-                <div class="form-field form-field--full">
-                    <x-input-label for="requester_observation" value="Observaciones del solicitante" />
-                    <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="4">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
-                    <x-input-error :messages="$errors->get('requester_observation')" />
+                <div class="form-field">
+                    <x-input-label for="hired_document" value="Cédula persona contratada *" />
+                    <input id="hired_document" name="hired_document" type="text" class="form-input" value="{{ old('hired_document', $requisition?->hired_document) }}" placeholder="Documento de identidad">
+                    <x-input-error :messages="$hiredDocumentErrors" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_first_surname" value="Primer apellido *" />
+                    <input id="hired_first_surname" name="hired_first_surname" type="text" class="form-input" value="{{ old('hired_first_surname', $requisition?->hired_first_surname) }}" placeholder="Primer apellido">
+                    <x-input-error :messages="$errors->get('hired_first_surname')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_second_surname" value="Segundo apellido" />
+                    <input id="hired_second_surname" name="hired_second_surname" type="text" class="form-input" value="{{ old('hired_second_surname', $requisition?->hired_second_surname) }}" placeholder="Segundo apellido">
+                    <x-input-error :messages="$errors->get('hired_second_surname')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_first_name" value="Primer nombre *" />
+                    <input id="hired_first_name" name="hired_first_name" type="text" class="form-input" value="{{ old('hired_first_name', $requisition?->hired_first_name) }}" placeholder="Primer nombre">
+                    <x-input-error :messages="$errors->get('hired_first_name')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_second_name" value="Segundo nombre" />
+                    <input id="hired_second_name" name="hired_second_name" type="text" class="form-input" value="{{ old('hired_second_name', $requisition?->hired_second_name) }}" placeholder="Segundo nombre">
+                    <x-input-error :messages="$errors->get('hired_second_name')" />
                 </div>
             </div>
+
+            <input type="hidden" id="confirm_duplicate_hired" name="confirm_duplicate_hired" value="{{ old('confirm_duplicate_hired', '0') }}">
+            <input type="hidden" id="confirm_duplicate_hired_document" name="confirm_duplicate_hired_document" value="{{ old('confirm_duplicate_hired_document', '') }}">
         </section>
     @endif
 </div>
@@ -435,8 +462,18 @@
         const statusSelect = document.getElementById('status');
         const hiredGroup = document.getElementById('js-hired-group');
         const hiredFields = [
+            document.getElementById('hiring_date'),
             document.getElementById('hired_document'),
-            document.getElementById('hired_full_name'),
+            document.getElementById('hired_first_surname'),
+            document.getElementById('hired_second_surname'),
+            document.getElementById('hired_first_name'),
+            document.getElementById('hired_second_name'),
+        ];
+        const hiredRequiredFields = [
+            document.getElementById('hiring_date'),
+            document.getElementById('hired_document'),
+            document.getElementById('hired_first_surname'),
+            document.getElementById('hired_first_name'),
         ];
 
         function toggleReplacementFields() {
@@ -537,8 +574,13 @@
 
             hiredFields.forEach(function (field) {
                 if (field) {
-                    field.required = isHired;
                     field.disabled = !isHired;
+                }
+            });
+
+            hiredRequiredFields.forEach(function (field) {
+                if (field) {
+                    field.required = isHired;
                 }
             });
 

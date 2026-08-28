@@ -34,6 +34,8 @@ trait EmployeeFichaMasivosPayload
     protected function masivosCorePayload(array $overrides = []): array
     {
         return array_merge([
+            'first_surname' => 'Perez',
+            'first_name' => 'Juan',
             'sex' => 'M',
             'hire_date' => now()->subMonth()->toDateString(),
             'position_code' => 'VIG',

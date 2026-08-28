@@ -24,14 +24,21 @@
 
                 <div class="form-field">
                     <label class="form-label" for="apply-access-source">Usuario origen</label>
-                    <select name="source_user_id" id="apply-access-source" class="form-select js-copy-access-select @error('source_user_id') form-input--invalid @enderror" required>
-                        <option value="">Seleccione un usuario</option>
-                        @foreach ($copyCandidates as $candidate)
-                            <option value="{{ $candidate->id }}" @selected((int) old('source_user_id') === $candidate->id)>
-                            {{ trim($candidate->name.' · '.$candidate->email.($candidate->document_number ? ' · '.$candidate->document_number : '').(! $candidate->is_active ? ' (inactivo)' : '')) }}
-                        </option>
-                        @endforeach
-                    </select>
+                    @php
+                        $modalCandidateOptions = $copyCandidates->map(fn ($candidate) => [
+                            'value' => (string) $candidate->id,
+                            'label' => trim($candidate->name.' · '.$candidate->email.($candidate->document_number ? ' · '.$candidate->document_number : '').(! $candidate->is_active ? ' (inactivo)' : '')),
+                        ])->all();
+                    @endphp
+                    <x-searchable-select
+                        id="apply-access-source"
+                        name="source_user_id"
+                        :options="$modalCandidateOptions"
+                        :value="old('source_user_id')"
+                        placeholder="Seleccione un usuario"
+                        searchPlaceholder="Buscar usuario…"
+                        :required="true"
+                    />
                     <x-input-error :messages="$errors->get('source_user_id')" />
                 </div>
 

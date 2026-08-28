@@ -35,7 +35,7 @@ class StoreManualEmployeeFichaRequest extends FormRequest
                 'max:50',
                 Rule::unique('personal_requisition_ficha_entries', 'hired_document')->ignore($fichaEntryId),
             ],
-            'hired_full_name' => ['required', 'string', 'max:255'],
+            'hired_full_name' => ['nullable', 'string', 'max:255'],
         ], $this->employeeFichaProfileFieldRules(requireCore: true));
     }
 
@@ -47,6 +47,10 @@ class StoreManualEmployeeFichaRequest extends FormRequest
         return [
             'ficha_entry_id' => 'registro pendiente',
             'hired_document' => 'cédula',
+            'first_surname' => 'primer apellido',
+            'second_surname' => 'segundo apellido',
+            'first_name' => 'primer nombre',
+            'second_name' => 'segundo nombre',
             'hired_full_name' => 'nombre completo',
             'sex' => 'género',
             'hire_date' => 'fecha ingreso',

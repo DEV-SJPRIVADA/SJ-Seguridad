@@ -76,6 +76,19 @@ class EmployeeFichaProfileCatalogSync
 
     private function syncParsedNameParts(EmployeeFichaProfile $profile): void
     {
+        if ($profile->first_surname || $profile->first_name) {
+            $nameParts = array_filter([
+                $profile->first_surname,
+                $profile->second_surname,
+                $profile->first_name,
+                $profile->second_name,
+            ], fn ($v) => $v !== null && $v !== '');
+
+            $profile->full_name = implode(' ', $nameParts);
+
+            return;
+        }
+
         $fullName = trim((string) $profile->full_name);
 
         if ($fullName === '') {

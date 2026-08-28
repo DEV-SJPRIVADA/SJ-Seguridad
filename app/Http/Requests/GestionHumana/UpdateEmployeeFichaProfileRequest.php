@@ -28,6 +28,10 @@ class UpdateEmployeeFichaProfileRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'first_surname' => 'primer apellido',
+            'second_surname' => 'segundo apellido',
+            'first_name' => 'primer nombre',
+            'second_name' => 'segundo nombre',
             'sex' => 'género',
             'hire_date' => 'fecha ingreso',
             'position_code' => 'cargo',

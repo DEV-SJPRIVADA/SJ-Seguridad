@@ -5,11 +5,12 @@ namespace Database\Seeders;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
 use App\Models\RequisitionClientType;
+use App\Models\RequisitionContractType;
 use App\Models\RequisitionPosition;
 use App\Models\RequisitionProgrammingType;
 use App\Models\RequisitionRequestReason;
-use App\Models\RequisitionContractType;
 use App\Models\RequisitionUniform;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 
 class RequisitionParameterSeeder extends Seeder
@@ -67,7 +68,7 @@ class RequisitionParameterSeeder extends Seeder
     }
 
     /**
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      * @param  array<int, string>  $items
      */
     private function seedCatalog(string $modelClass, array $items): void

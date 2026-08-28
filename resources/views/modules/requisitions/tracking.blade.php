@@ -114,7 +114,7 @@
                             </div>
 
                             <div class="req-manage-filters__extras">
-                                <form method="GET" id="tracking-advanced-form" class="req-manage-filters__row">
+                                <form method="GET" id="tracking-advanced-form" class="req-manage-filters__row" onchange="this.submit()">
                                     @if ($filters['q'] ?? '')
                                         <input type="hidden" name="q" value="{{ $filters['q'] }}">
                                     @endif
@@ -130,22 +130,26 @@
 
                                     <div class="req-manage-filters__field">
                                         <label class="req-manage-filters__label" for="tracking-client-select">Cliente</label>
-                                        <select id="tracking-client-select" name="client_id" class="form-select" onchange="this.form.submit()">
-                                            <option value="">Todos los clientes</option>
-                                            @foreach ($catalogs['clients'] as $client)
-                                                <option value="{{ $client->id }}" @selected((int) ($filters['client_id'] ?? 0) === $client->id)>{{ $client->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="tracking-client-select"
+                                            name="client_id"
+                                            :options="$catalogs['clients']"
+                                            :value="$filters['client_id'] ?? ''"
+                                            placeholder="Todos los clientes"
+                                            searchPlaceholder="Buscar cliente…"
+                                        />
                                     </div>
 
                                     <div class="req-manage-filters__field">
                                         <label class="req-manage-filters__label" for="tracking-city-select">Ciudad</label>
-                                        <select id="tracking-city-select" name="city_id" class="form-select" onchange="this.form.submit()">
-                                            <option value="">Todas las ciudades</option>
-                                            @foreach ($catalogs['cities'] as $city)
-                                                <option value="{{ $city->id }}" @selected((int) ($filters['city_id'] ?? 0) === $city->id)>{{ $city->name }}</option>
-                                            @endforeach
-                                        </select>
+                                        <x-searchable-select
+                                            id="tracking-city-select"
+                                            name="city_id"
+                                            :options="$catalogs['cities']"
+                                            :value="$filters['city_id'] ?? ''"
+                                            placeholder="Todas las ciudades"
+                                            searchPlaceholder="Buscar ciudad…"
+                                        />
                                     </div>
 
                                     <div class="req-manage-filters__field req-manage-filters__field--compact">
