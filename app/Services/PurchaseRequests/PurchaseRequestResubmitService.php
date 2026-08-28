@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseRequestResubmitService
 {
+    public function __construct(
+        private readonly PurchaseRequestAttachmentService $attachmentService,
+    ) {}
+
     public function resubmit(
         PurchaseRequest $purchaseRequest,
         array $validated,
@@ -18,22 +22,16 @@ class PurchaseRequestResubmitService
     ): PurchaseRequest {
         $itemsInput = $request->input('items', []);
         $totalCantidad = collect($itemsInput)->sum(fn ($item) => (int) ($item['cantidad'] ?? 0));
-        $lineCount = count($itemsInput);
+        $keepIds = $request->input('keep_attachment_ids', []);
+        $keepIds = is_array($keepIds) ? $keepIds : [];
 
-        if ($request->hasFile('archivo_pedido')) {
-            $archivoPedido = $request->file('archivo_pedido')->store('purchase-requests', 'public');
-        } else {
-            $archivoPedido = $purchaseRequest->archivo_pedido_path;
-        }
-
-        DB::transaction(function () use ($purchaseRequest, $validated, $request, $aprobador, $itemsInput, $totalCantidad, $archivoPedido): void {
+        DB::transaction(function () use ($purchaseRequest, $validated, $request, $aprobador, $itemsInput, $totalCantidad, $keepIds): void {
             $purchaseRequest->items()->delete();
 
             $purchaseRequest->update([
                 'area_key' => $validated['area_key'],
                 'fecha_solicitud' => $validated['fecha_solicitud'],
                 'cantidad' => max(1, $totalCantidad),
-                'archivo_pedido_path' => $archivoPedido,
                 'solicitud_para' => $validated['solicitud_para'],
                 'urgente' => (bool) $validated['urgente'],
                 'aprobador_id' => $aprobador->id,
@@ -63,9 +61,15 @@ class PurchaseRequestResubmitService
                     'ubicacion' => $itemData['ubicacion'],
                 ]);
             }
+
+            $this->attachmentService->syncOnResubmit(
+                $purchaseRequest,
+                $keepIds,
+                $this->attachmentService->filesFromRequest($request),
+            );
         });
 
-        return $purchaseRequest->fresh(['user', 'aprobador', 'items']);
+        return $purchaseRequest->fresh(['user', 'aprobador', 'items', 'attachments']);
     }
 
     /**

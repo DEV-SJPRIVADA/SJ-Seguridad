@@ -80,7 +80,7 @@ Segun permisos, el usuario puede:
 ### Gestionar desde Bandeja compras (Compras)
 
 1. Entre a **Compras → Solicitudes de compra → Bandeja compras**.
-2. Filtre por fechas, area, tipo **Suministro** o estado si lo necesita.
+2. Filtre por fechas, area, tipo **Suministro** o estado si lo necesita. Los insumos aprobados salen mezclados con solicitudes de compra, **los mas recientes primero**; si no los ve en la primera pagina, filtre por tipo **Suministro**.
 3. Pulse **Ver detalle** para ver el pedido con el mismo formato visual que una solicitud de compra.
 4. Desde el detalle descargue **PDF** o **Excel** (FO-AD-44).
 5. Para registrar costos y cerrar, use el flujo **Procesar** desde la bandeja.
@@ -98,3 +98,4 @@ Segun permisos, el usuario puede:
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-08-03 | Navegacion canonica | Entrada al menu por area base vs Calidad vs Compras |
 | 1.2 | 2026-08-03 | Detalle y export | Vista detalle unificada con solicitud compra; PDF/Excel FO-AD-44 desde detalle; flujo Compras en bandeja |
+| 1.3 | 2026-08-28 | Bandeja compras | Insumos aprobados visibles por fecha mas reciente; filtro tipo Suministro se aplica al elegir |

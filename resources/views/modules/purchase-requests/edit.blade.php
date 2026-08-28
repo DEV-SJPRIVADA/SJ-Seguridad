@@ -193,6 +193,72 @@
                             <x-input-error :messages="$errors->get('items')" />
                         </div>
 
+                        @php
+                            $attachmentMimes = config('purchase-requests.attachments.mimes', []);
+                            $attachmentAccept = collect($attachmentMimes)->map(fn ($ext) => '.'.$ext)->implode(',');
+                            $attachmentMaxFiles = (int) config('purchase-requests.attachments.max_files', 5);
+                            $attachmentMaxMb = (int) config('purchase-requests.attachments.max_kilobytes', 10240) / 1024;
+                            $keptIds = old('keep_attachment_ids');
+                            $existingAttachments = $keptIds === null
+                                ? $purchaseRequest->attachments
+                                : $purchaseRequest->attachments->whereIn('id', collect($keptIds)->map(fn ($id) => (int) $id)->all());
+                        @endphp
+                        <div class="block-spaced">
+                            <label class="form-label" for="purchase-attachments">Adjuntos</label>
+                            <p class="form-hint">
+                                Documentos de soporte (cotizacion, orden, evidencia). Opcional.
+                                Maximo {{ $attachmentMaxFiles }} archivos, {{ $attachmentMaxMb }} MB cada uno.
+                                Tipos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP. Quitar un archivo de la lista lo elimina al reenviar.
+                            </p>
+                            <div class="purchase-attachments-picker">
+                                @if ($existingAttachments->isNotEmpty())
+                                    <div class="purchase-attachments-existing-wrapper">
+                                        <span class="text-small text-muted" style="font-weight: 500; margin-bottom: 0.35rem; display: block;">Archivos adjuntos actuales:</span>
+                                        <ul id="purchase-attachments-existing" class="purchase-attachments-list" style="margin-bottom: 0.75rem;">
+                                            @foreach ($existingAttachments as $attachment)
+                                                <li data-existing-attachment class="purchase-attachment-item">
+                                                    <input type="hidden" name="keep_attachment_ids[]" value="{{ $attachment->id }}">
+                                                    <div class="purchase-attachment-item__info">
+                                                        <x-lucide-paperclip width="15" height="15" class="text-muted" aria-hidden="true" />
+                                                        <span class="purchase-attachment-item__name">{{ $attachment->original_name }}</span>
+                                                        <span class="purchase-attachment-item__size">({{ $attachment->sizeLabel() }})</span>
+                                                    </div>
+                                                    <button type="button" class="btn btn--secondary btn--sm purchase-attachment-item__remove" data-remove-attachment title="Quitar archivo">
+                                                        <x-lucide-trash-2 width="13" height="13" aria-hidden="true" />
+                                                        <span>Quitar</span>
+                                                    </button>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @else
+                                    <ul id="purchase-attachments-existing" class="purchase-attachments-list" style="margin-bottom: 0.75rem;"></ul>
+                                @endif
+
+                                <input
+                                    type="file"
+                                    name="attachments[]"
+                                    id="purchase-attachments"
+                                    class="purchase-attachments-picker__input"
+                                    multiple
+                                    accept="{{ $attachmentAccept }}"
+                                >
+                                <div class="purchase-attachments-picker__actions">
+                                    <label for="purchase-attachments" class="btn btn--secondary btn--sm purchase-attachments-picker__btn">
+                                        <x-lucide-upload width="15" height="15" aria-hidden="true" />
+                                        <span>Elegir archivos</span>
+                                    </label>
+                                    <span id="purchase-attachments-count" class="purchase-attachments-picker__status">Sin archivos nuevos seleccionados</span>
+                                </div>
+                                <ul id="purchase-attachments-selected" class="purchase-attachments-list"></ul>
+                            </div>
+                            <x-input-error :messages="$errors->get('attachments')" />
+                            @foreach ($errors->getMessages() as $errorKey => $errorMessages)
+                                @continue(! str_starts_with($errorKey, 'attachments.'))
+                                <x-input-error :messages="$errorMessages" />
+                            @endforeach
+                        </div>
+
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; gap: 0.75rem; flex-wrap: wrap;">
                             <a href="{{ route('purchase-requests.index', ['module' => $module]) }}" class="btn btn--secondary">
                                 Cancelar

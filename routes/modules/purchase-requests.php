@@ -34,5 +34,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
 
     Route::get('/solicitud/{purchase_request}/pdf', [PurchaseRequestController::class, 'exportPdf'])->name('export.pdf');
     Route::get('/solicitud/{purchase_request}/excel', [PurchaseRequestController::class, 'exportExcel'])->name('export.excel');
+    Route::get('/solicitud/{purchase_request}/adjuntos/{attachment}', [PurchaseRequestController::class, 'downloadAttachment'])
+        ->scopeBindings()
+        ->name('attachments.download');
     Route::get('/solicitud/{purchase_request}', [PurchaseRequestController::class, 'show'])->name('show');
 });

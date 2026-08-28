@@ -272,7 +272,6 @@ return [
                 'label' => 'Solicitudes de compra',
                 'permissions' => [
                     'purchase.tab.approval',
-                    'purchase.tab.processing',
                 ],
             ],
             'directores' => [

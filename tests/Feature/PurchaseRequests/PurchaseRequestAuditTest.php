@@ -64,6 +64,7 @@ class PurchaseRequestAuditTest extends TestCase
         $this->assertSame($purchaseRequest->numero_solicitud, $log->metadata['numero_solicitud']);
         $this->assertSame('operaciones', $log->metadata['area_key']);
         $this->assertSame(1, $log->metadata['items_count']);
+        $this->assertSame(0, $log->metadata['attachments_count']);
         $this->assertFalse($log->metadata['urgente']);
         $this->assertSame($director->id, $log->metadata['aprobador_id']);
     }
@@ -105,6 +106,7 @@ class PurchaseRequestAuditTest extends TestCase
 
         $this->assertSame($purchaseRequest->numero_solicitud, $log->metadata['numero_solicitud']);
         $this->assertSame(1, $log->metadata['items_count']);
+        $this->assertSame(0, $log->metadata['attachments_count']);
         $this->assertSame(PurchaseRequest::ESTADO_RECHAZADO, $log->metadata['previous_estado']);
     }
 

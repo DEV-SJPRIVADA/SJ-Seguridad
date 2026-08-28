@@ -263,4 +263,102 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault();
         }
     });
+
+    const attachmentsInput = document.getElementById('purchase-attachments');
+    const attachmentsSelected = document.getElementById('purchase-attachments-selected');
+    const attachmentsExisting = document.getElementById('purchase-attachments-existing');
+    const attachmentsCount = document.getElementById('purchase-attachments-count');
+
+    function formatFileSize(bytes) {
+        if (!bytes || bytes < 1024) {
+            return (bytes || 0) + ' B';
+        }
+        const kb = bytes / 1024;
+        if (kb < 1024) {
+            return kb.toFixed(1) + ' KB';
+        }
+        return (kb / 1024).toFixed(1) + ' MB';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    let selectedFilesTransfer = new DataTransfer();
+
+    function updateSelectedAttachmentsUI() {
+        if (!attachmentsSelected) {
+            return;
+        }
+
+        attachmentsSelected.innerHTML = '';
+        const files = Array.from(selectedFilesTransfer.files);
+
+        if (attachmentsCount) {
+            if (files.length === 0) {
+                attachmentsCount.textContent = attachmentsExisting ? 'Sin archivos nuevos seleccionados' : 'Sin archivos seleccionados';
+            } else if (files.length === 1) {
+                attachmentsCount.textContent = '1 archivo seleccionado';
+            } else {
+                attachmentsCount.textContent = `${files.length} archivos seleccionados`;
+            }
+        }
+
+        files.forEach(function (file, index) {
+            const item = document.createElement('li');
+            item.className = 'purchase-attachment-item';
+            item.innerHTML = `
+                <div class="purchase-attachment-item__info">
+                    <span style="display:inline-flex; align-items:center;" aria-hidden="true">📎</span>
+                    <span class="purchase-attachment-item__name">${escapeHtml(file.name)}</span>
+                    <span class="purchase-attachment-item__size">(${formatFileSize(file.size)})</span>
+                </div>
+                <button type="button" class="btn btn--secondary btn--sm purchase-attachment-item__remove" data-remove-selected-index="${index}" title="Quitar archivo">
+                    &times; Quitar
+                </button>
+            `;
+            attachmentsSelected.appendChild(item);
+        });
+    }
+
+    if (attachmentsInput && attachmentsSelected) {
+        attachmentsInput.addEventListener('change', function () {
+            selectedFilesTransfer = new DataTransfer();
+            Array.from(attachmentsInput.files || []).forEach(function (file) {
+                selectedFilesTransfer.items.add(file);
+            });
+            attachmentsInput.files = selectedFilesTransfer.files;
+            updateSelectedAttachmentsUI();
+        });
+
+        attachmentsSelected.addEventListener('click', function (event) {
+            const removeBtn = event.target.closest('[data-remove-selected-index]');
+            if (!removeBtn) {
+                return;
+            }
+
+            const removeIndex = parseInt(removeBtn.dataset.removeSelectedIndex, 10);
+            const newTransfer = new DataTransfer();
+            Array.from(selectedFilesTransfer.files).forEach(function (file, idx) {
+                if (idx !== removeIndex) {
+                    newTransfer.items.add(file);
+                }
+            });
+            selectedFilesTransfer = newTransfer;
+            attachmentsInput.files = selectedFilesTransfer.files;
+            updateSelectedAttachmentsUI();
+        });
+    }
+
+    attachmentsExisting?.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-remove-attachment]');
+
+        if (!button) {
+            return;
+        }
+
+        button.closest('[data-existing-attachment]')?.remove();
+    });
 });

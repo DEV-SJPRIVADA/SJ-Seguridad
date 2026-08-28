@@ -28,7 +28,6 @@ class PurchaseRequest extends Model
         'area_key',
         'fecha_solicitud',
         'cantidad',
-        'archivo_pedido_path',
         'solicitud_para',
         'urgente',
         'aprobador_id',
@@ -85,6 +84,11 @@ class PurchaseRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseRequestItem::class)->orderBy('orden');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(PurchaseRequestAttachment::class)->orderBy('sort_order')->orderBy('id');
     }
 
     public function mailLogs(): HasMany

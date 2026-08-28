@@ -140,15 +140,19 @@ class SupplyRequestController extends Controller
 
     public function create(string $module)
     {
+        $user = auth()->user();
+        $user?->loadMissing('site');
+
         $products = SupplyProduct::where('is_active', true)
             ->orderBy('category')
             ->orderBy('name')
-            ->get()
-            ->groupBy('category');
+            ->get();
 
         return view('modules.supplies.create', [
             'module' => $module,
-            'products' => $products,
+            'products' => $products->groupBy('category'),
+            'productNames' => $products->pluck('name', 'id'),
+            'canRequestSupplies' => $user?->hasAssignedSite() && (bool) $user->site?->is_active,
             'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }

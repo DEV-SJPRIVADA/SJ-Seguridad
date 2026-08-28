@@ -12,6 +12,21 @@
                 </div>
 
                 <div class="panel__body">
+                    @if ($errors->any())
+                        <div class="alert alert--danger" role="alert" style="margin-bottom: 1rem;">
+                            <p class="font-semibold" style="margin-bottom: 0.5rem;">No se pudo enviar la solicitud. Revisa lo siguiente:</p>
+                            <ul class="ficha-empleados-form__error-list">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @elseif (! ($canRequestSupplies ?? false))
+                        <div class="alert alert--warning" role="alert" style="margin-bottom: 1rem;">
+                            Debes tener una sede asignada y activa para enviar solicitudes de insumos. Contacta al administrador.
+                        </div>
+                    @endif
+
                     <form action="{{ route('supplies.store', ['module' => $module]) }}" method="POST" id="supply-request-form">
                         @csrf
 
@@ -84,7 +99,17 @@
             const submitBtn = document.getElementById('submit-request-btn');
             const searchInput = document.getElementById('catalog-search');
             const catalogItems = Array.from(document.querySelectorAll('.supply-catalog-item'));
+            const productNames = @json($productNames ?? []);
+            const oldItems = @json(array_values(old('items', [])));
             let itemIndex = 0;
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
 
             function updateCartState() {
                 const hasItems = cartItems.children.length > 0;
@@ -92,32 +117,32 @@
                 submitBtn.disabled = !hasItems;
             }
 
-            function addCatalogItem(productId, productName) {
-                const existing = cartItems.querySelector(`[data-product-id="${productId}"][data-item-type="catalog"]`);
-                if (existing) {
-                    const qtyInput = existing.querySelector('input[name$="[quantity]"]');
-                    qtyInput.value = parseInt(qtyInput.value || '0', 10) + 1;
-                    return;
-                }
+            function bindRemove(wrapper) {
+                wrapper.querySelector('.supply-cart-row__remove').addEventListener('click', function () {
+                    wrapper.remove();
+                    updateCartState();
+                });
+            }
 
+            function createCatalogRow(productId, productName, inventory, quantity) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'supply-cart-row';
                 wrapper.dataset.itemType = 'catalog';
                 wrapper.dataset.productId = productId;
                 wrapper.innerHTML = `
                     <div class="supply-cart-row__info">
-                        <strong>${productName}</strong>
+                        <strong>${escapeHtml(productName)}</strong>
                     </div>
                     <div class="supply-cart-row__fields">
                         <input type="hidden" name="items[${itemIndex}][type]" value="catalog">
-                        <input type="hidden" name="items[${itemIndex}][product_id]" value="${productId}">
+                        <input type="hidden" name="items[${itemIndex}][product_id]" value="${escapeHtml(productId)}">
                         <label class="supply-cart-field">
                             <span>Inventario</span>
-                            <input type="number" name="items[${itemIndex}][current_inventory]" class="supply-input" min="0" value="0" required>
+                            <input type="number" name="items[${itemIndex}][current_inventory]" class="supply-input" min="0" value="${escapeHtml(inventory)}" required>
                         </label>
                         <label class="supply-cart-field">
                             <span>Cantidad</span>
-                            <input type="number" name="items[${itemIndex}][quantity]" class="supply-input" min="1" value="1" required>
+                            <input type="number" name="items[${itemIndex}][quantity]" class="supply-input" min="1" value="${escapeHtml(quantity)}" required>
                         </label>
                         <button type="button" class="btn btn--secondary btn--sm supply-cart-row__remove">Quitar</button>
                     </div>
@@ -128,7 +153,18 @@
                 updateCartState();
             }
 
-            function addCustomItem() {
+            function addCatalogItem(productId, productName) {
+                const existing = cartItems.querySelector(`[data-product-id="${productId}"][data-item-type="catalog"]`);
+                if (existing) {
+                    const qtyInput = existing.querySelector('input[name$="[quantity]"]');
+                    qtyInput.value = parseInt(qtyInput.value || '0', 10) + 1;
+                    return;
+                }
+
+                createCatalogRow(productId, productName, 0, 1);
+            }
+
+            function addCustomItem(customName, quantity) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'supply-cart-row supply-cart-row--custom';
                 wrapper.dataset.itemType = 'custom';
@@ -141,11 +177,11 @@
                         <input type="hidden" name="items[${itemIndex}][type]" value="custom">
                         <label class="supply-cart-field supply-cart-field--wide">
                             <span>Nombre del producto</span>
-                            <input type="text" name="items[${itemIndex}][custom_name]" class="supply-input" placeholder="Describe el producto" required>
+                            <input type="text" name="items[${itemIndex}][custom_name]" class="supply-input" placeholder="Describe el producto" value="${escapeHtml(customName || '')}" required>
                         </label>
                         <label class="supply-cart-field">
                             <span>Cantidad</span>
-                            <input type="number" name="items[${itemIndex}][quantity]" class="supply-input" min="1" value="1" required>
+                            <input type="number" name="items[${itemIndex}][quantity]" class="supply-input" min="1" value="${escapeHtml(quantity || 1)}" required>
                         </label>
                         <button type="button" class="btn btn--secondary btn--sm supply-cart-row__remove">Quitar</button>
                     </div>
@@ -156,10 +192,16 @@
                 updateCartState();
             }
 
-            function bindRemove(wrapper) {
-                wrapper.querySelector('.supply-cart-row__remove').addEventListener('click', function () {
-                    wrapper.remove();
-                    updateCartState();
+            function restoreOldItems() {
+                oldItems.forEach(function (item) {
+                    if ((item.type || '') === 'custom') {
+                        addCustomItem(item.custom_name || '', item.quantity || 1);
+                        return;
+                    }
+
+                    const productId = String(item.product_id || '');
+                    const productName = productNames[productId] || productNames[Number(productId)] || ('Producto #' + productId);
+                    createCatalogRow(productId, productName, item.current_inventory ?? 0, item.quantity || 1);
                 });
             }
 
@@ -169,7 +211,9 @@
                 });
             });
 
-            document.getElementById('add-custom-item-btn').addEventListener('click', addCustomItem);
+            document.getElementById('add-custom-item-btn').addEventListener('click', function () {
+                addCustomItem('', 1);
+            });
 
             searchInput.addEventListener('input', function () {
                 const query = searchInput.value.trim().toLowerCase();
@@ -185,6 +229,7 @@
                 }
             });
 
+            restoreOldItems();
             updateCartState();
         });
     </script>

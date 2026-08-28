@@ -362,6 +362,66 @@ class SupplyModuleTest extends TestCase
         $response->assertSessionHasErrors('sede');
     }
 
+    public function test_create_form_warns_when_user_has_no_site(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'calidad',
+            'sede_id' => null,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('supply.tab.my_requests');
+
+        $this->actingAs($user)
+            ->get(route('supplies.create', ['module' => 'calidad']))
+            ->assertOk()
+            ->assertSee('Debes tener una sede asignada y activa', false);
+    }
+
+    public function test_failed_store_shows_errors_and_keeps_old_items(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'calidad',
+            'sede_id' => null,
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('supply.tab.my_requests');
+
+        $product = SupplyProduct::query()->firstOrFail();
+
+        $response = $this->actingAs($user)
+            ->from(route('supplies.create', ['module' => 'calidad']))
+            ->post(route('supplies.store', ['module' => 'calidad']), [
+                'observations' => 'Pedido de prueba.',
+                'items' => [
+                    [
+                        'type' => 'catalog',
+                        'product_id' => $product->id,
+                        'current_inventory' => 2,
+                        'quantity' => 4,
+                    ],
+                    [
+                        'type' => 'custom',
+                        'custom_name' => 'Tinta especial',
+                        'quantity' => 1,
+                    ],
+                ],
+            ]);
+
+        $response->assertRedirect(route('supplies.create', ['module' => 'calidad']));
+        $response->assertSessionHasErrors('sede');
+
+        $this->actingAs($user)
+            ->get(route('supplies.create', ['module' => 'calidad']))
+            ->assertOk()
+            ->assertSee('No se pudo enviar la solicitud', false)
+            ->assertSee('Debe tener una sede asignada', false)
+            ->assertSee('Tinta especial', false)
+            ->assertSee((string) $product->id, false)
+            ->assertSee('Pedido de prueba.', false);
+    }
+
     public function test_approved_tab_is_visible_with_quality_permission(): void
     {
         $reviewer = $this->qualityReviewer('calidad');

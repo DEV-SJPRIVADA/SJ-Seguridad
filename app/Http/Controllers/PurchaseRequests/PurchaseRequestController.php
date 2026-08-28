@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestRequest;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestAttachment;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
@@ -18,7 +20,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PurchaseRequestController extends Controller
 {
@@ -55,6 +59,7 @@ class PurchaseRequestController extends Controller
         PurchaseAccessService $accessService,
         PurchaseRequestNotificationService $notifications,
         PurchaseRequestAuditLogService $auditLogService,
+        PurchaseRequestAttachmentService $attachmentService,
     ): RedirectResponse {
         $validated = $request->validated();
 
@@ -69,13 +74,10 @@ class PurchaseRequestController extends Controller
         }
 
         $itemsInput = $request->input('items', []);
-        $archivoPedido = $request->hasFile('archivo_pedido')
-            ? $request->file('archivo_pedido')->store('purchase-requests', 'public')
-            : null;
 
         $totalCantidad = collect($itemsInput)->sum(fn ($item) => (int) ($item['cantidad'] ?? 0));
 
-        $purchaseRequest = DB::transaction(function () use ($request, $validated, $archivoPedido, $aprobador, $itemsInput, $totalCantidad, $module) {
+        $purchaseRequest = DB::transaction(function () use ($request, $validated, $aprobador, $itemsInput, $totalCantidad, $module, $attachmentService) {
             $next = ((int) PurchaseRequest::query()->lockForUpdate()->max('numero_solicitud')) + 1;
 
             $purchaseRequest = PurchaseRequest::create([
@@ -84,7 +86,6 @@ class PurchaseRequestController extends Controller
                 'area_key' => $validated['area_key'] ?? $module,
                 'fecha_solicitud' => $validated['fecha_solicitud'],
                 'cantidad' => max(1, $totalCantidad),
-                'archivo_pedido_path' => $archivoPedido,
                 'solicitud_para' => $validated['solicitud_para'],
                 'urgente' => (bool) $validated['urgente'],
                 'aprobador_id' => $aprobador->id,
@@ -112,10 +113,12 @@ class PurchaseRequestController extends Controller
                 ]);
             }
 
+            $attachmentService->storeMany($purchaseRequest, $attachmentService->filesFromRequest($request));
+
             return $purchaseRequest;
         });
 
-        $purchaseRequest->loadCount('items');
+        $purchaseRequest->loadCount(['items', 'attachments']);
 
         $auditLogService->logEvent(
             eventType: 'purchase_request',
@@ -124,6 +127,7 @@ class PurchaseRequestController extends Controller
                 'numero_solicitud' => $purchaseRequest->numero_solicitud,
                 'area_key' => $purchaseRequest->area_key,
                 'items_count' => $purchaseRequest->items_count,
+                'attachments_count' => $purchaseRequest->attachments_count,
                 'urgente' => $purchaseRequest->urgente,
                 'aprobador_id' => $purchaseRequest->aprobador_id,
             ],
@@ -147,7 +151,7 @@ class PurchaseRequestController extends Controller
     ): View {
         Gate::authorize('resubmit', $purchaseRequest);
 
-        $purchaseRequest->load(['items', 'aprobador']);
+        $purchaseRequest->load(['items', 'aprobador', 'attachments']);
 
         return view('modules.purchase-requests.edit', [
             'module' => $module,
@@ -194,6 +198,7 @@ class PurchaseRequestController extends Controller
             metadata: [
                 'numero_solicitud' => $purchaseRequest->numero_solicitud,
                 'items_count' => $purchaseRequest->items()->count(),
+                'attachments_count' => $purchaseRequest->attachments()->count(),
                 'previous_estado' => $previousEstado,
             ],
             model: $purchaseRequest,
@@ -213,7 +218,7 @@ class PurchaseRequestController extends Controller
     {
         Gate::authorize('view', $purchaseRequest);
 
-        $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor', 'mailLogs']);
+        $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor', 'mailLogs', 'attachments']);
 
         return view('modules.purchase-requests.show', [
             'module' => $module,
@@ -239,5 +244,19 @@ class PurchaseRequestController extends Controller
         $purchaseRequest->load('items');
 
         return $exporter->toDownloadResponse($purchaseRequest);
+    }
+
+    public function downloadAttachment(
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseRequestAttachment $attachment,
+    ): StreamedResponse {
+        Gate::authorize('view', $purchaseRequest);
+
+        $disk = (string) config('purchase-requests.attachments.disk', 'local');
+
+        abort_unless(Storage::disk($disk)->exists($attachment->stored_path), 404);
+
+        return Storage::disk($disk)->download($attachment->stored_path, $attachment->original_name);
     }
 }

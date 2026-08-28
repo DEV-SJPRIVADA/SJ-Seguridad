@@ -6,7 +6,8 @@ Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autori
 
 ## Alcance actual
 
-- Creacion multi-linea con foto opcional por articulo
+- Creacion multi-linea con foto opcional por articulo (disco `public`; sin cambio en FEAT-030)
+- Adjuntos **opcionales** multiples a **nivel solicitud** (no por linea): cotizaciones, ordenes, evidencias. Solo visibles en el detalle autenticado
 - Solicitud **Interno** o **Cliente** (campos adicionales de cliente)
 - Director aprobador seleccionado en el formulario (usuarios con rol `director` + `purchase.tab.approval`)
 - Autorizacion **in-app**: pestaña Pendientes + formulario Aprobar/Rechazar en detalle (`show`)
@@ -50,7 +51,7 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
-| Detalle / export (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel` |
+| Detalle / export / adjuntos (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download` |
 | Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
 
 Rutas publicas (URLs firmadas, sin login):
@@ -61,7 +62,11 @@ Rutas publicas (URLs firmadas, sin login):
 
 Servicio: `PurchaseEmailApprovalUrlBuilder` genera URLs firmadas para mail y controlador.
 
+Descarga de adjuntos: `GET purchase-requests.attachments.download` (`/solicitud/{purchase_request}/adjuntos/{attachment}`), mismo grupo `auth` + `active` + `password.changed` que `show` (fuera de tabs). `scopeBindings()`: el `{attachment}` debe pertenecer a la solicitud (404 si no). `Gate::authorize('view', $purchaseRequest)`. Disco `local`; no URL publica.
+
 Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccessService`.
+
+**Fuera de adjuntos de pedido:** correo al director (`PurchaseRequestCreatedMail`), FO-AD-44 (PDF/Excel) y vista guest `email-approval`. No hay rutas de adjuntos en `routes/modules/purchase-requests-email.php`.
 
 ## Permisos y policy
 
@@ -76,9 +81,10 @@ Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccess
 
 `PurchaseRequestPolicy`:
 
-- `view`: super-admin, compras processing, solicitante, director asignado
+- `view`: super-admin, compras processing, solicitante, director asignado — tambien autoriza **ver y descargar** adjuntos (sin permiso nuevo)
 - `approve`: director asignado + pendiente
 - `process`: compras + solicitud aprobada
+- `resubmit`: dueno + `estado=rechazado` + `purchase.tab.my_requests` o `purchase.tab.create` — conservar / agregar / quitar adjuntos al reenviar
 
 Directores: rol `director` incluye `view.board.compras.solicitudes_compra` (compras). No incluye autorizacion de requisiciones cargo nuevo (rol `administrador`).
 
@@ -104,13 +110,34 @@ Folio visible: `numero_solicitud` (4 digitos, unico). Campos clave: `area_key`, 
 
 Lineas: `orden`, `cantidad`, `descripcion`, `referencia`, `utilizacion`, `ubicacion`, `foto_path` (disco `public`).
 
-Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_20_082215_drop_descripcion_justificacion_from_purchase_requests_table.php`.
+### `purchase_request_attachments`
+
+Relacion **1:N** con `purchase_requests` (`PurchaseRequest::attachments()`, orden `sort_order` + `id`). Una fila por archivo de soporte de **toda** la solicitud.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `purchase_request_id` | FK | `cascadeOnDelete()` |
+| `original_name` | string(255) | Nombre que subio el usuario (`Content-Disposition`) |
+| `stored_path` | string(500) | Relativo al disco `local`. Nunca URL publica |
+| `mime_type` | string(127) nullable | |
+| `size_bytes` | unsignedInteger | |
+| `sort_order` | unsignedTinyInteger | 1-based |
+
+Disco: `local` (`storage/app/private`). Path: `purchase-requests/{id}/{uuid}.{ext}` (`config/purchase-requests.php` → `attachments.disk` / `directory`). Topes: `max_files` 5, `max_kilobytes` 10240, `mimes` pdf/doc/docx/xls/xlsx/ppt/pptx/jpg/jpeg/png/webp.
+
+Migracion: `2026_08_28_160752_create_purchase_request_attachments_table.php` (tabla + backfill desde legado + `UPDATE archivo_pedido_path = NULL`). `down()` solo `dropIfExists` de la tabla nueva.
+
+### `purchase_requests.archivo_pedido_path` (deprecada)
+
+Columna **permanece** nullable. **No DROP.** Ya no esta en `$fillable`. Store, resubmit, import y UI **no** la leen ni escriben. Fuente de verdad: `purchase_request_attachments`. Valores previos se copiaron a 1:N (disco `public` → `local` si el fichero existia) y la columna quedo en `NULL`.
+
+Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_20_082215_drop_descripcion_justificacion_from_purchase_requests_table.php`, `2026_08_28_160752_create_purchase_request_attachments_table.php`.
 
 ## Servicios y controladores
 
 | Componente | Responsabilidad |
 | --- | --- |
-| `PurchaseRequestController` | CRUD solicitante, show, export PDF/Excel |
+| `PurchaseRequestController` | CRUD solicitante, show, export PDF/Excel, `downloadAttachment` |
 | `PurchaseApprovalController` | Lista pendientes del director, PATCH autorizar |
 | `PurchaseProcessingController` | Bandeja unificada, procesar compra/suministro |
 | `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
@@ -120,9 +147,13 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 | `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
 | `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
-| `PurchaseEmailApprovalController` | Autorizacion guest por enlace firmado (show/update/pdf) |
+| `PurchaseEmailApprovalController` | Autorizacion guest por enlace firmado (show/update/pdf). **No** lista adjuntos de pedido |
+| `PurchaseRequestAttachmentService` | Guardar en disco `local`, sincronizar en resubmit (keep/quitar/agregar), mapear legado |
+| `PurchaseRequestResubmitService` | Reenvio de rechazada (items + adjuntos via attachment service). No toca `archivo_pedido_path` |
 
-Vistas: `resources/views/modules/purchase-requests/` (create, index, show, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
+Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
+
+Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
 
 ## Bandeja compras — filtros y listado
 
@@ -139,6 +170,8 @@ Reglas de volumen (`ComprasQueueService`):
 
 - Sin rango de fechas: maximo **200** registros mas recientes (`truncated` + aviso en UI).
 - Con rango de fechas: todos los que coincidan (sin tope).
+
+La tabla DataTables ordena por **fecha descendente** (`data-order` en la columna Fecha) para no empujar los suministros detras de todas las solicitudes de compra (el default `[[0, asc]]` por Tipo ocultaba "Suministro" en paginas siguientes). Los filtros Area/Tipo (searchable-select) autoenvian el GET al cambiar, igual que las fechas.
 
 Acciones por fila: **Ver detalle** (compra → `purchase-requests.show`; suministro → `supplies.show` con `module=area_key` del pedido). **Procesar** sigue en rutas `processing.purchase` / `processing.supply`.
 
@@ -175,7 +208,7 @@ Tipos en `notification_types` (modulo `purchase_requests`):
 | `purchase_request_approved_for_compras` | Emails configurados | Director aprueba |
 | `compras_queue_processed` | Solicitante | Compras actualiza estado |
 
-Correo director: boton principal **Autorizar por correo** (URL firmada a `email-approval.show`) y secundario a `purchase-requests.show` (login requerido en plataforma). Enlaces generados con `PUBLIC_APP_URL` (`App\Support\ApplicationUrls`) para que sean alcanzables desde VPN/red interna. PDF FO-AD-44 adjunto en el correo de nueva solicitud.
+Correo director: boton principal **Autorizar por correo** (URL firmada a `email-approval.show`) y secundario a `purchase-requests.show` (login requerido en plataforma). Enlaces generados con `PUBLIC_APP_URL` (`App\Support\ApplicationUrls`) para que sean alcanzables desde VPN/red interna. PDF FO-AD-44 adjunto en el correo de nueva solicitud. **Los adjuntos de pedido no viajan en el correo** (ni MIME ni enlaces); el director los consulta en el detalle autenticado.
 
 **Registro de correos:** tabla `purchase_request_mail_logs` (tipo, destinatario, estado `enviado`/`fallido`, detalle, fecha). Visible en detalle de la solicitud. Si falla el envio al crear, aviso amarillo en formulario Nueva solicitud.
 
@@ -197,6 +230,7 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 - Compra: `PurchaseRequestPdfService` → `pdf/purchase-request-solicitud.blade.php`; Excel `PurchaseRequestExcelExporter`
 - Suministro: `SupplyPurchasePdfExporter` → `pdf/supply-request-solicitud.blade.php` (**mismo layout visual** que compra); Excel `SupplyPurchaseReportExporter`
 - Botones: detalle compra, detalle suministro y bandeja compras (suministro)
+- **No** embebe adjuntos de pedido (FEAT-030)
 
 ## Import legacy
 
@@ -204,7 +238,7 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 php artisan purchase-requests:import-legacy --dry-run
 ```
 
-Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchaseRequestsCommand`.
+Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchaseRequestsCommand`. Escribe filas 1:N via `PurchaseRequestAttachmentService` (no la columna deprecada). No importa binarios del servidor legado; un path sin fichero puede dejar metadata con download 404.
 
 ## Reglas de negocio
 
@@ -213,10 +247,22 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - Rechazo director: comentarios obligatorios (`UpdatePurchaseApprovalRequest`)
 - Solo solicitudes `aprobado` entran en bandeja Compras
 - `show` muestra formulario de autorizacion si `@can('approve', $purchaseRequest)`
+- Adjuntos de solicitud **opcionales** (0–5; 10 MB c/u; tipos en config). No alteran estados ni el flujo de autorizacion
+- Al **reenviar rechazada**: `keep_attachment_ids[]` + `attachments[]` nuevos; tope combinado 5; quitar todos es valido
+- Audit `create` / `resubmit`: metadata `attachments_count` (entero). Sin paths ni nombres de archivo
+- Download sin `view`: 403. Adjunto de otra solicitud: 404. Sin auth: redirect login
+
+## Riesgos y pendientes (adjuntos)
+
+- **Tope PHP:** 5 × 10 MB mas fotos de linea puede superar `post_max_size` / `upload_max_filesize` (el POST se descarta antes de Laravel). No se bajo el tope de producto; si falla el envio, revisar php.ini.
+- **Huerfanos en disco:** el hook `deleting` borra el fichero si Eloquent elimina el adjunto. Un cascade SQL al borrar la solicitud padre no dispara el evento (aceptable en v1).
+- **Tope keep + nuevos en UI:** el servidor rechaza si se supera 5; no hay aviso en cliente (observacion de revision, no bloqueante).
 
 ## Pruebas
 
 - `tests/Feature/PurchaseRequestModuleTest.php`
+- `tests/Feature/PurchaseRequests/PurchaseRequestAttachmentTest.php`
+- `tests/Feature/PurchaseRequests/PurchaseRequestAuditTest.php`
 - `tests/Feature/ComprasDashboardTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
 - `tests/Feature/NavigationVisibilityTest.php`
@@ -241,9 +287,12 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | PDF suministro FO-AD-44: mismo layout visual que PDF solicitud de compra |
 | 2026-08-20 | Retirados campos de cabecera `descripcion` y `justificacion` (formulario, detalle, PDF, correo); detalle solo en lineas |
 | 2026-08-04 | Dashboard Compras restringido: director (`purchase.tab.approval`) ya no accede; requiere permiso dashboard, processing o area Compras |
+| 2026-08-28 | Bandeja: listado por fecha mas reciente (no por Tipo); filtros searchable-select autoenvian GET |
+| 2026-08-28 | FEAT-030: adjuntos opcionales 1:N a nivel solicitud (`purchase_request_attachments`, disco `local`, ruta `attachments.download`, policy `view`). `archivo_pedido_path` deprecada (columna permanece). Fuera: mail, FO-AD-44, guest |
 
 ## Referencias
 
 - Guia usuario: [`docs/user/purchase-requests.md`](../user/purchase-requests.md)
+- Feature Brief: [`docs/briefs/FEAT-030.md`](../briefs/FEAT-030.md)
 - Acceso: [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md)
 - Suministros: [`docs/modules/suministros.md`](suministros.md)

@@ -145,6 +145,41 @@
                         </table>
                     </div>
 
+                    @if ($purchaseRequest->attachments->isNotEmpty())
+                        <div class="block-spaced">
+                            <h4 class="form-label">Adjuntos</h4>
+                            <table class="supply-table">
+                                <thead>
+                                    <tr>
+                                        <th>Archivo</th>
+                                        <th>Tamaño</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($purchaseRequest->attachments as $attachment)
+                                        <tr>
+                                            <td>{{ $attachment->original_name }}</td>
+                                            <td>{{ $attachment->sizeLabel() }}</td>
+                                            <td>
+                                                <a
+                                                    href="{{ route('purchase-requests.attachments.download', [
+                                                        'module' => $module,
+                                                        'purchase_request' => $purchaseRequest->id,
+                                                        'attachment' => $attachment->id,
+                                                    ]) }}"
+                                                    class="btn btn--secondary btn--sm"
+                                                >
+                                                    Descargar
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
                     @include('modules.purchase-requests.partials.approval-form')
 
                     <div class="block-spaced-lg">

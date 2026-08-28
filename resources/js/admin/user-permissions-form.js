@@ -161,7 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     form.addEventListener('change', (event) => {
-        if (event.target.classList.contains('js-permission-checkbox') || event.target.name === 'role') {
+        if (event.target.classList.contains('js-permission-checkbox')) {
+            const permValue = event.target.value;
+            const isChecked = event.target.checked;
+            form.querySelectorAll(`.js-permission-checkbox[value="${CSS.escape(permValue)}"]`).forEach((cb) => {
+                if (cb !== event.target) {
+                    cb.checked = isChecked;
+                }
+            });
+            refreshPermissionUi();
+        } else if (event.target.name === 'role') {
             refreshPermissionUi();
         }
     });
