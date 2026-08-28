@@ -1,8 +1,8 @@
 :root {
     --brand-navy: #1e2743;
-    --brand-blue: #176392;
-    --brand-blue-soft: #dceffc;
-    --brand-blue-pale: #eef7fd;
+    --brand-blue: #0e4a6e;
+    --brand-blue-soft: #a3cbe6;
+    --brand-blue-pale: #cce8fa;
     --brand-white: #ffffff;
     --brand-silver: #d9d9d9;
     --brand-steel: #9ca3af;
@@ -1889,7 +1889,26 @@ a {
 }
 
 .searchable-select__trigger--disabled {
-    opacity: 0.6;
+    opacity: 0.7;
+    background-color: var(--color-surface, #f8fafc);
+    cursor: not-allowed;
+}
+
+.ficha-empleados-form--readonly .ficha-empleados-form__fields {
+    pointer-events: none;
+}
+
+.ficha-empleados-form--readonly .ficha-empleados-form__fields .form-input,
+.ficha-empleados-form--readonly .ficha-empleados-form__fields .form-textarea,
+.ficha-empleados-form--readonly .ficha-empleados-form__fields .form-select,
+.ficha-empleados-form--readonly .ficha-empleados-form__fields .searchable-select__trigger {
+    opacity: 0.75;
+    background-color: var(--color-surface, #f8fafc);
+    cursor: not-allowed;
+}
+
+.ficha-empleados-form__section--reference .form-input {
+    opacity: 0.75;
     background-color: var(--color-surface, #f8fafc);
     cursor: not-allowed;
     pointer-events: none;

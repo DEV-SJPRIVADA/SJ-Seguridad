@@ -102,6 +102,7 @@ return [
         ['code' => 'economic_activity_code', 'name' => 'economic_activity_name', 'type' => 'economic_activity'],
         ['code' => 'residence_city_code', 'name' => 'residence_city_name', 'type' => 'city'],
         ['code' => 'work_city_code', 'name' => 'work_city_name', 'type' => 'city'],
+        ['code' => 'expedition_city_code', 'name' => 'expedition_city_name', 'type' => 'city'],
     ],
 
     /**
@@ -112,6 +113,7 @@ return [
     'catalog_payroll_extra_code_name_pairs' => [
         ['code' => 'work_center_code', 'name' => 'work_center_name', 'type' => 'work_center', 'target' => 'profile'],
         ['code' => 'ccf_code', 'name' => 'compensation_fund_name', 'type' => 'ccf', 'target' => 'profile'],
+        ['code' => 'arp_code', 'name' => 'arp_name', 'type' => 'arp', 'target' => 'profile'],
         ['code' => 'branch_code', 'name' => 'branch_name', 'type' => 'branch', 'target' => 'payroll_extra'],
         ['code' => 'destination_code', 'name' => 'destination_name', 'type' => 'destination', 'target' => 'payroll_extra'],
         ['code' => 'zone_code', 'name' => 'zone_name', 'type' => 'zone', 'target' => 'payroll_extra'],

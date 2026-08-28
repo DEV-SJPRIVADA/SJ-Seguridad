@@ -66,14 +66,20 @@ class EmployeeFichaFormFe028Test extends TestCase
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
         ]);
 
-        $this->actingAs($manager)
+        $html = $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
             ->assertOk()
             ->assertSee('id="bank_code"', false)
             ->assertSee('id="account_type"', false)
             ->assertSee('id="payroll_extra_ccf_code"', false)
+            ->assertSee('Habilitar edición', false)
+            ->assertSee('ficha-empleados-form--readonly', false)
+            ->assertSee('ficha-empleados-form__fields', false)
             ->assertDontSee('name="eps_name"', false)
-            ->assertDontSee('name="compensation_fund_name"', false);
+            ->assertDontSee('name="compensation_fund_name"', false)
+            ->getContent();
+
+        $this->assertDoesNotMatchRegularExpression('/id="first_surname"[^>]*\breadonly\b/', $html);
     }
 
     public function test_update_ficha_persists_payroll_extra_fields_from_form(): void

@@ -11,18 +11,34 @@ export default function searchableSelect(config = {}) {
         disabled: Boolean(config.disabled),
         allowClear: config.allowClear !== undefined ? Boolean(config.allowClear) : true,
         highlightedIndex: -1,
+        formReadonly: false,
 
         init() {
             if (this.$refs.hiddenInput && this.value !== undefined && this.value !== null) {
                 this.$refs.hiddenInput.value = String(this.value);
             }
             this.syncLabel();
+            this.syncFormReadonly();
             this.$watch('value', (val) => {
                 if (this.$refs.hiddenInput) {
                     this.$refs.hiddenInput.value = val !== undefined && val !== null ? String(val) : '';
                 }
                 this.syncLabel();
             });
+
+            const form = this.$el.closest('.ficha-empleados-form');
+            if (form) {
+                this._formClassObserver = new MutationObserver(() => this.syncFormReadonly());
+                this._formClassObserver.observe(form, { attributes: true, attributeFilter: ['class'] });
+            }
+        },
+
+        syncFormReadonly() {
+            const form = this.$el.closest('.ficha-empleados-form');
+            this.formReadonly = Boolean(form?.classList.contains('ficha-empleados-form--readonly'));
+            if (this.formReadonly) {
+                this.close();
+            }
         },
 
         syncLabel() {
@@ -50,8 +66,12 @@ export default function searchableSelect(config = {}) {
             return this.value !== '' && this.value !== null && this.value !== undefined;
         },
 
+        get isDisabled() {
+            return Boolean(this.disabled) || Boolean(this.formReadonly);
+        },
+
         toggle() {
-            if (this.disabled) return;
+            if (this.isDisabled) return;
             if (this.open) {
                 this.close();
             } else {
@@ -60,7 +80,7 @@ export default function searchableSelect(config = {}) {
         },
 
         openDropdown() {
-            if (this.disabled) return;
+            if (this.isDisabled) return;
             this.open = true;
             this.search = '';
             this.highlightedIndex = -1;
@@ -93,7 +113,7 @@ export default function searchableSelect(config = {}) {
         },
 
         clear() {
-            if (this.disabled) return;
+            if (this.isDisabled) return;
             this.value = '';
             this.selectedLabel = '';
             this.close();

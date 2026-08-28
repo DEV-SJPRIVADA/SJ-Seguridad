@@ -34,11 +34,8 @@ class PlantillaMasivosExport
         foreach ($entries as $entry) {
             $values = $this->mapper->mapRow($entry);
             foreach ($values as $index => $value) {
-                if ($value === null || $value === '') {
-                    continue;
-                }
                 $column = Coordinate::stringFromColumnIndex($index + 1);
-                $sheet->setCellValue($column.$row, $value);
+                $sheet->setCellValue($column.$row, $value ?? null);
             }
             $row++;
         }
