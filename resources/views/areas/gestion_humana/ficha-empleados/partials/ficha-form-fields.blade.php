@@ -9,10 +9,60 @@
 
 <section class="ficha-empleados-form__section">
     <header class="ficha-empleados-form__section-head">
-        <h3 class="ficha-empleados-form__section-title">Identificación</h3>
-        <p class="ficha-empleados-form__section-lead">Tipo de documento, datos demográficos y expedición.</p>
+        <h3 class="ficha-empleados-form__section-title">Identificación y Nombres</h3>
+        <p class="ficha-empleados-form__section-lead">Nombres completos, tipo de documento, datos demográficos y expedición.</p>
     </header>
     <div class="form-grid form-grid--two ficha-empleados-form__grid">
+        <div class="form-field">
+            <label class="form-label" for="first_surname">Primer apellido <span class="text-danger">*</span></label>
+            <input
+                id="first_surname"
+                name="first_surname"
+                class="form-input"
+                value="{{ old('first_surname', $profile->first_surname) }}"
+                required
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('first_surname')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="second_surname">Segundo apellido</label>
+            <input
+                id="second_surname"
+                name="second_surname"
+                class="form-input"
+                value="{{ old('second_surname', $profile->second_surname) }}"
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('second_surname')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="first_name">Primer nombre <span class="text-danger">*</span></label>
+            <input
+                id="first_name"
+                name="first_name"
+                class="form-input"
+                value="{{ old('first_name', $profile->first_name) }}"
+                required
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('first_name')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="second_name">Segundo nombre</label>
+            <input
+                id="second_name"
+                name="second_name"
+                class="form-input"
+                value="{{ old('second_name', $profile->second_name) }}"
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            @error('second_name')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
         @include('areas.gestion_humana.ficha-empleados.partials.ficha-catalog-select', [
             'id' => 'document_type',
             'name' => 'document_type',

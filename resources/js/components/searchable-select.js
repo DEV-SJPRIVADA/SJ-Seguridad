@@ -74,6 +74,9 @@ export default function searchableSelect(config = {}) {
             this.value = String(opt.value);
             this.selectedLabel = opt.label;
             this.close();
+            if (this.$refs.hiddenInput) {
+                this.$refs.hiddenInput.value = this.value;
+            }
             this.$dispatch('change', { value: this.value, label: this.selectedLabel });
             if (this.$refs.hiddenInput) {
                 this.$refs.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -86,6 +89,9 @@ export default function searchableSelect(config = {}) {
             this.value = '';
             this.selectedLabel = '';
             this.close();
+            if (this.$refs.hiddenInput) {
+                this.$refs.hiddenInput.value = '';
+            }
             this.$dispatch('change', { value: '', label: '' });
             if (this.$refs.hiddenInput) {
                 this.$refs.hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));

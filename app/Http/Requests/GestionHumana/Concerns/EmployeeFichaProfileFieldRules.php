@@ -36,6 +36,10 @@ trait EmployeeFichaProfileFieldRules
     private function employeeFichaProfileScalarRules(string $required): array
     {
         return [
+            'first_surname' => [$required, 'string', 'max:100'],
+            'second_surname' => ['nullable', 'string', 'max:100'],
+            'first_name' => [$required, 'string', 'max:100'],
+            'second_name' => ['nullable', 'string', 'max:100'],
             'document_type' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('document_type')],
             'birth_date' => ['nullable', 'date'],
             'expedition_city_code' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('city')],

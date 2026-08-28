@@ -17,6 +17,10 @@ class PersonalRequisitionFichaEntry extends Model
     protected $fillable = [
         'personal_requisition_id',
         'hired_document',
+        'first_surname',
+        'second_surname',
+        'first_name',
+        'second_name',
         'hired_full_name',
         'moved_to_ficha_at',
         'moved_to_ficha_by',

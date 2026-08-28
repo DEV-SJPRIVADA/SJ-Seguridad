@@ -1918,11 +1918,11 @@ class RequisitionModuleTest extends TestCase
         [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0001');
 
         $payload = $this->hiredPayload();
-        unset($payload['hired_document'], $payload['hired_full_name']);
+        unset($payload['hired_document'], $payload['hired_first_surname'], $payload['hired_first_name'], $payload['hired_full_name']);
 
         $this->actingAs($manager)
             ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $payload)
-            ->assertSessionHasErrors(['hired_document', 'hired_full_name']);
+            ->assertSessionHasErrors(['hired_document', 'hired_first_surname', 'hired_first_name']);
     }
 
     public function test_update_hired_fields_nullable_when_status_not_contratado(): void
@@ -1933,7 +1933,7 @@ class RequisitionModuleTest extends TestCase
 
         $this->actingAs($manager)
             ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $payload)
-            ->assertSessionHasNoErrors(['hired_document', 'hired_full_name']);
+            ->assertSessionHasNoErrors(['hired_document', 'hired_first_surname', 'hired_first_name', 'hired_full_name']);
     }
 
     public function test_update_creates_ficha_entry_on_first_hire(): void
@@ -1967,14 +1967,16 @@ class RequisitionModuleTest extends TestCase
         $entryId = PersonalRequisitionFichaEntry::query()->where('personal_requisition_id', $requisition->id)->value('id');
 
         $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload([
-            'hired_full_name' => 'Contratado Prueba Actualizado',
+            'hired_first_surname' => 'Actualizado',
+            'hired_first_name' => 'Prueba',
+            'hired_full_name' => 'Actualizado Prueba',
         ]));
 
         $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
         $this->assertDatabaseHas('personal_requisition_ficha_entries', [
             'id' => $entryId,
             'personal_requisition_id' => $requisition->id,
-            'hired_full_name' => 'Contratado Prueba Actualizado',
+            'hired_full_name' => 'Actualizado Prueba',
         ]);
     }
 
@@ -2027,7 +2029,9 @@ class RequisitionModuleTest extends TestCase
             route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisitionB]),
             $this->hiredPayload([
                 'hired_document' => '999888777',
-                'hired_full_name' => 'Persona Reasignada',
+                'hired_first_surname' => 'Reasignada',
+                'hired_first_name' => 'Persona',
+                'hired_full_name' => 'Reasignada Persona',
                 'confirm_duplicate_hired' => 1,
                 'confirm_duplicate_hired_document' => '999888777',
             ])
@@ -2039,7 +2043,7 @@ class RequisitionModuleTest extends TestCase
             'id' => $entry->id,
             'personal_requisition_id' => $requisitionB->id,
             'hired_document' => '999888777',
-            'hired_full_name' => 'Persona Reasignada',
+            'hired_full_name' => 'Reasignada Persona',
         ]);
     }
 
@@ -2123,6 +2127,8 @@ class RequisitionModuleTest extends TestCase
             'statutory_bonus' => 50000,
             'hiring_date' => now()->toDateString(),
             'hired_document' => '100200300',
+            'hired_first_surname' => 'Contratado',
+            'hired_first_name' => 'Prueba',
             'hired_full_name' => 'Contratado Prueba',
         ], $overrides);
     }

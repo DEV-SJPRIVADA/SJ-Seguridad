@@ -171,7 +171,21 @@ class EmployeeFichaProfilePrefill
     private function attributesForEntry(PersonalRequisitionFichaEntry $entry): array
     {
         $requisition = $entry->requisition;
-        $parsed = EmployeeFichaNameParser::parse($entry->hired_full_name);
+        $firstSurname = $entry->first_surname ?: $requisition?->hired_first_surname;
+        $secondSurname = $entry->second_surname ?: $requisition?->hired_second_surname;
+        $firstName = $entry->first_name ?: $requisition?->hired_first_name;
+        $secondName = $entry->second_name ?: $requisition?->hired_second_name;
+
+        if (! $firstSurname && ! $firstName && $entry->hired_full_name) {
+            $parsed = EmployeeFichaNameParser::parse($entry->hired_full_name);
+            $firstSurname = $parsed['first_surname'];
+            $secondSurname = $parsed['second_surname'];
+            $firstName = $parsed['first_name'];
+            $secondName = $parsed['second_name'];
+        }
+
+        $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
+        $fullName = $nameParts !== [] ? implode(' ', $nameParts) : $entry->hired_full_name;
         $payrollPositionCode = null;
 
         if ($requisition?->position_id) {
@@ -185,11 +199,11 @@ class EmployeeFichaProfilePrefill
         return [
             'personal_requisition_ficha_entry_id' => $entry->id,
             'document_number' => $entry->hired_document,
-            'full_name' => $parsed['full_name'] ?: $entry->hired_full_name,
-            'first_surname' => $parsed['first_surname'],
-            'second_surname' => $parsed['second_surname'],
-            'first_name' => $parsed['first_name'],
-            'second_name' => $parsed['second_name'],
+            'full_name' => $fullName,
+            'first_surname' => $firstSurname,
+            'second_surname' => $secondSurname,
+            'first_name' => $firstName,
+            'second_name' => $secondName,
             'document_type' => 'C',
             'sex' => $this->mapSex($requisition?->sex),
             'salary' => $requisition?->base_salary,

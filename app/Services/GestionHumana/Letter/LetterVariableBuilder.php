@@ -51,12 +51,12 @@ class LetterVariableBuilder
 
         // --- From EmployeeFichaProfile ---
         if ($profile !== null) {
-            $variables['DOCUMENTO'] = (string) $profile->document_number;
-            $variables['NOMBRE_COMPLETO'] = (string) $profile->full_name;
-            $variables['PRIMER_APELLIDO'] = (string) $profile->first_surname;
-            $variables['SEGUNDO_APELLIDO'] = (string) $profile->second_surname;
-            $variables['PRIMER_NOMBRE'] = (string) $profile->first_name;
-            $variables['SEGUNDO_NOMBRE'] = (string) $profile->second_name;
+            $variables['DOCUMENTO'] = (string) ($profile->document_number ?: $entry->hired_document);
+            $variables['NOMBRE_COMPLETO'] = (string) ($profile->full_name ?: $entry->hired_full_name);
+            $variables['PRIMER_APELLIDO'] = (string) ($profile->first_surname ?: $entry->first_surname);
+            $variables['SEGUNDO_APELLIDO'] = (string) ($profile->second_surname ?: $entry->second_surname);
+            $variables['PRIMER_NOMBRE'] = (string) ($profile->first_name ?: $entry->first_name);
+            $variables['SEGUNDO_NOMBRE'] = (string) ($profile->second_name ?: $entry->second_name);
             $variables['TIPO_DOCUMENTO'] = (string) $profile->document_type;
             $variables['FECHA_NACIMIENTO'] = $this->formatLongDate($profile->birth_date);
             $variables['EDAD'] = $profile->age !== null ? (string) $profile->age : '';

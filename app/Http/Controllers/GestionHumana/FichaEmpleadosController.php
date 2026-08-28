@@ -21,7 +21,6 @@ use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use App\Services\GestionHumana\EmployeeFichaEntryDatatableService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
-use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Traits\HasFichaEmpleadosTabs;
@@ -339,12 +338,21 @@ class FichaEmpleadosController extends Controller
                 $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
 
                 $hiredDocument = trim($validated['hired_document']);
-                $hiredFullName = trim($validated['hired_full_name']);
-                $parsed = EmployeeFichaNameParser::parse($hiredFullName);
+                $firstSurname = trim((string) ($validated['first_surname'] ?? $entry->first_surname));
+                $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : $entry->second_surname;
+                $firstName = trim((string) ($validated['first_name'] ?? $entry->first_name));
+                $secondName = isset($validated['second_name']) ? trim((string) $validated['second_name']) : $entry->second_name;
+
+                $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
+                $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : trim((string) ($validated['hired_full_name'] ?? $entry->hired_full_name));
 
                 $entry->update([
                     'hired_document' => $hiredDocument,
-                    'hired_full_name' => $hiredFullName,
+                    'first_surname' => $firstSurname ?: null,
+                    'second_surname' => $secondSurname ?: null,
+                    'first_name' => $firstName ?: null,
+                    'second_name' => $secondName ?: null,
+                    'hired_full_name' => $computedFullName,
                     'moved_to_ficha_at' => now(),
                     'moved_to_ficha_by' => $userId,
                 ]);
@@ -358,11 +366,11 @@ class FichaEmpleadosController extends Controller
                         ->merge([
                             'personal_requisition_ficha_entry_id' => $entry->id,
                             'document_number' => $hiredDocument,
-                            'full_name' => $parsed['full_name'] ?: $hiredFullName,
-                            'first_surname' => $parsed['first_surname'],
-                            'second_surname' => $parsed['second_surname'],
-                            'first_name' => $parsed['first_name'],
-                            'second_name' => $parsed['second_name'],
+                            'full_name' => $computedFullName,
+                            'first_surname' => $firstSurname ?: null,
+                            'second_surname' => $secondSurname ?: null,
+                            'first_name' => $firstName ?: null,
+                            'second_name' => $secondName ?: null,
                         ])
                         ->all(),
                 );
@@ -414,13 +422,22 @@ class FichaEmpleadosController extends Controller
 
         $entry = DB::transaction(function () use ($validated, $userId): PersonalRequisitionFichaEntry {
             $hiredDocument = trim($validated['hired_document']);
-            $hiredFullName = trim($validated['hired_full_name']);
-            $parsed = EmployeeFichaNameParser::parse($hiredFullName);
+            $firstSurname = trim((string) ($validated['first_surname'] ?? ''));
+            $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : null;
+            $firstName = trim((string) ($validated['first_name'] ?? ''));
+            $secondName = isset($validated['second_name']) ? trim((string) $validated['second_name']) : null;
+
+            $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
+            $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : trim((string) ($validated['hired_full_name'] ?? ''));
 
             $entry = PersonalRequisitionFichaEntry::query()->create([
                 'personal_requisition_id' => null,
                 'hired_document' => $hiredDocument,
-                'hired_full_name' => $hiredFullName,
+                'first_surname' => $firstSurname ?: null,
+                'second_surname' => $secondSurname ?: null,
+                'first_name' => $firstName ?: null,
+                'second_name' => $secondName ?: null,
+                'hired_full_name' => $computedFullName,
                 'moved_to_ficha_at' => now(),
                 'moved_to_ficha_by' => $userId,
                 'created_by' => $userId,
@@ -431,11 +448,11 @@ class FichaEmpleadosController extends Controller
                 ->merge([
                     'personal_requisition_ficha_entry_id' => $entry->id,
                     'document_number' => $hiredDocument,
-                    'full_name' => $parsed['full_name'] ?: $hiredFullName,
-                    'first_surname' => $parsed['first_surname'],
-                    'second_surname' => $parsed['second_surname'],
-                    'first_name' => $parsed['first_name'],
-                    'second_name' => $parsed['second_name'],
+                    'full_name' => $computedFullName,
+                    'first_surname' => $firstSurname ?: null,
+                    'second_surname' => $secondSurname ?: null,
+                    'first_name' => $firstName ?: null,
+                    'second_name' => $secondName ?: null,
                     'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
                 ])
                 ->all();
@@ -504,9 +521,27 @@ class FichaEmpleadosController extends Controller
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
         $before = $this->profileAuditSnapshot($profile);
 
-        $attributes = $this->mergeProfilePayrollExtra($profile, $request->validated());
+        $validated = $request->validated();
+        $attributes = $this->mergeProfilePayrollExtra($profile, $validated);
         $attributes['phone_secondary'] = $request->input('phone_secondary');
         $attributes = $this->mergeWorkCityFromRequisitionIfMissing($fichaEntry, $attributes);
+
+        $firstSurname = trim((string) ($attributes['first_surname'] ?? $profile->first_surname));
+        $secondSurname = array_key_exists('second_surname', $attributes) ? trim((string) $attributes['second_surname']) : $profile->second_surname;
+        $firstName = trim((string) ($attributes['first_name'] ?? $profile->first_name));
+        $secondName = array_key_exists('second_name', $attributes) ? trim((string) $attributes['second_name']) : $profile->second_name;
+
+        $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
+        $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : $profile->full_name;
+        $attributes['full_name'] = $computedFullName;
+
+        $fichaEntry->update([
+            'first_surname' => $firstSurname ?: null,
+            'second_surname' => $secondSurname ?: null,
+            'first_name' => $firstName ?: null,
+            'second_name' => $secondName ?: null,
+            'hired_full_name' => $computedFullName ?: $fichaEntry->hired_full_name,
+        ]);
 
         $profile->fill($attributes);
         $profile->save();

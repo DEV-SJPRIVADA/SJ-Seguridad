@@ -260,6 +260,18 @@
                 <p class="req-form__hint">Horarios, descansos y condiciones del puesto a tener en cuenta.</p>
                 <x-input-error :messages="$errors->get('service_structure')" />
             </div>
+
+            <div class="form-field">
+                <x-input-label for="cost_center" value="Centro de costo *" />
+                <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}" required>
+                <x-input-error :messages="$errors->get('cost_center')" />
+            </div>
+
+            <div class="form-field form-field--full">
+                <x-input-label for="requester_observation" value="Observaciones del solicitante" />
+                <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
+                <x-input-error :messages="$errors->get('requester_observation')" />
+            </div>
         </div>
     </section>
 
@@ -342,15 +354,22 @@
                 <span class="req-form__section-step">6</span>
                 <div>
                     <h4 class="req-form__section-title">Gestion y seguimiento</h4>
-                    <p class="req-form__section-desc">Estado del proceso, reclutador, fechas y observaciones operativas.</p>
+                    <p class="req-form__section-desc">Reclutador, estado y observaciones operativas de gestion humana.</p>
                 </div>
             </header>
 
             <div class="form-grid form-grid--two">
                 <div class="form-field">
-                    <x-input-label for="cost_center" value="Centro de costo *" />
-                    <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}">
-                    <x-input-error :messages="$errors->get('cost_center')" />
+                    <x-input-label for="recruiter_id" value="Reclutador" />
+                    <x-searchable-select
+                        id="recruiter_id"
+                        name="recruiter_id"
+                        :options="$catalogs['recruiters']"
+                        :value="old('recruiter_id', $requisition?->recruiter_id)"
+                        placeholder="Selecciona un reclutador"
+                        searchPlaceholder="Buscar reclutador…"
+                    />
+                    <x-input-error :messages="$errors->get('recruiter_id')" />
                 </div>
 
                 <div class="form-field">
@@ -368,48 +387,6 @@
                     <x-input-error :messages="$errors->get('status')" />
                 </div>
 
-                <div class="form-field">
-                    <x-input-label for="recruiter_id" value="Reclutador" />
-                    <x-searchable-select
-                        id="recruiter_id"
-                        name="recruiter_id"
-                        :options="$catalogs['recruiters']"
-                        :value="old('recruiter_id', $requisition?->recruiter_id)"
-                        placeholder="Selecciona un reclutador"
-                        searchPlaceholder="Buscar reclutador…"
-                    />
-                    <x-input-error :messages="$errors->get('recruiter_id')" />
-                </div>
-
-                <div class="form-field">
-                    <x-input-label for="hiring_date" value="Fecha de contratacion" />
-                    <input id="hiring_date" name="hiring_date" type="date" class="form-input" value="{{ old('hiring_date', $requisition?->hiring_date?->format('Y-m-d')) }}">
-                    <x-input-error :messages="$errors->get('hiring_date')" />
-                </div>
-
-                <div id="js-hired-group" class="form-grid form-grid--two req-form__field-span" @unless($showHiredFieldsInitially) hidden @endunless>
-                    <div class="form-field">
-                        <x-input-label for="hired_document" value="Cedula persona contratada" />
-                        <input id="hired_document" name="hired_document" type="text" class="form-input" value="{{ old('hired_document', $requisition?->hired_document) }}" placeholder="Documento de identidad">
-                        <x-input-error :messages="$hiredDocumentErrors" />
-                    </div>
-
-                    <div class="form-field">
-                        <x-input-label for="hired_full_name" value="Nombre completo persona contratada" />
-                        <input id="hired_full_name" name="hired_full_name" type="text" class="form-input" value="{{ old('hired_full_name', $requisition?->hired_full_name) }}" placeholder="Nombre del colaborador contratado">
-                        <x-input-error :messages="$errors->get('hired_full_name')" />
-                    </div>
-                </div>
-
-                <input type="hidden" id="confirm_duplicate_hired" name="confirm_duplicate_hired" value="{{ old('confirm_duplicate_hired', '0') }}">
-                <input type="hidden" id="confirm_duplicate_hired_document" name="confirm_duplicate_hired_document" value="{{ old('confirm_duplicate_hired_document', '') }}">
-
-                <div class="form-field form-field--full">
-                    <x-input-label for="requester_observation" value="Observaciones del solicitante" />
-                    <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
-                    <x-input-error :messages="$errors->get('requester_observation')" />
-                </div>
-
                 <div class="form-field form-field--full">
                     <x-input-label for="human_resources_observation" value="Observaciones de gestion humana" />
                     <textarea id="human_resources_observation" name="human_resources_observation" class="form-textarea" rows="3" placeholder="Notas internas visibles en el seguimiento operativo.">{{ old('human_resources_observation', $requisition?->human_resources_observation) }}</textarea>
@@ -417,29 +394,56 @@
                 </div>
             </div>
         </section>
-    @else
-        <section class="req-form__section">
+
+        <section id="js-hired-group" class="req-form__section" @unless($showHiredFieldsInitially) hidden @endunless>
             <header class="req-form__section-head">
-                <span class="req-form__section-step">5</span>
+                <span class="req-form__section-step">7</span>
                 <div>
-                    <h4 class="req-form__section-title">Datos administrativos</h4>
-                    <p class="req-form__section-desc">Centro de costo y observaciones para gestion humana.</p>
+                    <h4 class="req-form__section-title">Datos de la persona contratada</h4>
+                    <p class="req-form__section-desc">Informacion del colaborador contratado para el cierre de la vacante.</p>
                 </div>
             </header>
 
             <div class="form-grid form-grid--two">
                 <div class="form-field">
-                    <x-input-label for="cost_center" value="Centro de costo *" />
-                    <input id="cost_center" name="cost_center" type="text" class="form-input" value="{{ old('cost_center', $requisition?->cost_center) }}" required>
-                    <x-input-error :messages="$errors->get('cost_center')" />
+                    <x-input-label for="hiring_date" value="Fecha de ingreso *" />
+                    <input id="hiring_date" name="hiring_date" type="date" class="form-input" value="{{ old('hiring_date', $requisition?->hiring_date?->format('Y-m-d')) }}">
+                    <x-input-error :messages="$errors->get('hiring_date')" />
                 </div>
 
-                <div class="form-field form-field--full">
-                    <x-input-label for="requester_observation" value="Observaciones del solicitante" />
-                    <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="4">{{ old('requester_observation', $requisition?->requester_observation) }}</textarea>
-                    <x-input-error :messages="$errors->get('requester_observation')" />
+                <div class="form-field">
+                    <x-input-label for="hired_document" value="Cédula persona contratada *" />
+                    <input id="hired_document" name="hired_document" type="text" class="form-input" value="{{ old('hired_document', $requisition?->hired_document) }}" placeholder="Documento de identidad">
+                    <x-input-error :messages="$hiredDocumentErrors" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_first_surname" value="Primer apellido *" />
+                    <input id="hired_first_surname" name="hired_first_surname" type="text" class="form-input" value="{{ old('hired_first_surname', $requisition?->hired_first_surname) }}" placeholder="Primer apellido">
+                    <x-input-error :messages="$errors->get('hired_first_surname')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_second_surname" value="Segundo apellido" />
+                    <input id="hired_second_surname" name="hired_second_surname" type="text" class="form-input" value="{{ old('hired_second_surname', $requisition?->hired_second_surname) }}" placeholder="Segundo apellido">
+                    <x-input-error :messages="$errors->get('hired_second_surname')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_first_name" value="Primer nombre *" />
+                    <input id="hired_first_name" name="hired_first_name" type="text" class="form-input" value="{{ old('hired_first_name', $requisition?->hired_first_name) }}" placeholder="Primer nombre">
+                    <x-input-error :messages="$errors->get('hired_first_name')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_second_name" value="Segundo nombre" />
+                    <input id="hired_second_name" name="hired_second_name" type="text" class="form-input" value="{{ old('hired_second_name', $requisition?->hired_second_name) }}" placeholder="Segundo nombre">
+                    <x-input-error :messages="$errors->get('hired_second_name')" />
                 </div>
             </div>
+
+            <input type="hidden" id="confirm_duplicate_hired" name="confirm_duplicate_hired" value="{{ old('confirm_duplicate_hired', '0') }}">
+            <input type="hidden" id="confirm_duplicate_hired_document" name="confirm_duplicate_hired_document" value="{{ old('confirm_duplicate_hired_document', '') }}">
         </section>
     @endif
 </div>
@@ -458,8 +462,18 @@
         const statusSelect = document.getElementById('status');
         const hiredGroup = document.getElementById('js-hired-group');
         const hiredFields = [
+            document.getElementById('hiring_date'),
             document.getElementById('hired_document'),
-            document.getElementById('hired_full_name'),
+            document.getElementById('hired_first_surname'),
+            document.getElementById('hired_second_surname'),
+            document.getElementById('hired_first_name'),
+            document.getElementById('hired_second_name'),
+        ];
+        const hiredRequiredFields = [
+            document.getElementById('hiring_date'),
+            document.getElementById('hired_document'),
+            document.getElementById('hired_first_surname'),
+            document.getElementById('hired_first_name'),
         ];
 
         function toggleReplacementFields() {
@@ -560,8 +574,13 @@
 
             hiredFields.forEach(function (field) {
                 if (field) {
-                    field.required = isHired;
                     field.disabled = !isHired;
+                }
+            });
+
+            hiredRequiredFields.forEach(function (field) {
+                if (field) {
+                    field.required = isHired;
                 }
             });
 

@@ -554,8 +554,25 @@ class RequisitionController extends Controller
                 'hired_document' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
                     ? $request->input('hired_document')
                     : null,
+                'hired_first_surname' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_first_surname')
+                    : null,
+                'hired_second_surname' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_second_surname')
+                    : null,
+                'hired_first_name' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_first_name')
+                    : null,
+                'hired_second_name' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_second_name')
+                    : null,
                 'hired_full_name' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
-                    ? $request->input('hired_full_name')
+                    ? (trim(implode(' ', array_filter([
+                        $request->input('hired_first_surname'),
+                        $request->input('hired_second_surname'),
+                        $request->input('hired_first_name'),
+                        $request->input('hired_second_name'),
+                    ], fn ($v) => $v !== null && $v !== ''))) ?: $request->input('hired_full_name'))
                     : null,
                 'status' => $newStatus,
                 'status_changed_at' => $oldStatus !== $newStatus ? now() : $requisition->status_changed_at,
@@ -569,8 +586,20 @@ class RequisitionController extends Controller
             $hiredDocument = $newStatus === PersonalRequisition::STATUS_CONTRATADO
                 ? trim((string) $request->input('hired_document'))
                 : '';
+            $hiredFirstSurname = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? trim((string) $request->input('hired_first_surname'))
+                : '';
+            $hiredSecondSurname = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? trim((string) $request->input('hired_second_surname'))
+                : '';
+            $hiredFirstName = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? trim((string) $request->input('hired_first_name'))
+                : '';
+            $hiredSecondName = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? trim((string) $request->input('hired_second_name'))
+                : '';
             $hiredFullName = $newStatus === PersonalRequisition::STATUS_CONTRATADO
-                ? trim((string) $request->input('hired_full_name'))
+                ? ($updateData['hired_full_name'] ?? trim((string) $request->input('hired_full_name')))
                 : '';
             $confirmDuplicate = $request->boolean('confirm_duplicate_hired')
                 && $hiredDocument !== ''
@@ -583,6 +612,10 @@ class RequisitionController extends Controller
                 $hiredFullName !== '' ? $hiredFullName : null,
                 $confirmDuplicate,
                 $request->user()->id,
+                $hiredFirstSurname !== '' ? $hiredFirstSurname : null,
+                $hiredSecondSurname !== '' ? $hiredSecondSurname : null,
+                $hiredFirstName !== '' ? $hiredFirstName : null,
+                $hiredSecondName !== '' ? $hiredSecondName : null,
             );
 
             if ($oldStatus !== $newStatus) {

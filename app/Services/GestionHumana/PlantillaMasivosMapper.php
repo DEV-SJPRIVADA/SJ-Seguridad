@@ -17,17 +17,28 @@ class PlantillaMasivosMapper
         $profile = $entry->profile;
         $extra = is_array($profile?->payroll_extra) ? $profile->payroll_extra : [];
 
+        $firstSurname = $profile?->first_surname ?: $entry->first_surname;
+        $secondSurname = $profile?->second_surname ?: $entry->second_surname;
+        $firstName = $profile?->first_name ?: $entry->first_name;
+        $secondName = $profile?->second_name ?: $entry->second_name;
         $fullName = $profile?->full_name ?: $entry->hired_full_name;
-        $parsed = EmployeeFichaNameParser::parse($fullName);
+
+        if (! $firstSurname && ! $firstName && $fullName) {
+            $parsed = EmployeeFichaNameParser::parse($fullName);
+            $firstSurname = $parsed['first_surname'];
+            $secondSurname = $parsed['second_surname'];
+            $firstName = $parsed['first_name'];
+            $secondName = $parsed['second_name'];
+        }
 
         return [
             $profile?->document_number ?: $entry->hired_document,
             $this->documentTypeCode($profile?->document_type),
             $fullName,
-            $profile?->first_surname ?: $parsed['first_surname'],
-            $profile?->second_surname ?: $parsed['second_surname'],
-            $profile?->first_name ?: $parsed['first_name'],
-            $profile?->second_name ?: $parsed['second_name'],
+            $firstSurname,
+            $secondSurname,
+            $firstName,
+            $secondName,
             $profile?->address,
             $profile?->phone,
             $profile?->phone_secondary ?: data_get($extra, 'phone_secondary'),
