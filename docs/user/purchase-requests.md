@@ -94,8 +94,8 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 ### Procesar en bandeja Compras
 
 1. Entre a **Compras → Solicitudes de compra → Bandeja compras**.
-2. Use **Filtros**: rango de fechas, area solicitante, tipo (Solicitud compra / Suministro) y pills de estado (Pendiente, En curso, Completado, Rechazado).
-3. Sin filtro de fechas el listado muestra hasta 200 registros recientes; con fechas ve el historico completo del periodo.
+2. Use **Filtros**: rango de fechas, area solicitante, tipo (Solicitud compra / Suministro) y pills de estado (Pendiente, En curso, Completado, Rechazado). Al elegir area o tipo, el listado se actualiza solo.
+3. El listado sale **mas reciente primero**. Sin filtro de fechas muestra hasta 200 registros recientes; con fechas ve el historico completo del periodo. Si no ve un suministro, revise que Tipo no este en "Solicitud compra" y que no haya un rango de fechas que lo excluya.
 4. Pulse **Ver detalle** para consultar la solicitud o el suministro sin salir del flujo de lectura.
 5. Para **procesar** una solicitud de compra: abra el flujo de procesamiento y actualice estado y comentarios de Compras.
 6. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
@@ -124,3 +124,4 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 | 1.3 | 2026-08-03 | Bandeja y dashboard | Filtros bandeja, dashboard Compras, ver detalle suministro unificado, KPIs alineados |
 | 1.5 | 2026-08-20 | Analista TIC | Sin descripcion general ni justificacion de cabecera; el detalle va en las lineas de producto |
 | 1.4 | 2026-08-03 | Autorizacion por correo | Director puede aprobar/rechazar via enlace firmado sin login; flujo dual correo + plataforma |
+| 1.6 | 2026-08-28 | Bandeja | Listado por fecha mas reciente; filtro tipo/area se aplica al elegir |

@@ -1032,6 +1032,46 @@ class PurchaseRequestModuleTest extends TestCase
 
         $response->assertOk();
         $response->assertSee($supplyRequest->folio());
+        $response->assertSee('Suministro');
+        $response->assertSee('data-order=\'[[2, "desc"]]\'', false);
+        $response->assertViewHas('queueItems', function ($items) use ($supplyRequest): bool {
+            $item = $items->firstWhere('folio', $supplyRequest->folio());
+
+            return $item !== null && $item['tipo'] === 'supply';
+        });
+    }
+
+    public function test_bandeja_tipo_supply_filter_lists_only_approved_supplies(): void
+    {
+        $compras = $this->comprasUser();
+        $director = $this->director();
+        $purchaseRequester = $this->purchaseRequester('operaciones');
+        $supplyRequester = $this->supplyRequester('operaciones');
+
+        $this->createPurchaseRequest(
+            $purchaseRequester,
+            $director,
+            PurchaseRequest::ESTADO_APROBADO,
+        );
+
+        $supplyRequest = SupplyRequest::query()->create([
+            'user_id' => $supplyRequester->id,
+            'area_key' => 'operaciones',
+            'sede_id' => $supplyRequester->sede_id,
+            'status' => 'aprobada_calidad',
+        ]);
+
+        $response = $this->actingAs($compras)->get(route('purchase-requests.processing.index', [
+            'module' => 'compras',
+            'tipo' => 'supply',
+        ]));
+
+        $response->assertOk();
+        $response->assertViewHas('queueItems', function ($items) use ($supplyRequest): bool {
+            return $items->isNotEmpty()
+                && $items->every(fn (array $item): bool => $item['tipo'] === 'supply')
+                && $items->contains(fn (array $item): bool => $item['id'] === $supplyRequest->id);
+        });
     }
 
     public function test_navigation_processing_bandeja_activates_solicitudes_compra_board(): void

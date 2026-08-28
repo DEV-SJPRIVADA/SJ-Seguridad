@@ -179,7 +179,7 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 - Estado `borrador` documentado pero no implementado.
 
 ### Integración bandeja Compras
-- Solicitudes `aprobada_calidad`, `en_compras` y `completada` aparecen en **Bandeja compras** (`purchase.tab.processing`).
+- Solicitudes `aprobada_calidad`, `en_compras` y `completada` aparecen en **Bandeja compras** (`purchase.tab.processing`). El listado ordena por fecha mas reciente para que los insumos recien aprobados no queden detras de las solicitudes de compra.
 - **Ver detalle** desde bandeja abre `supplies.show` con experiencia unificada y export PDF/Excel.
 - **Procesar** abre `purchase-requests.processing.supply` (costos unitarios, completar).
 - Al iniciar procesamiento, `aprobada_calidad` → `en_compras`.
@@ -193,6 +193,7 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 | 2026-08-03 | Detalle `supplies.show` alineado a solicitud compra; rutas `supplies.export.pdf` / `excel` |
 | 2026-08-03 | PDF FO-AD-44 suministro con layout identico a PDF solicitud compra |
 | 2026-08-03 | Doc corregida: estados `en_compras` y `completada` activos via bandeja Compras |
+| 2026-08-28 | Bandeja compras: orden por fecha descendente para no ocultar insumos aprobados |
 
 ---
 *Documento vivo. Actualizar si cambian las reglas de negocio durante el desarrollo.*

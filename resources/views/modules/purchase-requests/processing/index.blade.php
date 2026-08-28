@@ -140,6 +140,7 @@
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
+                            data-order='[[2, "desc"]]'
                         >
                         <thead>
                             <tr>
@@ -157,7 +158,9 @@
                                 <tr>
                                     <td>{{ $queueItem['tipo_label'] }}</td>
                                     <td>{{ $queueItem['folio'] }}</td>
-                                    <td><x-date-table :value="$queueItem['fecha']" datetime /></td>
+                                    <td data-order="{{ $queueItem['fecha']?->timestamp ?? 0 }}">
+                                        <x-date-table :value="$queueItem['fecha']" datetime />
+                                    </td>
                                     <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
                                     <td>{{ $queueItem['area'] ?? '—' }}</td>
                                     <td>
@@ -204,10 +207,14 @@
                     return;
                 }
 
-                filterForm.querySelectorAll('select, input[type="date"]').forEach((input) => {
-                    input.addEventListener('change', () => {
+                let submitTimer = null;
+                filterForm.addEventListener('change', () => {
+                    if (submitTimer) {
+                        clearTimeout(submitTimer);
+                    }
+                    submitTimer = setTimeout(() => {
                         filterForm.submit();
-                    });
+                    }, 20);
                 });
             });
         </script>
