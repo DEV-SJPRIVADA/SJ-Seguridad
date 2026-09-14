@@ -248,6 +248,129 @@ document.addEventListener('DOMContentLoaded', function () {
         itemIndex++;
     });
 
+    function setImportStatus(message, isError) {
+        const status = document.getElementById('purchase-items-import-status');
+
+        if (!status) {
+            return;
+        }
+
+        if (!message) {
+            status.hidden = true;
+            status.textContent = '';
+            status.classList.remove('alert', 'alert--danger', 'alert--success');
+
+            return;
+        }
+
+        status.hidden = false;
+        status.textContent = message;
+        status.classList.add('alert');
+        status.classList.toggle('alert--danger', Boolean(isError));
+        status.classList.toggle('alert--success', !isError);
+    }
+
+    function fillRowValues(row, item) {
+        const cantidad = row.querySelector('input[name*="[cantidad]"]');
+        const descripcion = row.querySelector('input[name*="[descripcion]"]');
+        const referencia = row.querySelector('input[name*="[referencia]"]');
+        const utilizacion = row.querySelector('input[name*="[utilizacion]"]');
+        const ubicacion = row.querySelector('input[name*="[ubicacion]"]');
+
+        if (cantidad) {
+            cantidad.value = item.cantidad || 1;
+        }
+        if (descripcion) {
+            descripcion.value = item.descripcion || '';
+        }
+        if (referencia) {
+            referencia.value = item.referencia || '';
+        }
+        if (utilizacion) {
+            utilizacion.value = item.utilizacion || '';
+        }
+        if (ubicacion) {
+            ubicacion.value = item.ubicacion || '';
+        }
+    }
+
+    function replaceItemsFromImport(items) {
+        itemsContainer.querySelectorAll('[data-purchase-item-row]').forEach(function (row) {
+            row.querySelectorAll('[data-purchase-item-foto]').forEach(revokePreviewUrl);
+            row.remove();
+        });
+
+        itemIndex = 0;
+        items.forEach(function (item) {
+            const row = createItemRow(itemIndex);
+            fillRowValues(row, item);
+            itemsContainer.appendChild(row);
+            itemIndex++;
+        });
+    }
+
+    const importInput = document.getElementById('purchase-items-import-file');
+
+    if (importInput) {
+        importInput.addEventListener('change', function () {
+            const file = importInput.files?.[0];
+            const url = importInput.dataset.purchaseItemsImportUrl;
+
+            if (!file || !url) {
+                return;
+            }
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const body = new FormData();
+            body.append('import_file', file);
+
+            setImportStatus('Cargando productos desde Excel…', false);
+            importInput.disabled = true;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrf || '',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: body,
+                credentials: 'same-origin',
+            })
+                .then(async function (response) {
+                    const payload = await response.json().catch(function () {
+                        return {};
+                    });
+
+                    if (!response.ok) {
+                        const message = payload.message
+                            || payload.errors?.import_file?.[0]
+                            || 'No se pudo importar el archivo.';
+                        throw new Error(message);
+                    }
+
+                    if (!Array.isArray(payload.items) || payload.items.length === 0) {
+                        throw new Error('El archivo no trajo productos validos.');
+                    }
+
+                    replaceItemsFromImport(payload.items);
+
+                    let message = payload.message || ('Se cargaron ' + payload.items.length + ' producto(s).');
+                    if (Array.isArray(payload.warnings) && payload.warnings.length > 0) {
+                        message += ' ' + payload.warnings.slice(0, 3).join(' ');
+                    }
+                    setImportStatus(message, false);
+                })
+                .catch(function (error) {
+                    setImportStatus(error.message || 'Error al importar.', true);
+                })
+                .finally(function () {
+                    importInput.value = '';
+                    importInput.disabled = false;
+                });
+        });
+    }
+
     itemsContainer.querySelectorAll('[data-purchase-item-row]').forEach(function (row) {
         bindRemoveRow(row);
         row.querySelectorAll('[data-purchase-item-foto]').forEach(bindPhotoZone);

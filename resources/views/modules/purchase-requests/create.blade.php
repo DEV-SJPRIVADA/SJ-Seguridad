@@ -120,12 +120,33 @@
                         </div>
 
                         <div class="block-spaced">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; gap: 0.75rem; flex-wrap: wrap;">
                                 <h4 class="form-label" style="margin: 0;">Productos solicitados</h4>
-                                <button type="button" class="btn btn--secondary btn--sm" id="purchase-add-item-btn">
-                                    + Agregar producto
-                                </button>
+                                <div class="purchase-items-bulk" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                    <a
+                                        href="{{ route('purchase-requests.items.import-template', ['module' => $module]) }}"
+                                        class="btn btn--secondary btn--sm"
+                                    >
+                                        <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
+                                        Descargar plantilla
+                                    </a>
+                                    <label class="btn btn--secondary btn--sm" for="purchase-items-import-file" style="margin: 0; cursor: pointer;">
+                                        <x-lucide-upload width="15" height="15" aria-hidden="true" />
+                                        Cargar Excel
+                                    </label>
+                                    <input
+                                        type="file"
+                                        id="purchase-items-import-file"
+                                        class="sr-only"
+                                        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                                        data-purchase-items-import-url="{{ route('purchase-requests.items.import', ['module' => $module]) }}"
+                                    >
+                                    <button type="button" class="btn btn--secondary btn--sm" id="purchase-add-item-btn">
+                                        + Agregar producto
+                                    </button>
+                                </div>
                             </div>
+                            <p id="purchase-items-import-status" class="form-hint" style="margin: 0 0 0.75rem;" hidden></p>
 
                             <table class="supply-table purchase-items-table">
                                 <thead>

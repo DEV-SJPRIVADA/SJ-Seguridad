@@ -62,6 +62,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 3. Marque **Urgente** si aplica.
 4. Si eligio **Cliente**, complete razon social, proyecto nuevo y si asume el cliente.
 5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional de esa linea.
+   - Opcional **carga masiva**: **Descargar plantilla** (Excel en blanco), llenela desde la fila 3 y use **Cargar Excel** para precargar la tabla. Luego puede editar filas, agregar fotos y enviar. La foto no va en el Excel.
 6. En **Adjuntos** (despues de los productos) puede, si lo desea, seleccionar **varios archivos a la vez** para toda la solicitud: cotizacion, orden de compra, evidencia u otro soporte. Es opcional: puede enviar la solicitud sin ningun archivo. Hasta 5 archivos, 10 MB cada uno. Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
 7. Envie el formulario. Recibira confirmacion con el numero de folio.
 8. El director recibira un correo con el PDF FO-AD-44 y un enlace para **autorizar por correo** o ingresar a la plataforma. Ese correo **no** incluye los archivos de Adjuntos; el director los ve al abrir el detalle en la plataforma.
@@ -134,4 +135,5 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 | 1.5 | 2026-08-20 | Analista TIC | Sin descripcion general ni justificacion de cabecera; el detalle va en las lineas de producto |
 | 1.4 | 2026-08-03 | Autorizacion por correo | Director puede aprobar/rechazar via enlace firmado sin login; flujo dual correo + plataforma |
 | 1.6 | 2026-08-28 | Bandeja | Listado por fecha mas reciente; filtro tipo/area se aplica al elegir |
+| 1.8 | 2026-09-14 | Compras | Nueva solicitud: plantilla Excel y carga masiva de productos a la tabla (sin fotos en el archivo). |
 | 1.7 | 2026-08-28 | FEAT-030 | Adjuntos opcionales multiples por solicitud (detalle de la plataforma). El correo de autorizacion y el FO-AD-44 no los incluyen. Al reenviar una rechazada se pueden conservar, agregar o quitar |

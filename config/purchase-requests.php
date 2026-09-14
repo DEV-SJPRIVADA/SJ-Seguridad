@@ -14,4 +14,19 @@ return [
         'disk' => 'local',
         'directory' => 'purchase-requests',
     ],
+
+    /*
+    | Columnas de plantilla Excel para precargar ítems en Nueva / Editar solicitud.
+    | Fila 1 = claves técnicas, fila 2 = etiquetas, datos desde fila 3.
+    | La foto no forma parte de la plantilla (se agrega en pantalla).
+    */
+    'items_import_columns' => [
+        'cantidad' => 'Cantidad (obligatorio, entero ≥ 1)',
+        'descripcion' => 'Descripción del producto',
+        'referencia' => 'Referencia / código',
+        'utilizacion' => 'Utilización / uso previsto',
+        'ubicacion' => 'Ubicación / sede',
+    ],
+
+    'items_import_max_rows' => 200,
 ];

@@ -47,7 +47,7 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 
 | Pestana | Permiso | Rutas |
 | --- | --- | --- |
-| Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store` |
+| Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store`; plantilla ítems `items.import-template`; precarga `items.import` |
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
@@ -154,6 +154,12 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
 
 Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
+
+### Carga masiva de ítems (Nueva solicitud)
+
+- Plantilla vacía: `GET purchase-requests.items.import-template` → `PurchaseRequestItemsImportTemplateExport` (columnas `config('purchase-requests.items_import_columns')`: cantidad, descripcion, referencia, utilizacion, ubicacion; fila 1 claves, fila 2 etiquetas, datos desde fila 3).
+- Precarga: `POST purchase-requests.items.import` (JSON) → `PurchaseRequestItemsImportService`; el JS reemplaza las filas de la tabla. La foto no va en Excel (se agrega en pantalla).
+- Máximo: `items_import_max_rows` (default 200). Mismo permiso `purchase.tab.create`.
 
 ## Bandeja compras — filtros y listado
 

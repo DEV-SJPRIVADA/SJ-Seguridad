@@ -9,6 +9,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
     Route::middleware(['purchase.tab:create'])->group(function (): void {
         Route::get('/nueva', [PurchaseRequestController::class, 'create'])->name('create');
         Route::post('/nueva', [PurchaseRequestController::class, 'store'])->name('store');
+        Route::get('/nueva/plantilla-items', [PurchaseRequestController::class, 'importItemsTemplate'])->name('items.import-template');
+        Route::post('/nueva/importar-items', [PurchaseRequestController::class, 'importItems'])->name('items.import');
     });
 
     Route::middleware(['purchase.tab:my_requests'])->group(function (): void {

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\PurchaseRequests;
 
+use App\Exports\PurchaseRequestItemsImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PurchaseRequests\ImportPurchaseRequestItemsRequest;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestRequest;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
@@ -12,10 +14,12 @@ use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
+use App\Services\PurchaseRequests\PurchaseRequestItemsImportService;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\PurchaseRequests\PurchaseRequestPdfService;
 use App\Services\PurchaseRequests\PurchaseRequestResubmitService;
 use App\Traits\HasPurchaseTabs;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +54,42 @@ class PurchaseRequestController extends Controller
             'subTabs' => $this->getPurchaseSubTabs($module),
             'directores' => $accessService->approversQuery()->get(),
             'areas' => collect(config('access.areas', [])),
+        ]);
+    }
+
+    public function importItemsTemplate(
+        string $module,
+        PurchaseRequestItemsImportTemplateExport $export,
+    ): StreamedResponse {
+        return $export->download('plantilla_items_solicitud_compra.xlsx');
+    }
+
+    public function importItems(
+        ImportPurchaseRequestItemsRequest $request,
+        string $module,
+        PurchaseRequestItemsImportService $importService,
+    ): JsonResponse {
+        $path = $request->file('import_file')?->getRealPath();
+
+        if ($path === false || $path === null) {
+            return response()->json([
+                'message' => 'No se pudo leer el archivo subido.',
+            ], 422);
+        }
+
+        try {
+            $result = $importService->parse($path);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Se cargaron '.count($result['items']).' producto(s) en la tabla.',
+            'items' => $result['items'],
+            'skipped' => $result['skipped'],
+            'warnings' => $result['warnings'],
         ]);
     }
 
