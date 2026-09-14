@@ -3,8 +3,8 @@
         @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
-        <div class="app-container">
+    <div class="page-section purchase-request-show-page">
+        <div class="app-container purchase-request-show-page__container">
             <div class="panel">
                 <div class="panel__header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -220,8 +220,7 @@
                             <form
                                 method="POST"
                                 action="{{ route('purchase-requests.comments.store', ['module' => $module, 'purchase_request' => $purchaseRequest->id, 'from' => request('from')]) }}"
-                                class="block-spaced"
-                                style="margin-top: 1rem;"
+                                class="purchase-request-comment-form"
                             >
                                 @csrf
                                 @if (request('from'))
@@ -240,12 +239,14 @@
                                     >{{ old('body') }}</textarea>
                                     <x-input-error :messages="$errors->get('body')" />
                                 </div>
-                                <div style="display: flex; justify-content: flex-end;">
-                                    <button type="submit" class="btn btn--secondary btn--sm">Agregar comentario</button>
+                                <div class="purchase-request-comment-form__actions">
+                                    <button type="submit" class="btn btn--primary btn--sm">
+                                        Agregar comentario
+                                    </button>
                                 </div>
                             </form>
                         @elseif (! $purchaseRequest->puedeComentar())
-                            <p class="text-muted text-small" style="margin-top: 0.75rem;">Esta solicitud ya esta completada en Compras; no se pueden agregar mas comentarios.</p>
+                            <p class="text-muted text-small purchase-request-comments__closed">Esta solicitud ya esta completada en Compras; no se pueden agregar mas comentarios.</p>
                         @endif
                     </div>
 
@@ -400,6 +401,27 @@
                 justify-content: center;
                 padding-inline: 0.45rem;
                 line-height: 1;
+            }
+
+            .purchase-request-show-page__container {
+                width: min(1120px, calc(100% - 2rem));
+                max-width: 1120px;
+            }
+
+            .purchase-request-comment-form {
+                margin-top: 1.1rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--color-border);
+            }
+
+            .purchase-request-comment-form__actions {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 0.85rem;
+            }
+
+            .purchase-request-comments__closed {
+                margin-top: 0.75rem;
             }
         </style>
     @endpush
