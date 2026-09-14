@@ -53,4 +53,17 @@ class PurchaseRequestPolicy
 
         return $user->can('purchase.tab.my_requests') || $user->can('purchase.tab.create');
     }
+
+    /**
+     * Notas del hilo (solicitante, director asignado o Compras).
+     * Bloqueado cuando Compras ya marco la solicitud como completada.
+     */
+    public function comment(User $user, PurchaseRequest $purchaseRequest): bool
+    {
+        if ($purchaseRequest->estado_compras === PurchaseRequest::COMPRAS_COMPLETADO) {
+            return false;
+        }
+
+        return $this->view($user, $purchaseRequest);
+    }
 }

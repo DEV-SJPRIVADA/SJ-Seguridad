@@ -91,6 +91,11 @@ class PurchaseRequest extends Model
         return $this->hasMany(PurchaseRequestAttachment::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(PurchaseRequestComment::class)->oldest('id');
+    }
+
     public function mailLogs(): HasMany
     {
         return $this->hasMany(PurchaseRequestMailLog::class)->latest('sent_at')->latest('id');
@@ -134,5 +139,10 @@ class PurchaseRequest extends Model
     public function puedeReabrir(): bool
     {
         return $this->estado === self::ESTADO_RECHAZADO;
+    }
+
+    public function puedeComentar(): bool
+    {
+        return $this->estado_compras !== self::COMPRAS_COMPLETADO;
     }
 }

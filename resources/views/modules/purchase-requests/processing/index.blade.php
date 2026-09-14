@@ -170,7 +170,7 @@
                                     </td>
                                     <td class="table-actions">
                                         @if ($queueItem['tipo'] === 'purchase')
-                                                <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
+                                                <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $queueItem['id'], 'from' => 'processing']) }}" class="btn btn--secondary btn--sm">
                                                     Ver detalle
                                                 </a>
                                             <a href="{{ route('purchase-requests.processing.purchase', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">

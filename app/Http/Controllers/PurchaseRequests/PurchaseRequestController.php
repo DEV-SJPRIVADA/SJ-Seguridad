@@ -5,10 +5,12 @@ namespace App\Http\Controllers\PurchaseRequests;
 use App\Exports\PurchaseRequestItemsImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\ImportPurchaseRequestItemsRequest;
+use App\Http\Requests\PurchaseRequests\StorePurchaseRequestCommentRequest;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestRequest;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestAttachment;
+use App\Models\PurchaseRequestComment;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
@@ -258,13 +260,55 @@ class PurchaseRequestController extends Controller
     {
         Gate::authorize('view', $purchaseRequest);
 
-        $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor', 'mailLogs', 'attachments']);
+        $purchaseRequest->load([
+            'user',
+            'aprobador',
+            'items',
+            'procesadoComprasPor',
+            'mailLogs',
+            'attachments',
+            'comments.user',
+        ]);
 
         return view('modules.purchase-requests.show', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
             'purchaseRequest' => $purchaseRequest,
         ]);
+    }
+
+    public function storeComment(
+        StorePurchaseRequestCommentRequest $request,
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): RedirectResponse {
+        $validated = $request->validated();
+
+        $comment = PurchaseRequestComment::query()->create([
+            'purchase_request_id' => $purchaseRequest->id,
+            'user_id' => $request->user()->id,
+            'body' => $validated['body'],
+        ]);
+
+        $auditLogService->logEvent(
+            eventType: 'purchase_request',
+            action: 'comment',
+            metadata: [
+                'comment_id' => $comment->id,
+                'body_length' => mb_strlen($validated['body']),
+            ],
+            model: $purchaseRequest,
+        );
+
+        return redirect()
+            ->route('purchase-requests.show', [
+                'module' => $module,
+                'purchase_request' => $purchaseRequest->id,
+                'from' => $request->query('from', $request->input('from')),
+            ])
+            ->with('status', 'Comentario agregado a la solicitud.')
+            ->withFragment('purchase-request-comments');
     }
 
     public function exportPdf(string $module, PurchaseRequest $purchaseRequest, PurchaseRequestPdfService $pdfService): Response

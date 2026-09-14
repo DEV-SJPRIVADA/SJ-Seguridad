@@ -42,7 +42,8 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('vendor.pagination.sj');
 
         Gate::before(function (User $user, string $ability): ?bool {
-            if ($ability === 'system.view.audit') {
+            // Dejar que la policy evalúe reglas de negocio (ej. hilo cerrado si Compras completó).
+            if (in_array($ability, ['system.view.audit', 'comment'], true)) {
                 return null;
             }
 

@@ -39,5 +39,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
     Route::get('/solicitud/{purchase_request}/adjuntos/{attachment}', [PurchaseRequestController::class, 'downloadAttachment'])
         ->scopeBindings()
         ->name('attachments.download');
+    Route::post('/solicitud/{purchase_request}/comentarios', [PurchaseRequestController::class, 'storeComment'])
+        ->name('comments.store');
     Route::get('/solicitud/{purchase_request}', [PurchaseRequestController::class, 'show'])->name('show');
 });

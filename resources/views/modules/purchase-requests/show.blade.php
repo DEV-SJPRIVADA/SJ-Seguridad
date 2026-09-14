@@ -28,6 +28,11 @@
                                 @if ($purchaseRequest->urgente)
                                     <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Urgente</span>
                                 @endif
+                                @if ($purchaseRequest->estado_compras)
+                                    <span class="status-pill status-pill--compras-{{ $purchaseRequest->estado_compras }}" style="margin-left: 0.35rem;">
+                                        Compras: {{ $purchaseRequest->estadoComprasLabel() }}
+                                    </span>
+                                @endif
                             </p>
                         </div>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -179,6 +184,70 @@
                             </table>
                         </div>
                     @endif
+
+                    <div id="purchase-request-comments" class="block-spaced">
+                        <h4 class="form-label">Comentarios de la solicitud</h4>
+                        <p class="form-hint" style="margin-top: 0;">
+                            Use este espacio para notas posteriores al envio (ej. un producto ya no es necesario). Quien puede ver la solicitud tambien puede responder.
+                            @if (! $purchaseRequest->puedeComentar())
+                                Los comentarios quedan cerrados cuando Compras marca la solicitud como <strong>completada</strong>.
+                            @endif
+                        </p>
+
+                        @if (session('status'))
+                            <div class="alert alert--success" role="status" style="margin: 0.75rem 0;">{{ session('status') }}</div>
+                        @endif
+
+                        @if ($purchaseRequest->comments->isEmpty())
+                            <p class="text-muted text-small">Aun no hay comentarios.</p>
+                        @else
+                            <ul class="purchase-request-comments-list" style="list-style: none; padding: 0; margin: 0.75rem 0 0; display: grid; gap: 0.75rem;">
+                                @foreach ($purchaseRequest->comments as $comment)
+                                    <li class="card card--muted" style="padding: 0.85rem 1rem;">
+                                        <div style="display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
+                                            <strong>{{ $comment->user?->name ?? 'Usuario' }}</strong>
+                                            <span class="text-muted text-small">
+                                                <x-date-table :value="$comment->created_at" datetime />
+                                            </span>
+                                        </div>
+                                        <p style="margin: 0; white-space: pre-wrap;">{{ $comment->body }}</p>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+
+                        @if ($purchaseRequest->puedeComentar() && auth()->user()?->can('comment', $purchaseRequest))
+                            <form
+                                method="POST"
+                                action="{{ route('purchase-requests.comments.store', ['module' => $module, 'purchase_request' => $purchaseRequest->id, 'from' => request('from')]) }}"
+                                class="block-spaced"
+                                style="margin-top: 1rem;"
+                            >
+                                @csrf
+                                @if (request('from'))
+                                    <input type="hidden" name="from" value="{{ request('from') }}">
+                                @endif
+                                <div class="form-field">
+                                    <label class="form-label" for="purchase-request-comment-body">Nuevo comentario</label>
+                                    <textarea
+                                        id="purchase-request-comment-body"
+                                        name="body"
+                                        class="form-textarea"
+                                        rows="3"
+                                        maxlength="5000"
+                                        required
+                                        placeholder="Ej. El item Cascos de seguridad ya no es necesario."
+                                    >{{ old('body') }}</textarea>
+                                    <x-input-error :messages="$errors->get('body')" />
+                                </div>
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button type="submit" class="btn btn--secondary btn--sm">Agregar comentario</button>
+                                </div>
+                            </form>
+                        @elseif (! $purchaseRequest->puedeComentar())
+                            <p class="text-muted text-small" style="margin-top: 0.75rem;">Esta solicitud ya esta completada en Compras; no se pueden agregar mas comentarios.</p>
+                        @endif
+                    </div>
 
                     @include('modules.purchase-requests.partials.approval-form')
 
