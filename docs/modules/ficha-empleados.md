@@ -241,6 +241,10 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - Plantilla: `EmployeeFichaImportTemplateExport` / ruta `import-template`.
 - Export datos actuales: `EmployeeFichaImportTemplateExport::downloadWithData()` + `EmployeeFichaImportRowMapper` / ruta `export-import-template`.
 - Servicio: `EmployeeFichaImportService`; comando `php artisan employee-ficha:import {path}`.
+- Columnas de nombre en `import_columns`: `primer_apellido`, `segundo_apellido`, `primer_nombre`, `segundo_nombre` (alineadas a BD) y `nombre` opcional. Si vienen partes, se usan tal cual y se compone `full_name`; si solo viene `nombre`, se parte con `EmployeeFichaNameParser` (compatibilidad plantillas antiguas).
+- `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). No crea periodo ni seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
+- Plantilla vacía y **Exportar datos para actualizar** comparten las mismas claves (`import_columns` + `EmployeeFichaImportRowMapper`).
+- Fuera de alcance del import SJ (van en formulario / plantilla nómina / Archivo): `phone_secondary`, códigos CCF/centro trabajo y demás `payroll_extra`, `archive_shelf` / `archive_box`.
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.
 - Mapeo técnico: [`docs/Contratacion/MAPEO-PLANTILLA-MASIVOS.md`](../Contratacion/MAPEO-PLANTILLA-MASIVOS.md).
 - Columna `linkage_type` (`tipo_vinculacion` en import): `VARCHAR(100)` — valores de nómina como `Contrato Laboral(Dependiente Asociado)` superaban el limite anterior de 30 caracteres.

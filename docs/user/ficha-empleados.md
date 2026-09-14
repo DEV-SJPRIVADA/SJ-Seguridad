@@ -121,8 +121,8 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 
 ### Importar empleados masivamente
 
-1. Pulse **Descargar plantilla importación** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
-2. Edite filas desde la fila 3; `cedula` es obligatoria. Incluye columnas `codigo_ciudad_trabajo` y `ciudad_trabajo`.
+1. Pulse **Descargar plantilla vacia** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
+2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). Incluye columnas `codigo_ciudad_trabajo` y `ciudad_trabajo`.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
@@ -146,6 +146,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-09-14 | Ficha | Plantilla vacía / import: columnas de primer/segundo apellido y nombre alineadas a BD; `nombre` completo queda opcional. |
 | 1.8 | 2026-09-14 | FEAT-031 | Desvincular individual crea seguimiento en Desvinculaciones; Generar cartas marca «tiene carta»; regenerar carta sigue en Ficha (permiso terminate). |
 | 1.7 | 2026-08-25 | Ficha | Ciudad de trabajo en perfil (precarga desde requisicion); columnas en plantilla importar/actualizar; sin cambio en plantilla masivos nomina. |
 | 1.6 | 2026-08-21 | FEAT-029 | Cartas: modal Generar (seleccion 1/N → docx o zip) en cualquier causal de vinculo cerrado; Descargar ultimo archivo; sin Regenerar aparte; plantillas en tablero Plantillas Word (re-subir legacy Renuncia). |

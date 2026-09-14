@@ -151,6 +151,21 @@ class EmployeeFichaPlantillasTest extends TestCase
             ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     }
 
+    public function test_import_template_headers_include_split_name_columns(): void
+    {
+        $columns = array_keys(config('employee_ficha.import_columns'));
+
+        $this->assertContains('primer_apellido', $columns);
+        $this->assertContains('segundo_apellido', $columns);
+        $this->assertContains('primer_nombre', $columns);
+        $this->assertContains('segundo_nombre', $columns);
+        $this->assertContains('nombre', $columns);
+        $this->assertSame(
+            ['cedula', 'primer_apellido', 'segundo_apellido', 'primer_nombre', 'segundo_nombre', 'nombre'],
+            array_slice($columns, 0, 6),
+        );
+    }
+
     public function test_import_creates_profile_and_ficha_entry(): void
     {
         $manager = $this->managerUser();
@@ -185,6 +200,73 @@ class EmployeeFichaPlantillasTest extends TestCase
         ]);
     }
 
+    public function test_import_prefers_split_name_columns_over_nombre(): void
+    {
+        $manager = $this->managerUser();
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '11223344',
+            'primer_apellido' => 'PEREZ',
+            'segundo_apellido' => 'LOPEZ',
+            'primer_nombre' => 'ANA',
+            'segundo_nombre' => 'MARIA',
+            'nombre' => 'NOMBRE COMPLETO IGNORADO SI HAY PARTES',
+            'fecha_ingreso' => '2026-02-01',
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ]);
+
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+        $response->assertSessionHas('import_result', function (array $result): bool {
+            return ($result['imported'] ?? 0) === 1 && ($result['failed'] ?? 0) === 0;
+        });
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '11223344',
+            'first_surname' => 'PEREZ',
+            'second_surname' => 'LOPEZ',
+            'first_name' => 'ANA',
+            'second_name' => 'MARIA',
+            'full_name' => 'PEREZ LOPEZ ANA MARIA',
+        ]);
+
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'hired_document' => '11223344',
+            'first_surname' => 'PEREZ',
+            'second_surname' => 'LOPEZ',
+            'first_name' => 'ANA',
+            'second_name' => 'MARIA',
+            'hired_full_name' => 'PEREZ LOPEZ ANA MARIA',
+        ]);
+    }
+
+    public function test_import_composes_full_name_from_split_columns_when_nombre_empty(): void
+    {
+        $manager = $this->managerUser();
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '55667788',
+            'primer_apellido' => 'GOMEZ',
+            'segundo_apellido' => 'DIAZ',
+            'primer_nombre' => 'CARLOS',
+            'segundo_nombre' => 'ANDRES',
+            'fecha_ingreso' => '2026-03-01',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ])->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '55667788',
+            'first_surname' => 'GOMEZ',
+            'second_surname' => 'DIAZ',
+            'first_name' => 'CARLOS',
+            'second_name' => 'ANDRES',
+            'full_name' => 'GOMEZ DIAZ CARLOS ANDRES',
+        ]);
+    }
+
     public function test_import_accepts_long_tipo_vinculacion_from_payroll_template(): void
     {
         $manager = $this->managerUser();
@@ -211,6 +293,57 @@ class EmployeeFichaPlantillasTest extends TestCase
         ]);
     }
 
+    public function test_import_applies_fecha_retiro_to_employment_status(): void
+    {
+        $manager = $this->managerUser();
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '66778899',
+            'primer_apellido' => 'ROJAS',
+            'primer_nombre' => 'LUIS',
+            'fecha_ingreso' => '2020-01-10',
+            'fecha_retiro' => now()->subDay()->toDateString(),
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ])->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+
+        $profile = EmployeeFichaProfile::query()->where('document_number', '66778899')->first();
+
+        $this->assertNotNull($profile);
+        $this->assertSame(now()->subDay()->toDateString(), $profile->termination_date?->toDateString());
+        $this->assertSame(EmployeeFichaProfile::STATUS_DESVINCULADO, $profile->employment_status);
+    }
+
+    public function test_export_import_template_column_keys_match_import_columns(): void
+    {
+        $manager = $this->managerUser();
+        $entry = $this->createInFichaEntry('555666777', 'Round Trip Keys');
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '555666777',
+            'full_name' => 'Round Trip Keys',
+            'first_surname' => 'Round',
+            'first_name' => 'Trip',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($manager)->get(route('gestion-humana.ficha-empleados.employees.export-import-template'));
+        $response->assertOk();
+
+        $temp = tempnam(sys_get_temp_dir(), 'import-keys-');
+        file_put_contents($temp, $response->streamedContent());
+        $sheet = IOFactory::load($temp)->getActiveSheet();
+
+        $expected = array_keys(config('employee_ficha.import_columns'));
+        $actual = [];
+        for ($col = 1; $col <= count($expected); $col++) {
+            $actual[] = (string) $sheet->getCell(Coordinate::stringFromColumnIndex($col).'1')->getValue();
+        }
+
+        $this->assertSame($expected, $actual);
+    }
+
     public function test_export_import_template_includes_profile_data(): void
     {
         $manager = $this->managerUser();
@@ -219,8 +352,11 @@ class EmployeeFichaPlantillasTest extends TestCase
             'personal_requisition_ficha_entry_id' => $entry->id,
             'document_number' => '444444444',
             'full_name' => 'Export Import Test',
+            'first_surname' => 'Export',
+            'second_surname' => 'Import',
+            'first_name' => 'Test',
             'eps_code' => 'EPS99',
-            'nombre_eps' => 'EPS Export',
+            'eps_name' => 'EPS Export',
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
         ]);
 
@@ -233,11 +369,16 @@ class EmployeeFichaPlantillasTest extends TestCase
         file_put_contents($temp, $response->streamedContent());
         $sheet = IOFactory::load($temp)->getActiveSheet();
 
-        $this->assertSame('cedula', $sheet->getCell('A1')->getValue());
-        $this->assertSame('444444444', (string) $sheet->getCell('A3')->getValue());
-        $this->assertSame('Export Import Test', $sheet->getCell('B3')->getValue());
-
         $headers = array_keys(config('employee_ficha.import_columns'));
+        $nombreCol = Coordinate::stringFromColumnIndex(array_search('nombre', $headers, true) + 1);
+        $primerApellidoCol = Coordinate::stringFromColumnIndex(array_search('primer_apellido', $headers, true) + 1);
+
+        $this->assertSame('cedula', $sheet->getCell('A1')->getValue());
+        $this->assertSame('primer_apellido', $sheet->getCell('B1')->getValue());
+        $this->assertSame('444444444', (string) $sheet->getCell('A3')->getValue());
+        $this->assertSame('Export', $sheet->getCell($primerApellidoCol.'3')->getValue());
+        $this->assertSame('Export Import Test', $sheet->getCell($nombreCol.'3')->getValue());
+
         $epsCodeCol = Coordinate::stringFromColumnIndex(array_search('codigo_eps', $headers, true) + 1);
         $this->assertSame('EPS99', $sheet->getCell($epsCodeCol.'3')->getValue());
     }

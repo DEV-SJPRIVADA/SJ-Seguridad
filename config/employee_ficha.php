@@ -122,7 +122,11 @@ return [
 
     'import_columns' => [
         'cedula' => 'Cédula (obligatorio)',
-        'nombre' => 'Nombre completo',
+        'primer_apellido' => 'Primer apellido',
+        'segundo_apellido' => 'Segundo apellido',
+        'primer_nombre' => 'Primer nombre',
+        'segundo_nombre' => 'Segundo nombre',
+        'nombre' => 'Nombre completo (opcional si llena partes)',
         'fecha_nac' => 'Fecha nacimiento (YYYY-MM-DD)',
         'tipo_documento' => 'Tipo documento (C, CE, N, TI, PT)',
         'codigo_lugar_exp_cedula' => 'Código lugar expedición',

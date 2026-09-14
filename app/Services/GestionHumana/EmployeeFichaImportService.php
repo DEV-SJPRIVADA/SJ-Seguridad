@@ -78,10 +78,12 @@ class EmployeeFichaImportService
 
                     if ($existing !== null) {
                         $existing->update($payload);
+                        $existing->syncEmploymentStatusFromTerminationDate();
                         $this->profileCatalogSync->syncAndSave($existing);
                         $stats['updated']++;
                     } else {
                         $profile = EmployeeFichaProfile::query()->create($payload);
+                        $profile->syncEmploymentStatusFromTerminationDate();
                         $this->profileCatalogSync->syncAndSave($profile);
                         $stats['imported']++;
                     }
@@ -142,15 +144,15 @@ class EmployeeFichaImportService
      */
     private function mapImportPayload(array $data, string $cedula): array
     {
-        $parsed = EmployeeFichaNameParser::parse(trim((string) ($data['nombre'] ?? '')));
+        $nameParts = $this->resolveImportNameParts($data);
 
         $payload = [
             'document_number' => $cedula,
-            'full_name' => $parsed['full_name'] ?: trim((string) ($data['nombre'] ?? '')),
-            'first_surname' => $parsed['first_surname'],
-            'second_surname' => $parsed['second_surname'],
-            'first_name' => $parsed['first_name'],
-            'second_name' => $parsed['second_name'],
+            'full_name' => $nameParts['full_name'],
+            'first_surname' => $nameParts['first_surname'],
+            'second_surname' => $nameParts['second_surname'],
+            'first_name' => $nameParts['first_name'],
+            'second_name' => $nameParts['second_name'],
             'document_type' => $this->stringOrNull($data['tipo_documento'] ?? null),
             'birth_date' => $this->parseDate($data['fecha_nac'] ?? null),
             'expedition_city_code' => $this->stringOrNull($data['codigo_lugar_exp_cedula'] ?? null),
@@ -172,6 +174,7 @@ class EmployeeFichaImportService
             'linkage_type' => $this->stringOrNull($data['tipo_vinculacion'] ?? null),
             'hire_date' => $this->parseDate($data['fecha_ingreso'] ?? null),
             'contract_end_date' => $this->parseDate($data['fecha_vencimiento_contrato'] ?? null),
+            'termination_date' => $this->parseDate($data['fecha_retiro'] ?? null),
             'work_center_name' => $this->stringOrNull($data['nombre_centro_trabajo'] ?? null),
             'cost_center_code' => $this->stringOrNull($data['ccosto'] ?? null),
             'cost_center_name' => $this->stringOrNull($data['nombre_ccosto'] ?? null),
@@ -226,14 +229,61 @@ class EmployeeFichaImportService
             $requisitionId = PersonalRequisition::query()->where('code', $code)->value('id');
         }
 
+        $nameParts = $this->resolveImportNameParts($data);
+
         return PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $requisitionId,
             'hired_document' => $cedula,
-            'hired_full_name' => trim((string) ($data['nombre'] ?? $cedula)),
+            'hired_full_name' => $nameParts['full_name'] !== '' ? $nameParts['full_name'] : $cedula,
+            'first_surname' => $nameParts['first_surname'],
+            'second_surname' => $nameParts['second_surname'],
+            'first_name' => $nameParts['first_name'],
+            'second_name' => $nameParts['second_name'],
             'moved_to_ficha_at' => now(),
             'moved_to_ficha_by' => $userId,
             'created_by' => $userId,
         ]);
+    }
+
+    /**
+     * Prefiere columnas partido; si faltan, deriva desde `nombre` (plantillas antiguas).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{full_name: string, first_surname: ?string, second_surname: ?string, first_name: ?string, second_name: ?string}
+     */
+    private function resolveImportNameParts(array $data): array
+    {
+        $firstSurname = $this->stringOrNull($data['primer_apellido'] ?? null);
+        $secondSurname = $this->stringOrNull($data['segundo_apellido'] ?? null);
+        $firstName = $this->stringOrNull($data['primer_nombre'] ?? null);
+        $secondName = $this->stringOrNull($data['segundo_nombre'] ?? null);
+        $nombre = trim((string) ($data['nombre'] ?? ''));
+        $hasParts = $firstSurname !== null || $secondSurname !== null || $firstName !== null || $secondName !== null;
+
+        if ($hasParts) {
+            $composed = implode(' ', array_filter(
+                [$firstSurname, $secondSurname, $firstName, $secondName],
+                fn (?string $part): bool => $part !== null && $part !== '',
+            ));
+
+            return [
+                'full_name' => $composed !== '' ? $composed : $nombre,
+                'first_surname' => $firstSurname,
+                'second_surname' => $secondSurname,
+                'first_name' => $firstName,
+                'second_name' => $secondName,
+            ];
+        }
+
+        $parsed = EmployeeFichaNameParser::parse($nombre);
+
+        return [
+            'full_name' => $parsed['full_name'] !== '' ? $parsed['full_name'] : $nombre,
+            'first_surname' => $parsed['first_surname'],
+            'second_surname' => $parsed['second_surname'],
+            'first_name' => $parsed['first_name'],
+            'second_name' => $parsed['second_name'],
+        ];
     }
 
     /**

@@ -15,9 +15,19 @@ class EmployeeFichaImportRowMapper
         $entry->loadMissing(['profile']);
         $profile = $entry->profile;
 
+        $firstSurname = $profile?->first_surname ?: $entry->first_surname;
+        $secondSurname = $profile?->second_surname ?: $entry->second_surname;
+        $firstName = $profile?->first_name ?: $entry->first_name;
+        $secondName = $profile?->second_name ?: $entry->second_name;
+        $fullName = $profile?->full_name ?: $entry->hired_full_name;
+
         return [
             'cedula' => $profile?->document_number ?: $entry->hired_document,
-            'nombre' => $profile?->full_name ?: $entry->hired_full_name,
+            'primer_apellido' => $firstSurname,
+            'segundo_apellido' => $secondSurname,
+            'primer_nombre' => $firstName,
+            'segundo_nombre' => $secondName,
+            'nombre' => $fullName,
             'fecha_nac' => $this->dateString($profile?->birth_date),
             'tipo_documento' => $profile?->document_type,
             'codigo_lugar_exp_cedula' => $profile?->expedition_city_code,

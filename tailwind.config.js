@@ -12,7 +12,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"Neue Haas Grotesk Display"', ...defaultTheme.fontFamily.sans],
             },
         },
     },

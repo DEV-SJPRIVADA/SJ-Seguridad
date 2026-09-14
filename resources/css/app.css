@@ -1,3 +1,27 @@
+@font-face {
+    font-family: "Neue Haas Grotesk Display";
+    src: url("../fonts/nhg-display/NHG_DSPRO-55-Roman.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Neue Haas Grotesk Display";
+    src: url("../fonts/nhg-display/NHG_DSPRO-56-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Neue Haas Grotesk Display";
+    src: url("../fonts/nhg-display/NHG_DSPRO-75-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     --brand-navy: #1e2743;
     --brand-blue: #0e4a6e;
@@ -7,6 +31,8 @@
     --brand-silver: #d9d9d9;
     --brand-steel: #9ca3af;
     --brand-ink: #10233f;
+
+    --font-sans: "Neue Haas Grotesk Display", ui-sans-serif, system-ui, sans-serif;
 
     --color-bg: #f4f7fb;
     --color-surface: var(--brand-white);
@@ -45,7 +71,7 @@
 }
 
 html {
-    font-family: "Figtree", sans-serif;
+    font-family: var(--font-sans);
 }
 
 body {
