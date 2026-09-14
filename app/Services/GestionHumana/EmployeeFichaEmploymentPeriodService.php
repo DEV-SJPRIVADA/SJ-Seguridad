@@ -61,19 +61,40 @@ class EmployeeFichaEmploymentPeriodService
         }
 
         $causeCode = trim((string) ($terminationData['termination_cause_code'] ?? ''));
-        $causeName = PayrollCatalogItem::query()
-            ->ofType('termination_cause')
-            ->where('code', $causeCode)
-            ->value('name');
+        $causeName = $causeCode !== ''
+            ? PayrollCatalogItem::query()
+                ->ofType('termination_cause')
+                ->where('code', $causeCode)
+                ->value('name')
+            : null;
+
+        // Masivos puede omitir rehire (null). Individual siempre envia bool required.
+        if (array_key_exists('is_rehireable', $terminationData)) {
+            $rawRehire = $terminationData['is_rehireable'];
+            if ($rawRehire === null || $rawRehire === '') {
+                $isRehireable = null;
+            } elseif (is_bool($rawRehire)) {
+                $isRehireable = $rawRehire;
+            } else {
+                $isRehireable = filter_var($rawRehire, FILTER_VALIDATE_BOOLEAN);
+            }
+        } else {
+            $isRehireable = false;
+        }
+
+        $notes = $terminationData['termination_notes'] ?? null;
+        if (is_string($notes) && trim($notes) === '') {
+            $notes = null;
+        }
 
         $period->fill([
             'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
             'termination_cause_code' => $causeCode !== '' ? $causeCode : null,
             'termination_cause_name' => $causeName,
-            'is_rehireable' => (bool) ($terminationData['is_rehireable'] ?? false),
+            'is_rehireable' => $isRehireable,
             'last_work_day' => $terminationData['last_work_day'] ?? null,
             'termination_date' => $terminationData['termination_date'] ?? null,
-            'termination_notes' => $terminationData['termination_notes'] ?? null,
+            'termination_notes' => $notes,
             'closed_by' => $userId,
         ]);
         $period->save();
@@ -153,6 +174,52 @@ class EmployeeFichaEmploymentPeriodService
         $profile->save();
 
         return $profile->fresh();
+    }
+
+    /**
+     * Reabre un periodo cerrado (revierte desvinculacion). No toca archivos; el caller borra cartas.
+     */
+    public function reopenClosedPeriod(EmployeeFichaEmploymentPeriod $period): EmployeeFichaEmploymentPeriod
+    {
+        if ($period->status !== EmployeeFichaEmploymentPeriod::STATUS_CERRADO) {
+            throw ValidationException::withMessages([
+                'employment_period' => 'Solo se puede revertir un vinculo cerrado.',
+            ]);
+        }
+
+        $entry = $period->fichaEntry;
+
+        if ($entry === null) {
+            throw ValidationException::withMessages([
+                'employment_period' => 'No se encontro la ficha del empleado.',
+            ]);
+        }
+
+        if ($this->activePeriod($entry) !== null) {
+            throw ValidationException::withMessages([
+                'employment_period' => 'El empleado ya tiene un vinculo laboral activo.',
+            ]);
+        }
+
+        $period->fill([
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+            'termination_cause_code' => null,
+            'termination_cause_name' => null,
+            'is_rehireable' => null,
+            'last_work_day' => null,
+            'termination_date' => null,
+            'termination_notes' => null,
+            'termination_letter_type' => null,
+            'termination_letter_path' => null,
+            'closed_by' => null,
+        ]);
+        $period->save();
+
+        $entry->loadMissing('profile');
+        $profile = $this->syncProfileFromActivePeriod($entry);
+        $profile->save();
+
+        return $period->fresh();
     }
 
     public function activePeriod(PersonalRequisitionFichaEntry $entry): ?EmployeeFichaEmploymentPeriod

@@ -29,6 +29,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-031 | Tablero Desvinculaciones (Masivos + Seguimientos) en GH | orquestado | Si | [`docs/runs/FEAT-031-run-log.md`](runs/FEAT-031-run-log.md) | 2026-09-14 |
 | FEAT-030 | Adjuntos multiples opcionales en solicitud de compra (detalle plataforma) | orquestado | Si | [`docs/runs/FEAT-030-run-log.md`](runs/FEAT-030-run-log.md) | 2026-08-28 |
 | FEAT-029 | Tablero plantillas Word (tipo documento) + modal generar cartas (1/N → docx/zip) | orquestado | Si | [`docs/runs/FEAT-029-run-log.md`](runs/FEAT-029-run-log.md) | 2026-08-21 |
 | FEAT-028 | Formulario ficha completo alineado a Plantilla masivos | orquestado | Si | [`docs/runs/FEAT-028-run-log.md`](runs/FEAT-028-run-log.md) | 2026-08-13 |

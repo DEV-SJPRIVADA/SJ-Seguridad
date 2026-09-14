@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GestionHumana\ArchivoController;
 use App\Http\Controllers\GestionHumana\ContratacionLetterController;
+use App\Http\Controllers\GestionHumana\DesvinculacionesController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
@@ -73,4 +74,21 @@ Route::middleware(['password.changed'])
         Route::post('/plantillas/{template}/reemplazar', [PlantillasWordController::class, 'replaceTemplate'])->name('templates.replace');
         Route::delete('/plantillas/{template}', [PlantillasWordController::class, 'destroyTemplate'])->name('templates.destroy');
         Route::get('/plantillas/{template}/descargar', [PlantillasWordController::class, 'downloadTemplate'])->name('templates.download');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/desvinculaciones')
+    ->name('gestion-humana.desvinculaciones.')
+    ->group(function (): void {
+        Route::get('/', [DesvinculacionesController::class, 'index'])->name('index');
+        Route::get('/masivos', [DesvinculacionesController::class, 'masivos'])->name('masivos');
+        Route::get('/masivos/plantillas', [DesvinculacionesController::class, 'templates'])->name('masivos.templates');
+        Route::get('/masivos/firmas', [DesvinculacionesController::class, 'signatories'])->name('masivos.signatories');
+        Route::post('/masivos/lookup', [DesvinculacionesController::class, 'lookup'])->name('masivos.lookup');
+        Route::post('/masivos/procesar', [DesvinculacionesController::class, 'process'])->name('masivos.process');
+        Route::get('/masivos/descarga/{token}', [DesvinculacionesController::class, 'downloadZip'])->name('masivos.download');
+        Route::get('/seguimientos', [DesvinculacionesController::class, 'seguimientos'])->name('seguimientos');
+        Route::get('/seguimientos/datatable', [DesvinculacionesController::class, 'seguimientosDatatable'])->name('seguimientos.datatable');
+        Route::patch('/seguimientos/{followup}', [DesvinculacionesController::class, 'updateSeguimiento'])->name('seguimientos.update');
+        Route::post('/seguimientos/{followup}/revertir', [DesvinculacionesController::class, 'revertSeguimiento'])->name('seguimientos.revert');
     });

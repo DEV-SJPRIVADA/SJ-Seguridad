@@ -9,6 +9,7 @@ use App\Models\PayrollCatalogItem;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeFichaAuditLogService;
+use App\Services\GestionHumana\EmployeeTerminationFollowupService;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterPackGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,7 @@ class TerminationLetterController extends Controller
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly TerminationLetterPackGeneratorService $packGenerator,
         private readonly EmployeeFichaAuditLogService $auditLogService,
+        private readonly EmployeeTerminationFollowupService $terminationFollowupService,
     ) {}
 
     public function templates(EmployeeFichaEmploymentPeriod $period): JsonResponse
@@ -76,6 +78,12 @@ class TerminationLetterController extends Controller
         abort_unless($entry !== null, 404);
 
         $result = $this->packGenerator->generate($period, $entry, $request->templateIds(), $request->signatoryId());
+
+        $this->terminationFollowupService->markLetterGenerated(
+            $period->fresh(),
+            $entry,
+            (int) auth()->id(),
+        );
 
         $this->auditLogService->logEvent(
             eventType: 'termination_letter_pack',

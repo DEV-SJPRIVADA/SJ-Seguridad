@@ -2327,9 +2327,9 @@ a {
 }
 
 .comercial-checklist-page .checklist-doc-select--x {
-    background: #fecaca;
-    border-color: #f87171;
-    color: #991b1b;
+    background: transparent;
+    border-color: #e2e8f0;
+    color: #64748b;
 }
 
 .comercial-checklist-page .checklist-doc-pill {
@@ -2363,8 +2363,8 @@ a {
 }
 
 .comercial-checklist-page .checklist-doc-pill--x {
-    background: #fecaca;
-    color: #991b1b;
+    background: transparent;
+    color: #64748b;
 }
 
 .comercial-clients-page .data-table td {
@@ -7642,4 +7642,325 @@ a.sj-pagination__item:hover {
     .supply-cart-layout {
         grid-template-columns: 1fr;
     }
+}
+
+/* FEAT-031 — Desvinculaciones Masivos */
+.app-main:has(.desvinculaciones-masivos-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.desvinculaciones-masivos-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.desvinculaciones-masivos-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+.desvinculaciones-masivos-page .desvinculaciones-masivos {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.desvinculaciones-masivos-page .desvinculaciones-masivos > .panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.desvinculaciones-masivos__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 0.65rem;
+    margin-top: 1rem;
+    padding-top: 0.35rem;
+}
+
+.desvinculaciones-masivos__table-wrap {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    overflow: auto;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.desvinculaciones-masivos__table {
+    width: 100%;
+    margin: 0;
+}
+
+.desvinculaciones-masivos__table .form-input,
+.desvinculaciones-masivos__table .searchable-select-wrap {
+    min-width: 9rem;
+}
+
+.desvinculaciones-masivos__col-cedula {
+    width: 6.5rem;
+    max-width: 6.5rem;
+}
+
+.desvinculaciones-masivos__cedula-input,
+.desvinculaciones-masivos__table .desvinculaciones-masivos__cedula-input {
+    min-width: 4.5rem;
+    width: 100%;
+    max-width: 6.5rem;
+}
+
+.desvinculaciones-masivos__table th {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.desvinculaciones-masivos__name {
+    display: inline-block;
+    min-width: 8rem;
+    font-size: 0.875rem;
+}
+
+.desvinculaciones-masivos__report {
+    flex-shrink: 0;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border, #e5e7eb);
+    max-height: 30vh;
+    overflow-y: auto;
+}
+
+.desvinculaciones-masivos__report-block {
+    margin-top: 0.75rem;
+}
+
+.desvinculaciones-masivos__report-list {
+    margin: 0.35rem 0 0;
+    padding-left: 1.25rem;
+    font-size: 0.875rem;
+}
+
+.desvinculaciones-masivos__report-list--fail {
+    color: var(--color-danger, #b91c1c);
+}
+
+/* FEAT-031 — Desvinculaciones Seguimientos */
+.app-main:has(.desvinculaciones-seguimientos-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.desvinculaciones-seguimientos-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.desvinculaciones-seguimientos-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+.desvinculaciones-seguimientos-page .desvinculaciones-seguimientos {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.desvinculaciones-seguimientos-page .desvinculaciones-seguimientos > .panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.desvinculaciones-seguimientos__readonly-notice {
+    flex-shrink: 0;
+    margin-bottom: 0.75rem;
+}
+
+.desvinculaciones-seguimientos__filters {
+    flex-shrink: 0;
+    margin-bottom: 0.75rem;
+}
+
+.desvinculaciones-seguimientos__status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.75rem 0 0.5rem;
+    padding: 0.2rem;
+}
+
+.desvinculaciones-seguimientos__table-wrap {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    overflow: auto;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.desvinculaciones-seguimientos__table {
+    width: 100%;
+    min-width: 1900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__table th {
+    white-space: nowrap !important;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    text-align: center !important;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.desvinculaciones-seguimientos__table th:not(.desvinculaciones-seguimientos__check-th) {
+    padding-left: 0.55rem !important;
+    padding-right: 0.55rem !important;
+}
+
+.desvinculaciones-seguimientos__check-th {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap !important;
+    max-width: none;
+    min-width: 2.65rem;
+    width: 2.65rem;
+    height: auto;
+    min-height: 8.5rem;
+    padding: 0.55rem 0.2rem !important;
+    text-align: center !important;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.desvinculaciones-seguimientos__check-td {
+    text-align: center;
+    vertical-align: middle;
+    min-width: 2.65rem;
+    width: 2.65rem;
+}
+
+.desvinculaciones-seguimientos__check {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.desvinculaciones-seguimientos__check:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.desvinculaciones-seguimientos__date {
+    min-width: 9.5rem;
+}
+
+.desvinculaciones-seguimientos__col-id {
+    min-width: 3rem;
+}
+
+.desvinculaciones-seguimientos__col-doc {
+    min-width: 6.5rem;
+}
+
+.desvinculaciones-seguimientos__col-name {
+    min-width: 11rem;
+}
+
+.desvinculaciones-seguimientos__col-wide {
+    min-width: 8.5rem;
+}
+
+.desvinculaciones-seguimientos__ok-todo {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.desvinculaciones-seguimientos__notes {
+    max-width: 14rem;
+    white-space: normal;
+    font-size: 0.8125rem;
+}
+
+.desvinculaciones-seguimientos__empty {
+    text-align: center;
+    padding: 1.25rem 0.75rem;
+}
+
+.desvinculaciones-seguimientos__pager {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.desvinculaciones-seguimientos__actions-th,
+.desvinculaciones-seguimientos__actions-td {
+    text-align: center;
+    width: 3.5rem;
+}
+
+.desvinculaciones-seguimientos__revert-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.45rem;
+}
+
+.desvinculaciones-seguimientos__revert-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.desvinculaciones-seguimientos__revert-modal {
+    width: min(32rem, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
 }

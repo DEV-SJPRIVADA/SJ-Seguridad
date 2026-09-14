@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -24,6 +25,7 @@ class NavigationResolver
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillasWordAccessService $plantillasWordAccess,
+        private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
@@ -214,6 +216,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'desvinculaciones') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->desvinculacionesAccess->canViewDesvinculacionesBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.desvinculaciones.masivos',
+                                'url' => $user->defaultDesvinculacionesBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -308,6 +327,7 @@ class NavigationResolver
                             $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
                             $boardKey === 'archivo' => str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana',
                             $boardKey === 'plantillas_word' => str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana',
+                            $boardKey === 'desvinculaciones' => str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
@@ -397,6 +417,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana'
                 );
 
                 return [

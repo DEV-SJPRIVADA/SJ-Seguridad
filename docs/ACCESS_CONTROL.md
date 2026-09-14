@@ -172,8 +172,25 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - En area `comercial`, el board `dashboard` redirige a `comercial/dashboard` (KPIs de matriz); acceso por `comercial.matriz.*`, `view.board.comercial.dashboard` o `view.area.comercial`
 - En area `gestion_humana`, tableros de area unica (no transversales de solicitante):
   - `ficha_empleados` — **Ficha empleados** (`view.board.gestion_humana.ficha_empleados` + `ficha_empleados.view` / `manage` / `terminate`)
+  - `desvinculaciones` — **Desvinculaciones** (`view.board.gestion_humana.desvinculaciones` + `desvinculaciones.view` / `masivos` / `seguimientos.edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
+
+### Desvinculaciones (Gestion humana)
+
+Tablero **Desvinculaciones** (Masivos + Seguimientos). Paquete V1: asignar los **4** permisos juntos en Admin.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.desvinculaciones` | Ver tablero **Desvinculaciones** en sidebar GH |
+| `desvinculaciones.view` | Acceder al tablero (UI Masivos + lectura Seguimientos) |
+| `desvinculaciones.masivos` | Lookup, procesar lote, descargar ZIP (no exige `ficha_empleados.terminate`) |
+| `desvinculaciones.seguimientos.edit` | Editar checks y fecha entregado nomina |
+
+- Bypass: `manage.users`.
+- Seed: `super-admin` todos; rol `administrador` **no** recibe el paquete por defecto (asignacion manual).
+- Relacion Ficha: terminate individual y cartas siguen con `ficha_empleados.terminate`; crean/actualizan seguimiento como side-effect.
+- Doc: [`docs/modules/desvinculaciones.md`](modules/desvinculaciones.md), [`docs/user/desvinculaciones.md`](user/desvinculaciones.md).
 
 ### Plantillas Word (Gestion humana)
 
