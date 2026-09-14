@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\PurchaseRequest;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 trait HasPurchaseTabs
@@ -12,9 +13,9 @@ trait HasPurchaseTabs
         $user = auth()->user();
         $tabs = $user->purchaseBoardTabsFor($module);
         $routeName = request()->route()?->getName();
-        $approvalShowContext = $this->isPurchaseApprovalShowContext();
+        $showTabContext = $this->resolvePurchaseShowTabContext();
 
-        return $tabs->map(function ($tab) use ($module, $routeName, $approvalShowContext) {
+        return $tabs->map(function ($tab) use ($module, $routeName, $showTabContext) {
             $targetRoute = match ($tab) {
                 'nueva' => 'purchase-requests.create',
                 'mis_solicitudes' => 'purchase-requests.index',
@@ -27,10 +28,11 @@ trait HasPurchaseTabs
                 'nueva' => in_array($routeName, ['purchase-requests.create'], true),
                 'mis_solicitudes' => $routeName === 'purchase-requests.index'
                     || in_array($routeName, ['purchase-requests.edit', 'purchase-requests.update'], true)
-                    || ($routeName === 'purchase-requests.show' && ! $approvalShowContext),
+                    || ($routeName === 'purchase-requests.show' && $showTabContext === 'mis_solicitudes'),
                 'pendientes_aprobacion' => str_starts_with((string) $routeName, 'purchase-requests.approval.')
-                    || ($routeName === 'purchase-requests.show' && $approvalShowContext),
-                'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.'),
+                    || ($routeName === 'purchase-requests.show' && $showTabContext === 'approval'),
+                'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
+                    || ($routeName === 'purchase-requests.show' && $showTabContext === 'processing'),
                 default => false,
             };
 
@@ -42,13 +44,52 @@ trait HasPurchaseTabs
         });
     }
 
-    protected function isPurchaseApprovalShowContext(): bool
+    /**
+     * Contexto de pestaña al ver detalle. Preferir ?from=; no usar Gate::can('approve')
+     * porque super-admin pasa todas las abilities vía Gate::before.
+     *
+     * @return 'mis_solicitudes'|'approval'|'processing'|null
+     */
+    protected function resolvePurchaseShowTabContext(): ?string
     {
+        $from = request()->query('from');
+
+        if (in_array($from, ['mis_solicitudes', 'approval', 'processing'], true)) {
+            return $from;
+        }
+
         $purchaseRequest = request()->route('purchase_request');
         $user = auth()->user();
 
-        return $purchaseRequest instanceof PurchaseRequest
-            && $user !== null
-            && $user->can('approve', $purchaseRequest);
+        if (! $purchaseRequest instanceof PurchaseRequest || $user === null) {
+            return null;
+        }
+
+        if ((int) $purchaseRequest->user_id === (int) $user->id) {
+            return 'mis_solicitudes';
+        }
+
+        if ($this->isAssignedPendingApprover($user, $purchaseRequest)) {
+            return 'approval';
+        }
+
+        if ($user->hasRole('super-admin') || $user->can('purchase.tab.processing')) {
+            return 'processing';
+        }
+
+        return 'mis_solicitudes';
+    }
+
+    protected function isAssignedPendingApprover(User $user, PurchaseRequest $purchaseRequest): bool
+    {
+        if ($purchaseRequest->estado !== PurchaseRequest::ESTADO_PENDIENTE) {
+            return false;
+        }
+
+        if ((int) $purchaseRequest->aprobador_id !== (int) $user->id) {
+            return false;
+        }
+
+        return $user->hasRole('super-admin') || $user->can('purchase.tab.approval');
     }
 }

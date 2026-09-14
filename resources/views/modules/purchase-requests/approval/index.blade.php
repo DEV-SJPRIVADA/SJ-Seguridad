@@ -108,7 +108,7 @@
                                             @endif
                                         </td>
                                         <td class="table-actions">
-                                            <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--{{ $purchaseRequest->estado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE ? 'primary' : 'secondary' }} btn--sm">
+                                            <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id, 'from' => 'approval']) }}" class="btn btn--{{ $purchaseRequest->estado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE ? 'primary' : 'secondary' }} btn--sm">
                                                 {{ $purchaseRequest->estado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE ? 'Autorizar' : 'Ver detalle' }}
                                             </a>
                                         </td>

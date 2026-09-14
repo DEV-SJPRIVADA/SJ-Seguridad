@@ -47,11 +47,11 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 
 | Pestana | Permiso | Rutas |
 | --- | --- | --- |
-| Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store` |
+| Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store`; plantilla ítems `items.import-template`; precarga `items.import` |
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
-| Detalle / export / adjuntos (transversal) | Policy `view` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download` |
+| Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store` |
 | Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
 
 Rutas publicas (URLs firmadas, sin login):
@@ -155,6 +155,23 @@ Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit,
 
 Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
 
+### Carga masiva de ítems (Nueva solicitud)
+
+- Plantilla vacía: `GET purchase-requests.items.import-template` → `PurchaseRequestItemsImportTemplateExport` (columnas `config('purchase-requests.items_import_columns')`: cantidad, descripcion, referencia, utilizacion, ubicacion; fila 1 claves, fila 2 etiquetas, datos desde fila 3).
+- Precarga: `POST purchase-requests.items.import` (JSON) → `PurchaseRequestItemsImportService`; el JS reemplaza las filas de la tabla. La foto no va en Excel (se agrega en pantalla).
+- Máximo: `items_import_max_rows` (default 200). Mismo permiso `purchase.tab.create`.
+
+### Comentarios del hilo (post-envio)
+
+- Tabla `purchase_request_comments` (`body`, `user_id`, FK a solicitud).
+- Modelo `PurchaseRequestComment`; relación `PurchaseRequest::comments()`.
+- Policy `comment` = misma regla que `view`, salvo si `estado_compras = completado` (hilo cerrado). `Gate::before` de super-admin **no** corta esta ability (igual que `system.view.audit`).
+- FormRequest y vista también exigen `puedeComentar()` por defensa en profundidad.
+- Ruta `POST purchase-requests.comments.store` → detalle `#purchase-request-comments`.
+- UI en `show.blade.php` (lista cronológica + formulario). Independiente de `comentarios_director` / `comentarios_compras`.
+- Audit: `purchase_request` / `comment` con `comment_id` y `body_length` (sin texto completo).
+- Subnav en `show`: query `from=mis_solicitudes|approval|processing`; si falta, dueño → Mis solicitudes; director asignado pendiente → Pendientes; resto con processing → Bandeja. No usar `Gate::can('approve')` (super-admin lo pasa siempre).
+- Mis solicitudes lista también `estado_compras` cuando existe.
 ## Bandeja compras — filtros y listado
 
 `ComprasQueueFilterBag` + vista `processing/index` (estilo filtros GH):

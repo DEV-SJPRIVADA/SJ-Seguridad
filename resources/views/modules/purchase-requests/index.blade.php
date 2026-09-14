@@ -44,6 +44,7 @@
                                     <th>Fecha de aprobacion</th>
                                     <th>Productos</th>
                                     <th>Estado</th>
+                                    <th>Estado compras</th>
                                     <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
                             </thead>
@@ -78,9 +79,18 @@
                                             <span class="status-pill {{ $estadoPill }}">{{ $estadoLabel }}</span>
 
                                         </td>
+                                        <td class="text-center">
+                                            @if ($purchaseRequest->estado_compras)
+                                                <span class="status-pill status-pill--compras-{{ $purchaseRequest->estado_compras }}">
+                                                    {{ $purchaseRequest->estadoComprasLabel() }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center purchase-request-actions-col">
                                             <div class="purchase-request-row-actions">
-                                                <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}" class="btn btn--secondary btn--sm">
+                                                <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id, 'from' => 'mis_solicitudes']) }}" class="btn btn--secondary btn--sm">
                                                     Ver detalle
                                                 </a>
                                                 @can('resubmit', $purchaseRequest)
@@ -98,7 +108,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-muted">No tienes solicitudes de compra registradas.</td>
+                                        <td colspan="9" class="text-muted">No tienes solicitudes de compra registradas.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

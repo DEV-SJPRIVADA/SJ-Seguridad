@@ -2,20 +2,26 @@
 
 namespace App\Http\Controllers\PurchaseRequests;
 
+use App\Exports\PurchaseRequestItemsImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PurchaseRequests\ImportPurchaseRequestItemsRequest;
+use App\Http\Requests\PurchaseRequests\StorePurchaseRequestCommentRequest;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestRequest;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestAttachment;
+use App\Models\PurchaseRequestComment;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
+use App\Services\PurchaseRequests\PurchaseRequestItemsImportService;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\PurchaseRequests\PurchaseRequestPdfService;
 use App\Services\PurchaseRequests\PurchaseRequestResubmitService;
 use App\Traits\HasPurchaseTabs;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +56,42 @@ class PurchaseRequestController extends Controller
             'subTabs' => $this->getPurchaseSubTabs($module),
             'directores' => $accessService->approversQuery()->get(),
             'areas' => collect(config('access.areas', [])),
+        ]);
+    }
+
+    public function importItemsTemplate(
+        string $module,
+        PurchaseRequestItemsImportTemplateExport $export,
+    ): StreamedResponse {
+        return $export->download('plantilla_items_solicitud_compra.xlsx');
+    }
+
+    public function importItems(
+        ImportPurchaseRequestItemsRequest $request,
+        string $module,
+        PurchaseRequestItemsImportService $importService,
+    ): JsonResponse {
+        $path = $request->file('import_file')?->getRealPath();
+
+        if ($path === false || $path === null) {
+            return response()->json([
+                'message' => 'No se pudo leer el archivo subido.',
+            ], 422);
+        }
+
+        try {
+            $result = $importService->parse($path);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Se cargaron '.count($result['items']).' producto(s) en la tabla.',
+            'items' => $result['items'],
+            'skipped' => $result['skipped'],
+            'warnings' => $result['warnings'],
         ]);
     }
 
@@ -218,13 +260,55 @@ class PurchaseRequestController extends Controller
     {
         Gate::authorize('view', $purchaseRequest);
 
-        $purchaseRequest->load(['user', 'aprobador', 'items', 'procesadoComprasPor', 'mailLogs', 'attachments']);
+        $purchaseRequest->load([
+            'user',
+            'aprobador',
+            'items',
+            'procesadoComprasPor',
+            'mailLogs',
+            'attachments',
+            'comments.user',
+        ]);
 
         return view('modules.purchase-requests.show', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
             'purchaseRequest' => $purchaseRequest,
         ]);
+    }
+
+    public function storeComment(
+        StorePurchaseRequestCommentRequest $request,
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): RedirectResponse {
+        $validated = $request->validated();
+
+        $comment = PurchaseRequestComment::query()->create([
+            'purchase_request_id' => $purchaseRequest->id,
+            'user_id' => $request->user()->id,
+            'body' => $validated['body'],
+        ]);
+
+        $auditLogService->logEvent(
+            eventType: 'purchase_request',
+            action: 'comment',
+            metadata: [
+                'comment_id' => $comment->id,
+                'body_length' => mb_strlen($validated['body']),
+            ],
+            model: $purchaseRequest,
+        );
+
+        return redirect()
+            ->route('purchase-requests.show', [
+                'module' => $module,
+                'purchase_request' => $purchaseRequest->id,
+                'from' => $request->query('from', $request->input('from')),
+            ])
+            ->with('status', 'Comentario agregado a la solicitud.')
+            ->withFragment('purchase-request-comments');
     }
 
     public function exportPdf(string $module, PurchaseRequest $purchaseRequest, PurchaseRequestPdfService $pdfService): Response

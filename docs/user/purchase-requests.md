@@ -12,7 +12,7 @@ Segun su perfil puede:
 
 - Crear solicitudes con una o varias lineas de productos (con foto opcional por linea)
 - Adjuntar, si lo desea, varios documentos de soporte a **toda** la solicitud (cotizacion, orden, evidencia)
-- Consultar el estado de sus propias solicitudes y descargar esos adjuntos desde el detalle
+- Consultar el estado de sus propias solicitudes, agregar **varios comentarios** al detalle (ej. un producto ya no es necesario) y descargar esos adjuntos desde el detalle
 - Autorizar o rechazar solicitudes asignadas a usted como director
 - Procesar solicitudes aprobadas e insumos aprobados desde la bandeja unificada de Compras
 - Descargar el formato FO-AD-44 (PDF y Excel) desde el detalle
@@ -62,6 +62,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 3. Marque **Urgente** si aplica.
 4. Si eligio **Cliente**, complete razon social, proyecto nuevo y si asume el cliente.
 5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional de esa linea.
+   - Opcional **carga masiva**: **Descargar plantilla** (Excel en blanco), llenela desde la fila 3 y use **Cargar Excel** para precargar la tabla. Luego puede editar filas, agregar fotos y enviar. La foto no va en el Excel.
 6. En **Adjuntos** (despues de los productos) puede, si lo desea, seleccionar **varios archivos a la vez** para toda la solicitud: cotizacion, orden de compra, evidencia u otro soporte. Es opcional: puede enviar la solicitud sin ningun archivo. Hasta 5 archivos, 10 MB cada uno. Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
 7. Envie el formulario. Recibira confirmacion con el numero de folio.
 8. El director recibira un correo con el PDF FO-AD-44 y un enlace para **autorizar por correo** o ingresar a la plataforma. Ese correo **no** incluye los archivos de Adjuntos; el director los ve al abrir el detalle en la plataforma.
@@ -71,7 +72,9 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 1. Abra **Mis solicitudes**.
 2. Revise el listado con estado (Pendiente, Aprobado, Rechazado).
 3. Pulse el folio o **Ver detalle** para consultar lineas, comentarios del director o de Compras. Si hay documentos de soporte, aparecen en **Adjuntos** con su nombre y tamano; pulse **Descargar** para guardarlos.
-4. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44). Esos formatos no llevan los adjuntos.
+4. En **Comentarios de la solicitud** puede agregar varias notas (ej. un producto ya no es necesario), mientras Compras **no** haya marcado la solicitud como completada. El director y Compras tambien las ven y pueden responder.
+5. En el listado vera el **estado del director** (Pendiente/Aprobado/Rechazado) y, si aplica, el **estado compras** (Pendiente/En curso/Completado/Rechazado).
+6. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44). Esos formatos no llevan los adjuntos ni el hilo de comentarios.
 
 ### Reenviar una solicitud rechazada
 
@@ -134,4 +137,7 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 | 1.5 | 2026-08-20 | Analista TIC | Sin descripcion general ni justificacion de cabecera; el detalle va en las lineas de producto |
 | 1.4 | 2026-08-03 | Autorizacion por correo | Director puede aprobar/rechazar via enlace firmado sin login; flujo dual correo + plataforma |
 | 1.6 | 2026-08-28 | Bandeja | Listado por fecha mas reciente; filtro tipo/area se aplica al elegir |
+| 1.10 | 2026-09-14 | Compras | Comentarios solo si Compras no esta completada; Mis solicitudes muestra estado compras; detalle conserva pestaña de origen (`from`). |
+| 1.9 | 2026-09-14 | Compras | Hilo de comentarios en el detalle de la solicitud (varios mensajes post-envio; visible para solicitante, director y Compras). |
+| 1.8 | 2026-09-14 | Compras | Nueva solicitud: plantilla Excel y carga masiva de productos a la tabla (sin fotos en el archivo). |
 | 1.7 | 2026-08-28 | FEAT-030 | Adjuntos opcionales multiples por solicitud (detalle de la plataforma). El correo de autorizacion y el FO-AD-44 no los incluyen. Al reenviar una rechazada se pueden conservar, agregar o quitar |
