@@ -26,7 +26,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - Portafolios: slugs en `commercial_portfolios` (`seg_fisica`, `monitoreo`, `ocasionales`, `inactivos` por defecto); columna `commercial_services.portfolio` sigue siendo slug string
 - Catalogos: `commercial_sectors`, `commercial_client_types`, `commercial_service_types`, `commercial_portfolios`
 - Checklist documental por **cliente** (estados por documento; vencimiento y dias de anticipacion unicos por NIT; sin adjuntos)
-- Badge de vencimiento documental del cliente en pantalla checklist; filtros compactos (`req-manage-filters`) con `q`, `city`, `doc_vigencia=expiring|expired`; selects/pills de estado por documento con color (OK verde, Pendiente rojo, Incompleto naranja, N/A amarillo, X rojo intenso)
+- Badge de vencimiento documental del cliente en pantalla checklist; filtros compactos (`req-manage-filters`) con `q`, `city`, `doc_vigencia=expiring|expired`; selects/pills de estado por documento con color (OK verde, Pendiente rojo, Incompleto naranja, N/A amarillo; **X sin color de fondo**)
 - Filtros `vigencia=expiring|expired` en servicios: solo `contract_end` (excluye `is_active = false`)
 - **Estado servicio** (etiquetas): **Inactivo** (`is_active = false`) → **Vencido** → **Por vencer** (30 dias) → **Activo**. Inactivar/Activar no cambia portafolio.
 - **Estado cliente**: **Activo** si existe al menos un servicio con `is_active = true` (independiente de vencimiento de contrato).

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EmployeeFichaEmploymentPeriod extends Model
 {
@@ -74,6 +75,11 @@ class EmployeeFichaEmploymentPeriod extends Model
     public function closedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'closed_by');
+    }
+
+    public function terminationFollowup(): HasOne
+    {
+        return $this->hasOne(EmployeeTerminationFollowup::class, 'employee_ficha_employment_period_id');
     }
 
     public function scopeActive(Builder $query): Builder

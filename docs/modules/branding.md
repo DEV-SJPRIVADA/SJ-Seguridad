@@ -11,6 +11,7 @@ Centralizar la identidad visual base de `SJ StatFlow` (marca corporativa SJ Segu
 - Uso en navegacion autenticada: [`resources/views/layouts/navigation.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/layouts/navigation.blade.php)
 - Pie de sidebar (desktop): [`resources/views/components/app-sidebar-footer.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/components/app-sidebar-footer.blade.php) — nombre, rol, area asignada, cerrar sesion y logo compacto
 - Tokens globales de color: [`resources/css/app.css`](c:/laragon/www/SJSEGURIDAD/resources/css/app.css)
+- Tipografía corporativa: **Neue Haas Grotesk Display** (`resources/fonts/nhg-display/`) — Roman 400, Italic 400, Bold 700; token `--font-sans`
 
 ## Paleta corporativa base
 
@@ -31,6 +32,19 @@ Extraida visualmente de la imagen corporativa compartida por el usuario y tomada
 - No introducir hexadecimales nuevos en vistas o componentes si el mismo resultado puede lograrse con la paleta corporativa.
 - Si una nueva pantalla necesita una variacion adicional, primero debe incorporarse como token reutilizable y documentarse en este archivo.
 - La tabla de permisos, navegacion, botones principales y elementos de marca deben priorizar `--brand-navy` y `--brand-blue` como colores base.
+
+## Tipografía
+
+| Archivo | Peso / estilo |
+| --- | --- |
+| `NHG_DSPRO-55-Roman.ttf` | 400 normal |
+| `NHG_DSPRO-56-Italic.ttf` | 400 italic |
+| `NHG_DSPRO-75-Bold.ttf` | 700 normal |
+
+- Familia CSS: `"Neue Haas Grotesk Display"`
+- Token: `--font-sans` en `resources/css/app.css`
+- Tailwind: `theme.extend.fontFamily.sans`
+- No cargar Figtree por CDN; las fuentes se empaquetan con Vite
 
 ## Formato de fechas en tablas
 

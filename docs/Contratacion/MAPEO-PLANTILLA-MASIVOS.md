@@ -8,11 +8,11 @@ Referencia técnica para export nómina (`Plantilla masivos.xlsx`) e import SJ (
 | --- | --- | --- | --- | --- |
 | A | TMPCEDULA.C15 | cedula | document_number | entry.hired_document / profile |
 | B | CLASEDOC.C1 | tipo_documento | document_type | catalogo `document_type` — codigos **C, CE, N, TI, PT** |
-| C | TMPNOMBRE.C40 | nombre | full_name | entry.hired_full_name |
-| D | TMPAPELL_1.C60 | — | first_surname | parse nombre |
-| E | TMPAPELL_2.C60 | — | second_surname | parse nombre |
-| F | TMPNOMB_1.C60 | — | first_name | parse nombre |
-| G | TMPNOMB_2.C60 | — | second_name | parse nombre |
+| C | TMPNOMBRE.C40 | nombre | full_name | compuesto desde partes o entry.hired_full_name |
+| D | TMPAPELL_1.C60 | primer_apellido | first_surname | columnas partido / parse nombre |
+| E | TMPAPELL_2.C60 | segundo_apellido | second_surname | columnas partido / parse nombre |
+| F | TMPNOMB_1.C60 | primer_nombre | first_name | columnas partido / parse nombre |
+| G | TMPNOMB_2.C60 | segundo_nombre | second_name | columnas partido / parse nombre |
 | H | TMPDIRECCI.C40 | direccion | address | profile |
 | I | TMPTELEFON.C19 | telefono | phone | profile |
 | J | TMPTELEF2.C19 | — | phone_secondary | payroll_extra |
@@ -72,6 +72,8 @@ Referencia técnica para export nómina (`Plantilla masivos.xlsx`) e import SJ (
 ## EMPLEADOS.xlsx — columnas importación SJ (fila 1)
 
 Mismas claves que `config/employee_ficha.php` → `import_columns`.
+
+Orden inicial de identidad: `cedula`, `primer_apellido`, `segundo_apellido`, `primer_nombre`, `segundo_nombre`, `nombre` (opcional si se llenan las partes).
 
 ## Estado laboral
 

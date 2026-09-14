@@ -31,7 +31,8 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 | Gestion Humana (gestiona requisiciones) | Marcar **Contratado** en la requisicion con cedula y nombre completo del contratado; resolver alertas de cedula duplicada. |
 | Gestion Humana (Ficha empleados, lectura) | Consultar la lista de espera y la ficha, exportar a Excel. |
 | Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** / **Gestionar reingreso** y alta manual. |
-| Gestion Humana (desvinculacion) | Usuarios con permiso **Desvincular** registran cierre formal de vinculo (causal, fechas, recontratable) y pueden **Generar** / **Descargar** cartas. |
+| Gestion Humana (desvinculacion) | Usuarios con permiso **Desvincular** registran cierre formal de vinculo (causal, fechas, recontratable) y pueden **Generar** / **Descargar** cartas. Al desvincular se crea el seguimiento en **Desvinculaciones**; al generar carta se marca «tiene carta». |
+| Gestion Humana (tablero Desvinculaciones) | Operadores con el paquete de permisos del tablero ejecutan Masivos y completan Seguimientos (ver [`desvinculaciones.md`](desvinculaciones.md)). |
 | Administrador de Plantillas Word | Sube y mantiene plantillas en el tablero **Plantillas Word** (permiso distinto al de desvinculacion). |
 | Administrador | Asignar los permisos de Ficha empleados (lectura/edicion/desvinculacion) y, si aplica, los de Plantillas Word; puede coincidir o no con quien gestiona requisiciones. |
 
@@ -85,6 +86,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. Pulse **Registrar desvinculacion** (solo usuarios con permiso de desvincular).
 3. Complete causal, si es recontratable, ultimo dia de trabajo y fecha de desvinculacion.
 4. Al confirmar, el vinculo activo se cierra y el empleado queda **desvinculado** (no sale en export masivos sin rango de fechas).
+5. Automaticamente se crea (si no existia) una fila en el tablero **Desvinculaciones → Seguimientos** para el checklist post-retiro. Guia: [`desvinculaciones.md`](desvinculaciones.md).
 
 ### Generar y descargar cartas de desvinculacion
 
@@ -95,8 +97,9 @@ Disponible cuando el vinculo esta **cerrado** (empleado desvinculado), con **cua
 3. Marque **una o varias** plantillas (al menos una) y confirme.
    - Si elige **una**, descarga un archivo Word (`.docx`).
    - Si elige **varias**, descarga un **ZIP** con esos Word.
-4. El archivo queda guardado en ese vinculo. Si vuelve a generar, **reemplaza** el archivo anterior.
+4. El archivo queda guardado en ese vinculo. Si vuelve a generar, **reemplaza** el archivo anterior. Ademas, el seguimiento en **Desvinculaciones** pasa a indicar que **tiene carta generada**.
 5. Use **Descargar cartas** para volver a bajar el ultimo archivo generado (no vuelve a armarlo desde cero). No existe un boton separado de “Regenerar”: para generar de nuevo, use otra vez **Generar cartas**.
+6. Si un lote de **Desvinculaciones → Masivos** dejo al empleado sin carta, use este mismo flujo de Ficha (hace falta el permiso de desvincular en Ficha) para generar la carta y actualizar el seguimiento.
 
 Si el listado del modal esta vacio, un administrador debe subir plantillas en el tablero **Plantillas Word** (tipo Desvinculacion). Las plantillas antiguas de Renuncia **no** se migraron solas: hay que re-subirlas. Guia: [`plantillas-word.md`](plantillas-word.md).
 
@@ -118,8 +121,8 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 
 ### Importar empleados masivamente
 
-1. Pulse **Descargar plantilla importación** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
-2. Edite filas desde la fila 3; `cedula` es obligatoria. Incluye columnas `codigo_ciudad_trabajo` y `ciudad_trabajo`.
+1. Pulse **Descargar plantilla vacia** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
+2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). Incluye columnas `codigo_ciudad_trabajo` y `ciudad_trabajo`.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
@@ -143,6 +146,8 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-09-14 | Ficha | Plantilla vacía / import: columnas de primer/segundo apellido y nombre alineadas a BD; `nombre` completo queda opcional. |
+| 1.8 | 2026-09-14 | FEAT-031 | Desvincular individual crea seguimiento en Desvinculaciones; Generar cartas marca «tiene carta»; regenerar carta sigue en Ficha (permiso terminate). |
 | 1.7 | 2026-08-25 | Ficha | Ciudad de trabajo en perfil (precarga desde requisicion); columnas en plantilla importar/actualizar; sin cambio en plantilla masivos nomina. |
 | 1.6 | 2026-08-21 | FEAT-029 | Cartas: modal Generar (seleccion 1/N → docx o zip) en cualquier causal de vinculo cerrado; Descargar ultimo archivo; sin Regenerar aparte; plantillas en tablero Plantillas Word (re-subir legacy Renuncia). |
 | 1.5 | 2026-08-13 | FEAT-028 | Formulario ficha completo alineado a plantilla masivos (62 cols): selectores de catalogo, campos obligatorios, referencia de requisicion separada de datos exportables, export/import solo con datos guardados, NIT centro trabajo no exportado, tipo documento CE. |

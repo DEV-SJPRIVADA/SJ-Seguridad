@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -336,5 +337,24 @@ class User extends Authenticatable
     public function defaultPlantillasWordBoardUrl(): string
     {
         return route('gestion-humana.plantillas-word.index');
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function desvinculacionesBoardTabsFor(): Collection
+    {
+        return collect(app(DesvinculacionesAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultDesvinculacionesBoardUrl(): string
+    {
+        $tabs = $this->desvinculacionesBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'seguimientos' => route('gestion-humana.desvinculaciones.seguimientos'),
+            default => route('gestion-humana.desvinculaciones.masivos'),
+        };
     }
 }

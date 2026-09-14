@@ -43,5 +43,9 @@ return [
             'label' => 'Ficha empleados',
             'area' => 'gestion_humana',
         ],
+        'desvinculaciones' => [
+            'label' => 'Desvinculaciones',
+            'area' => 'gestion_humana',
+        ],
     ],
 ];

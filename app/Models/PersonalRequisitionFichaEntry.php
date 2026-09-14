@@ -65,6 +65,11 @@ class PersonalRequisitionFichaEntry extends Model
             ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO);
     }
 
+    public function terminationFollowups(): HasMany
+    {
+        return $this->hasMany(EmployeeTerminationFollowup::class, 'personal_requisition_ficha_entry_id');
+    }
+
     public function isRehirePending(): bool
     {
         return $this->moved_to_ficha_at === null

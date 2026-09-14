@@ -27,6 +27,9 @@ return [
         'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
         'plantillas_word.view' => 'Plantillas Word: Ver tipos y plantillas',
         'plantillas_word.manage' => 'Plantillas Word: Administrar tipos y plantillas',
+        'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Masivos y Seguimientos)',
+        'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
+        'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -85,6 +88,7 @@ return [
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
         'ficha_empleados' => 'Ficha empleados',
+        'desvinculaciones' => 'Desvinculaciones',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
@@ -130,6 +134,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'desvinculaciones' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -156,6 +164,11 @@ return [
     'ficha_empleados_tabs' => [
         'empleados' => 'Empleados',
         'catalogos' => 'Catalogos',
+    ],
+
+    'desvinculaciones_tabs' => [
+        'masivos' => 'Masivos',
+        'seguimientos' => 'Seguimientos',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -299,6 +312,7 @@ return [
                             'view.board.gestion_humana.ficha_empleados',
                             'view.board.gestion_humana.archivo',
                             'view.board.gestion_humana.plantillas_word',
+                            'view.board.gestion_humana.desvinculaciones',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -321,6 +335,14 @@ return [
                         'permissions' => [
                             'plantillas_word.view',
                             'plantillas_word.manage',
+                        ],
+                    ],
+                    'desvinculaciones' => [
+                        'label' => 'Desvinculaciones',
+                        'permissions' => [
+                            'desvinculaciones.view',
+                            'desvinculaciones.masivos',
+                            'desvinculaciones.seguimientos.edit',
                         ],
                     ],
                 ],

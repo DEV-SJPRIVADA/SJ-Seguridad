@@ -23,6 +23,7 @@ use App\Services\GestionHumana\EmployeeFichaEntryDatatableService;
 use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
+use App\Services\GestionHumana\EmployeeTerminationFollowupService;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -52,6 +53,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaAuditLogService $auditLogService,
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaEntryDatatableService $entryDatatableService,
+        private readonly EmployeeTerminationFollowupService $terminationFollowupService,
     ) {}
 
     public function index(Request $request): View
@@ -593,12 +595,17 @@ class FichaEmpleadosController extends Controller
         $beforeStatus = $fichaEntry->profile?->employment_status;
 
         DB::transaction(function () use ($request, $fichaEntry): void {
-            $this->employmentPeriodService->closeActivePeriod(
+            $closedPeriod = $this->employmentPeriodService->closeActivePeriod(
                 $fichaEntry,
                 $request->validated(),
                 (int) $request->user()->id,
             );
             $this->employmentPeriodService->syncProfileAfterTermination($fichaEntry);
+            $this->terminationFollowupService->ensureForClosedPeriod(
+                $closedPeriod,
+                $fichaEntry->fresh(),
+                (int) $request->user()->id,
+            );
         });
 
         $fichaEntry->load('profile');

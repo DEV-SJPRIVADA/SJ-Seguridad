@@ -186,6 +186,10 @@ Servicio periodos: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodServ
 
 Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
 
+### Hooks FEAT-031 (tablero Desvinculaciones)
+
+Tras un `terminate` exitoso, `FichaEmpleadosController` llama a `EmployeeTerminationFollowupService::ensureForClosedPeriod` para crear (si no existe) el registro en `employee_termination_followups` con `letter_generated=false`. Tras un `TerminationLetterController::generate` exitoso, se llama `markLetterGenerated` (`letter_generated=true`; crea el followup si faltaba por datos legacy). Detalle del tablero: [`desvinculaciones.md`](desvinculaciones.md). Regenerar carta sigue en Ficha con `ficha_empleados.terminate` (Seguimientos solo muestra el flag).
+
 Reingreso: requisicion Contratado con cedula desvinculada **recontratable** devuelve el registro a **Pendientes** (badge Reingreso); **Gestionar reingreso** abre nuevo periodo al guardar.
 
 Catálogo **Causal desvinculacion** (`termination_cause`) en pestaña Catalogos.
@@ -237,6 +241,10 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - Plantilla: `EmployeeFichaImportTemplateExport` / ruta `import-template`.
 - Export datos actuales: `EmployeeFichaImportTemplateExport::downloadWithData()` + `EmployeeFichaImportRowMapper` / ruta `export-import-template`.
 - Servicio: `EmployeeFichaImportService`; comando `php artisan employee-ficha:import {path}`.
+- Columnas de nombre en `import_columns`: `primer_apellido`, `segundo_apellido`, `primer_nombre`, `segundo_nombre` (alineadas a BD) y `nombre` opcional. Si vienen partes, se usan tal cual y se compone `full_name`; si solo viene `nombre`, se parte con `EmployeeFichaNameParser` (compatibilidad plantillas antiguas).
+- `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). No crea periodo ni seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
+- Plantilla vacía y **Exportar datos para actualizar** comparten las mismas claves (`import_columns` + `EmployeeFichaImportRowMapper`).
+- Fuera de alcance del import SJ (van en formulario / plantilla nómina / Archivo): `phone_secondary`, códigos CCF/centro trabajo y demás `payroll_extra`, `archive_shelf` / `archive_box`.
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.
 - Mapeo técnico: [`docs/Contratacion/MAPEO-PLANTILLA-MASIVOS.md`](../Contratacion/MAPEO-PLANTILLA-MASIVOS.md).
 - Columna `linkage_type` (`tipo_vinculacion` en import): `VARCHAR(100)` — valores de nómina como `Contrato Laboral(Dependiente Asociado)` superaban el limite anterior de 30 caracteres.
@@ -289,6 +297,7 @@ Tests de regresion en `tests/Feature/RequisitionModuleTest.php` (marcar Contrata
 ## Referencias
 
 - Guia de usuario: [`docs/user/ficha-empleados.md`](../user/ficha-empleados.md)
+- Desvinculaciones (Masivos / Seguimientos): [`docs/modules/desvinculaciones.md`](desvinculaciones.md)
 - Plantillas Word (admin tablero): [`docs/modules/plantillas-word.md`](plantillas-word.md)
 - Modulo relacionado: [`docs/modules/requisitions.md`](requisitions.md) (captura de `hired_document`/`hired_full_name` al marcar Contratado)
 - Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)
