@@ -137,7 +137,7 @@ a {
     display: block;
     padding: 0.42rem 0.85rem;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
+    border-radius: 10px;
     background: #fff;
     color: var(--color-text-soft);
     font-size: 0.78rem;
