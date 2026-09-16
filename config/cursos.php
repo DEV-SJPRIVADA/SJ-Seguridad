@@ -26,14 +26,13 @@ return [
             'fecha_expedicion' => 'FECHA EXPEDICION',
             'numero_curso_anterior' => 'No.CURSO ANTERIOR (renovacion; opcional)',
             'numero_curso' => 'No.CURSO',
-            'estado' => 'ESTADO',
             'observaciones' => 'OBSERVACIONES',
         ],
     ],
 
     'estados' => [
-        '' => '',
         'SOLICITADO' => 'SOLICITADO',
         'ACTUALIZADO' => 'ACTUALIZADO',
+        'PENDIENTE' => 'PENDIENTE',
     ],
 ];

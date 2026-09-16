@@ -41,11 +41,14 @@
 | 18 | 2026-09-15 | Usuario: si (T4) | AgentSj | Bridge Ficha: botón cursos + modal + download anti-IDOR | Ficha controller, modal, routes, tests | OK |
 | 19 | 2026-09-15 | Validacion T4 | AgentSj | 26 tests Cursos OK (incl. bridge); pint OK | `CursosFichaBridgeTest` | OK |
 | 20 | 2026-09-16 | Usuario: renovacion import | AgentSj | Columna `numero_curso_anterior` + docs modulo/usuario | import service, plantilla, tests, `docs/modules/cursos.md`, `docs/user/cursos.md` | OK |
+| 21 | 2026-09-16 | Usuario: vigencia VENCIDO | AgentSj | Tercer estado cuando `fecha_expedicion+1y ≤ hoy`; filtros/KPI/chart/docs | model, list/dashboard, vistas, tests | OK |
+| 22 | 2026-09-16 | Usuario: estado PENDIENTE + sync | AgentSj | ESTADOS 3; import sin ESTADO; `cursos:sync-estados` diario + backfill | sync service, command, docs | OK |
 
 ## Notas
 
 - Shared-files: `config/access.php`, rutas GH, nav, audit, User, Ficha (T4), posible `app.css`.
-- Regla vigencia: ACTUALIZAR si `FECHA_EXPEDICION < (HOY + 30) - 365` (= hoy−335); si no → VIGENTE.
+- Regla vigencia: **VENCIDO** si `fecha_expedicion + 1 año ≤ hoy`; **ACTUALIZAR** si aún no venció y `fecha_expedicion < (HOY + 30) - 365` (= hoy−335); si no → **VIGENTE**.
+- Regla estado: VIGENTE → ACTUALIZADO; ACTUALIZAR/VENCIDO → PENDIENTE si no es SOLICITADO; SOLICITADO solo manual; sync diario `cursos:sync-estados`.
 - Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit`.
 - Plan aprobado 2026-09-15 («aprobado»).
 - T1–T4 cerrados 2026-09-15. Siguiente: Revisor → Documentador → cierre.

@@ -18,14 +18,17 @@ class EmployeeCursoListService
      *     vigencia?: string|null,
      *     estado?: string|null,
      *     solo_actualizar?: bool|string|null,
+     *     fecha_desde?: string|null,
+     *     fecha_hasta?: string|null,
      * }  $filters
      */
-    public function filteredQuery(array $filters): Builder
+    public function filteredQuery(array $filters, bool $ordered = true): Builder
     {
-        $query = EmployeeCurso::query()
-            ->with(['cursoTipo'])
-            ->orderByDesc('fecha_expedicion')
-            ->orderByDesc('id');
+        $query = EmployeeCurso::query()->with(['cursoTipo']);
+
+        if ($ordered) {
+            $query->orderByDesc('fecha_expedicion')->orderByDesc('id');
+        }
 
         $cedula = trim((string) ($filters['document_number'] ?? ''));
         if ($cedula !== '') {
@@ -43,10 +46,18 @@ class EmployeeCursoListService
         }
 
         $estado = $filters['estado'] ?? null;
-        if ($estado === '__empty') {
-            $query->whereNull('estado');
-        } elseif (is_string($estado) && $estado !== '' && $estado !== 'todos') {
+        if (is_string($estado) && $estado !== '' && $estado !== 'todos') {
             $query->where('estado', $estado);
+        }
+
+        $fechaDesde = trim((string) ($filters['fecha_desde'] ?? ''));
+        if ($fechaDesde !== '') {
+            $query->whereDate('fecha_expedicion', '>=', $fechaDesde);
+        }
+
+        $fechaHasta = trim((string) ($filters['fecha_hasta'] ?? ''));
+        if ($fechaHasta !== '') {
+            $query->whereDate('fecha_expedicion', '<=', $fechaHasta);
         }
 
         $soloActualizar = filter_var($filters['solo_actualizar'] ?? false, FILTER_VALIDATE_BOOLEAN);
@@ -56,13 +67,17 @@ class EmployeeCursoListService
             $vigencia = 'ACTUALIZAR';
         }
 
-        if (in_array($vigencia, ['ACTUALIZAR', 'VIGENTE'], true)) {
-            $threshold = EmployeeCurso::vigenciaThreshold(Carbon::today())->toDateString();
+        if (in_array($vigencia, EmployeeCurso::VIGENCIAS, true)) {
+            $actualizarThreshold = EmployeeCurso::vigenciaThreshold(Carbon::today())->toDateString();
+            $vencidoThreshold = EmployeeCurso::vencidoThreshold(Carbon::today())->toDateString();
 
-            if ($vigencia === 'ACTUALIZAR') {
-                $query->whereDate('fecha_expedicion', '<', $threshold);
+            if ($vigencia === EmployeeCurso::VIGENCIA_VENCIDO) {
+                $query->whereDate('fecha_expedicion', '<=', $vencidoThreshold);
+            } elseif ($vigencia === EmployeeCurso::VIGENCIA_ACTUALIZAR) {
+                $query->whereDate('fecha_expedicion', '<', $actualizarThreshold)
+                    ->whereDate('fecha_expedicion', '>', $vencidoThreshold);
             } else {
-                $query->whereDate('fecha_expedicion', '>=', $threshold);
+                $query->whereDate('fecha_expedicion', '>=', $actualizarThreshold);
             }
         }
 

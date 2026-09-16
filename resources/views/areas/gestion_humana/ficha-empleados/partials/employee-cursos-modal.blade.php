@@ -40,9 +40,11 @@
                         @forelse ($employeeCursos as $curso)
                             @php
                                 $vigencia = $curso->computeVigencia();
-                                $vigenciaClass = $vigencia === 'VIGENTE'
-                                    ? 'status-pill status-pill--success'
-                                    : 'status-pill status-pill--danger';
+                                $vigenciaClass = match ($vigencia) {
+                                    \App\Models\EmployeeCurso::VIGENCIA_VIGENTE => 'status-pill status-pill--success',
+                                    \App\Models\EmployeeCurso::VIGENCIA_ACTUALIZAR => 'status-pill status-pill--warning',
+                                    default => 'status-pill status-pill--danger',
+                                };
                             @endphp
                             <tr>
                                 <td>{{ $curso->cursoTipo?->tipo_curso ?: '—' }}</td>

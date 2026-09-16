@@ -183,7 +183,11 @@
                                 @foreach ($registros as $curso)
                                     @php
                                         $vigencia = $curso->computeVigencia();
-                                        $vigenciaClass = $vigencia === 'VIGENTE' ? 'status-pill status-pill--success' : 'status-pill status-pill--danger';
+                                        $vigenciaClass = match ($vigencia) {
+                                            \App\Models\EmployeeCurso::VIGENCIA_VIGENTE => 'status-pill status-pill--success',
+                                            \App\Models\EmployeeCurso::VIGENCIA_ACTUALIZAR => 'status-pill status-pill--warning',
+                                            default => 'status-pill status-pill--danger',
+                                        };
                                     @endphp
                                     <tr>
                                         <td>{{ $curso->document_number }}</td>
@@ -396,10 +400,10 @@
                                     </div>
                                     <div class="form-field">
                                         <label class="form-label" for="edit_estado">ESTADO</label>
-                                        <select id="edit_estado" name="estado" class="form-input" x-model="editForm.estado">
-                                            <option value="">(Sin estado)</option>
+                                        <select id="edit_estado" name="estado" class="form-input" x-model="editForm.estado" required>
                                             <option value="SOLICITADO">SOLICITADO</option>
                                             <option value="ACTUALIZADO">ACTUALIZADO</option>
+                                            <option value="PENDIENTE">PENDIENTE</option>
                                         </select>
                                     </div>
                                     <div class="form-field cursos-registros-page__form-span">
@@ -438,7 +442,7 @@
                         curso_tipo_id: '',
                         fecha_expedicion: '',
                         numero_curso: '',
-                        estado: '',
+                        estado: 'ACTUALIZADO',
                         observaciones: '',
                         update_url: '',
                     },

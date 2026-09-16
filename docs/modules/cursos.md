@@ -9,10 +9,19 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 
 ## Alcance actual
 
-- Pestanas **Cursos** (registros) y **Catalogo** (tipos).
+- Pestanas **Dashboard**, **Cursos** (registros) y **Catalogo** (tipos).
 - Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit` (bypass `manage.users`).
+- Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton).
 - Unicidad de registro: `(document_number, numero_curso)`.
-- Vigencia calculada (no persistida): ventana ~335 dias desde `fecha_expedicion`.
+- Vigencia calculada (no persistida):
+  - **VENCIDO** si `fecha_expedicion + 1 año ≤ hoy` (aniversario cumplido).
+  - **ACTUALIZAR** si aún no venció pero `fecha_expedicion < (hoy + 30d) − 365d` (ventana ~30 días antes).
+  - **VIGENTE** en caso contrario.
+- Estado de tramite (persistido): `SOLICITADO` / `ACTUALIZADO` / `PENDIENTE`.
+  - Import y sync: VIGENTE → `ACTUALIZADO`; ACTUALIZAR/VENCIDO → `PENDIENTE` si no es `SOLICITADO`.
+  - `SOLICITADO` solo se asigna manualmente en el formulario; el job diario lo conserva.
+  - Comando `cursos:sync-estados` (schedule diario 06:15 America/Bogota); `--backfill` fuerza VIGENTE → ACTUALIZADO (ajuste inicial).
+  - La plantilla Excel **no** incluye columna ESTADO.
 - Documento: 1 archivo por registro (PDF/JPG/PNG/WEBP); no viaja en Excel.
 - Bridge Ficha: listar/descargar cursos del empleado (sin mutar desde Ficha).
 - Import masivo: ver seccion Import abajo. Export listado respeta filtros (sin columna de renovacion).
@@ -24,7 +33,9 @@ Prefijo: `/gestion-humana/cursos` · nombre `gestion-humana.cursos.`
 
 | Metodo | URI | Nombre | Notas |
 | --- | --- | --- | --- |
-| GET | `/` | `index` | Redirect a registros |
+| GET | `/` | `index` | Redirect a **dashboard** |
+| GET | `/dashboard` | `dashboard` | Vista KPIs/graficos. `cursos.view` |
+| GET | `/dashboard/metrics` | `dashboard.metrics` | JSON filtros → KPIs/charts |
 | GET | `/registros` | `registros` | Listado + filtros |
 | GET | `/registros/exportar` | `registros.export` | Excel filtrado (`BaseExport`) |
 | GET | `/registros/plantilla-importacion` | `registros.import-template` | Plantilla vacia. `cursos.edit` |
@@ -47,7 +58,7 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 | `fecha_expedicion` | Si | Fecha valida |
 | `numero_curso_anterior` | No (opcional) | Clave de renovacion |
 | `numero_curso` | Si | Numero nuevo / vigente |
-| `estado` | No | Vacio → `null`; solo `SOLICITADO` / `ACTUALIZADO` |
+| `estado` | No (no va en plantilla) | Se calcula interno: VIGENTE → `ACTUALIZADO`; ACTUALIZAR/VENCIDO → `PENDIENTE`. Valores validos: `SOLICITADO` / `ACTUALIZADO` / `PENDIENTE` (SOLICITADO solo manual en UI). |
 | `observaciones` | No | |
 
 ### Reglas de match
@@ -67,7 +78,8 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 - Controllers: `CursosController`, `CursosCatalogController`
 - Models: `EmployeeCurso`, `CursoTipo`
-- Services: `EmployeeCursoImportService`, `EmployeeCursoListService`, `EmployeeCursoDocumentService`, `CursosAccessService`, `CursosAuditLogService`
+- Services: `EmployeeCursoImportService`, `EmployeeCursoListService`, `EmployeeCursoDashboardService`, `EmployeeCursoEstadoSyncService`, `EmployeeCursoDocumentService`, `CursosAccessService`, `CursosAuditLogService`
+- Command: `cursos:sync-estados` (`SyncEmployeeCursoEstadosCommand`)
 - Config: `config/cursos.php`, permisos en `config/access.php`, audit en `config/audit.php`
 - Vistas: `resources/views/areas/gestion_humana/cursos/`
 - Tests: `tests/Feature/GestionHumana/Cursos*.php`
@@ -76,5 +88,8 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.4 | 2026-09-16 | Estado: `PENDIENTE` + sync por vigencia (comando diario / import sin columna ESTADO). |
+| 1.3 | 2026-09-16 | Vigencia: estado **VENCIDO** cuando `fecha_expedicion + 1 año ≤ hoy`; ACTUALIZAR queda como ventana previa (~30 días). |
+| 1.2 | 2026-09-16 | Pestaña Dashboard (KPIs, gráficos, filtros AJAX, tendencia mensual nuevos/actualizaciones). |
 | 1.1 | 2026-09-16 | Import: columna `numero_curso_anterior` para renovar (cambia No.CURSO / fecha / tipo sin duplicar). Nombre siempre desde Ficha; cedula obligatoria en Ficha. |
 | 1.0 | 2026-09-15 | FEAT-032: tablero, catalogo, documento, import/export, bridge Ficha. |

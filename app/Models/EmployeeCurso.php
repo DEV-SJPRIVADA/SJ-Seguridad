@@ -22,12 +22,30 @@ class EmployeeCurso extends Model
 
     public const ESTADO_ACTUALIZADO = 'ACTUALIZADO';
 
+    public const ESTADO_PENDIENTE = 'PENDIENTE';
+
+    public const VIGENCIA_VIGENTE = 'VIGENTE';
+
+    public const VIGENCIA_ACTUALIZAR = 'ACTUALIZAR';
+
+    public const VIGENCIA_VENCIDO = 'VENCIDO';
+
     /**
      * @var list<string>
      */
     public const ESTADOS = [
         self::ESTADO_SOLICITADO,
         self::ESTADO_ACTUALIZADO,
+        self::ESTADO_PENDIENTE,
+    ];
+
+    /**
+     * @var list<string>
+     */
+    public const VIGENCIAS = [
+        self::VIGENCIA_VIGENTE,
+        self::VIGENCIA_ACTUALIZAR,
+        self::VIGENCIA_VENCIDO,
     ];
 
     /**
@@ -84,13 +102,23 @@ class EmployeeCurso extends Model
     }
 
     /**
-     * Umbral: (hoy + 30 días) − 365 días ≡ hoy − 335 días.
+     * Umbral de alerta ACTUALIZAR: (hoy + 30 días) − 365 días ≡ hoy − 335 días.
      */
     public static function vigenciaThreshold(?CarbonInterface $today = null): CarbonInterface
     {
         $today ??= Carbon::today();
 
-        return $today->copy()->addDays(30)->subDays(365);
+        return $today->copy()->startOfDay()->addDays(30)->subDays(365);
+    }
+
+    /**
+     * Umbral VENCIDO: hoy − 1 año (equivalente a fecha_expedicion + 1 año ≤ hoy).
+     */
+    public static function vencidoThreshold(?CarbonInterface $today = null): CarbonInterface
+    {
+        $today ??= Carbon::today();
+
+        return $today->copy()->startOfDay()->subYear();
     }
 
     public function computeVigencia(?CarbonInterface $today = null): string
@@ -98,12 +126,21 @@ class EmployeeCurso extends Model
         $fecha = $this->fecha_expedicion;
 
         if ($fecha === null) {
-            return 'ACTUALIZAR';
+            return self::VIGENCIA_ACTUALIZAR;
         }
 
-        $threshold = self::vigenciaThreshold($today);
+        $today = ($today ?? Carbon::today())->copy()->startOfDay();
+        $fecha = $fecha->copy()->startOfDay();
 
-        return $fecha->lt($threshold) ? 'ACTUALIZAR' : 'VIGENTE';
+        if ($fecha->lte(self::vencidoThreshold($today))) {
+            return self::VIGENCIA_VENCIDO;
+        }
+
+        if ($fecha->lt(self::vigenciaThreshold($today))) {
+            return self::VIGENCIA_ACTUALIZAR;
+        }
+
+        return self::VIGENCIA_VIGENTE;
     }
 
     protected function vigencia(): Attribute

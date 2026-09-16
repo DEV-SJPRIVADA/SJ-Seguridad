@@ -61,6 +61,7 @@ class CursosImportTest extends TestCase
             );
         }
         $this->assertContains('numero_curso_anterior', $keys);
+        $this->assertNotContains('estado', $keys);
 
         if (is_file($temp)) {
             unlink($temp);
@@ -96,9 +97,9 @@ class CursosImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['100', 'Nombre Del Excel Ignorado', 'ALTURAS', '2026-02-01', '', 'NC-1', 'ACTUALIZADO', 'upd'],
-            ['200', 'Maria Nueva Excel', 'ALTURAS', '2026-03-01', '', 'NC-2', '', ''],
-            ['300', 'Sin Tipo', 'INEXISTENTE', '2026-03-01', '', 'NC-3', '', ''],
+            ['100', 'Nombre Del Excel Ignorado', 'ALTURAS', '2026-02-01', '', 'NC-1', 'upd'],
+            ['200', 'Maria Nueva Excel', 'ALTURAS', '2026-03-01', '', 'NC-2', ''],
+            ['300', 'Sin Tipo', 'INEXISTENTE', '2026-03-01', '', 'NC-3', ''],
         ]);
 
         $this->actingAs($editor)
@@ -123,6 +124,7 @@ class CursosImportTest extends TestCase
             'document_number' => '200',
             'numero_curso' => 'NC-2',
             'full_name' => 'Maria Ficha',
+            'estado' => 'ACTUALIZADO',
         ]);
 
         $this->assertDatabaseMissing('employee_cursos', [
@@ -137,7 +139,7 @@ class CursosImportTest extends TestCase
         CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
 
         $path = $this->makeImportFile([
-            ['999', 'Persona Libre', 'ALTURAS', '2026-03-01', '', 'NC-9', '', ''],
+            ['999', 'Persona Libre', 'ALTURAS', '2026-03-01', '', 'NC-9', ''],
         ]);
 
         $this->actingAs($editor)
@@ -184,7 +186,7 @@ class CursosImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['400', 'Ignorado', 'REENTRENAMIENTO', '2026-05-01', 'OLD-100', 'NEW-200', 'ACTUALIZADO', 'renovado'],
+            ['400', 'Ignorado', 'REENTRENAMIENTO', '2026-05-01', 'OLD-100', 'NEW-200', 'renovado'],
         ]);
 
         $this->actingAs($editor)
@@ -221,7 +223,7 @@ class CursosImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['500', 'X', 'ALTURAS', '2026-05-01', 'NO-EXISTE', 'NEW-1', '', ''],
+            ['500', 'X', 'ALTURAS', '2026-05-01', 'NO-EXISTE', 'NEW-1', ''],
         ]);
 
         $this->actingAs($editor)
@@ -268,7 +270,7 @@ class CursosImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['600', 'X', 'ALTURAS', '2026-05-01', 'OLD-A', 'TAKEN', '', ''],
+            ['600', 'X', 'ALTURAS', '2026-05-01', 'OLD-A', 'TAKEN', ''],
         ]);
 
         $this->actingAs($editor)
@@ -305,11 +307,11 @@ class CursosImportTest extends TestCase
             'curso_tipo_id' => $tipo->id,
             'numero_curso' => 'SAME-1',
             'fecha_expedicion' => '2024-01-01',
-            'estado' => null,
+            'estado' => EmployeeCurso::ESTADO_PENDIENTE,
         ]);
 
         $path = $this->makeImportFile([
-            ['700', 'X', 'ALTURAS', '2026-06-01', 'SAME-1', 'SAME-1', 'ACTUALIZADO', 'ok'],
+            ['700', 'X', 'ALTURAS', '2026-06-01', 'SAME-1', 'SAME-1', 'ok'],
         ]);
 
         $this->actingAs($editor)

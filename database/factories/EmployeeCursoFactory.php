@@ -24,7 +24,7 @@ class EmployeeCursoFactory extends Factory
             'curso_tipo_id' => CursoTipo::factory(),
             'fecha_expedicion' => fake()->dateTimeBetween('-2 years', 'now')->format('Y-m-d'),
             'numero_curso' => fake()->unique()->bothify('NC-####'),
-            'estado' => null,
+            'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
             'observaciones' => null,
             'document_path' => null,
             'document_original_name' => null,

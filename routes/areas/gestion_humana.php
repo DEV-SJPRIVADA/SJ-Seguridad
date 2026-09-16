@@ -103,6 +103,8 @@ Route::middleware(['password.changed'])
     ->name('gestion-humana.cursos.')
     ->group(function (): void {
         Route::get('/', [CursosController::class, 'index'])->name('index');
+        Route::get('/dashboard', [CursosController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [CursosController::class, 'dashboardMetrics'])->name('dashboard.metrics');
         Route::get('/registros', [CursosController::class, 'registros'])->name('registros');
         Route::get('/registros/datatable', [CursosController::class, 'datatable'])->name('registros.datatable');
         Route::get('/registros/lookup', [CursosController::class, 'lookup'])->name('registros.lookup');

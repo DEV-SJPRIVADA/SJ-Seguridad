@@ -37,6 +37,7 @@ class CursosBoardAccessTest extends TestCase
     {
         $tabs = config('access.cursos_tabs');
 
+        $this->assertSame('Dashboard', $tabs['dashboard']);
         $this->assertSame('Cursos', $tabs['registros']);
         $this->assertSame('Catálogo', $tabs['catalogo']);
         $this->assertSame('Cursos', config('access.boards.cursos'));
@@ -82,13 +83,13 @@ class CursosBoardAccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_index_redirects_to_registros_with_view(): void
+    public function test_index_redirects_to_dashboard_with_view(): void
     {
         $viewer = $this->viewerUser();
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.cursos.index'))
-            ->assertRedirect(route('gestion-humana.cursos.registros'));
+            ->assertRedirect(route('gestion-humana.cursos.dashboard'));
     }
 
     public function test_registros_allows_view_permission(): void
@@ -107,7 +108,7 @@ class CursosBoardAccessTest extends TestCase
         $viewer = $this->viewerUser();
         $service = app(CursosAccessService::class);
 
-        $this->assertSame(['registros'], $service->visibleTabsFor($viewer));
+        $this->assertSame(['dashboard', 'registros'], $service->visibleTabsFor($viewer));
         $this->assertNotContains('catalogo', $service->visibleTabsFor($viewer));
     }
 
@@ -116,7 +117,7 @@ class CursosBoardAccessTest extends TestCase
         $editor = $this->editorUser();
         $service = app(CursosAccessService::class);
 
-        $this->assertSame(['registros', 'catalogo'], $service->visibleTabsFor($editor));
+        $this->assertSame(['dashboard', 'registros', 'catalogo'], $service->visibleTabsFor($editor));
     }
 
     public function test_manage_users_bypass_can_access_board(): void

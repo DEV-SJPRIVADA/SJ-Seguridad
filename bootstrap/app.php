@@ -31,6 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('06:00')
             ->timezone('America/Bogota');
 
+        $schedule->command('cursos:sync-estados')
+            ->dailyAt('06:15')
+            ->timezone('America/Bogota')
+            ->withoutOverlapping();
+
         $schedule->command('audit:purge --force')
             ->monthlyOn(1, '03:00')
             ->timezone('America/Bogota');

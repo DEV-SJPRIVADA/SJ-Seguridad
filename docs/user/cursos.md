@@ -8,8 +8,9 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 
 ## Alcance
 
-Aplica al tablero **Cursos** en **Gestion Humana**, con dos pestanas:
+Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
+- **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton).
 - **Cursos** — listado, filtros, alta/edicion/eliminacion, documento, export Excel e import masivo.
 - **Catalogo** — tipos de curso usados en el listado y en el Excel.
 
@@ -19,10 +20,10 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con dos pestanas:
 
 | Termino | Significado |
 | --- | --- |
-| VIGENCIA | Calculada por el sistema a partir de la fecha de expedicion (VIGENTE / ACTUALIZAR). |
+| VIGENCIA | Calculada por el sistema: **VIGENTE** (curso al dia), **ACTUALIZAR** (faltan ~30 dias o menos para el año), **VENCIDO** (ya paso 1 año desde la fecha de expedicion). |
+| ESTADO | Tramite: **SOLICITADO** (manual), **ACTUALIZADO** (curso vigente) o **PENDIENTE** (por actualizar o vencido, salvo que ya este solicitado). No se carga por Excel. |
 | No.CURSO | Numero actual del curso (unico por cedula). |
 | No.CURSO ANTERIOR | Columna opcional del Excel de import para **renovar** un curso cuando cambia el numero (y/o fecha/tipo). |
-| ESTADO | Tramite libre: vacio, SOLICITADO o ACTUALIZADO (independiente de la vigencia). |
 
 ## Responsabilidades
 
@@ -33,6 +34,13 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con dos pestanas:
 | Ficha empleados (lectura) | Ver cursos del empleado y descargar documento si existe. |
 
 ## Desarrollo (uso diario)
+
+### Dashboard
+
+1. Entre al tablero **Cursos** (abre en Dashboard).
+2. Use filtros: rango de fecha de expedicion, tipo, vigencia, estado y año de tendencia.
+3. Los indicadores y graficos se recalculan al cambiar un filtro.
+4. Graficos: cursos por tipo, vigencia, estado, y tendencia mensual del año (nuevos vs actualizaciones de carga).
 
 ### Importar masivos (renovaciones)
 
@@ -55,5 +63,8 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.4 | 2026-09-16 | Estado PENDIENTE; Excel ya no pide ESTADO (se asigna segun vigencia). |
+| 1.3 | 2026-09-16 | Vigencia incluye **VENCIDO** cuando ya pasó 1 año desde la fecha de expedición. |
+| 1.2 | 2026-09-16 | Pestaña Dashboard con KPIs/gráficos y filtros en vivo. |
 | 1.1 | 2026-09-16 | Plantilla import: No.CURSO ANTERIOR para renovar sin duplicar; cedula/nombre desde Ficha. |
 | 1.0 | 2026-09-15 | FEAT-032: tablero Cursos y Catalogo. |

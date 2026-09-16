@@ -373,6 +373,7 @@ class User extends Authenticatable
         $firstTab = $tabs->first();
 
         return match ($firstTab) {
+            'dashboard' => route('gestion-humana.cursos.dashboard'),
             'catalogo' => route('gestion-humana.cursos.catalogo'),
             'registros' => route('gestion-humana.cursos.registros'),
             default => route('dashboard', ['module' => 'gestion_humana']),

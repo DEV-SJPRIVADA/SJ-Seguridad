@@ -124,9 +124,9 @@
                         id="create_estado"
                         name="estado"
                         :options="$estadoOptions"
-                        :value="old('estado', '')"
-                        placeholder="Sin estado"
-                        :allow-clear="true"
+                        :value="old('estado', \App\Models\EmployeeCurso::ESTADO_ACTUALIZADO)"
+                        placeholder="Seleccione estado"
+                        :required="true"
                     />
                 </div>
                 <div class="form-field cursos-registros-page__form-span">

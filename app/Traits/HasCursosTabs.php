@@ -17,11 +17,14 @@ trait HasCursosTabs
 
         return collect($tabs)->map(function (string $tab) use ($activeTab, $routeName): array {
             $targetRoute = match ($tab) {
+                'dashboard' => 'gestion-humana.cursos.dashboard',
                 'catalogo' => 'gestion-humana.cursos.catalogo',
                 default => 'gestion-humana.cursos.registros',
             };
 
             $active = match ($tab) {
+                'dashboard' => $activeTab === 'dashboard'
+                    || str_starts_with((string) $routeName, 'gestion-humana.cursos.dashboard'),
                 'registros' => $activeTab === 'registros'
                     || str_starts_with((string) $routeName, 'gestion-humana.cursos.registros'),
                 'catalogo' => $activeTab === 'catalogo'

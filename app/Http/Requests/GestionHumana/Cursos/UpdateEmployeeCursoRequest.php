@@ -38,7 +38,7 @@ class UpdateEmployeeCursoRequest extends FormRequest
                     ->where(fn ($query) => $query->where('document_number', $this->input('document_number')))
                     ->ignore($curso->id),
             ],
-            'estado' => ['nullable', 'string', Rule::in(EmployeeCurso::ESTADOS)],
+            'estado' => ['required', 'string', Rule::in(EmployeeCurso::ESTADOS)],
             'observaciones' => ['nullable', 'string', 'max:5000'],
         ];
     }
@@ -56,19 +56,20 @@ class UpdateEmployeeCursoRequest extends FormRequest
             'fecha_expedicion.required' => 'La fecha de expedición es obligatoria.',
             'numero_curso.required' => 'El número de curso es obligatorio.',
             'numero_curso.unique' => 'Ya existe un curso con esa cédula y número.',
+            'estado.required' => 'El estado es obligatorio.',
             'estado.in' => 'El estado no es válido.',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        $estado = trim((string) $this->input('estado'));
+        $estado = mb_strtoupper(trim((string) $this->input('estado')));
 
         $this->merge([
             'document_number' => trim((string) $this->input('document_number')),
             'full_name' => trim((string) $this->input('full_name')),
             'numero_curso' => trim((string) $this->input('numero_curso')),
-            'estado' => $estado === '' ? null : $estado,
+            'estado' => $estado,
             'observaciones' => $this->nullableTrim('observaciones'),
         ]);
     }

@@ -246,7 +246,7 @@ class NavigationResolver
 
                             return [
                                 'label' => $boardLabel,
-                                'route' => 'gestion-humana.cursos.registros',
+                                'route' => 'gestion-humana.cursos.dashboard',
                                 'url' => $user->defaultCursosBoardUrl(),
                                 'active' => str_starts_with((string) $routeName, 'gestion-humana.cursos.'),
                             ];

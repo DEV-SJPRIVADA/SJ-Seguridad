@@ -35,8 +35,10 @@ class CursosRegistrosTest extends TestCase
 
     public function test_vigencia_threshold_and_labels(): void
     {
-        // umbral = 2026-09-15 - 335 = 2025-10-15
+        // umbral ACTUALIZAR = 2026-09-15 - 335 = 2025-10-15
+        // umbral VENCIDO = 2026-09-15 - 1 año = 2025-09-15
         $this->assertSame('2025-10-15', EmployeeCurso::vigenciaThreshold()->toDateString());
+        $this->assertSame('2025-09-15', EmployeeCurso::vencidoThreshold()->toDateString());
 
         $vigente = EmployeeCurso::factory()->make([
             'fecha_expedicion' => '2025-10-15',
@@ -44,9 +46,17 @@ class CursosRegistrosTest extends TestCase
         $actualizar = EmployeeCurso::factory()->make([
             'fecha_expedicion' => '2025-10-14',
         ]);
+        $actualizarInicio = EmployeeCurso::factory()->make([
+            'fecha_expedicion' => '2025-09-16',
+        ]);
+        $vencido = EmployeeCurso::factory()->make([
+            'fecha_expedicion' => '2025-09-15',
+        ]);
 
         $this->assertSame('VIGENTE', $vigente->computeVigencia());
         $this->assertSame('ACTUALIZAR', $actualizar->computeVigencia());
+        $this->assertSame('ACTUALIZAR', $actualizarInicio->computeVigencia());
+        $this->assertSame('VENCIDO', $vencido->computeVigencia());
     }
 
     public function test_lookup_returns_ficha_name(): void
@@ -100,6 +110,7 @@ class CursosRegistrosTest extends TestCase
                 'curso_tipo_id' => $tipo->id,
                 'fecha_expedicion' => '2026-01-01',
                 'numero_curso' => 'NC-DOC',
+                'estado' => 'ACTUALIZADO',
                 'document' => $file,
             ])
             ->assertRedirect(route('gestion-humana.cursos.registros'));
@@ -120,6 +131,7 @@ class CursosRegistrosTest extends TestCase
                 'curso_tipo_id' => $tipo->id,
                 'fecha_expedicion' => '2026-02-01',
                 'numero_curso' => 'NC-1',
+                'estado' => 'SOLICITADO',
             ])
             ->assertRedirect(route('gestion-humana.cursos.registros'))
             ->assertSessionHasErrors('numero_curso');

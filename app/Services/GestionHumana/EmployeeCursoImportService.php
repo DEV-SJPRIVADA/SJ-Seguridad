@@ -16,6 +16,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class EmployeeCursoImportService
 {
+    public function __construct(
+        private readonly EmployeeCursoEstadoSyncService $estadoSyncService,
+    ) {}
+
     /**
      * @return array{
      *     imported: int,
@@ -107,21 +111,14 @@ class EmployeeCursoImportService
                     throw new \InvalidArgumentException('La fecha de expedicion es obligatoria o invalida.');
                 }
 
-                $estadoRaw = trim((string) ($data['estado'] ?? ''));
-                $estado = null;
-                if ($estadoRaw !== '') {
-                    $estadoUpper = mb_strtoupper($estadoRaw);
-                    if (! in_array($estadoUpper, EmployeeCurso::ESTADOS, true)) {
-                        throw new \InvalidArgumentException("Estado invalido: {$estadoRaw}");
-                    }
-                    $estado = $estadoUpper;
-                }
-
                 $observaciones = trim((string) ($data['observaciones'] ?? ''));
                 $observaciones = $observaciones === '' ? null : $observaciones;
 
                 $numeroAnterior = trim((string) ($data['numero_curso_anterior'] ?? ''));
                 $profileId = (int) $profile->id;
+
+                $estadoProbe = new EmployeeCurso(['fecha_expedicion' => $fecha]);
+                $estado = $this->estadoSyncService->resolveEstadoFromVigencia($estadoProbe);
 
                 DB::transaction(function () use (
                     $cedula,

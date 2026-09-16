@@ -14,7 +14,9 @@ use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
 use App\Services\Access\CursosAccessService;
 use App\Services\GestionHumana\CursosAuditLogService;
+use App\Services\GestionHumana\EmployeeCursoDashboardService;
 use App\Services\GestionHumana\EmployeeCursoDocumentService;
+use App\Services\GestionHumana\EmployeeCursoEstadoSyncService;
 use App\Services\GestionHumana\EmployeeCursoImportService;
 use App\Services\GestionHumana\EmployeeCursoListService;
 use App\Traits\HasCursosTabs;
@@ -36,7 +38,9 @@ class CursosController extends Controller
         private readonly CursosAccessService $cursosAccess,
         private readonly CursosAuditLogService $auditLogService,
         private readonly EmployeeCursoListService $listService,
+        private readonly EmployeeCursoDashboardService $dashboardService,
         private readonly EmployeeCursoDocumentService $documentService,
+        private readonly EmployeeCursoEstadoSyncService $estadoSyncService,
         private readonly CursosImportTemplateExport $importTemplateExport,
         private readonly EmployeeCursoImportService $importService,
     ) {}
@@ -45,7 +49,50 @@ class CursosController extends Controller
     {
         abort_unless($this->cursosAccess->canView(auth()->user()), 403);
 
-        return redirect()->route('gestion-humana.cursos.registros', $request->query());
+        return redirect()->route('gestion-humana.cursos.dashboard', $request->query());
+    }
+
+    public function dashboard(Request $request): View
+    {
+        abort_unless($this->cursosAccess->canView(auth()->user()), 403);
+
+        $filters = $this->dashboardFiltersFromRequest($request);
+        $payload = $this->dashboardService->metrics($filters);
+
+        $tipoOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            $this->dashboardService->tipoOptions(),
+        );
+
+        return view('areas.gestion_humana.cursos.dashboard', [
+            'subTabs' => $this->getCursosSubTabs('dashboard'),
+            'filters' => $payload['filters'],
+            'initialPayload' => $payload,
+            'metricsUrl' => route('gestion-humana.cursos.dashboard.metrics'),
+            'tipoOptions' => $tipoOptions,
+            'yearOptions' => $this->dashboardService->yearOptions(),
+            'filterVigenciaOptions' => [
+                ['value' => '', 'label' => 'Todas'],
+                ['value' => EmployeeCurso::VIGENCIA_VIGENTE, 'label' => 'VIGENTE'],
+                ['value' => EmployeeCurso::VIGENCIA_ACTUALIZAR, 'label' => 'ACTUALIZAR'],
+                ['value' => EmployeeCurso::VIGENCIA_VENCIDO, 'label' => 'VENCIDO'],
+            ],
+            'filterEstadoOptions' => [
+                ['value' => 'todos', 'label' => 'Todos'],
+                ['value' => EmployeeCurso::ESTADO_SOLICITADO, 'label' => 'SOLICITADO'],
+                ['value' => EmployeeCurso::ESTADO_ACTUALIZADO, 'label' => 'ACTUALIZADO'],
+                ['value' => EmployeeCurso::ESTADO_PENDIENTE, 'label' => 'PENDIENTE'],
+            ],
+        ]);
+    }
+
+    public function dashboardMetrics(Request $request): JsonResponse
+    {
+        abort_unless($this->cursosAccess->canView(auth()->user()), 403);
+
+        return response()->json(
+            $this->dashboardService->metrics($this->dashboardFiltersFromRequest($request))
+        );
     }
 
     public function registros(Request $request): View
@@ -66,9 +113,9 @@ class CursosController extends Controller
             ->all();
 
         $estadoOptions = [
-            ['value' => '', 'label' => '(Sin estado)'],
             ['value' => EmployeeCurso::ESTADO_SOLICITADO, 'label' => 'SOLICITADO'],
             ['value' => EmployeeCurso::ESTADO_ACTUALIZADO, 'label' => 'ACTUALIZADO'],
+            ['value' => EmployeeCurso::ESTADO_PENDIENTE, 'label' => 'PENDIENTE'],
         ];
 
         return view('areas.gestion_humana.cursos.registros', [
@@ -84,14 +131,15 @@ class CursosController extends Controller
             ),
             'filterEstadoOptions' => [
                 ['value' => 'todos', 'label' => 'Todos'],
-                ['value' => '__empty', 'label' => '(Sin estado)'],
                 ['value' => EmployeeCurso::ESTADO_SOLICITADO, 'label' => 'SOLICITADO'],
                 ['value' => EmployeeCurso::ESTADO_ACTUALIZADO, 'label' => 'ACTUALIZADO'],
+                ['value' => EmployeeCurso::ESTADO_PENDIENTE, 'label' => 'PENDIENTE'],
             ],
             'filterVigenciaOptions' => [
                 ['value' => '', 'label' => 'Todas'],
-                ['value' => 'VIGENTE', 'label' => 'VIGENTE'],
-                ['value' => 'ACTUALIZAR', 'label' => 'ACTUALIZAR'],
+                ['value' => EmployeeCurso::VIGENCIA_VIGENTE, 'label' => 'VIGENTE'],
+                ['value' => EmployeeCurso::VIGENCIA_ACTUALIZAR, 'label' => 'ACTUALIZAR'],
+                ['value' => EmployeeCurso::VIGENCIA_VENCIDO, 'label' => 'VENCIDO'],
             ],
             'lookupUrl' => route('gestion-humana.cursos.registros.lookup'),
             'exportUrl' => route('gestion-humana.cursos.registros.export', $this->activeFilterQuery($filters)),
@@ -149,6 +197,12 @@ class CursosController extends Controller
         $validated = $request->validated();
         $payload = $this->payloadFromValidated($validated);
 
+        $curso = new EmployeeCurso($payload);
+        if (($payload['estado'] ?? null) !== EmployeeCurso::ESTADO_SOLICITADO) {
+            $this->estadoSyncService->applyToModel($curso, preserveSolicitado: false);
+            $payload['estado'] = $curso->estado;
+        }
+
         $curso = EmployeeCurso::query()->create([
             ...$payload,
             'created_by' => auth()->id(),
@@ -191,6 +245,12 @@ class CursosController extends Controller
         ]);
 
         $payload = $this->payloadFromValidated($request->validated());
+
+        $employeeCurso->fill($payload);
+        if (($payload['estado'] ?? null) !== EmployeeCurso::ESTADO_SOLICITADO) {
+            $this->estadoSyncService->applyToModel($employeeCurso, preserveSolicitado: false);
+            $payload['estado'] = $employeeCurso->estado;
+        }
 
         $employeeCurso->update([
             ...$payload,
@@ -447,6 +507,28 @@ class CursosController extends Controller
     }
 
     /**
+     * @return array{
+     *     curso_tipo_id: string,
+     *     vigencia: string,
+     *     estado: string,
+     *     fecha_desde: string,
+     *     fecha_hasta: string,
+     *     anio: int,
+     * }
+     */
+    private function dashboardFiltersFromRequest(Request $request): array
+    {
+        return [
+            'curso_tipo_id' => (string) $request->query('curso_tipo_id', ''),
+            'vigencia' => strtoupper(trim((string) $request->query('vigencia', ''))),
+            'estado' => (string) $request->query('estado', 'todos'),
+            'fecha_desde' => trim((string) $request->query('fecha_desde', '')),
+            'fecha_hasta' => trim((string) $request->query('fecha_hasta', '')),
+            'anio' => (int) $request->query('anio', now()->year),
+        ];
+    }
+
+    /**
      * @param  array{
      *     document_number: string,
      *     full_name: string,
@@ -505,7 +587,7 @@ class CursosController extends Controller
             'curso_tipo_id' => (int) $validated['curso_tipo_id'],
             'fecha_expedicion' => $validated['fecha_expedicion'],
             'numero_curso' => (string) $validated['numero_curso'],
-            'estado' => $validated['estado'] ?? null,
+            'estado' => $validated['estado'] ?? EmployeeCurso::ESTADO_ACTUALIZADO,
             'observaciones' => $validated['observaciones'] ?? null,
             'employee_ficha_profile_id' => $profileId,
         ];
