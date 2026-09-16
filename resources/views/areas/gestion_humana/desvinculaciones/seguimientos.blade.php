@@ -16,11 +16,14 @@
                 x-data="desvinculacionesSeguimientos(@js([
                     'canEdit' => (bool) $canEditSeguimientos,
                     'datatableUrl' => $datatableUrl,
+                    'exportUrl' => $exportUrl,
                     'csrf' => csrf_token(),
                     'checkFields' => $checkFields,
                     'checkLabels' => $checkLabels,
                     'initialQ' => $filters['q'] ?? '',
                     'initialStatus' => $filters['status'] ?? 'todos',
+                    'initialFechaDesde' => $filters['fecha_desde'] ?? '',
+                    'initialFechaHasta' => $filters['fecha_hasta'] ?? '',
                 ]))"
                 x-init="init()"
             >
@@ -32,23 +35,63 @@
                     @endunless
 
                     <div class="req-manage-filters desvinculaciones-seguimientos__filters">
-                        <div class="req-manage-filters__toolbar">
-                            <div class="req-manage-filters__search-col">
-                                <label class="req-manage-filters__label" for="seguimientos-search-q">Buscar</label>
-                                <div class="req-manage-filters__search-group">
-                                    <input
-                                        id="seguimientos-search-q"
-                                        type="search"
-                                        class="form-input"
-                                        placeholder="Cedula o nombre"
-                                        x-model="q"
-                                        x-on:keydown.enter.prevent="applyFilters()"
-                                        autocomplete="off"
-                                    >
-                                    <button type="button" class="btn btn--primary btn--sm" x-on:click="applyFilters()">
-                                        Buscar
-                                    </button>
+                        <div class="req-manage-filters__toolbar desvinculaciones-seguimientos__toolbar">
+                            <div class="desvinculaciones-seguimientos__filters-main">
+                                <div class="req-manage-filters__search-col desvinculaciones-seguimientos__search">
+                                    <label class="req-manage-filters__label" for="seguimientos-search-q">Buscar</label>
+                                    <div class="req-manage-filters__search-group">
+                                        <input
+                                            id="seguimientos-search-q"
+                                            type="search"
+                                            class="form-input"
+                                            placeholder="Cedula o nombre"
+                                            x-model="q"
+                                            x-on:keydown.enter.prevent="applyFilters()"
+                                            autocomplete="off"
+                                        >
+                                        <button type="button" class="btn btn--primary btn--sm" x-on:click="applyFilters()">
+                                            Buscar
+                                        </button>
+                                    </div>
                                 </div>
+
+                                <div class="desvinculaciones-seguimientos__date-range" role="group" aria-label="Rango fecha entregado nomina">
+                                    <span class="req-manage-filters__label desvinculaciones-seguimientos__date-range-title">
+                                        FECHA ENTREGADO NOMINA
+                                    </span>
+                                    <div class="desvinculaciones-seguimientos__date-fields">
+                                        <div class="desvinculaciones-seguimientos__date-field">
+                                            <label class="req-manage-filters__label" for="seguimientos-fecha-desde">Desde</label>
+                                            <input
+                                                id="seguimientos-fecha-desde"
+                                                type="date"
+                                                class="form-input desvinculaciones-seguimientos__date-input"
+                                                x-model="fechaDesde"
+                                                x-on:change="applyFilters()"
+                                            >
+                                        </div>
+                                        <div class="desvinculaciones-seguimientos__date-field">
+                                            <label class="req-manage-filters__label" for="seguimientos-fecha-hasta">Hasta</label>
+                                            <input
+                                                id="seguimientos-fecha-hasta"
+                                                type="date"
+                                                class="form-input desvinculaciones-seguimientos__date-input"
+                                                x-model="fechaHasta"
+                                                x-on:change="applyFilters()"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="desvinculaciones-seguimientos__export">
+                                <a
+                                    x-bind:href="exportHref"
+                                    class="btn btn--secondary btn--sm desvinculaciones-seguimientos__export-btn"
+                                    title="Exportar a Excel"
+                                >
+                                    <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />                                    
+                                </a>
                             </div>
                         </div>
 
@@ -268,11 +311,14 @@
                 Alpine.data('desvinculacionesSeguimientos', (config) => ({
                     canEdit: !!config.canEdit,
                     datatableUrl: config.datatableUrl,
+                    exportUrlBase: config.exportUrl || '',
                     csrf: config.csrf,
                     checkFields: config.checkFields || [],
                     checkLabels: config.checkLabels || {},
                     q: config.initialQ || '',
                     status: config.initialStatus || 'todos',
+                    fechaDesde: config.initialFechaDesde || '',
+                    fechaHasta: config.initialFechaHasta || '',
                     statusOptions: [
                         { value: 'todos', label: 'Todos' },
                         { value: 'incompletos', label: 'Incompletos' },
@@ -305,6 +351,33 @@
 
                     get totalFormatted() {
                         return Number(this.total || 0).toLocaleString('es-CO');
+                    },
+
+                    get exportHref() {
+                        const params = new URLSearchParams();
+                        if (this.q) {
+                            params.set('q', this.q);
+                        }
+                        if (this.status && this.status !== 'todos') {
+                            params.set('status', this.status);
+                        }
+                        if (this.fechaDesde) {
+                            params.set('fecha_desde', this.fechaDesde);
+                        }
+                        if (this.fechaHasta) {
+                            params.set('fecha_hasta', this.fechaHasta);
+                        }
+                        const qs = params.toString();
+                        return this.exportUrlBase + (qs ? '?' + qs : '');
+                    },
+
+                    filterParams() {
+                        return {
+                            q: this.q || '',
+                            status: this.status || 'todos',
+                            fecha_desde: this.fechaDesde || '',
+                            fecha_hasta: this.fechaHasta || '',
+                        };
                     },
 
                     init() {
@@ -419,8 +492,7 @@
                         this.saveError = '';
 
                         const params = new URLSearchParams({
-                            q: this.q || '',
-                            status: this.status || 'todos',
+                            ...this.filterParams(),
                             draw: '1',
                             start: String((this.page - 1) * this.perPage),
                             length: String(this.perPage),

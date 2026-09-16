@@ -15,18 +15,32 @@
                         @endif
                     </p>
                 </div>
-                @if ($employmentHistory->isNotEmpty())
-                    <button
-                        type="button"
-                        class="ficha-empleados-page__history-icon"
-                        title="Historial de vinculos"
-                        aria-label="Ver historial de vinculos"
-                        x-data=""
-                        x-on:click="$dispatch('open-modal', 'ficha-employment-history')"
-                    >
-                        <x-lucide-history width="20" height="20" aria-hidden="true" />
-                    </button>
-                @endif
+                <div class="ficha-empleados-page__title-actions">
+                    @if ($canViewEmployeeCursos ?? false)
+                        <button
+                            type="button"
+                            class="ficha-empleados-page__history-icon"
+                            title="Consultar cursos"
+                            aria-label="Consultar cursos del empleado"
+                            x-data=""
+                            x-on:click="$dispatch('open-modal', 'ficha-employee-cursos')"
+                        >
+                            <x-lucide-graduation-cap width="20" height="20" aria-hidden="true" />
+                        </button>
+                    @endif
+                    @if ($employmentHistory->isNotEmpty())
+                        <button
+                            type="button"
+                            class="ficha-empleados-page__history-icon"
+                            title="Historial de vinculos"
+                            aria-label="Ver historial de vinculos"
+                            x-data=""
+                            x-on:click="$dispatch('open-modal', 'ficha-employment-history')"
+                        >
+                            <x-lucide-history width="20" height="20" aria-hidden="true" />
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
     </x-slot>
@@ -192,6 +206,12 @@
             @include('areas.gestion_humana.ficha-empleados.partials.employment-period-history-modal', [
                 'employmentHistory' => $employmentHistory,
                 'canGenerateLetters' => $canGenerateLetters ?? false,
+            ])
+
+            @include('areas.gestion_humana.ficha-empleados.partials.employee-cursos-modal', [
+                'entry' => $entry,
+                'employeeCursos' => $employeeCursos ?? collect(),
+                'canViewEmployeeCursos' => $canViewEmployeeCursos ?? false,
             ])
         </div>
     </div>

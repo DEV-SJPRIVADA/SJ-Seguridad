@@ -11,9 +11,9 @@ Dar a Gestion Humana un tablero propio para desvincular varios empleados a la ve
 Aplica al tablero **Desvinculaciones** en el area **Gestion Humana**, con dos pestanas:
 
 - **Masivos** — buscar empleados activos por cedula, indicar fecha de desvinculacion, tipo de carta y firma; opcionalmente causal, si es recontratable y observaciones; ejecutar **Desvincular** sobre el lote; ver el reporte de exitos y fallos; descargar el ZIP de cartas generadas.
-- **Seguimientos** — consultar y marcar los ocho controles post-retiro; ver si ya hay carta generada y si el caso quedo **OK TODO**; guardar cambios al marcar (sin boton Guardar).
+- **Seguimientos** — consultar y marcar los ocho controles post-retiro; filtrar por texto, estado o rango de **fecha entregado nomina**; exportar a Excel lo filtrado; ver si ya hay carta generada y si el caso quedo **OK TODO**; guardar cambios al marcar (sin boton Guardar).
 
-**En esta version no hay:** exportacion a Excel, colores o semaforos del Excel antiguo, ni envio de correo al desvincular. La regeneracion de una carta que fallo se hace desde **Ficha empleados** (no desde Seguimientos).
+**En esta version no hay:** colores o semaforos del Excel antiguo, ni envio de correo al desvincular. La regeneracion de una carta que fallo se hace desde **Ficha empleados** (no desde Seguimientos).
 
 La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al confirmarse, tambien crea la fila de seguimiento.
 
@@ -68,12 +68,13 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 ### Usar Seguimientos
 
 1. Abra la pestana **Seguimientos**.
-2. Filtre por texto (cedula o nombre) o por estado: todos, incompletos, OK TODO, sin carta.
+2. Filtre por texto (cedula o nombre), por estado (todos, incompletos, OK TODO, sin carta) y/o por rango de **FECHA ENTREGADO NOMINA** (desde / hasta).
 3. Revise columnas de solo lectura: tipo de desvinculacion (causal), fechas, cargo, cedula, nombre, recontratable, observaciones y si **tiene carta generada**.
 4. Marque los ocho checks operativos (orden examenes, enviado, control roll, retiro ARL, retiro cesantias, recibido, paz y salvo, reporte noved) y, si aplica, la **fecha entregado nomina**. Los cambios se guardan solos al soltar el control (unos instantes despues).
 5. **OK TODO** se calcula solo: pasa a Si cuando los ocho checks estan en verdadero; no se puede forzar a mano.
-6. Si el caso esta **sin carta**, regenere la carta en **Ficha empleados** del empleado (vinculo cerrado → Generar cartas). Al generar con exito, Seguimientos mostrara que ya tiene carta.
-7. No se elimina ni se oculta un seguimiento de forma silenciosa. Para **revertir** la desvinculacion (reactivar al empleado): use el icono de reabrir en la fila, confirme con un **motivo obligatorio**. El sistema deja al empleado activo, quita la fila de Seguimientos y borra las cartas de ese retiro.
+6. Use **Exportar Excel** para descargar el listado con los filtros activos (incluye cedula, nombre, cargo, tipo desvinculacion, fechas, checks, OK TODO y observaciones).
+7. Si el caso esta **sin carta**, regenere la carta en **Ficha empleados** del empleado (vinculo cerrado → Generar cartas). Al generar con exito, Seguimientos mostrara que ya tiene carta.
+8. No se elimina ni se oculta un seguimiento de forma silenciosa. Para **revertir** la desvinculacion (reactivar al empleado): use el icono de reabrir en la fila, confirme con un **motivo obligatorio**. El sistema deja al empleado activo, quita la fila de Seguimientos y borra las cartas de ese retiro.
 
 ### Relacion con Ficha empleados
 
@@ -85,5 +86,6 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.2 | 2026-09-15 | Agencia | Filtro rango FECHA ENTREGADO NOMINA + export Excel en Seguimientos |
 | 1.1 | 2026-09-14 | Agencia | Revertir desvinculacion por fila en Seguimientos (motivo + icono) |
 | 1.0 | 2026-09-14 | Documentador FEAT-031 | Version inicial: Masivos, Seguimientos, paquete de permisos, relacion con Ficha; sin Excel, colores ni correo. |

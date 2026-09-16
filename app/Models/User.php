@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -355,6 +356,26 @@ class User extends Authenticatable
         return match ($firstTab) {
             'seguimientos' => route('gestion-humana.desvinculaciones.seguimientos'),
             default => route('gestion-humana.desvinculaciones.masivos'),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function cursosBoardTabsFor(): Collection
+    {
+        return collect(app(CursosAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultCursosBoardUrl(): string
+    {
+        $tabs = $this->cursosBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'catalogo' => route('gestion-humana.cursos.catalogo'),
+            'registros' => route('gestion-humana.cursos.registros'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }
 }

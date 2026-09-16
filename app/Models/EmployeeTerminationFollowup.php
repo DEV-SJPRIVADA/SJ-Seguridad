@@ -205,4 +205,28 @@ class EmployeeTerminationFollowup extends Model
             default => $query,
         };
     }
+
+    /**
+     * Filtra por rango de FECHA ENTREGADO NOMINA (`payroll_delivered_at`).
+     * Extremos opcionales; si ambos vienen invertidos se intercambian.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopePayrollDeliveredBetween(Builder $query, ?string $from, ?string $to): Builder
+    {
+        if ($from !== null && $to !== null && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        if ($from !== null) {
+            $query->whereDate('payroll_delivered_at', '>=', $from);
+        }
+
+        if ($to !== null) {
+            $query->whereDate('payroll_delivered_at', '<=', $to);
+        }
+
+        return $query;
+    }
 }

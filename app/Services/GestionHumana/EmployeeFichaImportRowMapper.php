@@ -35,8 +35,6 @@ class EmployeeFichaImportRowMapper
             'fecha_expedicion' => $this->dateString($profile?->expedition_date),
             'codigo_lugar_residencia' => $profile?->residence_city_code,
             'lugar_residencia' => $profile?->residence_city_name,
-            'codigo_ciudad_trabajo' => $profile?->work_city_code,
-            'ciudad_trabajo' => $profile?->work_city_name,
             'direccion' => $profile?->address,
             'telefono' => $profile?->phone,
             'tipo_sangre' => $profile?->blood_type,
@@ -70,6 +68,8 @@ class EmployeeFichaImportRowMapper
             'forma_pago' => $profile?->payment_method_code,
             'actividad_economica' => $profile?->economic_activity_code,
             'nombre_actividad_economica' => $profile?->economic_activity_name,
+            'codigo_ciudad_trabajo' => $profile?->work_city_code,
+            'ciudad_trabajo' => $profile?->work_city_name,
             'codigo_requisicion' => $entry->requisitionCode(),
         ];
     }

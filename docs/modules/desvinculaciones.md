@@ -14,9 +14,11 @@ Tablero de area **Gestion Humana** para (1) desvincular varios empleados activos
 - Lookup por cedula solo si empleado **activo** + periodo abierto.
 - Lote: continuar ante fallos; reporte `ok[]` / `failed[]`; ZIP de cartas exitosas via token one-shot.
 - Tabla `employee_termination_followups` (1:1 con periodo cerrado); creacion tambien desde Ficha `terminate` y marca de carta desde `TerminationLetterController::generate`.
-- Auditoria: lote (`bulk_termination`) + updates de seguimiento (`termination_followup` / `update`). Sin correo. Sin export Excel. Sin colores legacy.
+- Auditoria: lote (`bulk_termination`) + updates de seguimiento (`termination_followup` / `update`) + export Seguimientos (`export` / `seguimientos_excel`). Sin correo. Sin colores legacy.
 
-**Fuera de V1:** export Excel, correo, colores/semaforos, split de perfiles Masivos-only vs Seguimientos-only, multi-plantilla por fila en Masivos, tope de filas, confirmacion previa del lote, backfill historico, regenerar carta embebida en Seguimientos, historial campo-a-campo de checks.
+**Fuera de V1 (original):** correo, colores/semaforos, split de perfiles Masivos-only vs Seguimientos-only, multi-plantilla por fila en Masivos, tope de filas, confirmacion previa del lote, backfill historico, regenerar carta embebida en Seguimientos, historial campo-a-campo de checks.
+
+**Post-V1 (activo):** filtro rango **FECHA ENTREGADO NOMINA** + export Excel de Seguimientos (`BaseExport`).
 
 ## Rutas
 
@@ -34,7 +36,8 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | POST | `/masivos/procesar` | `masivos.process` | Lote → JSON reporte + `download_token`. `desvinculaciones.masivos` |
 | GET | `/masivos/descarga/{token}` | `masivos.download` | ZIP Content-Disposition; token one-shot. `desvinculaciones.masivos` |
 | GET | `/seguimientos` | `seguimientos` | Vista Seguimientos. `desvinculaciones.view` |
-| GET | `/seguimientos/datatable` | `seguimientos.datatable` | JSON filtrado. `desvinculaciones.view` |
+| GET | `/seguimientos/datatable` | `seguimientos.datatable` | JSON filtrado (q, status, fecha_desde/hasta nomina). `desvinculaciones.view` |
+| GET | `/seguimientos/exportar` | `seguimientos.export` | Excel filtrado (`BaseExport`). `desvinculaciones.view` |
 | PATCH | `/seguimientos/{followup}` | `seguimientos.update` | Autosave parcial. `desvinculaciones.seguimientos.edit` |
 | POST | `/seguimientos/{followup}/revertir` | `seguimientos.revert` | Revertir desvinculacion (reactiva empleado). `desvinculaciones.seguimientos.edit` |
 
@@ -72,7 +75,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 
 | Clase | Responsabilidad |
 | --- | --- |
-| `App\Http\Controllers\GestionHumana\DesvinculacionesController` | Vistas, lookup, process, downloadZip, datatable, PATCH seguimiento, POST revertir |
+| `App\Http\Controllers\GestionHumana\DesvinculacionesController` | Vistas, lookup, process, downloadZip, datatable, export Excel Seguimientos, PATCH seguimiento, POST revertir |
 | `LookupBulkTerminationRequest` | Auth `canMasivos`; `document_number` |
 | `ProcessBulkTerminationRequest` | Auth `canMasivos`; filas min 1; fecha/plantilla/firma required; causal/rehire/notas opcionales; rechazo duplicados de cedula en el lote (422 antes de procesar). `template_id` = `exists:termination_letter_document_templates,id` (**sin** scope tipo `desvinculacion` ni archivo en disco — la UI si filtra; obs. review #3) |
 | `UpdateTerminationFollowupRequest` | Auth `canEditSeguimientos`; payload parcial solo checks + `payroll_delivered_at` |
@@ -85,7 +88,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Vista | Descripcion |
 | --- | --- |
 | `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: filas, lookup blur/Enter, +fila / borrar, Desvincular, reporte, descarga ZIP |
-| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | Tabla checks + fecha nomina (autosave), filtros, OK TODO RO, icono revertir + modal motivo |
+| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | Tabla checks + fecha nomina (autosave), filtros (q, status, rango FECHA ENTREGADO NOMINA), export Excel, OK TODO RO, icono revertir + modal motivo |
 | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestanas `module-tab` Masivos / Seguimientos |
 | `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
 
@@ -179,8 +182,9 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 15. Causal, rehire, notas, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo).
 16. 8 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms.
 17. OK TODO solo lectura, calculado.
-18. Filtros: `q` (cedula/nombre) + status `todos` / `incompletos` / `ok_todo` / `sin_carta`.
-19. **Revertir** por fila (permiso edit): modal con motivo; reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
+18. Filtros: `q` (cedula/nombre) + status `todos` / `incompletos` / `ok_todo` / `sin_carta` + rango `fecha_desde` / `fecha_hasta` sobre `payroll_delivered_at` (scope `payrollDeliveredBetween`; extremos opcionales).
+19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 8 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
+20. **Revertir** por fila (permiso edit): modal con motivo; reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
 
 ## JavaScript / assets
 
@@ -190,7 +194,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 
 ## Export Excel
 
-**No aplica en V1.** No usar `BaseExport` / `<x-export-excel>` en este modulo.
+Seguimientos: `App\Exports\BaseExport` via `GET .../seguimientos/exportar`. Respeta los mismos filtros del datatable. No usar `excelHtml5`.
 
 ## Validacion local
 

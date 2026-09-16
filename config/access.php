@@ -30,6 +30,8 @@ return [
         'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Masivos y Seguimientos)',
         'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
+        'cursos.view' => 'Cursos: Ver listado, filtros y export Excel',
+        'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -89,6 +91,7 @@ return [
         'bandeja_compras' => 'Bandeja compras',
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
+        'cursos' => 'Cursos',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
@@ -138,6 +141,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'cursos' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -169,6 +176,11 @@ return [
     'desvinculaciones_tabs' => [
         'masivos' => 'Masivos',
         'seguimientos' => 'Seguimientos',
+    ],
+
+    'cursos_tabs' => [
+        'registros' => 'Cursos',
+        'catalogo' => 'Catálogo',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -313,6 +325,7 @@ return [
                             'view.board.gestion_humana.archivo',
                             'view.board.gestion_humana.plantillas_word',
                             'view.board.gestion_humana.desvinculaciones',
+                            'view.board.gestion_humana.cursos',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -343,6 +356,13 @@ return [
                             'desvinculaciones.view',
                             'desvinculaciones.masivos',
                             'desvinculaciones.seguimientos.edit',
+                        ],
+                    ],
+                    'cursos' => [
+                        'label' => 'Cursos',
+                        'permissions' => [
+                            'cursos.view',
+                            'cursos.edit',
                         ],
                     ],
                 ],

@@ -47,5 +47,9 @@ return [
             'label' => 'Desvinculaciones',
             'area' => 'gestion_humana',
         ],
+        'cursos' => [
+            'label' => 'Cursos',
+            'area' => 'gestion_humana',
+        ],
     ],
 ];

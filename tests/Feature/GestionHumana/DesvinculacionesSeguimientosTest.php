@@ -108,6 +108,79 @@ class DesvinculacionesSeguimientosTest extends TestCase
             ->assertJsonPath('data.0.id', $incomplete->id);
     }
 
+    public function test_seguimientos_datatable_filters_by_payroll_delivered_date_range(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $inside = $this->createFollowup(['document_number' => '5555555555', 'full_name' => 'Dentro Rango']);
+        $outside = $this->createFollowup(['document_number' => '6666666666', 'full_name' => 'Fuera Rango']);
+        $withoutDate = $this->createFollowup(['document_number' => '7777777777', 'full_name' => 'Sin Fecha']);
+
+        $inside->forceFill(['payroll_delivered_at' => '2026-03-15'])->save();
+        $outside->forceFill(['payroll_delivered_at' => '2026-01-10'])->save();
+        $withoutDate->forceFill(['payroll_delivered_at' => null])->save();
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => 'todos',
+                'fecha_desde' => '2026-03-01',
+                'fecha_hasta' => '2026-03-31',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $inside->id);
+    }
+
+    public function test_export_seguimientos_excel_uses_filters_and_audits(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $included = $this->createFollowup([
+            'document_number' => '8888888888',
+            'full_name' => 'Export Incluido',
+            'position_name' => 'Guardia',
+            'termination_notes' => 'Nota export',
+        ]);
+        $excluded = $this->createFollowup([
+            'document_number' => '9999999999',
+            'full_name' => 'Export Excluido',
+        ]);
+
+        $included->forceFill([
+            'payroll_delivered_at' => '2026-04-10',
+            'check_enviado' => true,
+        ])->save();
+        $excluded->forceFill(['payroll_delivered_at' => '2026-02-01'])->save();
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.desvinculaciones.seguimientos.export', [
+                'fecha_desde' => '2026-04-01',
+                'fecha_hasta' => '2026-04-30',
+            ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'module' => 'desvinculaciones',
+            'event_type' => 'export',
+            'action' => 'seguimientos_excel',
+        ]);
+
+        $content = $response->streamedContent();
+        $this->assertNotSame('', $content);
+        $this->assertStringContainsString('PK', substr($content, 0, 2));
+    }
+
+    public function test_export_seguimientos_without_view_permission_is_forbidden(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+
+        $this->actingAs($user)
+            ->get(route('gestion-humana.desvinculaciones.seguimientos.export'))
+            ->assertForbidden();
+    }
+
     public function test_patch_autosave_persists_check_and_audits(): void
     {
         $editor = $this->editorUser();
@@ -183,7 +256,9 @@ class DesvinculacionesSeguimientosTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('gestion-humana.desvinculaciones.seguimientos'))
             ->assertOk()
-            ->assertSee('Vista de solo lectura', false);
+            ->assertSee('Vista de solo lectura', false)
+            ->assertSee('Exportar Excel', false)
+            ->assertSee('FECHA ENTREGADO NOMINA', false);
     }
 
     public function test_revert_reactivates_employee_deletes_followup_and_letter(): void

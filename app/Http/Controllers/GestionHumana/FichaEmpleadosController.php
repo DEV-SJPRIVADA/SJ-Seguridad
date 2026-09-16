@@ -11,11 +11,13 @@ use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\TerminateEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
+use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\GestionHumana\EmployeeCursoDocumentService;
 use App\Services\GestionHumana\EmployeeFichaAuditLogService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
@@ -30,9 +32,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FichaEmpleadosController extends Controller
@@ -54,6 +58,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaEntryDatatableService $entryDatatableService,
         private readonly EmployeeTerminationFollowupService $terminationFollowupService,
+        private readonly EmployeeCursoDocumentService $cursoDocumentService,
     ) {}
 
     public function index(Request $request): View
@@ -499,6 +504,8 @@ class FichaEmpleadosController extends Controller
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
         $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
         $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
+        $documentNumber = $this->resolveEntryDocumentNumber($fichaEntry, $profile);
+        $employeeCursos = $this->employeeCursosForDocumentNumber($documentNumber);
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
@@ -514,7 +521,60 @@ class FichaEmpleadosController extends Controller
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
+            'employeeCursos' => $employeeCursos,
+            'canViewEmployeeCursos' => $this->fichaEmpleadosAccess->canView(auth()->user()),
         ]);
+    }
+
+    public function employeeCursos(PersonalRequisitionFichaEntry $fichaEntry): JsonResponse
+    {
+        abort_unless($this->fichaEmpleadosAccess->canView(auth()->user()), 403);
+
+        $fichaEntry->loadMissing('profile');
+        $documentNumber = $this->resolveEntryDocumentNumber($fichaEntry, $fichaEntry->profile);
+        $cursos = $this->employeeCursosForDocumentNumber($documentNumber);
+
+        return response()->json([
+            'document_number' => $documentNumber,
+            'data' => $cursos->map(fn (EmployeeCurso $curso): array => [
+                'id' => $curso->id,
+                'tipo_curso' => $curso->cursoTipo?->tipo_curso,
+                'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d'),
+                'numero_curso' => $curso->numero_curso,
+                'vigencia' => $curso->computeVigencia(),
+                'estado' => $curso->estado,
+                'has_document' => $curso->hasDocument(),
+                'document_original_name' => $curso->document_original_name,
+                'document_url' => $curso->hasDocument()
+                    ? route('gestion-humana.ficha-empleados.employees.cursos.document', [$fichaEntry, $curso])
+                    : null,
+            ])->values(),
+        ]);
+    }
+
+    public function downloadEmployeeCursoDocument(
+        PersonalRequisitionFichaEntry $fichaEntry,
+        EmployeeCurso $employeeCurso,
+    ): StreamedResponse|Response {
+        abort_unless($this->fichaEmpleadosAccess->canView(auth()->user()), 403);
+
+        $fichaEntry->loadMissing('profile');
+        $documentNumber = $this->resolveEntryDocumentNumber($fichaEntry, $fichaEntry->profile);
+
+        abort_unless(
+            $documentNumber !== '' && hash_equals($documentNumber, (string) $employeeCurso->document_number),
+            404,
+        );
+        abort_unless($employeeCurso->hasDocument(), 404);
+
+        $disk = Storage::disk($this->cursoDocumentService->disk());
+        $path = (string) $employeeCurso->document_path;
+        abort_unless($disk->exists($path), 404);
+
+        return $disk->download(
+            $path,
+            $employeeCurso->document_original_name ?: basename($path),
+        );
     }
 
     public function updateFicha(UpdateEmployeeFichaProfileRequest $request, PersonalRequisitionFichaEntry $fichaEntry): RedirectResponse
@@ -741,6 +801,35 @@ class FichaEmpleadosController extends Controller
     private function canManage(): bool
     {
         return $this->fichaEmpleadosAccess->canManage(auth()->user());
+    }
+
+    private function resolveEntryDocumentNumber(
+        PersonalRequisitionFichaEntry $fichaEntry,
+        ?EmployeeFichaProfile $profile = null,
+    ): string {
+        $fromProfile = trim((string) ($profile?->document_number ?? ''));
+        if ($fromProfile !== '') {
+            return $fromProfile;
+        }
+
+        return trim((string) ($fichaEntry->hired_document ?? ''));
+    }
+
+    /**
+     * @return Collection<int, EmployeeCurso>
+     */
+    private function employeeCursosForDocumentNumber(string $documentNumber): Collection
+    {
+        if ($documentNumber === '') {
+            return collect();
+        }
+
+        return EmployeeCurso::query()
+            ->with('cursoTipo')
+            ->where('document_number', $documentNumber)
+            ->orderByDesc('fecha_expedicion')
+            ->orderByDesc('id')
+            ->get();
     }
 
     private function canTerminate(): bool

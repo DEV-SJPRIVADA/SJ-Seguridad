@@ -134,8 +134,6 @@ return [
         'fecha_expedicion' => 'Fecha expedición',
         'codigo_lugar_residencia' => 'Código ciudad residencia DANE',
         'lugar_residencia' => 'Ciudad residencia',
-        'codigo_ciudad_trabajo' => 'Código ciudad de trabajo',
-        'ciudad_trabajo' => 'Ciudad de trabajo',
         'direccion' => 'Dirección',
         'telefono' => 'Teléfono',
         'tipo_sangre' => 'Tipo sangre',
@@ -169,6 +167,8 @@ return [
         'forma_pago' => 'Forma pago',
         'actividad_economica' => 'Código actividad económica',
         'nombre_actividad_economica' => 'Nombre actividad económica',
+        'codigo_ciudad_trabajo' => 'Código ciudad de trabajo',
+        'ciudad_trabajo' => 'Ciudad de trabajo',
         'codigo_requisicion' => 'Código requisición (opcional)',
     ],
 

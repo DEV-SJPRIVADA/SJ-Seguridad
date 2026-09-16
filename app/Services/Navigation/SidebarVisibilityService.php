@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -24,6 +25,7 @@ class SidebarVisibilityService
         private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
+        private readonly CursosAccessService $cursosAccess,
         private readonly PurchaseAccessService $purchaseAccess,
     ) {}
 
@@ -50,6 +52,7 @@ class SidebarVisibilityService
             'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
             'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
+            'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -165,6 +168,15 @@ class SidebarVisibilityService
         }
 
         return $this->desvinculacionesAccess->canViewDesvinculacionesBoard($user);
+    }
+
+    private function shouldShowCursosBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->cursosAccess->canViewCursosBoard($user);
     }
 
     private function shouldShowIndicadoresBoard(User $user, string $areaKey): bool
