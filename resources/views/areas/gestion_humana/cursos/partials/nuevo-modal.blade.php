@@ -1,4 +1,4 @@
-{{-- Variables: $tipoOptions, $estadoOptions, $lookupUrl, $show --}}
+{{-- Variables: $tipoOptions, $escuelaOptions, $estadoOptions, $lookupUrl, $show --}}
 <x-modal name="cursos-nuevo" maxWidth="2xl" :show="$show" focusable>
     <div
         class="modal-card ficha-empleados-masivos-modal cursos-registros-page__create-modal"
@@ -92,6 +92,17 @@
                         :options="$tipoOptions"
                         :value="old('curso_tipo_id')"
                         placeholder="Seleccionar tipo"
+                        :required="true"
+                    />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="create_curso_escuela_id">ESCUELA</label>
+                    <x-searchable-select
+                        id="create_curso_escuela_id"
+                        name="curso_escuela_id"
+                        :options="$escuelaOptions"
+                        :value="old('curso_escuela_id')"
+                        placeholder="Seleccionar escuela"
                         :required="true"
                     />
                 </div>

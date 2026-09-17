@@ -10,6 +10,7 @@ use App\Http\Requests\GestionHumana\Cursos\ImportEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\StoreEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\UpdateEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\UploadEmployeeCursoDocumentRequest;
+use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
@@ -114,6 +115,20 @@ class CursosController extends Controller
             ->values()
             ->all();
 
+        $escuelaOptions = CursoEscuela::query()
+            ->active()
+            ->whereNotNull('nombre')
+            ->where('nombre', '!=', '')
+            ->orderBy('nombre')
+            ->orderBy('id')
+            ->get(['id', 'nombre'])
+            ->map(fn (CursoEscuela $escuela): array => [
+                'value' => (string) $escuela->id,
+                'label' => $escuela->nombre,
+            ])
+            ->values()
+            ->all();
+
         $estadoOptions = [
             ['value' => EmployeeCurso::ESTADO_SOLICITADO, 'label' => 'SOLICITADO'],
             ['value' => EmployeeCurso::ESTADO_ACTUALIZADO, 'label' => 'ACTUALIZADO'],
@@ -126,6 +141,7 @@ class CursosController extends Controller
             'filters' => $filters,
             'registros' => $registros,
             'tipoOptions' => $tipoOptions,
+            'escuelaOptions' => $escuelaOptions,
             'estadoOptions' => $estadoOptions,
             'filterTipoOptions' => array_merge(
                 [['value' => '', 'label' => 'Todos']],
@@ -324,6 +340,10 @@ class CursosController extends Controller
             'document_number',
             'full_name',
             'curso_tipo_id',
+            'curso_escuela_id',
+            'escuela_codigo',
+            'escuela_nit',
+            'escuela_nombre',
             'fecha_expedicion',
             'numero_curso',
             'estado',
@@ -394,6 +414,9 @@ class CursosController extends Controller
             ['key' => 'document_number', 'label' => 'CEDULA'],
             ['key' => 'full_name', 'label' => 'NOMBRE COMPLETO'],
             ['key' => 'tipo_curso', 'label' => 'TIPO CURSO'],
+            ['key' => 'escuela_nombre', 'label' => 'ESCUELA'],
+            ['key' => 'escuela_codigo', 'label' => 'CODIGO ESCUELA'],
+            ['key' => 'escuela_nit', 'label' => 'NIT ESCUELA'],
             ['key' => 'fecha_expedicion', 'label' => 'FECHA EXPEDICION'],
             ['key' => 'numero_curso', 'label' => 'No.CURSO'],
             ['key' => 'vigencia', 'label' => 'VIGENCIA'],
@@ -406,6 +429,9 @@ class CursosController extends Controller
             'document_number' => $curso->document_number,
             'full_name' => $curso->full_name,
             'tipo_curso' => $curso->cursoTipo?->tipo_curso,
+            'escuela_nombre' => $curso->escuela_nombre,
+            'escuela_codigo' => $curso->escuela_codigo,
+            'escuela_nit' => $curso->escuela_nit,
             'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d'),
             'numero_curso' => $curso->numero_curso,
             'vigencia' => $curso->computeVigencia(),
@@ -668,10 +694,16 @@ class CursosController extends Controller
             ->where('document_number', $cedula)
             ->value('id');
 
+        $escuela = CursoEscuela::query()->findOrFail((int) $validated['curso_escuela_id']);
+
         return [
             'document_number' => $cedula,
             'full_name' => (string) $validated['full_name'],
             'curso_tipo_id' => (int) $validated['curso_tipo_id'],
+            'curso_escuela_id' => $escuela->id,
+            'escuela_codigo' => $escuela->codigo,
+            'escuela_nit' => $escuela->nit,
+            'escuela_nombre' => $escuela->nombre,
             'fecha_expedicion' => $validated['fecha_expedicion'],
             'numero_curso' => (string) $validated['numero_curso'],
             'estado' => $validated['estado'] ?? EmployeeCurso::ESTADO_ACTUALIZADO,

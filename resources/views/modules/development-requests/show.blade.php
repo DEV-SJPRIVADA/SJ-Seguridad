@@ -3,13 +3,13 @@
         @include('modules.development-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
-        <div class="app-container">
+    <div class="page-section development-requests-page">
+        <div class="app-container development-requests-page__stack">
             @if (session('status'))
-                <div class="alert alert--success bottom-spaced">{{ session('status') }}</div>
+                <div class="alert alert--success">{{ session('status') }}</div>
             @endif
 
-            <div class="panel bottom-spaced">
+            <div class="panel">
                 <div class="panel__header">
                     <h3 class="panel-title">{{ $developmentRequest->code ?: 'Sin codigo' }} — {{ $developmentRequest->title }}</h3>
                     <p class="panel-text">{{ $developmentRequest->estadoLabel() }} · {{ $developmentRequest->tipoLabel() }} · {{ $developmentRequest->prioridadLabel() }}</p>
@@ -53,7 +53,7 @@
             </div>
 
             @if ($canLeaderDecide)
-                <div class="panel bottom-spaced">
+                <div class="panel">
                     <div class="panel__header"><h3 class="panel-title">Decision del lider</h3></div>
                     <div class="panel__body">
                         <form method="POST" action="{{ route('development-requests.leader.update', ['module' => $module, 'development_request' => $developmentRequest]) }}">
@@ -90,7 +90,7 @@
                         ['value' => 'alta', 'label' => 'Alta'],
                     ];
                 @endphp
-                <div class="panel bottom-spaced">
+                <div class="panel">
                     <div class="panel__header">
                         <h3 class="panel-title">Gestion TIC</h3>
                         <p class="panel-text">Bloque interno, asignacion y cambio de estado.</p>
@@ -187,7 +187,7 @@
                     </div>
                 </div>
             @elseif ($developmentRequest->tic_viability || $developmentRequest->assignedProgrammer || $developmentRequest->tic_analysis_notes)
-                <div class="panel bottom-spaced">
+                <div class="panel">
                     <div class="panel__header"><h3 class="panel-title">Bloque TIC</h3></div>
                     <div class="panel__body">
                         <div class="dashboard-stat-grid">
@@ -215,7 +215,7 @@
             @endif
 
             @if ($canUat)
-                <div class="panel bottom-spaced">
+                <div class="panel">
                     <div class="panel__header"><h3 class="panel-title">Pruebas de aceptacion (UAT)</h3></div>
                     <div class="panel__body">
                         <form method="POST" action="{{ route('development-requests.uat.update', ['module' => $module, 'development_request' => $developmentRequest]) }}">
@@ -243,7 +243,7 @@
                 </div>
             @endif
 
-            <div class="panel bottom-spaced">
+            <div class="panel">
                 <div class="panel__header"><h3 class="panel-title">Historial de estados</h3></div>
                 <div class="panel__body">
                     <ul>
@@ -261,7 +261,7 @@
                 </div>
             </div>
 
-            <div class="panel" id="conversation">
+            <div class="panel development-requests-page__panel" id="conversation">
                 <div class="panel__header">
                     <h3 class="panel-title">Conversacion</h3>
                     <p class="panel-text">Los participantes reciben correo al publicar un mensaje.</p>

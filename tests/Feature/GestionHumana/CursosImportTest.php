@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\GestionHumana;
 
+use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
@@ -19,12 +20,20 @@ class CursosImportTest extends TestCase
 {
     use RefreshDatabase;
 
+    private CursoEscuela $escuelaSniper;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
+
+        $this->escuelaSniper = CursoEscuela::factory()->create([
+            'codigo' => '015',
+            'nit' => '8050262894',
+            'nombre' => 'SNIPER',
+        ]);
     }
 
     public function test_import_template_requires_edit(): void
@@ -90,16 +99,16 @@ class CursosImportTest extends TestCase
             'document_number' => '100',
             'full_name' => 'Viejo Nombre',
             'curso_tipo_id' => $tipo->id,
-            'numero_curso' => 'NC-1',
+            'numero_curso' => 'ECSP0015-NC1',
             'fecha_expedicion' => '2024-01-01',
             'document_path' => 'employee-cursos/keep.pdf',
             'document_original_name' => 'keep.pdf',
         ]);
 
         $path = $this->makeImportFile([
-            ['100', 'Nombre Del Excel Ignorado', 'ALTURAS', '2026-02-01', '', 'NC-1', 'upd'],
-            ['200', 'Maria Nueva Excel', 'ALTURAS', '2026-03-01', '', 'NC-2', ''],
-            ['300', 'Sin Tipo', 'INEXISTENTE', '2026-03-01', '', 'NC-3', ''],
+            ['100', 'Nombre Del Excel Ignorado', 'ALTURAS', '2026-02-01', '', 'ECSP0015-NC1', 'upd'],
+            ['200', 'Maria Nueva Excel', 'ALTURAS', '2026-03-01', '', 'ECSP0015-M256412', ''],
+            ['300', 'Sin Tipo', 'INEXISTENTE', '2026-03-01', '', 'ECSP0015-NC3', ''],
         ]);
 
         $this->actingAs($editor)
@@ -112,25 +121,66 @@ class CursosImportTest extends TestCase
 
         $updated = EmployeeCurso::query()
             ->where('document_number', '100')
-            ->where('numero_curso', 'NC-1')
+            ->where('numero_curso', 'ECSP0015-NC1')
             ->firstOrFail();
 
         $this->assertSame('Nombre Ficha Cien', $updated->full_name);
         $this->assertSame('ACTUALIZADO', $updated->estado);
         $this->assertSame('employee-cursos/keep.pdf', $updated->document_path);
         $this->assertSame('keep.pdf', $updated->document_original_name);
+        $this->assertSame($this->escuelaSniper->id, $updated->curso_escuela_id);
+        $this->assertSame('015', $updated->escuela_codigo);
+        $this->assertSame('8050262894', $updated->escuela_nit);
+        $this->assertSame('SNIPER', $updated->escuela_nombre);
 
         $this->assertDatabaseHas('employee_cursos', [
             'document_number' => '200',
-            'numero_curso' => 'NC-2',
+            'numero_curso' => 'ECSP0015-M256412',
             'full_name' => 'Maria Ficha',
             'estado' => 'ACTUALIZADO',
+            'curso_escuela_id' => $this->escuelaSniper->id,
+            'escuela_codigo' => '015',
+            'escuela_nit' => '8050262894',
+            'escuela_nombre' => 'SNIPER',
         ]);
 
         $this->assertDatabaseMissing('employee_cursos', [
             'document_number' => '300',
-            'numero_curso' => 'NC-3',
+            'numero_curso' => 'ECSP0015-NC3',
         ]);
+    }
+
+    public function test_import_resolves_escuela_from_numero_curso_prefix(): void
+    {
+        $this->assertSame('15', CursoEscuela::extractCodigoFromNumeroCurso('ECSP0015-M256412'));
+        $this->assertSame('15', CursoEscuela::normalizeCodigo('015'));
+        $this->assertNull(CursoEscuela::extractCodigoFromNumeroCurso('SINCODIGO'));
+    }
+
+    public function test_import_fails_when_escuela_codigo_not_in_catalog(): void
+    {
+        $editor = $this->editorUser();
+        CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '250',
+            'full_name' => 'Sin Escuela',
+        ]);
+
+        $path = $this->makeImportFile([
+            ['250', 'X', 'ALTURAS', '2026-03-01', '', 'ECSP9999-X1', ''],
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.cursos.registros.import'), [
+                'import_file' => new UploadedFile($path, 'cursos.xlsx', null, null, true),
+            ])
+            ->assertRedirect(route('gestion-humana.cursos.registros'))
+            ->assertSessionHas('import_failures');
+
+        $this->assertStringContainsString(
+            'No hay escuela activa en catalogo con codigo 9999',
+            (string) (session('import_failures')[0]['reason'] ?? ''),
+        );
     }
 
     public function test_import_rejects_cedula_not_in_ficha(): void
@@ -186,7 +236,7 @@ class CursosImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['400', 'Ignorado', 'REENTRENAMIENTO', '2026-05-01', 'OLD-100', 'NEW-200', 'renovado'],
+            ['400', 'Ignorado', 'REENTRENAMIENTO', '2026-05-01', 'OLD-100', 'ECSP0015-NEW200', 'renovado'],
         ]);
 
         $this->actingAs($editor)
@@ -200,10 +250,11 @@ class CursosImportTest extends TestCase
         $this->assertTrue($failures === null || $failures === []);
 
         $curso->refresh();
-        $this->assertSame('NEW-200', $curso->numero_curso);
+        $this->assertSame('ECSP0015-NEW200', $curso->numero_curso);
         $this->assertSame($tipoReent->id, $curso->curso_tipo_id);
         $this->assertSame('2026-05-01', optional($curso->fecha_expedicion)?->format('Y-m-d'));
         $this->assertSame('ACTUALIZADO', $curso->estado);
+        $this->assertSame($this->escuelaSniper->id, $curso->curso_escuela_id);
         $this->assertSame('employee-cursos/old.pdf', $curso->document_path);
         $this->assertSame(1, EmployeeCurso::query()->where('document_number', '400')->count());
         $this->assertDatabaseMissing('employee_cursos', [
@@ -223,7 +274,7 @@ class CursosImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['500', 'X', 'ALTURAS', '2026-05-01', 'NO-EXISTE', 'NEW-1', ''],
+            ['500', 'X', 'ALTURAS', '2026-05-01', 'NO-EXISTE', 'ECSP0015-NEW1', ''],
         ]);
 
         $this->actingAs($editor)
@@ -235,7 +286,7 @@ class CursosImportTest extends TestCase
 
         $this->assertDatabaseMissing('employee_cursos', [
             'document_number' => '500',
-            'numero_curso' => 'NEW-1',
+            'numero_curso' => 'ECSP0015-NEW1',
         ]);
 
         $this->assertStringContainsString(
@@ -265,12 +316,12 @@ class CursosImportTest extends TestCase
             'document_number' => '600',
             'full_name' => 'Colision',
             'curso_tipo_id' => $tipo->id,
-            'numero_curso' => 'TAKEN',
+            'numero_curso' => 'ECSP0015-TAKEN',
             'fecha_expedicion' => '2025-01-01',
         ]);
 
         $path = $this->makeImportFile([
-            ['600', 'X', 'ALTURAS', '2026-05-01', 'OLD-A', 'TAKEN', ''],
+            ['600', 'X', 'ALTURAS', '2026-05-01', 'OLD-A', 'ECSP0015-TAKEN', ''],
         ]);
 
         $this->actingAs($editor)
@@ -305,13 +356,13 @@ class CursosImportTest extends TestCase
             'document_number' => '700',
             'full_name' => 'Mismo Numero',
             'curso_tipo_id' => $tipo->id,
-            'numero_curso' => 'SAME-1',
+            'numero_curso' => 'ECSP0015-SAME1',
             'fecha_expedicion' => '2024-01-01',
             'estado' => EmployeeCurso::ESTADO_PENDIENTE,
         ]);
 
         $path = $this->makeImportFile([
-            ['700', 'X', 'ALTURAS', '2026-06-01', 'SAME-1', 'SAME-1', 'ok'],
+            ['700', 'X', 'ALTURAS', '2026-06-01', 'ECSP0015-SAME1', 'ECSP0015-SAME1', 'ok'],
         ]);
 
         $this->actingAs($editor)
@@ -326,11 +377,12 @@ class CursosImportTest extends TestCase
 
         $row = EmployeeCurso::query()
             ->where('document_number', '700')
-            ->where('numero_curso', 'SAME-1')
+            ->where('numero_curso', 'ECSP0015-SAME1')
             ->firstOrFail();
 
         $this->assertSame('ACTUALIZADO', $row->estado);
         $this->assertSame('2026-06-01', optional($row->fecha_expedicion)?->format('Y-m-d'));
+        $this->assertSame($this->escuelaSniper->id, $row->curso_escuela_id);
         $this->assertSame(1, EmployeeCurso::query()->where('document_number', '700')->count());
     }
 

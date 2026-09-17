@@ -196,6 +196,9 @@
                                     <th>CEDULA</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>TIPO CURSO</th>
+                                    <th>ESCUELA</th>
+                                    <th>CODIGO</th>
+                                    <th>NIT</th>
                                     <th>FECHA EXPEDICION</th>
                                     <th>No.CURSO</th>
                                     <th>VIGENCIA</th>
@@ -240,6 +243,9 @@
                                         <td>{{ $curso->document_number }}</td>
                                         <td>{{ $curso->full_name }}</td>
                                         <td>{{ $curso->cursoTipo?->tipo_curso }}</td>
+                                        <td>{{ $curso->escuela_nombre ?: '—' }}</td>
+                                        <td>{{ $curso->escuela_codigo ?: '—' }}</td>
+                                        <td>{{ $curso->escuela_nit ?: '—' }}</td>
                                         <td>{{ optional($curso->fecha_expedicion)?->format('Y-m-d') }}</td>
                                         <td>{{ $curso->numero_curso }}</td>
                                         <td><span class="{{ $vigenciaClass }}">{{ $vigencia }}</span></td>
@@ -318,6 +324,7 @@
                                                             'document_number' => $curso->document_number,
                                                             'full_name' => $curso->full_name,
                                                             'curso_tipo_id' => (string) $curso->curso_tipo_id,
+                                                            'curso_escuela_id' => $curso->curso_escuela_id ? (string) $curso->curso_escuela_id : '',
                                                             'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d'),
                                                             'numero_curso' => $curso->numero_curso,
                                                             'estado' => $curso->estado ?? '',
@@ -367,6 +374,7 @@
             @if ($canEdit)
                 @include('areas.gestion_humana.cursos.partials.nuevo-modal', [
                     'tipoOptions' => $tipoOptions,
+                    'escuelaOptions' => $escuelaOptions,
                     'estadoOptions' => $estadoOptions,
                     'lookupUrl' => $lookupUrl,
                     'show' => $showNuevoModal,
@@ -418,6 +426,15 @@
                                         <label class="form-label" for="edit_curso_tipo_id">TIPO CURSO</label>
                                         <select id="edit_curso_tipo_id" name="curso_tipo_id" class="form-input" required x-model="editForm.curso_tipo_id">
                                             @foreach ($tipoOptions as $opt)
+                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="edit_curso_escuela_id">ESCUELA</label>
+                                        <select id="edit_curso_escuela_id" name="curso_escuela_id" class="form-input" required x-model="editForm.curso_escuela_id">
+                                            <option value="">Seleccionar escuela</option>
+                                            @foreach ($escuelaOptions as $opt)
                                                 <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
                                             @endforeach
                                         </select>
@@ -586,6 +603,7 @@
                         document_number: '',
                         full_name: '',
                         curso_tipo_id: '',
+                        curso_escuela_id: '',
                         fecha_expedicion: '',
                         numero_curso: '',
                         estado: 'ACTUALIZADO',

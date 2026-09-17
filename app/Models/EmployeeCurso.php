@@ -55,6 +55,10 @@ class EmployeeCurso extends Model
         'document_number',
         'full_name',
         'curso_tipo_id',
+        'curso_escuela_id',
+        'escuela_codigo',
+        'escuela_nit',
+        'escuela_nombre',
         'fecha_expedicion',
         'numero_curso',
         'estado',
@@ -79,6 +83,11 @@ class EmployeeCurso extends Model
     public function cursoTipo(): BelongsTo
     {
         return $this->belongsTo(CursoTipo::class, 'curso_tipo_id');
+    }
+
+    public function cursoEscuela(): BelongsTo
+    {
+        return $this->belongsTo(CursoEscuela::class, 'curso_escuela_id');
     }
 
     public function employeeFichaProfile(): BelongsTo

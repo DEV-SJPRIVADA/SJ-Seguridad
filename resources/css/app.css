@@ -8554,6 +8554,125 @@ a.sj-pagination__item:hover {
     height: 320px;
 }
 
+/* Solicitudes de desarrollo — ancho contenido 80%; pestanas a ancho normal */
+.app-main:has(.development-requests-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.development-requests-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.development-requests-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 80%;
+    max-width: 80%;
+    margin-inline: auto;
+    gap: 0.75rem;
+}
+
+.development-requests-page__panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.development-requests-page__panel > .panel__body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Detalle: el ultimo panel (conversacion) ocupa el resto del main */
+.development-requests-page__stack > .development-requests-page__panel {
+    flex: 1 1 auto;
+}
+
+.development-requests-page__panel .data-table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.development-requests-kpis {
+    flex-shrink: 0;
+    gap: 0.75rem;
+    margin-bottom: 0;
+}
+
+.development-requests-kpis > .req-dashboard-kpi {
+    flex: 1 1 10rem;
+    min-width: 9.5rem;
+}
+
+.development-requests-kpi--sla {
+    --req-kpi-accent: #be123c;
+}
+
+.development-requests-kpi--course {
+    --req-kpi-accent: #b45309;
+}
+
+.development-requests-kpi--done {
+    --req-kpi-accent: #15803d;
+}
+
+.development-requests-page__stack {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+}
+
+.development-requests-page__header-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.development-requests-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.75rem;
+    align-items: end;
+    flex-shrink: 0;
+}
+
+.development-requests-filters__actions {
+    display: flex;
+    align-items: end;
+    padding-bottom: 0.1rem;
+}
+
+.development-requests-overdue-list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.development-requests-overdue-list li + li {
+    margin-top: 0.35rem;
+}
+
+@media (max-width: 768px) {
+    .development-requests-page > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+}
+
 @media (max-width: 900px) {
     .cursos-dashboard-page__charts {
         grid-template-columns: 1fr;

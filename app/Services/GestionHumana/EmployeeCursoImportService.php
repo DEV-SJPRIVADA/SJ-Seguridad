@@ -2,6 +2,7 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
@@ -60,6 +61,7 @@ class EmployeeCursoImportService
         }
 
         $tipoIndex = $this->buildTipoCursoIndex();
+        $escuelaIndex = $this->buildEscuelaCodigoIndex();
         $maxRow = (int) $sheet->getHighestRow();
 
         for ($row = 3; $row <= $maxRow; $row++) {
@@ -111,6 +113,20 @@ class EmployeeCursoImportService
                     throw new \InvalidArgumentException('La fecha de expedicion es obligatoria o invalida.');
                 }
 
+                $escuelaCodigo = CursoEscuela::extractCodigoFromNumeroCurso($numeroCurso);
+                if ($escuelaCodigo === null) {
+                    throw new \InvalidArgumentException(
+                        'No se pudo identificar el codigo de escuela en No.CURSO (formato esperado: PREFIJOCODIGO-RESTO, ej. ECSP0015-M256412).',
+                    );
+                }
+
+                $escuela = $escuelaIndex[$escuelaCodigo] ?? null;
+                if ($escuela === null) {
+                    throw new \InvalidArgumentException(
+                        "No hay escuela activa en catalogo con codigo {$escuelaCodigo} (extraido de No.CURSO).",
+                    );
+                }
+
                 $observaciones = trim((string) ($data['observaciones'] ?? ''));
                 $observaciones = $observaciones === '' ? null : $observaciones;
 
@@ -126,6 +142,7 @@ class EmployeeCursoImportService
                     $numeroAnterior,
                     $fullName,
                     $tipoId,
+                    $escuela,
                     $fecha,
                     $estado,
                     $observaciones,
@@ -171,6 +188,10 @@ class EmployeeCursoImportService
                         'document_number' => $cedula,
                         'full_name' => $fullName,
                         'curso_tipo_id' => $tipoId,
+                        'curso_escuela_id' => $escuela->id,
+                        'escuela_codigo' => $escuela->codigo,
+                        'escuela_nit' => $escuela->nit,
+                        'escuela_nombre' => $escuela->nombre,
                         'fecha_expedicion' => $fecha,
                         'numero_curso' => $numeroCurso,
                         'estado' => $estado,
@@ -218,6 +239,23 @@ class EmployeeCursoImportService
 
         foreach (CursoTipo::query()->get(['id', 'tipo_curso']) as $tipo) {
             $index[mb_strtolower(trim((string) $tipo->tipo_curso))] = (int) $tipo->id;
+        }
+
+        return $index;
+    }
+
+    /**
+     * @return array<string, CursoEscuela>
+     */
+    private function buildEscuelaCodigoIndex(): array
+    {
+        $index = [];
+
+        foreach (CursoEscuela::query()->active()->get(['id', 'codigo', 'nit', 'nombre', 'is_active']) as $escuela) {
+            $key = CursoEscuela::normalizeCodigo((string) $escuela->codigo);
+            if ($key !== '') {
+                $index[$key] = $escuela;
+            }
         }
 
         return $index;

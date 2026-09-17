@@ -3,9 +3,9 @@
         @include('modules.development-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section development-requests-page">
         <div class="app-container">
-            <div class="panel">
+            <div class="panel development-requests-page__panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Aprobacion lider</h3>
                     <p class="panel-text">Solicitudes pendientes de validacion institucional.</p>

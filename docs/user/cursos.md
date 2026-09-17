@@ -11,8 +11,8 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 - **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo.
-- **Cursos** — listado, filtros, alta/edicion/eliminacion, documento, export Excel e import masivo. Con permiso de edición: selección múltiple para marcar a **SOLICITADO**.
-- **Catalogo** — tipos de curso usados en el listado y en el Excel.
+- **Cursos** — listado, filtros, alta/edicion/eliminacion, documento, export Excel e import masivo. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO**.
+- **Catalogo** — tablero de tarjetas (como en Ficha empleados): elija **Tipos de curso** o **Escuelas** (CODIGO, NIT, NOMBRE) para gestionar cada uno.
 
 **En esta version:** el import **no** sube PDFs/imagenes; el documento se carga fila a fila. Desde **Ficha empleados** solo se consultan y descargan cursos (no se editan alla).
 
@@ -22,7 +22,7 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 | --- | --- |
 | VIGENCIA | Calculada por el sistema: **VIGENTE** (curso al dia), **ACTUALIZAR** (faltan ~30 dias o menos para el año), **VENCIDO** (ya paso 1 año desde la fecha de expedicion). |
 | ESTADO | Tramite: **SOLICITADO** (manual), **ACTUALIZADO** (curso vigente) o **PENDIENTE** (por actualizar o vencido, salvo que ya este solicitado). No se carga por Excel. |
-| No.CURSO | Numero actual del curso (unico por cedula). |
+| No.CURSO | Numero actual del curso (unico por cedula). En import, los digitos a la izquierda del guion identifican la escuela (ej. ECSP0015-… → codigo 15). |
 | No.CURSO ANTERIOR | Columna opcional del Excel de import para **renovar** un curso cuando cambia el numero (y/o fecha/tipo). |
 
 ## Responsabilidades
@@ -54,7 +54,7 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 1. En **Cursos**, abra el icono de carga / plantilla masivos y descargue la **plantilla vacia**.
 2. Complete datos desde la fila 3. La **cedula debe existir en Ficha**; el nombre del Excel se **ignora** (se toma de Ficha).
-3. **Alta o correccion del mismo numero:** deje **No.CURSO ANTERIOR** vacio y llene **No.CURSO**.
+3. **Alta o correccion del mismo numero:** deje **No.CURSO ANTERIOR** vacio y llene **No.CURSO** (con formato que incluya el codigo de escuela, ej. `ECSP0015-M256412`). El sistema busca la escuela en el catalogo y guarda codigo, NIT y nombre.
 4. **Renovacion** (cambia No.CURSO, fecha y a veces tipo, p. ej. Fundamentacion → Reentrenamiento):
    - En **No.CURSO ANTERIOR** ponga el numero que hoy tiene el registro vencido.
    - En **No.CURSO** ponga el numero nuevo.
@@ -71,6 +71,10 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.10 | 2026-09-17 | Selector de escuela solo muestra nombre; import identifica escuela por No.CURSO. |
+| 1.9 | 2026-09-17 | Registros: obligatoriedad de escuela; se guardan codigo y NIT. |
+| 1.8 | 2026-09-17 | Catalogo: tablero de tarjetas (tipos / escuelas) como en Ficha empleados. |
+| 1.7 | 2026-09-17 | Catalogo: CRUD de escuelas (codigo, NIT, nombre). |
 | 1.6 | 2026-09-16 | Listado: marcar varios registros a SOLICITADO con confirmación. |
 | 1.5 | 2026-09-16 | Dashboard: grafico de por actualizar/vencidos sin solicitar, por tipo. |
 | 1.4 | 2026-09-16 | Estado PENDIENTE; Excel ya no pide ESTADO (se asigna segun vigencia). |

@@ -9,11 +9,13 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 
 ## Alcance actual
 
-- Pestanas **Dashboard**, **Cursos** (registros) y **Catalogo** (tipos).
+- Pestanas **Dashboard**, **Cursos** (registros) y **Catalogo** (tablero de tarjetas: tipos + escuelas; `?catalog=`).
 - Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit` (bypass `manage.users`).
 - Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton).
   - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
 - Unicidad de registro: `(document_number, numero_curso)`.
+- Al crear/editar registro: seleccionar **escuela** del catalogo (solo nombre en el selector); se guardan snapshot `escuela_codigo`, `escuela_nit` y `escuela_nombre` (mas FK `curso_escuela_id`).
+- Import masivo: la escuela se resuelve automaticamente desde `No.CURSO` (digitos a la izquierda del primer `-`, p. ej. `ECSP0015-M256412` → codigo `15` / `015`).
 - Vigencia calculada (no persistida):
   - **VENCIDO** si `fecha_expedicion + 1 año ≤ hoy` (aniversario cumplido).
   - **ACTUALIZAR** si aún no venció pero `fecha_expedicion < (hoy + 30d) − 365d` (ventana ~30 días antes).
@@ -45,7 +47,9 @@ Prefijo: `/gestion-humana/cursos` · nombre `gestion-humana.cursos.`
 | POST | `/registros/importar` | `registros.import` | Carga masiva. `cursos.edit` |
 | GET | `/registros/importar/reporte/{token}` | `registros.import-report` | Fallos (token ~1 h) |
 | CRUD + documento | `/registros/...` | store/update/destroy/upload/download | Segun permiso |
-| GET | `/catalogo` | `catalogo` | Tipos de curso |
+| GET | `/catalogo` | `catalogo` | Tablero de catalogos (`?catalog=tipos|escuelas` abre seccion) |
+| POST/PATCH/DELETE | `/catalogo/...` | `catalogo.*` | CRUD tipos |
+| POST/PATCH/DELETE | `/catalogo/escuelas/...` | `catalogo.escuelas.*` | CRUD escuelas (codigo, nit, nombre) |
 | Bridge Ficha | rutas ficha `.../cursos` | list/download | Lectura por cedula del perfil |
 
 ## Import masivo
@@ -60,7 +64,7 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 | `tipo_curso` | Si | Match catalogo case-insensitive |
 | `fecha_expedicion` | Si | Fecha valida |
 | `numero_curso_anterior` | No (opcional) | Clave de renovacion |
-| `numero_curso` | Si | Numero nuevo / vigente |
+| `numero_curso` | Si | Numero nuevo / vigente. Debe incluir codigo de escuela a la izquierda del `-` (ej. `ECSP0015-M256412` → escuela `015`). |
 | `estado` | No (no va en plantilla) | Se calcula interno: VIGENTE → `ACTUALIZADO`; ACTUALIZAR/VENCIDO → `PENDIENTE`. Valores validos: `SOLICITADO` / `ACTUALIZADO` / `PENDIENTE` (SOLICITADO solo manual en UI). |
 | `observaciones` | No | |
 
@@ -91,6 +95,10 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.10 | 2026-09-17 | Selector escuela solo nombre; import resuelve escuela desde No.CURSO. |
+| 1.9 | 2026-09-17 | Registros: escuela obligatoria; guarda codigo y NIT en el curso. |
+| 1.8 | 2026-09-17 | Catalogo reorganizado como tablero de tarjetas (patron ficha-empleados/catalogos). |
+| 1.7 | 2026-09-17 | Catalogo: CRUD escuelas (codigo, NIT, nombre). |
 | 1.6 | 2026-09-16 | Registros: marcado masivo a SOLICITADO con selección, preview y confirmación irreversible. |
 | 1.5 | 2026-09-16 | Dashboard: grafico de ACTUALIZAR/VENCIDO no solicitados por tipo de curso. |
 | 1.4 | 2026-09-16 | Estado: `PENDIENTE` + sync por vigencia (comando diario / import sin columna ESTADO). |

@@ -149,7 +149,7 @@ class CursosBoardAccessTest extends TestCase
                 'cargo_acredit' => 'Acreditado',
                 'is_active' => '1',
             ])
-            ->assertRedirect(route('gestion-humana.cursos.catalogo'));
+            ->assertRedirect(route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos']));
 
         $this->assertDatabaseHas('curso_tipos', [
             'tipo_curso' => 'ALTURAS',
@@ -172,7 +172,7 @@ class CursosBoardAccessTest extends TestCase
 
         $this->actingAs($editor)
             ->delete(route('gestion-humana.cursos.catalogo.destroy', $tipo))
-            ->assertRedirect(route('gestion-humana.cursos.catalogo'))
+            ->assertRedirect(route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos']))
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('curso_tipos', [
@@ -188,7 +188,7 @@ class CursosBoardAccessTest extends TestCase
 
         $this->actingAs($editor)
             ->delete(route('gestion-humana.cursos.catalogo.destroy', $tipo))
-            ->assertRedirect(route('gestion-humana.cursos.catalogo'))
+            ->assertRedirect(route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos']))
             ->assertSessionHas('status');
 
         $this->assertDatabaseMissing('curso_tipos', ['id' => $tipo->id]);

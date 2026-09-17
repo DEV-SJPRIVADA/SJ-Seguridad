@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,6 +23,10 @@ class EmployeeCursoFactory extends Factory
             'document_number' => fake()->numerify('##########'),
             'full_name' => fake()->name(),
             'curso_tipo_id' => CursoTipo::factory(),
+            'curso_escuela_id' => null,
+            'escuela_codigo' => null,
+            'escuela_nit' => null,
+            'escuela_nombre' => null,
             'fecha_expedicion' => fake()->dateTimeBetween('-2 years', 'now')->format('Y-m-d'),
             'numero_curso' => fake()->unique()->bothify('NC-####'),
             'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
@@ -34,5 +39,19 @@ class EmployeeCursoFactory extends Factory
             'created_by' => null,
             'updated_by' => null,
         ];
+    }
+
+    public function withEscuela(?CursoEscuela $escuela = null): static
+    {
+        return $this->state(function () use ($escuela): array {
+            $escuela ??= CursoEscuela::factory()->create();
+
+            return [
+                'curso_escuela_id' => $escuela->id,
+                'escuela_codigo' => $escuela->codigo,
+                'escuela_nit' => $escuela->nit,
+                'escuela_nombre' => $escuela->nombre,
+            ];
+        });
     }
 }

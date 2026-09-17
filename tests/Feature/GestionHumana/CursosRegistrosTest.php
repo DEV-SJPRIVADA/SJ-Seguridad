@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\GestionHumana;
 
+use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
@@ -81,12 +82,18 @@ class CursosRegistrosTest extends TestCase
     {
         $editor = $this->editorUser();
         $tipo = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
+        $escuela = CursoEscuela::factory()->create([
+            'codigo' => '015',
+            'nit' => '8050262894',
+            'nombre' => 'SNIPER',
+        ]);
 
         $this->actingAs($editor)
             ->post(route('gestion-humana.cursos.registros.store'), [
                 'document_number' => '111',
                 'full_name' => 'Juan Perez',
                 'curso_tipo_id' => $tipo->id,
+                'curso_escuela_id' => $escuela->id,
                 'fecha_expedicion' => '2026-01-01',
                 'numero_curso' => 'NC-1',
                 'estado' => 'SOLICITADO',
@@ -98,6 +105,10 @@ class CursosRegistrosTest extends TestCase
             'document_number' => '111',
             'numero_curso' => 'NC-1',
             'full_name' => 'Juan Perez',
+            'curso_escuela_id' => $escuela->id,
+            'escuela_codigo' => '015',
+            'escuela_nit' => '8050262894',
+            'escuela_nombre' => 'SNIPER',
         ]);
 
         Storage::fake('local');
@@ -108,6 +119,7 @@ class CursosRegistrosTest extends TestCase
                 'document_number' => '222',
                 'full_name' => 'Con Documento',
                 'curso_tipo_id' => $tipo->id,
+                'curso_escuela_id' => $escuela->id,
                 'fecha_expedicion' => '2026-01-01',
                 'numero_curso' => 'NC-DOC',
                 'estado' => 'ACTUALIZADO',
@@ -129,6 +141,7 @@ class CursosRegistrosTest extends TestCase
                 'document_number' => '111',
                 'full_name' => 'Juan Perez',
                 'curso_tipo_id' => $tipo->id,
+                'curso_escuela_id' => $escuela->id,
                 'fecha_expedicion' => '2026-02-01',
                 'numero_curso' => 'NC-1',
                 'estado' => 'SOLICITADO',
@@ -138,11 +151,18 @@ class CursosRegistrosTest extends TestCase
 
         $curso = EmployeeCurso::query()->firstOrFail();
 
+        $otraEscuela = CursoEscuela::factory()->create([
+            'codigo' => '411',
+            'nit' => '8300211325',
+            'nombre' => 'ESC. COLOMBIANA',
+        ]);
+
         $this->actingAs($editor)
             ->patch(route('gestion-humana.cursos.registros.update', $curso), [
                 'document_number' => '111',
                 'full_name' => 'Juan Perez Actualizado',
                 'curso_tipo_id' => $tipo->id,
+                'curso_escuela_id' => $otraEscuela->id,
                 'fecha_expedicion' => '2026-03-01',
                 'numero_curso' => 'NC-1',
                 'estado' => 'ACTUALIZADO',
@@ -153,7 +173,30 @@ class CursosRegistrosTest extends TestCase
             'id' => $curso->id,
             'full_name' => 'Juan Perez Actualizado',
             'estado' => 'ACTUALIZADO',
+            'curso_escuela_id' => $otraEscuela->id,
+            'escuela_codigo' => '411',
+            'escuela_nit' => '8300211325',
+            'escuela_nombre' => 'ESC. COLOMBIANA',
         ]);
+    }
+
+    public function test_store_requires_active_escuela(): void
+    {
+        $editor = $this->editorUser();
+        $tipo = CursoTipo::factory()->create();
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.cursos.registros'))
+            ->post(route('gestion-humana.cursos.registros.store'), [
+                'document_number' => '333',
+                'full_name' => 'Sin Escuela',
+                'curso_tipo_id' => $tipo->id,
+                'fecha_expedicion' => '2026-01-01',
+                'numero_curso' => 'NC-NO-ESC',
+                'estado' => 'ACTUALIZADO',
+            ])
+            ->assertRedirect(route('gestion-humana.cursos.registros'))
+            ->assertSessionHasErrors('curso_escuela_id');
     }
 
     public function test_document_upload_download_and_destroy_with_record(): void

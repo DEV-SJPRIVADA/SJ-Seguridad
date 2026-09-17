@@ -29,6 +29,17 @@ class UpdateEmployeeCursoRequest extends FormRequest
             'document_number' => ['required', 'string', 'max:50'],
             'full_name' => ['required', 'string', 'max:255'],
             'curso_tipo_id' => ['required', 'integer', Rule::exists('curso_tipos', 'id')],
+            'curso_escuela_id' => [
+                'required',
+                'integer',
+                Rule::exists('curso_escuelas', 'id')->where(function ($query) use ($curso) {
+                    $query->where('is_active', true);
+
+                    if ($curso->curso_escuela_id) {
+                        $query->orWhere('id', $curso->curso_escuela_id);
+                    }
+                }),
+            ],
             'fecha_expedicion' => ['required', 'date'],
             'numero_curso' => [
                 'required',
@@ -53,6 +64,8 @@ class UpdateEmployeeCursoRequest extends FormRequest
             'full_name.required' => 'El nombre completo es obligatorio.',
             'curso_tipo_id.required' => 'El tipo de curso es obligatorio.',
             'curso_tipo_id.exists' => 'El tipo de curso no existe en el catálogo.',
+            'curso_escuela_id.required' => 'La escuela es obligatoria.',
+            'curso_escuela_id.exists' => 'La escuela no existe o no está activa en el catálogo.',
             'fecha_expedicion.required' => 'La fecha de expedición es obligatoria.',
             'numero_curso.required' => 'El número de curso es obligatorio.',
             'numero_curso.unique' => 'Ya existe un curso con esa cédula y número.',

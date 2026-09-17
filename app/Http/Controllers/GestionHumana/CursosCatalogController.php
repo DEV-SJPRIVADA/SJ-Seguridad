@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\GestionHumana;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\Cursos\StoreCursoEscuelaRequest;
 use App\Http\Requests\GestionHumana\Cursos\StoreCursoTipoRequest;
+use App\Http\Requests\GestionHumana\Cursos\UpdateCursoEscuelaRequest;
 use App\Http\Requests\GestionHumana\Cursos\UpdateCursoTipoRequest;
+use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Services\Access\CursosAccessService;
 use App\Services\GestionHumana\CursosAuditLogService;
@@ -31,9 +34,14 @@ class CursosCatalogController extends Controller
             ->ordered()
             ->get();
 
+        $escuelas = CursoEscuela::query()
+            ->ordered()
+            ->get();
+
         return view('areas.gestion_humana.cursos.catalogo', [
             'subTabs' => $this->getCursosSubTabs('catalogo'),
             'tipos' => $tipos,
+            'escuelas' => $escuelas,
         ]);
     }
 
@@ -78,7 +86,7 @@ class CursosCatalogController extends Controller
         );
 
         return redirect()
-            ->route('gestion-humana.cursos.catalogo')
+            ->route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos'])
             ->with('status', 'Tipo de curso creado correctamente.');
     }
 
@@ -112,7 +120,7 @@ class CursosCatalogController extends Controller
         );
 
         return redirect()
-            ->route('gestion-humana.cursos.catalogo')
+            ->route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos'])
             ->with('status', 'Tipo de curso actualizado correctamente.');
     }
 
@@ -122,7 +130,7 @@ class CursosCatalogController extends Controller
 
         if ($cursoTipo->employeeCursos()->exists()) {
             return redirect()
-                ->route('gestion-humana.cursos.catalogo')
+                ->route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos'])
                 ->with('error', 'No se puede eliminar un tipo de curso que tiene registros asociados.');
         }
 
@@ -141,7 +149,83 @@ class CursosCatalogController extends Controller
         );
 
         return redirect()
-            ->route('gestion-humana.cursos.catalogo')
+            ->route('gestion-humana.cursos.catalogo', ['catalog' => 'tipos'])
             ->with('status', 'Tipo de curso eliminado.');
+    }
+
+    public function storeEscuela(StoreCursoEscuelaRequest $request): RedirectResponse
+    {
+        $escuela = CursoEscuela::query()->create([
+            'codigo' => $request->string('codigo')->toString(),
+            'nit' => $request->string('nit')->toString(),
+            'nombre' => $request->string('nombre')->toString(),
+            'is_active' => $request->boolean('is_active', true),
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'curso_escuela',
+            action: 'store',
+            metadata: [
+                'curso_escuela_id' => $escuela->id,
+                'codigo' => $escuela->codigo,
+                'nit' => $escuela->nit,
+            ],
+            model: $escuela,
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.cursos.catalogo', ['catalog' => 'escuelas'])
+            ->with('status', 'Escuela creada correctamente.');
+    }
+
+    public function updateEscuela(UpdateCursoEscuelaRequest $request, CursoEscuela $cursoEscuela): RedirectResponse
+    {
+        $before = $cursoEscuela->only(['codigo', 'nit', 'nombre', 'is_active']);
+
+        $cursoEscuela->update([
+            'codigo' => $request->string('codigo')->toString(),
+            'nit' => $request->string('nit')->toString(),
+            'nombre' => $request->string('nombre')->toString(),
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        $this->auditLogService->logModelChange(
+            eventType: 'curso_escuela',
+            action: 'update',
+            model: $cursoEscuela,
+            before: $before,
+            after: $cursoEscuela->only(array_keys($before)),
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.cursos.catalogo', ['catalog' => 'escuelas'])
+            ->with('status', 'Escuela actualizada correctamente.');
+    }
+
+    public function destroyEscuela(CursoEscuela $cursoEscuela): RedirectResponse
+    {
+        abort_unless($this->cursosAccess->canEdit(auth()->user()), 403);
+
+        $metadata = [
+            'curso_escuela_id' => $cursoEscuela->id,
+            'codigo' => $cursoEscuela->codigo,
+            'nit' => $cursoEscuela->nit,
+        ];
+
+        $cursoEscuela->delete();
+
+        $this->auditLogService->logEvent(
+            eventType: 'curso_escuela',
+            action: 'delete',
+            metadata: $metadata,
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.cursos.catalogo', ['catalog' => 'escuelas'])
+            ->with('status', 'Escuela eliminada.');
     }
 }

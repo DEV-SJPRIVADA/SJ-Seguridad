@@ -3,11 +3,11 @@
         @include('modules.development-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section development-requests-page">
         <div class="app-container">
-            <div class="panel">
+            <div class="panel development-requests-page__panel">
                 <div class="panel__header panel__header--compact">
-                    <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
+                    <div class="development-requests-page__header-row">
                         <div>
                             <h3 class="panel-title">Mis solicitudes</h3>
                             <p class="panel-text panel-text--compact">Solicitudes de desarrollo creadas por usted.</p>

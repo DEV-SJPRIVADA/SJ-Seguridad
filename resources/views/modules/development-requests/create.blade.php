@@ -3,9 +3,9 @@
         @include('modules.development-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section development-requests-page">
         <div class="app-container">
-            <div class="panel">
+            <div class="panel development-requests-page__panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Nueva solicitud de desarrollo (FO-TIC-23)</h3>
                     <p class="panel-text">Diligencie los campos obligatorios. Si usted es el lider seleccionado, al enviar se radica de inmediato.</p>

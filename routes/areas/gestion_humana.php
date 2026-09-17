@@ -122,6 +122,9 @@ Route::middleware(['password.changed'])
 
         Route::get('/catalogo', [CursosCatalogController::class, 'index'])->name('catalogo');
         Route::get('/catalogo/opciones', [CursosCatalogController::class, 'options'])->name('catalogo.options');
+        Route::post('/catalogo/escuelas', [CursosCatalogController::class, 'storeEscuela'])->name('catalogo.escuelas.store');
+        Route::patch('/catalogo/escuelas/{cursoEscuela}', [CursosCatalogController::class, 'updateEscuela'])->name('catalogo.escuelas.update');
+        Route::delete('/catalogo/escuelas/{cursoEscuela}', [CursosCatalogController::class, 'destroyEscuela'])->name('catalogo.escuelas.destroy');
         Route::post('/catalogo', [CursosCatalogController::class, 'store'])->name('catalogo.store');
         Route::patch('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'update'])->name('catalogo.update');
         Route::delete('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'destroy'])->name('catalogo.destroy');

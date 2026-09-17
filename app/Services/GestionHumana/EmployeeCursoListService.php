@@ -24,7 +24,7 @@ class EmployeeCursoListService
      */
     public function filteredQuery(array $filters, bool $ordered = true): Builder
     {
-        $query = EmployeeCurso::query()->with(['cursoTipo']);
+        $query = EmployeeCurso::query()->with(['cursoTipo', 'cursoEscuela']);
 
         if ($ordered) {
             $query->orderByDesc('fecha_expedicion')->orderByDesc('id');

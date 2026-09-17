@@ -53,7 +53,7 @@
                         </span>
                         <div>
                             <h4 class="ficha-empleados-masivos-modal__card-title">Importar</h4>
-                            <p class="ficha-empleados-masivos-modal__card-note">Alta por cédula + No.CURSO. Renovación: use No.CURSO ANTERIOR para ubicar el registro (si no hay match, la fila falla; no crea duplicados). La cédula debe existir en Ficha; el nombre se toma de Ficha. No incluye documentos.</p>
+                            <p class="ficha-empleados-masivos-modal__card-note">Alta por cédula + No.CURSO. La escuela se deduce del No.CURSO (digitos a la izquierda del guion, ej. ECSP0015-M256412 → codigo 15). Renovación: use No.CURSO ANTERIOR para ubicar el registro (si no hay match, la fila falla; no crea duplicados). La cédula debe existir en Ficha; el nombre se toma de Ficha. No incluye documentos.</p>
                         </div>
                     </div>
 

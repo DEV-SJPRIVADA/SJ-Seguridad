@@ -3,42 +3,42 @@
         @include('modules.development-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section development-requests-page">
         <div class="app-container">
-            <div class="dashboard-stat-grid bottom-spaced">
-                <div class="panel panel--stat">
-                    <p class="panel-text panel-text--compact">Recibidos (radicados)</p>
-                    <p class="panel-title">{{ $kpis['recibidos'] }}</p>
+            <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis development-requests-kpis">
+                <div class="req-dashboard-kpi req-dashboard-kpi--total">
+                    <p class="req-dashboard-kpi__label">Recibidos</p>
+                    <p class="req-dashboard-kpi__value">{{ $kpis['recibidos'] }}</p>
                 </div>
-                <div class="panel panel--stat">
-                    <p class="panel-text panel-text--compact">En curso</p>
-                    <p class="panel-title">{{ $kpis['en_curso'] }}</p>
+                <div class="req-dashboard-kpi development-requests-kpi--course">
+                    <p class="req-dashboard-kpi__label">En curso</p>
+                    <p class="req-dashboard-kpi__value">{{ $kpis['en_curso'] }}</p>
                 </div>
-                <div class="panel panel--stat">
-                    <p class="panel-text panel-text--compact">Entregados / cerrados</p>
-                    <p class="panel-title">{{ $kpis['entregados'] }}</p>
+                <div class="req-dashboard-kpi development-requests-kpi--done">
+                    <p class="req-dashboard-kpi__label">Entregados / cerrados</p>
+                    <p class="req-dashboard-kpi__value">{{ $kpis['entregados'] }}</p>
                 </div>
-                <div class="panel panel--stat">
-                    <p class="panel-text panel-text--compact">Vencidos SLA analisis</p>
-                    <p class="panel-title">{{ $kpis['vencidos_sla'] }}</p>
+                <div class="req-dashboard-kpi development-requests-kpi--sla">
+                    <p class="req-dashboard-kpi__label">Vencidos SLA analisis</p>
+                    <p class="req-dashboard-kpi__value">{{ $kpis['vencidos_sla'] }}</p>
                 </div>
             </div>
 
             @if (count($overdue) > 0)
-                <div class="panel bottom-spaced">
-                    <div class="panel__header">
+                <div class="panel">
+                    <div class="panel__header panel__header--compact">
                         <h3 class="panel-title">SLA analisis vencido</h3>
-                        <p class="panel-text">Urgente 2d · Importante/Mejora 5d · Soporte 3d (desde radicacion).</p>
+                        <p class="panel-text panel-text--compact">Urgente 2d · Importante/Mejora 5d · Soporte 3d (desde radicacion).</p>
                     </div>
-                    <div class="panel__body">
-                        <ul>
+                    <div class="panel__body panel__body--compact">
+                        <ul class="development-requests-overdue-list">
                             @foreach (array_slice($overdue, 0, 10) as $item)
                                 <li>
                                     <a href="{{ route('development-requests.show', ['module' => $module, 'development_request' => $item['id'], 'from' => 'tic_queue']) }}">
                                         {{ $item['code'] ?: '#'.$item['id'] }}
                                     </a>
                                     — {{ $item['title'] }}
-                                    ({{ $item['days_open'] }}d / SLA {{ $item['sla_days'] }}d · {{ $item['priority'] }})
+                                    <span class="text-caption">({{ $item['days_open'] }}d / SLA {{ $item['sla_days'] }}d · {{ $item['priority'] }})</span>
                                 </li>
                             @endforeach
                         </ul>
@@ -46,9 +46,9 @@
                 </div>
             @endif
 
-            <div class="panel">
+            <div class="panel development-requests-page__panel">
                 <div class="panel__header panel__header--compact">
-                    <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
+                    <div class="development-requests-page__header-row">
                         <div>
                             <h3 class="panel-title">Bandeja TIC</h3>
                             <p class="panel-text panel-text--compact">Solicitudes radicadas y en curso. Abra el detalle para transicionar estado, UAT y chat.</p>
@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <div class="panel__body">
-                    <form method="GET" action="{{ route('development-requests.tic-queue', ['module' => $module]) }}" class="bottom-spaced" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.75rem;align-items:end;">
+                    <form method="GET" action="{{ route('development-requests.tic-queue', ['module' => $module]) }}" class="development-requests-filters bottom-spaced">
                         <div class="form-field">
                             <label class="form-label">Estado</label>
                             <x-searchable-select name="status" :options="$statusOptions" :value="$filters['status']" placeholder="Todos" :allowClear="true" />
@@ -70,7 +70,7 @@
                             <label class="form-label">Prioridad</label>
                             <x-searchable-select name="priority" :options="$priorityOptions" :value="$filters['priority']" placeholder="Todas" :allowClear="true" />
                         </div>
-                        <div>
+                        <div class="development-requests-filters__actions">
                             <button type="submit" class="btn btn--secondary btn--sm">Filtrar</button>
                         </div>
                     </form>
