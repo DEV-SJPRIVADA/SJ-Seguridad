@@ -12,6 +12,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 - Pestanas **Dashboard**, **Cursos** (registros) y **Catalogo** (tipos).
 - Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit` (bypass `manage.users`).
 - Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton).
+  - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
 - Unicidad de registro: `(document_number, numero_curso)`.
 - Vigencia calculada (no persistida):
   - **VENCIDO** si `fecha_expedicion + 1 año ≤ hoy` (aniversario cumplido).
@@ -22,6 +23,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
   - `SOLICITADO` solo se asigna manualmente en el formulario; el job diario lo conserva.
   - Comando `cursos:sync-estados` (schedule diario 06:15 America/Bogota); `--backfill` fuerza VIGENTE → ACTUALIZADO (ajuste inicial).
   - La plantilla Excel **no** incluye columna ESTADO.
+  - Listado: marcado masivo a `SOLICITADO` con checkboxes (uno a uno / todos elegibles del filtro), modal con listado previo, aviso de no reversión y checkbox de confirmación obligatoria.
 - Documento: 1 archivo por registro (PDF/JPG/PNG/WEBP); no viaja en Excel.
 - Bridge Ficha: listar/descargar cursos del empleado (sin mutar desde Ficha).
 - Import masivo: ver seccion Import abajo. Export listado respeta filtros (sin columna de renovacion).
@@ -37,6 +39,7 @@ Prefijo: `/gestion-humana/cursos` · nombre `gestion-humana.cursos.`
 | GET | `/dashboard` | `dashboard` | Vista KPIs/graficos. `cursos.view` |
 | GET | `/dashboard/metrics` | `dashboard.metrics` | JSON filtros → KPIs/charts |
 | GET | `/registros` | `registros` | Listado + filtros |
+| POST | `/registros/marcar-solicitado` | `registros.bulk-mark-solicitado` | Marca masiva a `SOLICITADO` (ids seleccionados). `cursos.edit`. Requiere confirmación. |
 | GET | `/registros/exportar` | `registros.export` | Excel filtrado (`BaseExport`) |
 | GET | `/registros/plantilla-importacion` | `registros.import-template` | Plantilla vacia. `cursos.edit` |
 | POST | `/registros/importar` | `registros.import` | Carga masiva. `cursos.edit` |
@@ -88,6 +91,8 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.6 | 2026-09-16 | Registros: marcado masivo a SOLICITADO con selección, preview y confirmación irreversible. |
+| 1.5 | 2026-09-16 | Dashboard: grafico de ACTUALIZAR/VENCIDO no solicitados por tipo de curso. |
 | 1.4 | 2026-09-16 | Estado: `PENDIENTE` + sync por vigencia (comando diario / import sin columna ESTADO). |
 | 1.3 | 2026-09-16 | Vigencia: estado **VENCIDO** cuando `fecha_expedicion + 1 año ≤ hoy`; ACTUALIZAR queda como ventana previa (~30 días). |
 | 1.2 | 2026-09-16 | Pestaña Dashboard (KPIs, gráficos, filtros AJAX, tendencia mensual nuevos/actualizaciones). |

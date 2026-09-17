@@ -75,6 +75,43 @@ class EmployeeCursoDashboardService
             ->map->count()
             ->sortDesc();
 
+        $pendientesRenovacion = $rows->filter(function (EmployeeCurso $curso): bool {
+            if ($curso->estado === EmployeeCurso::ESTADO_SOLICITADO) {
+                return false;
+            }
+
+            $vigencia = $curso->computeVigencia();
+
+            return in_array($vigencia, [
+                EmployeeCurso::VIGENCIA_ACTUALIZAR,
+                EmployeeCurso::VIGENCIA_VENCIDO,
+            ], true);
+        });
+
+        $pendientesRenovacionPorTipo = $pendientesRenovacion
+            ->groupBy(fn (EmployeeCurso $curso): string => $curso->cursoTipo?->tipo_curso ?: 'Sin tipo')
+            ->map(function (Collection $group, string $tipo): array {
+                $byVigencia = $group->countBy(
+                    fn (EmployeeCurso $curso): string => $curso->computeVigencia()
+                );
+
+                $actualizar = (int) ($byVigencia[EmployeeCurso::VIGENCIA_ACTUALIZAR] ?? 0);
+                $vencidos = (int) ($byVigencia[EmployeeCurso::VIGENCIA_VENCIDO] ?? 0);
+
+                return [
+                    'tipo' => $tipo,
+                    'actualizar' => $actualizar,
+                    'vencidos' => $vencidos,
+                    'total' => $actualizar + $vencidos,
+                ];
+            })
+            ->sortBy([
+                ['total', 'desc'],
+                ['tipo', 'asc'],
+            ])
+            ->take(12)
+            ->values();
+
         $nuevosPorMes = array_fill(1, 12, 0);
         $actualizadosPorMes = array_fill(1, 12, 0);
 
@@ -122,6 +159,11 @@ class EmployeeCursoDashboardService
                 'by_estado' => [
                     'labels' => $byEstado->keys()->values()->all(),
                     'data' => $byEstado->values()->map(fn ($v) => (int) $v)->all(),
+                ],
+                'pendientes_renovacion_by_tipo' => [
+                    'labels' => $pendientesRenovacionPorTipo->pluck('tipo')->all(),
+                    'actualizar' => $pendientesRenovacionPorTipo->pluck('actualizar')->all(),
+                    'vencidos' => $pendientesRenovacionPorTipo->pluck('vencidos')->all(),
                 ],
                 'trend' => [
                     'year' => $anio,

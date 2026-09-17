@@ -8,6 +8,7 @@ use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
+use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -27,6 +28,7 @@ class SidebarVisibilityService
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly PurchaseAccessService $purchaseAccess,
+        private readonly DevelopmentRequestAccessService $developmentRequestAccess,
     ) {}
 
     public function shouldShowArea(User $user, string $areaKey): bool
@@ -47,6 +49,7 @@ class SidebarVisibilityService
             'suministros' => $this->shouldShowSupplyBoard($user, $areaKey),
             'solicitudes_compra' => $this->shouldShowPurchaseBoard($user, $areaKey),
             'bandeja_compras' => $this->shouldShowBandejaComprasBoard($user, $areaKey),
+            'solicitudes_desarrollo' => $this->shouldShowDevelopmentRequestBoard($user, $areaKey),
             'documentos' => $this->shouldShowDocumentsBoard($user, $areaKey),
             'ficha_empleados' => $this->shouldShowFichaEmpleadosBoard($user, $areaKey),
             'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
@@ -127,6 +130,24 @@ class SidebarVisibilityService
 
         return $user->can('purchase.tab.processing')
             || $user->can('view.board.compras.bandeja_compras');
+    }
+
+    private function shouldShowDevelopmentRequestBoard(User $user, string $areaKey): bool
+    {
+        if ($this->developmentRequestAccess->baseAreaBoardVisible($user, $areaKey)) {
+            return true;
+        }
+
+        if ($areaKey === 'tic' && $this->hasTicDevelopmentRequestScope($user)) {
+            return true;
+        }
+
+        if ($this->hasTicDevelopmentRequestScope($user) && $areaKey !== 'tic') {
+            // Roles TIC transversales solo ven el hogar canónico.
+            return false;
+        }
+
+        return $user->can("view.board.{$areaKey}.solicitudes_desarrollo");
     }
 
     private function shouldShowDocumentsBoard(User $user, string $areaKey): bool
@@ -252,6 +273,13 @@ class SidebarVisibilityService
             || $user->can('manage.users');
     }
 
+    private function hasTicDevelopmentRequestScope(User $user): bool
+    {
+        return $user->can('devreq.tab.tic_queue')
+            || $user->can('devreq.tab.view')
+            || $user->can('manage.users');
+    }
+
     /**
      * @return array<int, string>
      */
@@ -263,6 +291,7 @@ class SidebarVisibilityService
             'calidad',
             'operaciones',
             'comercial',
+            'tic',
         ];
 
         if ($user->hasAssignedArea() && ! in_array($user->area_key, $areas, true)) {

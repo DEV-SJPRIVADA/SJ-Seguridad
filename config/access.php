@@ -47,6 +47,13 @@ return [
         'purchase.tab.my_requests' => 'Solicitudes compra: Mis solicitudes',
         'purchase.tab.approval' => 'Solicitudes compra: Autorizar (director)',
         'purchase.tab.processing' => 'Compras: Bandeja de procesamiento',
+
+        // Solicitudes de desarrollo (TIC)
+        'devreq.tab.create' => 'Solicitudes desarrollo: Crear',
+        'devreq.tab.my_requests' => 'Solicitudes desarrollo: Mis solicitudes',
+        'devreq.tab.leader_approval' => 'Solicitudes desarrollo: Aprobacion lider',
+        'devreq.tab.tic_queue' => 'Solicitudes desarrollo: Bandeja TIC',
+        'devreq.tab.view' => 'Solicitudes desarrollo: Consulta',
     ],
 
     'area_indicador_permissions' => [
@@ -73,7 +80,7 @@ return [
         'calidad' => 'Calidad',
         'admin_financiero' => 'Admin y Financiero',
         'compras' => 'Compras',
-        'Tic' => 'Tic',
+        'tic' => 'TIC',
     ],
 
     'area_actions' => [
@@ -89,6 +96,7 @@ return [
         'suministros' => 'Suministros',
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
+        'solicitudes_desarrollo' => 'Solicitudes desarrollo',
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
         'cursos' => 'Cursos',
@@ -119,6 +127,10 @@ return [
         'bandeja_compras' => [
             'home' => 'compras',
             'base_area_tab' => false,
+        ],
+        'solicitudes_desarrollo' => [
+            'home' => 'tic',
+            'base_area_tab' => true,
         ],
         'documentos' => [
             'home' => null,
@@ -212,6 +224,13 @@ return [
         'bandeja_compras' => 'Bandeja compras',
     ],
 
+    'devreq_tabs' => [
+        'nueva' => 'Nueva solicitud',
+        'mis_solicitudes' => 'Mis solicitudes',
+        'aprobacion_lider' => 'Aprobacion lider',
+        'bandeja_tic' => 'Bandeja TIC',
+    ],
+
     'quality_document_tabs' => [
         'biblioteca' => 'Biblioteca',
         'mis_documentos' => 'Mis documentos',
@@ -259,6 +278,8 @@ return [
             'supply.tab.my_requests',
             'purchase.tab.create',
             'purchase.tab.my_requests',
+            'devreq.tab.create',
+            'devreq.tab.my_requests',
         ],
         'global_groups' => [
             'administration' => [
@@ -304,6 +325,12 @@ return [
                 'label' => 'Directores — Autorizacion compras',
                 'permissions' => [
                     'purchase.tab.approval',
+                ],
+            ],
+            'development_requests' => [
+                'label' => 'Solicitudes de desarrollo — Aprobacion lider',
+                'permissions' => [
+                    'devreq.tab.leader_approval',
                 ],
             ],
             'documents' => [
@@ -446,6 +473,26 @@ return [
                         'permissions' => [
                             'view.area.calidad',
                             'manage.area.calidad',
+                        ],
+                    ],
+                ],
+            ],
+            'tic' => [
+                'label' => 'TIC',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros',
+                        'permissions' => [
+                            'view.board.tic.solicitudes_desarrollo',
+                            'view.board.tic.dashboard',
+                        ],
+                    ],
+                    'development_requests' => [
+                        'label' => 'Solicitudes de desarrollo (funciones)',
+                        'permissions' => [
+                            'devreq.tab.tic_queue',
+                            'devreq.tab.view',
+                            'devreq.tab.leader_approval',
                         ],
                     ],
                 ],

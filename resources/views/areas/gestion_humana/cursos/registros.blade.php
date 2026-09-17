@@ -19,6 +19,9 @@
         x-data="cursosRegistros({
             lookupUrl: @js($lookupUrl),
             canEdit: @js($canEdit),
+            bulkMarkSolicitadoUrl: @js($bulkMarkSolicitadoUrl ?? null),
+            activeFilterQuery: @js($activeFilterQuery ?? []),
+            bulkSelectableRows: @js($bulkSelectableRows ?? []),
         })"
     >
         <div class="app-container">
@@ -142,6 +145,16 @@
                                 <div class="cursos-registros-page__table-actions">
                                     <button
                                         type="button"
+                                        class="btn btn--primary btn--sm"
+                                        x-show="selectedCount > 0"
+                                        x-cloak
+                                        x-on:click="openBulkConfirm()"
+                                    >
+                                        Marcar SOLICITADO
+                                        (<span x-text="selectedCount"></span>)
+                                    </button>
+                                    <button
+                                        type="button"
                                         class="ficha-empleados-filters__bulk-icon cursos-registros-page__add-btn"
                                         title="Nuevo registro"
                                         aria-label="Nuevo registro"
@@ -161,10 +174,25 @@
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
+                            @if ($canEdit) data-order='[[1, "asc"]]' @endif
                             style="width:100%"
                         >
                             <thead>
                                 <tr>
+                                    @if ($canEdit)
+                                        <th class="cursos-registros-page__select-col" data-orderable="false">
+                                            <label class="cursos-registros-page__select-label" title="Seleccionar todos los elegibles del filtro actual">
+                                                <input
+                                                    type="checkbox"
+                                                    class="cursos-registros-page__select-checkbox"
+                                                    x-bind:checked="allEligibleSelected"
+                                                    x-bind:disabled="bulkSelectableRows.length === 0"
+                                                    x-on:change="toggleSelectAll($event.target.checked)"
+                                                    aria-label="Seleccionar todos"
+                                                >
+                                            </label>
+                                        </th>
+                                    @endif
                                     <th>CEDULA</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>TIPO CURSO</th>
@@ -188,8 +216,27 @@
                                             \App\Models\EmployeeCurso::VIGENCIA_ACTUALIZAR => 'status-pill status-pill--warning',
                                             default => 'status-pill status-pill--danger',
                                         };
+                                        $canSelect = $canEdit && $curso->estado !== \App\Models\EmployeeCurso::ESTADO_SOLICITADO;
                                     @endphp
                                     <tr>
+                                        @if ($canEdit)
+                                            <td class="cursos-registros-page__select-col" data-order="{{ $canSelect ? 0 : 1 }}">
+                                                @if ($canSelect)
+                                                    <label class="cursos-registros-page__select-label">
+                                                        <input
+                                                            type="checkbox"
+                                                            class="cursos-registros-page__select-checkbox"
+                                                            value="{{ $curso->id }}"
+                                                            x-bind:checked="isSelected({{ $curso->id }})"
+                                                            x-on:change="toggleRow({{ $curso->id }}, $event.target.checked)"
+                                                            aria-label="Seleccionar curso {{ $curso->numero_curso }}"
+                                                        >
+                                                    </label>
+                                                @else
+                                                    <span class="cursos-registros-page__select-disabled" title="Ya está SOLICITADO">—</span>
+                                                @endif
+                                            </td>
+                                        @endif
                                         <td>{{ $curso->document_number }}</td>
                                         <td>{{ $curso->full_name }}</td>
                                         <td>{{ $curso->cursoTipo?->tipo_curso }}</td>
@@ -424,6 +471,98 @@
                         </div>
                     </div>
                 </div>
+
+                <div
+                    class="cursos-registros-page__modal"
+                    x-show="bulkConfirmOpen"
+                    x-cloak
+                    @keydown.escape.window="closeBulkConfirm()"
+                >
+                    <div class="cursos-registros-page__modal-backdrop" @click="closeBulkConfirm()"></div>
+                    <div
+                        class="cursos-registros-page__modal-panel panel cursos-registros-page__bulk-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="cursos-bulk-solicitado-title"
+                    >
+                        <div class="panel__header panel-heading-row">
+                            <h3 id="cursos-bulk-solicitado-title" class="panel-title">Confirmar marcado a SOLICITADO</h3>
+                            <button type="button" class="btn btn--ghost btn--sm" @click="closeBulkConfirm()">Cerrar</button>
+                        </div>
+                        <div class="panel__body">
+                            <div class="alert alert--danger cursos-registros-page__bulk-warning">
+                                Esta acción <strong>no se puede revertir</strong> desde el marcado masivo.
+                                El estado quedará en <strong>SOLICITADO</strong> y el proceso diario de sincronización lo conservará.
+                                Solo podrá cambiarlo editando cada registro de forma individual.
+                            </div>
+
+                            <p class="panel-text cursos-registros-page__bulk-summary">
+                                Se actualizarán <strong x-text="selectedCount"></strong> registro(s):
+                            </p>
+
+                            <div class="cursos-registros-page__bulk-list-wrap">
+                                <table class="data-table cursos-registros-page__bulk-list">
+                                    <thead>
+                                        <tr>
+                                            <th>Cédula</th>
+                                            <th>Nombre</th>
+                                            <th>Tipo</th>
+                                            <th>No.CURSO</th>
+                                            <th>Vigencia</th>
+                                            <th>Estado actual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="row in selectedRows" :key="row.id">
+                                            <tr>
+                                                <td x-text="row.document_number"></td>
+                                                <td x-text="row.full_name"></td>
+                                                <td x-text="row.tipo_curso"></td>
+                                                <td x-text="row.numero_curso"></td>
+                                                <td x-text="row.vigencia"></td>
+                                                <td x-text="row.estado"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <form
+                                method="POST"
+                                :action="bulkMarkSolicitadoUrl"
+                                class="cursos-registros-page__bulk-form"
+                                x-on:submit="submittingBulk = true"
+                            >
+                                @csrf
+                                <template x-for="id in selectedIds" :key="'bulk-id-' + id">
+                                    <input type="hidden" name="ids[]" :value="id">
+                                </template>
+                                <template x-for="(value, key) in activeFilterQuery" :key="'filter-' + key">
+                                    <input type="hidden" :name="key" :value="value">
+                                </template>
+
+                                <label class="cursos-registros-page__bulk-confirm-label">
+                                    <input type="checkbox" name="confirmed" value="1" x-model="bulkConfirmAccepted">
+                                    Confirmo que revisé el listado y estoy seguro de ejecutar el cambio a SOLICITADO.
+                                </label>
+
+                                <div class="cursos-registros-page__form-actions">
+                                    <button type="button" class="btn btn--secondary" @click="closeBulkConfirm()" :disabled="submittingBulk">
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        class="btn btn--primary"
+                                        :disabled="! bulkConfirmAccepted || selectedCount < 1 || submittingBulk"
+                                    >
+                                        <span x-show="! submittingBulk">Ejecutar cambio</span>
+                                        <span x-show="submittingBulk" x-cloak>Ejecutando…</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             @endif
         </div>
     </div>
@@ -434,6 +573,13 @@
                 return {
                     lookupUrl: config.lookupUrl,
                     canEdit: config.canEdit,
+                    bulkMarkSolicitadoUrl: config.bulkMarkSolicitadoUrl || '',
+                    activeFilterQuery: config.activeFilterQuery || {},
+                    bulkSelectableRows: config.bulkSelectableRows || [],
+                    selectedMap: {},
+                    bulkConfirmOpen: false,
+                    bulkConfirmAccepted: false,
+                    submittingBulk: false,
                     editOpen: false,
                     editForm: {
                         id: null,
@@ -446,9 +592,62 @@
                         observaciones: '',
                         update_url: '',
                     },
+                    get selectedIds() {
+                        return Object.keys(this.selectedMap)
+                            .filter((id) => this.selectedMap[id])
+                            .map((id) => Number(id));
+                    },
+                    get selectedCount() {
+                        return this.selectedIds.length;
+                    },
+                    get selectedRows() {
+                        const selected = new Set(this.selectedIds);
+                        return this.bulkSelectableRows.filter((row) => selected.has(Number(row.id)));
+                    },
+                    get allEligibleSelected() {
+                        if (this.bulkSelectableRows.length === 0) {
+                            return false;
+                        }
+                        return this.bulkSelectableRows.every((row) => this.selectedMap[row.id]);
+                    },
+                    isSelected(id) {
+                        return !! this.selectedMap[id];
+                    },
+                    toggleRow(id, checked) {
+                        this.selectedMap = {
+                            ...this.selectedMap,
+                            [id]: !! checked,
+                        };
+                    },
+                    toggleSelectAll(checked) {
+                        const next = {};
+                        if (checked) {
+                            this.bulkSelectableRows.forEach((row) => {
+                                next[row.id] = true;
+                            });
+                        }
+                        this.selectedMap = next;
+                    },
+                    openBulkConfirm() {
+                        if (this.selectedCount < 1) {
+                            return;
+                        }
+                        this.bulkConfirmAccepted = false;
+                        this.submittingBulk = false;
+                        this.bulkConfirmOpen = true;
+                        this.editOpen = false;
+                    },
+                    closeBulkConfirm() {
+                        if (this.submittingBulk) {
+                            return;
+                        }
+                        this.bulkConfirmOpen = false;
+                        this.bulkConfirmAccepted = false;
+                    },
                     openEdit(row) {
                         this.editForm = { ...row };
                         this.editOpen = true;
+                        this.bulkConfirmOpen = false;
                     },
                     async lookupName(cedula, target) {
                         const value = String(cedula || '').trim();

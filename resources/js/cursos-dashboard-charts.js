@@ -13,6 +13,7 @@ const chartInstances = {
     tipo: null,
     vigencia: null,
     estado: null,
+    pendientesRenovacion: null,
     trend: null,
 };
 
@@ -97,6 +98,37 @@ function renderEstado(data) {
     chartInstances.estado.render();
 }
 
+function renderPendientesRenovacion(data) {
+    const el = document.querySelector('#cursos-chart-pendientes-renovacion');
+    if (!el) {
+        return;
+    }
+    destroyChart('pendientesRenovacion');
+    const labels = data.labels?.length ? data.labels : ['Sin datos'];
+    const actualizar = data.labels?.length ? (data.actualizar || []).map(Number) : [0];
+    const vencidos = data.labels?.length ? (data.vencidos || []).map(Number) : [0];
+    chartInstances.pendientesRenovacion = new ApexCharts(el, {
+        ...sharedChart,
+        chart: { ...sharedChart.chart, type: 'bar', height: '100%', stacked: true },
+        series: [
+            { name: 'ACTUALIZAR', data: actualizar },
+            { name: 'VENCIDO', data: vencidos },
+        ],
+        plotOptions: {
+            bar: { horizontal: true, borderRadius: 4, barHeight: '55%' },
+        },
+        colors: [STATUS_ORANGE, STATUS_RED],
+        xaxis: {
+            categories: labels,
+            labels: { style: { fontSize: '11px' } },
+            min: 0,
+            forceNiceScale: true,
+        },
+        legend: { position: 'bottom', fontSize: '12px' },
+    });
+    chartInstances.pendientesRenovacion.render();
+}
+
 function renderTrend(data) {
     const el = document.querySelector('#cursos-chart-trend');
     if (!el) {
@@ -135,6 +167,11 @@ export function renderCursosDashboardCharts(charts) {
     renderTipo(charts.by_tipo || { labels: [], data: [] });
     renderVigencia(charts.by_vigencia || { labels: ['VIGENTE', 'ACTUALIZAR', 'VENCIDO'], data: [0, 0, 0] });
     renderEstado(charts.by_estado || { labels: [], data: [] });
+    renderPendientesRenovacion(charts.pendientes_renovacion_by_tipo || {
+        labels: [],
+        actualizar: [],
+        vencidos: [],
+    });
     renderTrend(charts.trend || { labels: [], nuevos: [], actualizados: [] });
 }
 

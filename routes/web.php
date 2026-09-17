@@ -234,6 +234,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/modules/requisitions.php';
     require __DIR__.'/modules/supplies.php';
     require __DIR__.'/modules/purchase-requests.php';
+    require __DIR__.'/modules/development_requests.php';
     require __DIR__.'/modules/quality-documents.php';
     require __DIR__.'/areas/operaciones.php';
     require __DIR__.'/areas/comercial.php';

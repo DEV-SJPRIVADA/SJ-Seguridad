@@ -7,6 +7,7 @@ use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
+use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -203,6 +204,43 @@ class User extends Authenticatable
             'pendientes_aprobacion' => route('purchase-requests.approval.index', ['module' => $moduleKey]),
             'bandeja_compras' => route('purchase-requests.processing.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function developmentRequestBoardTabsFor(string $moduleKey): Collection
+    {
+        return collect(app(DevelopmentRequestAccessService::class)->visibleTabsFor($this, $moduleKey));
+    }
+
+    public function canAccessDevelopmentRequestTab(string $moduleKey, string $tab): bool
+    {
+        return app(DevelopmentRequestAccessService::class)->canAccessTab($this, $moduleKey, $tab);
+    }
+
+    public function canViewDevelopmentRequestBoardFor(string $areaKey): bool
+    {
+        return app(DevelopmentRequestAccessService::class)->canViewDevelopmentRequestBoard($this, $areaKey);
+    }
+
+    public function defaultDevelopmentRequestBoardUrl(string $moduleKey): string
+    {
+        $tabs = $this->developmentRequestBoardTabsFor($moduleKey);
+
+        if ($moduleKey === 'tic' && $tabs->contains('bandeja_tic')) {
+            return route('development-requests.tic-queue', ['module' => $moduleKey]);
+        }
+
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'nueva' => route('development-requests.create', ['module' => $moduleKey]),
+            'mis_solicitudes' => route('development-requests.my-requests', ['module' => $moduleKey]),
+            'aprobacion_lider' => route('development-requests.leader-approval', ['module' => $moduleKey]),
+            'bandeja_tic' => route('development-requests.tic-queue', ['module' => $moduleKey]),
+            default => route('development-requests.index', ['module' => $moduleKey]),
         };
     }
 

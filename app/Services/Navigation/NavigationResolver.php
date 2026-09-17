@@ -8,6 +8,7 @@ use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
+use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -29,6 +30,7 @@ class NavigationResolver
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly PurchaseAccessService $purchaseAccess,
+        private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
 
@@ -296,6 +298,20 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'solicitudes_desarrollo') {
+                            if (! $this->developmentRequestAccess->canViewDevelopmentRequestBoard($user, $key)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'development-requests.index',
+                                'url' => $user->defaultDevelopmentRequestBoardUrl($key),
+                                'active' => str_starts_with((string) $routeName, 'development-requests.')
+                                    && $requestModule === $key,
+                            ];
+                        }
+
                         if ($boardKey === 'bandeja_compras') {
                             if ($key !== 'compras') {
                                 return null;
@@ -334,6 +350,8 @@ class NavigationResolver
                             $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
                             $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
                             $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.')
+                                && $requestModule === $key,
+                            $boardKey === 'solicitudes_desarrollo' => str_starts_with((string) $routeName, 'development-requests.')
                                 && $requestModule === $key,
                             $boardKey === 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                 && $requestModule === $key,
@@ -416,6 +434,8 @@ class NavigationResolver
                 ) || (
                     str_starts_with((string) $routeName, 'purchase-requests.') && (string) request()->route('module') === $key
                 ) || (
+                    str_starts_with((string) $routeName, 'development-requests.') && (string) request()->route('module') === $key
+                ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
@@ -490,6 +510,7 @@ class NavigationResolver
         if (str_starts_with((string) $routeName, 'requisitions.')
             || str_starts_with((string) $routeName, 'supplies.')
             || str_starts_with((string) $routeName, 'purchase-requests.')
+            || str_starts_with((string) $routeName, 'development-requests.')
             || str_starts_with((string) $routeName, 'quality-documents.')) {
             return (string) request()->route('module');
         }

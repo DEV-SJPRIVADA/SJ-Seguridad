@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\DevelopmentRequest;
 use App\Models\PersonalRequisition;
 use App\Models\PurchaseRequest;
 use App\Models\QualityDocument;
 use App\Models\SupplyRequest;
 use App\Models\User;
+use App\Policies\DevelopmentRequestPolicy;
 use App\Policies\PersonalRequisitionPolicy;
 use App\Policies\PurchaseRequestPolicy;
 use App\Policies\QualityDocumentPolicy;
@@ -58,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SupplyRequest::class, SupplyRequestPolicy::class);
         Gate::policy(PersonalRequisition::class, PersonalRequisitionPolicy::class);
         Gate::policy(PurchaseRequest::class, PurchaseRequestPolicy::class);
+        Gate::policy(DevelopmentRequest::class, DevelopmentRequestPolicy::class);
 
         Route::bind('supply_request', function (string $value, $route) {
             $query = SupplyRequest::query()->whereKey($value);

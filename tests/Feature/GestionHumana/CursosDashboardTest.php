@@ -54,31 +54,49 @@ class CursosDashboardTest extends TestCase
             'document_path' => 'employee-cursos/x.pdf',
             'document_original_name' => 'x.pdf',
         ]);
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipoA->id,
+            'fecha_expedicion' => now()->subDays(350)->toDateString(),
+            'estado' => EmployeeCurso::ESTADO_PENDIENTE,
+            'document_path' => null,
+        ]);
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipoB->id,
+            'fecha_expedicion' => now()->subDays(400)->toDateString(),
+            'estado' => EmployeeCurso::ESTADO_SOLICITADO,
+            'document_path' => null,
+        ]);
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.cursos.dashboard'))
             ->assertOk()
             ->assertSee('Dashboard', false)
             ->assertSee('cursos-dashboard-page', false)
-            ->assertSee('Total cursos', false);
+            ->assertSee('Total cursos', false)
+            ->assertSee('Por actualizar / vencidos sin solicitar', false);
 
         $all = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.cursos.dashboard.metrics'))
             ->assertOk()
             ->json();
 
-        $this->assertSame(2, $all['kpis']['total']);
-        $this->assertSame(0, $all['kpis']['actualizar']);
+        $this->assertSame(4, $all['kpis']['total']);
+        $this->assertSame(1, $all['kpis']['actualizar']);
         $this->assertSame(1, $all['kpis']['vigentes']);
-        $this->assertSame(1, $all['kpis']['vencidos']);
-        $this->assertSame(1, $all['kpis']['sin_documento']);
-        $this->assertSame(1, $all['kpis']['solicitados']);
+        $this->assertSame(2, $all['kpis']['vencidos']);
+        $this->assertSame(3, $all['kpis']['sin_documento']);
+        $this->assertSame(2, $all['kpis']['solicitados']);
         $this->assertSame(1, $all['kpis']['actualizados']);
         $this->assertSame(['VIGENTE', 'ACTUALIZAR', 'VENCIDO'], $all['charts']['by_vigencia']['labels']);
-        $this->assertSame([1, 0, 1], $all['charts']['by_vigencia']['data']);
+        $this->assertSame([1, 1, 2], $all['charts']['by_vigencia']['data']);
         $this->assertArrayHasKey('by_tipo', $all['charts']);
         $this->assertArrayHasKey('trend', $all['charts']);
         $this->assertCount(12, $all['charts']['trend']['nuevos']);
+
+        $pendientesChart = $all['charts']['pendientes_renovacion_by_tipo'];
+        $this->assertSame(['ALTURAS', 'REENTRENAMIENTO'], $pendientesChart['labels']);
+        $this->assertSame([1, 0], $pendientesChart['actualizar']);
+        $this->assertSame([0, 1], $pendientesChart['vencidos']);
 
         $filtered = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.cursos.dashboard.metrics', [
@@ -91,6 +109,9 @@ class CursosDashboardTest extends TestCase
         $this->assertSame(1, $filtered['kpis']['total']);
         $this->assertSame(1, $filtered['kpis']['solicitados']);
         $this->assertSame(0, $filtered['kpis']['actualizados']);
+        $this->assertSame([], $filtered['charts']['pendientes_renovacion_by_tipo']['labels']);
+        $this->assertSame([], $filtered['charts']['pendientes_renovacion_by_tipo']['actualizar']);
+        $this->assertSame([], $filtered['charts']['pendientes_renovacion_by_tipo']['vencidos']);
     }
 
     private function viewerUser(): User

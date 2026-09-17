@@ -10,8 +10,8 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
-- **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton).
-- **Cursos** — listado, filtros, alta/edicion/eliminacion, documento, export Excel e import masivo.
+- **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo.
+- **Cursos** — listado, filtros, alta/edicion/eliminacion, documento, export Excel e import masivo. Con permiso de edición: selección múltiple para marcar a **SOLICITADO**.
 - **Catalogo** — tipos de curso usados en el listado y en el Excel.
 
 **En esta version:** el import **no** sube PDFs/imagenes; el documento se carga fila a fila. Desde **Ficha empleados** solo se consultan y descargan cursos (no se editan alla).
@@ -40,7 +40,15 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 1. Entre al tablero **Cursos** (abre en Dashboard).
 2. Use filtros: rango de fecha de expedicion, tipo, vigencia, estado y año de tendencia.
 3. Los indicadores y graficos se recalculan al cambiar un filtro.
-4. Graficos: cursos por tipo, vigencia, estado, y tendencia mensual del año (nuevos vs actualizaciones de carga).
+4. Graficos: cursos por tipo, vigencia, estado, **por actualizar/vencidos sin solicitar** (por tipo) y tendencia mensual del año (nuevos vs actualizaciones de carga).
+
+### Marcar varios a SOLICITADO
+
+1. Filtre el listado (por vigencia, estado, tipo, etc.).
+2. Marque filas con el checkbox de la izquierda, o use el checkbox del encabezado para seleccionar **todos los elegibles** del resultado filtrado (no incluye los que ya están SOLICITADO).
+3. Pulse **Marcar SOLICITADO**.
+4. Revise el listado del modal, lea el aviso de que **no se puede revertir** desde esta acción, marque la casilla de confirmación y ejecute.
+5. Si necesita deshacer el estado, edite el registro uno a uno.
 
 ### Importar masivos (renovaciones)
 
@@ -63,6 +71,8 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.6 | 2026-09-16 | Listado: marcar varios registros a SOLICITADO con confirmación. |
+| 1.5 | 2026-09-16 | Dashboard: grafico de por actualizar/vencidos sin solicitar, por tipo. |
 | 1.4 | 2026-09-16 | Estado PENDIENTE; Excel ya no pide ESTADO (se asigna segun vigencia). |
 | 1.3 | 2026-09-16 | Vigencia incluye **VENCIDO** cuando ya pasó 1 año desde la fecha de expedición. |
 | 1.2 | 2026-09-16 | Pestaña Dashboard con KPIs/gráficos y filtros en vivo. |

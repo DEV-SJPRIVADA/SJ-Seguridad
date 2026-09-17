@@ -51,5 +51,9 @@ return [
             'label' => 'Cursos',
             'area' => 'gestion_humana',
         ],
+        'development_requests' => [
+            'label' => 'Solicitudes de desarrollo',
+            'area' => 'tic',
+        ],
     ],
 ];

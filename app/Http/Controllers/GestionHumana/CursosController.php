@@ -5,6 +5,7 @@ namespace App\Http\Controllers\GestionHumana;
 use App\Exports\BaseExport;
 use App\Exports\CursosImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\Cursos\BulkMarkSolicitadoEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\ImportEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\StoreEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\UpdateEmployeeCursoRequest;
@@ -26,6 +27,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -145,7 +147,92 @@ class CursosController extends Controller
             'exportUrl' => route('gestion-humana.cursos.registros.export', $this->activeFilterQuery($filters)),
             'importTemplateUrl' => route('gestion-humana.cursos.registros.import-template'),
             'importUrl' => route('gestion-humana.cursos.registros.import'),
+            'bulkMarkSolicitadoUrl' => route('gestion-humana.cursos.registros.bulk-mark-solicitado'),
+            'activeFilterQuery' => $this->activeFilterQuery($filters),
+            'bulkSelectableRows' => $registros
+                ->filter(fn (EmployeeCurso $curso): bool => $curso->estado !== EmployeeCurso::ESTADO_SOLICITADO)
+                ->map(fn (EmployeeCurso $curso): array => [
+                    'id' => $curso->id,
+                    'document_number' => $curso->document_number,
+                    'full_name' => $curso->full_name,
+                    'tipo_curso' => $curso->cursoTipo?->tipo_curso ?? '—',
+                    'numero_curso' => $curso->numero_curso,
+                    'estado' => $curso->estado ?: '—',
+                    'vigencia' => $curso->computeVigencia(),
+                ])
+                ->values()
+                ->all(),
         ]);
+    }
+
+    public function bulkMarkSolicitado(BulkMarkSolicitadoEmployeeCursoRequest $request): RedirectResponse
+    {
+        /** @var list<int> $ids */
+        $ids = array_values(array_map('intval', $request->validated('ids')));
+
+        $updatedCount = 0;
+        $skippedAlreadySolicitado = 0;
+
+        DB::transaction(function () use ($ids, &$updatedCount, &$skippedAlreadySolicitado): void {
+            $cursos = EmployeeCurso::query()
+                ->whereIn('id', $ids)
+                ->get(['id', 'document_number', 'numero_curso', 'estado']);
+
+            $alreadySolicitado = $cursos->where('estado', EmployeeCurso::ESTADO_SOLICITADO);
+            $toUpdate = $cursos->reject(
+                fn (EmployeeCurso $curso): bool => $curso->estado === EmployeeCurso::ESTADO_SOLICITADO
+            );
+
+            $skippedAlreadySolicitado = $alreadySolicitado->count();
+
+            if ($toUpdate->isEmpty()) {
+                return;
+            }
+
+            $updateIds = $toUpdate->pluck('id')->all();
+
+            $updatedCount = EmployeeCurso::query()
+                ->whereIn('id', $updateIds)
+                ->where('estado', '!=', EmployeeCurso::ESTADO_SOLICITADO)
+                ->update([
+                    'estado' => EmployeeCurso::ESTADO_SOLICITADO,
+                    'updated_by' => auth()->id(),
+                    'updated_at' => now(),
+                ]);
+
+            $this->auditLogService->logEvent(
+                eventType: 'employee_curso',
+                action: 'bulk_mark_solicitado',
+                reason: 'Marcado masivo a SOLICITADO (irreversible desde esta acción).',
+                metadata: [
+                    'requested_ids' => $ids,
+                    'updated_ids' => $updateIds,
+                    'updated_count' => $updatedCount,
+                    'skipped_already_solicitado' => $skippedAlreadySolicitado,
+                ],
+                userId: (int) auth()->id(),
+            );
+        });
+
+        $filters = $this->filtersFromRequest($request);
+
+        if ($updatedCount === 0) {
+            return redirect()
+                ->route('gestion-humana.cursos.registros', $this->activeFilterQuery($filters))
+                ->with('error', 'No se actualizó ningún registro. Los seleccionados ya estaban en SOLICITADO o no eran válidos.');
+        }
+
+        $message = $updatedCount === 1
+            ? '1 registro marcado como SOLICITADO.'
+            : "{$updatedCount} registros marcados como SOLICITADO.";
+
+        if ($skippedAlreadySolicitado > 0) {
+            $message .= " Se omitieron {$skippedAlreadySolicitado} que ya estaban solicitados.";
+        }
+
+        return redirect()
+            ->route('gestion-humana.cursos.registros', $this->activeFilterQuery($filters))
+            ->with('status', $message);
     }
 
     public function datatable(Request $request): JsonResponse
@@ -497,11 +584,11 @@ class CursosController extends Controller
     private function filtersFromRequest(Request $request): array
     {
         return [
-            'document_number' => trim((string) $request->query('document_number', '')),
-            'full_name' => trim((string) $request->query('full_name', '')),
-            'curso_tipo_id' => (string) $request->query('curso_tipo_id', ''),
-            'vigencia' => strtoupper(trim((string) $request->query('vigencia', ''))),
-            'estado' => (string) $request->query('estado', 'todos'),
+            'document_number' => trim((string) $request->input('document_number', '')),
+            'full_name' => trim((string) $request->input('full_name', '')),
+            'curso_tipo_id' => (string) $request->input('curso_tipo_id', ''),
+            'vigencia' => strtoupper(trim((string) $request->input('vigencia', ''))),
+            'estado' => (string) $request->input('estado', 'todos'),
             'solo_actualizar' => $request->boolean('solo_actualizar'),
         ];
     }

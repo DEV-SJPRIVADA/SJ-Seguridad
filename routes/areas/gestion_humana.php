@@ -113,6 +113,7 @@ Route::middleware(['password.changed'])
         Route::post('/registros/importar', [CursosController::class, 'import'])->name('registros.import');
         Route::get('/registros/importar/reporte/{token}', [CursosController::class, 'downloadImportReport'])->name('registros.import-report');
         Route::post('/registros', [CursosController::class, 'store'])->name('registros.store');
+        Route::post('/registros/marcar-solicitado', [CursosController::class, 'bulkMarkSolicitado'])->name('registros.bulk-mark-solicitado');
         Route::patch('/registros/{employeeCurso}', [CursosController::class, 'update'])->name('registros.update');
         Route::delete('/registros/{employeeCurso}', [CursosController::class, 'destroy'])->name('registros.destroy');
         Route::get('/registros/{employeeCurso}/documento', [CursosController::class, 'downloadDocument'])->name('registros.document.download');

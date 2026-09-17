@@ -159,6 +159,14 @@
                         <div id="cursos-chart-estado" class="cursos-dashboard-page__chart"></div>
                     </div>
                 </div>
+                <div class="panel">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Por actualizar / vencidos sin solicitar</h3>
+                    </div>
+                    <div class="panel__body">
+                        <div id="cursos-chart-pendientes-renovacion" class="cursos-dashboard-page__chart"></div>
+                    </div>
+                </div>
                 <div class="panel cursos-dashboard-page__chart-wide">
                     <div class="panel__header">
                         <h3 class="panel-title">Tendencia <span x-text="filters.anio"></span> (nuevos vs actualizaciones)</h3>

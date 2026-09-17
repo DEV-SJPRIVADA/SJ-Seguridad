@@ -10,6 +10,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| FEAT-033 | Solicitudes de desarrollo TIC (FO-TIC-23 + chat) | orquestado | Cierre — Aprobado con observaciones | 2026-09-16 plan TIC | — | [`docs/briefs/FEAT-033.md`](briefs/FEAT-033.md) | [`docs/runs/FEAT-033-run-log.md`](runs/FEAT-033-run-log.md) | `config/access.php`, `routes/web.php`, nav, User, audit/notifications |
 | FEAT-032 | Tablero Cursos (GH): vigencia, documento, plantilla/import, bridge Ficha | orquestado | T4 OK — listo Revisor | 2026-09-15 cursos GH | — | [`docs/briefs/FEAT-032.md`](briefs/FEAT-032.md) | [`docs/runs/FEAT-032-run-log.md`](runs/FEAT-032-run-log.md) | `config/access.php`, rutas GH, nav, audit, app.css, Ficha controller/vistas |
 | FEAT-013 | Configuracion global de notificaciones (Super Admin) | orquestado | Feature T1-T3 implementado | 2026-07-29 | — | [`docs/briefs/FEAT-013.md`](briefs/FEAT-013.md) | [`docs/runs/FEAT-013-run-log.md`](runs/FEAT-013-run-log.md) | `config/access.php`, rutas admin |
 | FEAT-014 | Checklist documental por cliente + vista seguimiento tablero Clientes | orquestado | Feature T1–T4 (implementado) | 2026-07-29 checklist cliente | — | [`docs/briefs/FEAT-014.md`](briefs/FEAT-014.md) | [`docs/runs/FEAT-014-run-log.md`](runs/FEAT-014-run-log.md) | rutas comercial, dashboard, import, vistas servicio |
