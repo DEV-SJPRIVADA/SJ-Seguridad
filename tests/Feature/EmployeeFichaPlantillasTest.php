@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
@@ -160,9 +161,16 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->assertContains('primer_nombre', $columns);
         $this->assertContains('segundo_nombre', $columns);
         $this->assertContains('nombre', $columns);
+        $this->assertContains('edad', $columns);
+        $this->assertContains('tipo_cotizante', $columns);
+        $this->assertContains('escala', $columns);
         $this->assertSame(
-            ['cedula', 'primer_apellido', 'segundo_apellido', 'primer_nombre', 'segundo_nombre', 'nombre'],
+            ['cedula', 'nombre', 'primer_apellido', 'segundo_apellido', 'primer_nombre', 'segundo_nombre'],
             array_slice($columns, 0, 6),
+        );
+        $this->assertSame(
+            ['codigo_ciudad_trabajo', 'ciudad_trabajo', 'codigo_requisicion'],
+            array_slice($columns, -3),
         );
     }
 
@@ -374,7 +382,7 @@ class EmployeeFichaPlantillasTest extends TestCase
         $primerApellidoCol = Coordinate::stringFromColumnIndex(array_search('primer_apellido', $headers, true) + 1);
 
         $this->assertSame('cedula', $sheet->getCell('A1')->getValue());
-        $this->assertSame('primer_apellido', $sheet->getCell('B1')->getValue());
+        $this->assertSame('nombre', $sheet->getCell('B1')->getValue());
         $this->assertSame('444444444', (string) $sheet->getCell('A3')->getValue());
         $this->assertSame('Export', $sheet->getCell($primerApellidoCol.'3')->getValue());
         $this->assertSame('Export Import Test', $sheet->getCell($nombreCol.'3')->getValue());
@@ -424,6 +432,50 @@ class EmployeeFichaPlantillasTest extends TestCase
             ->assertOk()
             ->assertSee('Ficha —')
             ->assertSee('Género');
+    }
+
+    public function test_import_normalizes_nompr07_like_values_and_saves_extra_fields(): void
+    {
+        $manager = $this->managerUser();
+        PayrollCatalogItem::upsertPair('payment_method', '003', 'TR BBVA');
+        PayrollCatalogItem::upsertPair('contract_type', '01', 'A TERMINO INDEFINIDO');
+        PayrollCatalogItem::upsertPair('salary_type', '01', 'SALARIO BASICO');
+        PayrollCatalogItem::upsertPair('risk_level', 'N5', 'NIVEL DE RIESGO 5');
+
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '33445566',
+            'nombre' => 'NORMALIZA TEST',
+            'tipo_documento' => 'CEDULA',
+            'sexo' => 'Masculino',
+            'tipo_de_cuenta' => 'Ahorro',
+            'tipo_salario' => 'SALARIO BASICO',
+            'tipo_contrato' => 'A TERMINO INDEFINIDO',
+            'forma_pago' => 'TR BBVA',
+            'nivel_riesgo_arp' => 'NIVEL DE RIESGO 5',
+            'edad' => '45',
+            'tipo_cotizante' => 'Dependiente',
+            'escala' => 'A1',
+            'total_dias_vacaciones' => '20',
+            'fecha_ingreso' => '2026-01-10',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ])->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'));
+
+        $profile = EmployeeFichaProfile::query()->where('document_number', '33445566')->firstOrFail();
+
+        $this->assertSame('C', $profile->document_type);
+        $this->assertSame('M', $profile->sex);
+        $this->assertSame('1', $profile->account_type);
+        $this->assertSame('01', $profile->salary_type_code);
+        $this->assertSame('01', $profile->contract_type_code);
+        $this->assertSame('003', $profile->payment_method_code);
+        $this->assertSame('N5', $profile->risk_level);
+        $this->assertSame(45, (int) $profile->payrollExtraValue('age'));
+        $this->assertSame('Dependiente', $profile->payrollExtraValue('contributor_type'));
+        $this->assertSame('A1', $profile->payrollExtraValue('salary_scale'));
+        $this->assertSame(20.0, (float) $profile->payrollExtraValue('total_vacation_days'));
     }
 
     public function test_seed_catalogs_command_dry_run(): void

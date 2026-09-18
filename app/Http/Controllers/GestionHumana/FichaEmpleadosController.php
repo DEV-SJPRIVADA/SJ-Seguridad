@@ -197,22 +197,21 @@ class FichaEmpleadosController extends Controller
         $fechaDesde = $request->date('fecha_desde')?->toDateString();
         $fechaHasta = $request->date('fecha_hasta')?->toDateString();
         $hasDateRange = $fechaDesde !== null && $fechaHasta !== null;
+        [$employmentStatus] = $this->resolveEmploymentStatusFilter($request, 'en_ficha');
 
-        $query = $this->entryListQuery($q, 'en_ficha')
+        $query = $this->entryListQuery($q, 'en_ficha', $employmentStatus)
             ->with(['profile', 'requisition.position', 'requisition.client']);
 
         if ($hasDateRange) {
             $query->hireDateBetween($fechaDesde, $fechaHasta);
-        } else {
-            $query->withActiveProfile();
         }
 
         $entries = $query->orderByDesc('created_at')->get();
 
         if ($entries->isEmpty()) {
-            return redirect()
-                ->route('gestion-humana.ficha-empleados.employees.index')
-                ->withErrors(['export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.']);
+            return back()->withErrors([
+                'export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.',
+            ]);
         }
 
         return $this->archiveTemplateExport->downloadWithData(
@@ -615,6 +614,14 @@ class FichaEmpleadosController extends Controller
             (int) $request->user()->id,
         );
         $this->employmentPeriodService->syncProfileFromActivePeriod($fichaEntry, $profile)->save();
+
+        // La fecha de desvinculación vive en el perfil (import / corrección); el sync de periodo
+        // activo puede limpiarla — se reaplica desde el formulario y se alinea el estado.
+        if (array_key_exists('termination_date', $validated)) {
+            $profile->termination_date = $validated['termination_date'];
+            $profile->syncEmploymentStatusFromTerminationDate();
+            $profile->save();
+        }
 
         $profile->refresh();
         $after = $this->profileAuditSnapshot($profile);

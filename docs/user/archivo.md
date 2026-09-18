@@ -50,26 +50,33 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 ### Importar ubicaciones masivamente
 
 1. En **Archivo**, pulse **Importar** (o use el modal).
-2. Descargue **Exportar archivo** si aun no tiene la plantilla con datos.
-3. Edite columnas **Estantes** y **Cajas** (cedula obligatoria por fila).
+2. Descargue la plantilla eligiendo **Solo activos**, **Solo retirados** o **Todos** (los datos salen de la ficha de empleados).
+3. Edite columnas **Estantes** y/o **Cajas** (basta con una de las dos; la cedula es obligatoria por fila).
 4. Suba el `.xlsx` y confirme.
 5. Revise el resumen; si hubo filas omitidas, descargue el reporte de errores.
 
 La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
-### Exportar Excel para archivo (desde Ficha empleados)
+### Exportar Excel para archivo
 
-1. Abra **Ficha empleados → Empleados** (pestaña En ficha).
-2. Aplique filtros si necesita (busqueda, estado, fechas en el modal masivos).
-3. Pulse **Exportar archivo**.
-4. El archivo incluye todas las columnas de «Exportar datos para actualizar» **mas** **Estantes** y **Cajas** al final.
+**Desde Archivo → Historias laborales**
 
-Use ese Excel para trabajo offline del area de archivo. Complete estantes/cajas y reimporte desde **Archivo → Importar**.
+1. Pulse **Exportar archivo**.
+2. Elija **Solo activos**, **Solo retirados** o **Todos**.
+3. El Excel incluye las columnas de ficha **mas** **Estantes** y **Cajas**.
+
+**Desde Ficha empleados → Empleados** (pestaña En ficha)
+
+1. Aplique el filtro de estado (Activo / Desvinculado / Todos) si lo necesita.
+2. Pulse **Exportar archivo** (respeta el filtro de estado de la lista).
+3. Complete estantes/cajas y reimporte desde **Archivo → Importar**.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-09-18 | Archivo | Import: basta con estante o caja (uno de los dos) para actualizar la fila. |
+| 1.6 | 2026-09-18 | Archivo | Export plantilla: elegir activos, retirados o todos (datos de ficha). |
 | 1.0 | 2026-08-06 | Modulo Archivo | Campos estantes/cajas, tablero Archivo, export dedicado |
 | 1.1 | 2026-08-06 | Import archivo | Carga masiva de estantes/cajas separada del masivo de nomina |
 | 1.2 | 2026-08-06 | Edicion inline | Tabla editable; eliminada vista `/editar` |

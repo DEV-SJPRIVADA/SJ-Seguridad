@@ -18,7 +18,9 @@ Gestionar la **ubicacion documental fisica** de empleados ya en ficha: campos **
 - Formato: mismo Excel que export **Exportar archivo** (fila 1 claves, fila 2 etiquetas, datos desde fila 3)
 - Por fila: identifica empleado por **cedula** (debe estar **en ficha**)
 - Solo actualiza `archive_shelf` / `archive_box`; demas columnas se ignoran
-- Filas sin cedula: ignoradas; sin estantes ni cajas: omitidas
+- Por fila se requiere **al menos uno** de estante o caja; si vienen los dos, se actualizan ambos; si solo uno, solo ese campo
+- Filas sin cedula: ignoradas; sin estante **ni** caja: omitidas
+- Cabeceras aceptadas (fila 1): `cedula`; `estantes`/`estante`; `cajas`/`caja` (sin distinguir mayusculas)
 - Reporte de filas fallidas: mismo mecanismo que otros imports (`employee_archive`)
 
 ## Modelo de datos
@@ -110,7 +112,9 @@ Filtros: busqueda, mes, semana. PATCH por fila para `received` y `observation`.
 - Clase: `App\Exports\EmployeeFichaArchiveTemplateExport`
 - Mapper: `EmployeeFichaImportRowMapper::mapRowWithArchive()`
 - Columnas: `config('employee_ficha.import_columns')` + `config('employee_ficha.archive_export_extra_columns')` (`estantes`, `cajas`)
-- Mismos filtros que export masivos: solo **En ficha**; sin rango de fechas solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por ingreso.
+- Datos desde perfiles de **Ficha empleados** (En ficha).
+- Filtro `employment_status`: `activo` (default si no se envía), `desvinculado` (retirados), `todos`. Opcional: `fecha_desde`/`fecha_hasta` por fecha de ingreso.
+- UI Archivo: modal **Exportar archivo** y bloque en **Importar** con tres botones (Solo activos / Solo retirados / Todos).
 
 ## Controlador
 

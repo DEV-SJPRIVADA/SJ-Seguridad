@@ -72,6 +72,8 @@ class EmployeeFichaFormFe028Test extends TestCase
             ->assertSee('id="bank_code"', false)
             ->assertSee('id="account_type"', false)
             ->assertSee('id="payroll_extra_ccf_code"', false)
+            ->assertSee('id="termination_date"', false)
+            ->assertSee('Fecha desvinculación', false)
             ->assertSee('Habilitar edición', false)
             ->assertSee('ficha-empleados-form--readonly', false)
             ->assertSee('ficha-empleados-form__fields', false)
@@ -124,5 +126,54 @@ class EmployeeFichaFormFe028Test extends TestCase
         $this->assertSame('LM-NEW', $profile->payrollExtraValue('military_book'));
         $this->assertSame('Centro Trabajo Test', $profile->work_center_name);
         $this->assertSame('Caja Compensacion Test', $profile->compensation_fund_name);
+    }
+
+    public function test_update_ficha_persists_termination_date_and_syncs_status(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '805555555',
+            'hired_full_name' => 'Fecha Retiro Test',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '805555555',
+            'full_name' => 'Fecha Retiro Test',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'hire_date' => now()->subYear()->toDateString(),
+        ]);
+
+        $terminationDate = now()->subDay()->toDateString();
+
+        $this->actingAs($manager)
+            ->patch(
+                route('gestion-humana.ficha-empleados.employees.ficha.update', $entry),
+                $this->masivosCorePayload(['termination_date' => $terminationDate]),
+            )
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $profile = $entry->profile->fresh();
+
+        $this->assertSame($terminationDate, $profile->termination_date?->toDateString());
+        $this->assertSame(EmployeeFichaProfile::STATUS_DESVINCULADO, $profile->employment_status);
+
+        $this->actingAs($manager)
+            ->patch(
+                route('gestion-humana.ficha-empleados.employees.ficha.update', $entry),
+                $this->masivosCorePayload(['termination_date' => null]),
+            )
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $profile = $entry->profile->fresh();
+
+        $this->assertNull($profile->termination_date);
+        $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $profile->employment_status);
     }
 }

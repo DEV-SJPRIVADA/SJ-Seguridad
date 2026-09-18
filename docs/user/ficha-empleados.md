@@ -78,7 +78,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. Diligencie las siete secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
 3. Los campos marcados con **\*** son obligatorios para guardar.
 4. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.
-5. La **desvinculación** se registra con **Registrar desvinculación** (permiso `ficha_empleados.terminate`), no con un campo suelto de fecha retiro.
+5. En **Contrato y nómina** verá **Fecha desvinculación** (si el empleado se retiró por importación o desvinculación formal). Puede corregirla al editar; si tiene fecha ≤ hoy el estado pasa a desvinculado. La desvinculación **formal** (causal, cartas, seguimiento) se registra con **Registrar desvinculación**.
 
 ### Registrar desvinculacion
 
@@ -122,7 +122,7 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 ### Importar empleados masivamente
 
 1. Pulse **Descargar plantilla vacia** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
-2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). Incluye columnas `codigo_ciudad_trabajo` y `ciudad_trabajo`.
+2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). El orden sigue el extracto tipo nompr07; al final van opcionales `codigo_ciudad_trabajo`, `ciudad_trabajo` y `codigo_requisicion`. Puede pegar valores legibles (`CEDULA`, `Masculino`, `Ahorro`); el sistema los guarda como códigos (`C`, `M`, `1`) para la plantilla de nómina.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
@@ -146,6 +146,9 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.12 | 2026-09-18 | Ficha | Listado Empleados: se retira la columna **Fecha contrato** (quedan ingreso y retiro). |
+| 1.11 | 2026-09-18 | Ficha | Campo **Fecha desvinculación** visible/editable en el formulario de ficha (junto a fecha ingreso). |
+| 1.10 | 2026-09-18 | Ficha | Plantilla import alineada a orden nompr07 (campos nuevos opcionales); normaliza CEDULA/Masculino/Ahorro a C/M/1; plantilla nómina sin cambio. |
 | 1.9 | 2026-09-14 | Ficha | Plantilla vacía / import: columnas de primer/segundo apellido y nombre alineadas a BD; `nombre` completo queda opcional. |
 | 1.8 | 2026-09-14 | FEAT-031 | Desvincular individual crea seguimiento en Desvinculaciones; Generar cartas marca «tiene carta»; regenerar carta sigue en Ficha (permiso terminate). |
 | 1.7 | 2026-08-25 | Ficha | Ciudad de trabajo en perfil (precarga desde requisicion); columnas en plantilla importar/actualizar; sin cambio en plantilla masivos nomina. |

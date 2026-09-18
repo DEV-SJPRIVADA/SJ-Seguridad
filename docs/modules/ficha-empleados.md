@@ -208,6 +208,8 @@ Siete secciones: Identificación, Contacto, Contrato y nómina, Centros, Segurid
 
 Cédula, nombre (create), sexo, fecha ingreso, cargo (`position_code`), salario, centro de costo (`cost_center_code`), EPS, AFP, caja compensación (`payroll_extra.ccf_code`), forma de pago, banco, tipo cuenta, número cuenta.
 
+Opcional en formulario: **fecha desvinculación** (`termination_date`) — visible junto a fecha ingreso; al guardar se sincroniza `employment_status` (misma regla que el import: fecha ≤ hoy → desvinculado). No cierra periodo ni crea seguimiento; la desvinculación formal sigue en el modal **Registrar desvinculación**.
+
 Validación: trait `EmployeeFichaProfileFieldRules` + regla `PayrollCatalogCode`.
 
 ### Sync catálogo
@@ -241,10 +243,12 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - Plantilla: `EmployeeFichaImportTemplateExport` / ruta `import-template`.
 - Export datos actuales: `EmployeeFichaImportTemplateExport::downloadWithData()` + `EmployeeFichaImportRowMapper` / ruta `export-import-template`.
 - Servicio: `EmployeeFichaImportService`; comando `php artisan employee-ficha:import {path}`.
-- Columnas de nombre en `import_columns`: `primer_apellido`, `segundo_apellido`, `primer_nombre`, `segundo_nombre` (alineadas a BD) y `nombre` opcional. Si vienen partes, se usan tal cual y se compone `full_name`; si solo viene `nombre`, se parte con `EmployeeFichaNameParser` (compatibilidad plantillas antiguas).
+- Columnas de nombre en `import_columns`: orden tipo nompr07 (`cedula`, `nombre`, `primer_apellido`…); claves SJ sin renombrar. Campos nuevos opcionales (`edad`, `tipo_cotizante`, `escala`, vacaciones) en `payroll_extra`. Al final: `codigo_ciudad_trabajo`, `ciudad_trabajo`, `codigo_requisicion`.
+- Normalización al importar (`EmployeeFichaImportValueNormalizer`): `CEDULA`→`C`, `Masculino`→`M`, `Ahorro`→`1`, riesgo/contrato/salario/forma pago vía catálogo a código corto. La export nómina (`PlantillaMasivosMapper`) reaplica normalización al escribir celdas (archivo binario sin cambio).
+- Si vienen partes de nombre, se usan tal cual y se compone `full_name`; si solo viene `nombre`, se parte con `EmployeeFichaNameParser` (compatibilidad plantillas antiguas).
 - `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). No crea periodo ni seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
 - Plantilla vacía y **Exportar datos para actualizar** comparten las mismas claves (`import_columns` + `EmployeeFichaImportRowMapper`).
-- Fuera de alcance del import SJ (van en formulario / plantilla nómina / Archivo): `phone_secondary`, códigos CCF/centro trabajo y demás `payroll_extra`, `archive_shelf` / `archive_box`.
+- Fuera de alcance del import SJ hacia columnas de nómina no listadas: otros `payroll_extra` de formulario (jornada, CCF code, etc.) y Archivo (`archive_shelf` / `archive_box`).
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.
 - Mapeo técnico: [`docs/Contratacion/MAPEO-PLANTILLA-MASIVOS.md`](../Contratacion/MAPEO-PLANTILLA-MASIVOS.md).
 - Columna `linkage_type` (`tipo_vinculacion` en import): `VARCHAR(100)` — valores de nómina como `Contrato Laboral(Dependiente Asociado)` superaban el limite anterior de 30 caracteres.
@@ -262,7 +266,7 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 
 ## Vistas
 
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha; en pill **Pendientes**, boton **Gestionar Empleado** por fila (enlace `GET` a `create` con `?desde={id}`, sin formulario ni SweetAlert).
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha; columnas: cédula, nombre, cargo, cliente, ciudad, fecha ingreso, fecha retiro, estado (+ agregado por / acciones); en pill **Pendientes**, boton **Gestionar Empleado** por fila (enlace `GET` a `create` con `?desde={id}`, sin formulario ni SweetAlert).
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — formulario unico (alta manual / Gestionar empleado / reingreso).
 - `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-form-fields.blade.php` — formulario completo FEAT-028 (7 secciones).
 - `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-catalog-select.blade.php` — selector catalogo reutilizable.
