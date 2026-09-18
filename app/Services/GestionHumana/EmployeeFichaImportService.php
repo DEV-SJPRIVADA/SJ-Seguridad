@@ -20,6 +20,7 @@ class EmployeeFichaImportService
 {
     public function __construct(
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
+        private readonly EmployeeFichaImportValueNormalizer $valueNormalizer,
     ) {}
 
     /**
@@ -77,6 +78,11 @@ class EmployeeFichaImportService
                     }
 
                     if ($existing !== null) {
+                        $existingExtra = is_array($existing->payroll_extra) ? $existing->payroll_extra : [];
+                        $payload['payroll_extra'] = array_merge(
+                            $existingExtra,
+                            is_array($payload['payroll_extra'] ?? null) ? $payload['payroll_extra'] : [],
+                        );
                         $existing->update($payload);
                         $existing->syncEmploymentStatusFromTerminationDate();
                         $this->profileCatalogSync->syncAndSave($existing);
@@ -146,6 +152,16 @@ class EmployeeFichaImportService
     {
         $nameParts = $this->resolveImportNameParts($data);
 
+        $documentType = $this->valueNormalizer->documentType($data['tipo_documento'] ?? null);
+        $sex = $this->valueNormalizer->sex($data['sexo'] ?? null);
+        $accountType = $this->valueNormalizer->accountType($data['tipo_de_cuenta'] ?? null);
+        $riskLevel = $this->valueNormalizer->riskLevel($data['nivel_riesgo_arp'] ?? null);
+        $salaryType = $this->valueNormalizer->salaryType($data['tipo_salario'] ?? null);
+        $contractType = $this->valueNormalizer->contractType($data['tipo_contrato'] ?? null);
+        $paymentMethod = $this->valueNormalizer->paymentMethod($data['forma_pago'] ?? null);
+        $bank = $this->valueNormalizer->bank($data['banco'] ?? null);
+        $linkageType = $this->valueNormalizer->linkageType($data['tipo_vinculacion'] ?? null);
+
         $payload = [
             'document_number' => $cedula,
             'full_name' => $nameParts['full_name'],
@@ -153,7 +169,7 @@ class EmployeeFichaImportService
             'second_surname' => $nameParts['second_surname'],
             'first_name' => $nameParts['first_name'],
             'second_name' => $nameParts['second_name'],
-            'document_type' => $this->stringOrNull($data['tipo_documento'] ?? null),
+            'document_type' => $documentType,
             'birth_date' => $this->parseDate($data['fecha_nac'] ?? null),
             'expedition_city_code' => $this->stringOrNull($data['codigo_lugar_exp_cedula'] ?? null),
             'expedition_city_name' => $this->stringOrNull($data['lugar_exp_cedula'] ?? null),
@@ -165,13 +181,13 @@ class EmployeeFichaImportService
             'address' => $this->stringOrNull($data['direccion'] ?? null),
             'phone' => $this->stringOrNull($data['telefono'] ?? null),
             'blood_type' => $this->stringOrNull($data['tipo_sangre'] ?? null),
-            'sex' => $this->normalizeSex($data['sexo'] ?? null),
+            'sex' => $sex,
             'salary' => $this->numericOrNull($data['salario'] ?? null),
             'education_level' => $this->stringOrNull($data['escolaridad'] ?? null),
             'marital_status' => $this->stringOrNull($data['estado_civil'] ?? null),
             'children_count' => $this->intOrNull($data['numero_hijos'] ?? null),
             'email' => $this->stringOrNull($data['email'] ?? null),
-            'linkage_type' => $this->stringOrNull($data['tipo_vinculacion'] ?? null),
+            'linkage_type' => $linkageType,
             'hire_date' => $this->parseDate($data['fecha_ingreso'] ?? null),
             'contract_end_date' => $this->parseDate($data['fecha_vencimiento_contrato'] ?? null),
             'termination_date' => $this->parseDate($data['fecha_retiro'] ?? null),
@@ -180,26 +196,71 @@ class EmployeeFichaImportService
             'cost_center_name' => $this->stringOrNull($data['nombre_ccosto'] ?? null),
             'position_code' => $this->stringOrNull($data['cargo'] ?? null),
             'position_name' => $this->stringOrNull($data['nombre_cargo'] ?? null),
-            'salary_type_code' => $this->stringOrNull($data['tipo_salario'] ?? null),
-            'contract_type_code' => $this->stringOrNull($data['tipo_contrato'] ?? null),
+            'salary_type_code' => $salaryType,
+            'contract_type_code' => $contractType,
             'eps_code' => $this->stringOrNull($data['codigo_eps'] ?? null),
             'eps_name' => $this->stringOrNull($data['nombre_eps'] ?? null),
             'afp_code' => $this->stringOrNull($data['codigo_afp'] ?? null),
             'afp_name' => $this->stringOrNull($data['nombre_afp'] ?? null),
             'arp_name' => $this->stringOrNull($data['nombre_arp'] ?? null),
-            'risk_level' => $this->stringOrNull($data['nivel_riesgo_arp'] ?? null),
+            'risk_level' => $riskLevel,
             'compensation_fund_name' => $this->stringOrNull($data['nombre_caja_compensacion'] ?? null),
-            'bank_code' => $this->stringOrNull($data['banco'] ?? null),
-            'account_type' => $this->stringOrNull($data['tipo_de_cuenta'] ?? null),
+            'bank_code' => $bank,
+            'account_type' => $accountType,
             'account_number' => $this->stringOrNull($data['cuenta'] ?? null),
-            'payment_method_code' => $this->stringOrNull($data['forma_pago'] ?? null),
+            'payment_method_code' => $paymentMethod,
             'economic_activity_code' => $this->stringOrNull($data['actividad_economica'] ?? null),
             'economic_activity_name' => $this->stringOrNull($data['nombre_actividad_economica'] ?? null),
+            'payroll_extra' => $this->mapPayrollExtraFromImport($data),
         ];
 
-        $this->seedCatalogPairsFromRow($data);
+        $this->seedCatalogPairsFromRow($data, $payload);
 
         return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function mapPayrollExtraFromImport(array $data): array
+    {
+        $extra = [];
+
+        $age = $this->intOrNull($data['edad'] ?? null);
+        if ($age !== null) {
+            $extra['age'] = $age;
+        }
+
+        $contributorType = $this->stringOrNull($data['tipo_cotizante'] ?? null);
+        if ($contributorType !== null) {
+            $extra['contributor_type'] = $contributorType;
+        }
+
+        $scale = $this->stringOrNull($data['escala'] ?? null);
+        if ($scale !== null) {
+            $extra['salary_scale'] = $scale;
+        }
+
+        $lastVacationPeriod = $this->parseDate($data['ultimo_periodo_vacaciones'] ?? null);
+        if ($lastVacationPeriod !== null) {
+            $extra['last_vacation_period'] = $lastVacationPeriod;
+        }
+
+        foreach ([
+            'total_dias_vacaciones' => 'total_vacation_days',
+            'periodos_pendientes_vacaciones' => 'pending_vacation_periods',
+            'excedente_pdte_vacaciones' => 'vacation_excess_days',
+            'dias_pendientes_a_disfrutar' => 'vacation_days_to_enjoy',
+            'valor_pendiente_de_vacaciones' => 'pending_vacation_value',
+        ] as $importKey => $extraKey) {
+            $numeric = $this->numericOrNull($data[$importKey] ?? null);
+            if ($numeric !== null) {
+                $extra[$extraKey] = $numeric;
+            }
+        }
+
+        return $extra;
     }
 
     /**
@@ -288,10 +349,11 @@ class EmployeeFichaImportService
 
     /**
      * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $payload
      */
-    private function seedCatalogPairsFromRow(array $data): void
+    private function seedCatalogPairsFromRow(array $data, array $payload): void
     {
-        PayrollCatalogItem::upsertPair('document_type', $this->stringOrNull($data['tipo_documento'] ?? null), $this->stringOrNull($data['tipo_documento'] ?? null));
+        PayrollCatalogItem::upsertPair('document_type', $payload['document_type'] ?? null, $payload['document_type'] ?? null);
         PayrollCatalogItem::upsertPair('city', $this->stringOrNull($data['codigo_lugar_residencia'] ?? null), $this->stringOrNull($data['lugar_residencia'] ?? null));
         PayrollCatalogItem::upsertPair('city', $this->stringOrNull($data['codigo_ciudad_trabajo'] ?? null), $this->stringOrNull($data['ciudad_trabajo'] ?? null));
         PayrollCatalogItem::upsertPair('position', $this->stringOrNull($data['cargo'] ?? null), $this->stringOrNull($data['nombre_cargo'] ?? null));
@@ -299,10 +361,13 @@ class EmployeeFichaImportService
         PayrollCatalogItem::upsertPair('eps', $this->stringOrNull($data['codigo_eps'] ?? null), $this->stringOrNull($data['nombre_eps'] ?? null));
         PayrollCatalogItem::upsertPair('afp', $this->stringOrNull($data['codigo_afp'] ?? null), $this->stringOrNull($data['nombre_afp'] ?? null));
         PayrollCatalogItem::upsertPair('arp', null, $this->stringOrNull($data['nombre_arp'] ?? null));
-        PayrollCatalogItem::upsertPair('bank', $this->stringOrNull($data['banco'] ?? null), $this->stringOrNull($data['banco'] ?? null));
-        PayrollCatalogItem::upsertPair('payment_method', $this->stringOrNull($data['forma_pago'] ?? null), $this->stringOrNull($data['forma_pago'] ?? null));
-        PayrollCatalogItem::upsertPair('contract_type', $this->stringOrNull($data['tipo_contrato'] ?? null), $this->stringOrNull($data['tipo_contrato'] ?? null));
-        PayrollCatalogItem::upsertPair('salary_type', $this->stringOrNull($data['tipo_salario'] ?? null), $this->stringOrNull($data['tipo_salario'] ?? null));
+        PayrollCatalogItem::upsertPair('bank', $payload['bank_code'] ?? null, $this->stringOrNull($data['banco'] ?? null));
+        PayrollCatalogItem::upsertPair('payment_method', $payload['payment_method_code'] ?? null, $this->stringOrNull($data['forma_pago'] ?? null));
+        PayrollCatalogItem::upsertPair('contract_type', $payload['contract_type_code'] ?? null, $this->stringOrNull($data['tipo_contrato'] ?? null));
+        PayrollCatalogItem::upsertPair('salary_type', $payload['salary_type_code'] ?? null, $this->stringOrNull($data['tipo_salario'] ?? null));
+        PayrollCatalogItem::upsertPair('account_type', $payload['account_type'] ?? null, $payload['account_type'] ?? null);
+        PayrollCatalogItem::upsertPair('risk_level', $payload['risk_level'] ?? null, $this->stringOrNull($data['nivel_riesgo_arp'] ?? null));
+        PayrollCatalogItem::upsertPair('linkage_type', $payload['linkage_type'] ?? null, $this->stringOrNull($data['tipo_vinculacion'] ?? null));
         PayrollCatalogItem::upsertPair('economic_activity', $this->stringOrNull($data['actividad_economica'] ?? null), $this->stringOrNull($data['nombre_actividad_economica'] ?? null));
     }
 
@@ -346,16 +411,5 @@ class EmployeeFichaImportService
         } catch (\Throwable) {
             return null;
         }
-    }
-
-    private function normalizeSex(mixed $value): ?string
-    {
-        $value = mb_strtoupper(trim((string) ($value ?? '')));
-
-        return match (true) {
-            str_starts_with($value, 'M') => 'M',
-            str_starts_with($value, 'F') => 'F',
-            default => $value !== '' ? $value : null,
-        };
     }
 }

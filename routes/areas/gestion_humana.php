@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\GestionHumana\ArchivoController;
 use App\Http\Controllers\GestionHumana\ContratacionLetterController;
+use App\Http\Controllers\GestionHumana\CursosCatalogController;
+use App\Http\Controllers\GestionHumana\CursosController;
 use App\Http\Controllers\GestionHumana\DesvinculacionesController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
@@ -36,6 +38,8 @@ Route::middleware(['password.changed'])
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
         Route::post('/{fichaEntry}/desvincular', [FichaEmpleadosController::class, 'terminate'])->name('ficha.terminate');
+        Route::get('/{fichaEntry}/cursos', [FichaEmpleadosController::class, 'employeeCursos'])->name('cursos');
+        Route::get('/{fichaEntry}/cursos/{employeeCurso}/documento', [FichaEmpleadosController::class, 'downloadEmployeeCursoDocument'])->name('cursos.document');
         Route::get('/periodos/{period}/cartas/plantillas', [TerminationLetterController::class, 'templates'])->name('period.letters.templates');
         Route::post('/periodos/{period}/cartas/generar', [TerminationLetterController::class, 'generate'])->name('period.letters.generate');
         Route::get('/periodos/{period}/cartas/descargar', [TerminationLetterController::class, 'download'])->name('period.letters.download');
@@ -89,6 +93,39 @@ Route::middleware(['password.changed'])
         Route::get('/masivos/descarga/{token}', [DesvinculacionesController::class, 'downloadZip'])->name('masivos.download');
         Route::get('/seguimientos', [DesvinculacionesController::class, 'seguimientos'])->name('seguimientos');
         Route::get('/seguimientos/datatable', [DesvinculacionesController::class, 'seguimientosDatatable'])->name('seguimientos.datatable');
+        Route::get('/seguimientos/exportar', [DesvinculacionesController::class, 'exportSeguimientos'])->name('seguimientos.export');
         Route::patch('/seguimientos/{followup}', [DesvinculacionesController::class, 'updateSeguimiento'])->name('seguimientos.update');
         Route::post('/seguimientos/{followup}/revertir', [DesvinculacionesController::class, 'revertSeguimiento'])->name('seguimientos.revert');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/cursos')
+    ->name('gestion-humana.cursos.')
+    ->group(function (): void {
+        Route::get('/', [CursosController::class, 'index'])->name('index');
+        Route::get('/dashboard', [CursosController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [CursosController::class, 'dashboardMetrics'])->name('dashboard.metrics');
+        Route::get('/registros', [CursosController::class, 'registros'])->name('registros');
+        Route::get('/registros/datatable', [CursosController::class, 'datatable'])->name('registros.datatable');
+        Route::get('/registros/lookup', [CursosController::class, 'lookup'])->name('registros.lookup');
+        Route::get('/registros/exportar', [CursosController::class, 'export'])->name('registros.export');
+        Route::get('/registros/plantilla-importacion', [CursosController::class, 'importTemplate'])->name('registros.import-template');
+        Route::post('/registros/importar', [CursosController::class, 'import'])->name('registros.import');
+        Route::get('/registros/importar/reporte/{token}', [CursosController::class, 'downloadImportReport'])->name('registros.import-report');
+        Route::post('/registros', [CursosController::class, 'store'])->name('registros.store');
+        Route::post('/registros/marcar-solicitado', [CursosController::class, 'bulkMarkSolicitado'])->name('registros.bulk-mark-solicitado');
+        Route::patch('/registros/{employeeCurso}', [CursosController::class, 'update'])->name('registros.update');
+        Route::delete('/registros/{employeeCurso}', [CursosController::class, 'destroy'])->name('registros.destroy');
+        Route::get('/registros/{employeeCurso}/documento', [CursosController::class, 'downloadDocument'])->name('registros.document.download');
+        Route::post('/registros/{employeeCurso}/documento', [CursosController::class, 'uploadDocument'])->name('registros.document.upload');
+        Route::delete('/registros/{employeeCurso}/documento', [CursosController::class, 'destroyDocument'])->name('registros.document.destroy');
+
+        Route::get('/catalogo', [CursosCatalogController::class, 'index'])->name('catalogo');
+        Route::get('/catalogo/opciones', [CursosCatalogController::class, 'options'])->name('catalogo.options');
+        Route::post('/catalogo/escuelas', [CursosCatalogController::class, 'storeEscuela'])->name('catalogo.escuelas.store');
+        Route::patch('/catalogo/escuelas/{cursoEscuela}', [CursosCatalogController::class, 'updateEscuela'])->name('catalogo.escuelas.update');
+        Route::delete('/catalogo/escuelas/{cursoEscuela}', [CursosCatalogController::class, 'destroyEscuela'])->name('catalogo.escuelas.destroy');
+        Route::post('/catalogo', [CursosCatalogController::class, 'store'])->name('catalogo.store');
+        Route::patch('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'update'])->name('catalogo.update');
+        Route::delete('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'destroy'])->name('catalogo.destroy');
     });

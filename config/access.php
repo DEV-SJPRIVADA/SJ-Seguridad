@@ -30,6 +30,8 @@ return [
         'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Masivos y Seguimientos)',
         'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
+        'cursos.view' => 'Cursos: Ver listado, filtros y export Excel',
+        'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -45,6 +47,13 @@ return [
         'purchase.tab.my_requests' => 'Solicitudes compra: Mis solicitudes',
         'purchase.tab.approval' => 'Solicitudes compra: Autorizar (director)',
         'purchase.tab.processing' => 'Compras: Bandeja de procesamiento',
+
+        // Solicitudes de desarrollo (TIC)
+        'devreq.tab.create' => 'Solicitudes desarrollo: Crear',
+        'devreq.tab.my_requests' => 'Solicitudes desarrollo: Mis solicitudes',
+        'devreq.tab.leader_approval' => 'Solicitudes desarrollo: Aprobacion lider',
+        'devreq.tab.tic_queue' => 'Solicitudes desarrollo: Bandeja TIC',
+        'devreq.tab.view' => 'Solicitudes desarrollo: Consulta',
     ],
 
     'area_indicador_permissions' => [
@@ -71,7 +80,7 @@ return [
         'calidad' => 'Calidad',
         'admin_financiero' => 'Admin y Financiero',
         'compras' => 'Compras',
-        'Tic' => 'Tic',
+        'tic' => 'TIC',
     ],
 
     'area_actions' => [
@@ -87,8 +96,10 @@ return [
         'suministros' => 'Suministros',
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
+        'solicitudes_desarrollo' => 'Solicitudes desarrollo',
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
+        'cursos' => 'Cursos',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
@@ -117,6 +128,10 @@ return [
             'home' => 'compras',
             'base_area_tab' => false,
         ],
+        'solicitudes_desarrollo' => [
+            'home' => 'tic',
+            'base_area_tab' => true,
+        ],
         'documentos' => [
             'home' => null,
             'admin_home' => 'calidad',
@@ -135,6 +150,10 @@ return [
             'base_area_tab' => false,
         ],
         'desvinculaciones' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'cursos' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
@@ -171,6 +190,12 @@ return [
         'seguimientos' => 'Seguimientos',
     ],
 
+    'cursos_tabs' => [
+        'dashboard' => 'Dashboard',
+        'registros' => 'Cursos',
+        'catalogo' => 'Catálogo',
+    ],
+
     'comercial_gestion_tab_board_keys' => [
         'matriz_clientes',
         'servicios_comerciales',
@@ -197,6 +222,13 @@ return [
         'mis_solicitudes' => 'Mis solicitudes',
         'pendientes_aprobacion' => 'Pendientes autorizacion',
         'bandeja_compras' => 'Bandeja compras',
+    ],
+
+    'devreq_tabs' => [
+        'nueva' => 'Nueva solicitud',
+        'mis_solicitudes' => 'Mis solicitudes',
+        'aprobacion_lider' => 'Aprobacion lider',
+        'bandeja_tic' => 'Bandeja TIC',
     ],
 
     'quality_document_tabs' => [
@@ -246,6 +278,8 @@ return [
             'supply.tab.my_requests',
             'purchase.tab.create',
             'purchase.tab.my_requests',
+            'devreq.tab.create',
+            'devreq.tab.my_requests',
         ],
         'global_groups' => [
             'administration' => [
@@ -293,6 +327,12 @@ return [
                     'purchase.tab.approval',
                 ],
             ],
+            'development_requests' => [
+                'label' => 'Solicitudes de desarrollo — Aprobacion lider',
+                'permissions' => [
+                    'devreq.tab.leader_approval',
+                ],
+            ],
             'documents' => [
                 'label' => 'Documentos de Calidad',
                 'permissions' => [
@@ -313,6 +353,7 @@ return [
                             'view.board.gestion_humana.archivo',
                             'view.board.gestion_humana.plantillas_word',
                             'view.board.gestion_humana.desvinculaciones',
+                            'view.board.gestion_humana.cursos',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -343,6 +384,13 @@ return [
                             'desvinculaciones.view',
                             'desvinculaciones.masivos',
                             'desvinculaciones.seguimientos.edit',
+                        ],
+                    ],
+                    'cursos' => [
+                        'label' => 'Cursos',
+                        'permissions' => [
+                            'cursos.view',
+                            'cursos.edit',
                         ],
                     ],
                 ],
@@ -425,6 +473,26 @@ return [
                         'permissions' => [
                             'view.area.calidad',
                             'manage.area.calidad',
+                        ],
+                    ],
+                ],
+            ],
+            'tic' => [
+                'label' => 'TIC',
+                'subgroups' => [
+                    'boards' => [
+                        'label' => 'Ver tableros',
+                        'permissions' => [
+                            'view.board.tic.solicitudes_desarrollo',
+                            'view.board.tic.dashboard',
+                        ],
+                    ],
+                    'development_requests' => [
+                        'label' => 'Solicitudes de desarrollo (funciones)',
+                        'permissions' => [
+                            'devreq.tab.tic_queue',
+                            'devreq.tab.view',
+                            'devreq.tab.leader_approval',
                         ],
                     ],
                 ],

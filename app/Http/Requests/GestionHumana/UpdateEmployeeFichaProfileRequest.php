@@ -34,6 +34,7 @@ class UpdateEmployeeFichaProfileRequest extends FormRequest
             'second_name' => 'segundo nombre',
             'sex' => 'género',
             'hire_date' => 'fecha ingreso',
+            'termination_date' => 'fecha desvinculación',
             'position_code' => 'cargo',
             'cost_center_code' => 'centro de costo',
             'eps_code' => 'EPS',

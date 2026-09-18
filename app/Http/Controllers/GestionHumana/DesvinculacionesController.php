@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\GestionHumana;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\LookupBulkTerminationRequest;
 use App\Http\Requests\GestionHumana\ProcessBulkTerminationRequest;
@@ -12,6 +13,7 @@ use App\Models\PayrollCatalogItem;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\GestionHumana\BulkTerminationService;
+use App\Services\GestionHumana\DesvinculacionesAuditLogService;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
 use App\Services\GestionHumana\TerminationFollowupDatatableService;
 use Illuminate\Contracts\View\View;
@@ -22,6 +24,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DesvinculacionesController extends Controller
 {
@@ -34,6 +37,7 @@ class DesvinculacionesController extends Controller
         private readonly BulkTerminationService $bulkTerminationService,
         private readonly EmployeeTerminationFollowupService $followupService,
         private readonly TerminationFollowupDatatableService $followupDatatableService,
+        private readonly DesvinculacionesAuditLogService $auditLogService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -74,9 +78,12 @@ class DesvinculacionesController extends Controller
             'checkFields' => EmployeeTerminationFollowup::CHECK_FIELDS,
             'checkLabels' => EmployeeTerminationFollowup::CHECK_LABELS,
             'datatableUrl' => route('gestion-humana.desvinculaciones.seguimientos.datatable'),
+            'exportUrl' => route('gestion-humana.desvinculaciones.seguimientos.export'),
             'filters' => [
                 'q' => request()->string('q')->toString(),
                 'status' => request()->string('status')->toString() ?: 'todos',
+                'fecha_desde' => request()->string('fecha_desde')->toString(),
+                'fecha_hasta' => request()->string('fecha_hasta')->toString(),
             ],
         ]);
     }
@@ -86,6 +93,39 @@ class DesvinculacionesController extends Controller
         $this->authorizeView();
 
         return $this->followupDatatableService->respond($request);
+    }
+
+    public function exportSeguimientos(Request $request): StreamedResponse
+    {
+        $this->authorizeView();
+
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', 'in:todos,incompletos,ok_todo,sin_carta'],
+            'fecha_desde' => ['nullable', 'date'],
+            'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
+        ]);
+
+        $rows = $this->followupDatatableService->filteredQuery($request)->get();
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'seguimientos_excel',
+            metadata: [
+                'row_count' => $rows->count(),
+                'q' => trim($request->string('q')->toString()),
+                'status' => $request->string('status')->toString() ?: 'todos',
+                'fecha_desde' => $request->date('fecha_desde')?->toDateString(),
+                'fecha_hasta' => $request->date('fecha_hasta')?->toDateString(),
+            ],
+        );
+
+        return (new BaseExport(
+            $rows,
+            $this->followupDatatableService->exportColumns(),
+            'seguimientos_desvinculaciones_'.now()->format('Y-m-d').'.xlsx',
+            'Seguimientos desvinculaciones - '.config('app.name'),
+        ))->download();
     }
 
     public function updateSeguimiento(

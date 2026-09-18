@@ -26,7 +26,11 @@
                 <div class="alert alert--danger archivo-page__alert">{{ $errors->first('import_file') }}</div>
             @endif
 
-            @if ($errors->any() && ! $errors->has('import_file'))
+            @if ($errors->has('export'))
+                <div class="alert alert--danger archivo-page__alert">{{ $errors->first('export') }}</div>
+            @endif
+
+            @if ($errors->any() && ! $errors->has('import_file') && ! $errors->has('export'))
                 <div class="alert alert--danger archivo-page__alert">
                     @foreach ($errors->all() as $error)
                         <p class="archivo-page__inline-error">{{ $error }}</p>
@@ -55,11 +59,17 @@
                                     Consulta multiple
                                 </button>
                                 @if ($canExportArchive ?? false)
-                                    <x-export-excel
-                                        route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
-                                        label="Exportar archivo"
+                                    <button
+                                        type="button"
                                         class="btn btn--secondary btn--sm"
-                                    />
+                                        title="Exportar plantilla con datos de archivo"
+                                        aria-label="Exportar plantilla con datos de archivo"
+                                        x-data=""
+                                        x-on:click.prevent="$dispatch('open-modal', 'archivo-export-scope')"
+                                    >
+                                        <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
+                                        Exportar archivo
+                                    </button>
                                 @endif
                                 @if ($canManage)
                                     <button
@@ -186,10 +196,17 @@
                 'show' => $errors->has('documents') || $errors->has('consultation_types') || $errors->has('consultation_types.*'),
             ])
 
+            @if ($canExportArchive ?? false)
+                @include('areas.gestion_humana.archivo.partials.export-scope-modal', [
+                    'filters' => $filters ?? [],
+                ])
+            @endif
+
             @if ($canManage)
                 @include('areas.gestion_humana.archivo.partials.import-modal', [
                     'canManage' => $canManage,
                     'canExportArchive' => $canExportArchive ?? false,
+                    'filters' => $filters ?? [],
                     'show' => $errors->has('import_file') || (is_array(session('import_result')) && ((session('import_result.failures_count') ?? 0) > 0 || session('import_result.report_token'))),
                 ])
             @endif

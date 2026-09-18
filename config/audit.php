@@ -47,5 +47,13 @@ return [
             'label' => 'Desvinculaciones',
             'area' => 'gestion_humana',
         ],
+        'cursos' => [
+            'label' => 'Cursos',
+            'area' => 'gestion_humana',
+        ],
+        'development_requests' => [
+            'label' => 'Solicitudes de desarrollo',
+            'area' => 'tic',
+        ],
     ],
 ];

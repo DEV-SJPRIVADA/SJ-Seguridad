@@ -6,6 +6,7 @@ return [
         'comercial' => 'Comercial',
         'purchase_requests' => 'Solicitudes de compra',
         'supplies' => 'Suministros',
+        'development_requests' => 'Solicitudes de desarrollo',
     ],
 
     'fallback_recipient' => 'desarrollo.tic@sjsp.com.co',
@@ -28,6 +29,9 @@ return [
         ],
         'supplies' => [
             'supply_request_approved_for_compras',
+        ],
+        'development_requests' => [
+            'development_request_message',
         ],
     ],
 ];

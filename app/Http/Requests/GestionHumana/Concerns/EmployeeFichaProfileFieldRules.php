@@ -56,6 +56,7 @@ trait EmployeeFichaProfileFieldRules
             'sex' => [$required, 'string', Rule::in(['M', 'F'])],
             'salary' => [$required, 'numeric', 'min:0', 'max:999999999999.99'],
             'hire_date' => [$required, 'date'],
+            'termination_date' => ['nullable', 'date'],
             'contract_end_date' => ['nullable', 'date'],
             'work_center_name' => ['nullable', 'string', 'max:150'],
             'cost_center_code' => [$required, 'string', 'max:50', new PayrollCatalogCode('cost_center')],
@@ -106,6 +107,15 @@ trait EmployeeFichaProfileFieldRules
             'payroll_extra.arp_code' => ['nullable', 'string', 'max:50'],
             'payroll_extra.military_book' => ['nullable', 'string', 'max:50'],
             'payroll_extra.exclude_overtime' => ['nullable', 'string', 'max:5'],
+            'payroll_extra.age' => ['nullable', 'integer', 'min:0', 'max:120'],
+            'payroll_extra.contributor_type' => ['nullable', 'string', 'max:100'],
+            'payroll_extra.salary_scale' => ['nullable', 'string', 'max:50'],
+            'payroll_extra.last_vacation_period' => ['nullable', 'date'],
+            'payroll_extra.total_vacation_days' => ['nullable', 'numeric'],
+            'payroll_extra.pending_vacation_periods' => ['nullable', 'numeric'],
+            'payroll_extra.vacation_excess_days' => ['nullable', 'numeric'],
+            'payroll_extra.vacation_days_to_enjoy' => ['nullable', 'numeric'],
+            'payroll_extra.pending_vacation_value' => ['nullable', 'numeric'],
         ];
     }
 }

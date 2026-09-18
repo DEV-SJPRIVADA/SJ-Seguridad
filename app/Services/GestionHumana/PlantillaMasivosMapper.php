@@ -9,6 +9,10 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class PlantillaMasivosMapper
 {
+    public function __construct(
+        private readonly EmployeeFichaImportValueNormalizer $valueNormalizer,
+    ) {}
+
     /**
      * @return list<mixed>
      */
@@ -82,7 +86,7 @@ class PlantillaMasivosMapper
 
         return [
             $profile?->document_number ?: $entry->hired_document,
-            $this->documentTypeCode($profile?->document_type),
+            $this->valueNormalizer->documentType($profile?->document_type),
             $fullName,
             $firstSurname,
             $secondSurname,
@@ -104,7 +108,7 @@ class PlantillaMasivosMapper
             $bankCode,
             $bankName,
             $profile?->account_number,
-            $profile?->account_type,
+            $this->valueNormalizer->accountType($profile?->account_type),
             $workCenterCode,
             null,
             $workCenterName,
@@ -117,11 +121,11 @@ class PlantillaMasivosMapper
             $this->excelDate(data_get($extra, 'afp_start_date')),
             $arpCode,
             $arpName,
-            $profile?->risk_level,
+            $this->valueNormalizer->riskLevel($profile?->risk_level),
             $ccfCode,
             $ccfName,
             data_get($extra, 'military_book'),
-            $profile?->sex,
+            $this->valueNormalizer->sex($profile?->sex),
             $salaryTypeCode,
             $salaryTypeName,
             $contractTypeCode,
@@ -156,21 +160,6 @@ class PlantillaMasivosMapper
             ->ofType($type)
             ->where('code', $code)
             ->value('name');
-    }
-
-    private function documentTypeCode(?string $value): ?string
-    {
-        $value = trim((string) $value);
-
-        if ($value === '') {
-            return null;
-        }
-
-        if (str_contains($value, ' — ')) {
-            return trim(explode(' — ', $value, 2)[0]);
-        }
-
-        return $value;
     }
 
     private function excelDate(mixed $value): mixed

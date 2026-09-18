@@ -34,17 +34,15 @@
                         </span>
                         <div>
                             <h4 class="ficha-empleados-masivos-modal__card-title">Importar estantes y cajas</h4>
-                            <p class="ficha-empleados-masivos-modal__card-note">Use el Excel de <strong>Exportar archivo</strong> (Ficha empleados o este modulo). Edite columnas <strong>estantes</strong> y <strong>cajas</strong>; la cedula es obligatoria por fila.</p>
+                            <p class="ficha-empleados-masivos-modal__card-note">Descargue la plantilla eligiendo activos, retirados o todos. Por fila basta con <strong>estante</strong> o <strong>caja</strong> (uno de los dos); la cedula es obligatoria.</p>
                         </div>
                     </div>
 
                     <div class="ficha-empleados-masivos-modal__import">
                         @if ($canExportArchive ?? false)
-                            <x-export-excel
-                                route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template') }}"
-                                label="Descargar plantilla con datos"
-                                class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action"
-                            />
+                            @include('areas.gestion_humana.archivo.partials.export-scope-actions', [
+                                'filters' => $filters ?? [],
+                            ])
                         @endif
 
                         <form

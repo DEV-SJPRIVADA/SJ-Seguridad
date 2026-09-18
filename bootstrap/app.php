@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureDevelopmentRequestTabAccess;
 use App\Http\Middleware\EnsureIndicadorAccess;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\EnsurePurchaseTabAccess;
@@ -31,6 +32,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('06:00')
             ->timezone('America/Bogota');
 
+        $schedule->command('cursos:sync-estados')
+            ->dailyAt('06:15')
+            ->timezone('America/Bogota')
+            ->withoutOverlapping();
+
         $schedule->command('audit:purge --force')
             ->monthlyOn(1, '03:00')
             ->timezone('America/Bogota');
@@ -44,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'supply.tab' => EnsureSupplyTabAccess::class,
             'purchase.tab' => EnsurePurchaseTabAccess::class,
+            'devreq.tab' => EnsureDevelopmentRequestTabAccess::class,
             'requisition.tab' => EnsureRequisitionTabAccess::class,
             'indicador.tab' => EnsureIndicadorAccess::class,
         ]);

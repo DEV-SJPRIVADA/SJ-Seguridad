@@ -193,7 +193,6 @@
                                     <th>Cargo</th>
                                     <th>Cliente</th>
                                     <th>Ciudad</th>
-                                    <th>Fecha contrato</th>
                                     <th>Fecha ingreso</th>
                                     <th>Fecha retiro</th>
                                     <th>Estado</th>

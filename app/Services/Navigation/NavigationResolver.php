@@ -6,7 +6,9 @@ use App\Models\User;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
+use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
+use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -26,7 +28,9 @@ class NavigationResolver
         private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
+        private readonly CursosAccessService $cursosAccess,
         private readonly PurchaseAccessService $purchaseAccess,
+        private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
     ) {}
 
@@ -233,6 +237,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'cursos') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->cursosAccess->canViewCursosBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.cursos.dashboard',
+                                'url' => $user->defaultCursosBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.cursos.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -277,6 +298,20 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'solicitudes_desarrollo') {
+                            if (! $this->developmentRequestAccess->canViewDevelopmentRequestBoard($user, $key)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'development-requests.index',
+                                'url' => $user->defaultDevelopmentRequestBoardUrl($key),
+                                'active' => str_starts_with((string) $routeName, 'development-requests.')
+                                    && $requestModule === $key,
+                            ];
+                        }
+
                         if ($boardKey === 'bandeja_compras') {
                             if ($key !== 'compras') {
                                 return null;
@@ -316,6 +351,8 @@ class NavigationResolver
                             $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
                             $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.')
                                 && $requestModule === $key,
+                            $boardKey === 'solicitudes_desarrollo' => str_starts_with((string) $routeName, 'development-requests.')
+                                && $requestModule === $key,
                             $boardKey === 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                 && $requestModule === $key,
                             $boardKey === 'indicadores' => str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones',
@@ -328,6 +365,7 @@ class NavigationResolver
                             $boardKey === 'archivo' => str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana',
                             $boardKey === 'plantillas_word' => str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana',
                             $boardKey === 'desvinculaciones' => str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana',
+                            $boardKey === 'cursos' => str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
@@ -396,6 +434,8 @@ class NavigationResolver
                 ) || (
                     str_starts_with((string) $routeName, 'purchase-requests.') && (string) request()->route('module') === $key
                 ) || (
+                    str_starts_with((string) $routeName, 'development-requests.') && (string) request()->route('module') === $key
+                ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 ) || (
                     str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
@@ -419,6 +459,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana'
                 );
 
                 return [
@@ -468,6 +510,7 @@ class NavigationResolver
         if (str_starts_with((string) $routeName, 'requisitions.')
             || str_starts_with((string) $routeName, 'supplies.')
             || str_starts_with((string) $routeName, 'purchase-requests.')
+            || str_starts_with((string) $routeName, 'development-requests.')
             || str_starts_with((string) $routeName, 'quality-documents.')) {
             return (string) request()->route('module');
         }

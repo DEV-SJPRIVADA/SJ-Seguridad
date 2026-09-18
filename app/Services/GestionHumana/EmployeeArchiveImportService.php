@@ -54,6 +54,7 @@ class EmployeeArchiveImportService
             $shelf = $this->nullableString($data['estantes'] ?? null);
             $box = $this->nullableString($data['cajas'] ?? null);
 
+            // Basta con estante o caja; solo se omite si faltan los dos.
             if ($shelf === null && $box === null) {
                 $stats['skipped']++;
                 $stats['failures'][] = ImportFailureRow::make(
@@ -61,7 +62,7 @@ class EmployeeArchiveImportService
                     $cedula,
                     'Cedula',
                     ImportFailureRow::SEVERITY_SKIPPED,
-                    'Sin datos de estantes ni cajas (fila omitida).',
+                    'Sin estante ni caja (se requiere al menos uno).',
                     $this->filterArchiveRow($data),
                 );
 
@@ -147,13 +148,40 @@ class EmployeeArchiveImportService
         $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
 
         for ($col = 1; $col <= $maxCol; $col++) {
-            $key = trim((string) SpreadsheetCellReader::rawValue($sheet, $col, 1));
-            if ($key !== '') {
+            $raw = trim((string) SpreadsheetCellReader::rawValue($sheet, $col, 1));
+            if ($raw === '') {
+                continue;
+            }
+
+            $key = $this->canonicalizeHeaderKey($raw);
+
+            if ($key !== '' && ! array_key_exists($key, $headers)) {
                 $headers[$key] = $col;
             }
         }
 
         return $headers;
+    }
+
+    private function canonicalizeHeaderKey(string $key): string
+    {
+        $normalized = mb_strtolower(trim($key));
+        $normalized = strtr($normalized, [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'ü' => 'u',
+        ]);
+        $normalized = str_replace([' ', '_', '-'], '', $normalized);
+
+        return match ($normalized) {
+            'cedula', 'documento', 'nrodocumento', 'documentnumber' => 'cedula',
+            'estante', 'estantes', 'archiveshelf' => 'estantes',
+            'caja', 'cajas', 'archivebox' => 'cajas',
+            default => mb_strtolower(trim($key)),
+        };
     }
 
     /**
@@ -183,7 +211,19 @@ class EmployeeArchiveImportService
 
     private function nullableString(mixed $value): ?string
     {
-        $value = trim((string) ($value ?? ''));
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_float($value) || is_int($value)) {
+            if (is_float($value) && floor($value) === $value) {
+                $value = (string) (int) $value;
+            } else {
+                $value = (string) $value;
+            }
+        }
+
+        $value = trim((string) $value);
 
         return $value === '' ? null : mb_substr($value, 0, 100);
     }

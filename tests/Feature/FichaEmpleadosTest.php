@@ -346,7 +346,7 @@ class FichaEmpleadosTest extends TestCase
             ->get(route('gestion-humana.ficha-empleados.employees.index', ['employment_status' => 'todos']));
 
         $response->assertOk()
-            ->assertSee('Fecha contrato', false)
+            ->assertDontSee('Fecha contrato', false)
             ->assertSee('Fecha ingreso', false)
             ->assertSee('Fecha retiro', false)
             ->assertSee('Estado', false)

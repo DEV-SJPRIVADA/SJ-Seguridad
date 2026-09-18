@@ -149,6 +149,117 @@ class EmployeeArchiveTest extends TestCase
         @unlink($tempPath);
     }
 
+    public function test_export_archive_template_respects_employment_status_filter(): void
+    {
+        $viewer = User::factory()->create();
+        $viewer->givePermissionTo(['ficha_empleados.view', 'view.board.gestion_humana.ficha_empleados']);
+
+        $activeEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '1001001001',
+            'hired_full_name' => 'ACTIVO EXPORT',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        $retiredEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '2002002002',
+            'hired_full_name' => 'RETIRADO EXPORT',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $activeEntry->id,
+            'document_number' => $activeEntry->hired_document,
+            'full_name' => $activeEntry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $retiredEntry->id,
+            'document_number' => $retiredEntry->hired_document,
+            'full_name' => $retiredEntry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subDay()->toDateString(),
+        ]);
+
+        $activeOnly = $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.export-archive-template', [
+                'employment_status' => 'activo',
+            ]));
+        $activeOnly->assertOk();
+        $activeCedulas = $this->archiveExportCedulas($activeOnly);
+        $this->assertContains('1001001001', $activeCedulas);
+        $this->assertNotContains('2002002002', $activeCedulas);
+
+        $retiredOnly = $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.export-archive-template', [
+                'employment_status' => 'desvinculado',
+            ]));
+        $retiredOnly->assertOk();
+        $retiredCedulas = $this->archiveExportCedulas($retiredOnly);
+        $this->assertContains('2002002002', $retiredCedulas);
+        $this->assertNotContains('1001001001', $retiredCedulas);
+
+        $all = $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.export-archive-template', [
+                'employment_status' => 'todos',
+            ]));
+        $all->assertOk();
+        $allCedulas = $this->archiveExportCedulas($all);
+        $this->assertContains('1001001001', $allCedulas);
+        $this->assertContains('2002002002', $allCedulas);
+    }
+
+    public function test_archivo_labor_histories_shows_export_scope_choices(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo([
+            'archivo.view',
+            'view.board.gestion_humana.archivo',
+            'ficha_empleados.view',
+            'view.board.gestion_humana.ficha_empleados',
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.labor-histories.index'))
+            ->assertOk()
+            ->assertSee('Solo activos', false)
+            ->assertSee('Solo retirados', false)
+            ->assertSee('Todos', false)
+            ->assertSee('employment_status=activo', false)
+            ->assertSee('employment_status=desvinculado', false)
+            ->assertSee('employment_status=todos', false);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function archiveExportCedulas(TestResponse $response): array
+    {
+        $tempPath = tempnam(sys_get_temp_dir(), 'archive-export-status-').'.xlsx';
+        file_put_contents($tempPath, $response->streamedContent());
+
+        $sheet = IOFactory::load($tempPath)->getActiveSheet();
+        $cedulas = [];
+
+        for ($row = 3; $row <= $sheet->getHighestRow(); $row++) {
+            $value = trim((string) $sheet->getCell('A'.$row)->getValue());
+
+            if ($value !== '') {
+                $cedulas[] = $value;
+            }
+        }
+
+        @unlink($tempPath);
+
+        return $cedulas;
+    }
+
     public function test_import_columns_config_does_not_include_archive_fields(): void
     {
         $importColumns = array_keys(config('employee_ficha.import_columns', []));
@@ -199,6 +310,86 @@ class EmployeeArchiveTest extends TestCase
             'archive_shelf' => 'C-10',
             'archive_box' => 'Caja 99',
             'eps_code' => 'EPS-KEEP',
+        ]);
+
+        @unlink($path);
+    }
+
+    public function test_archivo_import_accepts_shelf_or_box_alone(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo(['archivo.manage', 'view.board.gestion_humana.archivo']);
+
+        $shelfOnlyEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '7007007007',
+            'hired_full_name' => 'SOLO ESTANTE',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        $boxOnlyEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '8008008008',
+            'hired_full_name' => 'SOLO CAJA',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        $neitherEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '9009009009',
+            'hired_full_name' => 'SIN UBICACION',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        foreach ([$shelfOnlyEntry, $boxOnlyEntry, $neitherEntry] as $entry) {
+            EmployeeFichaProfile::query()->create([
+                'personal_requisition_ficha_entry_id' => $entry->id,
+                'document_number' => $entry->hired_document,
+                'full_name' => $entry->hired_full_name,
+                'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+                'archive_shelf' => null,
+                'archive_box' => null,
+            ]);
+        }
+
+        $path = $this->createArchiveImportSpreadsheet([
+            ['cedula' => '7007007007', 'estantes' => 'E-77'],
+            ['cedula' => '8008008008', 'cajas' => 'Caja 88'],
+            ['cedula' => '9009009009'],
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.archivo.import'), [
+            'import_file' => new UploadedFile($path, 'archivo-parcial.xlsx', null, null, true),
+        ]);
+
+        $response->assertRedirect(route('gestion-humana.archivo.labor-histories.index'));
+        $response->assertSessionHas('import_result', function (array $result): bool {
+            return ($result['updated'] ?? 0) === 2
+                && ($result['skipped'] ?? 0) === 1;
+        });
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '7007007007',
+            'archive_shelf' => 'E-77',
+            'archive_box' => null,
+        ]);
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '8008008008',
+            'archive_shelf' => null,
+            'archive_box' => 'Caja 88',
+        ]);
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '9009009009',
+            'archive_shelf' => null,
+            'archive_box' => null,
         ]);
 
         @unlink($path);

@@ -73,7 +73,9 @@ Referencia técnica para export nómina (`Plantilla masivos.xlsx`) e import SJ (
 
 Mismas claves que `config/employee_ficha.php` → `import_columns`.
 
-Orden inicial de identidad: `cedula`, `primer_apellido`, `segundo_apellido`, `primer_nombre`, `segundo_nombre`, `nombre` (opcional si se llenan las partes).
+Orden alineado a extracto nompr07: `cedula`, `nombre`, `primer_apellido`, `segundo_apellido`, `primer_nombre`, `segundo_nombre`, …; al final opcionales `codigo_ciudad_trabajo`, `ciudad_trabajo`, `codigo_requisicion`.
+
+Valores legibles del extracto (`CEDULA`, `Masculino`, `Ahorro`, `NIVEL DE RIESGO 5`, …) se normalizan a códigos de nómina/catálogo al importar.
 
 ## Estado laboral
 

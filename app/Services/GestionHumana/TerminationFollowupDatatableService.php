@@ -4,24 +4,20 @@ namespace App\Services\GestionHumana;
 
 use App\Models\EmployeeTerminationFollowup;
 use App\Support\DisplayDate;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 final class TerminationFollowupDatatableService
 {
     public function respond(Request $request): JsonResponse
     {
-        $q = trim($request->string('q')->toString());
-        $status = $this->resolveStatusFilter($request);
-
         $baseQuery = EmployeeTerminationFollowup::query();
         $recordsTotal = (clone $baseQuery)->count();
 
-        $query = (clone $baseQuery)
-            ->search($q)
-            ->statusFilter($status)
-            ->orderByDesc('id');
+        $query = $this->filteredQuery($request);
 
         $draw = (int) $request->input('draw', 1);
         $start = max(0, (int) $request->input('start', 0));
@@ -47,6 +43,25 @@ final class TerminationFollowupDatatableService
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Query filtrada (busqueda, estado, rango fecha entregado nomina) ordenada por id desc.
+     *
+     * @return Builder<EmployeeTerminationFollowup>
+     */
+    public function filteredQuery(Request $request): Builder
+    {
+        $q = trim($request->string('q')->toString());
+        $status = $this->resolveStatusFilter($request);
+        $fechaDesde = $this->resolveDateFilter($request, 'fecha_desde');
+        $fechaHasta = $this->resolveDateFilter($request, 'fecha_hasta');
+
+        return EmployeeTerminationFollowup::query()
+            ->search($q)
+            ->statusFilter($status)
+            ->payrollDeliveredBetween($fechaDesde, $fechaHasta)
+            ->orderByDesc('id');
     }
 
     /**
@@ -88,6 +103,48 @@ final class TerminationFollowupDatatableService
         ];
     }
 
+    /**
+     * Columnas del export Excel de Seguimientos (labels operativos).
+     *
+     * @return list<array{key: string|\Closure, label: string}>
+     */
+    public function exportColumns(): array
+    {
+        $columns = [
+            ['key' => 'id', 'label' => 'No'],
+            ['key' => 'document_number', 'label' => 'CEDULA'],
+            ['key' => 'full_name', 'label' => 'NOMBRE Y APELLIDOS'],
+            ['key' => 'position_name', 'label' => 'CARGO'],
+            ['key' => 'termination_cause_name', 'label' => 'TIPO DESVINCULACION'],
+            [
+                'key' => static fn (EmployeeTerminationFollowup $row): string => DisplayDate::dateTime($row->registered_at, ''),
+                'label' => 'FECHA DE REGISTRO',
+            ],
+            [
+                'key' => static fn (EmployeeTerminationFollowup $row): string => DisplayDate::date($row->termination_date, ''),
+                'label' => 'FECHA DESVINCULACION',
+            ],
+        ];
+
+        foreach (EmployeeTerminationFollowup::CHECK_LABELS as $field => $label) {
+            $columns[] = [
+                'key' => fn (EmployeeTerminationFollowup $row): string => ((bool) $row->{$field}) ? 'Si' : 'No',
+                'label' => $label,
+            ];
+        }
+
+        $columns[] = [
+            'key' => static fn (EmployeeTerminationFollowup $row): string => $row->isOkTodo() ? 'Si' : 'No',
+            'label' => 'OK TODO',
+        ];
+        $columns[] = [
+            'key' => static fn (EmployeeTerminationFollowup $row): string => (string) ($row->termination_notes ?? ''),
+            'label' => 'OBSERVACIONES',
+        ];
+
+        return $columns;
+    }
+
     private function resolveStatusFilter(Request $request): string
     {
         $status = strtolower(trim($request->string('status')->toString()));
@@ -95,5 +152,20 @@ final class TerminationFollowupDatatableService
         return in_array($status, ['incompletos', 'ok_todo', 'sin_carta'], true)
             ? $status
             : 'todos';
+    }
+
+    private function resolveDateFilter(Request $request, string $key): ?string
+    {
+        $raw = trim($request->string($key)->toString());
+
+        if ($raw === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($raw)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

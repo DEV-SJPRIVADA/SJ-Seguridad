@@ -181,7 +181,6 @@ final class EmployeeFichaEntryDatatableService
             e($entry->positionName() ?: '—'),
             e($entry->clientName() ?: '—'),
             e($entry->cityName() ?: '—'),
-            e(DisplayDate::date($entry->contractDate())),
             e(DisplayDate::date($entry->hireDate())),
             e(DisplayDate::date($entry->terminationDate())),
             $statusCell,

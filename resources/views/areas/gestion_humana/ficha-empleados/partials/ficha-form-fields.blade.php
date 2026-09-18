@@ -215,6 +215,11 @@
             <x-input-error :messages="$errors->get('hire_date')" />
         </div>
         <div class="form-field">
+            <label class="form-label" for="termination_date">Fecha desvinculación</label>
+            <input id="termination_date" type="date" name="termination_date" class="form-input" value="{{ old('termination_date', optional($profile->termination_date)->format('Y-m-d')) }}">
+            <x-input-error :messages="$errors->get('termination_date')" />
+        </div>
+        <div class="form-field">
             <label class="form-label" for="contract_end_date">Fecha vencimiento contrato</label>
             <input id="contract_end_date" type="date" name="contract_end_date" class="form-input" value="{{ old('contract_end_date', optional($profile->contract_end_date)->format('Y-m-d')) }}">
             <x-input-error :messages="$errors->get('contract_end_date')" />
@@ -425,6 +430,51 @@
             <label class="form-label" for="payroll_extra_vacation_base_date">Fecha base vacaciones</label>
             <input id="payroll_extra_vacation_base_date" type="date" name="payroll_extra[vacation_base_date]" class="form-input" value="{{ old('payroll_extra.vacation_base_date', $payrollExtra('vacation_base_date')) }}">
             <x-input-error :messages="$errors->get('payroll_extra.vacation_base_date')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_age">Edad</label>
+            <input id="payroll_extra_age" type="number" min="0" max="120" name="payroll_extra[age]" class="form-input" value="{{ old('payroll_extra.age', $payrollExtra('age')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.age')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_contributor_type">Tipo cotizante</label>
+            <input id="payroll_extra_contributor_type" name="payroll_extra[contributor_type]" class="form-input" value="{{ old('payroll_extra.contributor_type', $payrollExtra('contributor_type')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.contributor_type')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_salary_scale">Escala</label>
+            <input id="payroll_extra_salary_scale" name="payroll_extra[salary_scale]" class="form-input" value="{{ old('payroll_extra.salary_scale', $payrollExtra('salary_scale')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.salary_scale')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_last_vacation_period">Último periodo vacaciones</label>
+            <input id="payroll_extra_last_vacation_period" type="date" name="payroll_extra[last_vacation_period]" class="form-input" value="{{ old('payroll_extra.last_vacation_period', $payrollExtra('last_vacation_period')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.last_vacation_period')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_total_vacation_days">Total días vacaciones</label>
+            <input id="payroll_extra_total_vacation_days" type="number" step="0.01" name="payroll_extra[total_vacation_days]" class="form-input" value="{{ old('payroll_extra.total_vacation_days', $payrollExtra('total_vacation_days')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.total_vacation_days')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_pending_vacation_periods">Periodos pendientes vacaciones</label>
+            <input id="payroll_extra_pending_vacation_periods" type="number" step="0.01" name="payroll_extra[pending_vacation_periods]" class="form-input" value="{{ old('payroll_extra.pending_vacation_periods', $payrollExtra('pending_vacation_periods')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.pending_vacation_periods')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_vacation_excess_days">Excedente pendiente vacaciones</label>
+            <input id="payroll_extra_vacation_excess_days" type="number" step="0.01" name="payroll_extra[vacation_excess_days]" class="form-input" value="{{ old('payroll_extra.vacation_excess_days', $payrollExtra('vacation_excess_days')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.vacation_excess_days')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_vacation_days_to_enjoy">Días pendientes a disfrutar</label>
+            <input id="payroll_extra_vacation_days_to_enjoy" type="number" step="0.01" name="payroll_extra[vacation_days_to_enjoy]" class="form-input" value="{{ old('payroll_extra.vacation_days_to_enjoy', $payrollExtra('vacation_days_to_enjoy')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.vacation_days_to_enjoy')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="payroll_extra_pending_vacation_value">Valor pendiente de vacaciones</label>
+            <input id="payroll_extra_pending_vacation_value" type="number" step="0.01" name="payroll_extra[pending_vacation_value]" class="form-input" value="{{ old('payroll_extra.pending_vacation_value', $payrollExtra('pending_vacation_value')) }}">
+            <x-input-error :messages="$errors->get('payroll_extra.pending_vacation_value')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_military_book">Libreta militar</label>

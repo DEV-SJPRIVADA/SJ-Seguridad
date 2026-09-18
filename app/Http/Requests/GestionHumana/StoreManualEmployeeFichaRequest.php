@@ -54,6 +54,7 @@ class StoreManualEmployeeFichaRequest extends FormRequest
             'hired_full_name' => 'nombre completo',
             'sex' => 'género',
             'hire_date' => 'fecha ingreso',
+            'termination_date' => 'fecha desvinculación',
             'position_code' => 'cargo',
             'cost_center_code' => 'centro de costo',
             'eps_code' => 'EPS',
