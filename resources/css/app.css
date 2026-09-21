@@ -4030,7 +4030,7 @@ a {
 }
 
 .req-manage-filters__panel-toggle::before {
-    content: 'ÃÂ¢ÃÂÃÂ¸';
+    content: '\25B8';
     margin-right: 0.35rem;
     font-size: 0.65rem;
     transition: transform 0.15s ease;
@@ -4106,7 +4106,7 @@ a {
 
 .req-manage-filters__query-toggle::before,
 .req-manage-filters__dates-toggle::before {
-    content: 'ÃÂ¢ÃÂÃÂ¸';
+    content: '\25B8';
     font-size: 0.65rem;
     transition: transform 0.15s ease;
 }
