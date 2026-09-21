@@ -11,7 +11,7 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 - **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo.
-- **Cursos** — listado, filtros, alta/edicion/eliminacion, documento, export Excel e import masivo. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO**.
+- **Cursos** — listado paginado (carga por paginas), filtros, alta/edicion/eliminacion, documento, export Excel e import masivo. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
 - **Catalogo** — tablero de tarjetas (como en Ficha empleados): elija **Tipos de curso** o **Escuelas** (CODIGO, NIT, NOMBRE) para gestionar cada uno.
 
 **En esta version:** el import **no** sube PDFs/imagenes; el documento se carga fila a fila. Desde **Ficha empleados** solo se consultan y descargan cursos (no se editan alla).

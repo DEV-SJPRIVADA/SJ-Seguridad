@@ -7,20 +7,24 @@ use App\Exports\CursosImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\Cursos\BulkMarkSolicitadoEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\ImportEmployeeCursoRequest;
+use App\Http\Requests\GestionHumana\Cursos\OmitEmployeeCursoPendingRequest;
 use App\Http\Requests\GestionHumana\Cursos\StoreEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\UpdateEmployeeCursoRequest;
 use App\Http\Requests\GestionHumana\Cursos\UploadEmployeeCursoDocumentRequest;
 use App\Models\CursoEscuela;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
+use App\Models\EmployeeCursoPending;
 use App\Models\EmployeeFichaProfile;
 use App\Services\Access\CursosAccessService;
 use App\Services\GestionHumana\CursosAuditLogService;
 use App\Services\GestionHumana\EmployeeCursoDashboardService;
+use App\Services\GestionHumana\EmployeeCursoDatatableService;
 use App\Services\GestionHumana\EmployeeCursoDocumentService;
 use App\Services\GestionHumana\EmployeeCursoEstadoSyncService;
 use App\Services\GestionHumana\EmployeeCursoImportService;
 use App\Services\GestionHumana\EmployeeCursoListService;
+use App\Services\GestionHumana\EmployeeCursoPendingService;
 use App\Traits\HasCursosTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -41,9 +45,11 @@ class CursosController extends Controller
         private readonly CursosAccessService $cursosAccess,
         private readonly CursosAuditLogService $auditLogService,
         private readonly EmployeeCursoListService $listService,
+        private readonly EmployeeCursoDatatableService $datatableService,
         private readonly EmployeeCursoDashboardService $dashboardService,
         private readonly EmployeeCursoDocumentService $documentService,
         private readonly EmployeeCursoEstadoSyncService $estadoSyncService,
+        private readonly EmployeeCursoPendingService $pendingService,
         private readonly CursosImportTemplateExport $importTemplateExport,
         private readonly EmployeeCursoImportService $importService,
     ) {}
@@ -102,8 +108,19 @@ class CursosController extends Controller
     {
         abort_unless($this->cursosAccess->canView(auth()->user()), 403);
 
+        $canEdit = $this->cursosAccess->canEdit(auth()->user());
+        $colaMode = (string) $request->query('cola', '') === 'nuevos-sin-curso';
+
+        if ($colaMode && ! $canEdit) {
+            abort(403);
+        }
+
+        $pendingCount = $canEdit ? $this->pendingService->countPendingActivos() : 0;
+        $pendingRows = $colaMode
+            ? $this->pendingService->listPendingActivos()
+            : collect();
+
         $filters = $this->filtersFromRequest($request);
-        $registros = $this->listService->all($filters);
 
         $tipoOptions = CursoTipo::query()
             ->ordered()
@@ -137,9 +154,11 @@ class CursosController extends Controller
 
         return view('areas.gestion_humana.cursos.registros', [
             'subTabs' => $this->getCursosSubTabs('registros'),
-            'canEdit' => $this->cursosAccess->canEdit(auth()->user()),
+            'canEdit' => $canEdit,
+            'colaMode' => $colaMode,
+            'pendingCount' => $pendingCount,
+            'pendingRows' => $pendingRows,
             'filters' => $filters,
-            'registros' => $registros,
             'tipoOptions' => $tipoOptions,
             'escuelaOptions' => $escuelaOptions,
             'estadoOptions' => $estadoOptions,
@@ -160,25 +179,31 @@ class CursosController extends Controller
                 ['value' => EmployeeCurso::VIGENCIA_VENCIDO, 'label' => 'VENCIDO'],
             ],
             'lookupUrl' => route('gestion-humana.cursos.registros.lookup'),
+            'datatableUrl' => route('gestion-humana.cursos.registros.datatable', $this->activeFilterQuery($filters)),
+            'bulkSelectableUrl' => route('gestion-humana.cursos.registros.bulk-selectable', $this->activeFilterQuery($filters)),
             'exportUrl' => route('gestion-humana.cursos.registros.export', $this->activeFilterQuery($filters)),
             'importTemplateUrl' => route('gestion-humana.cursos.registros.import-template'),
             'importUrl' => route('gestion-humana.cursos.registros.import'),
             'bulkMarkSolicitadoUrl' => route('gestion-humana.cursos.registros.bulk-mark-solicitado'),
             'activeFilterQuery' => $this->activeFilterQuery($filters),
-            'bulkSelectableRows' => $registros
-                ->filter(fn (EmployeeCurso $curso): bool => $curso->estado !== EmployeeCurso::ESTADO_SOLICITADO)
-                ->map(fn (EmployeeCurso $curso): array => [
-                    'id' => $curso->id,
-                    'document_number' => $curso->document_number,
-                    'full_name' => $curso->full_name,
-                    'tipo_curso' => $curso->cursoTipo?->tipo_curso ?? '—',
-                    'numero_curso' => $curso->numero_curso,
-                    'estado' => $curso->estado ?: '—',
-                    'vigencia' => $curso->computeVigencia(),
-                ])
-                ->values()
-                ->all(),
+            'colaQueueUrl' => route('gestion-humana.cursos.registros', ['cola' => 'nuevos-sin-curso']),
+            'colaExitUrl' => route('gestion-humana.cursos.registros'),
         ]);
+    }
+
+    public function omitPending(
+        OmitEmployeeCursoPendingRequest $request,
+        EmployeeCursoPending $pending,
+    ): RedirectResponse {
+        $this->pendingService->omit(
+            $pending,
+            $request->validated('omit_reason'),
+            $request->user()?->id,
+        );
+
+        return redirect()
+            ->route('gestion-humana.cursos.registros', ['cola' => 'nuevos-sin-curso'])
+            ->with('status', 'Persona omitida de la cola «Nuevos sin curso».');
     }
 
     public function bulkMarkSolicitado(BulkMarkSolicitadoEmployeeCursoRequest $request): RedirectResponse
@@ -255,16 +280,23 @@ class CursosController extends Controller
     {
         abort_unless($this->cursosAccess->canView(auth()->user()), 403);
 
-        $filters = $this->filtersFromRequest($request);
-        $rows = $this->listService->paginate($filters, (int) $request->integer('per_page', 25));
+        return $this->datatableService->respond(
+            $request,
+            $this->filtersFromRequest($request),
+            $this->cursosAccess->canEdit(auth()->user()),
+        );
+    }
+
+    public function bulkSelectable(Request $request): JsonResponse
+    {
+        abort_unless($this->cursosAccess->canEdit(auth()->user()), 403);
+
+        $rows = $this->datatableService->bulkSelectableRows($this->filtersFromRequest($request));
 
         return response()->json([
-            'data' => $rows->getCollection()->map(fn (EmployeeCurso $curso): array => $this->cursoToArray($curso))->values(),
+            'data' => $rows,
             'meta' => [
-                'current_page' => $rows->currentPage(),
-                'last_page' => $rows->lastPage(),
-                'per_page' => $rows->perPage(),
-                'total' => $rows->total(),
+                'count' => count($rows),
             ],
         ]);
     }
@@ -315,6 +347,12 @@ class CursosController extends Controller
         if ($request->hasFile('document')) {
             $this->documentService->storeOrReplace($curso, $request->file('document'));
         }
+
+        $this->pendingService->resolveByDocument(
+            (string) $curso->document_number,
+            $curso,
+            auth()->id(),
+        );
 
         $this->auditLogService->logEvent(
             eventType: 'employee_curso',
@@ -709,29 +747,6 @@ class CursosController extends Controller
             'estado' => $validated['estado'] ?? EmployeeCurso::ESTADO_ACTUALIZADO,
             'observaciones' => $validated['observaciones'] ?? null,
             'employee_ficha_profile_id' => $profileId,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function cursoToArray(EmployeeCurso $curso): array
-    {
-        $vigencia = $curso->computeVigencia();
-
-        return [
-            'id' => $curso->id,
-            'document_number' => $curso->document_number,
-            'full_name' => $curso->full_name,
-            'curso_tipo_id' => $curso->curso_tipo_id,
-            'tipo_curso' => $curso->cursoTipo?->tipo_curso,
-            'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d'),
-            'numero_curso' => $curso->numero_curso,
-            'vigencia' => $vigencia,
-            'estado' => $curso->estado,
-            'observaciones' => $curso->observaciones,
-            'has_document' => $curso->hasDocument(),
-            'document_original_name' => $curso->document_original_name,
         ];
     }
 }

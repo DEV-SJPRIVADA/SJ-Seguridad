@@ -4030,7 +4030,7 @@ a {
 }
 
 .req-manage-filters__panel-toggle::before {
-    content: 'ÃÂ¢ÃÂÃÂ¸';
+    content: '\25B8';
     margin-right: 0.35rem;
     font-size: 0.65rem;
     transition: transform 0.15s ease;
@@ -4106,7 +4106,7 @@ a {
 
 .req-manage-filters__query-toggle::before,
 .req-manage-filters__dates-toggle::before {
-    content: 'ÃÂ¢ÃÂÃÂ¸';
+    content: '\25B8';
     font-size: 0.65rem;
     transition: transform 0.15s ease;
 }
@@ -8273,6 +8273,32 @@ a.sj-pagination__item:hover {
     align-items: center;
     gap: 0.5rem;
     margin-left: auto;
+}
+
+.cursos-registros-page__nuevos-link {
+    text-decoration: none;
+}
+
+.cursos-registros-page__cola-exit {
+    margin-left: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.cursos-registros-page__identity-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.cursos-registros-page__identity-row .form-input {
+    flex: 1 1 auto;
+}
+
+.cursos-registros-page__omit-modal {
+    width: min(520px, calc(100vw - 2rem));
 }
 
 .cursos-registros-page__select-col {

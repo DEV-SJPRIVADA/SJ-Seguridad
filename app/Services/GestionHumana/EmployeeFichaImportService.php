@@ -21,6 +21,7 @@ class EmployeeFichaImportService
     public function __construct(
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaImportValueNormalizer $valueNormalizer,
+        private readonly EmployeeCursoPendingService $cursoPendingService,
     ) {}
 
     /**
@@ -71,7 +72,9 @@ class EmployeeFichaImportService
                 DB::transaction(function () use ($data, $cedula, $userId, &$stats): void {
                     $existing = EmployeeFichaProfile::query()->where('document_number', $cedula)->first();
                     $payload = $this->mapImportPayload($data, $cedula);
-                    $entry = $this->resolveFichaEntry($cedula, $data, $userId);
+                    $resolved = $this->resolveFichaEntry($cedula, $data, $userId);
+                    $entry = $resolved['entry'];
+                    $enteredFicha = $resolved['entered_ficha'];
 
                     if ($entry !== null) {
                         $payload['personal_requisition_ficha_entry_id'] = $entry->id;
@@ -86,12 +89,24 @@ class EmployeeFichaImportService
                         $existing->update($payload);
                         $existing->syncEmploymentStatusFromTerminationDate();
                         $this->profileCatalogSync->syncAndSave($existing);
+                        $profile = $existing->fresh();
                         $stats['updated']++;
                     } else {
                         $profile = EmployeeFichaProfile::query()->create($payload);
                         $profile->syncEmploymentStatusFromTerminationDate();
                         $this->profileCatalogSync->syncAndSave($profile);
+                        $profile = $profile->fresh();
                         $stats['imported']++;
+                    }
+
+                    if ($enteredFicha && $profile !== null) {
+                        $this->cursoPendingService->enqueueIfEligible([
+                            'document_number' => $cedula,
+                            'full_name' => $profile->full_name,
+                            'employee_ficha_profile_id' => $profile->id,
+                            'personal_requisition_ficha_entry_id' => $entry?->id,
+                            'enqueued_by' => $userId,
+                        ]);
                     }
                 });
             } catch (\Throwable $e) {
@@ -264,23 +279,33 @@ class EmployeeFichaImportService
     }
 
     /**
+     * Resuelve o crea la entrada de ficha. `entered_ficha` es true solo en la
+     * primera transición a ficha (moved_to_ficha_at null→now o alta nueva).
+     *
      * @param  array<string, mixed>  $data
+     * @return array{entry: PersonalRequisitionFichaEntry, entered_ficha: bool}
      */
-    private function resolveFichaEntry(string $cedula, array $data, ?int $userId): ?PersonalRequisitionFichaEntry
+    private function resolveFichaEntry(string $cedula, array $data, ?int $userId): array
     {
         $entry = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', $cedula)
             ->first();
 
         if ($entry !== null) {
+            $enteredFicha = false;
+
             if ($entry->moved_to_ficha_at === null) {
                 $entry->update([
                     'moved_to_ficha_at' => now(),
                     'moved_to_ficha_by' => $userId,
                 ]);
+                $enteredFicha = true;
             }
 
-            return $entry;
+            return [
+                'entry' => $entry->fresh(),
+                'entered_ficha' => $enteredFicha,
+            ];
         }
 
         $requisitionId = null;
@@ -292,7 +317,7 @@ class EmployeeFichaImportService
 
         $nameParts = $this->resolveImportNameParts($data);
 
-        return PersonalRequisitionFichaEntry::query()->create([
+        $entry = PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $requisitionId,
             'hired_document' => $cedula,
             'hired_full_name' => $nameParts['full_name'] !== '' ? $nameParts['full_name'] : $cedula,
@@ -304,6 +329,11 @@ class EmployeeFichaImportService
             'moved_to_ficha_by' => $userId,
             'created_by' => $userId,
         ]);
+
+        return [
+            'entry' => $entry,
+            'entered_ficha' => true,
+        ];
     }
 
     /**
