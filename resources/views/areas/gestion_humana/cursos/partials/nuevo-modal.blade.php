@@ -4,21 +4,38 @@
         class="modal-card ficha-empleados-masivos-modal cursos-registros-page__create-modal"
         x-data="{
             lookupUrl: @js($lookupUrl),
+            identityLocked: {{ $show && old('document_number') ? 'true' : 'false' }},
+            documentNumber: @js(old('document_number', '')),
+            fullName: @js(old('full_name', '')),
             async lookupName(cedula) {
                 const value = String(cedula || '').trim();
-                if (!value) return;
+                if (!value || this.identityLocked) return;
                 try {
                     const res = await fetch(this.lookupUrl + '?cedula=' + encodeURIComponent(value), {
                         headers: { 'Accept': 'application/json' },
                     });
                     if (!res.ok) return;
                     const data = await res.json();
-                    if (data.found && data.full_name && this.$refs.createName) {
-                        this.$refs.createName.value = data.full_name;
+                    if (data.found && data.full_name) {
+                        this.documentNumber = data.document_number || value;
+                        this.fullName = data.full_name;
+                        this.identityLocked = true;
                     }
                 } catch (e) {}
-            }
+            },
+            unlockIdentity() {
+                this.identityLocked = false;
+                this.documentNumber = '';
+                this.fullName = '';
+            },
+            applyPrefill(detail) {
+                this.documentNumber = detail?.document_number || '';
+                this.fullName = detail?.full_name || '';
+                this.identityLocked = !!(this.documentNumber && this.fullName);
+            },
         }"
+        x-on:cursos-nuevo-prefill.window="applyPrefill($event.detail)"
+        x-on:cursos-nuevo-reset.window="unlockIdentity()"
     >
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
@@ -27,7 +44,9 @@
                 </span>
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo registro</h3>
-                    <p class="ficha-empleados-masivos-modal__lead">Al ingresar la cédula se precarga el nombre si existe en Ficha empleados.</p>
+                    <p class="ficha-empleados-masivos-modal__lead">
+                        La cédula y el nombre se toman de Ficha empleados (solo lectura tras la búsqueda).
+                    </p>
                 </div>
             </div>
             <button
@@ -60,16 +79,27 @@
             <div class="cursos-registros-page__form-grid">
                 <div class="form-field">
                     <label class="form-label" for="create_document_number">CEDULA</label>
-                    <input
-                        id="create_document_number"
-                        name="document_number"
-                        type="text"
-                        class="form-input"
-                        maxlength="50"
-                        required
-                        value="{{ old('document_number') }}"
-                        @blur="lookupName($event.target.value)"
-                    >
+                    <div class="cursos-registros-page__identity-row">
+                        <input
+                            id="create_document_number"
+                            name="document_number"
+                            type="text"
+                            class="form-input"
+                            maxlength="50"
+                            required
+                            x-model="documentNumber"
+                            x-bind:readonly="identityLocked"
+                            @blur="lookupName($event.target.value)"
+                        >
+                        <button
+                            type="button"
+                            class="btn btn--ghost btn--sm"
+                            x-show="identityLocked"
+                            x-cloak
+                            x-on:click="unlockIdentity()"
+                            title="Cambiar persona"
+                        >Cambiar</button>
+                    </div>
                 </div>
                 <div class="form-field">
                     <label class="form-label" for="create_full_name">NOMBRE COMPLETO</label>
@@ -80,7 +110,8 @@
                         class="form-input"
                         maxlength="255"
                         required
-                        value="{{ old('full_name') }}"
+                        readonly
+                        x-model="fullName"
                         x-ref="createName"
                     >
                 </div>

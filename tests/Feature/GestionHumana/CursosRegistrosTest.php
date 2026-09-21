@@ -315,7 +315,8 @@ class CursosRegistrosTest extends TestCase
                 'solo_actualizar' => 1,
             ]))
             ->assertOk()
-            ->assertSee('js-datatable', false)
+            ->assertViewHas('datatableUrl')
+            ->assertSee('js-cursos-registros-datatable', false)
             ->assertSee('data-dt-body-scroll="true"', false)
             ->assertSee('cursos-registros-page__export-icon', false)
             ->assertSee('document_number=123', false)
@@ -341,11 +342,59 @@ class CursosRegistrosTest extends TestCase
             'numero_curso' => 'NEW-1',
         ]);
 
-        $this->actingAs($viewer)
-            ->get(route('gestion-humana.cursos.registros', ['solo_actualizar' => 1]))
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'solo_actualizar' => 1,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]));
+
+        $response->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        $rowText = collect($response->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+
+        $this->assertStringContainsString('A1', $rowText);
+        $this->assertStringNotContainsString('B1', $rowText);
+    }
+
+    public function test_datatable_requires_view_permission(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+
+        $this->actingAs($user)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_bulk_selectable_returns_eligible_rows_for_editors(): void
+    {
+        $editor = $this->editorUser();
+        $tipo = CursoTipo::factory()->create();
+
+        $pendiente = EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'estado' => EmployeeCurso::ESTADO_PENDIENTE,
+            'document_number' => '9001',
+        ]);
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'estado' => EmployeeCurso::ESTADO_SOLICITADO,
+            'document_number' => '9002',
+        ]);
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.cursos.registros.bulk-selectable'))
             ->assertOk()
-            ->assertSee('A1', false)
-            ->assertDontSee('B1', false);
+            ->assertJsonPath('meta.count', 1)
+            ->assertJsonFragment(['id' => $pendiente->id, 'document_number' => '9001']);
     }
 
     private function viewerUser(): User

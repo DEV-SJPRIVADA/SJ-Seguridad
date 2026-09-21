@@ -25,7 +25,8 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
   - `SOLICITADO` solo se asigna manualmente en el formulario; el job diario lo conserva.
   - Comando `cursos:sync-estados` (schedule diario 06:15 America/Bogota); `--backfill` fuerza VIGENTE → ACTUALIZADO (ajuste inicial).
   - La plantilla Excel **no** incluye columna ESTADO.
-  - Listado: marcado masivo a `SOLICITADO` con checkboxes (uno a uno / todos elegibles del filtro), modal con listado previo, aviso de no reversión y checkbox de confirmación obligatoria.
+  - Listado: marcado masivo a `SOLICITADO` con checkboxes (uno a uno / todos elegibles del filtro vía endpoint `bulk-selectable`), modal con listado previo, aviso de no reversión y checkbox de confirmación obligatoria.
+  - **Rendimiento:** la pestana Cursos usa DataTables **server-side** (`EmployeeCursoDatatableService`); no se renderizan todas las filas en el HTML inicial. Ver regla [`.cursor/rules/datatables-server-side.mdc`](../../.cursor/rules/datatables-server-side.mdc).
 - Documento: 1 archivo por registro (PDF/JPG/PNG/WEBP); no viaja en Excel.
 - Bridge Ficha: listar/descargar cursos del empleado (sin mutar desde Ficha).
 - Import masivo: ver seccion Import abajo. Export listado respeta filtros (sin columna de renovacion).
@@ -40,7 +41,9 @@ Prefijo: `/gestion-humana/cursos` · nombre `gestion-humana.cursos.`
 | GET | `/` | `index` | Redirect a **dashboard** |
 | GET | `/dashboard` | `dashboard` | Vista KPIs/graficos. `cursos.view` |
 | GET | `/dashboard/metrics` | `dashboard.metrics` | JSON filtros → KPIs/charts |
-| GET | `/registros` | `registros` | Listado + filtros |
+| GET | `/registros` | `registros` | Shell listado + filtros (sin filas HTML; DataTables server-side) |
+| GET | `/registros/datatable` | `registros.datatable` | JSON DataTables (`draw` / `recordsFiltered`). `cursos.view` |
+| GET | `/registros/bulk-selectable` | `registros.bulk-selectable` | JSON elegibles para marcado masivo (filtro actual). `cursos.edit` |
 | POST | `/registros/marcar-solicitado` | `registros.bulk-mark-solicitado` | Marca masiva a `SOLICITADO` (ids seleccionados). `cursos.edit`. Requiere confirmación. |
 | GET | `/registros/exportar` | `registros.export` | Excel filtrado (`BaseExport`) |
 | GET | `/registros/plantilla-importacion` | `registros.import-template` | Plantilla vacia. `cursos.edit` |

@@ -20,9 +20,12 @@
             lookupUrl: @js($lookupUrl),
             canEdit: @js($canEdit),
             bulkMarkSolicitadoUrl: @js($bulkMarkSolicitadoUrl ?? null),
+            bulkSelectableUrl: @js($bulkSelectableUrl ?? null),
             activeFilterQuery: @js($activeFilterQuery ?? []),
-            bulkSelectableRows: @js($bulkSelectableRows ?? []),
+            colaMode: @js($colaMode ?? false),
         })"
+        @open-cursos-nuevo-from-pending.window="openCreateFromPending($event.detail)"
+        @cursos-open-edit.window="openEdit($event.detail)"
     >
         <div class="app-container">
             @if (session('status'))
@@ -58,6 +61,7 @@
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-shell__filters">
+                        @unless ($colaMode ?? false)
                         <form method="GET" action="{{ route('gestion-humana.cursos.registros') }}" class="req-manage-filters">
                             <div class="cursos-registros-page__filters">
                                 <div class="form-field">
@@ -137,44 +141,74 @@
                                 </div>
                             </div>
                         </form>
+                        @endunless
 
                         <div class="cursos-registros-page__table-toolbar">
-                            <p class="req-manage-filters__meta">{{ $registros->count() }} registro(s)</p>
+                            @if ($colaMode ?? false)
+                                <p class="req-manage-filters__meta">
+                                    {{ $pendingRows->count() }} nuevo(s) sin curso
+                                    <a href="{{ $colaExitUrl }}" class="cursos-registros-page__cola-exit">Volver a registros</a>
+                                </p>
+                            @else
+                                <p class="req-manage-filters__meta">
+                                    <strong id="cursos-registros-count">…</strong>
+                                    <span id="cursos-registros-count-label">registro(s)</span>
+                                </p>
+                            @endif
 
                             @if ($canEdit)
                                 <div class="cursos-registros-page__table-actions">
-                                    <button
-                                        type="button"
-                                        class="btn btn--primary btn--sm"
-                                        x-show="selectedCount > 0"
-                                        x-cloak
-                                        x-on:click="openBulkConfirm()"
+                                    <a
+                                        href="{{ ($colaMode ?? false) ? $colaExitUrl : $colaQueueUrl }}"
+                                        class="ficha-empleados-filters__pending-link cursos-registros-page__nuevos-link {{ ($colaMode ?? false) ? 'is-active' : '' }}"
+                                        title="Nuevos sin curso"
+                                        aria-label="Nuevos sin curso: {{ number_format($pendingCount ?? 0) }}"
                                     >
-                                        Marcar SOLICITADO
-                                        (<span x-text="selectedCount"></span>)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__add-btn"
-                                        title="Nuevo registro"
-                                        aria-label="Nuevo registro"
-                                        x-on:click.prevent="$dispatch('open-modal', 'cursos-nuevo')"
-                                    >
-                                        <x-lucide-plus width="20" height="20" aria-hidden="true" />
-                                    </button>
+                                        <x-ri-pass-pending-fill width="24" height="24" aria-hidden="true" />
+                                        <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount ?? 0) }}</span>
+                                    </a>
+
+                                    @unless ($colaMode ?? false)
+                                        <button
+                                            type="button"
+                                            class="btn btn--primary btn--sm"
+                                            x-show="selectedCount > 0"
+                                            x-cloak
+                                            x-on:click="openBulkConfirm()"
+                                        >
+                                            Marcar SOLICITADO
+                                            (<span x-text="selectedCount"></span>)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="ficha-empleados-filters__bulk-icon cursos-registros-page__add-btn"
+                                            title="Nuevo registro"
+                                            aria-label="Nuevo registro"
+                                            x-on:click.prevent="openCreateBlank()"
+                                        >
+                                            <x-lucide-plus width="20" height="20" aria-hidden="true" />
+                                        </button>
+                                    @endunless
                                 </div>
                             @endif
                         </div>
                     </div>
 
+                    @if ($colaMode ?? false)
+                        @include('areas.gestion_humana.cursos.partials.nuevos-sin-curso-table', [
+                            'pendingRows' => $pendingRows,
+                        ])
+                    @else
                     <div class="data-table-wrap req-manage-shell__table cursos-registros-page__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')
                         <table
-                            class="data-table js-datatable"
+                            id="cursos-registros-datatable"
+                            class="data-table js-cursos-registros-datatable"
+                            data-dt-url="{{ $datatableUrl }}"
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
-                            @if ($canEdit) data-order='[[1, "asc"]]' @endif
+                            data-dt-can-edit="{{ $canEdit ? '1' : '0' }}"
                             style="width:100%"
                         >
                             <thead>
@@ -186,7 +220,7 @@
                                                     type="checkbox"
                                                     class="cursos-registros-page__select-checkbox"
                                                     x-bind:checked="allEligibleSelected"
-                                                    x-bind:disabled="bulkSelectableRows.length === 0"
+                                                    x-bind:disabled="bulkSelectableRows.length === 0 || bulkSelectableLoading"
                                                     x-on:change="toggleSelectAll($event.target.checked)"
                                                     aria-label="Seleccionar todos"
                                                 >
@@ -210,155 +244,10 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody>
-                                @foreach ($registros as $curso)
-                                    @php
-                                        $vigencia = $curso->computeVigencia();
-                                        $vigenciaClass = match ($vigencia) {
-                                            \App\Models\EmployeeCurso::VIGENCIA_VIGENTE => 'status-pill status-pill--success',
-                                            \App\Models\EmployeeCurso::VIGENCIA_ACTUALIZAR => 'status-pill status-pill--warning',
-                                            default => 'status-pill status-pill--danger',
-                                        };
-                                        $canSelect = $canEdit && $curso->estado !== \App\Models\EmployeeCurso::ESTADO_SOLICITADO;
-                                    @endphp
-                                    <tr>
-                                        @if ($canEdit)
-                                            <td class="cursos-registros-page__select-col" data-order="{{ $canSelect ? 0 : 1 }}">
-                                                @if ($canSelect)
-                                                    <label class="cursos-registros-page__select-label">
-                                                        <input
-                                                            type="checkbox"
-                                                            class="cursos-registros-page__select-checkbox"
-                                                            value="{{ $curso->id }}"
-                                                            x-bind:checked="isSelected({{ $curso->id }})"
-                                                            x-on:change="toggleRow({{ $curso->id }}, $event.target.checked)"
-                                                            aria-label="Seleccionar curso {{ $curso->numero_curso }}"
-                                                        >
-                                                    </label>
-                                                @else
-                                                    <span class="cursos-registros-page__select-disabled" title="Ya está SOLICITADO">—</span>
-                                                @endif
-                                            </td>
-                                        @endif
-                                        <td>{{ $curso->document_number }}</td>
-                                        <td>{{ $curso->full_name }}</td>
-                                        <td>{{ $curso->cursoTipo?->tipo_curso }}</td>
-                                        <td>{{ $curso->escuela_nombre ?: '—' }}</td>
-                                        <td>{{ $curso->escuela_codigo ?: '—' }}</td>
-                                        <td>{{ $curso->escuela_nit ?: '—' }}</td>
-                                        <td>{{ optional($curso->fecha_expedicion)?->format('Y-m-d') }}</td>
-                                        <td>{{ $curso->numero_curso }}</td>
-                                        <td><span class="{{ $vigenciaClass }}">{{ $vigencia }}</span></td>
-                                        <td>{{ $curso->estado ?: '—' }}</td>
-                                        <td>{{ \Illuminate\Support\Str::limit((string) $curso->observaciones, 60) ?: '—' }}</td>
-                                        <td>
-                                            <div class="cursos-registros-page__document-cell">
-                                                @if ($curso->hasDocument())
-                                                    <div class="cursos-registros-page__document-links">
-                                                        <a
-                                                            class="btn btn--secondary btn--sm"
-                                                            href="{{ route('gestion-humana.cursos.registros.document.download', $curso) }}"
-                                                        >Descargar</a>
-                                                        @if ($canEdit)
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('gestion-humana.cursos.registros.document.destroy', $curso) }}"
-                                                                class="inline"
-                                                                onsubmit="return confirm('¿Quitar el documento?');"
-                                                            >
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn btn--ghost btn--sm">Quitar</button>
-                                                            </form>
-                                                        @endif
-                                                    </div>
-                                                @else
-                                                    <span class="panel-text">Sin archivo</span>
-                                                @endif
-                                                @if ($canEdit)
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('gestion-humana.cursos.registros.document.upload', $curso) }}"
-                                                        enctype="multipart/form-data"
-                                                        class="cursos-registros-page__upload"
-                                                        x-data="{ fileName: '' }"
-                                                    >
-                                                        @csrf
-                                                        <input
-                                                            id="curso-document-{{ $curso->id }}"
-                                                            name="document"
-                                                            type="file"
-                                                            class="cursos-registros-page__file-input"
-                                                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                                                            required
-                                                            @change="fileName = $event.target.files?.[0]?.name || ''"
-                                                        >
-                                                        <span
-                                                            class="cursos-registros-page__file-name cursos-registros-page__file-name--compact"
-                                                            x-text="fileName || 'Sin archivo'"
-                                                        ></span>
-                                                        <div class="cursos-registros-page__file-actions">
-                                                            <label
-                                                                for="curso-document-{{ $curso->id }}"
-                                                                class="btn btn--secondary btn--sm"
-                                                            >
-                                                                <x-lucide-upload width="14" height="14" aria-hidden="true" />
-                                                                Elegir archivo
-                                                            </label>
-                                                            <button type="submit" class="btn btn--primary btn--sm">Subir</button>
-                                                        </div>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        @if ($canEdit)
-                                            <td class="table-actions">
-                                                <div class="cursos-registros-page__row-actions">
-                                                    <button
-                                                        type="button"
-                                                        class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit"
-                                                        title="Editar"
-                                                        aria-label="Editar"
-                                                        @click="openEdit(@js([
-                                                            'id' => $curso->id,
-                                                            'document_number' => $curso->document_number,
-                                                            'full_name' => $curso->full_name,
-                                                            'curso_tipo_id' => (string) $curso->curso_tipo_id,
-                                                            'curso_escuela_id' => $curso->curso_escuela_id ? (string) $curso->curso_escuela_id : '',
-                                                            'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d'),
-                                                            'numero_curso' => $curso->numero_curso,
-                                                            'estado' => $curso->estado ?? '',
-                                                            'observaciones' => $curso->observaciones ?? '',
-                                                            'update_url' => route('gestion-humana.cursos.registros.update', $curso),
-                                                        ]))"
-                                                    >
-                                                        <x-lucide-pencil width="16" height="16" aria-hidden="true" />
-                                                    </button>
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('gestion-humana.cursos.registros.destroy', $curso) }}"
-                                                        class="cursos-catalogo-page__delete-form"
-                                                        onsubmit="return confirm('¿Eliminar este registro y su documento?');"
-                                                    >
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button
-                                                            type="submit"
-                                                            class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
-                                                            title="Eliminar"
-                                                            aria-label="Eliminar"
-                                                        >
-                                                            <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @endforeach
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -491,6 +380,63 @@
 
                 <div
                     class="cursos-registros-page__modal"
+                    x-show="omitOpen"
+                    x-cloak
+                    @keydown.escape.window="closeOmit()"
+                >
+                    <div class="cursos-registros-page__modal-backdrop" @click="closeOmit()"></div>
+                    <div
+                        class="cursos-registros-page__modal-panel panel cursos-registros-page__omit-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="cursos-omit-title"
+                    >
+                        <div class="panel__header panel-heading-row">
+                            <h3 id="cursos-omit-title" class="panel-title">No aplica / omitir</h3>
+                            <button type="button" class="btn btn--ghost btn--sm" @click="closeOmit()">Cerrar</button>
+                        </div>
+                        <div class="panel__body">
+                            <p class="panel-text">
+                                Se omitirá a
+                                <strong x-text="omitForm.full_name || omitForm.document_number"></strong>
+                                (cédula <span x-text="omitForm.document_number"></span>) de la cola «Nuevos sin curso».
+                                Esta acción no se puede deshacer en V1.
+                            </p>
+                            <form
+                                method="POST"
+                                :action="omitForm.omit_url"
+                                class="cursos-registros-page__form"
+                                x-on:submit="submittingOmit = true"
+                            >
+                                @csrf
+                                <div class="form-field">
+                                    <label class="form-label" for="omit_reason">Motivo (opcional)</label>
+                                    <textarea
+                                        id="omit_reason"
+                                        name="omit_reason"
+                                        class="form-input"
+                                        rows="3"
+                                        maxlength="1000"
+                                        x-model="omitForm.omit_reason"
+                                        placeholder="Ej. No requiere curso por rol"
+                                    ></textarea>
+                                </div>
+                                <div class="cursos-registros-page__form-actions">
+                                    <button type="button" class="btn btn--secondary" @click="closeOmit()" :disabled="submittingOmit">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn--primary" :disabled="submittingOmit">
+                                        <span x-show="! submittingOmit">Confirmar omitir</span>
+                                        <span x-show="submittingOmit" x-cloak>Omitiendo…</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="cursos-registros-page__modal"
                     x-show="bulkConfirmOpen"
                     x-cloak
                     @keydown.escape.window="closeBulkConfirm()"
@@ -591,12 +537,24 @@
                     lookupUrl: config.lookupUrl,
                     canEdit: config.canEdit,
                     bulkMarkSolicitadoUrl: config.bulkMarkSolicitadoUrl || '',
+                    bulkSelectableUrl: config.bulkSelectableUrl || '',
                     activeFilterQuery: config.activeFilterQuery || {},
-                    bulkSelectableRows: config.bulkSelectableRows || [],
+                    bulkSelectableRows: [],
+                    bulkSelectableLoading: false,
+                    colaMode: !! config.colaMode,
                     selectedMap: {},
                     bulkConfirmOpen: false,
                     bulkConfirmAccepted: false,
                     submittingBulk: false,
+                    omitOpen: false,
+                    submittingOmit: false,
+                    omitForm: {
+                        id: null,
+                        document_number: '',
+                        full_name: '',
+                        omit_url: '',
+                        omit_reason: '',
+                    },
                     editOpen: false,
                     editForm: {
                         id: null,
@@ -609,6 +567,28 @@
                         estado: 'ACTUALIZADO',
                         observaciones: '',
                         update_url: '',
+                    },
+                    init() {
+                        if (this.canEdit && this.bulkSelectableUrl && ! this.colaMode) {
+                            this.loadBulkSelectable();
+                        }
+                    },
+                    async loadBulkSelectable() {
+                        this.bulkSelectableLoading = true;
+                        try {
+                            const res = await fetch(this.bulkSelectableUrl, {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            if (! res.ok) {
+                                return;
+                            }
+                            const payload = await res.json();
+                            this.bulkSelectableRows = Array.isArray(payload.data) ? payload.data : [];
+                        } catch (e) {
+                            this.bulkSelectableRows = [];
+                        } finally {
+                            this.bulkSelectableLoading = false;
+                        }
                     },
                     get selectedIds() {
                         return Object.keys(this.selectedMap)
@@ -631,11 +611,15 @@
                     isSelected(id) {
                         return !! this.selectedMap[id];
                     },
-                    toggleRow(id, checked) {
+                    toggleRow(id, checked, rowMeta) {
                         this.selectedMap = {
                             ...this.selectedMap,
                             [id]: !! checked,
                         };
+
+                        if (checked && rowMeta && ! this.bulkSelectableRows.some((row) => Number(row.id) === Number(id))) {
+                            this.bulkSelectableRows = [...this.bulkSelectableRows, rowMeta];
+                        }
                     },
                     toggleSelectAll(checked) {
                         const next = {};
@@ -645,6 +629,13 @@
                             });
                         }
                         this.selectedMap = next;
+                        this.syncPageCheckboxes();
+                    },
+                    syncPageCheckboxes() {
+                        document.querySelectorAll('.js-curso-row-select').forEach((input) => {
+                            const id = Number(input.value);
+                            input.checked = !! this.selectedMap[id];
+                        });
                     },
                     openBulkConfirm() {
                         if (this.selectedCount < 1) {
@@ -654,6 +645,7 @@
                         this.submittingBulk = false;
                         this.bulkConfirmOpen = true;
                         this.editOpen = false;
+                        this.omitOpen = false;
                     },
                     closeBulkConfirm() {
                         if (this.submittingBulk) {
@@ -662,10 +654,43 @@
                         this.bulkConfirmOpen = false;
                         this.bulkConfirmAccepted = false;
                     },
+                    openOmit(row) {
+                        this.omitForm = {
+                            id: row.id,
+                            document_number: row.document_number || '',
+                            full_name: row.full_name || '',
+                            omit_url: row.omit_url || '',
+                            omit_reason: '',
+                        };
+                        this.submittingOmit = false;
+                        this.omitOpen = true;
+                        this.editOpen = false;
+                        this.bulkConfirmOpen = false;
+                    },
+                    closeOmit() {
+                        if (this.submittingOmit) {
+                            return;
+                        }
+                        this.omitOpen = false;
+                    },
+                    openCreateBlank() {
+                        window.dispatchEvent(new CustomEvent('cursos-nuevo-reset'));
+                        this.$dispatch('open-modal', 'cursos-nuevo');
+                    },
+                    openCreateFromPending(row) {
+                        window.dispatchEvent(new CustomEvent('cursos-nuevo-prefill', {
+                            detail: {
+                                document_number: row.document_number || '',
+                                full_name: row.full_name || '',
+                            },
+                        }));
+                        this.$dispatch('open-modal', 'cursos-nuevo');
+                    },
                     openEdit(row) {
                         this.editForm = { ...row };
                         this.editOpen = true;
                         this.bulkConfirmOpen = false;
+                        this.omitOpen = false;
                     },
                     async lookupName(cedula, target) {
                         const value = String(cedula || '').trim();
@@ -686,8 +711,6 @@
                             }
                             if (target === 'edit') {
                                 this.editForm.full_name = data.full_name;
-                            } else if (this.$refs.createName) {
-                                this.$refs.createName.value = data.full_name;
                             }
                         } catch (e) {
                             // ignore lookup errors
@@ -698,34 +721,185 @@
 
             document.addEventListener('DOMContentLoaded', () => {
                 const form = document.querySelector('[data-cursos-import-form]');
-                if (!form) {
+                if (form) {
+                    const fileInput = form.querySelector('[data-cursos-import-file]');
+                    const fileName = form.querySelector('[data-cursos-import-name]');
+                    const submitBtn = form.querySelector('[data-cursos-import-submit]');
+                    const loading = document.querySelector('[data-cursos-import-loading]');
+
+                    fileInput?.addEventListener('change', () => {
+                        const name = fileInput.files?.[0]?.name || 'Sin archivo seleccionado';
+                        if (fileName) {
+                            fileName.textContent = name;
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = !fileInput.files?.length;
+                        }
+                    });
+
+                    form.addEventListener('submit', () => {
+                        if (loading) {
+                            loading.hidden = false;
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
+                        }
+                    });
+                }
+
+                const $table = window.jQuery ? window.jQuery('#cursos-registros-datatable') : null;
+                if (! $table || ! $table.length || typeof window.jQuery.fn.DataTable === 'undefined') {
                     return;
                 }
 
-                const fileInput = form.querySelector('[data-cursos-import-file]');
-                const fileName = form.querySelector('[data-cursos-import-name]');
-                const submitBtn = form.querySelector('[data-cursos-import-submit]');
-                const loading = document.querySelector('[data-cursos-import-loading]');
+                function revealCursosTableWrap() {
+                    $table.closest('.data-table-wrap').removeClass('data-table-wrap--booting');
+                }
 
-                fileInput?.addEventListener('change', () => {
-                    const name = fileInput.files?.[0]?.name || 'Sin archivo seleccionado';
-                    if (fileName) {
-                        fileName.textContent = name;
+                function updateCursosEntriesMeta(recordsFiltered) {
+                    const countEl = document.getElementById('cursos-registros-count');
+                    const labelEl = document.getElementById('cursos-registros-count-label');
+                    if (! countEl || ! labelEl) {
+                        return;
                     }
-                    if (submitBtn) {
-                        submitBtn.disabled = !fileInput.files?.length;
+                    const count = Number(recordsFiltered) || 0;
+                    countEl.textContent = count.toLocaleString('es-CO');
+                    labelEl.textContent = count === 1 ? 'registro' : 'registros';
+                }
+
+                function getAlpineRoot() {
+                    const root = document.querySelector('.cursos-registros-page');
+                    if (! root || ! window.Alpine) {
+                        return null;
+                    }
+                    return window.Alpine.$data(root);
+                }
+
+                function bindRowInteractions() {
+                    const alpine = getAlpineRoot();
+
+                    $table.find('.js-curso-row-select').each(function () {
+                        const id = Number(this.value);
+                        if (alpine) {
+                            this.checked = !! alpine.isSelected(id);
+                        }
+                    });
+
+                    $table.find('[data-curso-upload]').each(function () {
+                        const uploadForm = this;
+                        const input = uploadForm.querySelector('input[type="file"]');
+                        const nameEl = uploadForm.querySelector('[data-curso-upload-name]');
+                        if (! input || ! nameEl) {
+                            return;
+                        }
+                        input.addEventListener('change', () => {
+                            nameEl.textContent = input.files?.[0]?.name || 'Sin archivo';
+                        });
+                    });
+                }
+
+                if (window.jQuery.fn.DataTable.isDataTable($table[0])) {
+                    $table.DataTable().destroy();
+                }
+
+                $table.closest('.req-manage-shell__table, .data-table-wrap').addClass('data-table-wrap--dt-compact');
+
+                const canEdit = $table.data('dt-can-edit') === 1 || $table.data('dt-can-edit') === '1';
+                const columnDefs = [
+                    { targets: canEdit ? [0, 12, 13] : [11], orderable: false, searchable: false },
+                    { targets: canEdit ? [9] : [8], orderable: false },
+                ];
+
+                const api = $table.DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: $table.data('dt-url'),
+                    },
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                        emptyTable: 'No hay registros para este filtro.',
+                    },
+                    dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
+                    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                    pageLength: 10,
+                    responsive: false,
+                    order: [[canEdit ? 7 : 6, 'desc']],
+                    columnDefs: columnDefs,
+                });
+
+                api.on('xhr.dt', function (_event, _settings, json) {
+                    revealCursosTableWrap();
+                    if (json && typeof json.recordsFiltered !== 'undefined') {
+                        updateCursosEntriesMeta(json.recordsFiltered);
                     }
                 });
 
-                form.addEventListener('submit', () => {
-                    if (loading) {
-                        loading.hidden = false;
+                api.on('draw.dt', function () {
+                    bindRowInteractions();
+                });
+
+                $table.on('change', '.js-curso-row-select', function () {
+                    const alpine = getAlpineRoot();
+                    if (! alpine) {
+                        return;
                     }
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<span class="ficha-empleados-masivos-modal__btn-spinner" aria-hidden="true"></span> Importando…';
+                    let rowMeta = null;
+                    try {
+                        rowMeta = JSON.parse(this.getAttribute('data-curso-row') || 'null');
+                    } catch (e) {
+                        rowMeta = null;
+                    }
+                    alpine.toggleRow(Number(this.value), this.checked, rowMeta);
+                });
+
+                $table.on('click', '.js-curso-edit', function () {
+                    try {
+                        const row = JSON.parse(this.getAttribute('data-curso-edit') || '{}');
+                        window.dispatchEvent(new CustomEvent('cursos-open-edit', { detail: row }));
+                    } catch (e) {
+                        // ignore malformed payload
                     }
                 });
+
+                (function setupCursosTableScroll() {
+                    const $shell = $table.closest('.req-manage-shell');
+                    const $wrapper = $table.closest('.dataTables_wrapper');
+                    const $scroll = $wrapper.find('.req-manage-table-scroll').first();
+                    const $bottom = $wrapper.find('.req-manage-dt-bottom').first();
+
+                    if (! $scroll.length) {
+                        return;
+                    }
+
+                    const updateScrollArea = function () {
+                        const bottomHeight = $bottom.outerHeight(true) || 0;
+                        const rect = $scroll[0].getBoundingClientRect();
+                        const maxHeight = window.innerHeight - rect.top - bottomHeight - 16;
+                        $scroll.css('max-height', Math.max(220, maxHeight) + 'px');
+                    };
+
+                    const debounce = function (fn, wait) {
+                        let timer = null;
+                        return function () {
+                            if (timer) {
+                                clearTimeout(timer);
+                            }
+                            timer = setTimeout(fn, wait);
+                        };
+                    };
+
+                    updateScrollArea();
+                    setTimeout(updateScrollArea, 200);
+                    api.on('draw.dt-table-scroll', updateScrollArea);
+                    window.jQuery(window).on('resize orientationchange', debounce(updateScrollArea, 100));
+
+                    const $filtersPanel = $shell.find('.req-manage-shell__filters').first();
+                    if ($filtersPanel.length && typeof ResizeObserver !== 'undefined') {
+                        new ResizeObserver(debounce(updateScrollArea, 50)).observe($filtersPanel[0]);
+                    }
+                })();
             });
         </script>
     @endpush
