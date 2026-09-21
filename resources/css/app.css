@@ -8275,6 +8275,32 @@ a.sj-pagination__item:hover {
     margin-left: auto;
 }
 
+.cursos-registros-page__nuevos-link {
+    text-decoration: none;
+}
+
+.cursos-registros-page__cola-exit {
+    margin-left: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.cursos-registros-page__identity-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.cursos-registros-page__identity-row .form-input {
+    flex: 1 1 auto;
+}
+
+.cursos-registros-page__omit-modal {
+    width: min(520px, calc(100vw - 2rem));
+}
+
 .cursos-registros-page__select-col {
     width: 2.25rem;
     text-align: center;

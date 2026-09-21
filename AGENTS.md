@@ -60,6 +60,12 @@
 - `<x-searchable-select>` incluye buscador integrado en tiempo real, soporte de navegacion por teclado, compatibilidad con validacion nativa HTML5 (`required`), emision de eventos `change`/`input` y enlace con `<input type="hidden">` para envio estandar de formularios.
 - Parametros principales: `:options`, `:value`, `placeholder`, `searchPlaceholder`, `:required`, `:disabled`, `:allowClear`.
 
+## Listados DataTables server-side
+- Tablas operativas que pueden crecer (empleados, cursos, archivo, seguimientos, etc.) deben usar DataTables **`serverSide: true`** con endpoint JSON; no renderizar miles de filas en Blade + `js-datatable` client-side.
+- Referencia de implementacion: Ficha empleados, Cursos registros (`EmployeeCursoDatatableService`).
+- Regla Cursor (incluye cuando avisar antes de codear): [`.cursor/rules/datatables-server-side.mdc`](.cursor/rules/datatables-server-side.mdc).
+- Catalogos pequenos fijos pueden seguir con `js-datatable` client-side.
+
 ## Auditoria central
 - Modulos nuevos deben registrar eventos via `App\Services\Audit\SystemAuditService` (wrapper delgado por modulo con `module`/`area` fijos).
 - No crear tablas de audit duplicadas salvo historiales de dominio embebidos (ej. cambios campo a campo en requisiciones).

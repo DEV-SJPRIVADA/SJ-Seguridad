@@ -1,0 +1,43 @@
+---
+description: Listados grandes con DataTables server-side — obligatorio en vistas nuevas
+globs: resources/views/**/*.blade.php,app/Http/Controllers/**/*.php,app/Services/**/*Datatable*.php
+alwaysApply: false
+---
+
+# Listados DataTables server-side
+
+Patron obligatorio para tablas de negocio que pueden crecer (empleados, cursos, archivo, seguimientos, etc.).
+
+## Regla
+
+1. **No** cargar el listado completo en el HTML de la vista (`->get()` / `@foreach` de miles de filas + `js-datatable` client-side).
+2. Usar **DataTables `serverSide: true`** con endpoint JSON protocolo DataTables (`draw`, `recordsTotal`, `recordsFiltered`, `data`).
+3. Referencias de codigo:
+   - Ficha: `EmployeeFichaEntryDatatableService` + `js-ficha-empleados-datatable`
+   - Cursos: `EmployeeCursoDatatableService` + `js-cursos-registros-datatable`
+   - Archivo / Desvinculaciones: servicios `*DatatableService` equivalentes
+4. Clase de tabla **distinta** de `.js-datatable` (el layout inicializa client-side automatico).
+5. `lengthMenu` **sin** opcion `-1` / «Todos», o tope duro en el servidor (p. ej. max 100).
+6. Contador de filas desde `recordsFiltered` (xhr), no desde coleccion Blade.
+7. Acciones en celdas HTML: eventos delegados / `CustomEvent` (Alpine no enlaza HTML inyectado por DataTables).
+8. Seleccion masiva «todo el filtro»: endpoint ligero de IDs/resumen; **no** hidratar el DOM completo.
+
+## Antes de codear — avisar al usuario si hay riesgo grave
+
+Detenerse y **consultar al usuario** (no implementar a ciegas) cuando server-side implica:
+
+| Riesgo | Ejemplo |
+| --- | --- |
+| Cambio de semantica de negocio | «Seleccionar todos» pasaria de *todo el filtro* a *solo la pagina* y eso altera un bulk irreversible |
+| Export / reportes que hoy dependen del HTML completo | Un boton asume todas las filas en el DOM |
+| Formularios criticos por fila sin CSRF / sin ruta nombrada | Subidas, deletes masivos mal cableados |
+| Permisos distintos por fila no replicables en JSON | Filas que solo algunos roles pueden ver/editar |
+| Catalogos pequenos (&lt; ~100 filas fijas) | Server-side puede ser overkill; client-side `js-datatable` sigue OK |
+
+Si el riesgo es solo UX menor (p. ej. busqueda DT vs filtros GET), documentarlo en la Task Card y seguir.
+
+## Prohibido
+
+- Reintroducir `@foreach` de colecciones sin paginar en listados operativos grandes.
+- Dejar el endpoint `datatable` sin cablear a la vista.
+- Ofrecer «Todos» (`length: -1`) sin tope en backend.

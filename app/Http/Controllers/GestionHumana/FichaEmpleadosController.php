@@ -18,6 +18,7 @@ use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeCursoDocumentService;
+use App\Services\GestionHumana\EmployeeCursoPendingService;
 use App\Services\GestionHumana\EmployeeFichaAuditLogService;
 use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
@@ -59,6 +60,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaEntryDatatableService $entryDatatableService,
         private readonly EmployeeTerminationFollowupService $terminationFollowupService,
         private readonly EmployeeCursoDocumentService $cursoDocumentService,
+        private readonly EmployeeCursoPendingService $cursoPendingService,
     ) {}
 
     public function index(Request $request): View
@@ -398,8 +400,10 @@ class FichaEmpleadosController extends Controller
                 );
                 $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
 
-                return $entry->fresh(['requisition']);
+                return $entry->fresh(['requisition', 'profile']);
             });
+
+            $this->enqueueCursoPendingIfEligible($entry, $userId);
 
             $isRehire = ($entry->employmentPeriods()->count() ?? 0) > 1;
 
@@ -474,8 +478,10 @@ class FichaEmpleadosController extends Controller
             );
             $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
 
-            return $entry;
+            return $entry->fresh(['profile']);
         });
+
+        $this->enqueueCursoPendingIfEligible($entry, $userId);
 
         $this->auditLogService->logEvent(
             eventType: 'ficha_entry',
@@ -787,6 +793,27 @@ class FichaEmpleadosController extends Controller
     private function authorizeView(): void
     {
         abort_unless($this->fichaEmpleadosAccess->canView(auth()->user()), 403);
+    }
+
+    /**
+     * Encola en «Nuevos sin curso» tras ingreso a ficha (post go-live). Idempotente.
+     */
+    private function enqueueCursoPendingIfEligible(PersonalRequisitionFichaEntry $entry, int $userId): void
+    {
+        $profile = $entry->profile;
+        $documentNumber = trim((string) ($profile?->document_number ?? $entry->hired_document ?? ''));
+
+        if ($documentNumber === '') {
+            return;
+        }
+
+        $this->cursoPendingService->enqueueIfEligible([
+            'document_number' => $documentNumber,
+            'full_name' => $profile?->full_name ?? $entry->hired_full_name,
+            'employee_ficha_profile_id' => $profile?->id,
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'enqueued_by' => $userId,
+        ]);
     }
 
     /**

@@ -19,6 +19,7 @@ class EmployeeCursoImportService
 {
     public function __construct(
         private readonly EmployeeCursoEstadoSyncService $estadoSyncService,
+        private readonly EmployeeCursoPendingService $pendingService,
     ) {}
 
     /**
@@ -205,11 +206,16 @@ class EmployeeCursoImportService
                         $existing->update($payload);
                         $stats['updated']++;
                     } else {
-                        EmployeeCurso::query()->create([
+                        $created = EmployeeCurso::query()->create([
                             ...$payload,
                             'created_by' => $userId,
                         ]);
                         $stats['imported']++;
+                        $this->pendingService->resolveByDocument(
+                            $cedula,
+                            $created,
+                            $userId,
+                        );
                     }
                 });
             } catch (\Throwable $e) {
