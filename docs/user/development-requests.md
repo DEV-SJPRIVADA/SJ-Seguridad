@@ -35,7 +35,7 @@ Tablero **Solicitudes desarrollo**:
 
 ### Crear y enviar
 
-1. Abra **Nueva solicitud**, complete el formulario y adjunte evidencias si aplica.
+1. Abra **Nueva solicitud**. El formulario esta organizado en secciones (clasificacion, identificacion, necesidad, alcance, criterios y anexos); use la guia lateral como checklist.
 2. Guarde como borrador o envie. Si usted es el lider seleccionado, al enviar puede quedar **radicada** de inmediato.
 3. Si no, queda en **Pendiente aprobacion lider** hasta que el lider apruebe.
 
@@ -55,4 +55,6 @@ Tablero **Solicitudes desarrollo**:
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.2 | 2026-09-22 | Detalle y bandeja TIC: misma linea visual (secciones, aside, timeline, chat). |
+| 1.1 | 2026-09-22 | Vista Nueva/Editar: formulario por secciones con guia lateral. |
 | 1.0 | 2026-09-17 | FEAT-033: FO-TIC-23, lider, bandeja TIC, chat+correo, KPIs/SLA y export. |

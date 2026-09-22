@@ -31,7 +31,20 @@ class DevelopmentRequestTicQueueTest extends TestCase
         $this->actingAs($tic)
             ->get(route('development-requests.tic-queue', ['module' => 'tic']))
             ->assertOk()
+            ->assertSee('Bandeja TIC', false)
+            ->assertSee('Listado operativo', false)
             ->assertSee($request->code);
+
+        $this->actingAs($tic)
+            ->get(route('development-requests.show', [
+                'module' => 'tic',
+                'development_request' => $request,
+                'from' => 'tic_queue',
+            ]))
+            ->assertOk()
+            ->assertSee('Volver a bandeja TIC', false)
+            ->assertSee('Detalle FO-TIC-23', false)
+            ->assertSee('Gestion TIC', false);
 
         $this->actingAs($tic)
             ->patch(route('development-requests.tic.transition', [
