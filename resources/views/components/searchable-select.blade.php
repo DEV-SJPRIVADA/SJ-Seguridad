@@ -105,12 +105,12 @@
             'searchable-select__trigger--disabled': isDisabled,
             'searchable-select__trigger--has-value': hasSelection
         }"
-        @click="toggle()"
+        @click="if (!isDisabled) { toggle() }"
         tabindex="0"
-        @keydown.space.prevent="toggle()"
-        @keydown.enter.prevent="toggle()"
-        @keydown.down.prevent="openDropdown()"
-        @keydown.up.prevent="openDropdown()"
+        @keydown.space.prevent="if (!isDisabled) { toggle() }"
+        @keydown.enter.prevent="if (!isDisabled) { toggle() }"
+        @keydown.down.prevent="if (!isDisabled) { openDropdown() }"
+        @keydown.up.prevent="if (!isDisabled) { openDropdown() }"
         role="combobox"
         aria-haspopup="listbox"
         :aria-expanded="open.toString()"

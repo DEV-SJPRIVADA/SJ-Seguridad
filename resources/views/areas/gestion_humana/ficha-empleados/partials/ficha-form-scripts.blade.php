@@ -37,10 +37,18 @@
             salaryInput.value = formatCurrency(salaryInput.dataset.initialValue || salaryInput.value);
 
             salaryInput.addEventListener('focus', function () {
+                if (salaryInput.readOnly || salaryInput.disabled) {
+                    return;
+                }
+
                 salaryInput.value = parseCurrency(salaryInput.value);
             });
 
             salaryInput.addEventListener('blur', function () {
+                if (salaryInput.readOnly || salaryInput.disabled) {
+                    return;
+                }
+
                 salaryInput.value = formatCurrency(salaryInput.value);
             });
 

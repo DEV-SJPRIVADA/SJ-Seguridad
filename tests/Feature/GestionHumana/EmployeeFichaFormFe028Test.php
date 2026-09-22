@@ -84,6 +84,8 @@ class EmployeeFichaFormFe028Test extends TestCase
             ->assertSee('Habilitar edición', false)
             ->assertSee('ficha-empleados-form--readonly', false)
             ->assertSee('ficha-empleados-form__fields', false)
+            ->assertSee('x-ref="fichaFields"', false)
+            ->assertSee('syncFieldLock', false)
             ->assertDontSee('name="eps_name"', false)
             ->assertDontSee('name="compensation_fund_name"', false)
             ->getContent();

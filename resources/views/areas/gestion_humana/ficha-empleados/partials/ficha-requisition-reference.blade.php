@@ -9,35 +9,35 @@
     <div class="form-grid form-grid--two ficha-empleados-form__grid">
         <div class="form-field">
             <label class="form-label">Código requisición</label>
-            <input class="form-input" value="{{ $reference['code'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['code'] ?? '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Cliente</label>
-            <input class="form-input" value="{{ $reference['client_name'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['client_name'] ?? '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Cargo (requisición)</label>
-            <input class="form-input" value="{{ $reference['position_name'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['position_name'] ?? '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Tipo contrato (requisición)</label>
-            <input class="form-input" value="{{ $reference['contract_type_name'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['contract_type_name'] ?? '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Salario sugerido</label>
-            <input class="form-input" value="{{ isset($reference['base_salary']) ? number_format((float) $reference['base_salary'], 0, ',', '.') : '—' }}" disabled readonly>
+            <input class="form-input" value="{{ isset($reference['base_salary']) ? number_format((float) $reference['base_salary'], 0, ',', '.') : '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Fecha ingreso sugerida</label>
-            <input class="form-input" value="{{ $reference['hiring_date'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['hiring_date'] ?? '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Centro de costo (texto requisición)</label>
-            <input class="form-input" value="{{ $reference['cost_center_hint'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['cost_center_hint'] ?? '—' }}" readonly tabindex="0">
         </div>
         <div class="form-field">
             <label class="form-label">Ciudad (requisición)</label>
-            <input class="form-input" value="{{ $reference['city_name'] ?? '—' }}" disabled readonly>
+            <input class="form-input" value="{{ $reference['city_name'] ?? '—' }}" readonly tabindex="0">
         </div>
     </div>
 </section>

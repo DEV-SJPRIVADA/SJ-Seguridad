@@ -1964,24 +1964,26 @@ a {
     cursor: not-allowed;
 }
 
-.ficha-empleados-form--readonly .ficha-empleados-form__fields {
-    pointer-events: none;
-}
-
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .form-input,
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .form-textarea,
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .form-select,
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .searchable-select__trigger {
     opacity: 0.75;
     background-color: var(--color-surface, #f8fafc);
-    cursor: not-allowed;
+    cursor: text;
+    user-select: text;
+}
+
+.ficha-empleados-form--readonly .ficha-empleados-form__fields .searchable-select__label {
+    user-select: text;
+    cursor: text;
 }
 
 .ficha-empleados-form__section--reference .form-input {
     opacity: 0.75;
     background-color: var(--color-surface, #f8fafc);
-    cursor: not-allowed;
-    pointer-events: none;
+    cursor: text;
+    user-select: text;
 }
 
 .searchable-select__label {
