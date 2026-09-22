@@ -231,7 +231,7 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 ## Export Excel — Plantilla masivos (nómina externa)
 
 - Clase: `App\Exports\PlantillaMasivosExport` — carga `storage/templates/plantilla-masivos.xlsx`, conserva filas 1–2, datos desde fila 3.
-- Mapper: `App\Services\GestionHumana\PlantillaMasivosMapper` — **solo** `employee_ficha_profiles` + `payroll_extra` guardados; sin fallbacks de requisición (excepto cédula/nombre mínimo desde entry); columna **NITCENTROTB** siempre `null`; sin defaults numéricos en jornada/retención/gasto/horas extra.
+- Mapper: `App\Services\GestionHumana\PlantillaMasivosMapper` — **solo** `employee_ficha_profiles` + `payroll_extra` guardados; sin fallbacks de requisición (excepto cédula/nombre mínimo desde entry); columna **NITCENTROTB** siempre `null`; sin defaults numéricos en jornada/retención/gasto; **EXCLAUXTRA** = `exclude_transport_allowance` (Excluir auxilio de transporte, 0/1; lee legacy `exclude_overtime`).
 - Import row mapper: `EmployeeFichaImportRowMapper` — misma regla (solo perfil persistido).
 - Config: `config/employee_ficha.php` (`plantilla_masivos_columns`, `plantilla_masivos_excluded_columns`).
 - **Sin rango de fechas:** solo empleados activos en ficha.

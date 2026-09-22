@@ -485,18 +485,18 @@
             <x-input-error :messages="$errors->get('payroll_extra.military_book')" />
         </div>
         <div class="form-field">
-            <label class="form-label" for="payroll_extra_exclude_overtime">Excluir horas extra</label>
+            <label class="form-label" for="payroll_extra_exclude_transport_allowance">Excluir auxilio de transporte</label>
             <x-searchable-select
-                id="payroll_extra_exclude_overtime"
-                name="payroll_extra[exclude_overtime]"
+                id="payroll_extra_exclude_transport_allowance"
+                name="payroll_extra[exclude_transport_allowance]"
                 :options="[
                     ['value' => '0', 'label' => 'No'],
                     ['value' => '1', 'label' => 'Sí'],
                 ]"
-                :value="$payrollExtra('exclude_overtime', '0')"
+                :value="$payrollExtra('exclude_transport_allowance', $profile->payrollExtraValue('exclude_overtime', '0'))"
                 :allowClear="false"
             />
-            <x-input-error :messages="$errors->get('payroll_extra.exclude_overtime')" />
+            <x-input-error :messages="$errors->get('payroll_extra.exclude_transport_allowance')" />
         </div>
     </div>
 </section>

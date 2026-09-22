@@ -106,7 +106,11 @@ trait EmployeeFichaProfileFieldRules
             'payroll_extra.vacation_base_date' => ['nullable', 'date'],
             'payroll_extra.arp_code' => ['nullable', 'string', 'max:50'],
             'payroll_extra.military_book' => ['nullable', 'string', 'max:50'],
-            'payroll_extra.exclude_overtime' => ['nullable', 'string', 'max:5'],
+            'payroll_extra.exclude_transport_allowance' => [
+                'nullable',
+                'string',
+                Rule::in(['0', '1']),
+            ],
             'payroll_extra.age' => ['nullable', 'integer', 'min:0', 'max:120'],
             'payroll_extra.contributor_type' => [
                 'nullable',

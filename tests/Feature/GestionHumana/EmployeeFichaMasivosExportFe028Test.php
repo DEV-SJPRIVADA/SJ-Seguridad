@@ -99,7 +99,7 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
                 'workday' => '2',
                 'withholding_type' => '2',
                 'expense_type' => '3',
-                'exclude_overtime' => '1',
+                'exclude_transport_allowance' => '1',
             ],
         ]);
 
@@ -113,6 +113,25 @@ class EmployeeFichaMasivosExportFe028Test extends TestCase
         $this->assertSame('2', $row[self::COL_WORKDAY]);
         $this->assertSame('2', $row[47]);
         $this->assertSame('3', $row[48]);
+        $this->assertSame('1', $row[61]);
+    }
+
+    public function test_plantilla_masivos_mapper_reads_legacy_exclude_overtime_as_exclauxtra(): void
+    {
+        $entry = $this->createInFichaEntryWithRequisition();
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'payroll_extra' => [
+                'exclude_overtime' => '1',
+            ],
+        ]);
+
+        $row = app(PlantillaMasivosMapper::class)->mapRow($entry->fresh(['profile']));
+
         $this->assertSame('1', $row[61]);
     }
 

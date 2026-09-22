@@ -45,6 +45,9 @@ class EmployeeFichaFormFe028Test extends TestCase
             ->assertSee('id="payroll_extra_contributor_type"', false)
             ->assertSee('Dependiente', false)
             ->assertSee('Aprendices en Etapa productiva', false)
+            ->assertSee('Excluir auxilio de transporte', false)
+            ->assertSee('id="payroll_extra_exclude_transport_allowance"', false)
+            ->assertDontSee('Excluir horas extra', false)
             ->assertSee('C — Cedula de ciudadania', false)
             ->assertSee('CE — Cedula de extranjeria', false);
     }

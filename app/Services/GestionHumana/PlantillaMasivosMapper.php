@@ -146,7 +146,7 @@ class PlantillaMasivosMapper
             $zoneName,
             $economicActivityCode,
             $economicActivityName,
-            data_get($extra, 'exclude_overtime'),
+            data_get($extra, 'exclude_transport_allowance', data_get($extra, 'exclude_overtime')),
         ];
     }
 
