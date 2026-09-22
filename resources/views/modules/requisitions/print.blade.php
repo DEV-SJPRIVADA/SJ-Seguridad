@@ -354,9 +354,8 @@
                 <td class="signature-box" style="width: 33%;">
                     <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto;">Aprobación Gerencia (No se requiere en cambios de cargos OP sin afectación de salario)</div>
                 </td>
-                <td style="width: 33.3%;" class="text-center">
-                    <div class="signature-box">{{ ($name = $requisition->displayRecruiterName()) !== '—' ? $name : '_______________________' }}</div>
-                    <div style="border-top: 1px solid #000; padding-top: 2px;">Dirección de Gestión Humana Recibió</div>
+                <td class="signature-box" style="width: 33%;">
+                    <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto;">Dirección de Gestión Humana Recibió</div>
                 </td>
             </tr>
         </table>
