@@ -265,6 +265,7 @@ class PurchaseRequestModuleTest extends TestCase
         $this->actingAs($requester)
             ->get(route('purchase-requests.index', ['module' => 'compras']))
             ->assertOk()
+            ->assertSee('Listado', false)
             ->assertSee($purchaseRequest->folio())
             ->assertSee('Director aprobador')
             ->assertSee($director->name)
@@ -285,9 +286,14 @@ class PurchaseRequestModuleTest extends TestCase
         ]);
 
         $this->actingAs($requester)
-            ->get(route('purchase-requests.show', ['module' => 'operaciones', 'purchase_request' => $purchaseRequest->id]))
+            ->get(route('purchase-requests.show', [
+                'module' => 'operaciones',
+                'purchase_request' => $purchaseRequest->id,
+                'from' => 'mis_solicitudes',
+            ]))
             ->assertOk()
             ->assertSee('Registro de correos de esta solicitud')
+            ->assertSee('Volver a mis solicitudes', false)
             ->assertSee($director->email)
             ->assertSee('Enviado');
     }
@@ -515,6 +521,7 @@ class PurchaseRequestModuleTest extends TestCase
         $response = $this->actingAs($compras)->get(route('purchase-requests.processing.index', ['module' => 'compras']));
 
         $response->assertOk();
+        $response->assertSee('Listado operativo', false);
         $response->assertSee($purchaseRequest->fresh()->folio());
         $response->assertSee('Ver detalle', false);
         $response->assertSee('Filtros', false);
@@ -770,11 +777,17 @@ class PurchaseRequestModuleTest extends TestCase
         ])->assertRedirect();
 
         $this->actingAs($compras)
-            ->get(route('purchase-requests.show', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->get(route('purchase-requests.show', [
+                'module' => 'compras',
+                'purchase_request' => $purchaseRequest->id,
+                'from' => 'processing',
+            ]))
             ->assertOk()
             ->assertSee($purchaseRequest->folio())
             ->assertSee('Descargar PDF')
-            ->assertSee('Registro de correos de esta solicitud');
+            ->assertSee('Registro de correos de esta solicitud')
+            ->assertSee('Volver a bandeja de compras', false)
+            ->assertSee('Procesar solicitud', false);
     }
 
     public function test_director_can_approve_from_show_page(): void

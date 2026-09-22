@@ -21,16 +21,20 @@
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
-    <div class="page-section req-manage-page">
+    <div class="page-section purchase-requests-page purchase-requests-page--list req-manage-page">
         <div class="app-container">
-            <div class="panel">
+            <div class="panel purchase-requests-page__panel">
                 <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Bandeja de compras</h3>
-                    <p class="panel-text panel-text--compact">Cola unificada de solicitudes de compra aprobadas y suministros listos para procesamiento.</p>
+                    <div class="pur-req-list__header-row">
+                        <div>
+                            <h3 class="panel-title">Listado operativo</h3>
+                            <p class="panel-text panel-text--compact">Resultados segun filtros aplicados. Mas reciente primero.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="panel__body req-manage-shell">
-                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel req-manage-filters--bandeja" @if ($hasActiveFilters) open @endif>
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel req-manage-filters--bandeja pur-req-list__filters" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">
                             <span>Filtros</span>
                             @if ($hasActiveFilters)
@@ -88,7 +92,7 @@
                                             />
                                         </div>
                                     </div>
-                    </form>
+                                </form>
 
                                 <div class="req-manage-filters__status-row req-manage-filters__status-col--right">
                                     <p class="req-manage-filters__status-label">Estado</p>
@@ -136,63 +140,74 @@
                     <div class="data-table-wrap req-manage-shell__table">
                         <table
                             class="supply-table js-datatable"
-                            style="width:100%"
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
                             data-order='[[2, "desc"]]'
                         >
-                        <thead>
-                            <tr>
-                                <th>Tipo</th>
-                                <th>Folio</th>
-                                <th>Fecha</th>
-                                <th>Solicitante</th>
-                                <th>Area</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($queueItems as $queueItem)
+                            <thead>
                                 <tr>
-                                    <td>{{ $queueItem['tipo_label'] }}</td>
-                                    <td>{{ $queueItem['folio'] }}</td>
-                                    <td data-order="{{ $queueItem['fecha']?->timestamp ?? 0 }}">
-                                        <x-date-table :value="$queueItem['fecha']" datetime />
-                                    </td>
-                                    <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
-                                    <td>{{ $queueItem['area'] ?? '—' }}</td>
-                                    <td>
+                                    <th>Tipo</th>
+                                    <th>Folio</th>
+                                    <th>Fecha</th>
+                                    <th>Solicitante</th>
+                                    <th>Area</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($queueItems as $queueItem)
+                                    <tr>
+                                        <td>
+                                            <span class="pur-req-list__type {{ $queueItem['tipo'] === 'purchase' ? 'pur-req-list__type--purchase' : 'pur-req-list__type--supply' }}">
+                                                {{ $queueItem['tipo_label'] }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="pur-req-list__folio">{{ $queueItem['folio'] }}</span>
+                                        </td>
+                                        <td data-order="{{ $queueItem['fecha']?->timestamp ?? 0 }}">
+                                            <x-date-table :value="$queueItem['fecha']" datetime />
+                                        </td>
+                                        <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
+                                        <td>{{ $queueItem['area'] ?? '—' }}</td>
+                                        <td>
                                             <span class="status-pill status-pill--compras-{{ $queueItem['estado'] ?? 'pendiente' }}">
                                                 {{ $queueItem['estado_label'] ?? '—' }}
                                             </span>
-                                    </td>
-                                    <td class="table-actions">
-                                        @if ($queueItem['tipo'] === 'purchase')
-                                                <a href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $queueItem['id'], 'from' => 'processing']) }}" class="btn btn--secondary btn--sm">
-                                                    Ver detalle
-                                                </a>
-                                            <a href="{{ route('purchase-requests.processing.purchase', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
-                                                Procesar
-                                            </a>
-                                        @else
-                                                <a href="{{ route('supplies.show', ['module' => $queueItem['model']->area_key, 'supply_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
-                                                    Ver detalle
-                                                </a>
-                                            <a href="{{ route('purchase-requests.processing.supply', ['module' => $module, 'supply_request' => $queueItem['id']]) }}" class="btn btn--secondary btn--sm">
-                                                Procesar
-                                            </a>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-muted">No hay elementos en la bandeja con los filtros seleccionados.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td class="table-actions">
+                                            <div class="purchase-request-row-actions">
+                                                @if ($queueItem['tipo'] === 'purchase')
+                                                    <a
+                                                        href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $queueItem['id'], 'from' => 'processing']) }}"
+                                                        class="btn btn--secondary btn--sm"
+                                                    >Ver detalle</a>
+                                                    <a
+                                                        href="{{ route('purchase-requests.processing.purchase', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}"
+                                                        class="btn btn--secondary btn--sm"
+                                                    >Procesar</a>
+                                                @else
+                                                    <a
+                                                        href="{{ route('supplies.show', ['module' => $queueItem['model']->area_key, 'supply_request' => $queueItem['id']]) }}"
+                                                        class="btn btn--secondary btn--sm"
+                                                    >Ver detalle</a>
+                                                    <a
+                                                        href="{{ route('purchase-requests.processing.supply', ['module' => $module, 'supply_request' => $queueItem['id']]) }}"
+                                                        class="btn btn--secondary btn--sm"
+                                                    >Procesar</a>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-muted">No hay elementos en la bandeja con los filtros seleccionados.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

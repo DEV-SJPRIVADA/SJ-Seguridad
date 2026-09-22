@@ -57,7 +57,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 ### Crear una solicitud de compra
 
-1. Entre a **Solicitudes de compra** en su area → pestaña **Nueva solicitud**.
+1. Entre a **Solicitudes de compra** en su area → pestaña **Nueva solicitud**. El formulario esta en secciones (datos generales, cliente si aplica, productos y adjuntos); use la guia lateral como checklist.
 2. Complete **Area**, **Fecha**, **Solicitud para** (Interno o Cliente) y seleccione el **Director aprobador**.
 3. Marque **Urgente** si aplica.
 4. Si eligio **Cliente**, complete razon social, proyecto nuevo y si asume el cliente.
@@ -130,6 +130,8 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.12 | 2026-09-22 | UI | Mis solicitudes y Bandeja compras: intro, resumen y listado alineados al resto del modulo. |
+| 1.11 | 2026-09-22 | UI | Nueva y detalle: secciones, guia lateral, volver contextual y CTA Procesar desde bandeja. |
 | 1.0 | 2026-07-31 | Modulo inicial | Flujo solicitante → director → Compras; FO-AD-44 |
 | 1.1 | 2026-07-31 | Autorizacion in-app | Director autoriza en plataforma; correo solo notifica |
 | 1.2 | 2026-08-03 | Navegacion canonica | Tabla de entrada al menu por perfil; guia ampliada |

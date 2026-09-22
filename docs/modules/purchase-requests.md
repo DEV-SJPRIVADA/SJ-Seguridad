@@ -153,6 +153,9 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 
 Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
 
+UI create/show: layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*` en `resources/css/app.css` (tokens `--brand-*`). Detalle: volver contextual (`from=mis_solicitudes|processing|approval`), CTA Procesar si viene de bandeja.
+Listados Mis solicitudes / Bandeja: `purchase-requests-page--list` con intro, resumen de conteo (bandeja) y panel de listado operativo; filtros bandeja conservan IDs y auto-submit.
+
 Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
 
 ### Carga masiva de ítems (Nueva solicitud)

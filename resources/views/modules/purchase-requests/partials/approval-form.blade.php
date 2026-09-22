@@ -1,16 +1,14 @@
 @can('approve', $purchaseRequest)
-    <div class="block-spaced-lg">
-        <article class="req-approval-letter">
-            <h4 class="req-approval-letter__title">Autorizacion de solicitud</h4>
-
-            <p class="req-approval-letter__lead">
-                Revise los datos y registre su decision. Al aprobar, la solicitud pasa a la bandeja de Compras.
-            </p>
-
+    <div class="panel pur-req-approval-panel">
+        <div class="panel__header">
+            <h3 class="panel-title">Autorizacion de solicitud</h3>
+            <p class="panel-text">Revise los datos y registre su decision. Al aprobar, pasa a la bandeja de Compras.</p>
+        </div>
+        <div class="panel__body">
             <form
                 method="POST"
                 action="{{ route('purchase-requests.approval.update', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
-                class="req-approval-letter__form"
+                class="pur-req-approval-panel__form"
             >
                 @csrf
                 @method('PATCH')
@@ -28,21 +26,15 @@
                     <x-input-error :messages="$errors->get('estado')" />
                 </div>
 
-                <div class="req-approval-letter__actions">
-                    <button type="submit" name="estado" value="aprobado" class="btn btn--primary">
+                <div class="pur-req-form-actions__group">
+                    <button type="submit" name="estado" value="aprobado" class="btn btn--primary btn--sm">
                         Aprobar solicitud
                     </button>
-                    <button type="submit" name="estado" value="rechazado" class="btn btn--danger">
+                    <button type="submit" name="estado" value="rechazado" class="btn btn--danger btn--sm">
                         Rechazar
                     </button>
                 </div>
-
-                <div class="req-approval-letter__alt-actions">
-                    <a href="{{ route('purchase-requests.approval.index', ['module' => $module]) }}" class="req-approval-letter__back">
-                        Volver al listado de pendientes
-                    </a>
-                </div>
             </form>
-        </article>
+        </div>
     </div>
 @endcan
