@@ -39,6 +39,7 @@ class NotificationConfigTest extends TestCase
             ->assertSee('Respaldo si no hay destinatarios')
             ->assertSee('Sin destinatarios')
             ->assertSee('Nueva requisicion')
+            ->assertSee('Requisiciones — destinatarios adicionales')
             ->assertSee('Documentacion comercial (por vencer o vencida)')
             ->assertSee('Comercial')
             ->assertDontSee('Autorizacion requisicion cargo nuevo')

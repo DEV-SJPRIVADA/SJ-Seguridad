@@ -57,7 +57,31 @@
 
     <div
         class="page-section ficha-empleados-page ficha-empleados-page--form"
-        x-data="{ isEditing: {{ $errors->any() && ! $showTerminateModal ? 'true' : 'false' }} }"
+        x-data="{
+            isEditing: {{ $errors->any() && ! $showTerminateModal ? 'true' : 'false' }},
+            init() {
+                this.$watch('isEditing', () => this.syncFieldLock());
+                this.$nextTick(() => this.syncFieldLock());
+            },
+            syncFieldLock() {
+                const root = this.$refs.fichaFields;
+                if (! root) {
+                    return;
+                }
+
+                root.querySelectorAll('input, textarea').forEach((el) => {
+                    if (['hidden', 'file', 'checkbox', 'radio', 'submit', 'button', 'reset'].includes(el.type)) {
+                        return;
+                    }
+
+                    el.readOnly = ! this.isEditing;
+                });
+
+                root.querySelectorAll('input[type=checkbox], input[type=radio], select').forEach((el) => {
+                    el.disabled = ! this.isEditing;
+                });
+            },
+        }"
     >
         <div class="app-container">
             @if (session('status'))
@@ -124,6 +148,7 @@
                 class="panel ficha-empleados-form"
                 :class="{ 'ficha-empleados-form--readonly': !isEditing }"
                 id="ficha-empleados-form"
+                @submit="if (!isEditing) { $event.preventDefault() }"
             >
                 @csrf
                 @method('PATCH')
@@ -135,7 +160,13 @@
                         ])
                     @endif
 
-                    <div class="ficha-empleados-form__fields">
+                    <div
+                        class="ficha-empleados-form__fields"
+                        x-ref="fichaFields"
+                        @beforeinput="if (!isEditing) { $event.preventDefault() }"
+                        @paste="if (!isEditing) { $event.preventDefault() }"
+                        @cut="if (!isEditing) { $event.preventDefault() }"
+                    >
                         @include('areas.gestion_humana.ficha-empleados.partials.ficha-form-fields', [
                             'profile' => $profile,
                             'catalogs' => $catalogs,

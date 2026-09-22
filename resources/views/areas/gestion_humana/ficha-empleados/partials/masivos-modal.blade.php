@@ -1,14 +1,17 @@
 {{-- Variables: $filters, $canManage, $show --}}
 <x-modal name="ficha-masivos" maxWidth="lg" :show="$show" focusable>
-    <div class="modal-card ficha-empleados-masivos-modal">
+    <div class="modal-card ficha-empleados-masivos-modal" data-plantilla-code="nompr07" id="ficha-masivos-nompr07">
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
                     <x-lucide-users width="20" height="20" aria-hidden="true" />
                 </span>
                 <div>
-                    <h3 class="ficha-empleados-masivos-modal__title">Plantilla masivos</h3>
-                    <p class="ficha-empleados-masivos-modal__lead">Exportar empleados en ficha o importar actualizaciones masivas.</p>
+                    <div class="ficha-empleados-masivos-modal__title-row">
+                        <h3 class="ficha-empleados-masivos-modal__title">Plantilla masivos</h3>
+                        <span class="ficha-empleados-masivos-modal__plantilla-code" title="Identificador de plantilla Excel">nompr07</span>
+                    </div>
+                    <p class="ficha-empleados-masivos-modal__lead">Formato <strong>nompr07</strong>: exportar empleados en ficha o importar actualizaciones masivas.</p>
                 </div>
             </div>
             <button
@@ -30,14 +33,17 @@
         @endif
 
         <div class="ficha-empleados-masivos-modal__cards">
-            <section class="ficha-empleados-masivos-modal__card">
+            <section class="ficha-empleados-masivos-modal__card ficha-empleados-masivos-modal__card--export-manager" data-export-manager="export-masivos-manager" id="ficha-export-masivos-manager">
                 <div class="ficha-empleados-masivos-modal__card-head">
                     <span class="ficha-empleados-masivos-modal__card-icon ficha-empleados-masivos-modal__card-icon--export" aria-hidden="true">
                         <x-lucide-file-spreadsheet width="18" height="18" aria-hidden="true" />
                     </span>
                     <div>
-                        <h4 class="ficha-empleados-masivos-modal__card-title">Exportar</h4>
-                        <p class="ficha-empleados-masivos-modal__card-note">Sin rango de fechas se exportan solo empleados activos.</p>
+                        <div class="ficha-empleados-masivos-modal__title-row">
+                            <h4 class="ficha-empleados-masivos-modal__card-title">Exportar</h4>
+                            <span class="ficha-empleados-masivos-modal__plantilla-code ficha-empleados-masivos-modal__plantilla-code--phrase" title="Identificador del exportador de plantilla">Export Masivos Manager</span>
+                        </div>
+                        <p class="ficha-empleados-masivos-modal__card-note">Sin rango de fechas se exportan solo empleados activos (Export Masivos Manager).</p>
                     </div>
                 </div>
 
@@ -61,14 +67,17 @@
             </section>
 
             @if ($canManage)
-                <section class="ficha-empleados-masivos-modal__card ficha-empleados-masivos-modal__card--import">
+                <section class="ficha-empleados-masivos-modal__card ficha-empleados-masivos-modal__card--import" data-plantilla-code="nompr07">
                     <div class="ficha-empleados-masivos-modal__card-head">
                         <span class="ficha-empleados-masivos-modal__card-icon ficha-empleados-masivos-modal__card-icon--import" aria-hidden="true">
                             <x-lucide-upload width="18" height="18" aria-hidden="true" />
                         </span>
                         <div>
-                            <h4 class="ficha-empleados-masivos-modal__card-title">Importar</h4>
-                            <p class="ficha-empleados-masivos-modal__card-note">Cargue un archivo .xlsx con la plantilla de empleados.</p>
+                            <div class="ficha-empleados-masivos-modal__title-row">
+                                <h4 class="ficha-empleados-masivos-modal__card-title">Importar</h4>
+                                <span class="ficha-empleados-masivos-modal__plantilla-code ficha-empleados-masivos-modal__plantilla-code--sm" title="Plantilla nompr07">nompr07</span>
+                            </div>
+                            <p class="ficha-empleados-masivos-modal__card-note">Cargue un archivo .xlsx con la plantilla de empleados (nompr07).</p>
                         </div>
                     </div>
 

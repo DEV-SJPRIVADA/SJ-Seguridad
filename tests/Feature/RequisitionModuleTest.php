@@ -1953,6 +1953,27 @@ class RequisitionModuleTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_edit_form_shows_imprimir_rq_for_contratado_status(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-PRINT');
+
+        $this->actingAs($manager)
+            ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload())
+            ->assertRedirect();
+
+        $printUrl = route('requisitions.print', [
+            'module' => 'operaciones',
+            'requisition' => $requisition,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Imprimir Rq', false)
+            ->assertSee($printUrl, false)
+            ->assertSee('target="_blank"', false);
+    }
+
     public function test_update_requires_hired_document_and_name_when_status_contratado(): void
     {
         [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0001');

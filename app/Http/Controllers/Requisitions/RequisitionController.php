@@ -29,6 +29,7 @@ use App\Services\Requisitions\CommercialClientBridge;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Services\Requisitions\PersonalRequisitionFichaSync;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
+use App\Services\Requisitions\RequisitionAdditionalNotificationRecipients;
 use App\Services\Requisitions\RequisitionAuditLogService;
 use App\Services\Requisitions\RequisitionRequestReasonCatalog;
 use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
@@ -58,6 +59,7 @@ class RequisitionController extends Controller
         private readonly NotificationConfigService $notificationConfig,
         private readonly PersonalRequisitionFichaSync $fichaSync,
         private readonly RequisitionAuditLogService $auditLogService,
+        private readonly RequisitionAdditionalNotificationRecipients $additionalNotificationRecipients,
     ) {}
 
     /**
@@ -321,6 +323,15 @@ class RequisitionController extends Controller
                 );
 
                 Mail::to($newRequisitionEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
+
+                $additionalEmails = $this->additionalNotificationRecipients->emailsFor(
+                    $mainRequisition,
+                    $newRequisitionEmails
+                );
+
+                if ($additionalEmails !== []) {
+                    Mail::to($additionalEmails)->send(new PersonalRequisitionNotification($mainRequisition, $totalCount));
+                }
 
                 if ($isCargoNuevo) {
                     $managementEmails = $this->notificationConfig->recipientEmails(
@@ -652,6 +663,24 @@ class RequisitionController extends Controller
 
                 if (filled($requesterEmail)) {
                     Mail::to($requisition->requester)->send(
+                        new PersonalRequisitionStatusChangedMail(
+                            $requisition->fresh(),
+                            $oldStatus,
+                            $newStatus,
+                            filled($request->input('human_resources_observation'))
+                                ? (string) $request->input('human_resources_observation')
+                                : null,
+                        )
+                    );
+                }
+
+                $additionalEmails = $this->additionalNotificationRecipients->emailsFor(
+                    $requisition->fresh(['clientType']),
+                    filled($requesterEmail) ? [(string) $requesterEmail] : []
+                );
+
+                if ($additionalEmails !== []) {
+                    Mail::to($additionalEmails)->send(
                         new PersonalRequisitionStatusChangedMail(
                             $requisition->fresh(),
                             $oldStatus,

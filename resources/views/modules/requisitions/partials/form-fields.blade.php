@@ -442,6 +442,18 @@
                 </div>
             </div>
 
+            <div class="req-form-actions__group" style="margin-top: 1rem; width: 100%; justify-content: flex-end;">
+                <a
+                    href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn--secondary btn--sm"
+                    title="Previsualizar e Imprimir (datos guardados)"
+                >
+                    Imprimir RQ
+                </a>
+            </div>
+
             <input type="hidden" id="confirm_duplicate_hired" name="confirm_duplicate_hired" value="{{ old('confirm_duplicate_hired', '0') }}">
             <input type="hidden" id="confirm_duplicate_hired_document" name="confirm_duplicate_hired_document" value="{{ old('confirm_duplicate_hired_document', '') }}">
         </section>

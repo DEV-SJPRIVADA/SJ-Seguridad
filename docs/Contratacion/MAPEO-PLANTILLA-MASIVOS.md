@@ -67,7 +67,7 @@ Referencia técnica para export nómina (`Plantilla masivos.xlsx`) e import SJ (
 | BG | NOMZONA.C50 | — | payroll_extra.zone_name | payroll_extra |
 | BH | CODACTARL.C10 | actividad_economica | economic_activity_code | profile |
 | BI | NOMACTARL.C50 | nombre_actividad_economica | economic_activity_name | profile |
-| BJ | EXCLAUXTRA.N1 | — | payroll_extra.exclude_overtime | payroll_extra |
+| BJ | EXCLAUXTRA.N1 | — | payroll_extra.exclude_transport_allowance (legacy: exclude_overtime) | payroll_extra — Excluir auxilio de transporte (0/1) |
 
 ## EMPLEADOS.xlsx — columnas importación SJ (fila 1)
 

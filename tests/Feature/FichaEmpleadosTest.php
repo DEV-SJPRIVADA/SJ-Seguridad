@@ -220,6 +220,23 @@ class FichaEmpleadosTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_ficha_masivos_modal_identifies_nompr07_plantilla_on_index(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertOk()
+            ->assertSee('data-plantilla-code="nompr07"', false)
+            ->assertSee('ficha-masivos-nompr07', false)
+            ->assertSee('>nompr07<', false)
+            ->assertSee('data-export-manager="export-masivos-manager"', false)
+            ->assertSee('ficha-export-masivos-manager', false)
+            ->assertSee('Export Masivos Manager', false);
+    }
+
     public function test_ficha_empleados_index_lists_en_ficha_by_default(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);

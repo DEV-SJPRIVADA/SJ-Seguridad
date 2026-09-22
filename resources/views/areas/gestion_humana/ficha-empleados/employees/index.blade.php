@@ -143,8 +143,8 @@
                                     <button
                                         type="button"
                                         class="ficha-empleados-filters__bulk-icon"
-                                        title="Plantilla masivos — exportar e importar"
-                                        aria-label="Plantilla masivos — exportar e importar"
+                                        title="Plantilla masivos nompr07 — exportar e importar"
+                                        aria-label="Plantilla masivos nompr07 — exportar e importar"
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'ficha-masivos')"
                                     >
