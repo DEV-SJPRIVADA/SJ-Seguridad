@@ -389,7 +389,12 @@ permisos para modificar Catálogos
 ### Notificaciones
 
 31. Si requiere que se notifique a las solicitudes de requisición deberá
-    solicitarlo al administrador del sistema.
+    solicitarlo al administrador del sistema (Admin → Configuración de
+    notificaciones). Hay un aviso **Nueva requisición** y otro de
+    **destinatarios adicionales** (misma lista para alta y cambios de
+    estado en Gestión). Los adicionales **no** reciben correo cuando el
+    tipo de cliente es **Administrativos**. El correo de autorización
+    gerencia (cargo nuevo) no usa esa lista adicional.
 
 ### Autorizar requisiciones cargo nuevo (Gerencia)
 

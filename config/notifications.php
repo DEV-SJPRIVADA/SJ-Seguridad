@@ -18,6 +18,7 @@ return [
     'admin_configurable' => [
         'requisitions' => [
             'new_requisition',
+            'requisition_additional',
         ],
         'comercial' => [
             'documentation_expiring',

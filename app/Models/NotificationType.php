@@ -14,6 +14,8 @@ class NotificationType extends Model
 
     public const SLUG_NEW_REQUISITION = 'new_requisition';
 
+    public const SLUG_REQUISITION_ADDITIONAL = 'requisition_additional';
+
     public const SLUG_DOCUMENTATION_EXPIRING = 'documentation_expiring';
 
     public const SLUG_SERVICE_CONTRACT_EXPIRING = 'service_contract_expiring';

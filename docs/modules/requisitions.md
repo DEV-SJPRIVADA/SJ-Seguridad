@@ -125,8 +125,10 @@ Destinatarios: `NotificationConfigService::recipientEmails('requisitions', $slug
 | Evento | Clase | Cola | Slug / destinatario | CTA |
 | --- | --- | --- | --- | --- |
 | Alta (no cargo nuevo pendiente) | `PersonalRequisitionNotification` | `ShouldQueue` | `new_requisition` (editable en Admin → Notificaciones) | `requisitions.open` |
+| Alta — destinatarios adicionales | mismo Mailable | `ShouldQueue` | `requisition_additional` (Admin); **omitido** si tipo de cliente es Administrativos; no usa fallback | `requisitions.open` |
 | Cargo nuevo | `PersonalRequisitionManagementApprovalMail` | **Sincrono** | `management_approval_cargo_nuevo` (no en `admin_configurable`; se resuelve igual por servicio) | Enlace firmado `email-approval.*` + link plataforma |
 | Cambio de estado / rechazo gerencia | `PersonalRequisitionStatusChangedMail` | `ShouldQueue` | Email del `requested_by` | Seguimiento del area con `q` |
+| Cambio de estado en Gestion — adicionales | mismo Mailable | `ShouldQueue` | `requisition_additional`; **omitido** si Administrativos; no aplica a rechazo/aprobacion por correo gerencia | Seguimiento del area con `q` |
 
 Config enlace gerencia: `config/requisitions.php` (`email_approval_link_days`, opcional `email_approval_log_user_id`).
 

@@ -30,6 +30,7 @@ Tras agregar o quitar un correo, el redirect conserva contexto (`?module=&type=#
 | Modulo | Slug | Uso |
 | --- | --- | --- |
 | `requisitions` | `new_requisition` | Nueva requisicion de personal |
+| `requisitions` | `requisition_additional` | Destinatarios adicionales (alta normal + cambio de estado en Gestion); no se envia si tipo de cliente es Administrativos |
 | `comercial` | `documentation_expiring` | Digest diario documentacion comercial por vencer o vencida (checklist) |
 
 Resolucion de destinatarios: `NotificationConfigService::recipientEmails($module, $slug)`. Sin correos activos asignados → fallback `config('notifications.fallback_recipient')`.
