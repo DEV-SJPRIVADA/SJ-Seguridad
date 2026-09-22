@@ -101,7 +101,10 @@ class DevelopmentRequestFoundationTest extends TestCase
         $this->actingAs($user)
             ->get(route('development-requests.create', ['module' => 'tic']))
             ->assertOk()
-            ->assertSee('Nueva', false);
+            ->assertSee('Nueva solicitud de desarrollo', false)
+            ->assertSee('Clasificacion', false)
+            ->assertSee('Antes de enviar', false)
+            ->assertSee('Enviar / radicar', false);
     }
 
     public function test_permission_catalog_sync_includes_new_permissions(): void

@@ -63,6 +63,9 @@ Bypass: `super-admin` / `manage.users`. Middleware de pestana: `devreq.tab:{tab}
 - Policy: `app/Policies/DevelopmentRequestPolicy.php`
 - Access: `app/Services/Access/DevelopmentRequestAccessService.php`
 - Vistas: `resources/views/modules/development-requests/`
+- Formulario Nueva/Editar: layout `dev-req-form-layout` (main + aside), secciones numeradas FO-TIC-23 en `partials/form-fields.blade.php`, estilos `dev-req-form*` en `resources/css/app.css` (tokens `--brand-*`).
+- Detalle: layout `dev-req-detail-layout` (contenido + aside operativo lider/TIC/UAT), timeline, chat y bloques de lectura FO-TIC-23.
+- Bandeja TIC: intro, KPIs, panel SLA y filtros `dev-req-queue-*`.
 - Tests: `tests/Feature/DevelopmentRequests/`
 
 ## Auditoria / notificaciones

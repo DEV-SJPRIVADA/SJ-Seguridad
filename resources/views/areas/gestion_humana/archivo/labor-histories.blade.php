@@ -41,11 +41,26 @@
             <div class="panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-filters">
+                        <div class="req-manage-filters__toolbar">
+                            <form method="GET" class="req-manage-filters__search-col archivo-page__search-col">
+                                @if ($filters['consultation'] ?? null)
+                                    <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
+                                @endif
+                                <label class="req-manage-filters__label" for="archivo-search-input">Buscar</label>
+                                <div class="req-manage-filters__search-group">
+                                    <input
+                                        id="archivo-search-input"
+                                        type="search"
+                                        name="q"
+                                        class="form-input"
+                                        value="{{ $filters['q'] }}"
+                                        placeholder="Cedula, nombre o codigo de requisicion"
+                                    >
+                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
+                                </div>
+                            </form>
+                        </div>
                         <div class="req-manage-filters__head">
-                            <div class="panel-heading-row panel-heading-row--wrap">
-                                <h3 class="panel-title">Empleados en ficha</h3>
-                                <p class="panel-text">Cedula, nombre o codigo de requisicion</p>
-                            </div>
                             <div class="req-manage-filters__actions">
                                 <button
                                     type="button"
@@ -87,25 +102,7 @@
                             </div>
                         </div>
 
-                        <div class="req-manage-filters__toolbar">
-                            <form method="GET" class="req-manage-filters__search-col archivo-page__search-col">
-                                @if ($filters['consultation'] ?? null)
-                                    <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
-                                @endif
-                                <label class="req-manage-filters__label" for="archivo-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group">
-                                    <input
-                                        id="archivo-search-input"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="Cedula, nombre o codigo de requisicion"
-                                    >
-                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
-                                </div>
-                            </form>
-                        </div>
+
 
                         <p class="req-manage-filters__meta">
                             <strong id="archivo-entries-count">…</strong>

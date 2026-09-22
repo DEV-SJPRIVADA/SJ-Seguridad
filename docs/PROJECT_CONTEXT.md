@@ -26,6 +26,7 @@
 - **Documentos de Calidad:** biblioteca por area, mis documentos, administracion centralizada
 - **Indicadores (Operaciones):** captura FT-OP, dashboard, ajustes (periodos, metas, auditoria), consolidado, export PDF/Excel
 - **Comercial:** dashboard KPI, matriz clientes (NIT), servicios por portafolio; importacion MT-CO-01
+- **Gestion humana (area):** Ficha empleados, Desvinculaciones, Cursos, **Selección** (Ingreso / Examen ocupacional / Dashboard / Catalogos), Archivo, Plantillas Word
 - Modulos base configurados en navegacion: gestion humana, operaciones, programacion, juridico, comercial, calidad, admin y financiero, compras
 - Correo local: Laragon Mailpit (`MAIL_MAILER=smtp`, puerto `1025`; ver `docs/LOCAL_SETUP.md`)
 
@@ -55,6 +56,7 @@ El workflow multi-agente actualiza estas capas al cerrar features ([`docs/AGENT_
 - **Calidad documentos:** `quality_documents`, `quality_document_areas`, `quality_document_users`
 - **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `improvements`
 - **Comercial:** `commercial_clients`, `commercial_services`, catalogos `commercial_*`
+- **Selección (GH):** `seleccion_ingresos`, `seleccion_examenes_ocupacionales`; catalogos RH/estado civil/SOLICITUD en `payroll_catalog_items`
 - `requisition_clients` (puente interno con matriz comercial)
 - tablas de `cache` y `jobs`
 

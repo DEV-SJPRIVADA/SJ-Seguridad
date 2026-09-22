@@ -32,6 +32,8 @@ return [
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
         'cursos.view' => 'Cursos: Ver listado, filtros y export Excel',
         'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
+        'seleccion.view' => 'Selección: Ver dashboard, listados y export Excel',
+        'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -100,6 +102,7 @@ return [
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
         'cursos' => 'Cursos',
+        'seleccion' => 'Selección',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
@@ -157,6 +160,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'seleccion' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -194,6 +201,13 @@ return [
         'dashboard' => 'Dashboard',
         'registros' => 'Cursos',
         'catalogo' => 'Catálogo',
+    ],
+
+    'seleccion_tabs' => [
+        'dashboard' => 'Dashboard',
+        'ingresos' => 'Ingreso',
+        'examenes' => 'Examen ocupacional',
+        'catalogos' => 'Catálogos',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -354,6 +368,7 @@ return [
                             'view.board.gestion_humana.plantillas_word',
                             'view.board.gestion_humana.desvinculaciones',
                             'view.board.gestion_humana.cursos',
+                            'view.board.gestion_humana.seleccion',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -391,6 +406,13 @@ return [
                         'permissions' => [
                             'cursos.view',
                             'cursos.edit',
+                        ],
+                    ],
+                    'seleccion' => [
+                        'label' => 'Selección',
+                        'permissions' => [
+                            'seleccion.view',
+                            'seleccion.edit',
                         ],
                     ],
                 ],
