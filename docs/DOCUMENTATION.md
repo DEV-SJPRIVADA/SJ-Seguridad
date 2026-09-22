@@ -76,6 +76,8 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Matriz comercial | [`modules/matriz-clientes.md`](modules/matriz-clientes.md) | [`user/matriz-clientes.md`](user/matriz-clientes.md) | Area comercial |
 | Ficha empleados | [`modules/ficha-empleados.md`](modules/ficha-empleados.md) | [`user/ficha-empleados.md`](user/ficha-empleados.md) | Area gestion_humana |
 | Desvinculaciones | [`modules/desvinculaciones.md`](modules/desvinculaciones.md) | [`user/desvinculaciones.md`](user/desvinculaciones.md) | Area gestion_humana |
+| Cursos | [`modules/cursos.md`](modules/cursos.md) | [`user/cursos.md`](user/cursos.md) | Area gestion_humana |
+| Selección | [`modules/seleccion.md`](modules/seleccion.md) | [`user/seleccion.md`](user/seleccion.md) | Area gestion_humana |
 | Plantillas Word | [`modules/plantillas-word.md`](modules/plantillas-word.md) | [`user/plantillas-word.md`](user/plantillas-word.md) | Area gestion_humana |
 | Branding / UI | [`modules/branding.md`](modules/branding.md) | — (solo tecnica) | Transversal |
 

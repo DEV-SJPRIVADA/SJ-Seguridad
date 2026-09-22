@@ -8619,6 +8619,69 @@ a.sj-pagination__item:hover {
     height: 320px;
 }
 
+/* FEAT-035 Selección dashboard */
+.seleccion-dashboard-page__filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.seleccion-dashboard-page__filter-meta {
+    display: flex;
+    align-items: center;
+    min-height: 2.25rem;
+}
+
+.seleccion-dashboard-page__kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+}
+
+.seleccion-dashboard-page__kpi {
+    padding: 0.85rem 1rem;
+    border-left: 5px solid #0369a1;
+}
+
+.seleccion-dashboard-page__kpi-label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.seleccion-dashboard-page__kpi-value {
+    margin: 0.35rem 0 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.seleccion-dashboard-page__charts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.seleccion-dashboard-page__chart-wide {
+    grid-column: 1 / -1;
+}
+
+.seleccion-dashboard-page__chart {
+    width: 100%;
+    min-height: 240px;
+    height: 260px;
+}
+
+.seleccion-dashboard-page__chart--tall {
+    min-height: 300px;
+    height: 320px;
+}
+
 /* Solicitudes de desarrollo — ancho contenido 80%; pestanas a ancho normal */
 .app-main:has(.development-requests-page) {
     display: flex;
@@ -9425,7 +9488,8 @@ a.sj-pagination__item:hover {
 }
 
 @media (max-width: 900px) {
-    .cursos-dashboard-page__charts {
+    .cursos-dashboard-page__charts,
+    .seleccion-dashboard-page__charts {
         grid-template-columns: 1fr;
     }
 }

@@ -15,7 +15,7 @@
 | Brief | `docs/briefs/FEAT-035.md` |
 | Plan | `docs/briefs/FEAT-035-plan.md` |
 | Inicio | 2026-09-22 |
-| Cierre | |
+| Cierre | 2026-09-22 |
 
 ## Registro por paso
 
@@ -26,6 +26,18 @@
 | 3 | 2026-09-22 | Usuario responde 1–5 | AgentSj | Cierra preguntas en analyst.md; lanzo Arquitecto | `docs/briefs/FEAT-035-analyst.md` | OK |
 | 4 | 2026-09-22 | Task automatico | Arquitecto | Feature Brief FINAL | `docs/briefs/FEAT-035.md` | OK |
 | 5 | 2026-09-22 | AgentSj | Plan orquestacion T1–T5; pausa confirmacion Brief | `docs/briefs/FEAT-035-plan.md` | Pausa |
+| 6 | 2026-09-22 | Usuario «confirmo» | AgentSj | Task Card T1; lanzo Feature T1 | `docs/briefs/FEAT-035-task-1.md` | OK |
+| 7 | 2026-09-22 | Task automatico | Feature T1 | Permisos, Access/Audit, nav, shell rutas/vistas; 15 tests OK | `SeleccionAccessService`, rutas shell, `SeleccionBoardAccessTest` | OK |
+| 8 | 2026-09-22 | Task automatico | Feature T2 | Catalogos whitelist 7 tipos + seed RH/civil/SOLICITUD + exclusión Ficha; tests Seleccion OK | `SeleccionCatalogService`, seed migration, CRUD catalogos, `SeleccionCatalogTest` | OK |
+| 9 | 2026-09-22 | AgentSj | Task Card T3; lanzo Feature T3 Ingreso | `docs/briefs/FEAT-035-task-3.md` | OK |
+| 10 | 2026-09-22 | Task automatico | Feature T3 | Ingreso: migracion/modelo, CRUD, DT server-side, export, duplicado B, audit; 31 tests OK | `seleccion_ingresos`, `SeleccionIngreso*`, `SeleccionIngresoTest` | OK |
+| 11 | 2026-09-22 | AgentSj | Task Card T4; lanzo Feature T4 Examen | `docs/briefs/FEAT-035-task-4.md` | OK |
+| 12 | 2026-09-22 | Task automatico | Feature T4 | Examen: migracion/modelo, CRUD, DT, export, duplicado B, audit, refs catalog; 39 tests Seleccion OK | `seleccion_examenes_ocupacionales`, `SeleccionExamen*`, `SeleccionExamenTest` | OK |
+| 13 | 2026-09-22 | AgentSj | Task Card T5; lanzo Feature T5 Dashboard | `docs/briefs/FEAT-035-task-5.md` | OK |
+| 14 | 2026-09-22 | Task automatico | Feature T5 | Dashboard KPIs + ApexCharts + metrics JSON + filtros AJAX; 41 tests Seleccion OK | `SeleccionDashboardService`, `seleccion-dashboard-charts.js`, `SeleccionDashboardTest` | OK |
+| 15 | 2026-09-22 | Task automatico | Revisor | Aprobado con observaciones; sin blockers | `docs/reviews/FEAT-035.md` | OK |
+| 16 | 2026-09-22 | Task automatico | Documentador | Doc tecnica + usuario + INDEX/ACCESS/ARCHITECTURE | `docs/modules/seleccion.md`, `docs/user/seleccion.md` | OK |
+| 17 | 2026-09-22 | Checklist cierre | AgentSj | Movio FEAT-035 a Completadas | `docs/TASKS.md` | OK |
 
 ### Estados validos
 

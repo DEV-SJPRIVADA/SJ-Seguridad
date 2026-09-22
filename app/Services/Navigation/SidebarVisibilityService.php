@@ -12,6 +12,7 @@ use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\RequisitionAccessService;
+use App\Services\Access\SeleccionAccessService;
 use App\Services\Access\SupplyAccessService;
 use App\Services\GestionHumana\PlantillasWordAccessService;
 
@@ -27,6 +28,7 @@ class SidebarVisibilityService
         private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
+        private readonly SeleccionAccessService $seleccionAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
     ) {}
@@ -56,6 +58,7 @@ class SidebarVisibilityService
             'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
+            'seleccion' => $this->shouldShowSeleccionBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -198,6 +201,15 @@ class SidebarVisibilityService
         }
 
         return $this->cursosAccess->canViewCursosBoard($user);
+    }
+
+    private function shouldShowSeleccionBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->seleccionAccess->canViewSeleccionBoard($user);
     }
 
     private function shouldShowIndicadoresBoard(User $user, string $areaKey): bool

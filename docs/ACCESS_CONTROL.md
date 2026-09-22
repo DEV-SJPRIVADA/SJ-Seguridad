@@ -173,8 +173,27 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - En area `gestion_humana`, tableros de area unica (no transversales de solicitante):
   - `ficha_empleados` — **Ficha empleados** (`view.board.gestion_humana.ficha_empleados` + `ficha_empleados.view` / `manage` / `terminate`)
   - `desvinculaciones` — **Desvinculaciones** (`view.board.gestion_humana.desvinculaciones` + `desvinculaciones.view` / `masivos` / `seguimientos.edit`)
+  - `cursos` — **Cursos** (`view.board.gestion_humana.cursos` + `cursos.view` / `edit`)
+  - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
+
+### Selección (Gestion humana)
+
+Tablero **Selección** (Dashboard, Ingreso, Examen ocupacional, Catálogos). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.seleccion` | Ver tablero **Selección** en sidebar GH |
+| `seleccion.view` | Dashboard, listados, filtros, export Excel |
+| `seleccion.edit` | CRUD Ingreso / Examen ocupacional + Catálogos (implica view en servicio de acceso) |
+
+- Pestanas: `dashboard`, `ingresos`, `examenes`, `catalogos` (`config/access.php` → `seleccion_tabs`). Catálogos solo con `seleccion.edit`.
+- Bypass: `manage.users`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Selección*).
+- Dependencia operativa: select **Responsable** usa usuarios con `requisitions.selection_officer` (Parametros GH).
+- Doc: [`docs/modules/seleccion.md`](modules/seleccion.md), [`docs/user/seleccion.md`](user/seleccion.md).
 
 ### Desvinculaciones (Gestion humana)
 

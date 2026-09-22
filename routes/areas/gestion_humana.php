@@ -8,6 +8,7 @@ use App\Http\Controllers\GestionHumana\DesvinculacionesController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
+use App\Http\Controllers\GestionHumana\SeleccionController;
 use App\Http\Controllers\GestionHumana\TerminationLetterController;
 use Illuminate\Support\Facades\Route;
 
@@ -131,4 +132,34 @@ Route::middleware(['password.changed'])
         Route::post('/catalogo', [CursosCatalogController::class, 'store'])->name('catalogo.store');
         Route::patch('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'update'])->name('catalogo.update');
         Route::delete('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'destroy'])->name('catalogo.destroy');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/seleccion')
+    ->name('gestion-humana.seleccion.')
+    ->group(function (): void {
+        Route::get('/', [SeleccionController::class, 'index'])->name('index');
+        Route::get('/dashboard', [SeleccionController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [SeleccionController::class, 'dashboardMetrics'])->name('dashboard.metrics');
+
+        Route::get('/ingresos', [SeleccionController::class, 'ingresos'])->name('ingresos');
+        Route::get('/ingresos/datatable', [SeleccionController::class, 'ingresosDatatable'])->name('ingresos.datatable');
+        Route::get('/ingresos/lookup-cedula', [SeleccionController::class, 'ingresosLookupCedula'])->name('ingresos.lookup-cedula');
+        Route::get('/ingresos/exportar', [SeleccionController::class, 'ingresosExport'])->name('ingresos.export');
+        Route::post('/ingresos', [SeleccionController::class, 'storeIngreso'])->name('ingresos.store');
+        Route::patch('/ingresos/{seleccionIngreso}', [SeleccionController::class, 'updateIngreso'])->name('ingresos.update');
+        Route::delete('/ingresos/{seleccionIngreso}', [SeleccionController::class, 'destroyIngreso'])->name('ingresos.destroy');
+
+        Route::get('/examenes', [SeleccionController::class, 'examenes'])->name('examenes');
+        Route::get('/examenes/datatable', [SeleccionController::class, 'examenesDatatable'])->name('examenes.datatable');
+        Route::get('/examenes/lookup-cedula', [SeleccionController::class, 'examenesLookupCedula'])->name('examenes.lookup-cedula');
+        Route::get('/examenes/exportar', [SeleccionController::class, 'examenesExport'])->name('examenes.export');
+        Route::post('/examenes', [SeleccionController::class, 'storeExamen'])->name('examenes.store');
+        Route::patch('/examenes/{seleccionExamenOcupacional}', [SeleccionController::class, 'updateExamen'])->name('examenes.update');
+        Route::delete('/examenes/{seleccionExamenOcupacional}', [SeleccionController::class, 'destroyExamen'])->name('examenes.destroy');
+
+        Route::get('/catalogos', [SeleccionController::class, 'catalogos'])->name('catalogos');
+        Route::post('/catalogos/{type}', [SeleccionController::class, 'storeCatalog'])->name('catalogos.store');
+        Route::patch('/catalogos/{type}/{item}', [SeleccionController::class, 'updateCatalog'])->name('catalogos.update');
+        Route::delete('/catalogos/{type}/{item}', [SeleccionController::class, 'destroyCatalog'])->name('catalogos.destroy');
     });

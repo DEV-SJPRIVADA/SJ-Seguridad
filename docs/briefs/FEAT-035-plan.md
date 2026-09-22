@@ -20,11 +20,11 @@
 | --- | --- | --- | --- | --- |
 | 1 | Analista | Cerrar vacios / preguntas | — | OK |
 | 2 | Arquitecto | Feature Brief final | 1 | OK |
-| 3 | Feature | **T1** Accesos + nav + shell pestañas (permisos, `SeleccionAccessService`, rutas index/dashboard vacias, subnav) | 2 | Pendiente |
-| 4 | Feature | **T2** Catalogos + seed (`blood_type`, `marital_status`, `seleccion_solicitud_status` + UI Catalogos whitelist 7 tipos) | 3 | Pendiente |
+| 3 | Feature | **T1** Accesos + nav + shell pestañas (permisos, `SeleccionAccessService`, rutas index/dashboard vacias, subnav) | 2 | OK |
+| 4 | Feature | **T2** Catalogos + seed (`blood_type`, `marital_status`, `seleccion_solicitud_status` + UI Catalogos whitelist 7 tipos) | 3 | OK |
 | 5 | Feature | **T3** Ingreso vertical slice (migracion/modelo, CRUD, datatable, filtros, export, duplicado confirm) | 4 | Pendiente |
 | 6 | Feature | **T4** Examen ocupacional vertical slice (idem T3) | 5 | Pendiente |
-| 7 | Feature | **T5** Dashboard KPIs + graficos ApexCharts + filtros | 6 | Pendiente |
+| 7 | Feature | **T5** Dashboard KPIs + graficos ApexCharts + filtros | 6 | OK |
 | 8 | Revisor | Review del diff completo | 7 | Pendiente |
 | 9 | Documentador | `docs/modules/seleccion.md` + `docs/user/seleccion.md` + INDEX | 8 | Pendiente |
 | 10 | AgentSj | Checklist cierre | 9 | Pendiente |

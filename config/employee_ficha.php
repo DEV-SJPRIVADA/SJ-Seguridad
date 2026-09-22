@@ -293,6 +293,9 @@ return [
         'withholding_type',
         'expense_type',
         'termination_cause',
+        'blood_type',
+        'marital_status',
+        'seleccion_solicitud_status',
     ],
 
     'catalog_type_labels' => [
@@ -321,7 +324,22 @@ return [
         'withholding_type' => 'Tipo retencion en la fuente',
         'expense_type' => 'Tipo gasto',
         'termination_cause' => 'Causal desvinculacion',
+        'blood_type' => 'RH / Grupo sanguíneo',
+        'marital_status' => 'Estado civil',
+        'seleccion_solicitud_status' => 'Estado solicitud',
         'firmas' => 'Firmas',
+    ],
+
+    /**
+     * Tipos válidos en catalog_type_labels pero no listados en UI Catálogos de Ficha (FEAT-035).
+     * Se administran desde Selección → Catálogos.
+     *
+     * @var list<string>
+     */
+    'ficha_admin_excluded_catalog_types' => [
+        'blood_type',
+        'marital_status',
+        'seleccion_solicitud_status',
     ],
 
     /**

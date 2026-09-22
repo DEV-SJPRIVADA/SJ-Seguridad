@@ -91,6 +91,7 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 | operaciones / indicadores | `routes/areas/operaciones.php` | `Operaciones\IndicadorController` | `resources/views/areas/operaciones/` | `docs/modules/indicadores.md` | `docs/user/indicadores.md` |
 | comercial | `routes/areas/comercial.php` | `Comercial\*Controller` | `resources/views/areas/comercial/` | `docs/modules/matriz-clientes.md` | `docs/user/matriz-clientes.md` |
 | gestion_humana / desvinculaciones | `routes/areas/gestion_humana.php` | `GestionHumana\DesvinculacionesController` (+ hooks Ficha/Letter) | `resources/views/areas/gestion_humana/desvinculaciones/` | `docs/modules/desvinculaciones.md` | `docs/user/desvinculaciones.md` |
+| gestion_humana / seleccion | `routes/areas/gestion_humana.php` | `GestionHumana\SeleccionController` | `resources/views/areas/gestion_humana/seleccion/` | `docs/modules/seleccion.md` | `docs/user/seleccion.md` |
 | admin-users | `routes/web.php` (grupo admin) | `Admin\UserController` | `resources/views/admin/` | `docs/modules/admin-users.md` | `docs/user/admin-users.md` |
 | audit-log (transversal) | `routes/web.php` (admin auditoria) | `Admin\SystemAuditController`, `SystemAuditService` | `resources/views/admin/audit/` | `docs/modules/audit-log.md` | `docs/user/audit-log.md` |
 | branding | — | — | layouts, components | `docs/modules/branding.md` | — |
