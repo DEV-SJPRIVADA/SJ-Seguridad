@@ -980,6 +980,46 @@ class RequisitionModuleTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_gestion_print_does_not_show_recruiter_name_on_gh_signature(): void
+    {
+        $recruiter = User::factory()->create([
+            'name' => 'DIANA S RAMIREZ',
+            'must_change_password' => false,
+        ]);
+        $recruiter->assignRole('usuario');
+        $recruiter->givePermissionTo('requisitions.selection_officer');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0112', 'gestion_humana', 'Perfil print sin reclutador'),
+            ['recruiter_id' => $recruiter->id]
+        ));
+
+        $response = $this->actingAs($manager)->get(route('requisitions.print', [
+            'module' => 'gestion_humana',
+            'requisition' => $requisition,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Dirección de Gestión Humana Recibió', false);
+        $response->assertDontSee('DIANA S RAMIREZ', false);
+    }
+
     public function test_requester_can_filter_tracking_to_only_own_requests(): void
     {
         $requester = User::factory()->create([
