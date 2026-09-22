@@ -438,13 +438,16 @@
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_contributor_type">Tipo cotizante</label>
-            <input id="payroll_extra_contributor_type" name="payroll_extra[contributor_type]" class="form-input" value="{{ old('payroll_extra.contributor_type', $payrollExtra('contributor_type')) }}">
+            <x-searchable-select
+                id="payroll_extra_contributor_type"
+                name="payroll_extra[contributor_type]"
+                :options="[
+                    ['value' => 'Dependiente', 'label' => 'Dependiente'],
+                    ['value' => 'Aprendices en Etapa productiva', 'label' => 'Aprendices en Etapa productiva'],
+                ]"
+                :value="old('payroll_extra.contributor_type', $payrollExtra('contributor_type'))"
+            />
             <x-input-error :messages="$errors->get('payroll_extra.contributor_type')" />
-        </div>
-        <div class="form-field">
-            <label class="form-label" for="payroll_extra_salary_scale">Escala</label>
-            <input id="payroll_extra_salary_scale" name="payroll_extra[salary_scale]" class="form-input" value="{{ old('payroll_extra.salary_scale', $payrollExtra('salary_scale')) }}">
-            <x-input-error :messages="$errors->get('payroll_extra.salary_scale')" />
         </div>
         <div class="form-field">
             <label class="form-label" for="payroll_extra_last_vacation_period">Último periodo vacaciones</label>
@@ -490,7 +493,8 @@
                     ['value' => '0', 'label' => 'No'],
                     ['value' => '1', 'label' => 'Sí'],
                 ]"
-                :value="$payrollExtra('exclude_overtime')"
+                :value="$payrollExtra('exclude_overtime', '0')"
+                :allowClear="false"
             />
             <x-input-error :messages="$errors->get('payroll_extra.exclude_overtime')" />
         </div>

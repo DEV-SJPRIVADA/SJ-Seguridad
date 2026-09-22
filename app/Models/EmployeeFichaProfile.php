@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class EmployeeFichaProfile extends Model
 {
@@ -105,6 +107,67 @@ class EmployeeFichaProfile extends Model
         }
 
         $this->employment_status = self::STATUS_ACTIVO;
+    }
+
+    /**
+     * Edad en años cumplidos respecto a la fecha de referencia (por defecto hoy).
+     */
+    public static function ageFromBirthDate(CarbonInterface|string|null $birthDate, ?CarbonInterface $on = null): ?int
+    {
+        if ($birthDate === null || $birthDate === '') {
+            return null;
+        }
+
+        try {
+            $birth = $birthDate instanceof CarbonInterface
+                ? $birthDate->copy()->startOfDay()
+                : Carbon::parse((string) $birthDate)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $reference = ($on ?? Carbon::now())->copy()->startOfDay();
+        if ($birth->greaterThan($reference)) {
+            return null;
+        }
+
+        $age = $reference->year - $birth->year;
+        if (
+            $reference->month < $birth->month
+            || ($reference->month === $birth->month && $reference->day < $birth->day)
+        ) {
+            $age--;
+        }
+
+        if ($age < 0 || $age > 120) {
+            return null;
+        }
+
+        return $age;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    public static function syncAgeAttributesFromBirthDate(array $attributes): array
+    {
+        if (! array_key_exists('birth_date', $attributes)) {
+            return $attributes;
+        }
+
+        $age = self::ageFromBirthDate($attributes['birth_date'] ?? null);
+        $attributes['age'] = $age;
+
+        $extra = is_array($attributes['payroll_extra'] ?? null) ? $attributes['payroll_extra'] : [];
+        if ($age === null) {
+            unset($extra['age']);
+        } else {
+            $extra['age'] = $age;
+        }
+        $attributes['payroll_extra'] = $extra;
+
+        return $attributes;
     }
 
     /**

@@ -822,14 +822,15 @@ class FichaEmpleadosController extends Controller
      */
     private function mergeProfilePayrollExtra(EmployeeFichaProfile $profile, array $attributes): array
     {
-        if (! isset($attributes['payroll_extra']) || ! is_array($attributes['payroll_extra'])) {
-            return $attributes;
+        $existing = is_array($profile->payroll_extra) ? $profile->payroll_extra : [];
+
+        if (isset($attributes['payroll_extra']) && is_array($attributes['payroll_extra'])) {
+            $attributes['payroll_extra'] = array_merge($existing, $attributes['payroll_extra']);
+        } elseif (array_key_exists('birth_date', $attributes)) {
+            $attributes['payroll_extra'] = $existing;
         }
 
-        $existing = is_array($profile->payroll_extra) ? $profile->payroll_extra : [];
-        $attributes['payroll_extra'] = array_merge($existing, $attributes['payroll_extra']);
-
-        return $attributes;
+        return EmployeeFichaProfile::syncAgeAttributesFromBirthDate($attributes);
     }
 
     private function canManage(): bool

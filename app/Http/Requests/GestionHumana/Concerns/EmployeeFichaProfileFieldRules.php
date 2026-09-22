@@ -108,7 +108,11 @@ trait EmployeeFichaProfileFieldRules
             'payroll_extra.military_book' => ['nullable', 'string', 'max:50'],
             'payroll_extra.exclude_overtime' => ['nullable', 'string', 'max:5'],
             'payroll_extra.age' => ['nullable', 'integer', 'min:0', 'max:120'],
-            'payroll_extra.contributor_type' => ['nullable', 'string', 'max:100'],
+            'payroll_extra.contributor_type' => [
+                'nullable',
+                'string',
+                Rule::in(['Dependiente', 'Aprendices en Etapa productiva']),
+            ],
             'payroll_extra.salary_scale' => ['nullable', 'string', 'max:50'],
             'payroll_extra.last_vacation_period' => ['nullable', 'date'],
             'payroll_extra.total_vacation_days' => ['nullable', 'numeric'],
