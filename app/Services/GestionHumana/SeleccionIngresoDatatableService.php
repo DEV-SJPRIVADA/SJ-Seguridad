@@ -76,6 +76,7 @@ final class SeleccionIngresoDatatableService
                 ->orWhere('position_name', 'like', $like)
                 ->orWhere('blood_type_name', 'like', $like)
                 ->orWhere('reemplaza_a', 'like', $like)
+                ->orWhere('referido', 'like', $like)
                 ->orWhere('jefe_ope', 'like', $like)
                 ->orWhereHas('commercialClient', fn (Builder $client) => $client->where('name', 'like', $like))
                 ->orWhereHas('responsable', fn (Builder $user) => $user->where('name', 'like', $like));
@@ -103,6 +104,7 @@ final class SeleccionIngresoDatatableService
             5 => $query->orderBy('position_name', $direction),
             10 => $query->orderBy('fecha_ingreso', $direction)->orderBy('id', $direction),
             11 => $query->orderBy('blood_type_name', $direction),
+            13 => $query->orderBy('referido', $direction),
             default => $query->orderByDesc('fecha_ingreso')->orderByDesc('id'),
         };
     }
@@ -126,6 +128,7 @@ final class SeleccionIngresoDatatableService
             e(optional($ingreso->fecha_ingreso)?->format('Y-m-d') ?: '—'),
             e((string) $ingreso->blood_type_name),
             e((string) ($ingreso->responsable?->name ?: '—')),
+            e((string) ($ingreso->referido !== '' ? $ingreso->referido : '—')),
         ];
 
         if ($canEdit) {
@@ -154,6 +157,7 @@ final class SeleccionIngresoDatatableService
             'blood_type_code' => $ingreso->blood_type_code,
             'reemplaza_a' => $ingreso->reemplaza_a,
             'responsable_user_id' => (string) $ingreso->responsable_user_id,
+            'referido' => $ingreso->referido,
             'jefe_ope' => $ingreso->jefe_ope,
             'update_url' => route('gestion-humana.seleccion.ingresos.update', $ingreso),
         ], JSON_UNESCAPED_UNICODE));

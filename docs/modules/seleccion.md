@@ -127,7 +127,7 @@ Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultSeleccionBo
 ## Reglas de negocio
 
 1. Usuario solo `seleccion.view` (+ board): ve Dashboard/Ingreso/Examen y export; **sin** mutaciones ni pestana Catálogos.
-2. Ingreso campos required: CEDULA, NOMBRE, CORREO, TELEFONO, CIUDAD, CARGO, CLIENTE, tallas, TIPO DOTACION, FECHA INGRESO, RH, REEMPLAZA A, RESPONSABLE, JEFE OPE.
+2. Ingreso campos required: CEDULA, NOMBRE, CORREO, TELEFONO, CIUDAD, CARGO, CLIENTE, tallas, TIPO DOTACION, FECHA INGRESO, RH, REEMPLAZA A, RESPONSABLE, REFERIDO, JEFE OPE.
 3. Examen campos required: CEDULA, NOMBRE, CARGO, SERVICIO/SECTOR, CLIENTE, EPS, AFP, FECHA NACIMIENTO, CIUDAD, DIRECCION, CORREO, CELULAR, ESTADO CIVIL, FECHA ARL, SOLICITUD, RESPONSABLE.
 4. Duplicado: misma tabla; sin `confirm_duplicate` → 422 con matches; con flag → persiste.
 5. Dashboard filtros: Ingreso por `fecha_ingreso`; Examen por `fecha_arl`; ambos + cliente + responsable. Sin mutaciones.
@@ -177,7 +177,7 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 ## Archivos clave
 
 - Config: `config/seleccion.php`, `config/access.php`, `config/employee_ficha.php`, `config/audit.php`
-- Migrations: `*_create_seleccion_ingresos_table`, `*_create_seleccion_examenes_ocupacionales_table`, `*_seed_seleccion_payroll_catalog_defaults`
+- Migrations: `*_create_seleccion_ingresos_table`, `*_create_seleccion_examenes_ocupacionales_table`, `*_seed_seleccion_payroll_catalog_defaults`, `*_add_referido_to_seleccion_ingresos_table`
 - Factories: `SeleccionIngresoFactory`, `SeleccionExamenOcupacionalFactory`
 - Tests: `tests/Feature/GestionHumana/Seleccion*.php`
 - Vistas: `resources/views/areas/gestion_humana/seleccion/`

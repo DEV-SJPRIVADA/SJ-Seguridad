@@ -151,6 +151,7 @@
                                     <th>FECHA INGRESO</th>
                                     <th>RH</th>
                                     <th>RESPONSABLE</th>
+                                    <th>REFERIDO</th>
                                     @if ($canEdit)
                                         <th>Acciones</th>
                                     @endif
@@ -226,6 +227,7 @@
                                     'blood_type_code' => old('blood_type_code', ''),
                                     'reemplaza_a' => old('reemplaza_a', ''),
                                     'responsable_user_id' => old('responsable_user_id', ''),
+                                    'referido' => old('referido', ''),
                                     'jefe_ope' => old('jefe_ope', ''),
                                 ],
                                 'mode' => 'create',
@@ -367,6 +369,10 @@
                                         />
                                     </div>
                                     <div class="form-field">
+                                        <label class="form-label" for="edit_referido">REFERIDO</label>
+                                        <input id="edit_referido" name="referido" type="text" class="form-input" maxlength="255" required x-model="editForm.referido">
+                                    </div>
+                                    <div class="form-field">
                                         <label class="form-label" for="edit_jefe_ope">JEFE OPE ASIGNADO</label>
                                         <input id="edit_jefe_ope" name="jefe_ope" type="text" class="form-input" maxlength="255" required x-model="editForm.jefe_ope">
                                     </div>
@@ -503,7 +509,7 @@
                 }
 
                 const canEdit = $table.data('dt-can-edit') === 1 || $table.data('dt-can-edit') === '1';
-                const actionsIndex = canEdit ? 13 : -1;
+                const actionsIndex = canEdit ? 14 : -1;
 
                 const api = $table.DataTable({
                     processing: true,

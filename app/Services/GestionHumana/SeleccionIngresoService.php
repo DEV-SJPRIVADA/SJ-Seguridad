@@ -126,6 +126,7 @@ class SeleccionIngresoService
             'blood_type_name' => $blood,
             'reemplaza_a' => trim((string) $validated['reemplaza_a']),
             'responsable_user_id' => (int) $validated['responsable_user_id'],
+            'referido' => trim((string) $validated['referido']),
             'jefe_ope' => trim((string) $validated['jefe_ope']),
         ];
     }

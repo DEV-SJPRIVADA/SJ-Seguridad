@@ -64,7 +64,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 1. Vaya a la pestaña **Ingreso**.
 2. Pulse el botón para agregar (o editar una fila existente).
-3. Complete **todos** los campos: cédula, nombre, correo, teléfono, ciudad, cargo, cliente, tallas, tipo de dotación, fecha de ingreso, RH, a quién reemplaza, responsable y jefe OPE.
+3. Complete **todos** los campos: cédula, nombre, correo, teléfono, ciudad, cargo, cliente, tallas, tipo de dotación, fecha de ingreso, RH, a quién reemplaza, responsable, referido y jefe OPE.
 4. Si la cédula ya existe en Ingreso, el sistema muestra un aviso con los casos encontrados: confirme que desea continuar antes de guardar.
 5. Guarde. El listado se actualizará.
 
@@ -93,3 +93,4 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-09-22 | Documentador | Version inicial FEAT-035: tablero Selección (Dashboard, Ingreso, Examen ocupacional, Catálogos). |
+| 1.1 | 2026-09-23 | Desarrollo | Ingresos: campo obligatorio REFERIDO (formulario, listado y Excel) después de RESPONSABLE. |

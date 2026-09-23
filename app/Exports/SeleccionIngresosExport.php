@@ -29,6 +29,7 @@ class SeleccionIngresosExport
             ['key' => 'blood_type_name', 'label' => 'RH'],
             ['key' => 'reemplaza_a', 'label' => 'REEMPLAZA A'],
             ['key' => 'responsable', 'label' => 'RESPONSABLE'],
+            ['key' => 'referido', 'label' => 'REFERIDO'],
             ['key' => 'jefe_ope', 'label' => 'JEFE OPE ASIGNADO'],
         ];
 
@@ -48,6 +49,7 @@ class SeleccionIngresosExport
             'blood_type_name' => $row->blood_type_name,
             'reemplaza_a' => $row->reemplaza_a,
             'responsable' => $row->responsable?->name,
+            'referido' => $row->referido,
             'jefe_ope' => $row->jefe_ope,
         ]);
 
