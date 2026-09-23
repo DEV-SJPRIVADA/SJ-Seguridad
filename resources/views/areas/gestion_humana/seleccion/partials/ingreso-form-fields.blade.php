@@ -127,6 +127,10 @@
         />
     </div>
     <div class="form-field">
+        <label class="form-label" for="{{ $prefix }}_referido">REFERIDO</label>
+        <input id="{{ $prefix }}_referido" name="referido" type="text" class="form-input" maxlength="255" required value="{{ $v['referido'] ?? '' }}">
+    </div>
+    <div class="form-field">
         <label class="form-label" for="{{ $prefix }}_jefe_ope">JEFE OPE ASIGNADO</label>
         <input id="{{ $prefix }}_jefe_ope" name="jefe_ope" type="text" class="form-input" maxlength="255" required value="{{ $v['jefe_ope'] ?? '' }}">
     </div>

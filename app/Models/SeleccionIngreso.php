@@ -36,6 +36,7 @@ class SeleccionIngreso extends Model
         'blood_type_name',
         'reemplaza_a',
         'responsable_user_id',
+        'referido',
         'jefe_ope',
         'created_by',
         'updated_by',

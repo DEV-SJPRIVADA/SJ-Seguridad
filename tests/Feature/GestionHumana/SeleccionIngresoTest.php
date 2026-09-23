@@ -311,6 +311,7 @@ class SeleccionIngresoTest extends TestCase
             'blood_type_code' => $blood->code,
             'reemplaza_a' => 'N/A',
             'responsable_user_id' => $responsable->id,
+            'referido' => 'N/A',
             'jefe_ope' => 'Jefe Operaciones',
         ];
     }

@@ -62,6 +62,7 @@ class SeleccionIngresoFactory extends Factory
             'blood_type_name' => $blood->name,
             'reemplaza_a' => 'N/A',
             'responsable_user_id' => $responsable->id,
+            'referido' => 'N/A',
             'jefe_ope' => fake()->name(),
             'created_by' => null,
             'updated_by' => null,

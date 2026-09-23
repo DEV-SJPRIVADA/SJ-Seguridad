@@ -73,6 +73,7 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             ],
             'reemplaza_a' => ['required', 'string', 'max:255'],
             'responsable_user_id' => ['required', 'integer', Rule::in($officerIds)],
+            'referido' => ['required', 'string', 'max:255'],
             'jefe_ope' => ['required', 'string', 'max:255'],
             'confirm_duplicate' => ['nullable', 'boolean'],
         ];
@@ -106,6 +107,7 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'reemplaza_a.required' => 'El campo reemplaza a es obligatorio.',
             'responsable_user_id.required' => 'El responsable es obligatorio.',
             'responsable_user_id.in' => 'El responsable no es un reclutador activo válido.',
+            'referido.required' => 'El campo referido es obligatorio.',
             'jefe_ope.required' => 'El jefe OPE asignado es obligatorio.',
         ];
     }
@@ -121,6 +123,7 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'pants_size' => trim((string) $this->input('pants_size')),
             'shoes_size' => trim((string) $this->input('shoes_size')),
             'reemplaza_a' => trim((string) $this->input('reemplaza_a')),
+            'referido' => trim((string) $this->input('referido')),
             'jefe_ope' => trim((string) $this->input('jefe_ope')),
             'confirm_duplicate' => $this->boolean('confirm_duplicate'),
         ]);
