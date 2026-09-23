@@ -8,7 +8,8 @@
             || ($filters['status'] ?? '') !== ''
             || ($filters['date_from'] ?? null)
             || ($filters['date_to'] ?? null)
-            || ($filters['include_closed'] ?? false);
+            || ($filters['include_closed'] ?? false)
+            || ($filters['recruiter_id'] ?? '') !== '';
 
         $hasDateFilters = ($filters['date_from'] ?? null) || ($filters['date_to'] ?? null);
 
@@ -17,6 +18,7 @@
             'status' => array_key_exists('status', $overrides) ? $overrides['status'] : ($filters['status'] ?: null),
             'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
             'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
+            'recruiter_id' => array_key_exists('recruiter_id', $overrides) ? $overrides['recruiter_id'] : (($filters['recruiter_id'] ?? '') !== '' ? $filters['recruiter_id'] : null),
             'include_closed' => array_key_exists('include_closed', $overrides)
                 ? ($overrides['include_closed'] ? '1' : null)
                 : (($filters['include_closed'] ?? false) ? '1' : null),
@@ -72,9 +74,50 @@
                                             <label class="req-manage-filters__label" for="manage-date-to">Hasta</label>
                                             <input type="date" id="manage-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
                                         </div>
-                                        <div class="req-manage-filters__query-submit">
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--recruiter">
+                                            <label class="req-manage-filters__label" for="manage_filter_recruiter_id">Reclutador</label>
+                                            <x-searchable-select
+                                                id="manage_filter_recruiter_id"
+                                                name="recruiter_id"
+                                                :options="$recruiterFilterOptions"
+                                                :value="$filters['recruiter_id'] ?? ''"
+                                                placeholder="Todos"
+                                                searchPlaceholder="Buscar reclutador…"
+                                            />
+                                        </div>
+                                        <div class="req-manage-filters__query-actions">
                                             <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
-                                            <button type="submit" class="btn btn--primary">Buscar</button>
+                                            <div class="req-manage-filters__query-actions-row">
+                                                <button
+                                                    type="submit"
+                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                                    title="Buscar"
+                                                    aria-label="Buscar"
+                                                >
+                                                    <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                                </button>
+                                                @if ($hasActiveFilters)
+                                                    <a
+                                                        href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}"
+                                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                        title="Limpiar filtros"
+                                                        aria-label="Limpiar filtros"
+                                                    >
+                                                        <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="req-manage-filters__query-export">
+                                            <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
+                                            <a
+                                                href="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                title="Exportar Excel"
+                                                aria-label="Exportar Excel"
+                                            >
+                                                <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
+                                            </a>
                                         </div>
                                     </div>
                                 </form>
@@ -97,14 +140,6 @@
                                             >{{ $statusLabel }}</a>
                                         @endforeach
                                     </div>
-                                    <div class="req-manage-filters__head">
-                                        <div class="req-manage-filters__actions">
-                                            <x-export-excel route="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}" />
-                                            @if ($hasActiveFilters)
-                                                <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                            @endif
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -122,6 +157,13 @@
                                     <strong>{{ $filters['date_from'] ?? '…' }}</strong>
                                     —
                                     <strong>{{ $filters['date_to'] ?? '…' }}</strong>
+                                @endif
+                                @if (($filters['recruiter_id'] ?? '') !== '')
+                                    @php
+                                        $recruiterMetaLabel = collect($recruiterFilterOptions)
+                                            ->firstWhere('value', (string) $filters['recruiter_id'])['label'] ?? $filters['recruiter_id'];
+                                    @endphp
+                                    · Reclutador: <strong>{{ $recruiterMetaLabel }}</strong>
                                 @endif
                                 @if ($filters['exclude_closed'] ?? false)
                                     · Alcance: <strong>En curso</strong> (sin Contratado ni Cancelada)

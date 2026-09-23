@@ -140,6 +140,17 @@
                             searchPlaceholder="Buscar estado…"
                         />
                     </div>
+                    <div class="form-field">
+                        <label class="form-label">Reclutador</label>
+                        <x-searchable-select
+                            id="dashboard_filter_recruiter_id"
+                            name="recruiter_id"
+                            :options="$recruiterFilterOptions"
+                            :value="$filters['recruiter_id'] ?? ''"
+                            placeholder="Todos"
+                            searchPlaceholder="Buscar reclutador…"
+                        />
+                    </div>
                     <div class="form-field" style="max-width: 100px;">
                         <label class="form-label">Año</label>
                         <select name="year" class="form-select">

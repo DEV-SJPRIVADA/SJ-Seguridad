@@ -288,9 +288,12 @@ permisos para modificar Catálogos
 17. Abra la pestaña Dashboard del tablero Requisiciones.
 
 18. Revise los KPIs (Total, Solicitadas, En gestión, Contratadas,
-    Canceladas).
+    Canceladas). Todos los KPIs y los gráficos respetan los filtros
+    (cliente, cargo, ciudad, estado, año, mes y reclutador).
 
-19. Use los filtros disponibles; la pantalla se actualiza al cambiarlos.
+19. Use los filtros disponibles (incluye **Reclutador**: Todos, Sin
+    reclutador o un reclutador activo). El mes inicia en el mes actual;
+    la pantalla se actualiza al cambiar los filtros.
 
 20. Revise los gráficos de tendencia, estado, ciudad y cliente.
 
@@ -304,7 +307,8 @@ permisos para modificar Catálogos
 23. Por defecto el listado muestra requisiciones En curso (sin
     Contratado ni Cancelada). Use el filtro de estados **Todos** para
     ver todos los estados, los demás para filtrar uno en concreto, o
-    búsqueda y rango de Fecha inicio / Fecha fin; pulse Buscar.
+    búsqueda, rango de Fecha solicitud y **Reclutador** (Todos / Sin
+    reclutador / activos); pulse Buscar.
 
     ![Captura de pantalla de gestión de requisiciones](assets/image2.png)
 
@@ -436,3 +440,4 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.1         | 2026-09-23                 | Filtro por reclutador en Dashboard y Gestión; KPI Total respeta filtros; mes por defecto = mes actual |
