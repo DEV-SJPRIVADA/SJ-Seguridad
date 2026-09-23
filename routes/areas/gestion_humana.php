@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GestionHumana\AcreditacionesController;
 use App\Http\Controllers\GestionHumana\ArchivoController;
 use App\Http\Controllers\GestionHumana\ContratacionLetterController;
 use App\Http\Controllers\GestionHumana\CursosCatalogController;
@@ -162,4 +163,29 @@ Route::middleware(['password.changed'])
         Route::post('/catalogos/{type}', [SeleccionController::class, 'storeCatalog'])->name('catalogos.store');
         Route::patch('/catalogos/{type}/{item}', [SeleccionController::class, 'updateCatalog'])->name('catalogos.update');
         Route::delete('/catalogos/{type}/{item}', [SeleccionController::class, 'destroyCatalog'])->name('catalogos.destroy');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/acreditaciones')
+    ->name('gestion-humana.acreditaciones.')
+    ->group(function (): void {
+        Route::get('/', [AcreditacionesController::class, 'index'])->name('index');
+        Route::get('/dashboard', [AcreditacionesController::class, 'dashboard'])->name('dashboard');
+        Route::get('/acreditados', [AcreditacionesController::class, 'acreditados'])->name('acreditados');
+        Route::get('/acreditados/datatable', [AcreditacionesController::class, 'acreditadosDatatable'])->name('acreditados.datatable');
+        Route::get('/acreditados/lookup', [AcreditacionesController::class, 'acreditadosLookup'])->name('acreditados.lookup');
+        Route::get('/acreditados/exportar', [AcreditacionesController::class, 'exportAcreditados'])->name('acreditados.export');
+        Route::get('/acreditados/plantilla-importacion', [AcreditacionesController::class, 'importTemplate'])->name('acreditados.import-template');
+        Route::post('/acreditados/importar', [AcreditacionesController::class, 'importAcreditados'])->name('acreditados.import');
+        Route::get('/acreditados/importar/reporte/{token}', [AcreditacionesController::class, 'downloadImportReport'])->name('acreditados.import-report');
+        Route::post('/acreditados', [AcreditacionesController::class, 'storeAcreditado'])->name('acreditados.store');
+        Route::patch('/acreditados/{acreditacionAcreditado}', [AcreditacionesController::class, 'updateAcreditado'])->name('acreditados.update');
+        Route::delete('/acreditados/{acreditacionAcreditado}', [AcreditacionesController::class, 'destroyAcreditado'])->name('acreditados.destroy');
+        Route::get('/reporte-diario', [AcreditacionesController::class, 'reporteDiario'])->name('reporte-diario');
+        Route::get('/validaciones', [AcreditacionesController::class, 'validaciones'])->name('validaciones');
+        Route::get('/export-apo', [AcreditacionesController::class, 'exportApo'])->name('export-apo');
+        Route::get('/catalogo', [AcreditacionesController::class, 'catalogo'])->name('catalogo');
+        Route::post('/catalogo', [AcreditacionesController::class, 'storeCatalogo'])->name('catalogo.store');
+        Route::patch('/catalogo/{acreditacionCargo}', [AcreditacionesController::class, 'updateCatalogo'])->name('catalogo.update');
+        Route::delete('/catalogo/{acreditacionCargo}', [AcreditacionesController::class, 'destroyCatalogo'])->name('catalogo.destroy');
     });

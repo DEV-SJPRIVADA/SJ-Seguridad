@@ -324,6 +324,69 @@ class PlantillasWordCrudTest extends TestCase
         ]);
     }
 
+    public function test_plantillas_tab_filters_by_label_type_and_file_status(): void
+    {
+        $manager = $this->managerUser();
+        $desvinculacion = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
+
+        $otherType = WordDocumentType::query()->create([
+            'code' => 'otro_filtro',
+            'name' => 'Otro filtro',
+            'is_active' => true,
+            'sort_order' => 90,
+        ]);
+
+        TerminationLetterDocumentTemplate::query()->create([
+            'word_document_type_id' => $desvinculacion->id,
+            'label' => 'Renuncia visible',
+            'sort_order' => 1,
+            'template_path' => 'word-templates/renuncia.docx',
+        ]);
+
+        TerminationLetterDocumentTemplate::query()->create([
+            'word_document_type_id' => $otherType->id,
+            'label' => 'Contrato pendiente',
+            'sort_order' => 2,
+            'template_path' => null,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index', [
+                'tab' => 'plantillas',
+                'q' => 'Renuncia',
+            ]))
+            ->assertOk()
+            ->assertSee('Renuncia visible', false)
+            ->assertDontSee('Contrato pendiente', false);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index', [
+                'tab' => 'plantillas',
+                'type' => (string) $otherType->id,
+            ]))
+            ->assertOk()
+            ->assertSee('Contrato pendiente', false)
+            ->assertDontSee('Renuncia visible', false);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index', [
+                'tab' => 'plantillas',
+                'file' => 'pendiente',
+            ]))
+            ->assertOk()
+            ->assertSee('Contrato pendiente', false)
+            ->assertDontSee('Renuncia visible', false);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index', [
+                'tab' => 'plantillas',
+                'file' => 'cargada',
+            ]))
+            ->assertOk()
+            ->assertSee('Renuncia visible', false)
+            ->assertDontSee('Contrato pendiente', false);
+    }
+
     private function managerUser(): User
     {
         $user = User::factory()->create(['must_change_password' => false]);

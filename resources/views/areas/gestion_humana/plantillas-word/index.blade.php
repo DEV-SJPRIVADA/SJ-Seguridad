@@ -102,7 +102,14 @@
                                                 <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
                                                 <span>Activo</span>
                                             </label>
-                                            <button type="submit" class="btn btn--primary btn--sm">Agregar tipo</button>
+                                            <button
+                                                type="submit"
+                                                class="btn btn--primary btn--sm plantillas-word-page__icon-btn"
+                                                title="Agregar tipo"
+                                                aria-label="Agregar tipo"
+                                            >
+                                                <x-lucide-plus width="16" height="16" aria-hidden="true" />
+                                            </button>
                                         </div>
                                     </div>
                                 </form>
@@ -140,22 +147,34 @@
                                                     <div class="plantillas-word-page__row-actions">
                                                         <button
                                                             type="button"
-                                                            class="btn btn--secondary btn--sm btn-plantillas-word-type-edit"
+                                                            class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost btn-plantillas-word-type-edit"
+                                                            title="Editar"
+                                                            aria-label="Editar"
                                                             data-code="{{ $type->code }}"
                                                             data-name="{{ $type->name }}"
                                                             data-active="{{ $type->is_active ? '1' : '0' }}"
                                                             data-sort="{{ $type->sort_order }}"
                                                             data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
-                                                        >Editar</button>
+                                                        >
+                                                            <x-lucide-pencil width="16" height="16" aria-hidden="true" />
+                                                        </button>
                                                         @if ($type->templates_count === 0)
                                                             <form
                                                                 method="POST"
                                                                 action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
+                                                                class="plantillas-word-page__icon-form"
                                                                 onsubmit="return confirm('Eliminar este tipo de documento?')"
                                                             >
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
+                                                                <button
+                                                                    type="submit"
+                                                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--danger"
+                                                                    title="Eliminar"
+                                                                    aria-label="Eliminar"
+                                                                >
+                                                                    <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+                                                                </button>
                                                             </form>
                                                         @else
                                                             <span class="text-muted text-caption" title="Desactive el tipo en su lugar">Con plantillas</span>
@@ -182,17 +201,24 @@
                             @if (! empty($placeholders))
                                 <button
                                     type="button"
-                                    class="btn btn--secondary btn--sm"
+                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                    title="Ver variables"
+                                    aria-label="Ver variables"
                                     x-data=""
                                     x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
                                 >
                                     <x-lucide-braces width="16" height="16" aria-hidden="true" />
-                                    Ver variables
                                 </button>
                             @endif
                         </div>
                     </div>
                     <div class="panel__body section-stack">
+                        @php
+                            $hasActiveFilters = ($filters['q'] ?? '') !== ''
+                                || ($filters['type'] ?? '') !== ''
+                                || ($filters['file'] ?? '') !== '';
+                        @endphp
+
                         @if ($canManage)
                             <section class="plantillas-word-form__section">
                                 <header class="plantillas-word-form__section-head">
@@ -277,11 +303,112 @@
                                             </div>
                                         </div>
                                         <div class="plantillas-word-form__create-actions">
-                                            <button type="submit" class="btn btn--primary btn--sm">Agregar plantilla</button>
+                                            <button
+                                                type="submit"
+                                                class="btn btn--primary btn--sm plantillas-word-page__icon-btn"
+                                                title="Agregar plantilla"
+                                                aria-label="Agregar plantilla"
+                                            >
+                                                <x-lucide-plus width="16" height="16" aria-hidden="true" />
+                                            </button>
                                         </div>
                                     </div>
                                 </form>
                             </section>
+                        @endif
+
+                        <form
+                            method="GET"
+                            action="{{ route('gestion-humana.plantillas-word.index') }}"
+                            class="plantillas-word-page__filters"
+                        >
+                            <input type="hidden" name="tab" value="plantillas">
+
+                            <div class="plantillas-word-page__filters-field plantillas-word-page__filters-field--search">
+                                <label class="sr-only" for="plantillas-word-filter-q">Buscar</label>
+                                <input
+                                    id="plantillas-word-filter-q"
+                                    type="search"
+                                    name="q"
+                                    class="form-input"
+                                    value="{{ $filters['q'] ?? '' }}"
+                                    placeholder="Buscar por etiqueta…"
+                                >
+                            </div>
+
+                            <div class="plantillas-word-page__filters-field plantillas-word-page__filters-field--type">
+                                <label class="sr-only" for="plantillas-word-filter-type">Tipo</label>
+                                <x-searchable-select
+                                    id="plantillas-word-filter-type"
+                                    name="type"
+                                    :options="$types->map(fn ($type) => [
+                                        'value' => (string) $type->id,
+                                        'label' => $type->code.' — '.$type->name,
+                                    ])->values()->all()"
+                                    :value="$filters['type'] ?? ''"
+                                    placeholder="Todos los tipos"
+                                    searchPlaceholder="Buscar tipo…"
+                                    :allowClear="true"
+                                />
+                            </div>
+
+                            <div class="plantillas-word-page__filters-field plantillas-word-page__filters-field--file">
+                                <label class="sr-only" for="plantillas-word-filter-file">Archivo</label>
+                                <x-searchable-select
+                                    id="plantillas-word-filter-file"
+                                    name="file"
+                                    :options="[
+                                        ['value' => '', 'label' => 'Cualquier archivo'],
+                                        ['value' => 'cargada', 'label' => 'Cargada'],
+                                        ['value' => 'pendiente', 'label' => 'Pendiente'],
+                                    ]"
+                                    :value="$filters['file'] ?? ''"
+                                    placeholder="Archivo…"
+                                    searchPlaceholder="Buscar…"
+                                    :allowClear="true"
+                                />
+                            </div>
+
+                            <div class="plantillas-word-page__filters-actions">
+                                <button
+                                    type="submit"
+                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--primary"
+                                    title="Filtrar"
+                                    aria-label="Filtrar"
+                                >
+                                    <x-lucide-search width="16" height="16" aria-hidden="true" />
+                                </button>
+                                @if ($hasActiveFilters)
+                                    <a
+                                        href="{{ route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']) }}"
+                                        class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                        title="Limpiar filtros"
+                                        aria-label="Limpiar filtros"
+                                    >
+                                        <x-lucide-x width="16" height="16" aria-hidden="true" />
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+
+                        @if ($hasActiveFilters)
+                            <p class="plantillas-word-page__filters-meta text-caption text-muted">
+                                {{ $templates->count() }} resultado{{ $templates->count() === 1 ? '' : 's' }}
+                                @if (($filters['q'] ?? '') !== '')
+                                    · Etiqueta: <strong>{{ $filters['q'] }}</strong>
+                                @endif
+                                @if (($filters['type'] ?? '') !== '')
+                                    @php $filterType = $types->firstWhere('id', (int) $filters['type']); @endphp
+                                    @if ($filterType)
+                                        · Tipo: <strong>{{ $filterType->name }}</strong>
+                                    @endif
+                                @endif
+                                @if (($filters['file'] ?? '') === 'cargada')
+                                    · Archivo: <strong>Cargada</strong>
+                                @elseif (($filters['file'] ?? '') === 'pendiente')
+                                    · Archivo: <strong>Pendiente</strong>
+                                @endif
+                            </p>
                         @endif
 
                         <div class="data-table-wrap">
@@ -320,8 +447,12 @@
                                                     @if ($template->hasTemplateFile())
                                                         <a
                                                             href="{{ route('gestion-humana.plantillas-word.templates.download', $template) }}"
-                                                            class="btn btn--secondary btn--sm"
-                                                        >Descargar</a>
+                                                            class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                                            title="Descargar"
+                                                            aria-label="Descargar"
+                                                        >
+                                                            <x-lucide-download width="16" height="16" aria-hidden="true" />
+                                                        </a>
                                                     @endif
                                                     @if ($canManage)
                                                         <form
@@ -341,19 +472,41 @@
                                                                     required
                                                                     data-plantillas-word-file
                                                                 >
-                                                                <label for="template_file_replace_{{ $template->id }}" class="btn btn--secondary btn--sm">Seleccionar</label>
+                                                                <label
+                                                                    for="template_file_replace_{{ $template->id }}"
+                                                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                                                    title="Seleccionar archivo"
+                                                                    aria-label="Seleccionar archivo"
+                                                                >
+                                                                    <x-lucide-file-up width="16" height="16" aria-hidden="true" />
+                                                                </label>
                                                                 <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name hidden>Sin archivo</span>
                                                             </div>
-                                                            <button type="submit" class="btn btn--primary btn--sm">Reemplazar</button>
+                                                            <button
+                                                                type="submit"
+                                                                class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--primary"
+                                                                title="Reemplazar"
+                                                                aria-label="Reemplazar"
+                                                            >
+                                                                <x-lucide-replace width="16" height="16" aria-hidden="true" />
+                                                            </button>
                                                         </form>
                                                         <form
                                                             method="POST"
                                                             action="{{ route('gestion-humana.plantillas-word.templates.destroy', $template) }}"
+                                                            class="plantillas-word-page__icon-form"
                                                             onsubmit="return confirm('Eliminar esta plantilla Word? Se borrara el archivo y el registro.');"
                                                         >
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
+                                                            <button
+                                                                type="submit"
+                                                                class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--danger"
+                                                                title="Eliminar"
+                                                                aria-label="Eliminar"
+                                                            >
+                                                                <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+                                                            </button>
                                                         </form>
                                                     @endif
                                                 </div>
@@ -378,15 +531,19 @@
             document.querySelectorAll('[data-plantillas-word-file]').forEach(function (input) {
                 var picker = input.closest('.plantillas-word-file-picker');
                 var nameEl = picker ? picker.querySelector('[data-plantillas-word-file-name]') : null;
+                var label = picker ? picker.querySelector('label') : null;
+                var isCompact = picker && picker.classList.contains('plantillas-word-file-picker--compact');
 
                 input.addEventListener('change', function () {
-                    if (! nameEl) {
-                        return;
-                    }
                     var file = input.files && input.files[0];
-                    nameEl.textContent = file ? file.name : (nameEl.hidden ? 'Sin archivo' : 'Sin archivo seleccionado');
-                    if (nameEl.hasAttribute('hidden') && file) {
-                        nameEl.hidden = false;
+                    var fileName = file ? file.name : '';
+
+                    if (nameEl && ! isCompact) {
+                        nameEl.textContent = fileName || 'Sin archivo seleccionado';
+                    }
+
+                    if (label && isCompact) {
+                        label.title = fileName || 'Seleccionar archivo';
                     }
                 });
             });

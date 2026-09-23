@@ -34,6 +34,8 @@ return [
         'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
         'seleccion.view' => 'Selección: Ver dashboard, listados y export Excel',
         'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
+        'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
+        'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -103,6 +105,7 @@ return [
         'desvinculaciones' => 'Desvinculaciones',
         'cursos' => 'Cursos',
         'seleccion' => 'Selección',
+        'acreditaciones' => 'Acreditaciones',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
@@ -164,6 +167,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'acreditaciones' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -208,6 +215,15 @@ return [
         'ingresos' => 'Ingreso',
         'examenes' => 'Examen ocupacional',
         'catalogos' => 'Catálogos',
+    ],
+
+    'acreditaciones_tabs' => [
+        'dashboard' => 'Dashboard',
+        'acreditados' => 'Acreditados',
+        'reporte_diario' => 'Reporte Diario',
+        'validaciones' => 'Validaciones',
+        'export_apo' => 'Export Apo',
+        'catalogo' => 'Catálogo',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -369,6 +385,7 @@ return [
                             'view.board.gestion_humana.desvinculaciones',
                             'view.board.gestion_humana.cursos',
                             'view.board.gestion_humana.seleccion',
+                            'view.board.gestion_humana.acreditaciones',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -413,6 +430,13 @@ return [
                         'permissions' => [
                             'seleccion.view',
                             'seleccion.edit',
+                        ],
+                    ],
+                    'acreditaciones' => [
+                        'label' => 'Acreditaciones',
+                        'permissions' => [
+                            'acreditaciones.view',
+                            'acreditaciones.edit',
                         ],
                     ],
                 ],
