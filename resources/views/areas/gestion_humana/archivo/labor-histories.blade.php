@@ -40,28 +40,24 @@
 
             <div class="panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
-                    <div class="req-manage-filters">
-                        <div class="req-manage-filters__toolbar">
-                            <form method="GET" class="req-manage-filters__search-col archivo-page__search-col">
-                                @if ($filters['consultation'] ?? null)
-                                    <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
-                                @endif
-                                <label class="req-manage-filters__label" for="archivo-search-input">Buscar</label>
-                                <div class="req-manage-filters__search-group">
+                    <div class="req-manage-filters archivo-page__filters">
+                        <div class="archivo-page__filters-row">
+                            <div class="archivo-page__filters-left">
+                                <form method="GET" class="archivo-page__search-group">
+                                    @if ($filters['consultation'] ?? null)
+                                        <input type="hidden" name="consultation" value="{{ $filters['consultation'] }}">
+                                    @endif
+                                    <label class="sr-only" for="archivo-search-input">Buscar</label>
                                     <input
                                         id="archivo-search-input"
                                         type="search"
                                         name="q"
-                                        class="form-input"
+                                        class="form-input archivo-page__search-input"
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cedula, nombre o codigo de requisicion"
                                     >
                                     <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="req-manage-filters__head">
-                            <div class="req-manage-filters__actions">
+                                </form>
                                 <button
                                     type="button"
                                     class="btn btn--secondary btn--sm"
@@ -73,36 +69,35 @@
                                     <x-lucide-search width="16" height="16" aria-hidden="true" />
                                     Consulta multiple
                                 </button>
+                            </div>
+
+                            <div class="archivo-page__filters-actions">
                                 @if ($canExportArchive ?? false)
                                     <button
                                         type="button"
-                                        class="btn btn--secondary btn--sm"
-                                        title="Exportar plantilla con datos de archivo"
-                                        aria-label="Exportar plantilla con datos de archivo"
+                                        class="btn btn--secondary btn--sm archivo-page__icon-btn"
+                                        title="Exportar archivo"
+                                        aria-label="Exportar archivo"
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'archivo-export-scope')"
                                     >
                                         <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
-                                        Exportar archivo
                                     </button>
                                 @endif
                                 @if ($canManage)
                                     <button
                                         type="button"
-                                        class="btn btn--secondary btn--sm"
+                                        class="btn btn--secondary btn--sm archivo-page__icon-btn"
                                         title="Importar estantes y cajas"
-                                        aria-label="Importar estantes y cajas"
+                                        aria-label="Importar"
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'archivo-import')"
                                     >
                                         <x-lucide-upload width="16" height="16" aria-hidden="true" />
-                                        Importar
                                     </button>
                                 @endif
                             </div>
                         </div>
-
-
 
                         <p class="req-manage-filters__meta">
                             <strong id="archivo-entries-count">…</strong>

@@ -1,7 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
-
     </x-slot>
 
     @php
@@ -16,7 +15,7 @@
         ], fn ($value) => $value !== null && $value !== '');
     @endphp
 
-    <div class="page-section comercial-clients-page req-manage-page">
+    <div class="page-section comercial-clients-page comercial-clients-page--list req-manage-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success comercial-clients-page__alert">{{ session('status') }}</div>
@@ -29,8 +28,31 @@
 
             <div class="panel comercial-clients-panel">
                 <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Listado de clientes</h3>
-                    <p class="panel-text panel-text--compact">NIT, nombre o ciudad · varios servicios por cliente</p>
+                    <div class="comercial-list__header-row">
+                        <div>
+                            <h3 class="panel-title">Listado de clientes</h3>
+                            <p class="panel-text panel-text--compact">NIT, nombre o ciudad · varios servicios por cliente</p>
+                        </div>
+                        <div class="comercial-list__header-actions">
+                            <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
+                            @if ($canManage)
+                                <button
+                                    type="button"
+                                    class="btn btn--secondary btn--sm"
+                                    title="Carga masiva"
+                                    aria-label="Carga masiva"
+                                    x-data=""
+                                    x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
+                                >
+                                    <x-lucide-upload width="16" height="16" aria-hidden="true" />
+                                </button>
+                            @endif
+                            <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary btn--sm">Checklist</a>
+                            @if ($canManage)
+                                <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary btn--sm">Nuevo cliente</a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
                 <div class="panel__body req-manage-shell">
@@ -45,25 +67,8 @@
                         <div class="req-manage-filters__panel-body">
                             <div class="req-manage-filters__head">
                                 <div class="req-manage-filters__actions comercial-clients-filters__actions">
-                                    <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
-                                    @if ($canManage)
-                                        <button
-                                            type="button"
-                                            class="btn btn--secondary btn--sm"
-                                            title="Carga masiva"
-                                            aria-label="Carga masiva"
-                                            x-data=""
-                                            x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
-                                        >
-                                            <x-lucide-upload width="16" height="16" aria-hidden="true" />
-                                        </button>
-                                    @endif
                                     @if ($hasActiveFilters)
                                         <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                    @endif
-                                    <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary btn--sm">Checklist</a>
-                                    @if ($canManage)
-                                        <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary btn--sm">Nuevo cliente</a>
                                     @endif
                                 </div>
                             </div>
@@ -141,7 +146,6 @@
                     <div class="data-table-wrap req-manage-shell__table comercial-clients-page__table-wrap">
                         <table
                             class="data-table js-datatable"
-                            style="width:100%"
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
@@ -161,8 +165,8 @@
                             <tbody>
                                 @forelse ($clients as $client)
                                     <tr>
-                                        <td>{{ $client->nit }}</td>
-                                        <td>{{ $client->name }}</td>
+                                        <td><span class="comercial-list__code">{{ $client->nit }}</span></td>
+                                        <td><span class="comercial-list__name">{{ $client->name }}</span></td>
                                         <td>{{ $client->city ?: '—' }}</td>
                                         <td class="client-tags-cell">
                                             @if (! empty($client->portfolio_labels))

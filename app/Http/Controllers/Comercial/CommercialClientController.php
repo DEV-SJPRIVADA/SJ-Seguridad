@@ -249,6 +249,7 @@ class CommercialClientController extends Controller
             'portfolios' => CommercialService::portfolios(),
             'filters' => ['portfolio' => $portfolio],
             'canManage' => $this->canManage(),
+            'subTabs' => $this->getGestionClientesSubTabs('clientes'),
         ]);
     }
 

@@ -142,6 +142,12 @@ El tablero Gestion Clientes y el dashboard KPI solo aplican al area Comercial. S
 
 Al crear o editar una requisicion de personal, el cliente se elige desde esta matriz. `CommercialClientBridge` vincula por nombre con `requisition_clients` (tabla interna usada por `personal_requisitions.client_id` y filtros del dashboard). Esa tabla **no** se administra en Parametros de requisiciones.
 
+## UI (listado / detalle / servicio)
+
+- Clientes listado: acciones (export, masivos, checklist, nuevo) en cabecera del panel; filtros colapsables.
+- Detalle cliente: subnav Gestion Clientes, meta NIT, secciones datos/servicios y aside de resumen/acciones (`comercial-detail*` / `comercial-form*`).
+- Editar/crear servicio: formulario por secciones + guia lateral; buscador de cliente reutiliza `comercial-client-picker.js`.
+
 ## Fuente documental
 
 Formato de negocio MT-CO-01 (Excel maestro). El archivo **no** vive en el repo; solicitar copia al area Comercial o usar exportaciones desde el sistema.
