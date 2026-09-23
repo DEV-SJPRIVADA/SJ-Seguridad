@@ -214,7 +214,10 @@
                                         <x-searchable-select
                                             id="template_type_new"
                                             name="word_document_type_id"
-                                            :options="$activeTypes"
+                                            :options="$activeTypes->map(fn ($type) => [
+                                                'value' => (string) $type->id,
+                                                'label' => $type->code.' — '.$type->name,
+                                            ])->values()->all()"
                                             :value="old('word_document_type_id')"
                                             placeholder="Seleccione tipo…"
                                             searchPlaceholder="Buscar tipo…"
