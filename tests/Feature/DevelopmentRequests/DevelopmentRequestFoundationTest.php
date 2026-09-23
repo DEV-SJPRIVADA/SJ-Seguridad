@@ -98,13 +98,31 @@ class DevelopmentRequestFoundationTest extends TestCase
             'view.board.tic.solicitudes_desarrollo',
         ]);
 
+        $director = User::factory()->create([
+            'name' => 'Director Visible DevReq',
+            'must_change_password' => false,
+            'area_key' => 'gestion_humana',
+            'is_active' => true,
+        ]);
+        $director->assignRole('director');
+
+        $inactiveDirector = User::factory()->create([
+            'name' => 'Director Inactivo DevReq',
+            'must_change_password' => false,
+            'area_key' => 'gestion_humana',
+            'is_active' => false,
+        ]);
+        $inactiveDirector->assignRole('director');
+
         $this->actingAs($user)
             ->get(route('development-requests.create', ['module' => 'tic']))
             ->assertOk()
             ->assertSee('Nueva solicitud de desarrollo', false)
             ->assertSee('Clasificacion', false)
             ->assertSee('Antes de enviar', false)
-            ->assertSee('Enviar / radicar', false);
+            ->assertSee('Enviar / radicar', false)
+            ->assertSee('Director Visible DevReq', false)
+            ->assertDontSee('Director Inactivo DevReq', false);
     }
 
     public function test_permission_catalog_sync_includes_new_permissions(): void

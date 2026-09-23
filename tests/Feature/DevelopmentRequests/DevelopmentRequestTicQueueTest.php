@@ -221,6 +221,7 @@ class DevelopmentRequestTicQueueTest extends TestCase
             'area_key' => 'gestion_humana',
             'is_active' => true,
         ]);
+        $user->assignRole('director');
         $user->givePermissionTo([
             'devreq.tab.leader_approval',
             'view.board.tic.solicitudes_desarrollo',

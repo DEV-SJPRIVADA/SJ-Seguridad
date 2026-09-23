@@ -34,6 +34,8 @@ class RoleAndPermissionSeeder extends Seeder
                 'view.dashboard',
                 'purchase.tab.approval',
                 'view.board.compras.solicitudes_compra',
+                'devreq.tab.leader_approval',
+                'view.board.tic.solicitudes_desarrollo',
             ],
             'usuario' => ['view.dashboard'],
         ];
