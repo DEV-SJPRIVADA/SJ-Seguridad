@@ -87,6 +87,7 @@ Una fila del Excel corresponde a **un servicio**. Incluye NIT, datos del cliente
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.1 | 2026-09-23 | UI | Clientes (listado/detalle) y editar servicio: secciones, meta y aside alineados al branding. |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-07-22 | Documentacion | Excel MT-CO-01 fuera del repo; import con ruta explicita |
 | 1.2 | 2026-07-27 | FEAT-007 | Vencimiento opcional por documento del checklist; badges de vigencia incluyen documentos |

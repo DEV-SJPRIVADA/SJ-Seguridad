@@ -4,153 +4,188 @@
     $selectedClient = $selectedClient ?? null;
 @endphp
 
-<div class="form-stack">
-    <h4 class="panel-title" style="font-size:1rem;">Cliente</h4>
-    <div
-        class="form-field js-client-picker"
-        data-search-url="{{ $clientSearchUrl }}"
-    >
-        <x-input-label for="client_search" value="Buscar cliente" />
-        <p class="panel-text" style="margin:0 0 0.5rem;">Escriba nombre o NIT (min. 2 caracteres) y seleccione el resultado.</p>
+<div class="comercial-form">
+    <section class="comercial-form__section">
+        <header class="comercial-form__section-head">
+            <span class="comercial-form__section-step">1</span>
+            <div>
+                <h3 class="comercial-form__section-title">Cliente</h3>
+                <p class="comercial-form__section-desc">Busque por nombre o NIT (min. 2 caracteres) y seleccione el resultado.</p>
+            </div>
+        </header>
 
-        <div class="js-client-picker-search" style="{{ $selectedClient ? 'display:none;' : '' }}">
-            <x-text-input
-                id="client_search"
-                type="search"
-                class="form-input"
-                autocomplete="off"
-                placeholder="Ej. MADEMAX o 901360444"
-            />
-            <div class="client-picker-results js-client-picker-results" hidden role="listbox" aria-label="Resultados de clientes"></div>
-            <p class="panel-text js-client-picker-hint" style="margin:0.5rem 0 0;" hidden></p>
-        </div>
+        <div
+            class="form-field js-client-picker"
+            data-search-url="{{ $clientSearchUrl }}"
+        >
+            <x-input-label for="client_search" value="Buscar cliente" />
 
-        <div class="client-picker-selected js-client-picker-selected" style="{{ $selectedClient ? '' : 'display:none;' }}">
-            <div class="client-picker-selected__card">
-                <div>
-                    <strong class="js-client-picker-name">{{ $selectedClient?->name }}</strong>
-                    <div class="panel-text" style="margin:0.15rem 0 0;">
-                        NIT <span class="js-client-picker-nit">{{ $selectedClient?->nit }}</span>
-                        <span class="js-client-picker-city">{{ $selectedClient?->city ? ' · '.$selectedClient->city : '' }}</span>
+            <div class="js-client-picker-search" style="{{ $selectedClient ? 'display:none;' : '' }}">
+                <x-text-input
+                    id="client_search"
+                    type="search"
+                    class="form-input"
+                    autocomplete="off"
+                    placeholder="Ej. MADEMAX o 901360444"
+                />
+                <div class="client-picker-results js-client-picker-results" hidden role="listbox" aria-label="Resultados de clientes"></div>
+                <p class="comercial-form__hint js-client-picker-hint" hidden></p>
+            </div>
+
+            <div class="client-picker-selected js-client-picker-selected" style="{{ $selectedClient ? '' : 'display:none;' }}">
+                <div class="client-picker-selected__card">
+                    <div>
+                        <strong class="js-client-picker-name">{{ $selectedClient?->name }}</strong>
+                        <div class="client-picker-selected__meta">
+                            NIT <span class="js-client-picker-nit">{{ $selectedClient?->nit }}</span>
+                            <span class="js-client-picker-city">{{ $selectedClient?->city ? ' · '.$selectedClient->city : '' }}</span>
+                        </div>
                     </div>
+                    <button type="button" class="btn btn--secondary btn--sm js-client-picker-clear">Cambiar</button>
                 </div>
-                <button type="button" class="btn btn--secondary btn--sm js-client-picker-clear">Cambiar</button>
+            </div>
+
+            <input
+                type="hidden"
+                id="commercial_client_id"
+                name="commercial_client_id"
+                class="js-client-picker-id"
+                value="{{ old('commercial_client_id', $service->commercial_client_id) }}"
+                required
+            >
+            <x-input-error :messages="$errors->get('commercial_client_id')" />
+        </div>
+    </section>
+
+    <section class="comercial-form__section">
+        <header class="comercial-form__section-head">
+            <span class="comercial-form__section-step">2</span>
+            <div>
+                <h3 class="comercial-form__section-title">Servicio / contrato</h3>
+                <p class="comercial-form__section-desc">Portafolio, contrato, asesor y clasificacion comercial.</p>
+            </div>
+        </header>
+
+        <div class="form-grid form-grid--two">
+            <div class="form-field">
+                <x-input-label for="portfolio" value="Portafolio" />
+                <x-searchable-select
+                    id="portfolio"
+                    name="portfolio"
+                    :options="$portfolios"
+                    :value="old('portfolio', $service->portfolio)"
+                    placeholder="Seleccione portafolio…"
+                    searchPlaceholder="Buscar portafolio…"
+                    :required="true"
+                    :allowClear="false"
+                />
+                <x-input-error :messages="$errors->get('portfolio')" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="contract_number" value="No. contrato" />
+                <x-text-input id="contract_number" name="contract_number" class="form-input" :value="old('contract_number', $service->contract_number)" />
+                <x-input-error :messages="$errors->get('contract_number')" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="advisor_name" value="Asesor comercial" />
+                <x-text-input id="advisor_name" name="advisor_name" class="form-input" :value="old('advisor_name', $service->advisor_name)" />
+                <x-input-error :messages="$errors->get('advisor_name')" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="commercial_sector_id" value="Sector" />
+                <x-searchable-select
+                    id="commercial_sector_id"
+                    name="commercial_sector_id"
+                    :options="$sectors"
+                    :value="old('commercial_sector_id', $service->commercial_sector_id)"
+                    placeholder="— Seleccione sector —"
+                    searchPlaceholder="Buscar sector…"
+                />
+            </div>
+            <div class="form-field">
+                <x-input-label for="commercial_client_type_id" value="Tipo cliente" />
+                <x-searchable-select
+                    id="commercial_client_type_id"
+                    name="commercial_client_type_id"
+                    :options="$clientTypes"
+                    :value="old('commercial_client_type_id', $service->commercial_client_type_id)"
+                    placeholder="— Seleccione tipo —"
+                    searchPlaceholder="Buscar tipo…"
+                />
+            </div>
+            <div class="form-field">
+                <x-input-label for="commercial_service_type_id" value="Tipo de servicio" />
+                <x-searchable-select
+                    id="commercial_service_type_id"
+                    name="commercial_service_type_id"
+                    :options="$serviceTypes"
+                    :value="old('commercial_service_type_id', $service->commercial_service_type_id)"
+                    placeholder="— Seleccione servicio —"
+                    searchPlaceholder="Buscar servicio…"
+                />
             </div>
         </div>
 
-        <input
-            type="hidden"
-            id="commercial_client_id"
-            name="commercial_client_id"
-            class="js-client-picker-id"
-            value="{{ old('commercial_client_id', $service->commercial_client_id) }}"
-            required
-        >
-        <x-input-error :messages="$errors->get('commercial_client_id')" />
-    </div>
+        <div class="form-field">
+            <x-input-label for="service_description" value="Descripcion del servicio" />
+            <textarea id="service_description" name="service_description" class="form-textarea" rows="3">{{ old('service_description', $service->service_description) }}</textarea>
+        </div>
+    </section>
 
-    <h4 class="panel-title" style="font-size:1rem;">Servicio / contrato</h4>
-    <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
-        <div class="form-field">
-            <x-input-label for="portfolio" value="Portafolio" />
-            <x-searchable-select
-                id="portfolio"
-                name="portfolio"
-                :options="$portfolios"
-                :value="old('portfolio', $service->portfolio)"
-                placeholder="Seleccione portafolio…"
-                searchPlaceholder="Buscar portafolio…"
-                :required="true"
-                :allowClear="false"
-            />
-            <x-input-error :messages="$errors->get('portfolio')" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="contract_number" value="No. contrato" />
-            <x-text-input id="contract_number" name="contract_number" class="form-input" :value="old('contract_number', $service->contract_number)" />
-            <x-input-error :messages="$errors->get('contract_number')" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="advisor_name" value="Asesor comercial" />
-            <x-text-input id="advisor_name" name="advisor_name" class="form-input" :value="old('advisor_name', $service->advisor_name)" />
-            <x-input-error :messages="$errors->get('advisor_name')" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="commercial_sector_id" value="Sector" />
-            <x-searchable-select
-                id="commercial_sector_id"
-                name="commercial_sector_id"
-                :options="$sectors"
-                :value="old('commercial_sector_id', $service->commercial_sector_id)"
-                placeholder="— Seleccione sector —"
-                searchPlaceholder="Buscar sector…"
-            />
-        </div>
-        <div class="form-field">
-            <x-input-label for="commercial_client_type_id" value="Tipo cliente" />
-            <x-searchable-select
-                id="commercial_client_type_id"
-                name="commercial_client_type_id"
-                :options="$clientTypes"
-                :value="old('commercial_client_type_id', $service->commercial_client_type_id)"
-                placeholder="— Seleccione tipo —"
-                searchPlaceholder="Buscar tipo…"
-            />
-        </div>
-        <div class="form-field">
-            <x-input-label for="commercial_service_type_id" value="Tipo de servicio" />
-            <x-searchable-select
-                id="commercial_service_type_id"
-                name="commercial_service_type_id"
-                :options="$serviceTypes"
-                :value="old('commercial_service_type_id', $service->commercial_service_type_id)"
-                placeholder="— Seleccione servicio —"
-                searchPlaceholder="Buscar servicio…"
-            />
-        </div>
-    </div>
+    <section class="comercial-form__section">
+        <header class="comercial-form__section-head">
+            <span class="comercial-form__section-step">3</span>
+            <div>
+                <h3 class="comercial-form__section-title">Contacto operativo</h3>
+                <p class="comercial-form__section-desc">Persona de contacto en el cliente para este servicio.</p>
+            </div>
+        </header>
 
-    <div class="form-field">
-        <x-input-label for="service_description" value="Descripcion del servicio" />
-        <textarea id="service_description" name="service_description" class="form-input" rows="3">{{ old('service_description', $service->service_description) }}</textarea>
-    </div>
+        <div class="form-grid form-grid--two">
+            <div class="form-field">
+                <x-input-label for="contact_name" value="Contacto" />
+                <x-text-input id="contact_name" name="contact_name" class="form-input" :value="old('contact_name', $service->contact_name)" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="contact_role" value="Cargo" />
+                <x-text-input id="contact_role" name="contact_role" class="form-input" :value="old('contact_role', $service->contact_role)" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="contact_phone" value="Telefono contacto" />
+                <x-text-input id="contact_phone" name="contact_phone" class="form-input" :value="old('contact_phone', $service->contact_phone)" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="contact_email" value="Correo" />
+                <x-text-input id="contact_email" name="contact_email" class="form-input" :value="old('contact_email', $service->contact_email)" />
+            </div>
+        </div>
+    </section>
 
-    <h4 class="panel-title" style="font-size:1rem;">Contacto operativo</h4>
-    <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
-        <div class="form-field">
-            <x-input-label for="contact_name" value="Contacto" />
-            <x-text-input id="contact_name" name="contact_name" class="form-input" :value="old('contact_name', $service->contact_name)" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="contact_role" value="Cargo" />
-            <x-text-input id="contact_role" name="contact_role" class="form-input" :value="old('contact_role', $service->contact_role)" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="contact_phone" value="Telefono contacto" />
-            <x-text-input id="contact_phone" name="contact_phone" class="form-input" :value="old('contact_phone', $service->contact_phone)" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="contact_email" value="Correo" />
-            <x-text-input id="contact_email" name="contact_email" class="form-input" :value="old('contact_email', $service->contact_email)" />
-        </div>
-    </div>
+    <section class="comercial-form__section">
+        <header class="comercial-form__section-head">
+            <span class="comercial-form__section-step">4</span>
+            <div>
+                <h3 class="comercial-form__section-title">Vigencia</h3>
+                <p class="comercial-form__section-desc">Fechas de contrato y duracion en meses.</p>
+            </div>
+        </header>
 
-    <h4 class="panel-title" style="font-size:1rem;">Vigencia</h4>
-    <div class="form-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
-        <div class="form-field">
-            <x-input-label for="contract_start" value="Inicio contrato" />
-            <x-text-input id="contract_start" name="contract_start" type="date" class="form-input" :value="old('contract_start', optional($service->contract_start)->format('Y-m-d'))" />
-            <x-input-error :messages="$errors->get('contract_start')" />
+        <div class="form-grid form-grid--two">
+            <div class="form-field">
+                <x-input-label for="contract_start" value="Inicio contrato" />
+                <x-text-input id="contract_start" name="contract_start" type="date" class="form-input" :value="old('contract_start', optional($service->contract_start)->format('Y-m-d'))" />
+                <x-input-error :messages="$errors->get('contract_start')" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="contract_end" value="Fin contrato" />
+                <x-text-input id="contract_end" name="contract_end" type="date" class="form-input" :value="old('contract_end', optional($service->contract_end)->format('Y-m-d'))" />
+                <x-input-error :messages="$errors->get('contract_end')" />
+            </div>
+            <div class="form-field">
+                <x-input-label for="duration_months" value="Duracion (meses)" />
+                <x-text-input id="duration_months" name="duration_months" type="number" min="0" max="600" class="form-input" :value="old('duration_months', $service->duration_months)" />
+                <x-input-error :messages="$errors->get('duration_months')" />
+            </div>
         </div>
-        <div class="form-field">
-            <x-input-label for="contract_end" value="Fin contrato" />
-            <x-text-input id="contract_end" name="contract_end" type="date" class="form-input" :value="old('contract_end', optional($service->contract_end)->format('Y-m-d'))" />
-            <x-input-error :messages="$errors->get('contract_end')" />
-        </div>
-        <div class="form-field">
-            <x-input-label for="duration_months" value="Duracion (meses)" />
-            <x-text-input id="duration_months" name="duration_months" type="number" min="0" max="600" class="form-input" :value="old('duration_months', $service->duration_months)" />
-            <x-input-error :messages="$errors->get('duration_months')" />
-        </div>
-    </div>
+    </section>
 </div>

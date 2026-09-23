@@ -452,7 +452,16 @@ class CommercialMatrixTest extends TestCase
         $this->actingAs($user)
             ->get(route('comercial.matriz.services.edit', $service))
             ->assertOk()
-            ->assertSee('Gestion Clientes', false);
+            ->assertSee('Gestion Clientes', false)
+            ->assertSee('Editar servicio', false)
+            ->assertSee('Contacto operativo', false);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.show', $client))
+            ->assertOk()
+            ->assertSee('Gestion Clientes', false)
+            ->assertSee('Datos del cliente', false)
+            ->assertSee('Servicios / contratos', false);
     }
 
     public function test_navigation_shows_single_gestion_clientes_board(): void

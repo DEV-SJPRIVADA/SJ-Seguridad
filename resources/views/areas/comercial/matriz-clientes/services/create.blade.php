@@ -1,65 +1,65 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
-        <div class="app-container" style="padding-top: 0.75rem; padding-bottom: 0.75rem;">
-            <h2 class="panel-title" style="margin:0;">Nuevo servicio</h2>
-            <p class="panel-text" style="margin:0.25rem 0 0;">Busque el cliente por nombre o NIT y agreguelo al servicio.</p>
-        </div>
     </x-slot>
 
-    <div class="page-section">
+    <div class="page-section comercial-services-page comercial-services-page--form">
         <div class="app-container">
-            <div class="panel">
-                <form method="POST" action="{{ route('comercial.matriz.services.store') }}" class="panel__body form-stack">
-                    @csrf
-                    @include('areas.comercial.matriz-clientes.partials.service-fields')
-                    <div class="form-actions">
-                        <a href="{{ route('comercial.matriz.services.index') }}" class="btn btn--secondary">Cancelar</a>
-                        <x-primary-button>Guardar servicio</x-primary-button>
+            <div class="comercial-detail__toolbar">
+                <a href="{{ route('comercial.matriz.services.index') }}" class="comercial-detail__back">
+                    <x-lucide-arrow-left width="16" height="16" aria-hidden="true" />
+                    Volver a servicios
+                </a>
+            </div>
+
+            <div class="comercial-form-layout">
+                <div class="comercial-form-layout__main">
+                    <form method="POST" action="{{ route('comercial.matriz.services.store') }}" class="form-stack">
+                        @csrf
+
+                        <div class="comercial-form__meta">
+                            <div class="comercial-form__meta-item">
+                                <span class="comercial-form__meta-label">Accion</span>
+                                <span class="comercial-form__meta-value">Nuevo servicio</span>
+                            </div>
+                            <div class="comercial-form__meta-item">
+                                <span class="comercial-form__meta-label">Estado</span>
+                                <span class="comercial-form__meta-value">Alta comercial</span>
+                            </div>
+                        </div>
+
+                        @include('areas.comercial.matriz-clientes.partials.service-fields')
+
+                        <div class="comercial-form-actions">
+                            <p class="comercial-form-actions__note">
+                                Busque el cliente, complete contrato y vigencia, luego guarde.
+                            </p>
+                            <div class="comercial-form-actions__group">
+                                <a href="{{ route('comercial.matriz.services.index') }}" class="btn btn--secondary">Cancelar</a>
+                                <x-primary-button>Guardar servicio</x-primary-button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <aside class="comercial-form-aside">
+                    <div class="panel">
+                        <div class="panel__header">
+                            <h3 class="panel-title">Antes de enviar</h3>
+                            <p class="panel-text">Checklist rapido de alta.</p>
+                        </div>
+                        <div class="panel__body">
+                            <ul class="comercial-form-guide__list">
+                                <li class="comercial-form-guide__item">Seleccione el cliente correcto por NIT o razon social.</li>
+                                <li class="comercial-form-guide__item">Defina portafolio y tipo de servicio.</li>
+                                <li class="comercial-form-guide__item">Registre fechas de vigencia para alertas automaticas.</li>
+                            </ul>
+                        </div>
                     </div>
-                </form>
+                </aside>
             </div>
         </div>
     </div>
-
-    @push('styles')
-        <style>
-            .client-picker-results {
-                margin-top: 0.4rem;
-                border: 1px solid #d0d7de;
-                border-radius: 0.5rem;
-                background: #fff;
-                max-height: 240px;
-                overflow: auto;
-            }
-            .client-picker-results__item {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.15rem;
-                width: 100%;
-                padding: 0.65rem 0.85rem;
-                border: 0;
-                border-bottom: 1px solid #eef1f4;
-                background: transparent;
-                text-align: left;
-                cursor: pointer;
-            }
-            .client-picker-results__item:last-child { border-bottom: 0; }
-            .client-picker-results__item:hover { background: rgba(0, 51, 102, 0.06); }
-            .client-picker-results__item span { color: #5b6570; font-size: 0.875rem; }
-            .client-picker-selected__card {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 1rem;
-                padding: 0.85rem 1rem;
-                border: 1px solid #c9d6e5;
-                border-radius: 0.5rem;
-                background: rgba(0, 51, 102, 0.04);
-            }
-        </style>
-    @endpush
 
     @push('scripts')
         <script src="{{ asset('js/comercial-client-picker.js') }}?v={{ @filemtime(public_path('js/comercial-client-picker.js')) ?: time() }}"></script>
