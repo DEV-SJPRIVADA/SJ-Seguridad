@@ -262,6 +262,13 @@ class PlantillasWordCrudTest extends TestCase
         $manager = $this->managerUser();
 
         $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index'))
+            ->assertOk()
+            ->assertViewHas('activeTab', 'plantillas')
+            ->assertSee('Agregar plantilla', false)
+            ->assertDontSee('Agregar tipo', false);
+
+        $this->actingAs($manager)
             ->get(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']))
             ->assertOk()
             ->assertSee('Tipos de documento', false)

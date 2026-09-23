@@ -2216,6 +2216,57 @@ a {
     border: 0;
 }
 
+.plantillas-word-file-picker__zone {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.75rem;
+    border: 1.5px dashed var(--brand-blue-soft);
+    border-radius: 12px;
+    background: var(--brand-blue-pale);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plantillas-word-file-picker__zone:hover,
+.plantillas-word-file-picker:focus-within .plantillas-word-file-picker__zone {
+    border-color: var(--brand-blue);
+    background: #e8f4fc;
+    box-shadow: 0 0 0 3px rgba(14, 74, 110, 0.08);
+}
+
+.plantillas-word-file-picker__icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    background: var(--brand-white);
+    color: var(--brand-blue);
+    border: 1px solid var(--brand-blue-soft);
+}
+
+.plantillas-word-file-picker__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.plantillas-word-file-picker__title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-file-picker__hint {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
 .plantillas-word-file-picker__name {
     font-size: 0.85rem;
     color: var(--color-text-soft, #64748b);
@@ -2228,6 +2279,202 @@ a {
 .plantillas-word-file-picker--compact .plantillas-word-file-picker__name {
     max-width: 9rem;
     font-size: 0.75rem;
+}
+
+/* Plantillas Word — pagina */
+.plantillas-word-page {
+    padding-top: 0.35rem;
+    padding-bottom: 0.75rem;
+}
+
+.plantillas-word-page > .app-container {
+    width: min(1120px, calc(100% - 1.5rem));
+    max-width: min(1120px, calc(100% - 1.5rem));
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.plantillas-word-page__panel {
+    margin: 0;
+}
+
+.plantillas-word-page__header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-page__error-list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.plantillas-word-page__code {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-page__name {
+    font-weight: 600;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-page__col-sort {
+    width: 80px;
+}
+
+.plantillas-word-page__col-status {
+    width: 100px;
+}
+
+.plantillas-word-page__col-count {
+    width: 90px;
+}
+
+.plantillas-word-page__col-file {
+    width: 110px;
+}
+
+.plantillas-word-page__col-actions {
+    width: 200px;
+}
+
+.plantillas-word-page__col-actions-wide {
+    width: 1%;
+    min-width: 18rem;
+    white-space: nowrap;
+}
+
+.plantillas-word-page__row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-page__row-actions--templates {
+    flex-wrap: nowrap;
+}
+
+.plantillas-word-page__replace-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-form__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, #fbfdff 0%, var(--brand-white) 100%);
+    box-shadow: var(--shadow-soft);
+}
+
+.plantillas-word-form__section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.plantillas-word-form__section-step {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    background: var(--brand-navy);
+    color: var(--brand-white);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.plantillas-word-form__section-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-form__section-desc {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.plantillas-word-form__create-row,
+.plantillas-word-form__create-grid {
+    display: flex;
+    align-items: end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-form__create-grid .form-field,
+.plantillas-word-form__create-row .form-field {
+    min-width: 9rem;
+}
+
+.plantillas-word-form__field--grow {
+    flex: 1 1 14rem;
+    min-width: 12rem;
+}
+
+.plantillas-word-form__field--sort {
+    flex: 0 0 6rem;
+    max-width: 6.5rem;
+}
+
+.plantillas-word-form__field--file {
+    flex: 1 1 16rem;
+    min-width: 14rem;
+}
+
+.plantillas-word-form__create-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.1rem;
+}
+
+.plantillas-word-form__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    color: var(--brand-navy);
+}
+
+@media (max-width: 768px) {
+    .plantillas-word-page > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+
+    .plantillas-word-form__create-row,
+    .plantillas-word-form__create-grid {
+        align-items: stretch;
+    }
+
+    .plantillas-word-form__field--sort {
+        max-width: none;
+        flex: 1 1 6rem;
+    }
+
+    .plantillas-word-page__row-actions--templates {
+        flex-wrap: wrap;
+    }
 }
 
 /* Ficha empleados ÃÂ¢ÃÂÃÂ formulario crear/editar: ancho contenido y scroll contenido */

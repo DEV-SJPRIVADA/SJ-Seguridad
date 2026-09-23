@@ -75,3 +75,4 @@ El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas
 | --- | --- | --- | --- |
 | 1.0 | 2026-08-21 | FEAT-029 | Version inicial: tablero Plantillas Word (tipos + plantillas); re-subida obligatoria de plantillas de Renuncia; permisos propios del tablero. |
 | 1.1 | 2026-08-21 | UI | Pestanas **Tipos de documento** y **Plantillas** (una tabla por pestana). |
+| 1.2 | 2026-09-23 | UI | Redisenio visual: subnav en header, formularios por seccion, zona de carga `.docx` y acciones de fila compactas. |

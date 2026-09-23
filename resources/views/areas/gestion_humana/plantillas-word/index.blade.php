@@ -1,39 +1,32 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Plantillas Word</h2>
-                <p class="panel-text">Gestion humana — tipos de documento y plantillas .docx</p>
+        <div class="module-subnav requisition-subtabs">
+            <div class="app-container">
+                <div class="module-subnav__inner requisition-subtabs__inner">
+                    <p class="text-caption module-subnav__label">Plantillas Word</p>
+                    <nav class="module-tabs" aria-label="Plantillas Word">
+                        @foreach ($subTabs as $tab)
+                            <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
+                                {{ $tab['label'] }}
+                            </a>
+                        @endforeach
+                    </nav>
+                </div>
             </div>
         </div>
     </x-slot>
 
-    <div class="module-subnav requisition-subtabs">
+    <div class="page-section plantillas-word-page">
         <div class="app-container">
-            <div class="module-subnav__inner requisition-subtabs__inner">
-                <p class="text-caption module-subnav__label">Plantillas Word</p>
-                <nav class="module-tabs" aria-label="Plantillas Word">
-                    @foreach ($subTabs as $tab)
-                        <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
-                            {{ $tab['label'] }}
-                        </a>
-                    @endforeach
-                </nav>
-            </div>
-        </div>
-    </div>
-
-    <div class="page-section ficha-empleados-catalogs-page">
-        <div class="app-container section-stack">
             @if (session('status'))
-                <div class="alert alert--success ficha-empleados-catalogs-page__alert">{{ session('status') }}</div>
+                <div class="alert alert--success">{{ session('status') }}</div>
             @endif
             @if (session('error'))
-                <div class="alert alert--danger ficha-empleados-catalogs-page__alert">{{ session('error') }}</div>
+                <div class="alert alert--danger">{{ session('error') }}</div>
             @endif
             @if ($errors->any())
-                <div class="alert alert--danger ficha-empleados-catalogs-page__alert">
-                    <ul class="mb-0">
+                <div class="alert alert--danger">
+                    <ul class="plantillas-word-page__error-list">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -42,88 +35,99 @@
             @endif
 
             @if ($activeTab === 'tipos')
-                <div class="panel">
-                    <div class="panel__header">
-                        <h3 class="panel-title">Tipos de documento</h3>
-                        <p class="panel-text">Catalogo editable (codigo, nombre, estado y orden). No elimine un tipo con plantillas asociadas: desactivelo.</p>
+                <div class="panel plantillas-word-page__panel">
+                    <div class="panel__header panel__header--compact">
+                        <div class="plantillas-word-page__header-row">
+                            <h3 class="panel-title">Tipos de documento</h3>
+                        </div>
                     </div>
                     <div class="panel__body section-stack">
                         @if ($canManage)
-                            <form
-                                method="POST"
-                                action="{{ route('gestion-humana.plantillas-word.types.store') }}"
-                                class="ficha-empleados-catalogs-page__create-form"
-                            >
-                                @csrf
-                                <div class="ficha-empleados-catalogs-page__create-row">
-                                    <div class="form-field">
-                                        <label class="form-label" for="type_code_new">Codigo</label>
-                                        <input
-                                            id="type_code_new"
-                                            name="code"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="50"
-                                            required
-                                            value="{{ old('code') }}"
-                                            placeholder="Ej. desvinculacion"
-                                        >
+                            <section class="plantillas-word-form__section">
+                                <header class="plantillas-word-form__section-head">
+                                    <span class="plantillas-word-form__section-step">1</span>
+                                    <div>
+                                        <h4 class="plantillas-word-form__section-title">Agregar tipo</h4>
+                                        <p class="plantillas-word-form__section-desc">Defina codigo unico, nombre visible y orden de aparicion.</p>
                                     </div>
-                                    <div class="form-field ficha-empleados-catalogs-page__name-field">
-                                        <label class="form-label" for="type_name_new">Nombre</label>
-                                        <input
-                                            id="type_name_new"
-                                            name="name"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="255"
-                                            required
-                                            value="{{ old('name') }}"
-                                            placeholder="Nombre visible"
-                                        >
+                                </header>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('gestion-humana.plantillas-word.types.store') }}"
+                                    class="plantillas-word-form__create"
+                                >
+                                    @csrf
+                                    <div class="plantillas-word-form__create-row">
+                                        <div class="form-field">
+                                            <label class="form-label" for="type_code_new">Codigo</label>
+                                            <input
+                                                id="type_code_new"
+                                                name="code"
+                                                type="text"
+                                                class="form-input"
+                                                maxlength="50"
+                                                required
+                                                value="{{ old('code') }}"
+                                                placeholder="Ej. desvinculacion"
+                                            >
+                                        </div>
+                                        <div class="form-field plantillas-word-form__field--grow">
+                                            <label class="form-label" for="type_name_new">Nombre</label>
+                                            <input
+                                                id="type_name_new"
+                                                name="name"
+                                                type="text"
+                                                class="form-input"
+                                                maxlength="255"
+                                                required
+                                                value="{{ old('name') }}"
+                                                placeholder="Nombre visible"
+                                            >
+                                        </div>
+                                        <div class="form-field plantillas-word-form__field--sort">
+                                            <label class="form-label" for="type_sort_new">Orden</label>
+                                            <input
+                                                id="type_sort_new"
+                                                name="sort_order"
+                                                type="number"
+                                                min="0"
+                                                max="9999"
+                                                class="form-input"
+                                                value="{{ old('sort_order', 0) }}"
+                                            >
+                                        </div>
+                                        <div class="plantillas-word-form__create-actions">
+                                            <label class="plantillas-word-form__check">
+                                                <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
+                                                <span>Activo</span>
+                                            </label>
+                                            <button type="submit" class="btn btn--primary btn--sm">Agregar tipo</button>
+                                        </div>
                                     </div>
-                                    <div class="form-field ficha-empleados-catalogs-page__sort-field">
-                                        <label class="form-label" for="type_sort_new">Orden</label>
-                                        <input
-                                            id="type_sort_new"
-                                            name="sort_order"
-                                            type="number"
-                                            min="0"
-                                            max="9999"
-                                            class="form-input"
-                                            value="{{ old('sort_order', 0) }}"
-                                        >
-                                    </div>
-                                    <div class="ficha-empleados-catalogs-page__create-actions">
-                                        <label class="ficha-empleados-catalogs-page__active-check">
-                                            <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
-                                            <span>Activo</span>
-                                        </label>
-                                        <button type="submit" class="btn btn--primary btn--sm">Agregar tipo</button>
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
+                            </section>
                         @endif
 
                         <div class="data-table-wrap">
-                            <table class="data-table" style="width:100%">
+                            <table class="data-table">
                                 <thead>
                                     <tr>
                                         <th>Codigo</th>
                                         <th>Nombre</th>
-                                        <th style="width:80px;">Orden</th>
-                                        <th style="width:100px;">Estado</th>
-                                        <th style="width:90px;">Plantillas</th>
+                                        <th class="plantillas-word-page__col-sort">Orden</th>
+                                        <th class="plantillas-word-page__col-status">Estado</th>
+                                        <th class="plantillas-word-page__col-count">Plantillas</th>
                                         @if ($canManage)
-                                            <th style="width:200px;">Acciones</th>
+                                            <th class="plantillas-word-page__col-actions">Acciones</th>
                                         @endif
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($types as $type)
                                         <tr>
-                                            <td><code>{{ $type->code }}</code></td>
-                                            <td>{{ $type->name }}</td>
+                                            <td><code class="plantillas-word-page__code">{{ $type->code }}</code></td>
+                                            <td><span class="plantillas-word-page__name">{{ $type->name }}</span></td>
                                             <td>{{ $type->sort_order }}</td>
                                             <td>
                                                 <span class="status-pill {{ $type->is_active ? 'status-pill--success' : 'status-pill--muted' }}">
@@ -133,29 +137,30 @@
                                             <td>{{ $type->templates_count }}</td>
                                             @if ($canManage)
                                                 <td class="table-actions">
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn--secondary btn--sm btn-plantillas-word-type-edit"
-                                                        data-code="{{ $type->code }}"
-                                                        data-name="{{ $type->name }}"
-                                                        data-active="{{ $type->is_active ? '1' : '0' }}"
-                                                        data-sort="{{ $type->sort_order }}"
-                                                        data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
-                                                    >Editar</button>
-                                                    @if ($type->templates_count === 0)
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
-                                                            class="ficha-empleados-catalogs-page__delete-form"
-                                                            onsubmit="return confirm('Eliminar este tipo de documento?')"
-                                                        >
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
-                                                        </form>
-                                                    @else
-                                                        <span class="text-muted text-caption" title="Desactive el tipo en su lugar">Con plantillas</span>
-                                                    @endif
+                                                    <div class="plantillas-word-page__row-actions">
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn--secondary btn--sm btn-plantillas-word-type-edit"
+                                                            data-code="{{ $type->code }}"
+                                                            data-name="{{ $type->name }}"
+                                                            data-active="{{ $type->is_active ? '1' : '0' }}"
+                                                            data-sort="{{ $type->sort_order }}"
+                                                            data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
+                                                        >Editar</button>
+                                                        @if ($type->templates_count === 0)
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
+                                                                onsubmit="return confirm('Eliminar este tipo de documento?')"
+                                                            >
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
+                                                            </form>
+                                                        @else
+                                                            <span class="text-muted text-caption" title="Desactive el tipo en su lugar">Con plantillas</span>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                             @endif
                                         </tr>
@@ -170,115 +175,134 @@
                     </div>
                 </div>
             @else
-                <div class="panel">
-                    <div class="panel__header">
-                        <h3 class="panel-title">Plantillas</h3>
-                        <p class="panel-text">
-                            Agregue etiqueta + tipo activo + archivo <code>.docx</code>. Reemplazar solo cambia el archivo; eliminar pide confirmacion.
-                        </p>
+                <div class="panel plantillas-word-page__panel">
+                    <div class="panel__header panel__header--compact">
+                        <div class="plantillas-word-page__header-row">
+                            <h3 class="panel-title">Plantillas</h3>
+                            @if (! empty($placeholders))
+                                <button
+                                    type="button"
+                                    class="btn btn--secondary btn--sm"
+                                    x-data=""
+                                    x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
+                                >
+                                    <x-lucide-braces width="16" height="16" aria-hidden="true" />
+                                    Ver variables
+                                </button>
+                            @endif
+                        </div>
                     </div>
                     <div class="panel__body section-stack">
-                        @if (! empty($placeholders))
-                            <button
-                                type="button"
-                                class="btn btn--link btn-fit-content"
-                                x-data=""
-                                x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
-                            >Ver variables disponibles</button>
-                        @endif
-
                         @if ($canManage)
-                            <form
-                                method="POST"
-                                action="{{ route('gestion-humana.plantillas-word.templates.store') }}"
-                                enctype="multipart/form-data"
-                                class="ficha-empleados-catalogs-page__create-form"
-                            >
-                                @csrf
-                                <div class="ficha-empleados-catalogs-page__create-row">
-                                    <div class="form-field ficha-empleados-catalogs-page__name-field">
-                                        <label class="form-label" for="template_label_new">Etiqueta</label>
-                                        <input
-                                            id="template_label_new"
-                                            name="label"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="255"
-                                            required
-                                            value="{{ old('label') }}"
-                                            placeholder="Ej. Aceptacion de renuncia"
-                                        >
+                            <section class="plantillas-word-form__section">
+                                <header class="plantillas-word-form__section-head">
+                                    <span class="plantillas-word-form__section-step">1</span>
+                                    <div>
+                                        <h4 class="plantillas-word-form__section-title">Agregar plantilla</h4>
+                                        <p class="plantillas-word-form__section-desc">Etiqueta, tipo activo y archivo master .docx.</p>
                                     </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="template_type_new">Tipo</label>
-                                        <x-searchable-select
-                                            id="template_type_new"
-                                            name="word_document_type_id"
-                                            :options="$activeTypes->map(fn ($type) => [
-                                                'value' => (string) $type->id,
-                                                'label' => $type->code.' — '.$type->name,
-                                            ])->values()->all()"
-                                            :value="old('word_document_type_id')"
-                                            placeholder="Seleccione tipo…"
-                                            searchPlaceholder="Buscar tipo…"
-                                            :required="true"
-                                        />
-                                    </div>
-                                    <div class="form-field ficha-empleados-catalogs-page__sort-field">
-                                        <label class="form-label" for="template_sort_new">Orden</label>
-                                        <input
-                                            id="template_sort_new"
-                                            name="sort_order"
-                                            type="number"
-                                            min="0"
-                                            max="9999"
-                                            class="form-input"
-                                            value="{{ old('sort_order', 0) }}"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <span class="form-label" id="template_file_new_label">Archivo .docx</span>
-                                        <div class="plantillas-word-file-picker">
+                                </header>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('gestion-humana.plantillas-word.templates.store') }}"
+                                    enctype="multipart/form-data"
+                                    class="plantillas-word-form__create"
+                                >
+                                    @csrf
+                                    <div class="plantillas-word-form__create-grid">
+                                        <div class="form-field plantillas-word-form__field--grow">
+                                            <label class="form-label" for="template_label_new">Etiqueta</label>
                                             <input
-                                                id="template_file_new"
-                                                name="template"
-                                                type="file"
-                                                class="plantillas-word-file-picker__input"
-                                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                id="template_label_new"
+                                                name="label"
+                                                type="text"
+                                                class="form-input"
+                                                maxlength="255"
                                                 required
-                                                data-plantillas-word-file
-                                                aria-labelledby="template_file_new_label"
+                                                value="{{ old('label') }}"
+                                                placeholder="Ej. Aceptacion de renuncia"
                                             >
-                                            <label for="template_file_new" class="btn btn--secondary btn--sm">Seleccionar archivo</label>
-                                            <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name>Sin archivo seleccionado</span>
+                                        </div>
+                                        <div class="form-field">
+                                            <label class="form-label" for="template_type_new">Tipo</label>
+                                            <x-searchable-select
+                                                id="template_type_new"
+                                                name="word_document_type_id"
+                                                :options="$activeTypes->map(fn ($type) => [
+                                                    'value' => (string) $type->id,
+                                                    'label' => $type->code.' — '.$type->name,
+                                                ])->values()->all()"
+                                                :value="old('word_document_type_id')"
+                                                placeholder="Seleccione tipo…"
+                                                searchPlaceholder="Buscar tipo…"
+                                                :required="true"
+                                            />
+                                        </div>
+                                        <div class="form-field plantillas-word-form__field--sort">
+                                            <label class="form-label" for="template_sort_new">Orden</label>
+                                            <input
+                                                id="template_sort_new"
+                                                name="sort_order"
+                                                type="number"
+                                                min="0"
+                                                max="9999"
+                                                class="form-input"
+                                                value="{{ old('sort_order', 0) }}"
+                                            >
+                                        </div>
+                                        <div class="form-field plantillas-word-form__field--file">
+                                            <span class="form-label" id="template_file_new_label">Archivo .docx</span>
+                                            <div class="plantillas-word-file-picker">
+                                                <input
+                                                    id="template_file_new"
+                                                    name="template"
+                                                    type="file"
+                                                    class="plantillas-word-file-picker__input"
+                                                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                    required
+                                                    data-plantillas-word-file
+                                                    aria-labelledby="template_file_new_label"
+                                                >
+                                                <label for="template_file_new" class="plantillas-word-file-picker__zone">
+                                                    <span class="plantillas-word-file-picker__icon" aria-hidden="true">
+                                                        <x-lucide-file-up width="18" height="18" />
+                                                    </span>
+                                                    <span class="plantillas-word-file-picker__copy">
+                                                        <span class="plantillas-word-file-picker__title">Seleccionar archivo</span>
+                                                        <span class="plantillas-word-file-picker__hint">Solo .docx</span>
+                                                    </span>
+                                                </label>
+                                                <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name>Sin archivo seleccionado</span>
+                                            </div>
+                                        </div>
+                                        <div class="plantillas-word-form__create-actions">
+                                            <button type="submit" class="btn btn--primary btn--sm">Agregar plantilla</button>
                                         </div>
                                     </div>
-                                    <div class="ficha-empleados-catalogs-page__create-actions">
-                                        <button type="submit" class="btn btn--primary btn--sm">Agregar plantilla</button>
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
+                            </section>
                         @endif
 
                         <div class="data-table-wrap">
-                            <table class="data-table" style="width:100%">
+                            <table class="data-table">
                                 <thead>
                                     <tr>
                                         <th>Etiqueta</th>
                                         <th>Tipo</th>
-                                        <th style="width:80px;">Orden</th>
-                                        <th style="width:110px;">Archivo</th>
-                                        <th style="width:{{ $canManage ? '320px' : '120px' }};">Acciones</th>
+                                        <th class="plantillas-word-page__col-sort">Orden</th>
+                                        <th class="plantillas-word-page__col-file">Archivo</th>
+                                        <th class="plantillas-word-page__col-actions-wide">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($templates as $template)
                                         <tr>
-                                            <td>{{ $template->label }}</td>
+                                            <td><span class="plantillas-word-page__name">{{ $template->label }}</span></td>
                                             <td>
                                                 @if ($template->type)
                                                     {{ $template->type->name }}
-                                                    <span class="text-muted">(<code>{{ $template->type->code }}</code>)</span>
+                                                    <span class="text-muted">(<code class="plantillas-word-page__code">{{ $template->type->code }}</code>)</span>
                                                 @else
                                                     <span class="text-muted">—</span>
                                                 @endif
@@ -291,46 +315,48 @@
                                                     <span class="status-pill status-pill--muted">Pendiente</span>
                                                 @endif
                                             </td>
-                                            <td class="table-actions ficha-empleados-letter-templates__actions">
-                                                @if ($template->hasTemplateFile())
-                                                    <a
-                                                        href="{{ route('gestion-humana.plantillas-word.templates.download', $template) }}"
-                                                        class="btn btn--secondary btn--sm"
-                                                    >Descargar</a>
-                                                @endif
-                                                @if ($canManage)
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('gestion-humana.plantillas-word.templates.replace', $template) }}"
-                                                        enctype="multipart/form-data"
-                                                        class="ficha-empleados-letter-templates__upload-form"
-                                                    >
-                                                        @csrf
-                                                        <div class="plantillas-word-file-picker plantillas-word-file-picker--compact">
-                                                            <input
-                                                                id="template_file_replace_{{ $template->id }}"
-                                                                type="file"
-                                                                name="template"
-                                                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                                                class="plantillas-word-file-picker__input"
-                                                                required
-                                                                data-plantillas-word-file
-                                                            >
-                                                            <label for="template_file_replace_{{ $template->id }}" class="btn btn--secondary btn--sm">Seleccionar archivo</label>
-                                                            <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name hidden>Sin archivo</span>
-                                                        </div>
-                                                        <button type="submit" class="btn btn--primary btn--sm">Reemplazar</button>
-                                                    </form>
-                                                    <form
-                                                        method="POST"
-                                                        action="{{ route('gestion-humana.plantillas-word.templates.destroy', $template) }}"
-                                                        onsubmit="return confirm('Eliminar esta plantilla Word? Se borrara el archivo y el registro.');"
-                                                    >
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
-                                                    </form>
-                                                @endif
+                                            <td class="table-actions">
+                                                <div class="plantillas-word-page__row-actions plantillas-word-page__row-actions--templates">
+                                                    @if ($template->hasTemplateFile())
+                                                        <a
+                                                            href="{{ route('gestion-humana.plantillas-word.templates.download', $template) }}"
+                                                            class="btn btn--secondary btn--sm"
+                                                        >Descargar</a>
+                                                    @endif
+                                                    @if ($canManage)
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('gestion-humana.plantillas-word.templates.replace', $template) }}"
+                                                            enctype="multipart/form-data"
+                                                            class="plantillas-word-page__replace-form"
+                                                        >
+                                                            @csrf
+                                                            <div class="plantillas-word-file-picker plantillas-word-file-picker--compact">
+                                                                <input
+                                                                    id="template_file_replace_{{ $template->id }}"
+                                                                    type="file"
+                                                                    name="template"
+                                                                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                                    class="plantillas-word-file-picker__input"
+                                                                    required
+                                                                    data-plantillas-word-file
+                                                                >
+                                                                <label for="template_file_replace_{{ $template->id }}" class="btn btn--secondary btn--sm">Seleccionar</label>
+                                                                <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name hidden>Sin archivo</span>
+                                                            </div>
+                                                            <button type="submit" class="btn btn--primary btn--sm">Reemplazar</button>
+                                                        </form>
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('gestion-humana.plantillas-word.templates.destroy', $template) }}"
+                                                            onsubmit="return confirm('Eliminar esta plantilla Word? Se borrara el archivo y el registro.');"
+                                                        >
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
+                                                        </form>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
@@ -373,7 +399,9 @@
             <div class="panel ficha-empleados-catalogs-page__modal-card">
                 <div class="panel__header panel-heading-row">
                     <h3 class="panel-title" id="plantillas-word-type-modal-title">Editar tipo</h3>
-                    <button type="button" class="btn btn--secondary btn--sm" data-type-modal-close aria-label="Cerrar">✕</button>
+                    <button type="button" class="btn btn--secondary btn--sm" data-type-modal-close aria-label="Cerrar">
+                        <x-lucide-x width="16" height="16" aria-hidden="true" />
+                    </button>
                 </div>
                 <form method="POST" id="plantillas-word-type-edit-form" class="panel__body form-stack">
                     @csrf
@@ -390,7 +418,7 @@
                         <label class="form-label" for="plantillas-word-edit-sort">Orden</label>
                         <input id="plantillas-word-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
                     </div>
-                    <label class="ficha-empleados-catalogs-page__active-check">
+                    <label class="plantillas-word-form__check">
                         <input type="checkbox" id="plantillas-word-edit-active" name="is_active" value="1" class="form-check">
                         <span>Activo</span>
                     </label>

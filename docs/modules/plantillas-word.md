@@ -63,7 +63,7 @@ Servicio: `App\Services\GestionHumana\PlantillasWordAccessService` â€” `can
 
 | Vista | Descripcion |
 | --- | --- |
-| `resources/views/areas/gestion_humana/plantillas-word/index.blade.php` | Tablero con pestanas `?tab=tipos` \| `?tab=plantillas` (module-tabs); redirects CRUD conservan la pestana |
+| `resources/views/areas/gestion_humana/plantillas-word/index.blade.php` | Tablero con pestanas `?tab=plantillas` (default) \| `?tab=tipos` (module-tabs en header); formularios de alta en secciones numeradas; selector `.docx` con zona dashed + Lucide; redirects CRUD conservan la pestana |
 
 ## Modelos y tablas
 

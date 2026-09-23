@@ -225,11 +225,11 @@ class PlantillasWordController extends Controller
 
     private function resolveTab(mixed $tab): string
     {
-        $value = is_string($tab) ? $tab : self::TAB_TIPOS;
+        $value = is_string($tab) ? $tab : self::TAB_PLANTILLAS;
 
         return in_array($value, [self::TAB_TIPOS, self::TAB_PLANTILLAS], true)
             ? $value
-            : self::TAB_TIPOS;
+            : self::TAB_PLANTILLAS;
     }
 
     /**
@@ -239,16 +239,16 @@ class PlantillasWordController extends Controller
     {
         return [
             [
-                'key' => self::TAB_TIPOS,
-                'label' => 'Tipos de documento',
-                'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_TIPOS]),
-                'active' => $activeTab === self::TAB_TIPOS,
-            ],
-            [
                 'key' => self::TAB_PLANTILLAS,
                 'label' => 'Plantillas',
                 'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_PLANTILLAS]),
                 'active' => $activeTab === self::TAB_PLANTILLAS,
+            ],
+            [
+                'key' => self::TAB_TIPOS,
+                'label' => 'Tipos de documento',
+                'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_TIPOS]),
+                'active' => $activeTab === self::TAB_TIPOS,
             ],
         ];
     }
