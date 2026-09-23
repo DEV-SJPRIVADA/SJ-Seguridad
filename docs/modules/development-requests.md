@@ -32,7 +32,8 @@ Alternos: `devuelto`, `rechazado`. Si el creador es el lider seleccionado, el en
 | --- | --- |
 | `devreq.tab.create` | Nueva solicitud |
 | `devreq.tab.my_requests` | Mis solicitudes |
-| `devreq.tab.leader_approval` | Aprobacion lider + elegible como lider |
+| `devreq.tab.leader_approval` | Aprobacion lider (pestana). El select de lider lista usuarios con rol `director` activos. |
+
 | `devreq.tab.tic_queue` | Bandeja, export, transiciones TIC |
 | `devreq.tab.view` | Consulta (board TIC) |
 | `view.board.{area}.solicitudes_desarrollo` | Visibilidad del tablero en el area |
@@ -61,7 +62,7 @@ Bypass: `super-admin` / `manage.users`. Middleware de pestana: `devreq.tab:{tab}
 - Controllers: `app/Http/Controllers/DevelopmentRequests/`
 - Services: `Workflow`, `Attachment`, `Notification`, `Dashboard`, `AuditLog`
 - Policy: `app/Policies/DevelopmentRequestPolicy.php`
-- Access: `app/Services/Access/DevelopmentRequestAccessService.php`
+- Access: `app/Services/Access/DevelopmentRequestAccessService.php` (`leadersQuery()` = rol `director` activo)
 - Vistas: `resources/views/modules/development-requests/`
 - Formulario Nueva/Editar: layout `dev-req-form-layout` (main + aside), secciones numeradas FO-TIC-23 en `partials/form-fields.blade.php`, estilos `dev-req-form*` en `resources/css/app.css` (tokens `--brand-*`).
 - Detalle: layout `dev-req-detail-layout` (contenido + aside operativo lider/TIC/UAT), timeline, chat y bloques de lectura FO-TIC-23.

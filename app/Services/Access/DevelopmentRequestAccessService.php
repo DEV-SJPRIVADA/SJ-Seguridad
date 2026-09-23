@@ -4,7 +4,6 @@ namespace App\Services\Access;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Spatie\Permission\Models\Permission;
 
 class DevelopmentRequestAccessService
 {
@@ -40,7 +39,7 @@ class DevelopmentRequestAccessService
             return true;
         }
 
-        return $user->can('devreq.tab.leader_approval');
+        return $user->hasRole('director') || $user->can('devreq.tab.leader_approval');
     }
 
     public function canProcessTic(User $user): bool
@@ -113,30 +112,16 @@ class DevelopmentRequestAccessService
     }
 
     /**
-     * Lideres / directores que pueden aprobar radicacion.
+     * Directores activos elegibles como lider de area que aprueba.
      *
      * @return Builder<User>
      */
     public function leadersQuery(): Builder
     {
-        $permission = 'devreq.tab.leader_approval';
-
-        if (! $this->permissionExists($permission)) {
-            return User::query()->whereRaw('0 = 1');
-        }
-
         return User::query()
             ->where('is_active', true)
-            ->permission($permission)
+            ->whereHas('roles', fn (Builder $query) => $query->where('name', 'director'))
             ->orderBy('name');
-    }
-
-    private function permissionExists(string $name): bool
-    {
-        return Permission::query()
-            ->where('name', $name)
-            ->where('guard_name', 'web')
-            ->exists();
     }
 
     /**
