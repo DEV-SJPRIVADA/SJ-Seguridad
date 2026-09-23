@@ -41,6 +41,7 @@ class StoreWordDocumentTemplateRequest extends FormRequest
         return [
             'label.required' => 'La etiqueta de la plantilla es obligatoria.',
             'word_document_type_id.required' => 'Debe seleccionar un tipo de documento activo.',
+            'word_document_type_id.integer' => 'Debe seleccionar un tipo de documento válido.',
             'word_document_type_id.exists' => 'El tipo de documento debe existir y estar activo.',
             'template.required' => 'Debe seleccionar un archivo Word (.docx).',
             'template.mimes' => 'La plantilla debe ser un archivo .docx.',

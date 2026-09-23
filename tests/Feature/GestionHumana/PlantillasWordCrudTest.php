@@ -275,6 +275,48 @@ class PlantillasWordCrudTest extends TestCase
             ->assertDontSee('Agregar tipo', false);
     }
 
+    public function test_plantillas_type_select_uses_numeric_id_not_code(): void
+    {
+        $manager = $this->managerUser();
+        $type = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
+
+        $content = $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertTrue(
+            str_contains($content, '"value":"'.$type->id.'"')
+                || str_contains($content, '\u0022value\u0022:\u0022'.$type->id.'\u0022'),
+            'Expected type select options to use numeric id '.$type->id
+        );
+        $this->assertFalse(
+            str_contains($content, '"value":"desvinculacion"')
+                || str_contains($content, '\u0022value\u0022:\u0022desvinculacion\u0022'),
+            'Type select must not use document type code as value'
+        );
+    }
+
+    public function test_store_template_rejects_type_code_string(): void
+    {
+        $manager = $this->managerUser();
+
+        $this->actingAs($manager)
+            ->from(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->post(route('gestion-humana.plantillas-word.templates.store'), [
+                'label' => 'Plantilla invalida',
+                'word_document_type_id' => 'desvinculacion',
+                'sort_order' => 1,
+                'template' => $this->makeDocxFixture('[NOMBRE]'),
+            ])
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->assertSessionHasErrors('word_document_type_id');
+
+        $this->assertDatabaseMissing('termination_letter_document_templates', [
+            'label' => 'Plantilla invalida',
+        ]);
+    }
+
     private function managerUser(): User
     {
         $user = User::factory()->create(['must_change_password' => false]);
