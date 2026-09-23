@@ -3,6 +3,7 @@
 namespace App\Services\Navigation;
 
 use App\Models\User;
+use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
@@ -29,6 +30,7 @@ class SidebarVisibilityService
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly SeleccionAccessService $seleccionAccess,
+        private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
     ) {}
@@ -59,6 +61,7 @@ class SidebarVisibilityService
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'seleccion' => $this->shouldShowSeleccionBoard($user, $areaKey),
+            'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -210,6 +213,15 @@ class SidebarVisibilityService
         }
 
         return $this->seleccionAccess->canViewSeleccionBoard($user);
+    }
+
+    private function shouldShowAcreditacionesBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->acreditacionesAccess->canViewAcreditacionesBoard($user);
     }
 
     private function shouldShowIndicadoresBoard(User $user, string $areaKey): bool

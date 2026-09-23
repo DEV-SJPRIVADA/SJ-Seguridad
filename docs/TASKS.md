@@ -32,6 +32,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-036 | Tablero Acreditaciones GH (shell + Acreditados + catalogo cargos) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-036-run-log.md`](runs/FEAT-036-run-log.md) | 2026-09-23 |
 | FEAT-035 | Tablero Selección GH (Dashboard, Ingreso, Examen ocupacional, Catálogos) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-035-run-log.md`](runs/FEAT-035-run-log.md) | 2026-09-22 |
 | FEAT-031 | Tablero Desvinculaciones (Masivos + Seguimientos) en GH | orquestado | Si | [`docs/runs/FEAT-031-run-log.md`](runs/FEAT-031-run-log.md) | 2026-09-14 |
 | FEAT-030 | Adjuntos multiples opcionales en solicitud de compra (detalle plataforma) | orquestado | Si | [`docs/runs/FEAT-030-run-log.md`](runs/FEAT-030-run-log.md) | 2026-08-28 |

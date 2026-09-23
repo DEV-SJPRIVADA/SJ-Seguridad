@@ -13,6 +13,7 @@ use App\Services\GestionHumana\EmployeeFichaAuditLogService;
 use App\Services\GestionHumana\PlantillasWordAccessService;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -36,17 +37,22 @@ class PlantillasWordController extends Controller
         abort_unless($this->plantillasWordAccess->canView(auth()->user()), 403);
 
         $activeTab = $this->resolveTab($request->query('tab'));
+        $filters = $this->resolveTemplateFilters($request);
 
         $types = WordDocumentType::query()
             ->withCount('templates')
             ->ordered()
             ->get();
 
-        $templates = TerminationLetterDocumentTemplate::query()
+        $templatesQuery = TerminationLetterDocumentTemplate::query()
             ->with('type')
-            ->ordered()
-            ->get();
+            ->ordered();
 
+        if ($activeTab === self::TAB_PLANTILLAS) {
+            $this->applyTemplateFilters($templatesQuery, $filters);
+        }
+
+        $templates = $templatesQuery->get();
         $activeTypes = $types->where('is_active', true)->values();
 
         return view('areas.gestion_humana.plantillas-word.index', [
@@ -57,6 +63,7 @@ class PlantillasWordController extends Controller
             'placeholders' => config('employee_ficha.letter_placeholders', []),
             'activeTab' => $activeTab,
             'subTabs' => $this->subTabs($activeTab),
+            'filters' => $filters,
         ]);
     }
 
@@ -225,11 +232,60 @@ class PlantillasWordController extends Controller
 
     private function resolveTab(mixed $tab): string
     {
-        $value = is_string($tab) ? $tab : self::TAB_TIPOS;
+        $value = is_string($tab) ? $tab : self::TAB_PLANTILLAS;
 
         return in_array($value, [self::TAB_TIPOS, self::TAB_PLANTILLAS], true)
             ? $value
-            : self::TAB_TIPOS;
+            : self::TAB_PLANTILLAS;
+    }
+
+    /**
+     * @return array{q: string, type: string, file: string}
+     */
+    private function resolveTemplateFilters(Request $request): array
+    {
+        $file = (string) $request->query('file', '');
+        if (! in_array($file, ['cargada', 'pendiente'], true)) {
+            $file = '';
+        }
+
+        $type = (string) $request->query('type', '');
+        if ($type !== '' && ! ctype_digit($type)) {
+            $type = '';
+        }
+
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'type' => $type,
+            'file' => $file,
+        ];
+    }
+
+    /**
+     * @param  Builder<TerminationLetterDocumentTemplate>  $query
+     * @param  array{q: string, type: string, file: string}  $filters
+     */
+    private function applyTemplateFilters(Builder $query, array $filters): void
+    {
+        if ($filters['q'] !== '') {
+            $query->where('label', 'like', '%'.$filters['q'].'%');
+        }
+
+        if ($filters['type'] !== '') {
+            $query->where('word_document_type_id', (int) $filters['type']);
+        }
+
+        if ($filters['file'] === 'cargada') {
+            $query->withFile();
+        }
+
+        if ($filters['file'] === 'pendiente') {
+            $query->where(static function ($pendingQuery): void {
+                $pendingQuery
+                    ->whereNull('template_path')
+                    ->orWhere('template_path', '');
+            });
+        }
     }
 
     /**
@@ -239,16 +295,16 @@ class PlantillasWordController extends Controller
     {
         return [
             [
-                'key' => self::TAB_TIPOS,
-                'label' => 'Tipos de documento',
-                'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_TIPOS]),
-                'active' => $activeTab === self::TAB_TIPOS,
-            ],
-            [
                 'key' => self::TAB_PLANTILLAS,
                 'label' => 'Plantillas',
                 'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_PLANTILLAS]),
                 'active' => $activeTab === self::TAB_PLANTILLAS,
+            ],
+            [
+                'key' => self::TAB_TIPOS,
+                'label' => 'Tipos de documento',
+                'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_TIPOS]),
+                'active' => $activeTab === self::TAB_TIPOS,
             ],
         ];
     }

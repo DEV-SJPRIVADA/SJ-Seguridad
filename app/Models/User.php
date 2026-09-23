@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\BoardAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
@@ -437,6 +438,30 @@ class User extends Authenticatable
             'ingresos' => route('gestion-humana.seleccion.ingresos'),
             'examenes' => route('gestion-humana.seleccion.examenes'),
             'catalogos' => route('gestion-humana.seleccion.catalogos'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function acreditacionesBoardTabsFor(): Collection
+    {
+        return collect(app(AcreditacionesAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultAcreditacionesBoardUrl(): string
+    {
+        $tabs = $this->acreditacionesBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('gestion-humana.acreditaciones.dashboard'),
+            'acreditados' => route('gestion-humana.acreditaciones.acreditados'),
+            'reporte_diario' => route('gestion-humana.acreditaciones.reporte-diario'),
+            'validaciones' => route('gestion-humana.acreditaciones.validaciones'),
+            'export_apo' => route('gestion-humana.acreditaciones.export-apo'),
+            'catalogo' => route('gestion-humana.acreditaciones.catalogo'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }

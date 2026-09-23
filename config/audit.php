@@ -55,6 +55,10 @@ return [
             'label' => 'Selección',
             'area' => 'gestion_humana',
         ],
+        'acreditaciones' => [
+            'label' => 'Acreditaciones',
+            'area' => 'gestion_humana',
+        ],
         'development_requests' => [
             'label' => 'Solicitudes de desarrollo',
             'area' => 'tic',

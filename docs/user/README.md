@@ -21,6 +21,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Desvinculaciones | [`modules/desvinculaciones.md`](../modules/desvinculaciones.md) | [`desvinculaciones.md`](desvinculaciones.md) |
 | Cursos | [`modules/cursos.md`](../modules/cursos.md) | [`cursos.md`](cursos.md) |
 | Selección | [`modules/seleccion.md`](../modules/seleccion.md) | [`seleccion.md`](seleccion.md) |
+| Acreditaciones | [`modules/acreditaciones.md`](../modules/acreditaciones.md) | [`acreditaciones.md`](acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](../modules/plantillas-word.md) | [`plantillas-word.md`](plantillas-word.md) |
 | Suministros | [`modules/suministros.md`](../modules/suministros.md) | [`suministros.md`](suministros.md) |
 | Documentos calidad | [`modules/quality-documents.md`](../modules/quality-documents.md) | [`quality-documents.md`](quality-documents.md) |

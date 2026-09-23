@@ -57,6 +57,7 @@ El workflow multi-agente actualiza estas capas al cerrar features ([`docs/AGENT_
 - **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `improvements`
 - **Comercial:** `commercial_clients`, `commercial_services`, catalogos `commercial_*`
 - **Selección (GH):** `seleccion_ingresos`, `seleccion_examenes_ocupacionales`; catalogos RH/estado civil/SOLICITUD en `payroll_catalog_items`
+- **Acreditaciones (GH):** `acreditacion_acreditados`, `acreditacion_cargos`; estados calculados; enlace lógico a Ficha por cédula
 - `requisition_clients` (puente interno con matriz comercial)
 - tablas de `cache` y `jobs`
 

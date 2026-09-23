@@ -58,6 +58,11 @@ El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas
 2. Confirme. La plantilla aparece en la lista con su tipo.
 3. Para cartas de retiro, use el tipo **Desvinculacion** y variables en corchetes (`[NOMBRE]`, `[CEDULA]`, `[FECHA_TERMINACION]`, etc.; la pantalla muestra la lista de apoyo).
 
+### Filtrar plantillas
+
+1. En la pestana **Plantillas**, use la barra de filtros: busqueda por etiqueta, tipo de documento y estado del archivo (cargada / pendiente).
+2. Pulse el icono de buscar para aplicar; el icono X limpia los filtros activos.
+
 ### Reemplazar o eliminar una plantilla
 
 1. **Reemplazar:** elija solo el nuevo archivo `.docx` de esa fila. La etiqueta y el tipo no cambian.
@@ -75,3 +80,5 @@ El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas
 | --- | --- | --- | --- |
 | 1.0 | 2026-08-21 | FEAT-029 | Version inicial: tablero Plantillas Word (tipos + plantillas); re-subida obligatoria de plantillas de Renuncia; permisos propios del tablero. |
 | 1.1 | 2026-08-21 | UI | Pestanas **Tipos de documento** y **Plantillas** (una tabla por pestana). |
+| 1.2 | 2026-09-23 | UI | Redisenio visual: subnav en header, formularios por seccion, zona de carga `.docx` y acciones de fila compactas. |
+| 1.3 | 2026-09-23 | UI | Filtros en pestana Plantillas (etiqueta, tipo, estado de archivo). |

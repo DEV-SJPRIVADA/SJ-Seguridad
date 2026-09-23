@@ -175,8 +175,26 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `desvinculaciones` — **Desvinculaciones** (`view.board.gestion_humana.desvinculaciones` + `desvinculaciones.view` / `masivos` / `seguimientos.edit`)
   - `cursos` — **Cursos** (`view.board.gestion_humana.cursos` + `cursos.view` / `edit`)
   - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
+  - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
+
+### Acreditaciones (Gestion humana)
+
+Tablero **Acreditaciones** (Acreditados, Catálogo, placeholders Dashboard / Reporte Diario / Validaciones / Export Apo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
+| `acreditaciones.view` | Shell, Acreditados (lectura), export Excel, placeholders |
+| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo (implica view en servicio de acceso) |
+
+- Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). Catálogo solo con `acreditaciones.edit`.
+- Bypass: `manage.users`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Acreditaciones*).
+- Dependencia operativa: cédula debe existir en Ficha empleados (`employee_ficha_profiles`).
+- Doc: [`docs/modules/acreditaciones.md`](modules/acreditaciones.md), [`docs/user/acreditaciones.md`](user/acreditaciones.md).
 
 ### Selección (Gestion humana)
 

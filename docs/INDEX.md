@@ -39,6 +39,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Desvinculaciones | [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md) | [`user/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/desvinculaciones.md) |
 | Cursos | [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md) | [`user/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cursos.md) |
 | Selección | [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md) | [`user/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/seleccion.md) |
+| Acreditaciones | [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md) | [`user/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md) | [`user/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/user/plantillas-word.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
 | Solicitudes de compra | [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md) | [`user/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/purchase-requests.md) |
@@ -59,6 +60,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md)
 - [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md)
 - [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md)
+- [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md)
 - [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md)
 - [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md)
 - [`modules/development-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/development-requests.md)
