@@ -177,7 +177,7 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 ## Archivos clave
 
 - Config: `config/seleccion.php`, `config/access.php`, `config/employee_ficha.php`, `config/audit.php`
-- Migrations: `*_create_seleccion_ingresos_table`, `*_create_seleccion_examenes_ocupacionales_table`, `*_seed_seleccion_payroll_catalog_defaults`
+- Migrations: `*_create_seleccion_ingresos_table`, `*_create_seleccion_examenes_ocupacionales_table`, `*_seed_seleccion_payroll_catalog_defaults`, `*_add_referido_to_seleccion_ingresos_table`
 - Factories: `SeleccionIngresoFactory`, `SeleccionExamenOcupacionalFactory`
 - Tests: `tests/Feature/GestionHumana/Seleccion*.php`
 - Vistas: `resources/views/areas/gestion_humana/seleccion/`
