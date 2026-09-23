@@ -90,13 +90,16 @@ class RequisitionController extends Controller
     {
         $this->abortIfUnknownModule($module);
 
+        $recruiterFilter = PersonalRequisitionFilterBag::normalizeRecruiterFilter($request->input('recruiter_id'));
+
         $filters = [
             'client_id' => $request->input('client_id'),
             'position_id' => $request->input('position_id'),
             'city_id' => $request->input('city_id'),
             'status' => $request->input('status'),
             'year' => $request->input('year', now()->year),
-            'month' => $request->input('month'),
+            'month' => $request->input('month', now()->month),
+            'recruiter_id' => $recruiterFilter ?? '',
         ];
 
         $query = PersonalRequisition::query()
@@ -110,6 +113,12 @@ class RequisitionController extends Controller
             ->when($filters['status'], fn ($q) => $q->where('status', $filters['status']))
             ->when($filters['year'], fn ($q) => $q->whereYear('request_date', $filters['year']))
             ->when($filters['month'], fn ($q) => $q->whereMonth('request_date', $filters['month']));
+
+        if ($recruiterFilter === 'none') {
+            $query->whereNull('recruiter_id');
+        } elseif ($recruiterFilter !== null) {
+            $query->where('recruiter_id', (int) $recruiterFilter);
+        }
 
         $requisitions = $query->get();
 
@@ -131,6 +140,7 @@ class RequisitionController extends Controller
             'subTabs' => $this->getRequisitionSubTabs($module, 'dashboard'),
             'filters' => $filters,
             'catalogs' => $this->catalogs(),
+            'recruiterFilterOptions' => $this->recruiterFilterOptions(),
             'stats' => [
                 'total' => $requisitions->count(),
                 'solicitada' => $statsByStatus->get(PersonalRequisition::STATUS_SOLICITADA, 0),
@@ -375,6 +385,7 @@ class RequisitionController extends Controller
             'requisitions' => $requisitions,
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
+            'recruiterFilterOptions' => $this->recruiterFilterOptions(),
         ]);
     }
 
@@ -822,6 +833,7 @@ class RequisitionController extends Controller
             'mine_only' => $filters->mineOnly ? true : null,
             'exclude_closed' => $filters->excludeClosedStatuses ? true : null,
             'include_closed' => $filters->includeClosed ? true : null,
+            'recruiter_id' => $filters->recruiterFilter,
         ], fn ($value) => $value !== null && $value !== false);
 
         return [
@@ -835,6 +847,27 @@ class RequisitionController extends Controller
     private function trackingAreaScope(?User $user): string
     {
         return (string) $user?->area_key;
+    }
+
+    /**
+     * Opciones de filtro por reclutador: Todos (placeholder), Sin reclutador, activos.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function recruiterFilterOptions(): array
+    {
+        $options = [
+            ['value' => 'none', 'label' => 'Sin reclutador'],
+        ];
+
+        foreach ($this->selectionOfficerAccess->recruitersForSelect() as $recruiter) {
+            $options[] = [
+                'value' => (string) $recruiter->id,
+                'label' => (string) $recruiter->name,
+            ];
+        }
+
+        return $options;
     }
 
     /**

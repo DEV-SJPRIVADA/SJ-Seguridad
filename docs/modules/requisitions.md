@@ -197,14 +197,14 @@ Cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas envia
 ## UI operativa
 
 - Status pills por estado; layout con subnav de modulo.
-- Gestion: filtros + pills; default **En curso** (excluye contratado/cancelada); `include_closed=1` = Todos; DataTables.
+- Gestion: filtros + pills; default **En curso** (excluye contratado/cancelada); `include_closed=1` = Todos; filtro `recruiter_id` (`''` = todos, `none` = sin asignar, id = reclutador activo); DataTables.
 - Seguimiento: mismos filtros + export Excel.
-- Dashboard: KPIs Total / Solicitadas / En gestion / Contratadas / Canceladas; charts Vite `resources/js/requisitions-dashboard-charts.js` + `#requisitions-chart-data`.
+- Dashboard: KPIs Total / Solicitadas / En gestion / Contratadas / Canceladas; filtro reclutador (misma semántica); **todos** los KPIs (incluido Total) y charts respetan filtros; mes por defecto = mes actual; charts Vite `resources/js/requisitions-dashboard-charts.js` + `#requisitions-chart-data`.
 - Historial de estados y historial de cambios de campos (paneles en edicion Gestion).
 
 ## Export Excel
 
-- Gestion y Seguimiento: `App\Exports\PersonalRequisitionFullExport` (sobre `BaseExport`); filtros = vista (`q`, estado, `date_from`/`date_to` sobre `request_date`, etc.).
+- Gestion y Seguimiento: `App\Exports\PersonalRequisitionFullExport` (sobre `BaseExport`); filtros = vista (`q`, estado, `date_from`/`date_to` sobre `request_date`, `recruiter_id`, etc.).
 - No incluye `hired_*` como columnas propias; eso va en export de Ficha empleados (`PersonalRequisitionFichaEntryExport`).
 
 ## Modelos y tablas
@@ -247,6 +247,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-09-23 | Filtro reclutador en Dashboard y Gestion; KPI Total respeta filtros; mes dashboard por defecto = mes actual |
 | 2026-08-21 | Catalogos Parametros: persistir seccion activa con `?catalog=` tras CRUD |
 | 2026-08-20 | Doc tecnica alineada al codigo: notificaciones globales (`NotificationConfigService`), rutas export/gerencia/email, acceso Admin «Solicitar en su area», Catalogos sin correos, mail gerencia sincrono |
 | 2026-08-04 | Autorizacion cargo nuevo solo rol `administrador` |

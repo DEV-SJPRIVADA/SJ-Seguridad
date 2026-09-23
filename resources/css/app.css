@@ -4596,11 +4596,18 @@ a {
 }
 
 .req-manage-filters__query-field--search {
-    flex: 1 1 12rem;
+    flex: 0 1 22rem;
+    max-width: 50%;
 }
 
 .req-manage-filters__query-field--date {
     flex: 0 1 9.5rem;
+}
+
+.req-manage-filters__query-field--recruiter {
+    flex: 0 1 19rem;
+    width: 19rem;
+    max-width: 100%;
 }
 
 .req-manage-filters__query-submit {
@@ -4608,6 +4615,71 @@ a {
     flex-direction: column;
     gap: 0.3rem;
     flex: 0 0 auto;
+}
+
+.req-manage-filters__query-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.req-manage-filters__query-export {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.req-manage-filters__query-actions-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.req-manage-filters__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height-chrome);
+    height: var(--control-height-chrome);
+    min-width: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.req-manage-filters__icon-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.req-manage-filters__icon-btn--primary {
+    border: 1px solid var(--brand-blue);
+    background: var(--brand-blue);
+    color: #fff;
+}
+
+.req-manage-filters__icon-btn--primary:hover {
+    background: #002244;
+    border-color: #002244;
+    color: #fff;
+}
+
+.req-manage-filters__icon-btn--ghost {
+    border: 1px solid var(--color-border);
+    background: #fff;
+    color: var(--brand-blue);
+}
+
+.req-manage-filters__icon-btn--ghost:hover {
+    background: rgba(0, 51, 102, 0.08);
+    color: #002244;
 }
 
 .req-manage-filters__query-submit .btn {
@@ -9277,7 +9349,7 @@ a.sj-pagination__item:hover {
 
 .dev-req-form__meta {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
     gap: 0.75rem;
     padding: 0.95rem 1.15rem;
     border: 1px solid var(--color-border);
@@ -9290,6 +9362,7 @@ a.sj-pagination__item:hover {
     flex-direction: column;
     gap: 0.2rem;
     min-width: 0;
+    overflow: hidden;
 }
 
 .dev-req-form__meta-label {
@@ -9304,6 +9377,10 @@ a.sj-pagination__item:hover {
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--brand-navy);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
 }
 
 .dev-req-form__section {

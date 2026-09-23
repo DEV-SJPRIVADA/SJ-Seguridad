@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 
 class PersonalRequisitionFilterBag
 {
+    /**
+     * @param  string|null  $recruiterFilter  null = todos, "none" = sin asignar, id numerico en string = reclutador
+     */
     public function __construct(
         public readonly string $search,
         public readonly string $status,
@@ -18,6 +21,7 @@ class PersonalRequisitionFilterBag
         public readonly bool $mineOnly,
         public readonly bool $includeClosed = false,
         public readonly bool $excludeClosedStatuses = false,
+        public readonly ?string $recruiterFilter = null,
     ) {}
 
     public static function fromManageRequest(Request $request): self
@@ -35,6 +39,7 @@ class PersonalRequisitionFilterBag
             mineOnly: false,
             includeClosed: $includeClosed,
             excludeClosedStatuses: $status === '' && ! $includeClosed,
+            recruiterFilter: self::normalizeRecruiterFilter($request->input('recruiter_id')),
         );
     }
 
@@ -69,6 +74,7 @@ class PersonalRequisitionFilterBag
             'mine_only' => $this->mineOnly,
             'include_closed' => $this->includeClosed,
             'exclude_closed' => $this->excludeClosedStatuses,
+            'recruiter_id' => $this->recruiterFilter ?? '',
         ];
     }
 
@@ -80,7 +86,8 @@ class PersonalRequisitionFilterBag
             || $this->dateTo !== null
             || $this->clientId !== null
             || $this->cityId !== null
-            || $this->mineOnly;
+            || $this->mineOnly
+            || $this->recruiterFilter !== null;
     }
 
     /**
@@ -128,6 +135,49 @@ class PersonalRequisitionFilterBag
         if ($this->excludeClosedStatuses) {
             $query->whereNotIn('status', PersonalRequisition::closedStatuses());
         }
+
+        $this->applyRecruiterFilter($query);
+    }
+
+    /**
+     * @param  Builder<PersonalRequisition>  $query
+     */
+    public function applyRecruiterFilter(Builder $query): void
+    {
+        if ($this->recruiterFilter === null) {
+            return;
+        }
+
+        if ($this->recruiterFilter === 'none') {
+            $query->whereNull('recruiter_id');
+
+            return;
+        }
+
+        $query->where('recruiter_id', (int) $this->recruiterFilter);
+    }
+
+    public static function normalizeRecruiterFilter(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $string = trim((string) $value);
+
+        if ($string === '' || $string === 'todos') {
+            return null;
+        }
+
+        if ($string === 'none') {
+            return 'none';
+        }
+
+        if (ctype_digit($string) && (int) $string > 0) {
+            return $string;
+        }
+
+        return null;
     }
 
     private static function normalizeDate(mixed $value): ?string

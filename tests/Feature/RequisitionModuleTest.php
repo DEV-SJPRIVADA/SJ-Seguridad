@@ -688,6 +688,26 @@ class RequisitionModuleTest extends TestCase
             ->assertSee($withoutRecruiter->code)
             ->assertSee('Reclutador Visible')
             ->assertSee($withRecruiter->code);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', [
+                'module' => 'operaciones',
+                'recruiter_id' => $recruiter->id,
+                'include_closed' => 1,
+            ]))
+            ->assertOk()
+            ->assertSee($withRecruiter->code)
+            ->assertDontSee($withoutRecruiter->code);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', [
+                'module' => 'operaciones',
+                'recruiter_id' => 'none',
+                'include_closed' => 1,
+            ]))
+            ->assertOk()
+            ->assertSee($withoutRecruiter->code)
+            ->assertDontSee($withRecruiter->code);
     }
 
     public function test_user_cannot_create_requisition_outside_base_area_even_with_foreign_board(): void
