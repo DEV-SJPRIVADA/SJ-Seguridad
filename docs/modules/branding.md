@@ -99,6 +99,28 @@ Toda la UI usa [Blade Icons](https://github.com/blade-ui-kit/blade-icons). No ag
 
 El set Remix local se registra en `AppServiceProvider`. Para un icono Lucide nuevo, usar el componente del paquete (`<x-lucide-{nombre} />`); no copiar paths SVG a Blade.
 
+## Botones icon-only
+
+Un solo look. Regla Cursor: [`.cursor/rules/icon-buttons-ui.mdc`](../../.cursor/rules/icon-buttons-ui.mdc).
+
+| Contexto | Clases | Uso |
+| --- | --- | --- |
+| Chrome / filtros / toolbar / modales | `.req-manage-filters__icon-btn` + `--primary` \| `--ghost` \| `--danger` | Filtrar, limpiar, export, import, nuevo, cerrar |
+| Acciones de fila | `.cursos-catalogo-page__icon-btn` (+ `--danger`) | Editar / eliminar en tablas |
+
+| Accion | Variante | Icono |
+| --- | --- | --- |
+| Filtrar | `--primary` | `lucide-search` |
+| Limpiar / cerrar | `--ghost` | `lucide-x` |
+| Exportar | `--ghost` | `selfhst-microsoft-excel-2013` |
+| Importar / masivos | `--ghost` | `lucide-upload` |
+| Nuevo | `--primary` | `lucide-plus` |
+| Elegir archivo | `--ghost` | `lucide-file-up` |
+| Editar (fila) | `cursos-catalogo-page__icon-btn` | pencil |
+| Eliminar (fila) | `…--danger` | trash-2 |
+
+Obligatorio: `title` + `aria-label`. Prohibido crear `*{modulo}*__icon-btn` o usar `ficha-empleados-filters__bulk-icon` en codigo nuevo.
+
 ## Regla de mantenimiento
 
 Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero en el componente `application-logo` para evitar inconsistencias entre pantallas.
@@ -107,3 +129,4 @@ Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero e
 
 - Cambios directos en vistas individuales pueden duplicar branding y desalinear la identidad visual.
 - Si en el futuro se agrega un archivo raster o vector oficial, este documento debe actualizarse para indicar su ubicacion y formato fuente.
+- Inventar clases de icon-btn por modulo rompe el estandar; migrar a las clases canónicas.

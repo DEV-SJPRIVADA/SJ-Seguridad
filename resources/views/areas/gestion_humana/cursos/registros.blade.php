@@ -123,7 +123,7 @@
                                     <a href="{{ route('gestion-humana.cursos.registros') }}" class="btn btn--secondary btn--sm">Limpiar</a>
                                     <a
                                         href="{{ $exportUrl }}"
-                                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__export-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Exportar a Excel (respeta filtros)"
                                         aria-label="Exportar a Excel"
                                     >
@@ -131,12 +131,12 @@
                                     </a>
                                     <button
                                         type="button"
-                                        class="ficha-empleados-filters__bulk-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Plantilla masivos — importar"
                                         aria-label="Plantilla masivos — importar"
                                         x-on:click.prevent="$dispatch('open-modal', 'cursos-masivos')"
                                     >
-                                        <x-lucide-upload width="20" height="20" aria-hidden="true" />
+                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
@@ -181,12 +181,12 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="ficha-empleados-filters__bulk-icon cursos-registros-page__add-btn"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                             title="Nuevo registro"
                                             aria-label="Nuevo registro"
                                             x-on:click.prevent="openCreateBlank()"
                                         >
-                                            <x-lucide-plus width="20" height="20" aria-hidden="true" />
+                                            <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                         </button>
                                     @endunless
                                 </div>

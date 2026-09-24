@@ -104,7 +104,7 @@
                                             </label>
                                             <button
                                                 type="submit"
-                                                class="btn btn--primary btn--sm plantillas-word-page__icon-btn"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                                 title="Agregar tipo"
                                                 aria-label="Agregar tipo"
                                             >
@@ -147,7 +147,7 @@
                                                     <div class="plantillas-word-page__row-actions">
                                                         <button
                                                             type="button"
-                                                            class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost btn-plantillas-word-type-edit"
+                                                            class="cursos-catalogo-page__icon-btn btn-plantillas-word-type-edit"
                                                             title="Editar"
                                                             aria-label="Editar"
                                                             data-code="{{ $type->code }}"
@@ -169,7 +169,7 @@
                                                                 @method('DELETE')
                                                                 <button
                                                                     type="submit"
-                                                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--danger"
+                                                                    class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
                                                                     title="Eliminar"
                                                                     aria-label="Eliminar"
                                                                 >
@@ -201,7 +201,7 @@
                             @if (! empty($placeholders))
                                 <button
                                     type="button"
-                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                     title="Ver variables"
                                     aria-label="Ver variables"
                                     x-data=""
@@ -305,7 +305,7 @@
                                         <div class="plantillas-word-form__create-actions">
                                             <button
                                                 type="submit"
-                                                class="btn btn--primary btn--sm plantillas-word-page__icon-btn"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                                 title="Agregar plantilla"
                                                 aria-label="Agregar plantilla"
                                             >
@@ -372,7 +372,7 @@
                             <div class="plantillas-word-page__filters-actions">
                                 <button
                                     type="submit"
-                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--primary"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                     title="Filtrar"
                                     aria-label="Filtrar"
                                 >
@@ -381,7 +381,7 @@
                                 @if ($hasActiveFilters)
                                     <a
                                         href="{{ route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']) }}"
-                                        class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Limpiar filtros"
                                         aria-label="Limpiar filtros"
                                     >
@@ -447,7 +447,7 @@
                                                     @if ($template->hasTemplateFile())
                                                         <a
                                                             href="{{ route('gestion-humana.plantillas-word.templates.download', $template) }}"
-                                                            class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                                             title="Descargar"
                                                             aria-label="Descargar"
                                                         >
@@ -474,7 +474,7 @@
                                                                 >
                                                                 <label
                                                                     for="template_file_replace_{{ $template->id }}"
-                                                                    class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--ghost"
+                                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                                                     title="Seleccionar archivo"
                                                                     aria-label="Seleccionar archivo"
                                                                 >
@@ -484,7 +484,7 @@
                                                             </div>
                                                             <button
                                                                 type="submit"
-                                                                class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--primary"
+                                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                                                 title="Reemplazar"
                                                                 aria-label="Reemplazar"
                                                             >
@@ -501,7 +501,7 @@
                                                             @method('DELETE')
                                                             <button
                                                                 type="submit"
-                                                                class="plantillas-word-page__icon-btn plantillas-word-page__icon-btn--danger"
+                                                                class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
                                                                 title="Eliminar"
                                                                 aria-label="Eliminar"
                                                             >

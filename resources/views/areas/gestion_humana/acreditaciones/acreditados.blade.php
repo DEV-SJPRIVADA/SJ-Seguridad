@@ -46,7 +46,7 @@
                     </ul>
                     @if (session('import_report_token'))
                         <a
-                            class="ficha-empleados-filters__bulk-icon"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                             href="{{ route('gestion-humana.acreditaciones.acreditados.import-report', session('import_report_token')) }}"
                             title="Descargar reporte"
                             aria-label="Descargar reporte"
@@ -103,7 +103,7 @@
                                 <div class="form-field cursos-registros-page__filter-actions">
                                     <button
                                         type="submit"
-                                        class="ficha-empleados-filters__bulk-icon acreditaciones-acreditados-page__icon-btn--primary"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                         title="Filtrar"
                                         aria-label="Filtrar"
                                     >
@@ -111,7 +111,7 @@
                                     </button>
                                     <a
                                         href="{{ route('gestion-humana.acreditaciones.acreditados') }}"
-                                        class="ficha-empleados-filters__bulk-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Limpiar filtros"
                                         aria-label="Limpiar filtros"
                                     >
@@ -119,7 +119,7 @@
                                     </a>
                                     <a
                                         href="{{ $exportUrl }}"
-                                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__export-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Exportar a Excel"
                                         aria-label="Exportar a Excel"
                                     >
@@ -142,21 +142,21 @@
                                 <div class="cursos-registros-page__table-actions">
                                     <button
                                         type="button"
-                                        class="ficha-empleados-filters__bulk-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Plantilla masivos — importar"
                                         aria-label="Plantilla masivos — importar"
                                         x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-masivos')"
                                     >
-                                        <x-lucide-upload width="20" height="20" aria-hidden="true" />
+                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
                                     </button>
                                     <button
                                         type="button"
-                                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__add-btn"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                         title="Nuevo acreditado"
                                         aria-label="Nuevo acreditado"
                                         x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-nuevo')"
                                     >
-                                        <x-lucide-plus width="20" height="20" aria-hidden="true" />
+                                        <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                     </button>
                                 </div>
                             @endif
@@ -220,7 +220,7 @@
                             <h3 class="panel-title">Editar acreditado</h3>
                             <button
                                 type="button"
-                                class="ficha-empleados-filters__bulk-icon"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                 title="Cerrar"
                                 aria-label="Cerrar"
                                 @click="editOpen = false"
@@ -324,7 +324,7 @@
                                 <div class="cursos-registros-page__form-actions">
                                     <button
                                         type="submit"
-                                        class="ficha-empleados-filters__bulk-icon acreditaciones-acreditados-page__icon-btn--primary"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                         title="Actualizar"
                                         aria-label="Actualizar"
                                     >

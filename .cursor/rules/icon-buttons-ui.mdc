@@ -1,0 +1,76 @@
+---
+description: Estandar de botones icon-only — chrome/filtros y acciones de fila
+globs: resources/views/**/*.blade.php,resources/css/app.css,app/Services/**/*DatatableService.php,docs/modules/branding.md
+alwaysApply: false
+---
+
+# Botones icon-only — estandar UI
+
+Un solo look para acciones icon-only. No crear familias CSS por modulo (`plantillas-word-page__icon-btn`, `acreditaciones-…__icon-btn`, etc.).
+
+## Dos contextos (obligatorio)
+
+| Contexto | Clases canónicas | Donde |
+| --- | --- | --- |
+| Chrome / filtros / toolbar / modales | `.req-manage-filters__icon-btn` + `--primary` \| `--ghost` \| `--danger` | Filtros, export, import, nuevo, limpiar, cerrar, submit icon-only |
+| Acciones de fila (tablas) | `.cursos-catalogo-page__icon-btn` (+ `--edit` / `--danger`) | Editar / eliminar en DataTables y listados Blade |
+
+Tamaño del SVG Lucide: **18×18** en chrome; **16×16** en filas. Siempre `title` + `aria-label`.
+
+## Mapa accion → icono
+
+| Accion | Variante clase | Icono |
+| --- | --- | --- |
+| Filtrar / buscar (submit) | `--primary` | `<x-lucide-search>` |
+| Limpiar filtros / cerrar | `--ghost` | `<x-lucide-x>` |
+| Exportar Excel | `--ghost` | `<x-selfhst-microsoft-excel-2013>` |
+| Importar / masivos | `--ghost` | `<x-lucide-upload>` |
+| Nuevo / agregar | `--primary` | `<x-lucide-plus>` |
+| Elegir archivo | `--ghost` | `<x-lucide-file-up>` |
+| Reemplazar archivo | `--primary` | `<x-lucide-replace>` |
+| Descargar | `--ghost` | `<x-lucide-download>` |
+| Editar (fila) | `cursos-catalogo-page__icon-btn` | pencil (Lucide o SVG inline en DatatableService) |
+| Eliminar (fila) | `…__icon-btn--danger` | trash-2 |
+| Guardar / Actualizar en modal | Preferir `btn btn--primary` con texto; si icon-only, `--primary` + `<x-lucide-save>` | |
+
+## Ejemplo chrome
+
+```blade
+<button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
+    <x-lucide-search width="18" height="18" aria-hidden="true" />
+</button>
+<a href="…" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
+    <x-lucide-x width="18" height="18" aria-hidden="true" />
+</a>
+```
+
+## Ejemplo fila (Blade)
+
+```blade
+<button type="button" class="cursos-catalogo-page__icon-btn" title="Editar" aria-label="Editar">
+    <x-lucide-pencil width="16" height="16" aria-hidden="true" />
+</button>
+<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" title="Eliminar" aria-label="Eliminar">
+    <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+</button>
+```
+
+En DataTables server-side, reutilizar el HTML/SVG ya usado en `*DatatableService` (mismas clases).
+
+## Prohibido
+
+- Nuevas clases `*{modulo}*__icon-btn` por pantalla.
+- `ficha-empleados-filters__bulk-icon` en codigo nuevo (legacy; migrar a `req-manage-filters__icon-btn`).
+- SVG embebidos en Blade de vistas nuevas (usar `<x-lucide-*>`; en DatatableService el inline SVG existente esta permitido por coherencia con filas actuales).
+- Botones icon-only sin `title` / `aria-label`.
+- Reintroducir texto + icono en filtros cuando el listado ya usa icon-only (salvo CTAs de formulario modal con texto).
+
+## Tras cambiar CSS
+
+`npm run build` (o `npm run dev`).
+
+## Referencia
+
+- CSS: `resources/css/app.css` (`.req-manage-filters__icon-btn*`, `.cursos-catalogo-page__icon-btn*`)
+- Doc: [`docs/modules/branding.md`](../../docs/modules/branding.md)
+- Bases: [`AGENTS.md`](../../AGENTS.md)

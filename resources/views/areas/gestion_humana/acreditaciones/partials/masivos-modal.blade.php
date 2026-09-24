@@ -4,7 +4,7 @@
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                    <x-lucide-upload width="20" height="20" aria-hidden="true" />
+                    <x-lucide-upload width="18" height="18" aria-hidden="true" />
                 </span>
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Plantilla masivos</h3>
@@ -40,7 +40,7 @@
                 <div class="ficha-empleados-masivos-modal__export">
                     <a
                         href="{{ $exportUrl }}"
-                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__export-icon"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                         title="Exportar listado"
                         aria-label="Exportar listado"
                     >
@@ -68,7 +68,7 @@
                     <div class="ficha-empleados-masivos-modal__import">
                         <a
                             href="{{ $importTemplateUrl }}"
-                            class="ficha-empleados-filters__bulk-icon cursos-registros-page__export-icon"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                             title="Descargar plantilla vacía"
                             aria-label="Descargar plantilla vacía"
                         >
@@ -97,7 +97,7 @@
                             <div class="ficha-empleados-masivos-modal__import-actions">
                                 <label
                                     for="acreditaciones-import-file"
-                                    class="ficha-empleados-filters__bulk-icon"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                     title="Elegir archivo"
                                     aria-label="Elegir archivo"
                                     data-acreditaciones-import-choose
@@ -106,7 +106,7 @@
                                 </label>
                                 <button
                                     type="submit"
-                                    class="ficha-empleados-filters__bulk-icon acreditaciones-acreditados-page__icon-btn--primary"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                     title="Importar"
                                     aria-label="Importar"
                                     data-acreditaciones-import-submit

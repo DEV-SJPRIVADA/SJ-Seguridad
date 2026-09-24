@@ -1304,19 +1304,24 @@ a {
     }
 }
 
+/* Legacy — no usar en codigo nuevo; preferir .req-manage-filters__icon-btn */
 .ficha-empleados-filters__bulk-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
+    width: var(--control-height-chrome);
+    height: var(--control-height-chrome);
+    min-width: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
     padding: 0;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #fff;
     color: var(--brand-blue);
+    text-decoration: none;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .ficha-empleados-filters__bulk-icon:hover {
@@ -1325,8 +1330,8 @@ a {
 }
 
 .ficha-empleados-filters__bulk-icon svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.125rem;
+    height: 1.125rem;
 }
 
 .ficha-empleados-masivos-modal {
@@ -2395,63 +2400,6 @@ a {
     width: auto;
     gap: 0.35rem;
     position: relative;
-}
-
-.plantillas-word-page__icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
-    min-width: 2.1rem;
-    min-height: 2.1rem;
-    padding: 0;
-    border: 1px solid rgba(0, 51, 102, 0.18);
-    border-radius: 8px;
-    background: #fff;
-    color: var(--brand-blue, #003366);
-    cursor: pointer;
-    text-decoration: none;
-    flex-shrink: 0;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.plantillas-word-page__icon-btn svg {
-    width: 1rem;
-    height: 1rem;
-}
-
-.plantillas-word-page__icon-btn--ghost:hover {
-    background: rgba(0, 51, 102, 0.08);
-    color: #002244;
-}
-
-.plantillas-word-page__icon-btn--primary {
-    border-color: var(--brand-blue);
-    background: var(--brand-blue);
-    color: #fff;
-}
-
-.plantillas-word-page__icon-btn--primary:hover {
-    background: #002244;
-    border-color: #002244;
-    color: #fff;
-}
-
-.plantillas-word-page__icon-btn--danger {
-    color: #b91c1c;
-    border-color: rgba(185, 28, 28, 0.25);
-}
-
-.plantillas-word-page__icon-btn--danger:hover {
-    background: rgba(185, 28, 28, 0.08);
-}
-
-.btn.plantillas-word-page__icon-btn {
-    width: 2.1rem;
-    height: 2.1rem;
-    min-width: 2.1rem;
-    padding: 0;
 }
 
 .plantillas-word-page__filters {
@@ -5071,6 +5019,23 @@ a {
 .req-manage-filters__icon-btn--ghost:hover {
     background: rgba(0, 51, 102, 0.08);
     color: #002244;
+}
+
+.req-manage-filters__icon-btn--danger {
+    border: 1px solid rgba(185, 28, 28, 0.25);
+    background: #fff;
+    color: #b91c1c;
+}
+
+.req-manage-filters__icon-btn--danger:hover {
+    background: rgba(185, 28, 28, 0.08);
+    color: #991b1b;
+}
+
+.req-manage-filters__icon-btn:disabled,
+.req-manage-filters__icon-btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .req-manage-filters__query-submit .btn {
@@ -9077,37 +9042,8 @@ a.sj-pagination__item:hover {
     white-space: nowrap;
 }
 
-.cursos-registros-page__filter-actions .ficha-empleados-filters__bulk-icon {
+.cursos-registros-page__filter-actions .req-manage-filters__icon-btn {
     flex: 0 0 auto;
-    width: 2.25rem;
-    height: 2.25rem;
-    border: 1px solid rgba(0, 51, 102, 0.2);
-    background: #fff;
-    text-decoration: none;
-}
-
-.cursos-registros-page__filter-actions .ficha-empleados-filters__bulk-icon:hover {
-    background: rgba(0, 51, 102, 0.08);
-}
-
-.acreditaciones-acreditados-page__icon-btn--primary,
-.ficha-empleados-filters__bulk-icon.acreditaciones-acreditados-page__icon-btn--primary {
-    border: 1px solid var(--brand-blue, #003366);
-    background: var(--brand-blue, #003366);
-    color: #fff;
-}
-
-.acreditaciones-acreditados-page__icon-btn--primary:hover,
-.ficha-empleados-filters__bulk-icon.acreditaciones-acreditados-page__icon-btn--primary:hover {
-    background: #002244;
-    border-color: #002244;
-    color: #fff;
-}
-
-.ficha-empleados-filters__bulk-icon:disabled,
-.ficha-empleados-filters__bulk-icon[disabled] {
-    opacity: 0.45;
-    cursor: not-allowed;
 }
 
 .acreditaciones-acreditados-page .ficha-empleados-masivos-modal__import-actions {

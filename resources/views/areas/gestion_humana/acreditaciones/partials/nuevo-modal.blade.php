@@ -33,7 +33,7 @@
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                    <x-lucide-plus width="20" height="20" aria-hidden="true" />
+                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
                 </span>
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo acreditado</h3>
@@ -85,7 +85,7 @@
                         >
                         <button
                             type="button"
-                            class="ficha-empleados-filters__bulk-icon"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                             x-show="identityLocked"
                             x-cloak
                             x-on:click="unlockIdentity()"
@@ -179,7 +179,7 @@
             <div class="cursos-registros-page__form-actions">
                 <button
                     type="submit"
-                    class="ficha-empleados-filters__bulk-icon acreditaciones-acreditados-page__icon-btn--primary"
+                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                     title="Guardar"
                     aria-label="Guardar"
                 >

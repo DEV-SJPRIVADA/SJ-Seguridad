@@ -100,7 +100,7 @@
                                             title="Limpiar filtros"
                                             aria-label="Limpiar filtros"
                                         >
-                                            <x-lucide-filter-x width="20" height="20" aria-hidden="true" />
+                                            <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
                                         </a>
                                     @endif
                                 </div>
@@ -142,20 +142,20 @@
                                 @if ($currentEstado === 'en_ficha')
                                     <button
                                         type="button"
-                                        class="ficha-empleados-filters__bulk-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Plantilla masivos nompr07 — exportar e importar"
                                         aria-label="Plantilla masivos nompr07 — exportar e importar"
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'ficha-masivos')"
                                     >
-                                        <x-lucide-upload width="20" height="20" aria-hidden="true" />
+                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
                                     </button>
 
                                     @if ($canExportArchive ?? false)
                                         <x-export-excel
                                             route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
                                             label=""
-                                            class="btn btn--secondary btn--sm"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         />
                                     @endif
                                 @endif
