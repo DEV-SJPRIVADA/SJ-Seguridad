@@ -5,7 +5,7 @@
             <div class="ficha-empleados-masivos-modal__header">
                 <div class="ficha-empleados-masivos-modal__heading">
                     <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                        <x-lucide-graduation-cap width="20" height="20" aria-hidden="true" />
+                        <x-lucide-graduation-cap width="18" height="18" aria-hidden="true" />
                     </span>
                     <div>
                         <h3 class="ficha-empleados-masivos-modal__title">Cursos del empleado</h3>
@@ -55,9 +55,13 @@
                                 <td>
                                     @if ($curso->hasDocument())
                                         <a
-                                            class="btn btn--secondary btn--sm"
+                                            class="cursos-catalogo-page__icon-btn"
                                             href="{{ route('gestion-humana.ficha-empleados.employees.cursos.document', [$entry, $curso]) }}"
-                                        >Descargar</a>
+                                            title="Descargar"
+                                            aria-label="Descargar"
+                                        >
+                                            <x-lucide-download width="16" height="16" aria-hidden="true" />
+                                        </a>
                                     @else
                                         <span class="text-muted">Sin archivo</span>
                                     @endif

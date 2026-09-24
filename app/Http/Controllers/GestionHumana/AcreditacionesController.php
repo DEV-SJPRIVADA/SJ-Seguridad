@@ -5,6 +5,7 @@ namespace App\Http\Controllers\GestionHumana;
 use App\Exports\AcreditacionesImportTemplateExport;
 use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionCargoRequest;
@@ -27,6 +28,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -102,11 +104,18 @@ class AcreditacionesController extends Controller
             $cargoApoOptions,
         );
 
+        $filterFichaEstadoOptions = [
+            ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos en ficha'],
+            ['value' => EmployeeFichaProfile::STATUS_DESVINCULADO, 'label' => 'Desvinculados'],
+            ['value' => 'todos', 'label' => 'Todos (ficha)'],
+        ];
+
         return view('areas.gestion_humana.acreditaciones.acreditados', [
             'subTabs' => $this->getAcreditacionesSubTabs('acreditados'),
             'canEdit' => $canEdit,
             'filters' => $filters,
             'filterEstadoOptions' => $filterEstadoOptions,
+            'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
             'filterCargoApoOptions' => $filterCargoApoOptions,
             'cargoApoOptions' => $cargoApoOptions,
             'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
@@ -114,6 +123,11 @@ class AcreditacionesController extends Controller
                 'gestion-humana.acreditaciones.acreditados.datatable',
                 $this->activeAcreditadoFilterQuery($filters),
             ),
+            'bulkSelectableUrl' => route(
+                'gestion-humana.acreditaciones.acreditados.bulk-selectable',
+                $this->activeAcreditadoFilterQuery($filters),
+            ),
+            'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
             'exportUrl' => route(
                 'gestion-humana.acreditaciones.acreditados.export',
                 $this->activeAcreditadoFilterQuery($filters),
@@ -133,6 +147,94 @@ class AcreditacionesController extends Controller
             $this->acreditadoFiltersFromRequest($request),
             $this->acreditacionesAccess->canEdit(auth()->user()),
         );
+    }
+
+    public function bulkSelectable(Request $request): JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $rows = $this->acreditadoDatatableService->bulkSelectableRows(
+            $this->acreditadoFiltersFromRequest($request),
+        );
+
+        return response()->json(['data' => $rows]);
+    }
+
+    public function bulkUpdate(BulkUpdateAcreditacionAcreditadoRequest $request): RedirectResponse
+    {
+        /** @var list<int> $ids */
+        $ids = array_values(array_map('intval', $request->validated('ids')));
+        $observacionesInput = $request->validated('observaciones');
+        $fechaSolicitudInput = $request->validated('fecha_solicitud');
+
+        $applyObservaciones = is_string($observacionesInput) && trim($observacionesInput) !== '';
+        $applyFechaSolicitud = filled($fechaSolicitudInput);
+
+        $observaciones = $applyObservaciones ? trim((string) $observacionesInput) : null;
+        $fechaSolicitud = $applyFechaSolicitud
+            ? Carbon::parse((string) $fechaSolicitudInput)->toDateString()
+            : null;
+
+        $updatedCount = 0;
+
+        DB::transaction(function () use (
+            $ids,
+            $applyObservaciones,
+            $applyFechaSolicitud,
+            $observaciones,
+            $fechaSolicitud,
+            &$updatedCount,
+        ): void {
+            $rows = AcreditacionAcreditado::query()
+                ->whereIn('id', $ids)
+                ->get();
+
+            foreach ($rows as $row) {
+                if ($applyObservaciones) {
+                    $row->observaciones = $observaciones;
+                }
+
+                if ($applyFechaSolicitud) {
+                    $row->fecha_solicitud = $fechaSolicitud;
+                }
+
+                $row->estado = $this->estadoCalculator->calculate(
+                    $row->fecha_solicitud,
+                    $row->vigencia_acr,
+                );
+                $row->updated_by = auth()->id();
+                $row->save();
+                $updatedCount++;
+            }
+
+            $this->auditLogService->logEvent(
+                eventType: 'acreditacion_acreditado',
+                action: 'bulk_update',
+                metadata: [
+                    'requested_ids' => $ids,
+                    'updated_count' => $updatedCount,
+                    'applied_observaciones' => $applyObservaciones,
+                    'applied_fecha_solicitud' => $applyFechaSolicitud,
+                ],
+                userId: (int) auth()->id(),
+            );
+        });
+
+        $filters = $this->acreditadoFiltersFromRequest($request);
+
+        if ($updatedCount === 0) {
+            return redirect()
+                ->route('gestion-humana.acreditaciones.acreditados', $this->activeAcreditadoFilterQuery($filters))
+                ->with('error', 'No se actualizó ningún registro.');
+        }
+
+        $message = $updatedCount === 1
+            ? '1 acreditado actualizado.'
+            : "{$updatedCount} acreditados actualizados.";
+
+        return redirect()
+            ->route('gestion-humana.acreditaciones.acreditados', $this->activeAcreditadoFilterQuery($filters))
+            ->with('status', $message);
     }
 
     public function acreditadosLookup(Request $request): JsonResponse
@@ -349,6 +451,15 @@ class AcreditacionesController extends Controller
         return redirect()
             ->route('gestion-humana.acreditaciones.acreditados')
             ->with('status', $message)
+            ->with('import_done', true)
+            ->with('import_result', [
+                'imported' => $stats['imported'],
+                'updated' => $stats['updated'],
+                'skipped' => $stats['skipped'],
+                'empty_rows' => $stats['empty_rows'],
+                'failures_count' => $stats['skipped'],
+                'report_token' => $token,
+            ])
             ->with('import_failures', array_slice($stats['failures'], 0, 50))
             ->with('import_report_token', $token);
     }
@@ -534,10 +645,20 @@ class AcreditacionesController extends Controller
      *     estado: string,
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
+     *     ficha_estado: string,
      * }
      */
     private function acreditadoFiltersFromRequest(Request $request): array
     {
+        $fichaEstado = (string) $request->input('ficha_estado', EmployeeFichaProfile::STATUS_ACTIVO);
+        if (! in_array($fichaEstado, [
+            EmployeeFichaProfile::STATUS_ACTIVO,
+            EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'todos',
+        ], true)) {
+            $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;
+        }
+
         return [
             'document_number' => trim((string) $request->input('document_number', '')),
             'cargo' => trim((string) $request->input('cargo', '')),
@@ -545,6 +666,7 @@ class AcreditacionesController extends Controller
             'estado' => (string) $request->input('estado', 'todos'),
             'vigencia_desde' => trim((string) $request->input('vigencia_desde', '')),
             'vigencia_hasta' => trim((string) $request->input('vigencia_hasta', '')),
+            'ficha_estado' => $fichaEstado,
         ];
     }
 
@@ -556,6 +678,7 @@ class AcreditacionesController extends Controller
      *     estado: string,
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
+     *     ficha_estado: string,
      * }  $filters
      * @return array<string, string>
      */
@@ -586,6 +709,9 @@ class AcreditacionesController extends Controller
         if ($filters['vigencia_hasta'] !== '') {
             $query['vigencia_hasta'] = $filters['vigencia_hasta'];
         }
+
+        // Always pass ficha_estado so datatable/export keep the same default (activo).
+        $query['ficha_estado'] = $filters['ficha_estado'];
 
         return $query;
     }

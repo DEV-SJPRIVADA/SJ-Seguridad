@@ -41,20 +41,15 @@
 
     <div class="page-section ficha-empleados-page req-manage-page">
         <div class="app-container">
-            @if (session('status'))
-                @php
-                    $importResult = session('import_result');
-                    $importHasErrors = is_array($importResult) && (($importResult['failures_count'] ?? $importResult['failed'] ?? 0) > 0);
-                @endphp
-                <div class="alert {{ $importHasErrors ? 'alert--warning' : 'alert--success' }} ficha-empleados-page__alert">
-                    {{ session('status') }}
-                </div>
+            @php
+                $hasImportFlash = session()->has('import_done') || session()->has('import_result');
+            @endphp
+
+            @if (session('status') && ! $hasImportFlash)
+                <div class="alert alert--success ficha-empleados-page__alert">{{ session('status') }}</div>
             @endif
 
-            @include('partials.import-failure-report', [
-                'importResult' => session('import_result'),
-                'downloadRoute' => 'gestion-humana.ficha-empleados.employees.import-report',
-            ])
+            <x-import-result-modal download-route="gestion-humana.ficha-empleados.employees.import-report" />
 
             @if ($errors->has('export'))
                 <div class="alert alert--danger ficha-empleados-page__alert">{{ $errors->first('export') }}</div>
@@ -100,7 +95,7 @@
                                             title="Limpiar filtros"
                                             aria-label="Limpiar filtros"
                                         >
-                                            <x-lucide-filter-x width="20" height="20" aria-hidden="true" />
+                                            <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
                                         </a>
                                     @endif
                                 </div>
@@ -136,26 +131,33 @@
 
                             <div class="ficha-empleados-filters__actions">
                                 @if ($canManage)
-                                    <a href="{{ route('gestion-humana.ficha-empleados.employees.create') }}" class="btn btn--primary btn--sm">Nuevo empleado</a>
+                                    <a
+                                        href="{{ route('gestion-humana.ficha-empleados.employees.create') }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        title="Nuevo empleado"
+                                        aria-label="Nuevo empleado"
+                                    >
+                                        <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                    </a>
                                 @endif
 
                                 @if ($currentEstado === 'en_ficha')
                                     <button
                                         type="button"
-                                        class="ficha-empleados-filters__bulk-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Plantilla masivos nompr07 — exportar e importar"
                                         aria-label="Plantilla masivos nompr07 — exportar e importar"
                                         x-data=""
                                         x-on:click.prevent="$dispatch('open-modal', 'ficha-masivos')"
                                     >
-                                        <x-lucide-upload width="20" height="20" aria-hidden="true" />
+                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
                                     </button>
 
                                     @if ($canExportArchive ?? false)
                                         <x-export-excel
                                             route="{{ route('gestion-humana.ficha-empleados.employees.export-archive-template', request()->query()) }}"
                                             label=""
-                                            class="btn btn--secondary btn--sm"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         />
                                     @endif
                                 @endif
@@ -214,7 +216,7 @@
                 @include('areas.gestion_humana.ficha-empleados.partials.masivos-modal', [
                     'filters' => $filters,
                     'canManage' => $canManage,
-                    'show' => $errors->has('export') || $errors->has('import_file') || (is_array(session('import_result')) && ((session('import_result.failures_count') ?? 0) > 0 || session('import_result.report_token'))),
+                    'show' => $errors->has('export') || $errors->has('import_file'),
                 ])
             @endif
         </div>

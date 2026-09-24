@@ -17,14 +17,15 @@
 
     <div class="page-section comercial-clients-page comercial-clients-page--list req-manage-page">
         <div class="app-container">
-            @if (session('status'))
+            @php
+                $hasImportFlash = session()->has('import_done') || session()->has('import_result');
+            @endphp
+
+            @if (session('status') && ! $hasImportFlash)
                 <div class="alert alert--success comercial-clients-page__alert">{{ session('status') }}</div>
             @endif
 
-            @include('partials.import-failure-report', [
-                'importResult' => session('import_result'),
-                'downloadRoute' => 'comercial.matriz.clients.import-report',
-            ])
+            <x-import-result-modal download-route="comercial.matriz.clients.import-report" />
 
             <div class="panel comercial-clients-panel">
                 <div class="panel__header panel__header--compact">
@@ -217,7 +218,7 @@
                 @include('areas.comercial.matriz-clientes.partials.masivos-modal', [
                     'filters' => $filters,
                     'canManage' => $canManage,
-                    'show' => $errors->has('export') || $errors->has('import_file') || (is_array(session('import_result')) && ((session('import_result.failures_count') ?? 0) > 0 || session('import_result.report_token'))),
+                    'show' => $errors->has('export') || $errors->has('import_file'),
                 ])
             @endif
         </div>

@@ -62,16 +62,17 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 ### Registrar o editar un acreditado
 
-1. En **Acreditados**, pulse el botón para agregar (o editar una fila).
-2. Indique la **cédula**: el sistema busca el nombre en Ficha. Si la cédula no está en Ficha, no podrá guardar.
-3. Complete el **CARGO** (texto), elija el **CARGO APO** del listado del catálogo y, si aplica, observaciones.
+1. En **Acreditados**, pulse el botón para agregar (o el lápiz de una fila para editar).
+2. Indique la **cédula**: el sistema busca el nombre en Ficha. Si la cédula no está en Ficha, no podrá guardar. En edición la identidad queda bloqueada; use el icono de cambiar persona si debe corregir cédula.
+3. Complete el **CARGO** (texto), elija el **CARGO APO** del listado del catálogo (buscador) y, si aplica, observaciones.
 4. Indique al menos una fecha: **VIGEN.ACR** y/o **fecha de solicitud**.
-5. Revise el **estado** que muestra el sistema (solo lectura) y guarde.
+5. Revise el **estado** que muestra el sistema (solo lectura; se recalcula al guardar) y pulse **Guardar cambios**.
 6. Si ya existía la misma cédula con el mismo CARGO APO, estará editando ese registro (no se crea otro).
 
 ### Filtrar, exportar y eliminar
 
-1. Use los filtros (estado, cédula, cargo, CARGO APO, rango de fechas de vigencia). Los botones de filtrar, limpiar y exportar son iconos (pase el cursor para ver la ayuda).
+1. Use los filtros (estado de acreditación, estado en ficha, cédula, cargo, CARGO APO, rango de fechas de vigencia). Por defecto solo aparecen empleados **activos en ficha**; elija «Desvinculados» o «Todos (ficha)» para ver inactivos. Los botones de filtrar, limpiar y exportar son iconos (pase el cursor para ver la ayuda).
+2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro) y usar **Actualizar seleccionados** para poner la misma observación y/o fecha de solicitud a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO.
 2. Para Excel del listado, use el icono de Excel: se descarga según los filtros actuales. Incluye el estado calculado.
 3. Para eliminar, confirme en el aviso: el registro desaparece de forma permanente.
 
@@ -105,5 +106,9 @@ El sistema también recalcula estos estados de madrugada según el calendario.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
-| 1.0 | 2026-09-23 | Documentador | Version inicial FEAT-036: tablero Acreditaciones (Acreditados, Catálogo, import/export; placeholders Dashboard/Reporte/Validaciones/Export Apo). |
+| 1.5 | 2026-09-24 | UI | Modal «Actualizar seleccionados»: chrome unificado, preview de filas, Aplicar cambios. |
+| 1.4 | 2026-09-24 | UI | Modal editar acreditado: chrome unificado, identidad bloqueable, CARGO APO searchable-select. |
+| 1.3 | 2026-09-24 | Feature | Acreditados: selección masiva + modal observaciones/fecha solicitud. |
+| 1.2 | 2026-09-24 | Feature | Acreditados: filtro «Estado en ficha» (por defecto solo activos; opción desvinculados/todos). |
 | 1.1 | 2026-09-23 | UI | Acciones de Acreditados (filtros, export, modales) como iconos Lucide. |
+| 1.0 | 2026-09-23 | Documentador | Version inicial FEAT-036: tablero Acreditaciones (Acreditados, Catálogo, import/export; placeholders Dashboard/Reporte/Validaciones/Export Apo). |

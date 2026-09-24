@@ -33,9 +33,13 @@ Todos los selectores en formularios, modales y filtros deben usar `<x-searchable
 
 Tablas operativas grandes: `serverSide: true` + endpoint JSON (no `@foreach` masivo). Regla y riesgos a consultar antes de codear: [`.cursor/rules/datatables-server-side.mdc`](datatables-server-side.mdc).
 
-## Navegacion chrome (areas / tableros / pestanas)
+## Navegacion chrome
 
 Mismo estilo pill para sidebar (`.sidebar-link`), tableros y pestanas (`.module-tab`). Padding contenedor ↔ botones: `0.2rem`. Detalle: [`.cursor/rules/nav-chrome-ui.mdc`](nav-chrome-ui.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).
+
+## Botones icon-only
+
+Chrome/filtros/toolbar: `.req-manage-filters__icon-btn` (`--primary` / `--ghost` / `--danger`). Acciones de fila: `.cursos-catalogo-page__icon-btn`. No crear familias CSS por modulo. Mapa de iconos y ejemplos: [`.cursor/rules/icon-buttons-ui.mdc`](icon-buttons-ui.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).
 
 ## Workflow multi-agente
 

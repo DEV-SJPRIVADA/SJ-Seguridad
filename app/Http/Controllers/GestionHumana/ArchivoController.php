@@ -288,6 +288,7 @@ class ArchivoController extends Controller
         return redirect()
             ->route('gestion-humana.archivo.labor-histories.index')
             ->with('status', $message)
+            ->with('import_done', true)
             ->with('import_result', $importResult);
     }
 

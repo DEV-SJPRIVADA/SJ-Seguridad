@@ -542,6 +542,15 @@ class CursosController extends Controller
         return redirect()
             ->route('gestion-humana.cursos.registros')
             ->with('status', $message)
+            ->with('import_done', true)
+            ->with('import_result', [
+                'imported' => $stats['imported'],
+                'updated' => $stats['updated'],
+                'skipped' => $stats['skipped'],
+                'empty_rows' => $stats['empty_rows'],
+                'failures_count' => $stats['skipped'],
+                'report_token' => $token,
+            ])
             ->with('import_failures', array_slice($stats['failures'], 0, 50))
             ->with('import_report_token', $token);
     }

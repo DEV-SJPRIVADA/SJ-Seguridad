@@ -42,6 +42,8 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/dashboard` | `dashboard` | Placeholder. `acreditaciones.view` |
 | GET | `/acreditados` | `acreditados` | Shell listado. `acreditaciones.view` |
 | GET | `/acreditados/datatable` | `acreditados.datatable` | JSON DataTables. `acreditaciones.view` |
+| GET | `/acreditados/bulk-selectable` | `acreditados.bulk-selectable` | JSON ids del filtro para selección masiva. `acreditaciones.edit` |
+| POST | `/acreditados/bulk-update` | `acreditados.bulk-update` | Actualiza obs. y/o fecha solicitud de ids. `acreditaciones.edit` |
 | GET | `/acreditados/lookup` | `acreditados.lookup` | Lookup Ficha por cedula. `acreditaciones.edit` |
 | GET | `/acreditados/exportar` | `acreditados.export` | Excel filtrado. `acreditaciones.view` |
 | GET | `/acreditados/plantilla-importacion` | `acreditados.import-template` | Plantilla vacia. `acreditaciones.edit` |
@@ -89,7 +91,9 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | `areas/gestion_humana/acreditaciones/catalogo.blade.php` | Listado + CRUD catalogo |
 | `areas/gestion_humana/acreditaciones/placeholder.blade.php` | Dashboard / Reporte Diario / Validaciones / Export Apo |
 | `areas/gestion_humana/acreditaciones/partials/subnav.blade.php` | Pestanas `.module-tab` |
-| `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal create/edit acreditado |
+| `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal crear acreditado |
+| `areas/gestion_humana/acreditaciones/partials/edit-modal.blade.php` | Modal editar (identidad bloqueable, CARGO APO searchable-select) |
+| `areas/gestion_humana/acreditaciones/partials/bulk-update-modal.blade.php` | Modal actualizar seleccionados (fecha solicitud / observaciones) |
 | `areas/gestion_humana/acreditaciones/partials/masivos-modal.blade.php` | Modal import masivo |
 
 ## Modelos y tablas
@@ -181,7 +185,8 @@ Prioridad (`AcreditacionEstadoCalculator`):
 
 5. Unicidad: un registro por `(document_number, cargo_apo)`.
 6. `cargo_apo` debe existir como valor **activo** en `acreditacion_cargos` (comparacion trim + case-insensitive via `forCargoApo`).
-7. Filtros listado/export: `estado`, `document_number` (parcial), `cargo` (parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
+7. Filtros listado/export: `estado` (acreditacion), `ficha_estado` (`activo` por defecto | `desvinculado` | `todos` via `employee_ficha_profiles.employment_status` por cedula), `document_number` (parcial), `cargo` (parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
+8. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones` y/o `fecha_solicitud` (al menos un campo); con fecha → recalcula estado (EN PROCESO).
 8. Eliminar: confirmacion UI; DELETE fisico.
 
 ### Catalogo

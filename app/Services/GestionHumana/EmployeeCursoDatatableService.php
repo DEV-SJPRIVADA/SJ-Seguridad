@@ -236,17 +236,27 @@ final class EmployeeCursoDatatableService
         $parts = ['<div class="cursos-registros-page__document-cell">'];
 
         if ($curso->hasDocument()) {
-            $parts[] = '<div class="cursos-registros-page__document-links">';
+            $parts[] = '<div class="cursos-registros-page__document-links cursos-catalogo-page__row-actions">';
             $parts[] = sprintf(
-                '<a class="btn btn--secondary btn--sm" href="%s">Descargar</a>',
+                '<a class="cursos-catalogo-page__icon-btn" href="%s" title="Descargar" aria-label="Descargar">'.
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+                'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+                '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/>'.
+                '<line x1="12" x2="12" y1="15" y2="3"/></svg></a>',
                 e(route('gestion-humana.cursos.registros.document.download', $curso)),
             );
 
             if ($canEdit) {
                 $parts[] = sprintf(
-                    '<form method="POST" action="%s" class="inline" onsubmit="return confirm(%s);">'.
+                    '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form" onsubmit="return confirm(%s);">'.
                     '%s<input type="hidden" name="_method" value="DELETE">'.
-                    '<button type="submit" class="btn btn--ghost btn--sm">Quitar</button></form>',
+                    '<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" '.
+                    'title="Quitar documento" aria-label="Quitar documento">'.
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+                    'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+                    '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>'.
+                    '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'.
+                    '</button></form>',
                     e(route('gestion-humana.cursos.registros.document.destroy', $curso)),
                     e(json_encode('¿Quitar el documento?', JSON_UNESCAPED_UNICODE)),
                     $this->csrfField(),
@@ -266,9 +276,20 @@ final class EmployeeCursoDatatableService
                 '<input id="%s" name="document" type="file" class="cursos-registros-page__file-input" '.
                 'accept=".pdf,.jpg,.jpeg,.png,.webp" required>'.
                 '<span class="cursos-registros-page__file-name cursos-registros-page__file-name--compact" data-curso-upload-name>Sin archivo</span>'.
-                '<div class="cursos-registros-page__file-actions">'.
-                '<label for="%s" class="btn btn--secondary btn--sm">Elegir archivo</label>'.
-                '<button type="submit" class="btn btn--primary btn--sm">Subir</button>'.
+                '<div class="cursos-registros-page__file-actions cursos-catalogo-page__row-actions">'.
+                '<label for="%s" class="cursos-catalogo-page__icon-btn" title="Elegir archivo" aria-label="Elegir archivo">'.
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+                'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+                '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>'.
+                '<path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 12v6"/><path d="m15 15-3-3-3 3"/></svg>'.
+                '</label>'.
+                '<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit" '.
+                'title="Subir" aria-label="Subir">'.
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+                'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+                '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/>'.
+                '<line x1="12" x2="12" y1="3" y2="15"/></svg>'.
+                '</button>'.
                 '</div></form>',
                 e(route('gestion-humana.cursos.registros.document.upload', $curso)),
                 $this->csrfField(),

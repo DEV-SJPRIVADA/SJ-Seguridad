@@ -4,7 +4,7 @@
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                    <x-lucide-file-spreadsheet width="20" height="20" aria-hidden="true" />
+                    <x-lucide-file-spreadsheet width="18" height="18" aria-hidden="true" />
                 </span>
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Exportar archivo</h3>

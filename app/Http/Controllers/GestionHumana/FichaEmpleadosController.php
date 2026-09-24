@@ -292,6 +292,7 @@ class FichaEmpleadosController extends Controller
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.index')
             ->with('status', $message)
+            ->with('import_done', true)
             ->with('import_result', $importResult);
     }
 

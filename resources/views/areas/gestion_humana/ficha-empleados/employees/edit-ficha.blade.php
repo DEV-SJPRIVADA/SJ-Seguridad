@@ -25,7 +25,7 @@
                             x-data=""
                             x-on:click="$dispatch('open-modal', 'ficha-employee-cursos')"
                         >
-                            <x-lucide-graduation-cap width="20" height="20" aria-hidden="true" />
+                            <x-lucide-graduation-cap width="18" height="18" aria-hidden="true" />
                         </button>
                     @endif
                     @if ($employmentHistory->isNotEmpty())
@@ -37,7 +37,7 @@
                             x-data=""
                             x-on:click="$dispatch('open-modal', 'ficha-employment-history')"
                         >
-                            <x-lucide-history width="20" height="20" aria-hidden="true" />
+                            <x-lucide-history width="18" height="18" aria-hidden="true" />
                         </button>
                     @endif
                 </div>

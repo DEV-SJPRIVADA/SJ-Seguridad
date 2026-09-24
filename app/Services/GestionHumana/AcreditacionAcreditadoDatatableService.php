@@ -33,7 +33,7 @@ final class AcreditacionAcreditadoDatatableService
         $this->applyDatatableSearch($query, $request);
         $recordsFiltered = (clone $query)->count();
 
-        $this->applyOrdering($query, $request);
+        $this->applyOrdering($query, $request, $canEdit);
 
         if ($length !== -1) {
             $query->skip($start)->take(max(1, min($maxLength, $length)));
@@ -55,6 +55,47 @@ final class AcreditacionAcreditadoDatatableService
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Filas del filtro actual elegibles para acción masiva.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return list<array{
+     *     id: int,
+     *     document_number: string,
+     *     full_name: string,
+     *     cargo: string,
+     *     cargo_apo: string,
+     *     estado: string,
+     *     vigencia_acr: string
+     * }>
+     */
+    public function bulkSelectableRows(array $filters): array
+    {
+        return $this->listService
+            ->filteredQuery($filters, ordered: false)
+            ->orderByDesc('id')
+            ->get([
+                'id',
+                'document_number',
+                'full_name',
+                'cargo',
+                'cargo_apo',
+                'estado',
+                'vigencia_acr',
+            ])
+            ->map(fn (AcreditacionAcreditado $row): array => [
+                'id' => $row->id,
+                'document_number' => (string) $row->document_number,
+                'full_name' => (string) $row->full_name,
+                'cargo' => (string) $row->cargo,
+                'cargo_apo' => (string) $row->cargo_apo,
+                'estado' => $this->estadoCalculator->estadoLabel((string) $row->estado),
+                'vigencia_acr' => optional($row->vigencia_acr)?->format('Y-m-d') ?: '—',
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -83,7 +124,7 @@ final class AcreditacionAcreditadoDatatableService
     /**
      * @param  Builder<AcreditacionAcreditado>  $query
      */
-    private function applyOrdering(Builder $query, Request $request): void
+    private function applyOrdering(Builder $query, Request $request, bool $canEdit): void
     {
         if (! $request->has('order.0.column')) {
             $query->orderByDesc('id');
@@ -93,9 +134,11 @@ final class AcreditacionAcreditadoDatatableService
 
         $columnIndex = (int) $request->input('order.0.column', 0);
         $direction = $request->input('order.0.dir', 'desc') === 'asc' ? 'asc' : 'desc';
+        $offset = $canEdit ? 1 : 0;
+        $logical = $columnIndex - $offset;
 
-        // Columns: CEDULA, NOMBRE, CARGO, CARGO APO, VIGEN.ACR, ESTADO, OBSERVACIONES, FECHA SOLICITUD [, Acciones]
-        match ($columnIndex) {
+        // Logical: CEDULA, NOMBRE, CARGO, CARGO APO, VIGEN.ACR, ESTADO, OBSERVACIONES, FECHA SOLICITUD [, Acciones]
+        match ($logical) {
             0 => $query->orderBy('document_number', $direction),
             1 => $query->orderBy('full_name', $direction),
             2 => $query->orderBy('cargo', $direction),
@@ -120,7 +163,13 @@ final class AcreditacionAcreditadoDatatableService
             default => 'status-pill status-pill--danger',
         };
 
-        $cells = [
+        $cells = [];
+
+        if ($canEdit) {
+            $cells[] = $this->formatSelectCell($row);
+        }
+
+        $cells = array_merge($cells, [
             e((string) $row->document_number),
             e((string) $row->full_name),
             e((string) $row->cargo),
@@ -129,13 +178,36 @@ final class AcreditacionAcreditadoDatatableService
             sprintf('<span class="%s">%s</span>', e($estadoClass), e($estadoLabel)),
             e(Str::limit((string) ($row->observaciones ?? ''), 60) ?: '—'),
             e(optional($row->fecha_solicitud)?->format('Y-m-d') ?: '—'),
-        ];
+        ]);
 
         if ($canEdit) {
             $cells[] = $this->formatActionsCell($row);
         }
 
         return $cells;
+    }
+
+    private function formatSelectCell(AcreditacionAcreditado $row): string
+    {
+        $payload = e(json_encode([
+            'id' => $row->id,
+            'document_number' => $row->document_number,
+            'full_name' => $row->full_name,
+            'cargo' => $row->cargo,
+            'cargo_apo' => $row->cargo_apo,
+            'estado' => $this->estadoCalculator->estadoLabel((string) $row->estado),
+            'vigencia_acr' => optional($row->vigencia_acr)?->format('Y-m-d') ?: '—',
+        ], JSON_UNESCAPED_UNICODE));
+
+        return sprintf(
+            '<label class="cursos-registros-page__select-label">'.
+            '<input type="checkbox" class="cursos-registros-page__select-checkbox js-acreditado-row-select" '.
+            'value="%d" data-acreditado-row="%s" aria-label="Seleccionar cédula %s">'.
+            '</label>',
+            $row->id,
+            $payload,
+            e((string) $row->document_number),
+        );
     }
 
     private function formatActionsCell(AcreditacionAcreditado $row): string

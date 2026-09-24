@@ -94,12 +94,16 @@
                                     />
                                 </div>
                                 <div class="form-field cursos-registros-page__filter-actions">
-                                    <button type="submit" class="btn btn--primary btn--sm">Filtrar</button>
-                                    <a href="{{ route('gestion-humana.seleccion.ingresos') }}" class="btn btn--secondary btn--sm">Limpiar</a>
+                                    <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
+                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                    <a href="{{ route('gestion-humana.seleccion.ingresos') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
+                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                    </a>
                                     <x-export-excel
                                         route="{{ $exportUrl }}"
                                         label=""
-                                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__export-icon"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                     />
                                 </div>
                             </div>
@@ -115,12 +119,12 @@
                                 <div class="cursos-registros-page__table-actions">
                                     <button
                                         type="button"
-                                        class="ficha-empleados-filters__bulk-icon cursos-registros-page__add-btn"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                         title="Nuevo ingreso"
                                         aria-label="Nuevo ingreso"
                                         x-on:click.prevent="$dispatch('open-modal', 'seleccion-ingreso-nuevo')"
                                     >
-                                        <x-lucide-plus width="20" height="20" aria-hidden="true" />
+                                        <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                     </button>
                                 </div>
                             @endif
@@ -169,7 +173,7 @@
                         <div class="ficha-empleados-masivos-modal__header">
                             <div class="ficha-empleados-masivos-modal__heading">
                                 <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                                    <x-lucide-plus width="20" height="20" aria-hidden="true" />
+                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                 </span>
                                 <div>
                                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo ingreso</h3>

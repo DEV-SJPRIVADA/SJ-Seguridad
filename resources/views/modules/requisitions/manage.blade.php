@@ -222,10 +222,25 @@
                                                 </span>
                                             </td>
                                             <td class="table-actions">
-                                                <a href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary btn--sm">Abrir</a>
-                                                <a href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}" target="_blank" class="btn btn--secondary btn--sm" title="Previsualizar e Imprimir">
-                                                    Imprimir
-                                                </a>
+                                                <div class="cursos-catalogo-page__row-actions">
+                                                    <a
+                                                        href="{{ route('requisitions.edit', ['module' => $moduleKey, 'requisition' => $requisition]) }}"
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Abrir"
+                                                        aria-label="Abrir"
+                                                    >
+                                                        <x-lucide-square-pen width="16" height="16" aria-hidden="true" />
+                                                    </a>
+                                                    <a
+                                                        href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}"
+                                                        target="_blank"
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Previsualizar e imprimir"
+                                                        aria-label="Previsualizar e imprimir"
+                                                    >
+                                                        <x-lucide-printer width="16" height="16" aria-hidden="true" />
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty

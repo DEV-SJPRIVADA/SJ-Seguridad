@@ -94,7 +94,14 @@
                                                 <input type="checkbox" name="is_active" value="1" class="form-check" checked>
                                                 <span>Activo</span>
                                             </label>
-                                            <button type="submit" class="btn btn--primary btn--sm">Agregar</button>
+                                            <button
+                                                type="submit"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                                title="Agregar"
+                                                aria-label="Agregar"
+                                            >
+                                                <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                            </button>
                                         </div>
                                     </div>
                                 </form>
@@ -122,29 +129,42 @@
                                                         </span>
                                                     </td>
                                                     <td class="table-actions">
-                                                        <button
-                                                            type="button"
-                                                            class="btn btn--secondary btn--sm btn-seleccion-catalog-edit"
-                                                            data-label="{{ $catalog['label'] }}"
-                                                            data-code="{{ $item->code }}"
-                                                            data-name="{{ $item->name }}"
-                                                            data-active="{{ $item->is_active ? '1' : '0' }}"
-                                                            data-sort="{{ $item->sort_order ?? 0 }}"
-                                                            data-code-label="{{ $catalog['columnLabels']['code'] }}"
-                                                            data-name-label="{{ $catalog['columnLabels']['name'] }}"
-                                                            data-update-url="{{ route('gestion-humana.seleccion.catalogos.update', ['type' => $catalog['key'], 'item' => $item->id]) }}"
-                                                        >Editar</button>
+                                                        <div class="cursos-catalogo-page__row-actions">
+                                                            <button
+                                                                type="button"
+                                                                class="cursos-catalogo-page__icon-btn btn-seleccion-catalog-edit"
+                                                                title="Editar"
+                                                                aria-label="Editar"
+                                                                data-label="{{ $catalog['label'] }}"
+                                                                data-code="{{ $item->code }}"
+                                                                data-name="{{ $item->name }}"
+                                                                data-active="{{ $item->is_active ? '1' : '0' }}"
+                                                                data-sort="{{ $item->sort_order ?? 0 }}"
+                                                                data-code-label="{{ $catalog['columnLabels']['code'] }}"
+                                                                data-name-label="{{ $catalog['columnLabels']['name'] }}"
+                                                                data-update-url="{{ route('gestion-humana.seleccion.catalogos.update', ['type' => $catalog['key'], 'item' => $item->id]) }}"
+                                                            >
+                                                                <x-lucide-pencil width="16" height="16" aria-hidden="true" />
+                                                            </button>
 
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('gestion-humana.seleccion.catalogos.destroy', ['type' => $catalog['key'], 'item' => $item->id]) }}"
-                                                            class="ficha-empleados-catalogs-page__delete-form"
-                                                            onsubmit="return confirm('Eliminar este registro del catalogo?')"
-                                                        >
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn--danger btn--sm">Eliminar</button>
-                                                        </form>
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('gestion-humana.seleccion.catalogos.destroy', ['type' => $catalog['key'], 'item' => $item->id]) }}"
+                                                                class="cursos-catalogo-page__delete-form"
+                                                                onsubmit="return confirm('Eliminar este registro del catalogo?')"
+                                                            >
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button
+                                                                    type="submit"
+                                                                    class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
+                                                                    title="Eliminar"
+                                                                    aria-label="Eliminar"
+                                                                >
+                                                                    <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             @empty
@@ -168,7 +188,9 @@
         <div class="panel ficha-empleados-catalogs-page__modal-card">
             <div class="panel__header">
                 <h3 class="panel-title" id="seleccion-catalog-modal-title">Editar catalogo</h3>
-                <button type="button" class="btn btn--secondary btn--sm" data-catalog-modal-close aria-label="Cerrar">✕</button>
+                <button type="button" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" data-catalog-modal-close title="Cerrar" aria-label="Cerrar">
+                    <x-lucide-x width="18" height="18" aria-hidden="true" />
+                </button>
             </div>
             <form method="POST" id="seleccion-catalog-edit-form" class="panel__body form-stack">
                 @csrf

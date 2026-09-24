@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana;
 
 use App\Models\AcreditacionAcreditado;
+use App\Models\EmployeeFichaProfile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -16,6 +17,7 @@ class AcreditacionAcreditadoListService
      *     estado?: string|null,
      *     vigencia_desde?: string|null,
      *     vigencia_hasta?: string|null,
+     *     ficha_estado?: string|null,
      * }  $filters
      * @return Builder<AcreditacionAcreditado>
      */
@@ -57,7 +59,39 @@ class AcreditacionAcreditadoListService
             $query->whereDate('vigencia_acr', '<=', $vigenciaHasta);
         }
 
+        $this->applyFichaEstadoFilter($query, $filters);
+
         return $query;
+    }
+
+    /**
+     * @param  Builder<AcreditacionAcreditado>  $query
+     * @param  array<string, mixed>  $filters
+     */
+    private function applyFichaEstadoFilter(Builder $query, array $filters): void
+    {
+        $fichaEstado = (string) ($filters['ficha_estado'] ?? EmployeeFichaProfile::STATUS_ACTIVO);
+
+        if ($fichaEstado === '' || $fichaEstado === 'todos') {
+            return;
+        }
+
+        if (! in_array($fichaEstado, [
+            EmployeeFichaProfile::STATUS_ACTIVO,
+            EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ], true)) {
+            $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;
+        }
+
+        $query->whereExists(function ($sub) use ($fichaEstado): void {
+            $sub->selectRaw('1')
+                ->from('employee_ficha_profiles')
+                ->whereColumn(
+                    'employee_ficha_profiles.document_number',
+                    'acreditacion_acreditados.document_number',
+                )
+                ->where('employee_ficha_profiles.employment_status', $fichaEstado);
+        });
     }
 
     /**
