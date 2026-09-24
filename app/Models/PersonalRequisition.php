@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 class PersonalRequisition extends Model
 {
@@ -174,6 +175,20 @@ class PersonalRequisition extends Model
     public function statusLogs(): HasMany
     {
         return $this->hasMany(PersonalRequisitionStatusLog::class);
+    }
+
+    public function humanResourcesReceivedAt(): ?Carbon
+    {
+        $logs = $this->relationLoaded('statusLogs')
+            ? $this->statusLogs
+            : $this->statusLogs()->get();
+
+        $log = $logs
+            ->where('to_status', self::STATUS_SOLICITADA)
+            ->sortBy('id')
+            ->first();
+
+        return $log?->created_at;
     }
 
     public function managementApprovalDecisionLog(): ?PersonalRequisitionStatusLog

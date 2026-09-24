@@ -7,12 +7,14 @@ use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionReporteDiarioRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionCargoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\UpdateAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\UpdateAcreditacionCargoRequest;
 use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionCargo;
+use App\Models\AcreditacionReporteDiarioFila;
 use App\Models\EmployeeFichaProfile;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\GestionHumana\AcreditacionAcreditadoDatatableService;
@@ -21,6 +23,9 @@ use App\Services\GestionHumana\AcreditacionCargoCatalogService;
 use App\Services\GestionHumana\AcreditacionesAuditLogService;
 use App\Services\GestionHumana\AcreditacionEstadoCalculator;
 use App\Services\GestionHumana\AcreditacionImportService;
+use App\Services\GestionHumana\AcreditacionReporteDiarioDatatableService;
+use App\Services\GestionHumana\AcreditacionReporteDiarioImportService;
+use App\Services\GestionHumana\AcreditacionReporteDiarioListService;
 use App\Traits\HasAcreditacionesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -30,6 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AcreditacionesController extends Controller
@@ -45,6 +51,9 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionEstadoCalculator $estadoCalculator,
         private readonly AcreditacionImportService $importService,
         private readonly AcreditacionesImportTemplateExport $importTemplateExport,
+        private readonly AcreditacionReporteDiarioImportService $reporteDiarioImportService,
+        private readonly AcreditacionReporteDiarioListService $reporteDiarioListService,
+        private readonly AcreditacionReporteDiarioDatatableService $reporteDiarioDatatableService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -528,15 +537,234 @@ class AcreditacionesController extends Controller
         ))->download();
     }
 
-    public function reporteDiario(): View
+    public function reporteDiario(Request $request): View
     {
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
-        return view('areas.gestion_humana.acreditaciones.placeholder', [
+        $canEdit = $this->acreditacionesAccess->canEdit(auth()->user());
+        $filters = $this->reporteDiarioFiltersFromRequest($request);
+
+        /** @var array<string, string> $origenLabels */
+        $origenLabels = config('acreditaciones.reporte_diario.origenes', []);
+
+        $filterOrigenOptions = array_merge(
+            [['value' => 'todos', 'label' => 'Todos']],
+            collect($origenLabels)
+                ->map(fn (string $label, string $code): array => [
+                    'value' => $code,
+                    'label' => $label,
+                ])
+                ->values()
+                ->all(),
+        );
+
+        $today = Carbon::now(config('app.timezone'))->toDateString();
+
+        return view('areas.gestion_humana.acreditaciones.reporte-diario', [
             'subTabs' => $this->getAcreditacionesSubTabs('reporte_diario'),
-            'pageTitle' => 'Reporte Diario',
-            'pageDescription' => 'Gestion humana — reporte diario de acreditaciones',
+            'canEdit' => $canEdit,
+            'filters' => $filters,
+            'filterOrigenOptions' => $filterOrigenOptions,
+            'today' => $today,
+            'datatableUrl' => route(
+                'gestion-humana.acreditaciones.reporte-diario.datatable',
+                $this->activeReporteDiarioFilterQuery($filters),
+            ),
+            'exportUrl' => route(
+                'gestion-humana.acreditaciones.reporte-diario.export',
+                $this->activeReporteDiarioFilterQuery($filters),
+            ),
+            'importUrl' => route('gestion-humana.acreditaciones.reporte-diario.import'),
+            'cargasUrl' => route('gestion-humana.acreditaciones.reporte-diario.cargas'),
+            'activeFilterQuery' => $this->activeReporteDiarioFilterQuery($filters),
         ]);
+    }
+
+    public function reporteDiarioDatatable(Request $request): JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
+
+        return $this->reporteDiarioDatatableService->respond(
+            $request,
+            $this->reporteDiarioFiltersFromRequest($request),
+        );
+    }
+
+    public function exportReporteDiario(Request $request): StreamedResponse
+    {
+        abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
+
+        $filters = $this->reporteDiarioFiltersFromRequest($request);
+        $rows = $this->reporteDiarioListService->all($filters);
+
+        $columns = [
+            ['key' => 'origen', 'label' => 'Origen'],
+            ['key' => 'apellido1', 'label' => 'Apellido1'],
+            ['key' => 'apellido2', 'label' => 'Apellido2'],
+            ['key' => 'nombre1', 'label' => 'Nombre1'],
+            ['key' => 'nombre2', 'label' => 'Nombre2'],
+            ['key' => 'full_name', 'label' => 'Nombre completo'],
+            ['key' => 'document_number', 'label' => 'IdNum'],
+            ['key' => 'cargo', 'label' => 'Cargo'],
+            ['key' => 'estado_apo', 'label' => 'Estado (APO)'],
+            ['key' => 'vigencia_acr', 'label' => 'Vigen.Acr'],
+        ];
+
+        $data = $rows->map(fn (AcreditacionReporteDiarioFila $row): array => [
+            'origen' => $row->origenLabel(),
+            'apellido1' => $row->apellido1,
+            'apellido2' => $row->apellido2,
+            'nombre1' => $row->nombre1,
+            'nombre2' => $row->nombre2,
+            'full_name' => $row->full_name,
+            'document_number' => $row->document_number,
+            'cargo' => $row->cargo,
+            'estado_apo' => $row->resolvedEstadoApo(),
+            'vigencia_acr' => optional($row->vigencia_acr)?->format('Y-m-d'),
+        ]);
+
+        $fecha = $filters['fecha_reporte'];
+
+        return (new BaseExport(
+            $data,
+            $columns,
+            'reporte_diario_apo_'.$fecha.'_'.now()->format('His').'.xlsx',
+            'Reporte Diario APO — '.$fecha.' — '.config('app.name'),
+        ))->download();
+    }
+
+    public function importReporteDiario(ImportAcreditacionReporteDiarioRequest $request): RedirectResponse
+    {
+        try {
+            $result = $this->reporteDiarioImportService->import([
+                'fecha_reporte' => (string) $request->validated('fecha_reporte'),
+                'file_proceso' => $request->file('file_proceso'),
+                'file_acreditado' => $request->file('file_acreditado'),
+                'confirm_replace' => $request->boolean('confirm_replace'),
+            ], $request->user()?->id);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['file_proceso' => $e->getMessage()]);
+        }
+
+        $carga = $result['carga'];
+        $fecha = optional($carga->fecha_reporte)?->format('Y-m-d')
+            ?? (string) $request->validated('fecha_reporte');
+
+        $parts = [];
+        foreach ($result['by_origen'] as $origen => $stats) {
+            $label = config('acreditaciones.reporte_diario.origenes.'.$origen, $origen);
+            $parts[] = sprintf('%s: %d ok, %d fallo(s)', $label, $stats['ok'], $stats['fail']);
+        }
+
+        $message = ($result['replaced'] ? 'Reemplazo' : 'Carga').' finalizada ('.$fecha.'). '.implode(' · ', $parts);
+
+        if ($result['empty_rows'] > 0) {
+            $message .= sprintf(' %d filas vacías ignoradas.', $result['empty_rows']);
+        }
+
+        $token = null;
+        if ($result['failures'] !== []) {
+            $token = Str::uuid()->toString();
+            Cache::put('acreditaciones_reporte_diario_import_report_'.$token, $result['failures'], now()->addHour());
+        }
+
+        $this->auditLogService->logEvent(
+            eventType: 'acreditacion_reporte_diario_carga',
+            action: 'imported',
+            metadata: [
+                'carga_id' => $carga->id,
+                'fecha_reporte' => $fecha,
+                'origins' => $result['origins'],
+                'by_origen' => $result['by_origen'],
+                'replaced' => $result['replaced'],
+                'imported' => $result['imported'],
+                'skipped' => $result['skipped'],
+                'empty_rows' => $result['empty_rows'],
+            ],
+            model: $carga,
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.acreditaciones.reporte-diario', ['fecha_reporte' => $fecha])
+            ->with('status', $message)
+            ->with('import_done', true)
+            ->with('import_result', [
+                'imported' => $result['imported'],
+                'updated' => 0,
+                'skipped' => $result['skipped'],
+                'empty_rows' => $result['empty_rows'],
+                'failures_count' => $result['skipped'],
+                'report_token' => $token,
+                'replaced' => $result['replaced'],
+                'by_origen' => $result['by_origen'],
+            ])
+            ->with('import_failures', array_slice($result['failures'], 0, 50))
+            ->with('import_report_token', $token);
+    }
+
+    public function downloadReporteDiarioImportReport(string $token): StreamedResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        /** @var list<array<string, mixed>>|null $failures */
+        $failures = Cache::get('acreditaciones_reporte_diario_import_report_'.$token);
+
+        if (! is_array($failures)) {
+            abort(404);
+        }
+
+        $columns = [
+            ['key' => 'row', 'label' => 'Fila'],
+            ['key' => 'identifier', 'label' => 'IdNum'],
+            ['key' => 'severity', 'label' => 'Severidad'],
+            ['key' => 'reason', 'label' => 'Motivo'],
+        ];
+
+        $data = collect($failures)->map(fn (array $failure): array => [
+            'row' => $failure['row'] ?? '',
+            'identifier' => $failure['identifier'] ?? '',
+            'severity' => $failure['severity'] ?? '',
+            'reason' => $failure['reason'] ?? '',
+        ]);
+
+        return (new BaseExport(
+            $data,
+            $columns,
+            'reporte_fallos_reporte_diario_'.now()->format('Y-m-d_His').'.xlsx',
+            'Errores importación Reporte Diario APO',
+        ))->download();
+    }
+
+    public function reporteDiarioCargas(): JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
+
+        $cargas = $this->reporteDiarioListService->cargasList()->map(function ($carga): array {
+            return [
+                'id' => $carga->id,
+                'fecha_reporte' => optional($carga->fecha_reporte)?->format('Y-m-d'),
+                'proceso_file_name' => $carga->proceso_file_name,
+                'proceso_rows_ok' => (int) $carga->proceso_rows_ok,
+                'proceso_rows_fail' => (int) $carga->proceso_rows_fail,
+                'proceso_loaded_at' => optional($carga->proceso_loaded_at)?->timezone(config('app.timezone'))->format('Y-m-d H:i'),
+                'proceso_loaded_by' => $carga->procesoLoadedBy?->name,
+                'acreditado_file_name' => $carga->acreditado_file_name,
+                'acreditado_rows_ok' => (int) $carga->acreditado_rows_ok,
+                'acreditado_rows_fail' => (int) $carga->acreditado_rows_fail,
+                'acreditado_loaded_at' => optional($carga->acreditado_loaded_at)?->timezone(config('app.timezone'))->format('Y-m-d H:i'),
+                'acreditado_loaded_by' => $carga->acreditadoLoadedBy?->name,
+                'view_url' => route('gestion-humana.acreditaciones.reporte-diario', [
+                    'fecha_reporte' => optional($carga->fecha_reporte)?->format('Y-m-d'),
+                ]),
+            ];
+        })->values()->all();
+
+        return response()->json(['data' => $cargas]);
     }
 
     public function validaciones(): View
@@ -749,6 +977,46 @@ class AcreditacionesController extends Controller
 
         // Always pass ficha_estado so datatable/export keep the same default (activo).
         $query['ficha_estado'] = $filters['ficha_estado'];
+
+        return $query;
+    }
+
+    /**
+     * @return array{fecha_reporte: string, origen: string, q: string}
+     */
+    private function reporteDiarioFiltersFromRequest(Request $request): array
+    {
+        $origen = (string) $request->input('origen', 'todos');
+        if ($origen !== 'todos' && ! in_array($origen, AcreditacionReporteDiarioFila::ORIGENES, true)) {
+            $origen = 'todos';
+        }
+
+        return [
+            'fecha_reporte' => $this->reporteDiarioListService->resolveFecha(
+                $request->input('fecha_reporte'),
+            ),
+            'origen' => $origen,
+            'q' => trim((string) $request->input('q', '')),
+        ];
+    }
+
+    /**
+     * @param  array{fecha_reporte: string, origen: string, q: string}  $filters
+     * @return array<string, string>
+     */
+    private function activeReporteDiarioFilterQuery(array $filters): array
+    {
+        $query = [
+            'fecha_reporte' => $filters['fecha_reporte'],
+        ];
+
+        if ($filters['origen'] !== '' && $filters['origen'] !== 'todos') {
+            $query['origen'] = $filters['origen'];
+        }
+
+        if ($filters['q'] !== '') {
+            $query['q'] = $filters['q'];
+        }
 
         return $query;
     }

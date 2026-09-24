@@ -76,4 +76,44 @@ return [
             'observaciones' => 'OBSERVACIONES',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporte Diario APO (FEAT-037) — snapshot histórico
+    |--------------------------------------------------------------------------
+    */
+    'reporte_diario' => [
+        'origenes' => [
+            'PROCESO' => 'En proceso',
+            'ACREDITADO' => 'Acreditado APO',
+        ],
+        'headers' => [
+            'PROCESO' => [
+                'apellido1' => ['apellido1', 'apellido 1', 'primer apellido'],
+                'apellido2' => ['apellido2', 'apellido 2', 'segundo apellido'],
+                'nombre1' => ['nombre1', 'nombre 1', 'primer nombre'],
+                'nombre2' => ['nombre2', 'nombre 2', 'segundo nombre'],
+                'document_number' => ['idnum', 'id num', 'cedula', 'documento', 'nro documento', 'numero documento'],
+                'cargo' => ['cargo'],
+                'estado_apo' => ['estado', 'estado apo'],
+            ],
+            'ACREDITADO' => [
+                'apellido1' => ['apellido1', 'apellido 1', 'primer apellido'],
+                'apellido2' => ['apellido2', 'apellido 2', 'segundo apellido'],
+                'nombre1' => ['nombre1', 'nombre 1', 'primer nombre'],
+                'nombre2' => ['nombre2', 'nombre 2', 'segundo nombre'],
+                'document_number' => ['idnum', 'id num', 'cedula', 'documento', 'nro documento', 'numero documento'],
+                'cargo' => ['cargo'],
+                'vigencia_acr' => [
+                    'vigenacr',
+                    'vigen acr',
+                    'vigen.acr',
+                    'vigenciaacr',
+                    'vigencia acr',
+                    'vigencia',
+                    'vigencia acreditacion',
+                ],
+            ],
+        ],
+    ],
 ];

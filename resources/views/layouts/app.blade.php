@@ -893,7 +893,7 @@
 
             // Disparar desde session status de Laravel
             $(document).ready(function() {
-                @if (session('status'))
+                @if (session('status') && ! session()->has('import_done'))
                     @php
                         $msg = session('status');
                         $type = 'success';
@@ -910,14 +910,19 @@
                         ];
 
                         $finalMsg = $messages[$msg] ?? $msg;
-                        if (str_contains(strtolower($msg), 'error') || str_contains(strtolower($msg), 'fail')) {
+                        // Evitar falsos positivos: textos tipo "0 error(es)" en resúmenes de carga.
+                        $msgLower = mb_strtolower((string) $msg);
+                        $looksLikeFailure = (bool) preg_match('/\b(fall[oó]|failed|fracas)\b/u', $msgLower)
+                            || str_contains($msgLower, 'no se pudo')
+                            || str_contains($msgLower, 'no se puede');
+                        if ($looksLikeFailure) {
                             $type = 'error';
                         }
                     @endphp
-                    showToast("{{ $finalMsg }}", "{{ $type }}");
+                    showToast(@js($finalMsg), @js($type));
                 @endif
 
-                @if ($errors->any())
+                @if ($errors->any() && ! session()->has('import_done'))
                     showToast("Por favor verifica los errores en el formulario.", "error");
                 @endif
 

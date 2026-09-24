@@ -504,9 +504,22 @@ class RequisitionController extends Controller
         abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
 
         return view('modules.requisitions.print', [
-            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'contractType', 'uniform']),
+            'blank' => false,
+            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'contractType', 'uniform', 'statusLogs']),
             'statusLabels' => PersonalRequisition::statuses(),
             'moduleLabel' => config("access.areas.{$requisition->requesting_area_key}"),
+        ]);
+    }
+
+    public function printTemplate(string $module): View
+    {
+        $this->abortIfUnknownModule($module);
+
+        return view('modules.requisitions.print', [
+            'blank' => true,
+            'requisition' => new PersonalRequisition,
+            'statusLabels' => PersonalRequisition::statuses(),
+            'moduleLabel' => '',
         ]);
     }
 

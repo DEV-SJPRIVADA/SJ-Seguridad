@@ -21,6 +21,7 @@ use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
 use App\Services\Requisitions\CommercialClientBridge;
+use App\Support\DisplayDate;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -1029,6 +1030,12 @@ class RequisitionModuleTest extends TestCase
             $this->requisitionAttributes($requester, 'REQ-2026-0112', 'gestion_humana', 'Perfil print sin reclutador'),
             ['recruiter_id' => $recruiter->id]
         ));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+        $receivedAt = $requisition->fresh()->humanResourcesReceivedAt();
 
         $response = $this->actingAs($manager)->get(route('requisitions.print', [
             'module' => 'gestion_humana',
@@ -1038,6 +1045,55 @@ class RequisitionModuleTest extends TestCase
         $response->assertOk();
         $response->assertSee('Dirección de Gestión Humana Recibió', false);
         $response->assertDontSee('DIANA S RAMIREZ', false);
+        $this->assertNotNull($receivedAt);
+        $response->assertSee(DisplayDate::dateTime($receivedAt), false);
+    }
+
+    public function test_gestion_can_open_blank_print_template(): void
+    {
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $manage = $this->actingAs($manager)->get(route('requisitions.manage', [
+            'module' => 'gestion_humana',
+        ]));
+
+        $templateUrl = route('requisitions.print-template', ['module' => 'gestion_humana']);
+
+        $manage->assertOk();
+        $manage->assertSee($templateUrl, false);
+        $manage->assertSee('Descargar plantilla FO-GH-22 vacía', false);
+
+        $response = $this->actingAs($manager)->get($templateUrl);
+
+        $response->assertOk();
+        $response->assertSee('REQUISICIÓN DE PERSONAL', false);
+        $response->assertSee('FO-GH-22', false);
+        $response->assertSee('IMPRIMIR PLANTILLA VACÍA', false);
+        $response->assertSee('Plantilla FO-GH-22', false);
+    }
+
+    public function test_requester_with_seguimiento_cannot_open_blank_print_template(): void
+    {
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+        $requester->givePermissionTo('requisitions.tab.seguimiento');
+
+        $response = $this->actingAs($requester)->get(route('requisitions.print-template', [
+            'module' => 'operaciones',
+        ]));
+
+        $response->assertForbidden();
     }
 
     public function test_requester_can_filter_tracking_to_only_own_requests(): void

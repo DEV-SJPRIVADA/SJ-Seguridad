@@ -184,6 +184,11 @@ Route::middleware(['password.changed'])
         Route::patch('/acreditados/{acreditacionAcreditado}', [AcreditacionesController::class, 'updateAcreditado'])->name('acreditados.update');
         Route::delete('/acreditados/{acreditacionAcreditado}', [AcreditacionesController::class, 'destroyAcreditado'])->name('acreditados.destroy');
         Route::get('/reporte-diario', [AcreditacionesController::class, 'reporteDiario'])->name('reporte-diario');
+        Route::get('/reporte-diario/datatable', [AcreditacionesController::class, 'reporteDiarioDatatable'])->name('reporte-diario.datatable');
+        Route::get('/reporte-diario/exportar', [AcreditacionesController::class, 'exportReporteDiario'])->name('reporte-diario.export');
+        Route::post('/reporte-diario/importar', [AcreditacionesController::class, 'importReporteDiario'])->name('reporte-diario.import');
+        Route::get('/reporte-diario/importar/reporte/{token}', [AcreditacionesController::class, 'downloadReporteDiarioImportReport'])->name('reporte-diario.import-report');
+        Route::get('/reporte-diario/cargas', [AcreditacionesController::class, 'reporteDiarioCargas'])->name('reporte-diario.cargas');
         Route::get('/validaciones', [AcreditacionesController::class, 'validaciones'])->name('validaciones');
         Route::get('/export-apo', [AcreditacionesController::class, 'exportApo'])->name('export-apo');
         Route::get('/catalogo', [AcreditacionesController::class, 'catalogo'])->name('catalogo');

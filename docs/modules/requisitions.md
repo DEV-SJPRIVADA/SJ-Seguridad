@@ -55,6 +55,7 @@ Middleware comun: `auth`, `active`, `password.changed`.
 | GET | `/requisitions/{module}/seguimiento/{requisition}` | `requisitions.tracking.show` | `seguimiento` |
 | GET | `/requisitions/{module}/gestion` | `requisitions.manage` | `gestion` |
 | GET | `/requisitions/{module}/gestion/exportar` | `requisitions.export` | `gestion` |
+| GET | `/requisitions/{module}/gestion/imprimir-plantilla` | `requisitions.print-template` | `gestion` — FO-GH-22 vacío |
 | GET | `/requisitions/{module}/gestion/{requisition}/editar` | `requisitions.edit` | `gestion` |
 | GET | `/requisitions/{module}/gestion/{requisition}/imprimir` | `requisitions.print` | `gestion` |
 | PATCH | `/requisitions/{module}/gestion/{requisition}` | `requisitions.update` | `gestion` |
@@ -248,6 +249,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-09-24 | Impresión FO-GH-22: recepción GH = `created_at` del primer status log `solicitada` (`humanResourcesReceivedAt`) |
 | 2026-09-23 | Filtro reclutador en Dashboard y Gestion; KPI Total respeta filtros; mes dashboard por defecto = mes actual |
 | 2026-08-21 | Catalogos Parametros: persistir seccion activa con `?catalog=` tras CRUD |
 | 2026-08-20 | Doc tecnica alineada al codigo: notificaciones globales (`NotificationConfigService`), rutas export/gerencia/email, acceso Admin «Solicitar en su area», Catalogos sin correos, mail gerencia sincrono |
