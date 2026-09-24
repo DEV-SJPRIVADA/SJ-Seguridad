@@ -117,6 +117,7 @@ final class AcreditacionAcreditadoDatatableService
                 ->orWhere('cargo', 'like', $like)
                 ->orWhere('cargo_apo', 'like', $like)
                 ->orWhere('estado', 'like', $like)
+                ->orWhere('renovacion', 'like', $like)
                 ->orWhere('observaciones', 'like', $like);
         });
     }
@@ -137,7 +138,8 @@ final class AcreditacionAcreditadoDatatableService
         $offset = $canEdit ? 1 : 0;
         $logical = $columnIndex - $offset;
 
-        // Logical: CEDULA, NOMBRE, CARGO, CARGO APO, VIGEN.ACR, ESTADO, OBSERVACIONES, FECHA SOLICITUD [, Acciones]
+        // Logical: CEDULA, NOMBRE, CARGO, CARGO APO, VIGEN.ACR, ESTADO, RENOVACIONES,
+        // FECHA SOLICITUD, OBSERVACIONES [, Acciones]
         match ($logical) {
             0 => $query->orderBy('document_number', $direction),
             1 => $query->orderBy('full_name', $direction),
@@ -145,6 +147,7 @@ final class AcreditacionAcreditadoDatatableService
             3 => $query->orderBy('cargo_apo', $direction),
             4 => $query->orderBy('vigencia_acr', $direction)->orderBy('id', $direction),
             5 => $query->orderBy('estado', $direction),
+            6 => $query->orderBy('renovacion', $direction),
             7 => $query->orderBy('fecha_solicitud', $direction)->orderBy('id', $direction),
             default => $query->orderByDesc('id'),
         };
@@ -176,8 +179,9 @@ final class AcreditacionAcreditadoDatatableService
             e((string) $row->cargo_apo),
             e(optional($row->vigencia_acr)?->format('Y-m-d') ?: '—'),
             sprintf('<span class="%s">%s</span>', e($estadoClass), e($estadoLabel)),
-            e(Str::limit((string) ($row->observaciones ?? ''), 60) ?: '—'),
+            e($row->renovacionLabel()),
             e(optional($row->fecha_solicitud)?->format('Y-m-d') ?: '—'),
+            e(Str::limit((string) ($row->observaciones ?? ''), 60) ?: '—'),
         ]);
 
         if ($canEdit) {
@@ -222,6 +226,7 @@ final class AcreditacionAcreditadoDatatableService
             'fecha_solicitud' => optional($row->fecha_solicitud)?->format('Y-m-d') ?? '',
             'estado' => $row->estado,
             'estado_label' => $this->estadoCalculator->estadoLabel((string) $row->estado),
+            'renovacion' => $row->renovacion ?? '',
             'observaciones' => $row->observaciones ?? '',
             'update_url' => route('gestion-humana.acreditaciones.acreditados.update', $row),
         ], JSON_UNESCAPED_UNICODE));

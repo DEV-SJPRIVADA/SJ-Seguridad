@@ -25,6 +25,7 @@ class AcreditacionAcreditadoFactory extends Factory
             'vigencia_acr' => fake()->dateTimeBetween('+30 days', '+2 years')->format('Y-m-d'),
             'fecha_solicitud' => null,
             'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            'renovacion' => null,
             'observaciones' => null,
             'created_by' => null,
             'updated_by' => null,

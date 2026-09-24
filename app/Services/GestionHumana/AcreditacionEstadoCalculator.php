@@ -11,9 +11,10 @@ class AcreditacionEstadoCalculator
     /**
      * Prioridad (brief FEAT-036):
      * 1) Si hay FECHA SOLICITUD → EN_PROCESO
-     * 2) Si VIGEN.ACR ≤ hoy → DESACREDITADO
-     * 3) Si VIGEN.ACR ≤ hoy + N días → POR_VENCER
-     * 4) Else → ACREDITADO
+     * 2) Si no hay VIGEN.ACR (vacío / trámite) → EN_PROCESO
+     * 3) Si VIGEN.ACR ≤ hoy → DESACREDITADO
+     * 4) Si VIGEN.ACR ≤ hoy + N días → POR_VENCER
+     * 5) Else → ACREDITADO
      */
     public function calculate(
         ?CarbonInterface $fechaSolicitud,
@@ -27,8 +28,8 @@ class AcreditacionEstadoCalculator
         }
 
         if ($vigenciaAcr === null) {
-            // Sin fechas no hay regla aplicable; el Form Request debe rechazar antes.
-            return AcreditacionAcreditado::ESTADO_ACREDITADO;
+            // Sin vigencia (p. ej. import con celda vacía o «en proceso») → trámite en curso.
+            return AcreditacionAcreditado::ESTADO_EN_PROCESO;
         }
 
         $vigencia = $vigenciaAcr->copy()->startOfDay();

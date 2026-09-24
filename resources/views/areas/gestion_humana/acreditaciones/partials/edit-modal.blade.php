@@ -124,17 +124,6 @@
                     </div>
 
                     <div class="form-field">
-                        <label class="form-label" for="edit_fecha_solicitud">FECHA SOLICITUD</label>
-                        <input
-                            id="edit_fecha_solicitud"
-                            name="fecha_solicitud"
-                            type="date"
-                            class="form-input"
-                            x-model="editForm.fecha_solicitud"
-                        >
-                    </div>
-
-                    <div class="form-field">
                         <label class="form-label" for="edit_estado">ESTADO</label>
                         <input
                             id="edit_estado"
@@ -143,6 +132,30 @@
                             readonly
                             x-model="editForm.estado_label"
                             title="Se calcula automáticamente al guardar"
+                        >
+                    </div>
+
+                    <div class="form-field">
+                        <label class="form-label" for="edit_renovacion">RENOVACIONES</label>
+                        <x-searchable-select
+                            id="edit_renovacion"
+                            name="renovacion"
+                            class="js-edit-renovacion-select"
+                            :options="$renovacionOptions"
+                            :value="''"
+                            placeholder="Sin renovación"
+                            :allow-clear="true"
+                        />
+                    </div>
+
+                    <div class="form-field">
+                        <label class="form-label" for="edit_fecha_solicitud">FECHA SOLICITUD</label>
+                        <input
+                            id="edit_fecha_solicitud"
+                            name="fecha_solicitud"
+                            type="date"
+                            class="form-input"
+                            x-model="editForm.fecha_solicitud"
                         >
                     </div>
 

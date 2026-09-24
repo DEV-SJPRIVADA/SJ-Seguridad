@@ -108,14 +108,8 @@ class AcreditacionImportService
                     );
                 }
 
-                $vigencia = $this->parseDate($data['vigencia_acr'] ?? null);
+                $vigencia = $this->resolveVigenciaAcr($data['vigencia_acr'] ?? null);
                 $fechaSolicitud = $this->parseDate($data['fecha_solicitud'] ?? null);
-
-                if ($vigencia === null && $fechaSolicitud === null) {
-                    throw new \InvalidArgumentException(
-                        'Debe indicar al menos una fecha: VIGEN.ACR o FECHA SOLICITUD.',
-                    );
-                }
 
                 $observaciones = trim((string) ($data['observaciones'] ?? ''));
                 $observaciones = $observaciones === '' ? null : $observaciones;
@@ -248,6 +242,59 @@ class AcreditacionImportService
         }
 
         return true;
+    }
+
+    /**
+     * VIGEN.ACR en Excel: fecha, vacío o marcador «en proceso» (y variantes).
+     * Vacío / en proceso → null (estado EN_PROCESO vía calculador).
+     */
+    private function resolveVigenciaAcr(mixed $value): ?string
+    {
+        if ($this->isEnProcesoVigenciaValue($value)) {
+            return null;
+        }
+
+        $parsed = $this->parseDate($value);
+
+        if ($parsed === null) {
+            throw new \InvalidArgumentException(
+                'VIGEN.ACR no es una fecha válida. Use una fecha, déjelo vacío o indique «en proceso».',
+            );
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Celda vacía o texto de trámite (en proceso / EN PROCESO / EN_PROCESO, sin importar mayúsculas).
+     */
+    private function isEnProcesoVigenciaValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return true;
+        }
+
+        if (is_numeric($value)) {
+            return false;
+        }
+
+        $trimmed = trim((string) $value);
+        if ($trimmed === '') {
+            return true;
+        }
+
+        $normalized = mb_strtolower($trimmed);
+        $normalized = preg_replace('/[\s_\-\.]+/u', '', $normalized) ?? $normalized;
+        $normalized = strtr($normalized, [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'ü' => 'u',
+        ]);
+
+        return $normalized === 'enproceso';
     }
 
     private function parseDate(mixed $value): ?string

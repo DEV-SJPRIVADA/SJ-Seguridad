@@ -380,19 +380,26 @@ permisos para modificar Catálogos
 27. Exporte a Excel; incluye todos los campos de la requisición
     (incluida compensación) según los filtros activos.
 
-28. Imprima la ficha si necesita documento físico.
+28. Descargue la **plantilla FO-GH-22 vacía** (icono de impresora junto
+    al Excel) si necesita el formato físico en blanco para diligenciar a
+    mano; abra e imprima en tamaño carta.
+
+29. Imprima la ficha de una requisición existente (icono de impresora en
+    la fila) si necesita el documento con los datos ya cargados. La
+    **fecha y hora de recepción en Gestión Humana** se toma del momento
+    en que la solicitud quedó en estado Solicitada.
 
 ### Administrar parámetros
 
-29. Acceda a Catálogos (requiere permiso).
+30. Acceda a Catálogos (requiere permiso).
 
-30. Mantenga catálogos: cargos, motivos, ciudades, tipos de
+31. Mantenga catálogos: cargos, motivos, ciudades, tipos de
     programación, uniformes, Correos de notificación y Tipos de
     notificación (asignar correos por tipo de aviso).
 
 ### Notificaciones
 
-31. Si requiere que se notifique a las solicitudes de requisición deberá
+32. Si requiere que se notifique a las solicitudes de requisición deberá
     solicitarlo al administrador del sistema (Admin → Configuración de
     notificaciones). Hay un aviso **Nueva requisición** y otro de
     **destinatarios adicionales** (misma lista para alta y cambios de
@@ -402,15 +409,15 @@ permisos para modificar Catálogos
 
 ### Autorizar requisiciones cargo nuevo (Gerencia)
 
-32. Ingrese con usuario que tenga permiso Autorizar cargo nuevo
+33. Ingrese con usuario que tenga permiso Autorizar cargo nuevo
     (gerencia) (rol administrador).
 
-33. Abra Requisiciones → Gestión humana → Autorización gerencia.
+34. Abra Requisiciones → Gestión humana → Autorización gerencia.
 
-34. Revise la lista (solo pendientes). Abra Revisar, Autorizar o
+35. Revise la lista (solo pendientes). Abra Revisar, Autorizar o
     Rechazar (comentario obligatorio al rechazar).
 
-35. Tras autorizar, la solicitud pasa a Solicitada y Gestión humana
+36. Tras autorizar, la solicitud pasa a Solicitada y Gestión humana
     puede continuar. Si rechaza, queda Cancelada.
 
 ### Activar encargados de selección (solo Gestión humana)
@@ -418,17 +425,17 @@ permisos para modificar Catálogos
 Esta sección aparece únicamente en el tablero Requisiciones del área
 Gestión humana, pestaña Catálogos.
 
-36. Entre a Requisiciones → Gestion humana → Catálogos.
+37. Entre a Requisiciones → Gestion humana → Catálogos.
 
-37. Abra la tarjeta Encargados de selección.
+38. Abra la tarjeta Encargados de selección.
 
-38. Revise la tabla de usuarios activos del área Gestión humana (nombre
+39. Revise la tabla de usuarios activos del área Gestión humana (nombre
     y correo).
 
-39. Use el interruptor (toggle) en la columna Encargado para activar o
+40. Use el interruptor (toggle) en la columna Encargado para activar o
     desactivar a cada persona.
 
-40. Solo los usuarios con toggle activo aparecen en la lista Reclutador
+41. Solo los usuarios con toggle activo aparecen en la lista Reclutador
     al editar requisiciones en Gestión (cualquier área solicitante).
 
 Nota: el permiso relacionado puede verse en Administración de usuarios,
@@ -440,4 +447,6 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.3         | 2026-09-24                 | Impresión FO-GH-22: recepción GH = momento Solicitada |
+| 1.2         | 2026-09-24                 | Plantilla FO-GH-22 vacía descargable desde Gestión |
 | 1.1         | 2026-09-23                 | Filtro por reclutador en Dashboard y Gestión; KPI Total respeta filtros; mes por defecto = mes actual |

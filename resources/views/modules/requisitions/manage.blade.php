@@ -110,14 +110,26 @@
                                         </div>
                                         <div class="req-manage-filters__query-export">
                                             <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
-                                            <a
-                                                href="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}"
-                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                                title="Exportar Excel"
-                                                aria-label="Exportar Excel"
-                                            >
-                                                <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
-                                            </a>
+                                            <div class="req-manage-filters__export-group">
+                                                <a
+                                                    href="{{ route('requisitions.print-template', ['module' => $moduleKey]) }}"
+                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                    title="Descargar plantilla FO-GH-22 vacía"
+                                                    aria-label="Descargar plantilla FO-GH-22 vacía"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                >
+                                                    <x-lucide-printer width="16" height="16" aria-hidden="true" />
+                                                </a>
+                                                <a
+                                                    href="{{ route('requisitions.export', ['module' => $moduleKey, ...request()->query()]) }}"
+                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                    title="Exportar Excel"
+                                                    aria-label="Exportar Excel"
+                                                >
+                                                    <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </form>

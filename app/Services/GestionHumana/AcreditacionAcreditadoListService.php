@@ -15,6 +15,7 @@ class AcreditacionAcreditadoListService
      *     cargo?: string|null,
      *     cargo_apo?: string|null,
      *     estado?: string|null,
+     *     renovacion?: string|null,
      *     vigencia_desde?: string|null,
      *     vigencia_hasta?: string|null,
      *     ficha_estado?: string|null,
@@ -47,6 +48,11 @@ class AcreditacionAcreditadoListService
         $estado = (string) ($filters['estado'] ?? '');
         if ($estado !== '' && $estado !== 'todos') {
             $query->where('estado', $estado);
+        }
+
+        $renovacion = (string) ($filters['renovacion'] ?? '');
+        if ($renovacion !== '' && $renovacion !== 'todos') {
+            $query->where('renovacion', $renovacion);
         }
 
         $vigenciaDesde = trim((string) ($filters['vigencia_desde'] ?? ''));

@@ -135,15 +135,53 @@ class AcreditacionesImportTest extends TestCase
         ]);
     }
 
-    public function test_import_fails_without_ficha_and_empty_dates(): void
+    public function test_import_accepts_blank_and_en_proceso_vigencia(): void
     {
         $editor = $this->editorUser();
         $this->activeCargo('VIGILANTE');
-        $this->createFicha('300', 'Con Ficha Sin Fechas');
+        $this->createFicha('310', 'Sin Vigencia Vacia');
+        $this->createFicha('311', 'Sin Vigencia Texto');
+
+        $path = $this->makeImportFile([
+            ['310', 'Ignorado', 'GUARDA', 'VIGILANTE', '', '', 'obs vacia'],
+            ['311', 'Ignorado', 'GUARDA', 'VIGILANTE', 'en proceso', '', 'obs texto'],
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.import'), [
+                'import_file' => new UploadedFile($path, 'acreditados.xlsx', null, null, true),
+            ])
+            ->assertRedirect(route('gestion-humana.acreditaciones.acreditados'))
+            ->assertSessionHas('status');
+
+        $failures = session('import_failures', []);
+        $this->assertSame([], $failures, json_encode($failures, JSON_UNESCAPED_UNICODE));
+
+        $blank = AcreditacionAcreditado::query()
+            ->where('document_number', '310')
+            ->firstOrFail();
+        $this->assertNull($blank->vigencia_acr);
+        $this->assertNull($blank->fecha_solicitud);
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $blank->estado);
+        $this->assertSame('obs vacia', $blank->observaciones);
+
+        $texto = AcreditacionAcreditado::query()
+            ->where('document_number', '311')
+            ->firstOrFail();
+        $this->assertNull($texto->vigencia_acr);
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $texto->estado);
+        $this->assertSame('obs texto', $texto->observaciones);
+    }
+
+    public function test_import_fails_without_ficha_and_invalid_vigencia_text(): void
+    {
+        $editor = $this->editorUser();
+        $this->activeCargo('VIGILANTE');
+        $this->createFicha('300', 'Con Ficha Vigencia Invalida');
 
         $path = $this->makeImportFile([
             ['999', 'Sin Ficha', 'GUARDA', 'VIGILANTE', '2027-01-01', '', ''],
-            ['300', 'Con Ficha', 'GUARDA', 'VIGILANTE', '', '', ''],
+            ['300', 'Con Ficha', 'GUARDA', 'VIGILANTE', 'texto-invalido', '', ''],
         ]);
 
         $this->actingAs($editor)
@@ -161,7 +199,7 @@ class AcreditacionesImportTest extends TestCase
             (string) ($failures[0]['reason'] ?? ''),
         );
         $this->assertStringContainsString(
-            'Debe indicar al menos una fecha',
+            'VIGEN.ACR no es una fecha válida',
             (string) ($failures[1]['reason'] ?? ''),
         );
 

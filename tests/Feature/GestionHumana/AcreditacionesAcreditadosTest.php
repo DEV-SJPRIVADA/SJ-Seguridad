@@ -239,6 +239,18 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $one->estado);
         $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $two->estado);
 
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$one->id, $two->id],
+                'renovacion' => AcreditacionAcreditado::RENOVACION_SOLICITADO,
+            ])
+            ->assertRedirect();
+
+        $one->refresh();
+        $two->refresh();
+        $this->assertSame(AcreditacionAcreditado::RENOVACION_SOLICITADO, $one->renovacion);
+        $this->assertSame(AcreditacionAcreditado::RENOVACION_SOLICITADO, $two->renovacion);
+
         $selectable = $this->actingAs($editor)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.bulk-selectable'));
 
@@ -268,6 +280,7 @@ class AcreditacionesAcreditadosTest extends TestCase
                 'ids' => [$row->id],
                 'observaciones' => '',
                 'fecha_solicitud' => '',
+                'renovacion' => '',
             ])
             ->assertSessionHasErrors('observaciones');
     }
@@ -369,6 +382,47 @@ class AcreditacionesAcreditadosTest extends TestCase
         $json = $response->json();
         $this->assertSame(1, $json['recordsFiltered']);
         $this->assertStringContainsString('5005', $json['data'][0][0]);
+    }
+
+    public function test_datatable_filters_by_renovacion(): void
+    {
+        $viewer = $this->viewerUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('5015', 'Renova Uno');
+        $this->createFicha('5016', 'Renova Dos');
+
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5015',
+            'full_name' => 'Renova Uno',
+            'cargo' => 'GUARDA',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            'renovacion' => AcreditacionAcreditado::RENOVACION_SOLICITADO,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5016',
+            'full_name' => 'Renova Dos',
+            'cargo' => 'OTRO',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            'renovacion' => AcreditacionAcreditado::RENOVACION_RENOVADO,
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'renovacion' => AcreditacionAcreditado::RENOVACION_SOLICITADO,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $response->assertOk();
+        $json = $response->json();
+        $this->assertSame(1, $json['recordsFiltered']);
+        $this->assertStringContainsString('5015', $json['data'][0][0]);
+        $this->assertStringContainsString('Solicitado', $json['data'][0][6]);
     }
 
     public function test_export_respects_filters(): void

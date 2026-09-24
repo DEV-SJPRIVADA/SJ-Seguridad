@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Requisición de Personal - {{ $requisition->code }}</title>
+    <title>{{ ($blank ?? false) ? 'Requisición de Personal - Plantilla FO-GH-22' : 'Requisición de Personal - '.$requisition->code }}</title>
     <style>
         @page {
             size: letter;
@@ -39,6 +39,11 @@
         .bg-gray { background-color: #e0e0e0 !important; font-weight: bold; }
         .header-table td { height: 20px; }
         .row-h15 td { height: 12pt; }
+        .value-row td {
+            height: 14pt;
+            min-height: 14pt;
+            vertical-align: middle;
+        }
         .section-title {
             background-color: #e0e0e0 !important;
             text-align: center;
@@ -53,6 +58,9 @@
             text-align: center;
             font-weight: bold;
             font-size: 8pt;
+            height: 14pt;
+            min-height: 14pt;
+            vertical-align: middle;
         }
         .label-cell {
             background-color: #f2f2f2 !important;
@@ -87,9 +95,37 @@
     </style>
 </head>
 <body>
+@php
+    $isBlank = (bool) ($blank ?? false);
+    $mark = static function (bool $condition) use ($isBlank): string {
+        if ($isBlank) {
+            return "\u{00A0}";
+        }
+
+        return $condition ? 'X' : "\u{00A0}";
+    };
+    $money = static function ($value) use ($isBlank): string {
+        if ($isBlank) {
+            return '$ ';
+        }
+
+        return '$ '.number_format((float) $value, 0);
+    };
+    $cell = static function (?string $value = null) use ($isBlank): string {
+        if ($isBlank) {
+            return "\u{00A0}";
+        }
+
+        $text = (string) ($value ?? '');
+
+        return $text === '' ? "\u{00A0}" : $text;
+    };
+@endphp
 
     <div class="no-print">
-        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px;">IMPRIMIR FORMATO (TAMAÑO CARTA)</button>
+        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; font-weight: bold; background: #2563eb; color: white; border: none; border-radius: 4px;">
+            {{ $isBlank ? 'IMPRIMIR PLANTILLA VACÍA (TAMAÑO CARTA)' : 'IMPRIMIR FORMATO (TAMAÑO CARTA)' }}
+        </button>
     </div>
 
     <div class="container">
@@ -120,10 +156,22 @@
                 <td style="width: 25%;" class="text-center">FECHA DE SOLICITUD</td>
                 <td style="width: 50%;" class="text-center">FECHA Y HORA DE RECEPCIÓN EN GESTIÓN HUMANA</td>
             </tr>
-            <tr>
-                <td class="text-center" style="font-weight: bold; font-size: 11pt;">{{ $requisition->code }}</td>
-                <td class="text-center"><x-date-table :value="$requisition->request_date" /></td>
-                <td></td>
+            <tr class="value-row">
+                <td class="text-center" style="font-weight: bold; font-size: 11pt;">{{ $cell($isBlank ? null : $requisition->code) }}</td>
+                <td class="text-center">
+                    @if ($isBlank)
+                        {{ $cell() }}
+                    @else
+                        <x-date-table :value="$requisition->request_date" empty="" />
+                    @endif
+                </td>
+                <td class="text-center">
+                    @if ($isBlank)
+                        {{ $cell() }}
+                    @else
+                        <x-date-table :value="$requisition->humanResourcesReceivedAt()" datetime empty="" />
+                    @endif
+                </td>
             </tr>
         </table>
 
@@ -132,9 +180,9 @@
                 <td style="width: 50%;" class="text-center">LIDER Y/O JEFE DE AREA QUIEN SOLICITA</td>
                 <td style="width: 50%;" class="text-center">PROCESO / ÁREA QUE SOLICITA</td>
             </tr>
-            <tr>
-                <td class="text-center">{{ $requisition->leader_name }}</td>
-                <td class="text-center">{{ $moduleLabel }}</td>
+            <tr class="value-row">
+                <td class="text-center">{{ $cell($isBlank ? null : $requisition->leader_name) }}</td>
+                <td class="text-center">{{ $cell($isBlank ? null : $moduleLabel) }}</td>
             </tr>
         </table>
 
@@ -148,17 +196,17 @@
                 <td style="width: 15%;" class="text-center">F</td>
                 <td style="width: 15%;" class="text-center">M</td>
             </tr>
-            <tr>
-                <td>{{ $requisition->position?->name ?: '—' }}</td>
-                <td class="checkbox-cell">{{ ($requisition->sex == 'femenino' || $requisition->sex == 'indiferente') ? 'X' : '' }}</td>
-                <td class="checkbox-cell">{{ ($requisition->sex == 'masculino' || $requisition->sex == 'indiferente') ? 'X' : '' }}</td>
+            <tr class="value-row">
+                <td>{{ $cell($isBlank ? null : ($requisition->position?->name ?: '')) }}</td>
+                <td class="checkbox-cell">{{ $mark(($requisition->sex ?? null) == 'femenino' || ($requisition->sex ?? null) == 'indiferente') }}</td>
+                <td class="checkbox-cell">{{ $mark(($requisition->sex ?? null) == 'masculino' || ($requisition->sex ?? null) == 'indiferente') }}</td>
             </tr>
             <tr>
                 <td colspan="3" style="padding: 0; border: none;">
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
+                        <tr class="value-row">
                             <td class="bg-gray text-center" style="width: 22%; white-space: nowrap;">A QUIEN REMPLAZA:</td>
-                            <td style="width: 78%;">{{ $requisition->replacement_name ?? 'N/A' }}</td>
+                            <td style="width: 78%;">{{ $cell($isBlank ? null : ($requisition->replacement_name ?? '')) }}</td>
                         </tr>
                     </table>
                 </td>
@@ -173,16 +221,16 @@
             </tr>
             <tr class="row-h12">
                 <td style="width: 15%;">Obra Labor</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->contractType?->name, 'Obra') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->contractType?->name ?? '', 'Obra') !== false) }}</td>
                 <td style="width: 15%;">Fijo</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->contractType?->name, 'Fijo') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->contractType?->name ?? '', 'Fijo') !== false) }}</td>
                 <td style="width: 15%;">Indefinido</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->contractType?->name, 'Indefinido') !== false ? 'X' : '' }}</td>
-                
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->contractType?->name ?? '', 'Indefinido') !== false) }}</td>
+
                 <td style="width: 15%;">Administrativo</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ $requisition->operating_area_key == 'administrativa' ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(($requisition->operating_area_key ?? null) == 'administrativa') }}</td>
                 <td style="width: 15%;">Operativo</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ $requisition->operating_area_key == 'operaciones' ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(($requisition->operating_area_key ?? null) == 'operaciones') }}</td>
             </tr>
         </table>
 
@@ -193,19 +241,19 @@
             </tr>
             <tr>
                 <td style="width: 15%;">Renuncia</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->requestReason?->name, 'Renuncia') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->requestReason?->name ?? '', 'Renuncia') !== false) }}</td>
                 <td style="width: 15%;">Traslado</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->requestReason?->name, 'Traslado') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->requestReason?->name ?? '', 'Traslado') !== false) }}</td>
                 <td style="width: 15%;">Cliente Nuevo</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->requestReason?->name, 'Servicio nuevo') !== false || stripos($requisition->requestReason?->name, 'Cliente nuevo') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->requestReason?->name ?? '', 'Servicio nuevo') !== false || stripos($requisition->requestReason?->name ?? '', 'Cliente nuevo') !== false) }}</td>
                 <td style="width: 15%;">Promoción</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->requestReason?->name, 'Promoción') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->requestReason?->name ?? '', 'Promoción') !== false) }}</td>
                 <td style="width: 15%;">Cargo Nuevo</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->requestReason?->name, 'Cargo nuevo') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->requestReason?->name ?? '', 'Cargo nuevo') !== false) }}</td>
             </tr>
-            <tr>
+            <tr class="value-row">
                 <td class="bg-gray">DURACIÓN DEL CONTRATO:</td>
-                <td colspan="9">{{ $requisition->contract_duration ?? '0' }}</td>
+                <td colspan="9">{{ $cell($isBlank ? null : ($requisition->contract_duration ?? '')) }}</td>
             </tr>
         </table>
 
@@ -216,27 +264,27 @@
             </tr>
             <tr>
                 <td class="label-cell">Valor Salario Base:</td>
-                <td>$ {{ number_format($requisition->base_salary, 0) }}</td>
+                <td>{{ $money($requisition->base_salary ?? null) }}</td>
             </tr>
             <tr>
                 <td class="label-cell">Auxilio de Transporte Legal:</td>
-                <td>$ {{ number_format($requisition->transport_allowance, 0) }}</td>
+                <td>{{ $money($requisition->transport_allowance ?? null) }}</td>
             </tr>
             <tr>
                 <td class="label-cell">Auxilio de Movilización NO prestacional:</td>
-                <td>$ {{ number_format($requisition->mobility_allowance, 0) }}</td>
+                <td>{{ $money($requisition->mobility_allowance ?? null) }}</td>
             </tr>
             <tr>
                 <td class="label-cell">Bonificación Prestacional:</td>
-                <td>$ {{ number_format($requisition->statutory_bonus, 0) }}</td>
+                <td>{{ $money($requisition->statutory_bonus ?? null) }}</td>
             </tr>
             <tr>
                 <td class="label-cell">Bonificación NO Prestacional:</td>
-                <td>$ {{ number_format($requisition->non_statutory_bonus, 0) }}</td>
+                <td>{{ $money($requisition->non_statutory_bonus ?? null) }}</td>
             </tr>
-            <tr>
+            <tr class="value-row">
                 <td class="label-cell">Otros valores, cuales:</td>
-                <td>{{ $requisition->other_allowances ?: '—' }}</td>
+                <td>{{ $cell($isBlank ? null : ($requisition->other_allowances ?: '')) }}</td>
             </tr>
             <tr>
                 <td colspan="2" style="padding: 0;">
@@ -244,10 +292,10 @@
                         <tr>
                             <td style="border: none; border-right: 1px solid #000; width: 30%;" class="bg-gray">Contrato Arrendamiento</td>
                             <td style="border: none; border-right: 1px solid #000; width: 8%; text-align: center;">SI</td>
-                            <td class="checkbox-cell" style="width: 5%; border: none; border-right: 1px solid #000;">{{ stripos($requisition->leasing_contract, 'SI') !== false ? 'X' : '' }}</td>
+                            <td class="checkbox-cell" style="width: 5%; border: none; border-right: 1px solid #000;">{{ $mark(stripos((string) ($requisition->leasing_contract ?? ''), 'SI') !== false) }}</td>
                             <td style="border: none; border-right: 1px solid #000; width: 8%; text-align: center;">NO</td>
-                            <td class="checkbox-cell" style="width: 5%; border: none; border-right: 1px solid #000;">{{ stripos($requisition->leasing_contract, 'NO') !== false || empty($requisition->leasing_contract) ? 'X' : '' }}</td>
-                            <td style="border: none; width: 44%; text-align: right;">$ {{ number_format(floatval($requisition->leasing_contract), 0) }}</td>
+                            <td class="checkbox-cell" style="width: 5%; border: none; border-right: 1px solid #000;">{{ $mark(! $isBlank && (stripos((string) ($requisition->leasing_contract ?? ''), 'NO') !== false || empty($requisition->leasing_contract))) }}</td>
+                            <td style="border: none; width: 44%; text-align: right;">{{ $isBlank ? '$ ' : '$ '.number_format(floatval($requisition->leasing_contract), 0) }}</td>
                         </tr>
                     </table>
                 </td>
@@ -259,21 +307,21 @@
             <tr class="bg-gray">
                 <td colspan="6" class="text-center">ESPECIFICACIONES DEL CLIENTE O PROCESO</td>
             </tr>
-            <tr>
+            <tr class="value-row">
                 <td class="label-cell">NOMBRE DEL CLIENTE:</td>
-                <td colspan="5">{{ $requisition->client?->name }}</td>
+                <td colspan="5">{{ $cell($isBlank ? null : $requisition->client?->name) }}</td>
             </tr>
-            <tr>
+            <tr class="value-row">
                 <td class="label-cell">CIUDAD DE LABORES:</td>
-                <td style="width: 25%;">{{ $requisition->city?->name }}</td>
+                <td style="width: 25%;">{{ $cell($isBlank ? null : $requisition->city?->name) }}</td>
                 <td class="bg-gray text-center" style="width: 15%;">CLIENTE GRUPO</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ $requisition->clientType?->name == 'Grupo' ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(($requisition->clientType?->name ?? null) == 'Grupo') }}</td>
                 <td class="bg-gray text-center" style="width: 15%;">CLIENTE EXTERNO</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ $requisition->clientType?->name != 'Grupo' ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(! $isBlank && ($requisition->clientType?->name ?? null) != 'Grupo') }}</td>
             </tr>
-            <tr>
+            <tr class="value-row">
                 <td class="label-cell">TIPO DE PROGRAMACION:</td>
-                <td colspan="5">{{ $requisition->programmingType?->name }}</td>
+                <td colspan="5">{{ $cell($isBlank ? null : $requisition->programmingType?->name) }}</td>
             </tr>
         </table>
 
@@ -284,8 +332,13 @@
             </tr>
             <tr>
                 <td style="height: 120px; vertical-align: top; text-align: justify;">
-                    <strong>PERFIL:</strong> {{ $requisition->required_profile }}<br><br>
-                    <strong>OBSERVACIONES:</strong> {{ $requisition->requester_observation ?? 'Ninguna' }}
+                    @if ($isBlank)
+                        <strong>PERFIL:</strong><br><br>
+                        <strong>OBSERVACIONES:</strong>
+                    @else
+                        <strong>PERFIL:</strong> {{ $requisition->required_profile }}<br><br>
+                        <strong>OBSERVACIONES:</strong> {{ $requisition->requester_observation ?? 'Ninguna' }}
+                    @endif
                 </td>
             </tr>
         </table>
@@ -297,15 +350,15 @@
             </tr>
             <tr>
                 <td style="width: 15%;">ADMINISTRATIVA</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->uniform?->name, 'Administrativa') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->uniform?->name ?? '', 'Administrativa') !== false) }}</td>
                 <td style="width: 15%;">GALA</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->uniform?->name, 'Gala') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->uniform?->name ?? '', 'Gala') !== false) }}</td>
                 <td style="width: 15%;">OVEROL</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->uniform?->name, 'Overol') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->uniform?->name ?? '', 'Overol') !== false) }}</td>
                 <td style="width: 15%;">ESCOLTA</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->uniform?->name, 'Escolta') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->uniform?->name ?? '', 'Escolta') !== false) }}</td>
                 <td style="width: 15%;">BONO</td>
-                <td class="checkbox-cell" style="width: 5%;">{{ stripos($requisition->uniform?->name, 'Bono') !== false ? 'X' : '' }}</td>
+                <td class="checkbox-cell" style="width: 5%;">{{ $mark(stripos($requisition->uniform?->name ?? '', 'Bono') !== false) }}</td>
             </tr>
         </table>
 

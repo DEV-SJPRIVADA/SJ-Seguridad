@@ -181,13 +181,13 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 
 ### Acreditaciones (Gestion humana)
 
-Tablero **Acreditaciones** (Acreditados, Catálogo, placeholders Dashboard / Reporte Diario / Validaciones / Export Apo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
+Tablero **Acreditaciones** (Acreditados, Reporte Diario APO, Catálogo; placeholders Dashboard / Validaciones / Export Apo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
 
 | Permiso | Uso |
 | --- | --- |
 | `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
-| `acreditaciones.view` | Shell, Acreditados (lectura), export Excel, placeholders |
-| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo (implica view en servicio de acceso) |
+| `acreditaciones.view` | Shell, Acreditados (lectura), Reporte Diario (ver/filtrar/export/cargas), export Excel, placeholders |
+| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo, cargar/reemplazar Reporte Diario (implica view en servicio de acceso) |
 
 - Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). Catálogo solo con `acreditaciones.edit`.
 - Bypass: `manage.users`.

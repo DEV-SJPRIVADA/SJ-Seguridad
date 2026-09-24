@@ -143,16 +143,6 @@
                     >
                 </div>
                 <div class="form-field">
-                    <label class="form-label" for="create_fecha_solicitud">FECHA SOLICITUD</label>
-                    <input
-                        id="create_fecha_solicitud"
-                        name="fecha_solicitud"
-                        type="date"
-                        class="form-input"
-                        value="{{ old('fecha_solicitud') }}"
-                    >
-                </div>
-                <div class="form-field">
                     <label class="form-label" for="create_estado">ESTADO</label>
                     <input
                         id="create_estado"
@@ -161,6 +151,27 @@
                         readonly
                         value="Automático"
                         title="Se calcula al guardar"
+                    >
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="create_renovacion">RENOVACIONES</label>
+                    <x-searchable-select
+                        id="create_renovacion"
+                        name="renovacion"
+                        :options="$renovacionOptions"
+                        :value="old('renovacion', '')"
+                        placeholder="Sin renovación"
+                        :allow-clear="true"
+                    />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="create_fecha_solicitud">FECHA SOLICITUD</label>
+                    <input
+                        id="create_fecha_solicitud"
+                        name="fecha_solicitud"
+                        type="date"
+                        class="form-input"
+                        value="{{ old('fecha_solicitud') }}"
                     >
                 </div>
                 <div class="form-field cursos-registros-page__form-span">
