@@ -114,10 +114,11 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | `vigencia_acr` | date nullable | VIGEN.ACR (vencimiento) |
 | `fecha_solicitud` | date nullable | FECHA SOLICITUD |
 | `estado` | string(30) | Calculado; index |
+| `renovacion` | string(30) nullable | Manual: `SOLICITADO` / `RENOVADO`; index |
 | `observaciones` | text nullable | |
 | `created_by` / `updated_by` | FK users nullable | `nullOnDelete` |
 
-Indexes: `estado`, `vigencia_acr`, `fecha_solicitud`, `cargo`, `document_number`.
+Indexes: `estado`, `renovacion`, `vigencia_acr`, `fecha_solicitud`, `cargo`, `document_number`.
 
 ### `acreditacion_cargos`
 
@@ -173,11 +174,13 @@ Schedule: `bootstrap/app.php` → diario **06:20** `America/Bogota`, `withoutOve
 Prioridad (`AcreditacionEstadoCalculator`):
 
 1. Si hay `fecha_solicitud` → `EN_PROCESO` (gana aunque `vigencia_acr` este vencida).
-2. Si `vigencia_acr` ≤ hoy → `DESACREDITADO`.
-3. Si `vigencia_acr` ≤ hoy + `config('acreditaciones.por_vencer_days')` (21) → `POR_VENCER`.
-4. Else → `ACREDITADO`.
+2. Si no hay `vigencia_acr` → `EN_PROCESO` (trámite; import con celda vacía o «en proceso»).
+3. Si `vigencia_acr` ≤ hoy → `DESACREDITADO`.
+4. Si `vigencia_acr` ≤ hoy + `config('acreditaciones.por_vencer_days')` (21) → `POR_VENCER`.
+5. Else → `ACREDITADO`.
 
-- Ambas fechas vacias → rechazar (422 / fila import falla). Form Request/import lo validan; el calculator, si llega sin fechas, retorna `ACREDITADO` de forma defensiva (review obs. #4).
+- Formulario create/update: ambas fechas vacías → rechazar (422).
+- Import `VIGEN.ACR`: fecha válida, vacío o texto «en proceso» (variantes) → vigencia null + `EN_PROCESO`. Otro texto → falla la fila.
 - Recalc inmediato en store/update/import y en sync diario.
 - Ventana timezone app (`America/Bogota`).
 
@@ -217,15 +220,15 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 | `full_name` | NOMBRE COMPLETO | Ignorado (ayuda humana) |
 | `cargo` | CARGO | Si; texto |
 | `cargo_apo` | CARGO APO | Si; tipo / unique key |
-| `vigencia_acr` | VIGEN.ACR | Si; date; opcional si hay fecha_solicitud |
-| `fecha_solicitud` | FECHA SOLICITUD | Si; date; opcional si hay vigencia_acr |
+| `vigencia_acr` | VIGEN.ACR | Si; date, vacío o «en proceso» → vigencia null + estado EN PROCESO; opcional si hay fecha_solicitud |
+| `fecha_solicitud` | FECHA SOLICITUD | Si; date; opcional si VIGEN.ACR es fecha, vacío o «en proceso» |
 | `observaciones` | OBSERVACIONES | Si; nullable |
 
 **No** incluir columna ESTADO. Misma cedula + mismo `cargo_apo` → update in-place (upsert). Fallos: token temporal + descarga reporte.
 
 ### Export listado
 
-`BaseExport` inline en controlador (no clase dedicada). Columnas: CEDULA, NOMBRE COMPLETO, CARGO, CARGO APO, VIGEN.ACR, ESTADO, OBSERVACIONES, FECHA SOLICITUD. Respeta filtros activos. Auth: `acreditaciones.view`. Boton `<x-export-excel>`.
+`BaseExport` inline en controlador (no clase dedicada). Columnas: CEDULA, NOMBRE COMPLETO, CARGO, CARGO APO, VIGEN.ACR, ESTADO, RENOVACIONES, FECHA SOLICITUD, OBSERVACIONES. Respeta filtros activos. Auth: `acreditaciones.view`. Boton `<x-export-excel>`.
 
 > Observacion review #1: export hace `filteredQuery()->get()` sin tope; volumen alto puede saturar memoria (mismo patron Seleccion). Follow-up: chunk/stream.
 

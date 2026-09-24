@@ -86,6 +86,22 @@ class AcreditacionesController extends Controller
                 ->all(),
         );
 
+        /** @var array<string, string> $renovacionLabels */
+        $renovacionLabels = config('acreditaciones.renovaciones', []);
+
+        $renovacionOptions = collect($renovacionLabels)
+            ->map(fn (string $label, string $code): array => [
+                'value' => $code,
+                'label' => $label,
+            ])
+            ->values()
+            ->all();
+
+        $filterRenovacionOptions = array_merge(
+            [['value' => 'todos', 'label' => 'Todos']],
+            $renovacionOptions,
+        );
+
         $cargoApoOptions = AcreditacionCargo::query()
             ->active()
             ->orderBy('cargo_apo')
@@ -115,9 +131,11 @@ class AcreditacionesController extends Controller
             'canEdit' => $canEdit,
             'filters' => $filters,
             'filterEstadoOptions' => $filterEstadoOptions,
+            'filterRenovacionOptions' => $filterRenovacionOptions,
             'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
             'filterCargoApoOptions' => $filterCargoApoOptions,
             'cargoApoOptions' => $cargoApoOptions,
+            'renovacionOptions' => $renovacionOptions,
             'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
             'datatableUrl' => route(
                 'gestion-humana.acreditaciones.acreditados.datatable',
@@ -166,14 +184,17 @@ class AcreditacionesController extends Controller
         $ids = array_values(array_map('intval', $request->validated('ids')));
         $observacionesInput = $request->validated('observaciones');
         $fechaSolicitudInput = $request->validated('fecha_solicitud');
+        $renovacionInput = $request->validated('renovacion');
 
         $applyObservaciones = is_string($observacionesInput) && trim($observacionesInput) !== '';
         $applyFechaSolicitud = filled($fechaSolicitudInput);
+        $applyRenovacion = filled($renovacionInput);
 
         $observaciones = $applyObservaciones ? trim((string) $observacionesInput) : null;
         $fechaSolicitud = $applyFechaSolicitud
             ? Carbon::parse((string) $fechaSolicitudInput)->toDateString()
             : null;
+        $renovacion = $applyRenovacion ? (string) $renovacionInput : null;
 
         $updatedCount = 0;
 
@@ -181,8 +202,10 @@ class AcreditacionesController extends Controller
             $ids,
             $applyObservaciones,
             $applyFechaSolicitud,
+            $applyRenovacion,
             $observaciones,
             $fechaSolicitud,
+            $renovacion,
             &$updatedCount,
         ): void {
             $rows = AcreditacionAcreditado::query()
@@ -196,6 +219,10 @@ class AcreditacionesController extends Controller
 
                 if ($applyFechaSolicitud) {
                     $row->fecha_solicitud = $fechaSolicitud;
+                }
+
+                if ($applyRenovacion) {
+                    $row->renovacion = $renovacion;
                 }
 
                 $row->estado = $this->estadoCalculator->calculate(
@@ -215,6 +242,7 @@ class AcreditacionesController extends Controller
                     'updated_count' => $updatedCount,
                     'applied_observaciones' => $applyObservaciones,
                     'applied_fecha_solicitud' => $applyFechaSolicitud,
+                    'applied_renovacion' => $applyRenovacion,
                 ],
                 userId: (int) auth()->id(),
             );
@@ -304,6 +332,7 @@ class AcreditacionesController extends Controller
             'vigencia_acr',
             'fecha_solicitud',
             'estado',
+            'renovacion',
             'observaciones',
         ]);
 
@@ -372,8 +401,9 @@ class AcreditacionesController extends Controller
             ['key' => 'cargo_apo', 'label' => 'CARGO APO'],
             ['key' => 'vigencia_acr', 'label' => 'VIGEN.ACR'],
             ['key' => 'estado', 'label' => 'ESTADO'],
-            ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
+            ['key' => 'renovacion', 'label' => 'RENOVACIONES'],
             ['key' => 'fecha_solicitud', 'label' => 'FECHA SOLICITUD'],
+            ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
         ];
 
         $data = $rows->map(fn (AcreditacionAcreditado $row): array => [
@@ -383,8 +413,9 @@ class AcreditacionesController extends Controller
             'cargo_apo' => $row->cargo_apo,
             'vigencia_acr' => optional($row->vigencia_acr)?->format('Y-m-d'),
             'estado' => $this->estadoCalculator->estadoLabel((string) $row->estado),
-            'observaciones' => $row->observaciones,
+            'renovacion' => $row->renovacionLabel() === '—' ? null : $row->renovacionLabel(),
             'fecha_solicitud' => optional($row->fecha_solicitud)?->format('Y-m-d'),
+            'observaciones' => $row->observaciones,
         ]);
 
         return (new BaseExport(
@@ -664,6 +695,7 @@ class AcreditacionesController extends Controller
             'cargo' => trim((string) $request->input('cargo', '')),
             'cargo_apo' => trim((string) $request->input('cargo_apo', '')),
             'estado' => (string) $request->input('estado', 'todos'),
+            'renovacion' => (string) $request->input('renovacion', 'todos'),
             'vigencia_desde' => trim((string) $request->input('vigencia_desde', '')),
             'vigencia_hasta' => trim((string) $request->input('vigencia_hasta', '')),
             'ficha_estado' => $fichaEstado,
@@ -676,6 +708,7 @@ class AcreditacionesController extends Controller
      *     cargo: string,
      *     cargo_apo: string,
      *     estado: string,
+     *     renovacion: string,
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
      *     ficha_estado: string,
@@ -700,6 +733,10 @@ class AcreditacionesController extends Controller
 
         if ($filters['estado'] !== '' && $filters['estado'] !== 'todos') {
             $query['estado'] = $filters['estado'];
+        }
+
+        if ($filters['renovacion'] !== '' && $filters['renovacion'] !== 'todos') {
+            $query['renovacion'] = $filters['renovacion'];
         }
 
         if ($filters['vigencia_desde'] !== '') {
@@ -737,6 +774,7 @@ class AcreditacionesController extends Controller
             'vigencia_acr' => $validated['vigencia_acr'] ?? null,
             'fecha_solicitud' => $validated['fecha_solicitud'] ?? null,
             'estado' => $this->estadoCalculator->calculate($solicitud, $vigencia),
+            'renovacion' => $validated['renovacion'] ?? null,
             'observaciones' => $validated['observaciones'] ?? null,
         ];
     }

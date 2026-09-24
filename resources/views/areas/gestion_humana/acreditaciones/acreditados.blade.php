@@ -72,6 +72,17 @@
                                     />
                                 </div>
                                 <div class="form-field">
+                                    <label class="form-label" for="filter_renovacion">Renovaciones</label>
+                                    <x-searchable-select
+                                        id="filter_renovacion"
+                                        name="renovacion"
+                                        :options="$filterRenovacionOptions"
+                                        :value="$filters['renovacion']"
+                                        placeholder="Todos"
+                                        :allow-clear="false"
+                                    />
+                                </div>
+                                <div class="form-field">
                                     <label class="form-label" for="filter_ficha_estado">Estado en ficha</label>
                                     <x-searchable-select
                                         id="filter_ficha_estado"
@@ -198,8 +209,9 @@
                                     <th>CARGO APO</th>
                                     <th>VIGEN.ACR</th>
                                     <th>ESTADO</th>
-                                    <th>OBSERVACIONES</th>
+                                    <th>RENOVACIONES</th>
                                     <th>FECHA SOLICITUD</th>
+                                    <th>OBSERVACIONES</th>
                                     @if ($canEdit)
                                         <th>Acciones</th>
                                     @endif
@@ -216,6 +228,7 @@
 
                 @include('areas.gestion_humana.acreditaciones.partials.nuevo-modal', [
                     'cargoApoOptions' => $cargoApoOptions,
+                    'renovacionOptions' => $renovacionOptions,
                     'lookupUrl' => $lookupUrl,
                     'show' => $showNuevoModal,
                 ])
@@ -230,6 +243,7 @@
 
                 @include('areas.gestion_humana.acreditaciones.partials.edit-modal', [
                     'cargoApoOptions' => $cargoApoOptions,
+                    'renovacionOptions' => $renovacionOptions,
                 ])
             @endif
         </div>
@@ -252,6 +266,7 @@
                     bulkForm: {
                         observaciones: '',
                         fecha_solicitud: '',
+                        renovacion: '',
                     },
                     editOpen: false,
                     editIdentityLocked: true,
@@ -264,6 +279,7 @@
                         fecha_solicitud: '',
                         estado: '',
                         estado_label: '',
+                        renovacion: '',
                         observaciones: '',
                         update_url: '',
                     },
@@ -309,7 +325,8 @@
                     },
                     get bulkHasPayload() {
                         return String(this.bulkForm.observaciones || '').trim() !== ''
-                            || String(this.bulkForm.fecha_solicitud || '').trim() !== '';
+                            || String(this.bulkForm.fecha_solicitud || '').trim() !== ''
+                            || String(this.bulkForm.renovacion || '').trim() !== '';
                     },
                     isSelected(id) {
                         return !! this.selectedMap[id];
@@ -344,12 +361,82 @@
                         if (this.selectedCount < 1) {
                             return;
                         }
-                        this.bulkForm = { observaciones: '', fecha_solicitud: '' };
+                        this.bulkForm = { observaciones: '', fecha_solicitud: '', renovacion: '' };
                         this.bulkUpdateOpen = true;
+                        this.submittingBulk = false;
+                        this.syncBulkRenovacion('');
                     },
                     closeBulkUpdate() {
                         this.bulkUpdateOpen = false;
                         this.submittingBulk = false;
+                    },
+                    submitBulkUpdate() {
+                        if (this.submittingBulk || this.selectedCount < 1 || ! this.bulkHasPayload) {
+                            return;
+                        }
+
+                        this.submittingBulk = true;
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.style.display = 'none';
+
+                        const filterQuery = new URLSearchParams();
+                        Object.entries(this.activeFilterQuery || {}).forEach(([key, value]) => {
+                            if (value !== undefined && value !== null && String(value) !== '') {
+                                filterQuery.set(key, String(value));
+                            }
+                        });
+                        const queryString = filterQuery.toString();
+                        form.action = queryString
+                            ? `${this.bulkUpdateUrl}${this.bulkUpdateUrl.includes('?') ? '&' : '?'}${queryString}`
+                            : this.bulkUpdateUrl;
+
+                        const append = (name, value) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = value == null ? '' : String(value);
+                            form.appendChild(input);
+                        };
+
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                            || '';
+                        append('_token', token);
+
+                        this.selectedIds.forEach((id) => append('ids[]', id));
+
+                        const observaciones = String(this.bulkForm.observaciones || '').trim();
+                        const fecha = String(this.bulkForm.fecha_solicitud || '').trim();
+                        const renovacion = String(this.bulkForm.renovacion || '').trim();
+
+                        if (observaciones !== '') {
+                            append('observaciones', observaciones);
+                        }
+                        if (fecha !== '') {
+                            append('fecha_solicitud', fecha);
+                        }
+                        if (renovacion !== '') {
+                            append('renovacion', renovacion);
+                        }
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    },
+                    syncBulkRenovacion(value) {
+                        this.bulkForm.renovacion = String(value || '');
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-bulk-renovacion-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
                     },
                     closeEdit() {
                         this.editOpen = false;
@@ -373,6 +460,20 @@
                             } catch (e) {}
                         });
                     },
+                    syncEditRenovacion(value) {
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-edit-renovacion-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
+                    },
                     openEdit(detail) {
                         this.editForm = {
                             document_number: detail?.document_number || '',
@@ -383,12 +484,14 @@
                             fecha_solicitud: detail?.fecha_solicitud || '',
                             estado: detail?.estado || '',
                             estado_label: detail?.estado_label || detail?.estado || '',
+                            renovacion: detail?.renovacion || '',
                             observaciones: detail?.observaciones || '',
                             update_url: detail?.update_url || '',
                         };
                         this.editIdentityLocked = Boolean(this.editForm.document_number);
                         this.editOpen = true;
                         this.syncEditCargoApo(this.editForm.cargo_apo);
+                        this.syncEditRenovacion(this.editForm.renovacion);
                     },
                     async lookupName(cedula, mode) {
                         const value = String(cedula || '').trim();
@@ -503,7 +606,7 @@
                     responsive: false,
                     order: [[canEdit ? 1 : 0, 'asc']],
                     columnDefs: canEdit
-                        ? [{ targets: [0, 9], orderable: false, searchable: false }]
+                        ? [{ targets: [0, 10], orderable: false, searchable: false }]
                         : [],
                 });
 

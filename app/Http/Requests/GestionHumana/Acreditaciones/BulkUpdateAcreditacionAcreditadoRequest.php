@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GestionHumana\Acreditaciones;
 
+use App\Models\AcreditacionAcreditado;
 use App\Services\Access\AcreditacionesAccessService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,6 +31,7 @@ class BulkUpdateAcreditacionAcreditadoRequest extends FormRequest
             'ids.*' => ['integer', 'distinct', Rule::exists('acreditacion_acreditados', 'id')],
             'observaciones' => ['nullable', 'string', 'max:'.$obsMax],
             'fecha_solicitud' => ['nullable', 'date'],
+            'renovacion' => ['nullable', 'string', Rule::in(AcreditacionAcreditado::RENOVACIONES)],
         ];
     }
 
@@ -46,16 +48,26 @@ class BulkUpdateAcreditacionAcreditadoRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        $renovacion = trim((string) $this->input('renovacion', ''));
+
+        $this->merge([
+            'renovacion' => $renovacion === '' ? null : $renovacion,
+        ]);
+    }
+
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
             $observaciones = trim((string) $this->input('observaciones', ''));
             $fecha = trim((string) $this->input('fecha_solicitud', ''));
+            $renovacion = trim((string) ($this->input('renovacion') ?? ''));
 
-            if ($observaciones === '' && $fecha === '') {
+            if ($observaciones === '' && $fecha === '' && $renovacion === '') {
                 $validator->errors()->add(
                     'observaciones',
-                    'Indique al menos una observación o una fecha de solicitud.',
+                    'Indique al menos observaciones, fecha de solicitud o renovaciones.',
                 );
             }
         });

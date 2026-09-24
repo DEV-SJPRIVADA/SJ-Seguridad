@@ -23,6 +23,10 @@ class AcreditacionAcreditado extends Model
 
     public const ESTADO_ACREDITADO = 'ACREDITADO';
 
+    public const RENOVACION_SOLICITADO = 'SOLICITADO';
+
+    public const RENOVACION_RENOVADO = 'RENOVADO';
+
     /**
      * @var list<string>
      */
@@ -36,6 +40,14 @@ class AcreditacionAcreditado extends Model
     /**
      * @var list<string>
      */
+    public const RENOVACIONES = [
+        self::RENOVACION_SOLICITADO,
+        self::RENOVACION_RENOVADO,
+    ];
+
+    /**
+     * @var list<string>
+     */
     protected $fillable = [
         'document_number',
         'full_name',
@@ -44,6 +56,7 @@ class AcreditacionAcreditado extends Model
         'vigencia_acr',
         'fecha_solicitud',
         'estado',
+        'renovacion',
         'observaciones',
         'created_by',
         'updated_by',
@@ -78,5 +91,17 @@ class AcreditacionAcreditado extends Model
         $labels = config('acreditaciones.estados', []);
 
         return $labels[$this->estado] ?? (string) $this->estado;
+    }
+
+    public function renovacionLabel(): string
+    {
+        if ($this->renovacion === null || $this->renovacion === '') {
+            return '—';
+        }
+
+        /** @var array<string, string> $labels */
+        $labels = config('acreditaciones.renovaciones', []);
+
+        return $labels[$this->renovacion] ?? (string) $this->renovacion;
     }
 }

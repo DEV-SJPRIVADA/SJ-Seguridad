@@ -51,6 +51,7 @@ class UpdateAcreditacionAcreditadoRequest extends FormRequest
             ],
             'vigencia_acr' => ['nullable', 'date'],
             'fecha_solicitud' => ['nullable', 'date'],
+            'renovacion' => ['nullable', 'string', Rule::in(AcreditacionAcreditado::RENOVACIONES)],
             'observaciones' => ['nullable', 'string', 'max:'.$obsMax],
         ];
     }
@@ -114,6 +115,7 @@ class UpdateAcreditacionAcreditadoRequest extends FormRequest
             'cargo_apo' => trim((string) $this->input('cargo_apo')),
             'vigencia_acr' => $this->nullableDate('vigencia_acr'),
             'fecha_solicitud' => $this->nullableDate('fecha_solicitud'),
+            'renovacion' => $this->nullableTrim('renovacion'),
             'observaciones' => $this->nullableTrim('observaciones'),
         ]);
     }

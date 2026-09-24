@@ -36,6 +36,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 | CARGO APO | Tipo de acreditación (por ejemplo VIGILANTE, ESCOLTA). Define la unicidad junto con la cédula. |
 | VIGEN.ACR | Fecha de **vencimiento** de la acreditación. |
 | Fecha de solicitud | Fecha en que se inició un trámite de acreditación o renovación. |
+| Renovaciones | Campo manual del trámite de renovación: **Solicitado** o **Renovado** (opcional). |
 | ACREDITADO | Estado: vigencia vigente y sin solicitud en curso (más de 21 días hasta el vencimiento). |
 | EN PROCESO | Estado: hay fecha de solicitud (tiene prioridad aunque la vigencia esté vencida). |
 | POR VENCER | Estado: la vigencia vence en 21 días o menos (y no hay solicitud). |
@@ -79,10 +80,10 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 ### Carga masiva (importación)
 
 1. Con permiso de edición, descargue la **plantilla** de importación.
-2. Complete las filas a partir de la fila de datos (no borre los encabezados). Incluya cédula, cargo, CARGO APO y al menos una fecha. El nombre en Excel se ignora (el sistema usa Ficha). No agregue columna de estado.
+2. Complete las filas a partir de la fila de datos (no borre los encabezados). Incluya cédula, cargo y CARGO APO. En **VIGEN.ACR** puede ir una fecha, quedar vacío o decir «en proceso» (queda sin vigencia y el estado pasa a **EN PROCESO**). El nombre en Excel se ignora (el sistema usa Ficha). No agregue columna de estado.
 3. Suba el archivo desde el modal de carga masiva.
 4. Revise el resumen: filas nuevas, actualizadas y fallidas. Si hay fallos, descargue el reporte mientras esté disponible.
-5. Causas frecuentes de fallo: cédula ausente en Ficha, CARGO APO no activo en catálogo, o ambas fechas vacías.
+5. Causas frecuentes de fallo: cédula ausente en Ficha, CARGO APO no activo en catálogo, o texto inválido en VIGEN.ACR (que no sea fecha ni «en proceso»).
 
 ### Administrar Catálogo (solo edición)
 
@@ -96,9 +97,10 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 Sin intervención manual:
 
 1. Si hay **fecha de solicitud** → **EN PROCESO**.
-2. Si no hay solicitud y la **vigencia ya venció** → **DESACREDITADO**.
-3. Si no hay solicitud y la vigencia vence en **21 días o menos** → **POR VENCER**.
-4. En cualquier otro caso con vigencia vigente → **ACREDITADO**.
+2. Si no hay vigencia (**VIGEN.ACR** vacío) → **EN PROCESO**.
+3. Si no hay solicitud y la **vigencia ya venció** → **DESACREDITADO**.
+4. Si no hay solicitud y la vigencia vence en **21 días o menos** → **POR VENCER**.
+5. En cualquier otro caso con vigencia vigente → **ACREDITADO**.
 
 El sistema también recalcula estos estados de madrugada según el calendario.
 
@@ -106,6 +108,8 @@ El sistema también recalcula estos estados de madrugada según el calendario.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-09-24 | Feature | Import masivo: VIGEN.ACR vacío o «en proceso» carga con vigencia vacía y estado EN PROCESO. |
+| 1.6 | 2026-09-24 | Feature | Acreditados: columna/filtro RENOVACIONES (Solicitado / Renovado); orden FECHA SOLICITUD → OBSERVACIONES; también en Actualizar seleccionados. |
 | 1.5 | 2026-09-24 | UI | Modal «Actualizar seleccionados»: chrome unificado, preview de filas, Aplicar cambios. |
 | 1.4 | 2026-09-24 | UI | Modal editar acreditado: chrome unificado, identidad bloqueable, CARGO APO searchable-select. |
 | 1.3 | 2026-09-24 | Feature | Acreditados: selección masiva + modal observaciones/fecha solicitud. |

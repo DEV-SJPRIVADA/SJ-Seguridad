@@ -72,41 +72,40 @@
             </div>
 
             <form
-                method="POST"
-                :action="bulkUpdateUrl"
                 class="cursos-registros-page__form"
-                x-on:submit="submittingBulk = true"
+                x-on:submit.prevent="submitBulkUpdate()"
             >
-                @csrf
-                <template x-for="id in selectedIds" :key="'bulk-id-' + id">
-                    <input type="hidden" name="ids[]" :value="id">
-                </template>
-                <template x-for="(value, key) in activeFilterQuery" :key="'filter-' + key">
-                    <input type="hidden" :name="key" :value="value">
-                </template>
-
                 <div class="cursos-registros-page__form-grid">
+                    <div class="form-field" @change="bulkForm.renovacion = ($event.detail && $event.detail.value !== undefined) ? String($event.detail.value) : (bulkForm.renovacion || '')">
+                        <label class="form-label" for="bulk_renovacion">Renovaciones</label>
+                        <x-searchable-select
+                            id="bulk_renovacion"
+                            name="renovacion_ui"
+                            class="js-bulk-renovacion-select"
+                            :options="$renovacionOptions"
+                            :value="''"
+                            placeholder="Sin cambio"
+                            :allow-clear="true"
+                        />
+                    </div>
                     <div class="form-field">
                         <label class="form-label" for="bulk_fecha_solicitud">Fecha de solicitud</label>
                         <input
                             id="bulk_fecha_solicitud"
-                            name="fecha_solicitud"
                             type="date"
                             class="form-input"
                             x-model="bulkForm.fecha_solicitud"
-                            :disabled="submittingBulk"
+                            autocomplete="off"
                         >
                     </div>
                     <div class="form-field cursos-registros-page__form-span">
                         <label class="form-label" for="bulk_observaciones">Observaciones</label>
                         <textarea
                             id="bulk_observaciones"
-                            name="observaciones"
                             class="form-input"
                             rows="3"
                             maxlength="{{ $observacionesMax }}"
                             x-model="bulkForm.observaciones"
-                            :disabled="submittingBulk"
                             placeholder="Si completa este campo, se sobrescribe en todos los seleccionados"
                         ></textarea>
                     </div>

@@ -78,4 +78,15 @@ class AcreditacionEstadoCalculatorTest extends TestCase
 
         $this->assertSame(AcreditacionAcreditado::ESTADO_ACREDITADO, $estado);
     }
+
+    public function test_sin_vigencia_ni_solicitud_es_en_proceso(): void
+    {
+        $estado = $this->calculator->calculate(
+            null,
+            null,
+            Carbon::parse('2026-09-23'),
+        );
+
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $estado);
+    }
 }

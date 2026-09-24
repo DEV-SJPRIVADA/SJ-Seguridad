@@ -9224,6 +9224,24 @@ a.sj-pagination__item:hover {
     flex: 0 0 auto;
 }
 
+/* Acreditados: con más filtros (Renovaciones) los botones suelen ir a 2.ª fila → alineados a la derecha. */
+.acreditaciones-acreditados-page .cursos-registros-page__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.acreditaciones-acreditados-page .cursos-registros-page__filters > .form-field:not(.cursos-registros-page__filter-actions) {
+    flex: 1 1 11rem;
+    min-width: min(11rem, 100%);
+}
+
+.acreditaciones-acreditados-page .cursos-registros-page__filter-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
 .acreditaciones-acreditados-page .ficha-empleados-masivos-modal__import-actions {
     display: inline-flex;
     flex-direction: row;
