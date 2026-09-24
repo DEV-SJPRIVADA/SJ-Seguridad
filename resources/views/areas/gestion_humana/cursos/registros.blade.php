@@ -28,35 +28,21 @@
         @cursos-open-edit.window="openEdit($event.detail)"
     >
         <div class="app-container">
-            @if (session('status'))
+            @php
+                $hasImportFlash = session()->has('import_done')
+                    || session()->has('import_result')
+                    || session()->has('import_failures')
+                    || session()->has('import_report_token');
+            @endphp
+
+            @if (session('status') && ! $hasImportFlash)
                 <div class="alert alert--success cursos-registros-page__alert">{{ session('status') }}</div>
             @endif
             @if (session('error'))
                 <div class="alert alert--danger cursos-registros-page__alert">{{ session('error') }}</div>
             @endif
 
-            @if (session('import_failures'))
-                <div class="alert alert--danger cursos-registros-page__alert">
-                    <p class="mb-2">Errores de importación (máx. 50 en pantalla):</p>
-                    <ul class="mb-2">
-                        @foreach (session('import_failures') as $failure)
-                            <li>
-                                Fila {{ $failure['row'] ?? '?' }}
-                                @if (! empty($failure['identifier']))
-                                    ({{ $failure['identifier'] }})
-                                @endif
-                                : {{ $failure['reason'] ?? '' }}
-                            </li>
-                        @endforeach
-                    </ul>
-                    @if (session('import_report_token'))
-                        <a
-                            class="btn btn--secondary btn--sm"
-                            href="{{ route('gestion-humana.cursos.registros.import-report', session('import_report_token')) }}"
-                        >Descargar reporte</a>
-                    @endif
-                </div>
-            @endif
+            <x-import-result-modal download-route="gestion-humana.cursos.registros.import-report" />
 
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
@@ -119,8 +105,12 @@
                                     </label>
                                 </div>
                                 <div class="form-field cursos-registros-page__filter-actions">
-                                    <button type="submit" class="btn btn--primary btn--sm">Filtrar</button>
-                                    <a href="{{ route('gestion-humana.cursos.registros') }}" class="btn btn--secondary btn--sm">Limpiar</a>
+                                    <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
+                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                    <a href="{{ route('gestion-humana.cursos.registros') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
+                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                    </a>
                                     <a
                                         href="{{ $exportUrl }}"
                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"

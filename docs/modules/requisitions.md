@@ -157,7 +157,7 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 | --- | --- |
 | Servicio | `RequisitionSelectionOfficerAccessService` |
 | Permiso | `requisitions.selection_officer` (toggle Parametros GH; no en roles base) |
-| UI | Catalogos GH + partial `selection-officers.blade.php` |
+| UI | Catalogos GH (`parameters.blade.php`, grid estilo ficha-catalogs) + partial `selection-officers.blade.php`; acciones icon-only (`icon-buttons-ui`) |
 | Toggle | `requisitions.selection-officers.update`; solo `module=gestion_humana` |
 | Select Gestion | `recruitersForSelect(?currentRecruiterId)` — usuarios GH activos con permiso; el reclutador ya guardado sigue aunque se apague el toggle |
 | Persistencia | `personal_requisitions.recruiter_id` → `users.id` nullable; no se escribe `recruiter_name` |
@@ -197,6 +197,7 @@ Cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas envia
 ## UI operativa
 
 - Status pills por estado; layout con subnav de modulo.
+- Parametros: tablero de tarjetas + detalle por `?catalog=`; botones Agregar/Editar/Eliminar como iconos (regla `icon-buttons-ui`).
 - Gestion: filtros + pills; default **En curso** (excluye contratado/cancelada); `include_closed=1` = Todos; filtro `recruiter_id` (`''` = todos, `none` = sin asignar, id = reclutador activo); DataTables.
 - Seguimiento: mismos filtros + export Excel.
 - Dashboard: KPIs Total / Solicitadas / En gestion / Contratadas / Canceladas; filtro reclutador (misma semántica); **todos** los KPIs (incluido Total) y charts respetan filtros; mes por defecto = mes actual; charts Vite `resources/js/requisitions-dashboard-charts.js` + `#requisitions-chart-data`.

@@ -173,6 +173,8 @@ Route::middleware(['password.changed'])
         Route::get('/dashboard', [AcreditacionesController::class, 'dashboard'])->name('dashboard');
         Route::get('/acreditados', [AcreditacionesController::class, 'acreditados'])->name('acreditados');
         Route::get('/acreditados/datatable', [AcreditacionesController::class, 'acreditadosDatatable'])->name('acreditados.datatable');
+        Route::get('/acreditados/bulk-selectable', [AcreditacionesController::class, 'bulkSelectable'])->name('acreditados.bulk-selectable');
+        Route::post('/acreditados/bulk-update', [AcreditacionesController::class, 'bulkUpdate'])->name('acreditados.bulk-update');
         Route::get('/acreditados/lookup', [AcreditacionesController::class, 'acreditadosLookup'])->name('acreditados.lookup');
         Route::get('/acreditados/exportar', [AcreditacionesController::class, 'exportAcreditados'])->name('acreditados.export');
         Route::get('/acreditados/plantilla-importacion', [AcreditacionesController::class, 'importTemplate'])->name('acreditados.import-template');

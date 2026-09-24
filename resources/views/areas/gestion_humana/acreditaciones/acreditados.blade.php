@@ -6,12 +6,6 @@
 
     <x-slot name="header">
         @include('areas.gestion_humana.acreditaciones.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Acreditados</h2>
-                <p class="panel-text">Gestion humana — personal acreditado (vigencia y estados automáticos)</p>
-            </div>
-        </div>
     </x-slot>
 
     <div
@@ -19,43 +13,28 @@
         x-data="acreditacionesAcreditados({
             lookupUrl: @js($lookupUrl),
             canEdit: @js($canEdit),
+            bulkSelectableUrl: @js($bulkSelectableUrl ?? null),
+            bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
+            activeFilterQuery: @js($activeFilterQuery ?? []),
         })"
         @acreditaciones-open-edit.window="openEdit($event.detail)"
     >
         <div class="app-container">
-            @if (session('status'))
+            @php
+                $hasImportFlash = session()->has('import_done')
+                    || session()->has('import_result')
+                    || session()->has('import_failures')
+                    || session()->has('import_report_token');
+            @endphp
+
+            @if (session('status') && ! $hasImportFlash)
                 <div class="alert alert--success cursos-registros-page__alert">{{ session('status') }}</div>
             @endif
             @if (session('error'))
                 <div class="alert alert--danger cursos-registros-page__alert">{{ session('error') }}</div>
             @endif
 
-            @if (session('import_failures'))
-                <div class="alert alert--danger cursos-registros-page__alert">
-                    <p class="mb-2">Errores de importación (máx. 50 en pantalla):</p>
-                    <ul class="mb-2">
-                        @foreach (session('import_failures') as $failure)
-                            <li>
-                                Fila {{ $failure['row'] ?? '?' }}
-                                @if (! empty($failure['identifier']))
-                                    ({{ $failure['identifier'] }})
-                                @endif
-                                : {{ $failure['reason'] ?? '' }}
-                            </li>
-                        @endforeach
-                    </ul>
-                    @if (session('import_report_token'))
-                        <a
-                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            href="{{ route('gestion-humana.acreditaciones.acreditados.import-report', session('import_report_token')) }}"
-                            title="Descargar reporte"
-                            aria-label="Descargar reporte"
-                        >
-                            <x-lucide-download width="18" height="18" aria-hidden="true" />
-                        </a>
-                    @endif
-                </div>
-            @endif
+            <x-import-result-modal download-route="gestion-humana.acreditaciones.acreditados.import-report" />
 
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
@@ -82,13 +61,24 @@
                                     />
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="filter_estado">Estado</label>
+                                    <label class="form-label" for="filter_estado">Estado acreditación</label>
                                     <x-searchable-select
                                         id="filter_estado"
                                         name="estado"
                                         :options="$filterEstadoOptions"
                                         :value="$filters['estado']"
                                         placeholder="Todos"
+                                        :allow-clear="false"
+                                    />
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="filter_ficha_estado">Estado en ficha</label>
+                                    <x-searchable-select
+                                        id="filter_ficha_estado"
+                                        name="ficha_estado"
+                                        :options="$filterFichaEstadoOptions"
+                                        :value="$filters['ficha_estado']"
+                                        placeholder="Activos en ficha"
                                         :allow-clear="false"
                                     />
                                 </div>
@@ -128,6 +118,8 @@
                                 </div>
                             </div>
                             <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;">
+                                Por defecto solo se listan empleados <strong>activos en ficha</strong>.
+                                Use «Estado en ficha» para ver desvinculados o todos.
                                 El rango de fechas filtra por <strong>VIGEN.ACR</strong> (vencimiento).
                             </p>
                         </form>
@@ -140,6 +132,18 @@
 
                             @if ($canEdit)
                                 <div class="cursos-registros-page__table-actions">
+                                    <button
+                                        type="button"
+                                        class="btn btn--primary btn--sm acreditaciones-bulk-trigger"
+                                        x-show="selectedCount > 0"
+                                        x-cloak
+                                        x-on:click="openBulkUpdate()"
+                                        title="Actualizar seleccionados"
+                                    >
+                                        <x-lucide-list-checks width="16" height="16" aria-hidden="true" />
+                                        <span>Actualizar</span>
+                                        <span class="acreditaciones-bulk-trigger__count" x-text="selectedCount"></span>
+                                    </button>
                                     <button
                                         type="button"
                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
@@ -174,6 +178,20 @@
                         >
                             <thead>
                                 <tr>
+                                    @if ($canEdit)
+                                        <th class="cursos-registros-page__select-col" data-orderable="false">
+                                            <label class="cursos-registros-page__select-label" title="Seleccionar todos los del filtro actual">
+                                                <input
+                                                    type="checkbox"
+                                                    class="cursos-registros-page__select-checkbox"
+                                                    x-bind:checked="allEligibleSelected"
+                                                    x-bind:disabled="bulkSelectableRows.length === 0 || bulkSelectableLoading"
+                                                    x-on:change="toggleSelectAll($event.target.checked)"
+                                                    aria-label="Seleccionar todos"
+                                                >
+                                            </label>
+                                        </th>
+                                    @endif
                                     <th>CEDULA</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>CARGO</th>
@@ -194,6 +212,8 @@
             </div>
 
             @if ($canEdit)
+                @include('areas.gestion_humana.acreditaciones.partials.bulk-update-modal')
+
                 @include('areas.gestion_humana.acreditaciones.partials.nuevo-modal', [
                     'cargoApoOptions' => $cargoApoOptions,
                     'lookupUrl' => $lookupUrl,
@@ -208,133 +228,9 @@
                     'show' => $showMasivosModal,
                 ])
 
-                <div
-                    class="cursos-registros-page__modal"
-                    x-show="editOpen"
-                    x-cloak
-                    @keydown.escape.window="editOpen = false"
-                >
-                    <div class="cursos-registros-page__modal-backdrop" @click="editOpen = false"></div>
-                    <div class="cursos-registros-page__modal-panel panel" role="dialog" aria-modal="true">
-                        <div class="panel__header panel-heading-row">
-                            <h3 class="panel-title">Editar acreditado</h3>
-                            <button
-                                type="button"
-                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                title="Cerrar"
-                                aria-label="Cerrar"
-                                @click="editOpen = false"
-                            >
-                                <x-lucide-x width="18" height="18" aria-hidden="true" />
-                            </button>
-                        </div>
-                        <div class="panel__body">
-                            <form method="POST" :action="editForm.update_url" class="cursos-registros-page__form">
-                                @csrf
-                                @method('PATCH')
-                                <div class="cursos-registros-page__form-grid">
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_document_number">CEDULA</label>
-                                        <input
-                                            id="edit_document_number"
-                                            name="document_number"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="50"
-                                            required
-                                            x-model="editForm.document_number"
-                                            @blur="lookupName($event.target.value, 'edit')"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_full_name">NOMBRE COMPLETO</label>
-                                        <input
-                                            id="edit_full_name"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="255"
-                                            readonly
-                                            x-model="editForm.full_name"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_cargo">CARGO</label>
-                                        <input
-                                            id="edit_cargo"
-                                            name="cargo"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="255"
-                                            required
-                                            x-model="editForm.cargo"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_cargo_apo">CARGO APO</label>
-                                        <select id="edit_cargo_apo" name="cargo_apo" class="form-input" required x-model="editForm.cargo_apo">
-                                            @foreach ($cargoApoOptions as $opt)
-                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_vigencia_acr">VIGEN.ACR</label>
-                                        <input
-                                            id="edit_vigencia_acr"
-                                            name="vigencia_acr"
-                                            type="date"
-                                            class="form-input"
-                                            x-model="editForm.vigencia_acr"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_fecha_solicitud">FECHA SOLICITUD</label>
-                                        <input
-                                            id="edit_fecha_solicitud"
-                                            name="fecha_solicitud"
-                                            type="date"
-                                            class="form-input"
-                                            x-model="editForm.fecha_solicitud"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_estado">ESTADO</label>
-                                        <input
-                                            id="edit_estado"
-                                            type="text"
-                                            class="form-input"
-                                            readonly
-                                            x-model="editForm.estado_label"
-                                        >
-                                    </div>
-                                    <div class="form-field cursos-registros-page__form-span">
-                                        <label class="form-label" for="edit_observaciones">OBSERVACIONES</label>
-                                        <textarea
-                                            id="edit_observaciones"
-                                            name="observaciones"
-                                            class="form-input"
-                                            rows="2"
-                                            x-model="editForm.observaciones"
-                                        ></textarea>
-                                    </div>
-                                </div>
-                                <p class="panel-text" style="font-size:0.85rem;">
-                                    El estado se recalcula automáticamente al guardar. Indique al menos una fecha.
-                                </p>
-                                <div class="cursos-registros-page__form-actions">
-                                    <button
-                                        type="submit"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                        title="Actualizar"
-                                        aria-label="Actualizar"
-                                    >
-                                        <x-lucide-save width="18" height="18" aria-hidden="true" />
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                @include('areas.gestion_humana.acreditaciones.partials.edit-modal', [
+                    'cargoApoOptions' => $cargoApoOptions,
+                ])
             @endif
         </div>
     </div>
@@ -345,7 +241,20 @@
                 return {
                     lookupUrl: config.lookupUrl,
                     canEdit: !!config.canEdit,
+                    bulkSelectableUrl: config.bulkSelectableUrl || '',
+                    bulkUpdateUrl: config.bulkUpdateUrl || '',
+                    activeFilterQuery: config.activeFilterQuery || {},
+                    bulkSelectableRows: [],
+                    bulkSelectableLoading: false,
+                    selectedMap: {},
+                    bulkUpdateOpen: false,
+                    submittingBulk: false,
+                    bulkForm: {
+                        observaciones: '',
+                        fecha_solicitud: '',
+                    },
                     editOpen: false,
+                    editIdentityLocked: true,
                     editForm: {
                         document_number: '',
                         full_name: '',
@@ -357,6 +266,112 @@
                         estado_label: '',
                         observaciones: '',
                         update_url: '',
+                    },
+                    init() {
+                        if (this.canEdit && this.bulkSelectableUrl) {
+                            this.loadBulkSelectable();
+                        }
+                    },
+                    async loadBulkSelectable() {
+                        this.bulkSelectableLoading = true;
+                        try {
+                            const res = await fetch(this.bulkSelectableUrl, {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            if (! res.ok) {
+                                return;
+                            }
+                            const payload = await res.json();
+                            this.bulkSelectableRows = Array.isArray(payload.data) ? payload.data : [];
+                        } catch (e) {
+                            this.bulkSelectableRows = [];
+                        } finally {
+                            this.bulkSelectableLoading = false;
+                        }
+                    },
+                    get selectedIds() {
+                        return Object.keys(this.selectedMap)
+                            .filter((id) => this.selectedMap[id])
+                            .map((id) => Number(id));
+                    },
+                    get selectedCount() {
+                        return this.selectedIds.length;
+                    },
+                    get selectedRows() {
+                        const selected = new Set(this.selectedIds);
+                        return this.bulkSelectableRows.filter((row) => selected.has(Number(row.id)));
+                    },
+                    get allEligibleSelected() {
+                        if (this.bulkSelectableRows.length === 0) {
+                            return false;
+                        }
+                        return this.bulkSelectableRows.every((row) => this.selectedMap[row.id]);
+                    },
+                    get bulkHasPayload() {
+                        return String(this.bulkForm.observaciones || '').trim() !== ''
+                            || String(this.bulkForm.fecha_solicitud || '').trim() !== '';
+                    },
+                    isSelected(id) {
+                        return !! this.selectedMap[id];
+                    },
+                    toggleRow(id, checked, rowMeta) {
+                        this.selectedMap = {
+                            ...this.selectedMap,
+                            [id]: !! checked,
+                        };
+
+                        if (checked && rowMeta && ! this.bulkSelectableRows.some((row) => Number(row.id) === Number(id))) {
+                            this.bulkSelectableRows = [...this.bulkSelectableRows, rowMeta];
+                        }
+                    },
+                    toggleSelectAll(checked) {
+                        const next = {};
+                        if (checked) {
+                            this.bulkSelectableRows.forEach((row) => {
+                                next[row.id] = true;
+                            });
+                        }
+                        this.selectedMap = next;
+                        this.syncPageCheckboxes();
+                    },
+                    syncPageCheckboxes() {
+                        document.querySelectorAll('.js-acreditado-row-select').forEach((input) => {
+                            const id = Number(input.value);
+                            input.checked = !! this.selectedMap[id];
+                        });
+                    },
+                    openBulkUpdate() {
+                        if (this.selectedCount < 1) {
+                            return;
+                        }
+                        this.bulkForm = { observaciones: '', fecha_solicitud: '' };
+                        this.bulkUpdateOpen = true;
+                    },
+                    closeBulkUpdate() {
+                        this.bulkUpdateOpen = false;
+                        this.submittingBulk = false;
+                    },
+                    closeEdit() {
+                        this.editOpen = false;
+                    },
+                    unlockEditIdentity() {
+                        this.editIdentityLocked = false;
+                        this.editForm.document_number = '';
+                        this.editForm.full_name = '';
+                    },
+                    syncEditCargoApo(value) {
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-edit-cargo-apo-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
                     },
                     openEdit(detail) {
                         this.editForm = {
@@ -371,21 +386,31 @@
                             observaciones: detail?.observaciones || '',
                             update_url: detail?.update_url || '',
                         };
+                        this.editIdentityLocked = Boolean(this.editForm.document_number);
                         this.editOpen = true;
+                        this.syncEditCargoApo(this.editForm.cargo_apo);
                     },
                     async lookupName(cedula, mode) {
                         const value = String(cedula || '').trim();
-                        if (!value || !this.lookupUrl) return;
+                        if (! value || ! this.lookupUrl) {
+                            return;
+                        }
+                        if (mode === 'edit' && this.editIdentityLocked) {
+                            return;
+                        }
                         try {
                             const res = await fetch(this.lookupUrl + '?cedula=' + encodeURIComponent(value), {
                                 headers: { 'Accept': 'application/json' },
                             });
-                            if (!res.ok) return;
+                            if (! res.ok) {
+                                return;
+                            }
                             const data = await res.json();
                             if (data.found && data.full_name) {
                                 if (mode === 'edit') {
                                     this.editForm.document_number = data.document_number || value;
                                     this.editForm.full_name = data.full_name;
+                                    this.editIdentityLocked = true;
                                 }
                             }
                         } catch (e) {}
@@ -444,6 +469,24 @@
                     }
                 };
 
+                function getAlpineRoot() {
+                    const root = document.querySelector('.acreditaciones-acreditados-page');
+                    if (! root || ! window.Alpine) {
+                        return null;
+                    }
+                    return window.Alpine.$data(root);
+                }
+
+                function bindRowInteractions() {
+                    const alpine = getAlpineRoot();
+                    $table.find('.js-acreditado-row-select').each(function () {
+                        const id = Number(this.value);
+                        if (alpine) {
+                            this.checked = !! alpine.isSelected(id);
+                        }
+                    });
+                }
+
                 const canEdit = $table.data('dt-can-edit') === 1 || $table.data('dt-can-edit') === '1';
 
                 const api = $table.DataTable({
@@ -458,9 +501,9 @@
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     pageLength: 10,
                     responsive: false,
-                    order: [[0, 'asc']],
+                    order: [[canEdit ? 1 : 0, 'asc']],
                     columnDefs: canEdit
-                        ? [{ targets: [8], orderable: false, searchable: false }]
+                        ? [{ targets: [0, 9], orderable: false, searchable: false }]
                         : [],
                 });
 
@@ -469,6 +512,24 @@
                     if (json && typeof json.recordsFiltered !== 'undefined') {
                         updateMeta(json.recordsFiltered);
                     }
+                });
+
+                api.on('draw.dt', function () {
+                    bindRowInteractions();
+                });
+
+                $table.on('change', '.js-acreditado-row-select', function () {
+                    const alpine = getAlpineRoot();
+                    if (! alpine) {
+                        return;
+                    }
+                    let rowMeta = null;
+                    try {
+                        rowMeta = JSON.parse(this.getAttribute('data-acreditado-row') || 'null');
+                    } catch (e) {
+                        rowMeta = null;
+                    }
+                    alpine.toggleRow(Number(this.value), this.checked, rowMeta);
                 });
 
                 $table.on('click', '.js-acreditado-edit', function () {

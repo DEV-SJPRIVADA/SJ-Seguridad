@@ -55,9 +55,13 @@
                                 <td>
                                     @if ($curso->hasDocument())
                                         <a
-                                            class="btn btn--secondary btn--sm"
+                                            class="cursos-catalogo-page__icon-btn"
                                             href="{{ route('gestion-humana.ficha-empleados.employees.cursos.document', [$entry, $curso]) }}"
-                                        >Descargar</a>
+                                            title="Descargar"
+                                            aria-label="Descargar"
+                                        >
+                                            <x-lucide-download width="16" height="16" aria-hidden="true" />
+                                        </a>
                                     @else
                                         <span class="text-muted">Sin archivo</span>
                                     @endif

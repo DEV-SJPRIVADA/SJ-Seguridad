@@ -67,7 +67,14 @@
                                     <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
                                     <span>Activo</span>
                                 </label>
-                                <button type="submit" class="btn btn--primary btn--sm">Agregar cargo</button>
+                                <button
+                                    type="submit"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Agregar cargo"
+                                    aria-label="Agregar cargo"
+                                >
+                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                </button>
                             </div>
                         </div>
                     </form>

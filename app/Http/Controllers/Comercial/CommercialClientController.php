@@ -393,6 +393,7 @@ class CommercialClientController extends Controller
         return redirect()
             ->route('comercial.matriz.clients.index', $request->only(['q', 'city', 'status']))
             ->with('status', $message)
+            ->with('import_done', true)
             ->with('import_result', $importResult);
     }
 

@@ -42,6 +42,7 @@ return [
     'limits' => [
         'observaciones_max' => 5000,
         'datatable_max_length' => 100,
+        'bulk_max_ids' => 500,
         'cargo_max' => 255,
         'document_number_max' => 50,
         'full_name_max' => 255,

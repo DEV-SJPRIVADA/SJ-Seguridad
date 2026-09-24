@@ -187,6 +187,150 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->assertDatabaseMissing('acreditacion_acreditados', ['id' => $row->id]);
     }
 
+    public function test_bulk_update_observaciones_and_fecha_solicitud(): void
+    {
+        $editor = $this->editorUser();
+        $viewer = $this->viewerUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('7100', 'Bulk Uno');
+        $this->createFicha('7101', 'Bulk Dos');
+
+        $one = AcreditacionAcreditado::factory()->create([
+            'document_number' => '7100',
+            'full_name' => 'Bulk Uno',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'fecha_solicitud' => null,
+            'observaciones' => 'vieja',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        $two = AcreditacionAcreditado::factory()->create([
+            'document_number' => '7101',
+            'full_name' => 'Bulk Dos',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'fecha_solicitud' => null,
+            'observaciones' => null,
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($viewer)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$one->id, $two->id],
+                'observaciones' => 'nueva obs',
+                'fecha_solicitud' => '2026-09-20',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$one->id, $two->id],
+                'observaciones' => 'nueva obs',
+                'fecha_solicitud' => '2026-09-20',
+            ])
+            ->assertRedirect();
+
+        $one->refresh();
+        $two->refresh();
+
+        $this->assertSame('nueva obs', $one->observaciones);
+        $this->assertSame('nueva obs', $two->observaciones);
+        $this->assertSame('2026-09-20', optional($one->fecha_solicitud)?->format('Y-m-d'));
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $one->estado);
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $two->estado);
+
+        $selectable = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.bulk-selectable'));
+
+        $selectable->assertOk();
+        $ids = collect($selectable->json('data'))->pluck('id')->all();
+        $this->assertContains($one->id, $ids);
+        $this->assertContains($two->id, $ids);
+    }
+
+    public function test_bulk_update_requires_at_least_one_field(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('ESCOLTA');
+        $this->createFicha('7200', 'Bulk Tres');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '7200',
+            'full_name' => 'Bulk Tres',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.acreditaciones.acreditados'))
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$row->id],
+                'observaciones' => '',
+                'fecha_solicitud' => '',
+            ])
+            ->assertSessionHasErrors('observaciones');
+    }
+
+    public function test_datatable_defaults_to_active_ficha_and_can_show_desvinculados(): void
+    {
+        $viewer = $this->viewerUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+
+        $this->createFicha('5100', 'Activo Uno');
+        $desvinculado = $this->createFicha('5101', 'Desvinculado Uno');
+        $desvinculado->update(['employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO]);
+
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5100',
+            'full_name' => 'Activo Uno',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5101',
+            'full_name' => 'Desvinculado Uno',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $default = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $default->assertOk();
+        $this->assertSame(1, $default->json('recordsFiltered'));
+        $this->assertStringContainsString('5100', $default->json('data.0.0'));
+
+        $desvinculados = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'ficha_estado' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $desvinculados->assertOk();
+        $this->assertSame(1, $desvinculados->json('recordsFiltered'));
+        $this->assertStringContainsString('5101', $desvinculados->json('data.0.0'));
+
+        $todos = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'ficha_estado' => 'todos',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $todos->assertOk();
+        $this->assertSame(2, $todos->json('recordsFiltered'));
+    }
+
     public function test_datatable_filters_by_estado_and_vigencia(): void
     {
         $viewer = $this->viewerUser();

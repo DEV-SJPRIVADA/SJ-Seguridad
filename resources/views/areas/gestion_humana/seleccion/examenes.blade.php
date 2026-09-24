@@ -105,8 +105,12 @@
                                     />
                                 </div>
                                 <div class="form-field cursos-registros-page__filter-actions">
-                                    <button type="submit" class="btn btn--primary btn--sm">Filtrar</button>
-                                    <a href="{{ route('gestion-humana.seleccion.examenes') }}" class="btn btn--secondary btn--sm">Limpiar</a>
+                                    <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
+                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                    <a href="{{ route('gestion-humana.seleccion.examenes') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
+                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                    </a>
                                     <x-export-excel
                                         route="{{ $exportUrl }}"
                                         label=""

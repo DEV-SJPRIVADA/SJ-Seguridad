@@ -11,16 +11,20 @@
 
     <div class="page-section archivo-page req-manage-page">
         <div class="app-container">
-            @if (session('status'))
-                <div class="alert {{ ($importHasFailures ?? false) ? 'alert--warning' : 'alert--success' }} archivo-page__alert">
-                    {{ session('status') }}
-                </div>
+            @php
+                $hasImportFlash = session()->has('import_done')
+                    || session()->has('import_result')
+                    || ($importResult ?? null);
+            @endphp
+
+            @if (session('status') && ! $hasImportFlash)
+                <div class="alert alert--success archivo-page__alert">{{ session('status') }}</div>
             @endif
 
-            @include('partials.import-failure-report', [
-                'importResult' => $importResult ?? session('import_result'),
-                'downloadRoute' => 'gestion-humana.archivo.import-report',
-            ])
+            <x-import-result-modal
+                download-route="gestion-humana.archivo.import-report"
+                :import-result="$importResult ?? session('import_result')"
+            />
 
             @if ($errors->has('import_file'))
                 <div class="alert alert--danger archivo-page__alert">{{ $errors->first('import_file') }}</div>
@@ -56,7 +60,14 @@
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cedula, nombre o codigo de requisicion"
                                     >
-                                    <button type="submit" class="btn btn--primary btn--sm">Buscar</button>
+                                    <button
+                                        type="submit"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        title="Buscar"
+                                        aria-label="Buscar"
+                                    >
+                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                    </button>
                                 </form>
                                 <button
                                     type="button"
@@ -199,7 +210,7 @@
                     'canManage' => $canManage,
                     'canExportArchive' => $canExportArchive ?? false,
                     'filters' => $filters ?? [],
-                    'show' => $errors->has('import_file') || (is_array(session('import_result')) && ((session('import_result.failures_count') ?? 0) > 0 || session('import_result.report_token'))),
+                    'show' => $errors->has('import_file'),
                 ])
             @endif
         </div>

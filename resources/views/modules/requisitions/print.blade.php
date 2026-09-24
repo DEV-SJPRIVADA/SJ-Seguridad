@@ -141,54 +141,27 @@
         {{-- CARGO SOLICITADO --}}
         <table class="row-h15">
             <tr>
-                <td colspan="5" class="section-title" style="text-decoration: underline;">CARGO SOLICITADO</td>
+                <td colspan="3" class="section-title" style="text-decoration: underline;">CARGO SOLICITADO</td>
             </tr>
             <tr class="bg-gray">
-                <td style="width: 40%;">NOMBRE DEL CARGO (Marque con una x)</td>
-                <td style="width: 15%;"></td>
+                <td style="width: 70%;">NOMBRE DEL CARGO</td>
                 <td style="width: 15%;" class="text-center">F</td>
                 <td style="width: 15%;" class="text-center">M</td>
-                <td style="width: 15%;" class="text-center">CANTIDAD</td>
             </tr>
-            @php
-                $standardPositions = [
-                    'Vigilante de Seguridad',
-                    'Vigilante Motorizado',
-                    'Operador Medios tecnológicos',
-                    'Supervisor',
-                    'Escolta VIP',
-                    'Escolta motorizado',
-                    'Escolta Conductor',
-                    'Administrativo'
-                ];
-                $currentPositionName = $requisition->position?->name;
-                $found = false;
-            @endphp
-            @foreach($standardPositions as $pos)
-                @php
-                    $isMatch = stripos($currentPositionName, $pos) !== false;
-                    if ($isMatch) $found = true;
-                @endphp
-                <tr>
-                    <td>{{ $pos }}</td>
-                    <td class="checkbox-cell">{{ $isMatch ? 'X' : '' }}</td>
-                    <td class="checkbox-cell">{{ ($isMatch && ($requisition->sex == 'femenino' || $requisition->sex == 'indiferente')) ? 'X' : '' }}</td>
-                    <td class="checkbox-cell">{{ ($isMatch && ($requisition->sex == 'masculino' || $requisition->sex == 'indiferente')) ? 'X' : '' }}</td>
-                    <td class="text-center">{{ $isMatch ? '1' : '' }}</td>
-                </tr>
-            @endforeach
-            @if(!$found)
-                <tr>
-                    <td>{{ $currentPositionName }} (Otro)</td>
-                    <td class="checkbox-cell">X</td>
-                    <td class="checkbox-cell">{{ ($requisition->sex == 'femenino' || $requisition->sex == 'indiferente') ? 'X' : '' }}</td>
-                    <td class="checkbox-cell">{{ ($requisition->sex == 'masculino' || $requisition->sex == 'indiferente') ? 'X' : '' }}</td>
-                    <td class="text-center">1</td>
-                </tr>
-            @endif
             <tr>
-                <td class="bg-gray text-center">A QUIEN REMPLAZA:</td>
-                <td colspan="4">{{ $requisition->replacement_name ?? 'N/A' }}</td>
+                <td>{{ $requisition->position?->name ?: '—' }}</td>
+                <td class="checkbox-cell">{{ ($requisition->sex == 'femenino' || $requisition->sex == 'indiferente') ? 'X' : '' }}</td>
+                <td class="checkbox-cell">{{ ($requisition->sex == 'masculino' || $requisition->sex == 'indiferente') ? 'X' : '' }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="padding: 0; border: none;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td class="bg-gray text-center" style="width: 22%; white-space: nowrap;">A QUIEN REMPLAZA:</td>
+                            <td style="width: 78%;">{{ $requisition->replacement_name ?? 'N/A' }}</td>
+                        </tr>
+                    </table>
+                </td>
             </tr>
         </table>
 

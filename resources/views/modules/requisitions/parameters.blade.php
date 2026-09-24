@@ -3,171 +3,123 @@
         @include('modules.requisitions.partials.subnav', ['moduleLabel' => $moduleLabel, 'subTabs' => $subTabs])
     </x-slot>
 
-    <style>
-        .parameter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .parameter-card {
-            background: #fff;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            box-shadow: var(--shadow-soft);
-        }
-
-        .parameter-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--color-sky);
-            box-shadow: var(--shadow-card);
-        }
-
-        .parameter-card i {
-            font-size: 2rem;
-            color: var(--color-primary);
-        }
-
-        .parameter-card h4 {
-            margin: 0;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--color-text);
-        }
-
-        .parameter-card .item-count {
-            font-size: 0.75rem;
-            color: var(--color-text-soft);
-            background: var(--color-bg);
-            padding: 2px 8px;
-            border-radius: 999px;
-        }
-
-        .parameter-section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .back-to-grid {
-            margin-bottom: 1rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--color-sky);
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .back-to-grid:hover {
-            text-decoration: underline;
-        }
-    </style>
-
-    <div class="page-section">
+    <div class="page-section ficha-empleados-catalogs-page requisition-parameters-page">
         <div class="app-container">
-            
-            {{-- PANTALLA 1: SELECTOR DE PARÁMETROS --}}
+            @if (session('status'))
+                <div class="alert alert--success ficha-empleados-catalogs-page__alert">{{ session('status') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert--danger ficha-empleados-catalogs-page__alert">{{ session('error') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="alert alert--danger ficha-empleados-catalogs-page__alert">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div id="parameter-selector-screen">
-                <div class="page-header-inner" style="padding-top: 0;">
-                    <h2 class="page-title">Tablero de Parámetros</h2>
-                    <p class="page-subtitle">Selecciona una categoría para gestionar sus valores disponibles.</p>
+                <div class="page-header-inner ficha-empleados-catalogs-page__head">
+                    <h2 class="page-title">Parámetros</h2>
+                    <p class="page-subtitle">Seleccione una categoría para gestionar los valores de formularios de requisiciones.</p>
                 </div>
 
-                <div class="parameter-grid">
+                <div class="ficha-empleados-catalogs-page__grid">
                     @foreach ($catalogs as $catalog)
-                        <div class="parameter-card" onclick="showParameterSection('{{ $catalog['key'] }}')">
-                            <div style="background: var(--brand-blue-pale); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
-                            </div>
-                            <h4>{{ $catalog['label'] }}</h4>
-                            <span class="item-count">{{ count($catalog['items']) }} registrados</span>
-                        </div>
+                        <button
+                            type="button"
+                            class="ficha-empleados-catalogs-page__card"
+                            onclick="showParameterSection('{{ $catalog['key'] }}')"
+                        >
+                            <span class="ficha-empleados-catalogs-page__card-icon" aria-hidden="true">
+                                <x-lucide-settings-2 width="22" height="22" />
+                            </span>
+                            <span class="ficha-empleados-catalogs-page__card-title">{{ $catalog['label'] }}</span>
+                            <span class="ficha-empleados-catalogs-page__card-count">{{ count($catalog['items']) }} registrados</span>
+                        </button>
                     @endforeach
+
                     @if ($showSelectionOfficers ?? false)
-                        <div class="parameter-card" onclick="showParameterSection('selection-officers')">
-                            <div style="background: var(--brand-blue-pale); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            </div>
-                            <h4>Encargados de seleccion</h4>
-                            <span class="item-count">{{ count($gestionHumanaUsers ?? []) }} usuarios GH</span>
-                        </div>
+                        <button
+                            type="button"
+                            class="ficha-empleados-catalogs-page__card"
+                            onclick="showParameterSection('selection-officers')"
+                        >
+                            <span class="ficha-empleados-catalogs-page__card-icon" aria-hidden="true">
+                                <x-lucide-users width="22" height="22" />
+                            </span>
+                            <span class="ficha-empleados-catalogs-page__card-title">Encargados de selección</span>
+                            <span class="ficha-empleados-catalogs-page__card-count">{{ count($gestionHumanaUsers ?? []) }} usuarios GH</span>
+                        </button>
                     @endif
                 </div>
             </div>
 
-            {{-- PANTALLA 2: GESTIÓN DE PARÁMETRO SELECCIONADO --}}
-            <div id="parameter-management-screen" style="display: none;">
-                <div class="back-to-grid" onclick="showSelectorScreen()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            <div id="parameter-management-screen" class="ficha-empleados-catalogs-page__manage" hidden>
+                <button type="button" class="ficha-empleados-catalogs-page__back" onclick="showSelectorScreen()">
+                    <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     Volver al tablero
-                </div>
+                </button>
 
                 @foreach ($catalogs as $catalog)
-                    <section id="section-{{ $catalog['key'] }}" class="parameter-section">
+                    <section id="section-{{ $catalog['key'] }}" class="parameter-section ficha-empleados-catalogs-page__section" hidden>
                         <div class="panel">
-                            <div class="panel__header">
-                                <h3 class="panel-title">Gestionar: {{ $catalog['label'] }}</h3>
-                                <p class="panel-text">Añade o edita los valores que aparecen en los formularios de requisiciones.</p>
+                            <div class="panel__header panel__header--compact">
+                                <h3 class="panel-title">{{ $catalog['label'] }}</h3>
                             </div>
 
                             <div class="panel__body section-stack">
-                                {{-- Formulario agregar --}}
                                 <form
                                     method="POST"
                                     action="{{ route('requisitions.parameters.store', ['module' => $moduleKey, 'type' => $catalog['key']]) }}"
-                                    class="form-stack"
-                                    style="background: var(--color-bg); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;"
+                                    class="ficha-empleados-catalogs-page__create-form"
                                 >
                                     @csrf
-                                    <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                                        <div class="form-field" style="flex: 1; min-width: 250px;">
-                                            <x-input-label :for="'name_'.$catalog['key']" value="Nuevo valor para {{ $catalog['label'] }}" />
+                                    <div class="ficha-empleados-catalogs-page__create-row">
+                                        <div class="form-field ficha-empleados-catalogs-page__name-field">
+                                            <label class="form-label" for="name_{{ $catalog['key'] }}">
+                                                {{ $catalog['key'] === 'emails' ? 'Nuevo correo' : 'Nuevo valor' }}
+                                            </label>
                                             <input
-                                                id="{{ 'name_'.$catalog['key'] }}"
+                                                id="name_{{ $catalog['key'] }}"
                                                 name="name"
                                                 type="{{ $catalog['key'] === 'emails' ? 'email' : 'text' }}"
                                                 class="form-input"
-                                                placeholder="{{ $catalog['key'] === 'emails' ? 'ej. notificaciones@empresa.com' : 'Escribe el nombre aquí...' }}"
+                                                placeholder="{{ $catalog['key'] === 'emails' ? 'ej. notificaciones@empresa.com' : 'Nombre…' }}"
                                                 required
                                             >
                                         </div>
-                                        
-                                        <div style="display: flex; align-items: center; gap: 1rem; height: 44px;">
-                                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
+                                        <div class="ficha-empleados-catalogs-page__create-actions">
+                                            <label class="ficha-empleados-catalogs-page__active-check">
                                                 <input type="checkbox" name="is_active" value="1" class="form-check" checked>
-                                                <span style="font-size: 0.9rem; font-weight: 600;">Activo</span>
+                                                <span>Activo</span>
                                             </label>
-                                            <button type="submit" class="btn btn--primary">Agregar</button>
+                                            <button
+                                                type="submit"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                                title="Agregar"
+                                                aria-label="Agregar"
+                                            >
+                                                <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                            </button>
                                         </div>
                                     </div>
                                 </form>
 
-                                {{-- Tabla --}}
                                 <div class="data-table-wrap">
                                     <table class="data-table js-datatable" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>Nombre</th>
-                                                <th style="width:100px;">Estado</th>
-                                                <th style="width:160px;">Acciones</th>
+                                                <th class="requisition-parameters-page__col-status">Estado</th>
+                                                <th class="requisition-parameters-page__col-actions">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($catalog['items'] as $item)
+                                            @forelse ($catalog['items'] as $item)
                                                 <tr>
                                                     <td>{{ $item->name }}</td>
                                                     <td>
@@ -176,30 +128,46 @@
                                                         </span>
                                                     </td>
                                                     <td class="table-actions">
-                                                        <button
-                                                            type="button"
-                                                            class="btn btn--secondary btn-param-edit"
-                                                            data-type="{{ $catalog['key'] }}"
-                                                            data-id="{{ $item->id }}"
-                                                            data-name="{{ $item->name }}"
-                                                            data-active="{{ $item->is_active ? '1' : '0' }}"
-                                                            data-label="{{ $catalog['label'] }}"
-                                                            data-update-url="{{ route('requisitions.parameters.update', ['module' => $moduleKey, 'type' => $catalog['key'], 'parameterId' => $item->id]) }}"
-                                                        >Editar</button>
-
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('requisitions.parameters.destroy', ['module' => $moduleKey, 'type' => $catalog['key'], 'parameterId' => $item->id]) }}"
-                                                            style="display:inline;"
-                                                            onsubmit="return confirm('¿Eliminar este parametro?')"
-                                                        >
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn--danger">Eliminar</button>
-                                                        </form>
+                                                        <div class="cursos-catalogo-page__row-actions">
+                                                            <button
+                                                                type="button"
+                                                                class="cursos-catalogo-page__icon-btn btn-param-edit"
+                                                                title="Editar"
+                                                                aria-label="Editar"
+                                                                data-type="{{ $catalog['key'] }}"
+                                                                data-id="{{ $item->id }}"
+                                                                data-name="{{ $item->name }}"
+                                                                data-active="{{ $item->is_active ? '1' : '0' }}"
+                                                                data-label="{{ $catalog['label'] }}"
+                                                                data-update-url="{{ route('requisitions.parameters.update', ['module' => $moduleKey, 'type' => $catalog['key'], 'parameterId' => $item->id]) }}"
+                                                            >
+                                                                <x-lucide-pencil width="16" height="16" aria-hidden="true" />
+                                                            </button>
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('requisitions.parameters.destroy', ['module' => $moduleKey, 'type' => $catalog['key'], 'parameterId' => $item->id]) }}"
+                                                                class="cursos-catalogo-page__delete-form"
+                                                                onsubmit="return confirm('¿Eliminar este parámetro?')"
+                                                            >
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button
+                                                                    type="submit"
+                                                                    class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
+                                                                    title="Eliminar"
+                                                                    aria-label="Eliminar"
+                                                                >
+                                                                    <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     </td>
                                                 </tr>
-                                            @endforeach
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" class="text-muted">Sin registros en este catálogo.</td>
+                                                </tr>
+                                            @endforelse
                                         </tbody>
                                     </table>
                                 </div>
@@ -209,7 +177,7 @@
                 @endforeach
 
                 @if ($showSelectionOfficers ?? false)
-                    <section id="section-selection-officers" class="parameter-section">
+                    <section id="section-selection-officers" class="parameter-section ficha-empleados-catalogs-page__section" hidden>
                         @include('modules.requisitions.partials.selection-officers', [
                             'moduleKey' => $moduleKey,
                             'gestionHumanaUsers' => $gestionHumanaUsers,
@@ -218,33 +186,37 @@
                     </section>
                 @endif
             </div>
-
         </div>
     </div>
 
-    {{-- Modal de edicion --}}
-    <div id="param-modal" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;">
-        <div id="param-modal-backdrop" style="position:absolute; inset:0; background:rgba(0,0,0,.5);" onclick="closeParamModal()"></div>
-        <div class="panel" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem;">
-            <div class="panel__header">
-                <h3 class="panel-title" id="param-modal-title">Editar parametro</h3>
-                <button type="button" class="btn btn--secondary" onclick="closeParamModal()">✕</button>
+    <div id="param-modal" class="ficha-empleados-catalogs-page__modal" hidden>
+        <div class="ficha-empleados-catalogs-page__modal-backdrop" onclick="closeParamModal()"></div>
+        <div class="panel ficha-empleados-catalogs-page__modal-card">
+            <div class="panel__header panel-heading-row">
+                <h3 class="panel-title" id="param-modal-title">Editar parámetro</h3>
+                <button
+                    type="button"
+                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                    onclick="closeParamModal()"
+                    title="Cerrar"
+                    aria-label="Cerrar"
+                >
+                    <x-lucide-x width="18" height="18" aria-hidden="true" />
+                </button>
             </div>
             <form method="POST" id="param-edit-form" class="panel__body form-stack">
                 @csrf
                 @method('PATCH')
-                <div class="form-stack">
-                    <div class="form-field">
-                        <x-input-label for="edit-param-name" id="edit-param-name-label" value="Nombre" />
-                        <input id="edit-param-name" name="name" type="text" class="form-input" required autocomplete="off">
-                    </div>
-                    <label class="checkbox-card">
-                        <input type="checkbox" id="edit-param-active" name="is_active" value="1" class="form-check">
-                        <span>
-                            <span class="checkbox-card__title">Activo para formularios</span>
-                        </span>
-                    </label>
+                <div class="form-field">
+                    <label class="form-label" for="edit-param-name" id="edit-param-name-label">Nombre</label>
+                    <input id="edit-param-name" name="name" type="text" class="form-input" required autocomplete="off">
                 </div>
+                <label class="checkbox-card">
+                    <input type="checkbox" id="edit-param-active" name="is_active" value="1" class="form-check">
+                    <span>
+                        <span class="checkbox-card__title">Activo para formularios</span>
+                    </span>
+                </label>
                 <div class="form-actions">
                     <button type="button" class="btn btn--secondary" onclick="closeParamModal()">Cancelar</button>
                     <button type="submit" class="btn btn--primary">Guardar cambios</button>
@@ -270,56 +242,72 @@
     }
 
     function showParameterSection(key) {
-        document.getElementById('parameter-selector-screen').style.display = 'none';
-        document.getElementById('parameter-management-screen').style.display = 'block';
+        document.getElementById('parameter-selector-screen').hidden = true;
+        const manage = document.getElementById('parameter-management-screen');
+        manage.hidden = false;
 
-        document.querySelectorAll('.parameter-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.parameter-section').forEach(function (s) {
+            s.hidden = true;
+            s.style.display = 'none';
+        });
 
         const section = document.getElementById('section-' + key);
-        if (section) section.style.display = 'block';
+        if (section) {
+            section.hidden = false;
+            section.style.display = 'block';
+        }
 
         setCatalogQuery(key);
         window.scrollTo(0, 0);
     }
 
     function showSelectorScreen() {
-        document.getElementById('parameter-selector-screen').style.display = 'block';
-        document.getElementById('parameter-management-screen').style.display = 'none';
+        document.getElementById('parameter-selector-screen').hidden = false;
+        document.getElementById('parameter-management-screen').hidden = true;
+        document.querySelectorAll('.parameter-section').forEach(function (s) {
+            s.hidden = true;
+            s.style.display = 'none';
+        });
         setCatalogQuery(null);
     }
 
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const openCatalog = catalogQueryKey();
         if (openCatalog && document.getElementById('section-' + openCatalog)) {
             showParameterSection(openCatalog);
         }
 
-        const $modal   = $('#param-modal');
-        const $form    = $('#param-edit-form');
-        const $mTitle  = $('#param-modal-title');
-        const $mName   = $('#edit-param-name');
-        const $mActive = $('#edit-param-active');
+        const modal = document.getElementById('param-modal');
+        const form = document.getElementById('param-edit-form');
+        const mTitle = document.getElementById('param-modal-title');
+        const mName = document.getElementById('edit-param-name');
+        const mActive = document.getElementById('edit-param-active');
+        const mNameLabel = document.getElementById('edit-param-name-label');
 
-        $(document).on('click', '.btn-param-edit', function() {
-            const data = $(this).data();
-            const isEmail = data.type === 'emails';
-            $mTitle.text('Editar: ' + data.label);
-            $mName.val(data.name);
-            $mName.attr('type', isEmail ? 'email' : 'text');
-            $mName.attr('placeholder', isEmail ? 'ej. notificaciones@empresa.com' : '');
-            $('#edit-param-name-label').text(isEmail ? 'Correo' : 'Nombre');
-            $mActive.prop('checked', data.active === 1);
-            $form.attr('action', data.updateUrl);
-            $modal.css('display', 'flex');
-            $mName.focus();
+        document.querySelectorAll('.btn-param-edit').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const type = button.getAttribute('data-type') || '';
+                const isEmail = type === 'emails';
+                mTitle.textContent = 'Editar: ' + (button.getAttribute('data-label') || '');
+                mName.value = button.getAttribute('data-name') || '';
+                mName.setAttribute('type', isEmail ? 'email' : 'text');
+                mName.setAttribute('placeholder', isEmail ? 'ej. notificaciones@empresa.com' : '');
+                mNameLabel.textContent = isEmail ? 'Correo' : 'Nombre';
+                mActive.checked = button.getAttribute('data-active') === '1';
+                form.action = button.getAttribute('data-update-url') || '';
+                modal.hidden = false;
+                mName.focus();
+            });
         });
 
         window.closeParamModal = function () {
-            $modal.hide();
+            modal.hidden = true;
         };
 
-        $(document).on('keydown', function (e) {
-            if (e.key === 'Escape') closeParamModal();
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeParamModal();
+            }
         });
     });
     </script>
