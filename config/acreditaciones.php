@@ -94,6 +94,66 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Export Apo SuperVigilancia (FEAT-039)
+    |--------------------------------------------------------------------------
+    */
+    'export_apo' => [
+        'filename_prefix' => 'APO9005767186',
+        'seq_pad' => 3,
+        'dashboard_last_n' => 20,
+        'dashboard_novedad_policy' => 'VIGENTE_ACTUALIZAR',
+        'dashboard_novedad_chunk' => 50,
+        'dashboard_novedad_max_scan' => 500,
+        'labels' => [
+            'nit' => 'Nit',
+            'razon_social' => 'RazonSocial',
+            'tipo_documento' => 'TipoDocumento',
+            'tipo_establecimiento' => 'TipoEstablecimiento',
+            'telefono_r' => 'TelefonoR',
+            'direccion_r' => 'DireccionR',
+            'direccion_p' => 'DireccionP',
+            'departamento' => 'Departamento',
+            'ciudad' => 'Ciudad',
+            'educacion_bm' => 'EducacionBM',
+            'educacion_s' => 'EducacionS',
+            'discapacidad' => 'Discapacidad',
+            'section_title' => 'Parámetros Export Apo',
+            'section_help' => 'Fila única usada en todas las filas del archivo SuperVigilancia (.xls).',
+        ],
+        'headers' => [
+            'Nit',
+            'RazonSocial',
+            'TipoDocumento',
+            'NoDocumento',
+            'Nombre1',
+            'Nombre2',
+            'Apellido1',
+            'Apellido2',
+            'FechaNacimiento',
+            'Genero',
+            'Cargo',
+            'Fechavinculacion',
+            'CodigoCurso',
+            'NitEscuela',
+            'Nro',
+            'TipoEstablecimiento',
+            'TelefonoR',
+            'DireccionR',
+            'DireccionP',
+            'Departamento',
+            'Ciudad',
+            'EducacionBM',
+            'EducacionS',
+            'Discapacidad',
+        ],
+        'vigencia_policies' => [
+            'VIGENTE' => 'Solo VIGENTE',
+            'VIGENTE_ACTUALIZAR' => 'VIGENTE + ACTUALIZAR',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Reporte Diario APO (FEAT-037) — snapshot histórico
     |--------------------------------------------------------------------------
     */

@@ -90,4 +90,36 @@ class CursoEscuela extends Model
 
         return $normalized === '' ? null : $normalized;
     }
+
+    /**
+     * Busca escuela activa por codigo normalizado (solo digitos, sin ceros a la izquierda).
+     */
+    public static function findActiveByNormalizedCodigo(string $codigoNorm): ?self
+    {
+        $codigoNorm = self::normalizeCodigo($codigoNorm);
+        if ($codigoNorm === '') {
+            return null;
+        }
+
+        foreach (self::query()->active()->get(['id', 'codigo', 'nit', 'nombre', 'is_active']) as $escuela) {
+            if (self::normalizeCodigo((string) $escuela->codigo) === $codigoNorm) {
+                return $escuela;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resuelve escuela activa desde No.CURSO (codigo embebido a la izquierda del guion).
+     */
+    public static function findActiveByNumeroCurso(string $numeroCurso): ?self
+    {
+        $codigo = self::extractCodigoFromNumeroCurso($numeroCurso);
+        if ($codigo === null) {
+            return null;
+        }
+
+        return self::findActiveByNormalizedCodigo($codigo);
+    }
 }

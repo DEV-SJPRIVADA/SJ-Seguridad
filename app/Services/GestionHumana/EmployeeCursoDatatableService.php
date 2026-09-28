@@ -2,6 +2,7 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Models\CursoEscuela;
 use App\Models\EmployeeCurso;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +15,11 @@ final class EmployeeCursoDatatableService
     public function __construct(
         private readonly EmployeeCursoListService $listService,
     ) {}
+
+    /**
+     * @var array<string, CursoEscuela>|null
+     */
+    private ?array $escuelaCodigoIndex = null;
 
     /**
      * @param  array{
@@ -51,10 +57,14 @@ final class EmployeeCursoDatatableService
         /** @var Collection<int, EmployeeCurso> $cursos */
         $cursos = $query->with(['cursoTipo', 'cursoEscuela'])->get();
 
+        $this->escuelaCodigoIndex = null;
+
         $rows = $cursos
             ->map(fn (EmployeeCurso $curso): array => $this->formatRow($curso, $canEdit))
             ->values()
             ->all();
+
+        $this->escuelaCodigoIndex = null;
 
         return response()->json([
             'draw' => $draw,
@@ -174,6 +184,8 @@ final class EmployeeCursoDatatableService
             default => 'status-pill status-pill--danger',
         };
 
+        $escuelaDisplay = $this->resolveEscuelaDisplay($curso);
+
         $cells = [];
 
         if ($canEdit) {
@@ -184,9 +196,9 @@ final class EmployeeCursoDatatableService
             e((string) $curso->document_number),
             e((string) $curso->full_name),
             e((string) ($curso->cursoTipo?->tipo_curso ?: '—')),
-            e((string) ($curso->escuela_nombre ?: '—')),
-            e((string) ($curso->escuela_codigo ?: '—')),
-            e((string) ($curso->escuela_nit ?: '—')),
+            e((string) ($escuelaDisplay['nombre'] ?: '—')),
+            e((string) ($escuelaDisplay['codigo'] ?: '—')),
+            e((string) ($escuelaDisplay['nit'] ?: '—')),
             e(optional($curso->fecha_expedicion)?->format('Y-m-d') ?: '—'),
             e((string) $curso->numero_curso),
             sprintf('<span class="%s">%s</span>', e($vigenciaClass), e($vigencia)),
@@ -200,6 +212,75 @@ final class EmployeeCursoDatatableService
         }
 
         return $cells;
+    }
+
+    /**
+     * Preferir snapshot; si falta, FK activa; si falta, No.CURSO → catálogo Escuelas.
+     *
+     * @return array{nombre: string, codigo: string, nit: string, escuela_id: string}
+     */
+    private function resolveEscuelaDisplay(EmployeeCurso $curso): array
+    {
+        $nombre = trim((string) ($curso->escuela_nombre ?? ''));
+        $codigo = trim((string) ($curso->escuela_codigo ?? ''));
+        $nit = trim((string) ($curso->escuela_nit ?? ''));
+        $escuelaId = $curso->curso_escuela_id ? (string) $curso->curso_escuela_id : '';
+
+        if ($nombre !== '' || $codigo !== '' || $nit !== '') {
+            return [
+                'nombre' => $nombre,
+                'codigo' => $codigo,
+                'nit' => $nit,
+                'escuela_id' => $escuelaId,
+            ];
+        }
+
+        $escuela = $curso->cursoEscuela;
+        if ($escuela instanceof CursoEscuela && $escuela->is_active) {
+            return [
+                'nombre' => trim((string) $escuela->nombre),
+                'codigo' => trim((string) $escuela->codigo),
+                'nit' => trim((string) $escuela->nit),
+                'escuela_id' => (string) $escuela->id,
+            ];
+        }
+
+        $resolved = $this->findEscuelaByNumeroCurso((string) $curso->numero_curso);
+        if ($resolved instanceof CursoEscuela) {
+            return [
+                'nombre' => trim((string) $resolved->nombre),
+                'codigo' => trim((string) $resolved->codigo),
+                'nit' => trim((string) $resolved->nit),
+                'escuela_id' => (string) $resolved->id,
+            ];
+        }
+
+        return [
+            'nombre' => '',
+            'codigo' => '',
+            'nit' => '',
+            'escuela_id' => '',
+        ];
+    }
+
+    private function findEscuelaByNumeroCurso(string $numeroCurso): ?CursoEscuela
+    {
+        $codigo = CursoEscuela::extractCodigoFromNumeroCurso($numeroCurso);
+        if ($codigo === null) {
+            return null;
+        }
+
+        if ($this->escuelaCodigoIndex === null) {
+            $this->escuelaCodigoIndex = [];
+            foreach (CursoEscuela::query()->active()->get(['id', 'codigo', 'nit', 'nombre', 'is_active']) as $escuela) {
+                $key = CursoEscuela::normalizeCodigo((string) $escuela->codigo);
+                if ($key !== '') {
+                    $this->escuelaCodigoIndex[$key] = $escuela;
+                }
+            }
+        }
+
+        return $this->escuelaCodigoIndex[$codigo] ?? null;
     }
 
     private function formatSelectCell(EmployeeCurso $curso): string
@@ -310,7 +391,7 @@ final class EmployeeCursoDatatableService
             'document_number' => $curso->document_number,
             'full_name' => $curso->full_name,
             'curso_tipo_id' => (string) $curso->curso_tipo_id,
-            'curso_escuela_id' => $curso->curso_escuela_id ? (string) $curso->curso_escuela_id : '',
+            'curso_escuela_id' => $this->resolveEscuelaDisplay($curso)['escuela_id'],
             'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d'),
             'numero_curso' => $curso->numero_curso,
             'estado' => $curso->estado ?? '',

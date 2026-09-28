@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Services\GestionHumana\EmployeeCursoEscuelaBackfillService;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Inspiring;
@@ -151,3 +152,26 @@ Artisan::command('app:sync-permissions', function () {
 
     return self::SUCCESS;
 })->purpose('Sincroniza permisos desde config y actualiza rol super-admin');
+
+Artisan::command('cursos:backfill-escuelas {--limit= : Maximo de filas a escanear}', function () {
+    $limitOption = $this->option('limit');
+    $limit = $limitOption !== null && $limitOption !== '' ? max(1, (int) $limitOption) : null;
+
+    /** @var EmployeeCursoEscuelaBackfillService $service */
+    $service = app(EmployeeCursoEscuelaBackfillService::class);
+    $stats = $service->backfill($limit);
+
+    $this->info('Backfill escuelas desde No.CURSO + catalogo Escuelas');
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Escaneados', (string) $stats['scanned']],
+            ['Actualizados', (string) $stats['updated']],
+            ['Sin codigo en No.CURSO', (string) $stats['skipped_no_codigo']],
+            ['Codigo no en catalogo', (string) $stats['skipped_no_catalog']],
+            ['Ya tenian escuela', (string) $stats['skipped_already_filled']],
+        ]
+    );
+
+    return self::SUCCESS;
+})->purpose('Completa codigo/NIT/nombre de escuela en registros de curso desde No.CURSO');

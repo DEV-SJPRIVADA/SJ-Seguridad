@@ -114,9 +114,10 @@ class AcreditacionesBoardAccessTest extends TestCase
             ->assertSee('Acreditados', false)
             ->assertSee('Reporte Diario', false)
             ->assertDontSee('Validaciones', false)
-            ->assertSee('Export Apo', false)
             ->assertDontSee('Catálogo', false)
-            ->assertSee('Próximamente', false);
+            ->assertDontSee('Próximamente', false)
+            ->assertSee('Candidatos exportables', false)
+            ->assertSee('Últimas corridas Export Apo', false);
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.acreditaciones.acreditados'))
@@ -135,7 +136,7 @@ class AcreditacionesBoardAccessTest extends TestCase
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.acreditaciones.export-apo'))
-            ->assertOk();
+            ->assertForbidden();
     }
 
     public function test_editor_can_access_catalogo(): void
@@ -155,11 +156,12 @@ class AcreditacionesBoardAccessTest extends TestCase
         $service = app(AcreditacionesAccessService::class);
 
         $this->assertSame(
-            ['dashboard', 'acreditados', 'reporte_diario', 'export_apo'],
+            ['dashboard', 'acreditados', 'reporte_diario'],
             $service->visibleTabsFor($viewer)
         );
         $this->assertNotContains('catalogo', $service->visibleTabsFor($viewer));
         $this->assertNotContains('validaciones', $service->visibleTabsFor($viewer));
+        $this->assertNotContains('export_apo', $service->visibleTabsFor($viewer));
     }
 
     public function test_editor_sees_catalogo_tab(): void

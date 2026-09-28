@@ -171,6 +171,7 @@ Route::middleware(['password.changed'])
     ->group(function (): void {
         Route::get('/', [AcreditacionesController::class, 'index'])->name('index');
         Route::get('/dashboard', [AcreditacionesController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [AcreditacionesController::class, 'dashboardMetrics'])->name('dashboard.metrics');
         Route::get('/acreditados', [AcreditacionesController::class, 'acreditados'])->name('acreditados');
         Route::get('/acreditados/datatable', [AcreditacionesController::class, 'acreditadosDatatable'])->name('acreditados.datatable');
         Route::get('/acreditados/bulk-selectable', [AcreditacionesController::class, 'bulkSelectable'])->name('acreditados.bulk-selectable');
@@ -195,8 +196,11 @@ Route::middleware(['password.changed'])
         Route::get('/validaciones/exportar', [AcreditacionesController::class, 'exportValidaciones'])->name('validaciones.export');
         Route::get('/validaciones/exportar-consolidado', [AcreditacionesController::class, 'exportValidacionesConsolidado'])->name('validaciones.export-consolidated');
         Route::get('/export-apo', [AcreditacionesController::class, 'exportApo'])->name('export-apo');
+        Route::post('/export-apo/preview', [AcreditacionesController::class, 'exportApoPreview'])->name('export-apo.preview');
+        Route::post('/export-apo/generar', [AcreditacionesController::class, 'exportApoGenerate'])->name('export-apo.generate');
         Route::get('/catalogo', [AcreditacionesController::class, 'catalogo'])->name('catalogo');
         Route::post('/catalogo', [AcreditacionesController::class, 'storeCatalogo'])->name('catalogo.store');
+        Route::patch('/catalogo/export-apo-params', [AcreditacionesController::class, 'updateExportApoParams'])->name('catalogo.export-apo-params.update');
         Route::patch('/catalogo/{acreditacionCargo}', [AcreditacionesController::class, 'updateCatalogo'])->name('catalogo.update');
         Route::delete('/catalogo/{acreditacionCargo}', [AcreditacionesController::class, 'destroyCatalogo'])->name('catalogo.destroy');
     });

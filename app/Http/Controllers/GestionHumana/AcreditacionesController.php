@@ -8,15 +8,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesDatatableRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesExportRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcreditadoRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\GenerateAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionReporteDiarioRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\PreviewAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\RunAcreditacionValidacionesRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionCargoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\UpdateAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\UpdateAcreditacionCargoRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\UpdateAcreditacionExportApoParamsRequest;
 use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionCargo;
+use App\Models\AcreditacionExportApoSetting;
 use App\Models\AcreditacionReporteDiarioFila;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
@@ -25,8 +29,12 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\AcreditacionAcreditadoDatatableService;
 use App\Services\GestionHumana\AcreditacionAcreditadoListService;
 use App\Services\GestionHumana\AcreditacionCargoCatalogService;
+use App\Services\GestionHumana\AcreditacionDashboardService;
 use App\Services\GestionHumana\AcreditacionesAuditLogService;
 use App\Services\GestionHumana\AcreditacionEstadoCalculator;
+use App\Services\GestionHumana\AcreditacionExportApoGenerateService;
+use App\Services\GestionHumana\AcreditacionExportApoPreviewService;
+use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
 use App\Services\GestionHumana\AcreditacionImportService;
 use App\Services\GestionHumana\AcreditacionReporteDiarioDatatableService;
 use App\Services\GestionHumana\AcreditacionReporteDiarioImportService;
@@ -70,6 +78,9 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionValidacionesDatatableService $validacionesDatatableService,
         private readonly AcreditacionValidacionesExportService $validacionesExportService,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
+        private readonly AcreditacionExportApoPreviewService $exportApoPreviewService,
+        private readonly AcreditacionExportApoGenerateService $exportApoGenerateService,
+        private readonly AcreditacionDashboardService $dashboardService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -83,11 +94,21 @@ class AcreditacionesController extends Controller
     {
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
-        return view('areas.gestion_humana.acreditaciones.placeholder', [
+        $payload = $this->dashboardService->metrics();
+
+        return view('areas.gestion_humana.acreditaciones.dashboard', [
             'subTabs' => $this->getAcreditacionesSubTabs('dashboard'),
-            'pageTitle' => 'Dashboard',
-            'pageDescription' => 'Gestion humana — indicadores de acreditaciones',
+            'initialPayload' => $payload,
+            'metricsUrl' => route('gestion-humana.acreditaciones.dashboard.metrics'),
+            'canEditExportApo' => $this->acreditacionesAccess->canEdit(auth()->user()),
         ]);
+    }
+
+    public function dashboardMetrics(): JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
+
+        return response()->json($this->dashboardService->metrics());
     }
 
     public function acreditados(Request $request): View
@@ -1121,15 +1142,82 @@ class AcreditacionesController extends Controller
         return $result;
     }
 
-    public function exportApo(): View
+    public function exportApo(Request $request): View
     {
-        abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
 
-        return view('areas.gestion_humana.acreditaciones.placeholder', [
+        $vigenciaPolicies = collect(config('acreditaciones.export_apo.vigencia_policies', []))
+            ->map(fn (string $label, string $value): array => [
+                'value' => $value,
+                'label' => $label,
+            ])
+            ->values()
+            ->all();
+
+        $settings = AcreditacionExportApoSetting::singleton();
+
+        return view('areas.gestion_humana.acreditaciones.export-apo', [
             'subTabs' => $this->getAcreditacionesSubTabs('export_apo'),
-            'pageTitle' => 'Export Apo',
-            'pageDescription' => 'Gestion humana — exportación APO',
+            'vigenciaPolicyOptions' => $vigenciaPolicies,
+            'defaultVigenciaPolicy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+            'previewUrl' => route('gestion-humana.acreditaciones.export-apo.preview'),
+            'generateUrl' => route('gestion-humana.acreditaciones.export-apo.generate'),
+            'exportApoSettings' => $settings,
         ]);
+    }
+
+    public function exportApoPreview(PreviewAcreditacionExportApoRequest $request): JsonResponse
+    {
+        $preview = $request->previewAll()
+            ? $this->exportApoPreviewService->previewAll($request->vigenciaPolicy())
+            : $this->exportApoPreviewService->preview(
+                $request->ids(),
+                $request->vigenciaPolicy(),
+            );
+
+        return response()->json($preview);
+    }
+
+    public function exportApoGenerate(GenerateAcreditacionExportApoRequest $request): StreamedResponse|RedirectResponse
+    {
+        try {
+            $result = $this->exportApoGenerateService->generate(
+                $request->ids(),
+                $request->vigenciaPolicy(),
+                $request->includeNovedades(),
+                (int) auth()->id(),
+            );
+        } catch (ValidationException $e) {
+            return redirect()
+                ->route('gestion-humana.acreditaciones.export-apo')
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', collect($e->errors())->flatten()->first() ?: 'No se pudo generar el archivo Export Apo.');
+        }
+
+        $run = $result['run'];
+
+        $this->auditLogService->logEvent(
+            eventType: 'export_apo_generate',
+            action: 'generate',
+            reason: null,
+            metadata: [
+                'file_name' => $run->file_name,
+                'export_date' => optional($run->export_date)?->format('Y-m-d'),
+                'seq' => $run->seq,
+                'vigencia_policy' => $run->vigencia_policy,
+                'include_novedades' => $run->include_novedades,
+                'rows_selected' => $run->rows_selected,
+                'rows_ok' => $run->rows_ok,
+                'rows_novedad' => $run->rows_novedad,
+                'rows_blocked' => $run->rows_blocked,
+                'rows_exported' => $run->rows_exported,
+            ],
+            model: $run,
+            userId: (int) auth()->id(),
+        );
+
+        return $result['response'];
     }
 
     public function catalogo(): View
@@ -1144,7 +1232,49 @@ class AcreditacionesController extends Controller
             'subTabs' => $this->getAcreditacionesSubTabs('catalogo'),
             'cargos' => $cargos,
             'catalogService' => $this->catalogService,
+            'exportApoSettings' => AcreditacionExportApoSetting::singleton(),
+            'exportApoLabels' => config('acreditaciones.export_apo.labels', []),
         ]);
+    }
+
+    public function updateExportApoParams(UpdateAcreditacionExportApoParamsRequest $request): RedirectResponse
+    {
+        $settings = AcreditacionExportApoSetting::singleton();
+
+        $fieldKeys = [
+            'nit',
+            'razon_social',
+            'tipo_documento',
+            'tipo_establecimiento',
+            'telefono_r',
+            'direccion_r',
+            'direccion_p',
+            'departamento',
+            'ciudad',
+            'educacion_bm',
+            'educacion_s',
+            'discapacidad',
+        ];
+
+        $before = $settings->only($fieldKeys);
+        $validated = $request->validated();
+
+        $settings->fill($validated);
+        $settings->updated_by = (int) auth()->id();
+        $settings->save();
+
+        $this->auditLogService->logModelChange(
+            eventType: 'export_apo_settings',
+            action: 'update',
+            model: $settings,
+            before: $before,
+            after: $settings->only($fieldKeys),
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.acreditaciones.catalogo')
+            ->with('status', 'Parámetros Export Apo actualizados correctamente.');
     }
 
     public function storeCatalogo(StoreAcreditacionCargoRequest $request): RedirectResponse

@@ -52,7 +52,7 @@ class AcreditacionesAccessService
         if (! $this->canEdit($user)) {
             $tabs = array_values(array_filter(
                 $tabs,
-                fn (string $tab): bool => ! in_array($tab, ['catalogo', 'validaciones'], true),
+                fn (string $tab): bool => ! in_array($tab, ['catalogo', 'validaciones', 'export_apo'], true),
             ));
         }
 
