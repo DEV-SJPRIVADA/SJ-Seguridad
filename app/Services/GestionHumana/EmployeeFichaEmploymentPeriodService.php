@@ -230,6 +230,105 @@ class EmployeeFichaEmploymentPeriodService
             ->first();
     }
 
+    /**
+     * Invariante de negocio: perfil `activo` en ficha (ya movido) debe tener periodo abierto.
+     * Crea el periodo faltante (legado / import / fecha retiro vaciada sin reabrir vinculo).
+     */
+    public function ensureOpenPeriodIfProfileActive(
+        PersonalRequisitionFichaEntry $entry,
+        int $userId,
+    ): ?EmployeeFichaEmploymentPeriod {
+        $entry->loadMissing('profile');
+        $profile = $entry->profile;
+
+        $existing = $this->activePeriod($entry);
+
+        if ($profile === null || $profile->employment_status !== EmployeeFichaProfile::STATUS_ACTIVO) {
+            return $existing;
+        }
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        if ($entry->moved_to_ficha_at === null) {
+            return null;
+        }
+
+        $openedBy = $userId > 0
+            ? $userId
+            : (int) ($entry->moved_to_ficha_by ?? $entry->created_by ?? 0);
+
+        if ($openedBy <= 0) {
+            $openedBy = 1;
+        }
+
+        return $this->openPeriod(
+            $entry,
+            $profile->getAttributes(),
+            $openedBy,
+            $entry->personal_requisition_id,
+        );
+    }
+
+    /**
+     * Abre periodo activo para perfiles `activo` sin vinculo abierto.
+     *
+     * @return array{scanned: int, opened: int, skipped: int, failed: int}
+     */
+    public function backfillMissingActivePeriods(?int $limit = null, int $userId = 0): array
+    {
+        $query = EmployeeFichaProfile::query()
+            ->where('employment_status', EmployeeFichaProfile::STATUS_ACTIVO)
+            ->whereHas('fichaEntry', static function ($inner): void {
+                $inner->whereNotNull('moved_to_ficha_at');
+            })
+            ->whereDoesntHave('fichaEntry.employmentPeriods', static function ($inner): void {
+                $inner->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO);
+            })
+            ->with('fichaEntry')
+            ->orderBy('id');
+
+        if ($limit !== null) {
+            $query->limit(max(1, $limit));
+        }
+
+        $scanned = 0;
+        $opened = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        foreach ($query->cursor() as $profile) {
+            $scanned++;
+            $entry = $profile->fichaEntry;
+
+            if ($entry === null) {
+                $skipped++;
+
+                continue;
+            }
+
+            try {
+                $period = $this->ensureOpenPeriodIfProfileActive($entry, $userId);
+
+                if ($period !== null && $period->status === EmployeeFichaEmploymentPeriod::STATUS_ACTIVO) {
+                    $opened++;
+                } else {
+                    $skipped++;
+                }
+            } catch (\Throwable) {
+                $failed++;
+            }
+        }
+
+        return [
+            'scanned' => $scanned,
+            'opened' => $opened,
+            'skipped' => $skipped,
+            'failed' => $failed,
+        ];
+    }
+
     public function latestClosedPeriod(PersonalRequisitionFichaEntry $entry): ?EmployeeFichaEmploymentPeriod
     {
         return EmployeeFichaEmploymentPeriod::query()

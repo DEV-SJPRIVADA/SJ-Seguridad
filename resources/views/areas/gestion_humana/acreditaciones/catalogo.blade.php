@@ -31,6 +31,83 @@
 
             <div class="panel">
                 <div class="panel__header">
+                    <h3 class="panel-title">{{ $exportApoLabels['section_title'] ?? 'Parámetros Export Apo' }}</h3>
+                    <p class="panel-text">{{ $exportApoLabels['section_help'] ?? 'Fila única usada en el archivo SuperVigilancia (.xls).' }}</p>
+                </div>
+                <div class="panel__body section-stack">
+                    <form
+                        method="POST"
+                        action="{{ route('gestion-humana.acreditaciones.catalogo.export-apo-params.update') }}"
+                        class="ficha-empleados-catalogs-page__create-form cursos-catalogo-page__filters"
+                    >
+                        @csrf
+                        @method('PATCH')
+                        <div class="ficha-empleados-catalogs-page__create-row cursos-catalogo-page__filters-row">
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_nit">{{ $exportApoLabels['nit'] ?? 'Nit' }}</label>
+                                <input id="export_apo_nit" name="nit" type="text" class="form-input" maxlength="20" required value="{{ old('nit', $exportApoSettings->nit) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_razon_social">{{ $exportApoLabels['razon_social'] ?? 'RazonSocial' }}</label>
+                                <input id="export_apo_razon_social" name="razon_social" type="text" class="form-input" maxlength="255" required value="{{ old('razon_social', $exportApoSettings->razon_social) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_tipo_documento">{{ $exportApoLabels['tipo_documento'] ?? 'TipoDocumento' }}</label>
+                                <input id="export_apo_tipo_documento" name="tipo_documento" type="text" class="form-input" maxlength="10" required value="{{ old('tipo_documento', $exportApoSettings->tipo_documento) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_tipo_establecimiento">{{ $exportApoLabels['tipo_establecimiento'] ?? 'TipoEstablecimiento' }}</label>
+                                <input id="export_apo_tipo_establecimiento" name="tipo_establecimiento" type="text" class="form-input" maxlength="50" required value="{{ old('tipo_establecimiento', $exportApoSettings->tipo_establecimiento) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_telefono_r">{{ $exportApoLabels['telefono_r'] ?? 'TelefonoR' }}</label>
+                                <input id="export_apo_telefono_r" name="telefono_r" type="text" class="form-input" maxlength="30" required value="{{ old('telefono_r', $exportApoSettings->telefono_r) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_direccion_r">{{ $exportApoLabels['direccion_r'] ?? 'DireccionR' }}</label>
+                                <input id="export_apo_direccion_r" name="direccion_r" type="text" class="form-input" maxlength="255" required value="{{ old('direccion_r', $exportApoSettings->direccion_r) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_direccion_p">{{ $exportApoLabels['direccion_p'] ?? 'DireccionP' }}</label>
+                                <input id="export_apo_direccion_p" name="direccion_p" type="text" class="form-input" maxlength="255" required value="{{ old('direccion_p', $exportApoSettings->direccion_p) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_departamento">{{ $exportApoLabels['departamento'] ?? 'Departamento' }}</label>
+                                <input id="export_apo_departamento" name="departamento" type="text" class="form-input" maxlength="100" required value="{{ old('departamento', $exportApoSettings->departamento) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_ciudad">{{ $exportApoLabels['ciudad'] ?? 'Ciudad' }}</label>
+                                <input id="export_apo_ciudad" name="ciudad" type="text" class="form-input" maxlength="100" required value="{{ old('ciudad', $exportApoSettings->ciudad) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_educacion_bm">{{ $exportApoLabels['educacion_bm'] ?? 'EducacionBM' }}</label>
+                                <input id="export_apo_educacion_bm" name="educacion_bm" type="text" class="form-input" maxlength="50" required value="{{ old('educacion_bm', $exportApoSettings->educacion_bm) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_educacion_s">{{ $exportApoLabels['educacion_s'] ?? 'EducacionS' }}</label>
+                                <input id="export_apo_educacion_s" name="educacion_s" type="text" class="form-input" maxlength="50" required value="{{ old('educacion_s', $exportApoSettings->educacion_s) }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label" for="export_apo_discapacidad">{{ $exportApoLabels['discapacidad'] ?? 'Discapacidad' }}</label>
+                                <input id="export_apo_discapacidad" name="discapacidad" type="text" class="form-input" maxlength="50" required value="{{ old('discapacidad', $exportApoSettings->discapacidad) }}">
+                            </div>
+                            <div class="ficha-empleados-catalogs-page__create-actions">
+                                <button
+                                    type="submit"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Guardar parámetros Export Apo"
+                                    aria-label="Guardar parámetros Export Apo"
+                                >
+                                    <x-lucide-save width="18" height="18" aria-hidden="true" />
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel__header">
                     <h3 class="panel-title">Gestionar cargos</h3>
                     <p class="panel-text">{{ $cargos->count() }} registros en catálogo</p>
                 </div>

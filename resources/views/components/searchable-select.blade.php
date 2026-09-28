@@ -55,10 +55,11 @@
     }
 
     $dataAttributes = $attributes->filter(fn ($val, $k) => str_starts_with($k, 'data-'));
+    $formId = $attributes->get('form');
 @endphp
 
 <div
-    {{ $attributes->merge(['class' => 'searchable-select-wrap']) }}
+    {{ $attributes->except('form')->merge(['class' => 'searchable-select-wrap']) }}
     x-data="searchableSelect({
         name: @js($name),
         value: @js($selectedValue),
@@ -83,6 +84,7 @@
         :value="value"
         :disabled="disabled"
         x-ref="hiddenInput"
+        @if ($formId) form="{{ $formId }}" @endif
         {{ $dataAttributes }}
     >
     <template x-if="required">

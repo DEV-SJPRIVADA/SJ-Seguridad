@@ -80,7 +80,7 @@ class AcreditacionImportService
 
                 $profile = EmployeeFichaProfile::query()
                     ->where('document_number', $cedula)
-                    ->first(['id', 'document_number', 'full_name']);
+                    ->first(['id', 'document_number', 'full_name', 'position_name']);
 
                 if ($profile === null) {
                     throw new \InvalidArgumentException('La cedula no existe en Ficha empleados.');
@@ -91,9 +91,11 @@ class AcreditacionImportService
                     throw new \InvalidArgumentException('La ficha de esta cedula no tiene nombre completo.');
                 }
 
-                $cargo = trim((string) ($data['cargo'] ?? ''));
+                $cargo = trim((string) ($profile->position_name ?? ''));
                 if ($cargo === '') {
-                    throw new \InvalidArgumentException('El cargo es obligatorio.');
+                    throw new \InvalidArgumentException(
+                        'La ficha de esta cedula no tiene cargo. Complete el cargo en Ficha empleados.',
+                    );
                 }
 
                 $cargoApoInput = trim((string) ($data['cargo_apo'] ?? ''));

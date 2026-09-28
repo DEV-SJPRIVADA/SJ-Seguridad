@@ -99,8 +99,8 @@ class AcreditacionesImportTest extends TestCase
         ]);
 
         $path = $this->makeImportFile([
-            ['100', 'Ignorado Excel', 'GUARDA', 'VIGILANTE', '2027-06-01', '', 'actualizado'],
-            ['200', 'Ignorado', 'GUARDA', 'VIGILANTE', '2027-12-01', '', 'nuevo'],
+            ['100', 'Ignorado Excel', 'CARGO EXCEL IGNORADO', 'VIGILANTE', '2027-06-01', '', 'actualizado'],
+            ['200', 'Ignorado', 'OTRO EXCEL', 'VIGILANTE', '2027-12-01', '', 'nuevo'],
         ]);
 
         $this->actingAs($editor)
@@ -269,11 +269,15 @@ class AcreditacionesImportTest extends TestCase
         return $path;
     }
 
-    private function createFicha(string $documentNumber, string $fullName): EmployeeFichaProfile
-    {
+    private function createFicha(
+        string $documentNumber,
+        string $fullName,
+        string $positionName = 'GUARDA',
+    ): EmployeeFichaProfile {
         return EmployeeFichaProfile::query()->create([
             'document_number' => $documentNumber,
             'full_name' => $fullName,
+            'position_name' => $positionName,
         ]);
     }
 

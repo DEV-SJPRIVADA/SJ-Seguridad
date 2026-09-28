@@ -39,7 +39,17 @@
 @endphp
 
 @if ($compactCreate && $copyCandidates->isNotEmpty())
-    @include('admin.users.partials.copy-access-create')
+    {{-- Formulario GET fuera del POST de crear; los campos del panel usan form="…" --}}
+    <form
+        id="copy-access-create-form"
+        method="GET"
+        action="{{ route('admin.users.create') }}"
+        class="sr-only"
+        aria-hidden="true"
+        tabindex="-1"
+    >
+        <input type="hidden" name="tab" value="capabilities">
+    </form>
 @endif
 
 <form method="POST" action="{{ $action }}" class="user-form panel__body {{ $compactCreate ? 'user-form--create' : '' }}" id="user-permissions-form">
@@ -105,94 +115,102 @@
                 </div>
             @endunless
 
-            <div class="form-grid {{ $compactCreate ? 'admin-user-create__grid' : 'form-grid--two' }}">
-                <div class="form-field">
-                    <label class="form-label">Cedula</label>
-                    <input name="document_number" type="text" class="form-input @error('document_number') form-input--invalid @enderror" value="{{ old('document_number', $user?->document_number) }}" maxlength="50" required>
-                    <x-input-error :messages="$errors->get('document_number')" />
-                    @if ($compactCreate)
-                        <p class="text-small text-muted">Contrasena temporal y acceso inicial.</p>
-                    @elseif (! $user)
-                        <p class="text-small text-muted">Se usara como contrasena temporal al crear el usuario.</p>
-                    @endif
-                </div>
-                <div class="form-field">
-                    <label class="form-label">Nombre completo</label>
-                    <input name="name" type="text" class="form-input @error('name') form-input--invalid @enderror" value="{{ old('name', $user?->name) }}" required>
-                    <x-input-error :messages="$errors->get('name')" />
-                </div>
+            <div class="{{ $compactCreate && $copyCandidates->isNotEmpty() ? 'admin-user-create__datos-layout' : '' }}">
+                <div class="{{ $compactCreate && $copyCandidates->isNotEmpty() ? 'admin-user-create__datos-main' : '' }}">
+                    <div class="form-grid {{ $compactCreate ? 'admin-user-create__grid' : 'form-grid--two' }}">
+                        <div class="form-field">
+                            <label class="form-label">Cedula</label>
+                            <input name="document_number" type="text" class="form-input @error('document_number') form-input--invalid @enderror" value="{{ old('document_number', $user?->document_number) }}" maxlength="50" required>
+                            <x-input-error :messages="$errors->get('document_number')" />
+                            @if ($compactCreate)
+                                <p class="text-small text-muted">Contrasena temporal y acceso inicial.</p>
+                            @elseif (! $user)
+                                <p class="text-small text-muted">Se usara como contrasena temporal al crear el usuario.</p>
+                            @endif
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">Nombre completo</label>
+                            <input name="name" type="text" class="form-input @error('name') form-input--invalid @enderror" value="{{ old('name', $user?->name) }}" required>
+                            <x-input-error :messages="$errors->get('name')" />
+                        </div>
 
-                <div class="form-field">
-                    <label class="form-label">Correo electronico</label>
-                    <input name="email" type="email" class="form-input @error('email') form-input--invalid @enderror" value="{{ old('email', $user?->email) }}" required>
-                    <x-input-error :messages="$errors->get('email')" />
-                    @if ($compactCreate)
-                        <p class="text-small text-muted">Recibira credenciales por correo.</p>
-                    @endif
-                </div>
-                <div class="form-field">
-                    <label class="form-label">Perfil / Rol principal</label>
-                    <x-searchable-select
-                        id="user-role"
-                        name="role"
-                        :options="collect($roles)->map(fn($r) => ['value' => $r->name, 'label' => ucfirst($r->name)])->all()"
-                        :value="$selectedRole"
-                        placeholder="Seleccionar rol…"
-                        searchPlaceholder="Buscar rol…"
-                        :required="true"
-                        :allowClear="false"
-                    />
-                    <x-input-error :messages="$errors->get('role')" />
-                </div>
-                <div class="form-field">
-                    <label class="form-label">Area base</label>
-                    <x-searchable-select
-                        id="user-area-key"
-                        name="area_key"
-                        :options="$areas"
-                        :value="old('area_key', $copyDefaults['area_key'] ?? $user?->area_key)"
-                        placeholder="Sin area fija"
-                        searchPlaceholder="Buscar area…"
-                    />
-                    <x-input-error :messages="$errors->get('area_key')" />
-                    @unless ($compactCreate)
-                        <p class="text-small text-muted">{{ $help['area_key'] ?? '' }}</p>
-                    @endunless
-                </div>
-                <div class="form-field">
-                    <label class="form-label">Sede fisica</label>
-                    <div class="user-form__sede-row">
-                        <x-searchable-select
-                            id="user-sede-id"
-                            name="sede_id"
-                            :options="collect($sites ?? [])->map(fn($s) => ['value' => (string) $s->id, 'label' => $s->utilization . ' (' . $s->city . ')'])->all()"
-                            :value="old('sede_id', $copyDefaults['sede_id'] ?? $user?->sede_id)"
-                            placeholder="Sin sede asignada"
-                            searchPlaceholder="Buscar sede…"
-                        />
-                        <button type="button" class="btn btn--secondary btn--sm" id="open-sites-modal" title="Gestionar sedes">
-                            Gestionar
-                        </button>
+                        <div class="form-field">
+                            <label class="form-label">Correo electronico</label>
+                            <input name="email" type="email" class="form-input @error('email') form-input--invalid @enderror" value="{{ old('email', $user?->email) }}" required>
+                            <x-input-error :messages="$errors->get('email')" />
+                            @if ($compactCreate)
+                                <p class="text-small text-muted">Recibira credenciales por correo.</p>
+                            @endif
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">Perfil / Rol principal</label>
+                            <x-searchable-select
+                                id="user-role"
+                                name="role"
+                                :options="collect($roles)->map(fn($r) => ['value' => $r->name, 'label' => ucfirst($r->name)])->all()"
+                                :value="$selectedRole"
+                                placeholder="Seleccionar rol…"
+                                searchPlaceholder="Buscar rol…"
+                                :required="true"
+                                :allowClear="false"
+                            />
+                            <x-input-error :messages="$errors->get('role')" />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">Area base</label>
+                            <x-searchable-select
+                                id="user-area-key"
+                                name="area_key"
+                                :options="$areas"
+                                :value="old('area_key', $copyDefaults['area_key'] ?? $user?->area_key)"
+                                placeholder="Sin area fija"
+                                searchPlaceholder="Buscar area…"
+                            />
+                            <x-input-error :messages="$errors->get('area_key')" />
+                            @unless ($compactCreate)
+                                <p class="text-small text-muted">{{ $help['area_key'] ?? '' }}</p>
+                            @endunless
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">Sede fisica</label>
+                            <div class="user-form__sede-row">
+                                <x-searchable-select
+                                    id="user-sede-id"
+                                    name="sede_id"
+                                    :options="collect($sites ?? [])->map(fn($s) => ['value' => (string) $s->id, 'label' => $s->utilization . ' (' . $s->city . ')'])->all()"
+                                    :value="old('sede_id', $copyDefaults['sede_id'] ?? $user?->sede_id)"
+                                    placeholder="Sin sede asignada"
+                                    searchPlaceholder="Buscar sede…"
+                                />
+                                <button type="button" class="btn btn--secondary btn--sm" id="open-sites-modal" title="Gestionar sedes">
+                                    Gestionar
+                                </button>
+                            </div>
+                            <x-input-error :messages="$errors->get('sede_id')" />
+                            @unless ($compactCreate)
+                                <p class="text-small text-muted">Requerida para solicitar insumos.</p>
+                            @endunless
+                        </div>
                     </div>
-                    <x-input-error :messages="$errors->get('sede_id')" />
-                    @unless ($compactCreate)
-                        <p class="text-small text-muted">Requerida para solicitar insumos.</p>
-                    @endunless
-                </div>
-            </div>
 
-            @if ($compactCreate)
-                <div class="admin-user-create__security">
-                    <label class="admin-user-create__toggle">
-                        <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
-                        <span>Usuario activo</span>
-                    </label>
-                    <label class="admin-user-create__toggle">
-                        <input type="checkbox" name="must_change_password" value="1" class="form-check" @checked(old('must_change_password', true))>
-                        <span>Forzar cambio de contrasena al ingresar</span>
-                    </label>
+                    @if ($compactCreate)
+                        <div class="admin-user-create__security">
+                            <label class="admin-user-create__toggle">
+                                <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
+                                <span>Usuario activo</span>
+                            </label>
+                            <label class="admin-user-create__toggle">
+                                <input type="checkbox" name="must_change_password" value="1" class="form-check" @checked(old('must_change_password', true))>
+                                <span>Forzar cambio de contrasena al ingresar</span>
+                            </label>
+                        </div>
+                    @endif
                 </div>
-            @endif
+
+                @if ($compactCreate && $copyCandidates->isNotEmpty())
+                    @include('admin.users.partials.copy-access-create')
+                @endif
+            </div>
         </div>
 
         <div id="section-capabilities" class="user-form__section" @if ($initialTab !== 'section-capabilities') hidden @endif>

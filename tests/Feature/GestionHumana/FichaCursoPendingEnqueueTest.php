@@ -4,7 +4,7 @@ namespace Tests\Feature\GestionHumana;
 
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeCursoPending;
-use App\Models\EmployeeFichaProfile;
+use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
@@ -194,6 +194,11 @@ class FichaCursoPendingEnqueueTest extends TestCase
             'status' => EmployeeCursoPending::STATUS_PENDING,
             'personal_requisition_ficha_entry_id' => $entry->id,
             'enqueued_by' => $manager->id,
+        ]);
+
+        $this->assertDatabaseHas('employee_ficha_employment_periods', [
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
         ]);
     }
 

@@ -36,6 +36,43 @@ class EmployeeFichaEmploymentPeriodTest extends TestCase
         PermissionCatalog::sync();
     }
 
+    public function test_ensure_opens_period_for_activo_without_period_and_shows_terminate(): void
+    {
+        $terminator = User::factory()->create(['must_change_password' => false]);
+        $terminator->givePermissionTo(['ficha_empleados.manage', 'ficha_empleados.terminate']);
+
+        $entry = $this->createInFichaEntry(withActivePeriod: false);
+
+        $this->assertDatabaseMissing('employee_ficha_employment_periods', [
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+        ]);
+
+        $this->actingAs($terminator)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertSee('Desvinculación', false);
+
+        $this->assertDatabaseHas('employee_ficha_employment_periods', [
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+        ]);
+    }
+
+    public function test_backfill_opens_missing_active_periods(): void
+    {
+        $entry = $this->createInFichaEntry(withActivePeriod: false);
+        $service = app(EmployeeFichaEmploymentPeriodService::class);
+
+        $stats = $service->backfillMissingActivePeriods(null, (int) $entry->moved_to_ficha_by);
+
+        $this->assertSame(1, $stats['opened']);
+        $this->assertDatabaseHas('employee_ficha_employment_periods', [
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+        ]);
+    }
+
     public function test_can_terminate_requires_dedicated_permission(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);

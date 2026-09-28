@@ -46,6 +46,7 @@
     </x-slot>
 
     @php
+        $canManageFicha = (bool) ($canManage ?? false);
         $showTerminateModal = $errors->hasAny([
             'termination_cause_code',
             'last_work_day',
@@ -53,12 +54,14 @@
             'is_rehireable',
             'termination_notes',
         ]);
+        $startInEditMode = $canManageFicha && $errors->any() && ! $showTerminateModal;
     @endphp
 
     <div
         class="page-section ficha-empleados-page ficha-empleados-page--form"
         x-data="{
-            isEditing: {{ $errors->any() && ! $showTerminateModal ? 'true' : 'false' }},
+            canManage: {{ $canManageFicha ? 'true' : 'false' }},
+            isEditing: {{ $startInEditMode ? 'true' : 'false' }},
             init() {
                 this.$watch('isEditing', () => this.syncFieldLock());
                 this.$nextTick(() => this.syncFieldLock());
@@ -69,16 +72,18 @@
                     return;
                 }
 
+                const editable = this.canManage && this.isEditing;
+
                 root.querySelectorAll('input, textarea').forEach((el) => {
                     if (['hidden', 'file', 'checkbox', 'radio', 'submit', 'button', 'reset'].includes(el.type)) {
                         return;
                     }
 
-                    el.readOnly = ! this.isEditing;
+                    el.readOnly = ! editable;
                 });
 
                 root.querySelectorAll('input[type=checkbox], input[type=radio], select').forEach((el) => {
-                    el.disabled = ! this.isEditing;
+                    el.disabled = ! editable;
                 });
             },
         }"
@@ -110,27 +115,29 @@
                     </template>
                 </div>
 
-                <div>
-                    <template x-if="!isEditing">
-                        <button
-                            type="button"
-                            class="btn btn--primary"
-                            @click="isEditing = true"
-                        >
-                            <x-lucide-edit-3 width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
-                            Habilitar edición
-                        </button>
-                    </template>
-                    <template x-if="isEditing">
-                        <button
-                            type="button"
-                            class="btn btn--secondary"
-                            @click="isEditing = false"
-                        >
-                            Bloquear edición
-                        </button>
-                    </template>
-                </div>
+                @if ($canManageFicha)
+                    <div>
+                        <template x-if="!isEditing">
+                            <button
+                                type="button"
+                                class="btn btn--primary"
+                                @click="isEditing = true"
+                            >
+                                <x-lucide-edit-3 width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
+                                Habilitar edición
+                            </button>
+                        </template>
+                        <template x-if="isEditing">
+                            <button
+                                type="button"
+                                class="btn btn--secondary"
+                                @click="isEditing = false"
+                            >
+                                Bloquear edición
+                            </button>
+                        </template>
+                    </div>
+                @endif
             </div>
 
             @if ($canGenerateContratacionLetters)
@@ -148,7 +155,7 @@
                 class="panel ficha-empleados-form"
                 :class="{ 'ficha-empleados-form--readonly': !isEditing }"
                 id="ficha-empleados-form"
-                @submit="if (!isEditing) { $event.preventDefault() }"
+                @submit="if (!canManage || !isEditing) { $event.preventDefault() }"
             >
                 @csrf
                 @method('PATCH')
@@ -163,9 +170,9 @@
                     <div
                         class="ficha-empleados-form__fields"
                         x-ref="fichaFields"
-                        @beforeinput="if (!isEditing) { $event.preventDefault() }"
-                        @paste="if (!isEditing) { $event.preventDefault() }"
-                        @cut="if (!isEditing) { $event.preventDefault() }"
+                        @beforeinput="if (!canManage || !isEditing) { $event.preventDefault() }"
+                        @paste="if (!canManage || !isEditing) { $event.preventDefault() }"
+                        @cut="if (!canManage || !isEditing) { $event.preventDefault() }"
                     >
                         @include('areas.gestion_humana.ficha-empleados.partials.ficha-form-fields', [
                             'profile' => $profile,
@@ -186,27 +193,29 @@
                         >Desvinculación</button>
                     @endif
 
-                    <template x-if="!isEditing">
-                        <button
-                            type="button"
-                            class="btn btn--primary"
-                            @click="isEditing = true"
-                        >
-                            <x-lucide-edit-3 width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
-                            Habilitar edición
-                        </button>
-                    </template>
-
-                    <template x-if="isEditing">
-                        <div style="display: inline-flex; gap: 0.5rem; align-items: center;">
+                    @if ($canManageFicha)
+                        <template x-if="!isEditing">
                             <button
                                 type="button"
-                                class="btn btn--secondary"
-                                @click="isEditing = false"
-                            >Cancelar</button>
-                            <button type="submit" class="btn btn--primary">Guardar ficha</button>
-                        </div>
-                    </template>
+                                class="btn btn--primary"
+                                @click="isEditing = true"
+                            >
+                                <x-lucide-edit-3 width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
+                                Habilitar edición
+                            </button>
+                        </template>
+
+                        <template x-if="isEditing">
+                            <div style="display: inline-flex; gap: 0.5rem; align-items: center;">
+                                <button
+                                    type="button"
+                                    class="btn btn--secondary"
+                                    @click="isEditing = false"
+                                >Cancelar</button>
+                                <button type="submit" class="btn btn--primary">Guardar ficha</button>
+                            </div>
+                        </template>
+                    @endif
                 </div>
             </form>
 

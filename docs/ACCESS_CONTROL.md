@@ -181,19 +181,21 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 
 ### Acreditaciones (Gestion humana)
 
-Tablero **Acreditaciones** (Acreditados, Reporte Diario APO, Catálogo; placeholders Dashboard / Validaciones / Export Apo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
+Tablero **Acreditaciones** (Dashboard, Acreditados, Reporte Diario APO, Validaciones, Export Apo SuperVigilancia, Catálogo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
 
 | Permiso | Uso |
 | --- | --- |
 | `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
-| `acreditaciones.view` | Shell, Acreditados (lectura), Reporte Diario (ver/filtrar/export/cargas), export Excel, placeholders |
-| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo, cargar/reemplazar Reporte Diario (implica view en servicio de acceso) |
+| `acreditaciones.view` | Shell, **Dashboard** (KPIs/metrics), Acreditados (lectura), Reporte Diario (ver/filtrar/export/cargas), export listados. **No** ve ni opera Validaciones, Export Apo ni edita parámetros Catálogo |
+| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo (cargos + params Export Apo), cargar/reemplazar Reporte Diario, **Validaciones**, **Export Apo** (tab, DT, preview, generar `.xls`, modal novedades) (implica view en servicio de acceso) |
 
-- Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). Catálogo solo con `acreditaciones.edit`.
+- Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). **Catálogo**, **Validaciones** y **Export Apo** solo con `acreditaciones.edit` (`AcreditacionesAccessService::visibleTabsFor`). **Dashboard** con `view`.
+- **Cambio FEAT-039 vs placeholder FEAT-036:** Export Apo pasó de gate `view` a **`edit`**. Sin permiso Spatie nuevo; **no** se tocó `config/access.php`.
+- Acción **Abrir Ficha** desde Validaciones: además requiere permiso de gestión de Ficha (`ficha_empleados.manage`); no abre la pestaña Validaciones por sí solo.
 - Bypass: `manage.users`.
 - Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto.
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Acreditaciones*).
-- Dependencia operativa: cédula debe existir en Ficha empleados (`employee_ficha_profiles`).
+- Dependencia operativa: cédula en Ficha para Acreditados; Export Apo exige Ficha activa + identidad completa; CodigoCurso APO vive en `curso_tipos.cursos` (módulo Cursos).
 - Doc: [`docs/modules/acreditaciones.md`](modules/acreditaciones.md), [`docs/user/acreditaciones.md`](user/acreditaciones.md).
 
 ### Selección (Gestion humana)

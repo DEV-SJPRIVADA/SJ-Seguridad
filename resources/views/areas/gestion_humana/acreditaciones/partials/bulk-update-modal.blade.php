@@ -29,7 +29,7 @@
                         </h3>
                         <p class="ficha-empleados-masivos-modal__lead">
                             Se actualizarán
-                            <strong x-text="selectedCount"></strong>
+                            <strong x-text="selectedRows.length"></strong>
                             registro(s). Complete al menos un campo; los vacíos no se modifican.
                         </p>
                     </div>
@@ -127,7 +127,7 @@
                     <button
                         type="submit"
                         class="btn btn--primary"
-                        :disabled="selectedCount < 1 || ! bulkHasPayload || submittingBulk"
+                        :disabled="selectedRows.length < 1 || ! bulkHasPayload || submittingBulk"
                     >
                         <span x-show="! submittingBulk">Aplicar cambios</span>
                         <span x-show="submittingBulk" x-cloak>Guardando…</span>

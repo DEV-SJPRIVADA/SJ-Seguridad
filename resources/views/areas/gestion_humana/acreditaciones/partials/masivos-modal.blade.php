@@ -58,7 +58,7 @@
                         <div>
                             <h4 class="ficha-empleados-masivos-modal__card-title">Importar</h4>
                             <p class="ficha-empleados-masivos-modal__card-note">
-                                Upsert por cédula + CARGO APO. La cédula debe existir en Ficha; el nombre se toma de Ficha.
+                                Upsert por cédula + CARGO APO. La cédula debe existir en Ficha; el nombre y el CARGO se toman de Ficha (columna CARGO del Excel se ignora).
                                 CARGO APO debe existir en el catálogo. Al menos una fecha (VIGEN.ACR o FECHA SOLICITUD).
                                 No incluye columna ESTADO (se calcula automáticamente).
                             </p>

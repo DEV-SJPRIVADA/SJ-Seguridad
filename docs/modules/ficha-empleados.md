@@ -109,11 +109,12 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 
 > **FEAT-022 (2026-08-03):** se elimino la ruta `PATCH .../{fichaEntry}/agregar` (`...employees.promote`) y su `PromoteFichaEntryRequest`. `create`/`store` ahora tienen **dos modos** sobre las mismas URIs (ver seccion "Flujo Gestionar Empleado" abajo): sin `desde`/`ficha_entry_id` (alta manual, sin cambios) y con `desde`/`ficha_entry_id` (completar un pendiente existente).
 
-Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export, `abort_unless($this->canManage(), 403)` para `create`/`store`/import/catalogos).
+Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export/`editFicha` consulta, `abort_unless($this->canManage(), 403)` / FormRequest `ficha_empleados.manage` para `create`/`store`/`updateFicha`/import/catalogos).
 
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
 - `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`.
+- `datatable` — server-side via `EmployeeFichaEntryDatatableService`. Con `estado=en_ficha` y `employment_status=desvinculado` incluye columna **Recontratable** (`Si`/`No`/`—`) desde el ultimo periodo cerrado (`is_rehireable`).
 - `create(Request $request): View` — **dos modos** segun query `desde` (ver "Flujo Gestionar Empleado" abajo):
   - Sin `desde`: alta manual sin requisición — `$fichaEntry = null`, perfil vacio con `document_type='C'` y `employment_status=activo`.
   - Con `desde={fichaEntryId}`: resuelve `$fichaEntry` con `PersonalRequisitionFichaEntry::pending()->findOrFail($desde)` (**404** si no existe o ya esta en ficha) y arma el perfil precargado con `EmployeeFichaProfilePrefill::buildForEntry()` (no persiste nada en el `GET`).
@@ -124,7 +125,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
-- `editFicha` / `updateFicha` — formulario ficha empleado para un pendiente o uno ya en ficha (`employee_ficha_profiles`); **no** mueve a ficha (`moved_to_ficha_at` no se toca aqui), fuera del alcance de FEAT-022.
+- `editFicha` / `updateFicha` — consulta/edicion de ficha ya en ficha (`employee_ficha_profiles`). `editFicha` exige `canView` (lectura o manage); con solo `ficha_empleados.view` la UI queda en **solo lectura** (sin «Habilitar edición» / Guardar) y no ejecuta side-effects de heal (`ensureWorkCity` / `ensureOpenPeriod`). `updateFicha` exige `ficha_empleados.manage`. **No** mueve a ficha (`moved_to_ficha_at` no se toca aqui).
 
 > **FEAT-022:** se elimino `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry)` (setear `moved_to_ficha_at` de un clic sin formulario). Toda promocion de un pendiente pasa ahora por `create`/`store` en modo `desde`.
 
@@ -157,6 +158,8 @@ Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo cre
 ### `employee_ficha_employment_periods` (vinculos laborales)
 
 Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un periodo `activo` por empleado.
+
+**Invariante:** perfil `employment_status = activo` (ficha ya movida) **debe** tener periodo abierto. Si falta (legado / import / fecha retiro vaciada), `ensureOpenPeriodIfProfileActive` lo crea al abrir la ficha, al guardar, en **import masivo SJ**, o al lookup de Desvinculaciones masivos. Backfill: `php artisan ficha:backfill-active-periods`.
 
 | Campo clave | Notas |
 | --- | --- |
@@ -246,7 +249,9 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - Columnas de nombre en `import_columns`: orden tipo nompr07 (`cedula`, `nombre`, `primer_apellido`…); claves SJ sin renombrar. Campos nuevos opcionales (`edad`, `tipo_cotizante`, `escala`, vacaciones) en `payroll_extra`. Al final: `codigo_ciudad_trabajo`, `ciudad_trabajo`, `codigo_requisicion`.
 - Normalización al importar (`EmployeeFichaImportValueNormalizer`): `CEDULA`→`C`, `Masculino`→`M`, `Ahorro`→`1`, riesgo/contrato/salario/forma pago vía catálogo a código corto. La export nómina (`PlantillaMasivosMapper`) reaplica normalización al escribir celdas (archivo binario sin cambio).
 - Si vienen partes de nombre, se usan tal cual y se compone `full_name`; si solo viene `nombre`, se parte con `EmployeeFichaNameParser` (compatibilidad plantillas antiguas).
-- `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). No crea periodo ni seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
+- **Encoding de nombres:** el import normaliza charset (Windows-1252→UTF-8) y repara `?` donde iba `Ñ`/`Ó` (p. ej. `MU?OZ`→`MUÑOZ`, `LE?N`→`LEÓN`). Backfill de datos ya corruptos: `php artisan ficha:fix-name-encoding`.
+- **Actualización:** al reimportar una cédula ya en ficha, el servicio sincroniza también la entrada (`hired_full_name` + partes de nombre) con el perfil, para que listado y título coincidan con el formulario.
+- `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). Si queda `activo`, el import **abre periodo** si faltaba (`ensureOpenPeriodIfProfileActive`). No cierra periodo ni crea seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
 - Plantilla vacía y **Exportar datos para actualizar** comparten las mismas claves (`import_columns` + `EmployeeFichaImportRowMapper`).
 - Fuera de alcance del import SJ hacia columnas de nómina no listadas: otros `payroll_extra` de formulario (jornada, CCF code, etc.) y Archivo (`archive_shelf` / `archive_box`).
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.

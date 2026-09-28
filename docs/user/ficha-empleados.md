@@ -29,8 +29,8 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 | Rol / perfil | Responsabilidad |
 | --- | --- |
 | Gestion Humana (gestiona requisiciones) | Marcar **Contratado** en la requisicion con cedula y nombre completo del contratado; resolver alertas de cedula duplicada. |
-| Gestion Humana (Ficha empleados, lectura) | Consultar la lista de espera y la ficha, exportar a Excel. |
-| Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** / **Gestionar reingreso** y alta manual. |
+| Gestion Humana (Ficha empleados, lectura) | Consultar la lista de espera y la ficha (abrir detalle en solo lectura), exportar a Excel. |
+| Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** / **Gestionar reingreso**, alta manual y **editar/guardar** la ficha. |
 | Gestion Humana (desvinculacion) | Usuarios con permiso **Desvincular** registran cierre formal de vinculo (causal, fechas, recontratable) y pueden **Generar** / **Descargar** cartas. Al desvincular se crea el seguimiento en **Desvinculaciones**; al generar carta se marca «tiene carta». |
 | Gestion Humana (tablero Desvinculaciones) | Operadores con el paquete de permisos del tablero ejecutan Masivos y completan Seguimientos (ver [`desvinculaciones.md`](desvinculaciones.md)). |
 | Administrador de Plantillas Word | Sube y mantiene plantillas en el tablero **Plantillas Word** (permiso distinto al de desvinculacion). |
@@ -69,8 +69,9 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 ### Consultar registros ya movidos (En ficha)
 
 1. En la pestaña **Empleados**, cambie a la pill **En ficha**.
-2. Revise las columnas adicionales **Agregado a ficha** y **Agregado por**.
-3. Estos registros no admiten mas acciones desde esta pantalla.
+2. Haga clic en una fila para abrir el detalle de la ficha.
+3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, puede habilitar edición y guardar.
+4. En el filtro **Desvinculado** aparece la columna **Recontratable** (Si/No) según lo registrado al desvincular.
 
 ### Completar ficha de empleado
 
@@ -125,7 +126,8 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). El orden sigue el extracto tipo nompr07; al final van opcionales `codigo_ciudad_trabajo`, `ciudad_trabajo` y `codigo_requisicion`. Puede pegar valores legibles (`CEDULA`, `Masculino`, `Ahorro`); el sistema los guarda como códigos (`C`, `M`, `1`) para la plantilla de nómina.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
-5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
+5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica) y también sincroniza el nombre del listado (`hired_full_name`) con los apellidos/nombres del Excel.
+6. Si el Excel trae nombres con `?` por encoding roto (p. ej. `MU?OZ`), el import los corrige a `Ñ`/`Ó` al guardar.
 
 **Exportar datos para actualizar:** sin rango de fechas exporta solo **activos**; con fechas filtra por **fecha de ingreso**. Respeta la búsqueda activa del listado (`q`).
 
@@ -146,6 +148,10 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.16 | 2026-09-28 | Ficha | Listado Desvinculado: columna Recontratable (Si/No). |
+| 1.15 | 2026-09-28 | Ficha | Permiso solo ver: puede abrir la ficha en solo lectura; sin editar/guardar. |
+| 1.14 | 2026-09-28 | Ficha | Import masivo repara nombres con `?` (Ñ/Ó); comando `ficha:fix-name-encoding` para datos ya guardados. |
+| 1.13 | 2026-09-28 | Ficha | Import masivo: al actualizar una cédula existente, el nombre del listado (`hired_full_name`) se sincroniza con los campos del formulario. |
 | 1.12 | 2026-09-18 | Ficha | Listado Empleados: se retira la columna **Fecha contrato** (quedan ingreso y retiro). |
 | 1.11 | 2026-09-18 | Ficha | Campo **Fecha desvinculación** visible/editable en el formulario de ficha (junto a fecha ingreso). |
 | 1.10 | 2026-09-18 | Ficha | Plantilla import alineada a orden nompr07 (campos nuevos opcionales); normaliza CEDULA/Masculino/Ahorro a C/M/1; plantilla nómina sin cambio. |

@@ -62,6 +62,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Validaciones (FEAT-038) — corrida efímera en caché
+    |--------------------------------------------------------------------------
+    */
+    'validaciones' => [
+        'cache_ttl_seconds' => 5400, // 1.5 h (rango Brief 1–2 h)
+        'colas' => [
+            'sin_acreditacion' => 'Ficha activa sin acreditación',
+            'ausente_reporte' => 'Acreditado ausente del reporte del día',
+            'en_proceso_ya_acreditado' => 'EN PROCESO en sistema / ACREDITADO en APO',
+            'vencidas' => 'Vencidas / por vencer',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Import Excel (T4) — claves fila 1 / labels fila 2
     |--------------------------------------------------------------------------
     */
@@ -74,6 +89,66 @@ return [
             'vigencia_acr' => 'VIGEN.ACR',
             'fecha_solicitud' => 'FECHA SOLICITUD',
             'observaciones' => 'OBSERVACIONES',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export Apo SuperVigilancia (FEAT-039)
+    |--------------------------------------------------------------------------
+    */
+    'export_apo' => [
+        'filename_prefix' => 'APO9005767186',
+        'seq_pad' => 3,
+        'dashboard_last_n' => 20,
+        'dashboard_novedad_policy' => 'VIGENTE_ACTUALIZAR',
+        'dashboard_novedad_chunk' => 50,
+        'dashboard_novedad_max_scan' => 500,
+        'labels' => [
+            'nit' => 'Nit',
+            'razon_social' => 'RazonSocial',
+            'tipo_documento' => 'TipoDocumento',
+            'tipo_establecimiento' => 'TipoEstablecimiento',
+            'telefono_r' => 'TelefonoR',
+            'direccion_r' => 'DireccionR',
+            'direccion_p' => 'DireccionP',
+            'departamento' => 'Departamento',
+            'ciudad' => 'Ciudad',
+            'educacion_bm' => 'EducacionBM',
+            'educacion_s' => 'EducacionS',
+            'discapacidad' => 'Discapacidad',
+            'section_title' => 'Parámetros Export Apo',
+            'section_help' => 'Fila única usada en todas las filas del archivo SuperVigilancia (.xls).',
+        ],
+        'headers' => [
+            'Nit',
+            'RazonSocial',
+            'TipoDocumento',
+            'NoDocumento',
+            'Nombre1',
+            'Nombre2',
+            'Apellido1',
+            'Apellido2',
+            'FechaNacimiento',
+            'Genero',
+            'Cargo',
+            'Fechavinculacion',
+            'CodigoCurso',
+            'NitEscuela',
+            'Nro',
+            'TipoEstablecimiento',
+            'TelefonoR',
+            'DireccionR',
+            'DireccionP',
+            'Departamento',
+            'Ciudad',
+            'EducacionBM',
+            'EducacionS',
+            'Discapacidad',
+        ],
+        'vigencia_policies' => [
+            'VIGENTE' => 'Solo VIGENTE',
+            'VIGENTE_ACTUALIZAR' => 'VIGENTE + ACTUALIZAR',
         ],
     ],
 

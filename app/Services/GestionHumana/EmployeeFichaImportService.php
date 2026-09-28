@@ -8,6 +8,7 @@ use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Support\ColombianCurrencyParser;
 use App\Support\ImportFailureRow;
+use App\Support\SpanishNameEncodingFixer;
 use App\Support\SpreadsheetCellReader;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,7 @@ class EmployeeFichaImportService
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaImportValueNormalizer $valueNormalizer,
         private readonly EmployeeCursoPendingService $cursoPendingService,
+        private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
     ) {}
 
     /**
@@ -97,6 +99,15 @@ class EmployeeFichaImportService
                         $this->profileCatalogSync->syncAndSave($profile);
                         $profile = $profile->fresh();
                         $stats['imported']++;
+                    }
+
+                    if ($entry !== null && $profile !== null) {
+                        $entry = $entry->fresh();
+                        $entry?->setRelation('profile', $profile);
+                        $this->employmentPeriodService->ensureOpenPeriodIfProfileActive(
+                            $entry,
+                            (int) ($userId ?? $entry->moved_to_ficha_by ?? $entry->created_by ?? 1),
+                        );
                     }
 
                     if ($enteredFicha && $profile !== null) {
@@ -293,13 +304,16 @@ class EmployeeFichaImportService
 
         if ($entry !== null) {
             $enteredFicha = false;
+            $attributes = $this->entryNameAttributesFromImport($data, $entry->hired_full_name);
 
             if ($entry->moved_to_ficha_at === null) {
-                $entry->update([
-                    'moved_to_ficha_at' => now(),
-                    'moved_to_ficha_by' => $userId,
-                ]);
+                $attributes['moved_to_ficha_at'] = now();
+                $attributes['moved_to_ficha_by'] = $userId;
                 $enteredFicha = true;
+            }
+
+            if ($attributes !== []) {
+                $entry->update($attributes);
             }
 
             return [
@@ -315,24 +329,47 @@ class EmployeeFichaImportService
             $requisitionId = PersonalRequisition::query()->where('code', $code)->value('id');
         }
 
-        $nameParts = $this->resolveImportNameParts($data);
+        $nameAttributes = $this->entryNameAttributesFromImport($data, $cedula);
 
-        $entry = PersonalRequisitionFichaEntry::query()->create([
+        $entry = PersonalRequisitionFichaEntry::query()->create(array_merge([
             'personal_requisition_id' => $requisitionId,
             'hired_document' => $cedula,
-            'hired_full_name' => $nameParts['full_name'] !== '' ? $nameParts['full_name'] : $cedula,
-            'first_surname' => $nameParts['first_surname'],
-            'second_surname' => $nameParts['second_surname'],
-            'first_name' => $nameParts['first_name'],
-            'second_name' => $nameParts['second_name'],
+            'hired_full_name' => $cedula,
             'moved_to_ficha_at' => now(),
             'moved_to_ficha_by' => $userId,
             'created_by' => $userId,
-        ]);
+        ], $nameAttributes));
 
         return [
             'entry' => $entry,
             'entered_ficha' => true,
+        ];
+    }
+
+    /**
+     * Atributos de identidad para la entrada de ficha. Solo incluye nombre cuando
+     * el Excel trae un nombre usable (evita borrar hired_full_name con fila vacía).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function entryNameAttributesFromImport(array $data, ?string $fallbackFullName = null): array
+    {
+        $nameParts = $this->resolveImportNameParts($data);
+        $fullName = $nameParts['full_name'] !== ''
+            ? $nameParts['full_name']
+            : trim((string) $fallbackFullName);
+
+        if ($fullName === '') {
+            return [];
+        }
+
+        return [
+            'hired_full_name' => $fullName,
+            'first_surname' => $nameParts['first_surname'],
+            'second_surname' => $nameParts['second_surname'],
+            'first_name' => $nameParts['first_name'],
+            'second_name' => $nameParts['second_name'],
         ];
     }
 
@@ -344,11 +381,11 @@ class EmployeeFichaImportService
      */
     private function resolveImportNameParts(array $data): array
     {
-        $firstSurname = $this->stringOrNull($data['primer_apellido'] ?? null);
-        $secondSurname = $this->stringOrNull($data['segundo_apellido'] ?? null);
-        $firstName = $this->stringOrNull($data['primer_nombre'] ?? null);
-        $secondName = $this->stringOrNull($data['segundo_nombre'] ?? null);
-        $nombre = trim((string) ($data['nombre'] ?? ''));
+        $firstSurname = $this->nameOrNull($data['primer_apellido'] ?? null);
+        $secondSurname = $this->nameOrNull($data['segundo_apellido'] ?? null);
+        $firstName = $this->nameOrNull($data['primer_nombre'] ?? null);
+        $secondName = $this->nameOrNull($data['segundo_nombre'] ?? null);
+        $nombre = SpanishNameEncodingFixer::fixPersonName(trim((string) ($data['nombre'] ?? '')));
         $hasParts = $firstSurname !== null || $secondSurname !== null || $firstName !== null || $secondName !== null;
 
         if ($hasParts) {
@@ -401,9 +438,14 @@ class EmployeeFichaImportService
         PayrollCatalogItem::upsertPair('economic_activity', $this->stringOrNull($data['actividad_economica'] ?? null), $this->stringOrNull($data['nombre_actividad_economica'] ?? null));
     }
 
+    private function nameOrNull(mixed $value): ?string
+    {
+        return SpanishNameEncodingFixer::fixPersonNameOrNull($value);
+    }
+
     private function stringOrNull(mixed $value): ?string
     {
-        $value = trim((string) ($value ?? ''));
+        $value = trim(SpanishNameEncodingFixer::normalizeEncoding((string) ($value ?? '')));
 
         return $value === '' ? null : $value;
     }

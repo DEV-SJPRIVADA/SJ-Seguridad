@@ -15,6 +15,7 @@
             canEdit: @js($canEdit),
             bulkSelectableUrl: @js($bulkSelectableUrl ?? null),
             bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
+            exportApoUrl: @js($exportApoUrl ?? null),
             activeFilterQuery: @js($activeFilterQuery ?? []),
         })"
         @acreditaciones-open-edit.window="openEdit($event.detail)"
@@ -47,7 +48,14 @@
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="filter_cargo">Cargo</label>
-                                    <input id="filter_cargo" name="cargo" type="text" class="form-input" value="{{ $filters['cargo'] }}">
+                                    <x-searchable-select
+                                        id="filter_cargo"
+                                        name="cargo"
+                                        :options="$filterCargoFichaOptions"
+                                        :value="$filters['cargo']"
+                                        placeholder="Todos"
+                                        :allow-clear="true"
+                                    />
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="filter_cargo_apo">CARGO APO</label>
@@ -143,6 +151,17 @@
 
                             @if ($canEdit)
                                 <div class="cursos-registros-page__table-actions">
+                                    <button
+                                        type="button"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        x-show="selectedCount > 0"
+                                        x-cloak
+                                        x-on:click="cargarEnExportApo()"
+                                        title="Cargar en Export Apo"
+                                        aria-label="Cargar en Export Apo"
+                                    >
+                                        <x-lucide-file-output width="18" height="18" aria-hidden="true" />
+                                    </button>
                                     <button
                                         type="button"
                                         class="btn btn--primary btn--sm acreditaciones-bulk-trigger"
@@ -257,6 +276,7 @@
                     canEdit: !!config.canEdit,
                     bulkSelectableUrl: config.bulkSelectableUrl || '',
                     bulkUpdateUrl: config.bulkUpdateUrl || '',
+                    exportApoUrl: config.exportApoUrl || '',
                     activeFilterQuery: config.activeFilterQuery || {},
                     bulkSelectableRows: [],
                     bulkSelectableLoading: false,
@@ -357,6 +377,17 @@
                             input.checked = !! this.selectedMap[id];
                         });
                     },
+                    cargarEnExportApo() {
+                        const ids = this.selectedIds;
+                        if (ids.length < 1 || ! this.exportApoUrl) {
+                            return;
+                        }
+                        const url = new URL(this.exportApoUrl, window.location.origin);
+                        ids.forEach((id) => {
+                            url.searchParams.append('ids[]', String(id));
+                        });
+                        window.location.href = url.toString();
+                    },
                     openBulkUpdate() {
                         if (this.selectedCount < 1) {
                             return;
@@ -445,6 +476,7 @@
                         this.editIdentityLocked = false;
                         this.editForm.document_number = '';
                         this.editForm.full_name = '';
+                        this.editForm.cargo = '';
                     },
                     syncEditCargoApo(value) {
                         this.$nextTick(() => {
@@ -492,13 +524,13 @@
                         this.editOpen = true;
                         this.syncEditCargoApo(this.editForm.cargo_apo);
                         this.syncEditRenovacion(this.editForm.renovacion);
+                        if (this.editForm.document_number) {
+                            this.lookupName(this.editForm.document_number, 'edit');
+                        }
                     },
                     async lookupName(cedula, mode) {
                         const value = String(cedula || '').trim();
                         if (! value || ! this.lookupUrl) {
-                            return;
-                        }
-                        if (mode === 'edit' && this.editIdentityLocked) {
                             return;
                         }
                         try {
@@ -513,6 +545,7 @@
                                 if (mode === 'edit') {
                                     this.editForm.document_number = data.document_number || value;
                                     this.editForm.full_name = data.full_name;
+                                    this.editForm.cargo = data.cargo || '';
                                     this.editIdentityLocked = true;
                                 }
                             }

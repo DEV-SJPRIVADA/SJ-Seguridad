@@ -50,7 +50,10 @@ class AcreditacionesAccessService
         $tabs = array_keys(config('access.acreditaciones_tabs', []));
 
         if (! $this->canEdit($user)) {
-            $tabs = array_values(array_filter($tabs, fn (string $tab): bool => $tab !== 'catalogo'));
+            $tabs = array_values(array_filter(
+                $tabs,
+                fn (string $tab): bool => ! in_array($tab, ['catalogo', 'validaciones', 'export_apo'], true),
+            ));
         }
 
         return $tabs;

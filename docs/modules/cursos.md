@@ -16,6 +16,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 - Unicidad de registro: `(document_number, numero_curso)`.
 - Al crear/editar registro: seleccionar **escuela** del catalogo (solo nombre en el selector); se guardan snapshot `escuela_codigo`, `escuela_nit` y `escuela_nombre` (mas FK `curso_escuela_id`).
 - Import masivo: la escuela se resuelve automaticamente desde `No.CURSO` (digitos a la izquierda del primer `-`, p. ej. `ECSP0015-M256412` → codigo `15` / `015`).
+- Listado Registros: si el snapshot viene vacío (cargas antiguas), la tabla resuelve en caliente desde No.CURSO + catálogo. Para persistir: `php artisan cursos:backfill-escuelas`.
 - Vigencia calculada (no persistida):
   - **VENCIDO** si `fecha_expedicion + 1 año ≤ hoy` (aniversario cumplido).
   - **ACTUALIZAR** si aún no venció pero `fecha_expedicion < (hoy + 30d) − 365d` (ventana ~30 días antes).
@@ -30,6 +31,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 - Documento: 1 archivo por registro (PDF/JPG/PNG/WEBP); no viaja en Excel.
 - Bridge Ficha: listar/descargar cursos del empleado (sin mutar desde Ficha).
 - Import masivo: ver seccion Import abajo. Export listado respeta filtros (sin columna de renovacion).
+- **Integración Export Apo (Acreditaciones, FEAT-039):** el campo `curso_tipos.cursos` (UI Catálogo «CURSOS») es el **CodigoCurso** APO emitido en el `.xls` SuperVigilancia. El campo `curso_tipos.cargo_acredit` participa en el **match F|R** del mismo cargo: puede ser el nombre APO (`ESCOLTA`) **o** el código `cargo_acreditacion` (`2`), junto con `tipo_curso` tipo `F.{APO}` / `R.{APO}`. Vacío en `cursos` → novedad blanda en preview Export Apo; no se inventan códigos desde Acreditaciones. **NitEscuela:** usa `employee_cursos.escuela_nit`; si falta, resuelve por código embebido en No.CURSO (`ECSP0015-…` → `15`) contra catálogo Escuelas (misma lógica que el import).
 
 ## Rutas
 
@@ -98,6 +100,10 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.14 | 2026-09-28 | Registros: fallback UI escuela desde No.CURSO; comando `cursos:backfill-escuelas`. |
+| 1.13 | 2026-09-28 | Export Apo NitEscuela: fallback código desde No.CURSO → catálogo Escuelas. |
+| 1.12 | 2026-09-28 | Match Export Apo: `cargo_acredit` acepta nombre APO o código `cargo_acreditacion`. |
+| 1.11 | 2026-09-28 | Nota FEAT-039: `cursos` = CodigoCurso APO; `cargo_acredit` usado en match Export Apo. |
 | 1.10 | 2026-09-17 | Selector escuela solo nombre; import resuelve escuela desde No.CURSO. |
 | 1.9 | 2026-09-17 | Registros: escuela obligatoria; guarda codigo y NIT en el curso. |
 | 1.8 | 2026-09-17 | Catalogo reorganizado como tablero de tarjetas (patron ficha-empleados/catalogos). |

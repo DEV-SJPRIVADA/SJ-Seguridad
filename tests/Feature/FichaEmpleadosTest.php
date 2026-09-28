@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
@@ -1055,6 +1056,143 @@ class FichaEmpleadosTest extends TestCase
 
         $this->assertNotContains('catalogos', $viewerTabs);
         $this->assertContains('catalogos', $managerTabs);
+    }
+
+    public function test_desvinculado_list_shows_rehireable_column(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $mover = User::factory()->create(['must_change_password' => false]);
+
+        $rehireableEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-REH-SI')->id,
+            'hired_document' => '900000801',
+            'hired_full_name' => 'Recontratable Si',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $rehireableEntry->id,
+            'document_number' => '900000801',
+            'full_name' => 'Recontratable Si',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subDay()->toDateString(),
+        ]);
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $rehireableEntry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'is_rehireable' => true,
+            'termination_date' => now()->subDay()->toDateString(),
+            'opened_by' => $mover->id,
+            'closed_by' => $mover->id,
+        ]);
+
+        $notRehireableEntry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-REH-NO')->id,
+            'hired_document' => '900000802',
+            'hired_full_name' => 'Recontratable No',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $notRehireableEntry->id,
+            'document_number' => '900000802',
+            'full_name' => 'Recontratable No',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subDay()->toDateString(),
+        ]);
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $notRehireableEntry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'is_rehireable' => false,
+            'termination_date' => now()->subDay()->toDateString(),
+            'opened_by' => $mover->id,
+            'closed_by' => $mover->id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index', [
+                'estado' => 'en_ficha',
+                'employment_status' => 'desvinculado',
+            ]))
+            ->assertOk()
+            ->assertSee('Recontratable', false);
+
+        $datatable = $this->getFichaEmpleadosDatatable($viewer, ['employment_status' => 'desvinculado']);
+        $datatable->assertOk()->assertJsonPath('recordsFiltered', 2);
+
+        $texts = $this->datatableRowTexts($datatable->json());
+        $this->assertStringContainsString('Recontratable Si', $texts);
+        $this->assertStringContainsString('Recontratable No', $texts);
+
+        $rows = $datatable->json('data');
+        $this->assertIsArray($rows);
+        $byName = collect($rows)->keyBy(fn (array $row): string => strip_tags((string) ($row[1] ?? '')));
+
+        // Cedula, Nombre, Cargo, Cliente, Ciudad, Ingreso, Retiro, Estado, Recontratable, Agregado por, href
+        $this->assertSame('Si', strip_tags((string) ($byName['Recontratable Si'][8] ?? '')));
+        $this->assertSame('No', strip_tags((string) ($byName['Recontratable No'][8] ?? '')));
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertOk()
+            ->assertDontSee('>Recontratable<', false);
+    }
+
+    public function test_viewer_can_open_ficha_readonly_but_cannot_update(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $mover = User::factory()->create(['must_change_password' => false]);
+        $requisition = $this->createRequisition('REQ-FICHA-VIEW-1');
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '900000701',
+            'hired_full_name' => 'Consulta Solo Lectura',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '900000701',
+            'full_name' => 'Consulta Solo Lectura',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $datatable = $this->getFichaEmpleadosDatatable($viewer);
+        $datatable->assertOk();
+        $href = collect($datatable->json('data') ?? [])
+            ->map(fn (array $row) => end($row))
+            ->first(fn (mixed $cell): bool => is_string($cell) && $cell !== '');
+        $this->assertSame(
+            route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry),
+            $href,
+        );
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertSee('Consulta Solo Lectura', false)
+            ->assertSee('Solo lectura', false)
+            ->assertDontSee('Habilitar edición', false)
+            ->assertDontSee('Guardar ficha', false)
+            ->assertViewHas('canManage', false);
+
+        $this->actingAs($viewer)
+            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), [
+                'first_surname' => 'Hackeado',
+                'first_name' => 'Nombre',
+            ])
+            ->assertForbidden();
+
+        $this->assertSame('Consulta Solo Lectura', $entry->fresh()->hired_full_name);
     }
 
     public function test_catalogs_index_forbidden_without_manage_permission(): void

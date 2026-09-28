@@ -29,7 +29,7 @@ class BulkTerminationService
      *
      * @return array{ok: bool, message?: string, ficha_entry_id?: int, document_number?: string, full_name?: string}
      */
-    public function lookupActiveByDocument(string $documentNumber): array
+    public function lookupActiveByDocument(string $documentNumber, ?int $actorUserId = null): array
     {
         $documentNumber = trim($documentNumber);
 
@@ -42,26 +42,42 @@ class BulkTerminationService
 
         $entry = PersonalRequisitionFichaEntry::query()
             ->with(['profile'])
-            ->where('hired_document', $documentNumber)
+            ->where(function ($query) use ($documentNumber): void {
+                $query->where('hired_document', $documentNumber)
+                    ->orWhereHas('profile', static function ($profile) use ($documentNumber): void {
+                        $profile->where('document_number', $documentNumber);
+                    });
+            })
             ->whereHas('profile', static function ($query): void {
                 $query->where('employment_status', EmployeeFichaProfile::STATUS_ACTIVO);
             })
-            ->whereHas('employmentPeriods', static function ($query): void {
-                $query->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO);
-            })
+            ->whereNotNull('moved_to_ficha_at')
+            ->orderByDesc('id')
             ->first();
 
         if ($entry === null) {
             return [
                 'ok' => false,
-                'message' => 'No se encontro un empleado activo con periodo abierto para esa cedula.',
+                'message' => 'No se encontro un empleado activo en ficha para esa cedula.',
+            ];
+        }
+
+        $this->periodService->ensureOpenPeriodIfProfileActive(
+            $entry,
+            (int) ($actorUserId ?? $entry->moved_to_ficha_by ?? $entry->created_by ?? 1),
+        );
+
+        if ($this->periodService->activePeriod($entry) === null) {
+            return [
+                'ok' => false,
+                'message' => 'El empleado esta activo en ficha pero no se pudo abrir un periodo laboral.',
             ];
         }
 
         return [
             'ok' => true,
             'ficha_entry_id' => $entry->id,
-            'document_number' => (string) $entry->hired_document,
+            'document_number' => (string) ($entry->hired_document ?: $entry->profile?->document_number),
             'full_name' => (string) ($entry->hired_full_name ?: $entry->profile?->full_name),
         ];
     }
@@ -184,7 +200,7 @@ class BulkTerminationService
     private function processRow(array $row, User $actor): array
     {
         $documentNumber = trim((string) ($row['document_number'] ?? ''));
-        $lookup = $this->lookupActiveByDocument($documentNumber);
+        $lookup = $this->lookupActiveByDocument($documentNumber, $actor->id);
 
         if (! $lookup['ok']) {
             throw ValidationException::withMessages([

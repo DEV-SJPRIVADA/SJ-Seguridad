@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Services\GestionHumana\EmployeeCursoEscuelaBackfillService;
+use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
+use App\Services\GestionHumana\EmployeeFichaNameEncodingHealService;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Inspiring;
@@ -151,3 +154,71 @@ Artisan::command('app:sync-permissions', function () {
 
     return self::SUCCESS;
 })->purpose('Sincroniza permisos desde config y actualiza rol super-admin');
+
+Artisan::command('cursos:backfill-escuelas {--limit= : Maximo de filas a escanear}', function () {
+    $limitOption = $this->option('limit');
+    $limit = $limitOption !== null && $limitOption !== '' ? max(1, (int) $limitOption) : null;
+
+    /** @var EmployeeCursoEscuelaBackfillService $service */
+    $service = app(EmployeeCursoEscuelaBackfillService::class);
+    $stats = $service->backfill($limit);
+
+    $this->info('Backfill escuelas desde No.CURSO + catalogo Escuelas');
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Escaneados', (string) $stats['scanned']],
+            ['Actualizados', (string) $stats['updated']],
+            ['Sin codigo en No.CURSO', (string) $stats['skipped_no_codigo']],
+            ['Codigo no en catalogo', (string) $stats['skipped_no_catalog']],
+            ['Ya tenian escuela', (string) $stats['skipped_already_filled']],
+        ]
+    );
+
+    return self::SUCCESS;
+})->purpose('Completa codigo/NIT/nombre de escuela en registros de curso desde No.CURSO');
+
+Artisan::command('ficha:backfill-active-periods {--limit= : Maximo de perfiles a escanear} {--user= : ID usuario opened_by}', function () {
+    $limitOption = $this->option('limit');
+    $limit = $limitOption !== null && $limitOption !== '' ? max(1, (int) $limitOption) : null;
+    $userId = max(0, (int) $this->option('user'));
+
+    /** @var EmployeeFichaEmploymentPeriodService $service */
+    $service = app(EmployeeFichaEmploymentPeriodService::class);
+    $stats = $service->backfillMissingActivePeriods($limit, $userId);
+
+    $this->info('Backfill periodos activos para perfiles activo sin vinculo abierto');
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Escaneados', (string) $stats['scanned']],
+            ['Periodos abiertos', (string) $stats['opened']],
+            ['Omitidos', (string) $stats['skipped']],
+            ['Fallidos', (string) $stats['failed']],
+        ]
+    );
+
+    return self::SUCCESS;
+})->purpose('Abre periodo laboral para empleados activo en ficha sin periodo abierto');
+
+Artisan::command('ficha:fix-name-encoding {--limit= : Maximo de registros a escanear por tabla}', function () {
+    $limitOption = $this->option('limit');
+    $limit = $limitOption !== null && $limitOption !== '' ? max(1, (int) $limitOption) : null;
+
+    /** @var EmployeeFichaNameEncodingHealService $service */
+    $service = app(EmployeeFichaNameEncodingHealService::class);
+    $stats = $service->heal($limit);
+
+    $this->info('Reparacion de nombres con ? (Ñ/Ó perdido por encoding)');
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Perfiles escaneados', (string) $stats['scanned']],
+            ['Perfiles actualizados', (string) $stats['updated_profiles']],
+            ['Entradas ficha actualizadas', (string) $stats['updated_entries']],
+            ['Requisiciones actualizadas', (string) $stats['updated_requisitions']],
+        ]
+    );
+
+    return self::SUCCESS;
+})->purpose('Corrige nombres de empleados con ? (MU?OZ→MUÑOZ, LE?N→LEÓN)');

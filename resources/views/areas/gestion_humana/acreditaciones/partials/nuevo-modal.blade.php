@@ -1,4 +1,7 @@
-{{-- Variables: $cargoApoOptions, $lookupUrl, $show --}}
+{{-- Variables: $cargoApoOptions, $lookupUrl, $show, $validacionesReturn (opcional) --}}
+@php
+    $validacionesReturn = $validacionesReturn ?? null;
+@endphp
 <x-modal name="acreditaciones-nuevo" maxWidth="2xl" :show="$show" focusable>
     <div
         class="modal-card ficha-empleados-masivos-modal cursos-registros-page__create-modal"
@@ -7,6 +10,7 @@
             identityLocked: {{ $show && old('document_number') ? 'true' : 'false' }},
             documentNumber: @js(old('document_number', '')),
             fullName: @js(old('full_name', '')),
+            cargo: @js(old('cargo', '')),
             async lookupName(cedula) {
                 const value = String(cedula || '').trim();
                 if (!value || this.identityLocked) return;
@@ -19,6 +23,7 @@
                     if (data.found && data.full_name) {
                         this.documentNumber = data.document_number || value;
                         this.fullName = data.full_name;
+                        this.cargo = data.cargo || '';
                         this.identityLocked = true;
                     }
                 } catch (e) {}
@@ -27,8 +32,22 @@
                 this.identityLocked = false;
                 this.documentNumber = '';
                 this.fullName = '';
+                this.cargo = '';
+            },
+            prefillFromValidaciones(detail) {
+                const doc = String(detail?.document_number || '').trim();
+                const name = String(detail?.full_name || '').trim();
+                const cargo = String(detail?.cargo || '').trim();
+                this.documentNumber = doc;
+                this.fullName = name;
+                this.cargo = cargo;
+                this.identityLocked = Boolean(doc && name);
+                if (doc && (! name || ! cargo)) {
+                    this.lookupName(doc);
+                }
             },
         }"
+        @acreditaciones-open-nuevo.window="prefillFromValidaciones($event.detail)"
     >
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
@@ -68,6 +87,11 @@
             class="cursos-registros-page__form"
         >
             @csrf
+            @if (! empty($validacionesReturn))
+                <input type="hidden" name="_return_context" value="validaciones">
+                <input type="hidden" name="_return_fecha_reporte" value="{{ $validacionesReturn['fecha_reporte'] ?? '' }}">
+                <input type="hidden" name="_return_run_token" value="{{ $validacionesReturn['run_token'] ?? '' }}">
+            @endif
             <div class="cursos-registros-page__form-grid">
                 <div class="form-field">
                     <label class="form-label" for="create_document_number">CEDULA</label>
@@ -116,8 +140,9 @@
                         type="text"
                         class="form-input"
                         maxlength="255"
-                        required
-                        value="{{ old('cargo') }}"
+                        readonly
+                        x-model="cargo"
+                        placeholder="Se completa desde Ficha"
                     >
                 </div>
                 <div class="form-field">
