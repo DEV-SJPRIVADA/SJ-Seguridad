@@ -198,6 +198,9 @@
                                     <th>Fecha ingreso</th>
                                     <th>Fecha retiro</th>
                                     <th>Estado</th>
+                                    @if ($currentEstado === 'en_ficha' && $employmentStatusMode === 'desvinculado')
+                                        <th>Recontratable</th>
+                                    @endif
                                     @if ($currentEstado === 'en_ficha')
                                         <th>Agregado por</th>
                                     @else

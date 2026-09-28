@@ -92,7 +92,7 @@ class PersonalRequisitionFichaEntry extends Model
                 ->orderByDesc('sequence')
                 ->first();
 
-        if ($latestClosed === null) {
+        if ($latestClosed === null || $latestClosed->is_rehireable === null) {
             return null;
         }
 

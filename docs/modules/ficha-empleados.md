@@ -109,11 +109,12 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 
 > **FEAT-022 (2026-08-03):** se elimino la ruta `PATCH .../{fichaEntry}/agregar` (`...employees.promote`) y su `PromoteFichaEntryRequest`. `create`/`store` ahora tienen **dos modos** sobre las mismas URIs (ver seccion "Flujo Gestionar Empleado" abajo): sin `desde`/`ficha_entry_id` (alta manual, sin cambios) y con `desde`/`ficha_entry_id` (completar un pendiente existente).
 
-Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export, `abort_unless($this->canManage(), 403)` para `create`/`store`/import/catalogos).
+Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/web.php`); autorizacion fina resuelta en el controlador (`authorizeView()` para index/export/`editFicha` consulta, `abort_unless($this->canManage(), 403)` / FormRequest `ficha_empleados.manage` para `create`/`store`/`updateFicha`/import/catalogos).
 
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
 - `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`.
+- `datatable` — server-side via `EmployeeFichaEntryDatatableService`. Con `estado=en_ficha` y `employment_status=desvinculado` incluye columna **Recontratable** (`Si`/`No`/`—`) desde el ultimo periodo cerrado (`is_rehireable`).
 - `create(Request $request): View` — **dos modos** segun query `desde` (ver "Flujo Gestionar Empleado" abajo):
   - Sin `desde`: alta manual sin requisición — `$fichaEntry = null`, perfil vacio con `document_type='C'` y `employment_status=activo`.
   - Con `desde={fichaEntryId}`: resuelve `$fichaEntry` con `PersonalRequisitionFichaEntry::pending()->findOrFail($desde)` (**404** si no existe o ya esta en ficha) y arma el perfil precargado con `EmployeeFichaProfilePrefill::buildForEntry()` (no persiste nada en el `GET`).
@@ -124,7 +125,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
-- `editFicha` / `updateFicha` — formulario ficha empleado para un pendiente o uno ya en ficha (`employee_ficha_profiles`); **no** mueve a ficha (`moved_to_ficha_at` no se toca aqui), fuera del alcance de FEAT-022.
+- `editFicha` / `updateFicha` — consulta/edicion de ficha ya en ficha (`employee_ficha_profiles`). `editFicha` exige `canView` (lectura o manage); con solo `ficha_empleados.view` la UI queda en **solo lectura** (sin «Habilitar edición» / Guardar) y no ejecuta side-effects de heal (`ensureWorkCity` / `ensureOpenPeriod`). `updateFicha` exige `ficha_empleados.manage`. **No** mueve a ficha (`moved_to_ficha_at` no se toca aqui).
 
 > **FEAT-022:** se elimino `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry)` (setear `moved_to_ficha_at` de un clic sin formulario). Toda promocion de un pendiente pasa ahora por `create`/`store` en modo `desde`.
 

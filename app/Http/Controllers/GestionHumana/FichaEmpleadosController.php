@@ -105,6 +105,7 @@ class FichaEmpleadosController extends Controller
             $query,
             $estado,
             $this->canManage(),
+            $employmentStatus,
         );
     }
 
@@ -501,16 +502,21 @@ class FichaEmpleadosController extends Controller
 
     public function editFicha(PersonalRequisitionFichaEntry $fichaEntry): View
     {
-        abort_unless($this->canManage(), 403);
+        $this->authorizeView();
 
+        $canManage = $this->canManage();
         $fichaEntry->load(['requisition.position', 'requisition.city', 'requisition.client', 'requisition.contractType', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
-        $this->profilePrefill->ensureWorkCityFromRequisition($fichaEntry, $profile);
-        $profile->refresh();
-        $this->employmentPeriodService->ensureOpenPeriodIfProfileActive(
-            $fichaEntry,
-            (int) (auth()->id() ?? $fichaEntry->moved_to_ficha_by ?? 1),
-        );
+
+        if ($canManage) {
+            $this->profilePrefill->ensureWorkCityFromRequisition($fichaEntry, $profile);
+            $profile->refresh();
+            $this->employmentPeriodService->ensureOpenPeriodIfProfileActive(
+                $fichaEntry,
+                (int) (auth()->id() ?? $fichaEntry->moved_to_ficha_by ?? 1),
+            );
+        }
+
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
         $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
         $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
@@ -519,13 +525,14 @@ class FichaEmpleadosController extends Controller
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
-            'profile' => $profile->fresh(),
+            'profile' => $profile->fresh() ?? $profile,
             'requisitionReference' => $fichaEntry->requisition
                 ? $this->profilePrefill->requisitionReferenceForEntry($fichaEntry)
                 : null,
             'activePeriod' => $activePeriod,
             'employmentHistory' => $employmentHistory,
             'letterPeriod' => $letterPeriod,
+            'canManage' => $canManage,
             'canGenerateLetters' => $this->canGenerateLetters($letterPeriod),
             'canGenerateContratacionLetters' => $this->canGenerateContratacionLetters($activePeriod),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,

@@ -2,6 +2,8 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Models\EmployeeFichaEmploymentPeriod;
+use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Support\DisplayDate;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,10 +22,13 @@ final class EmployeeFichaEntryDatatableService
         Builder $query,
         string $estado,
         bool $canManage,
+        ?string $employmentStatus = null,
     ): JsonResponse {
         $draw = (int) $request->input('draw', 1);
         $start = max(0, (int) $request->input('start', 0));
         $length = (int) $request->input('length', 10);
+        $showRehireable = $estado === 'en_ficha'
+            && $employmentStatus === EmployeeFichaProfile::STATUS_DESVINCULADO;
 
         $recordsTotal = (clone $query)->count();
 
@@ -37,11 +42,24 @@ final class EmployeeFichaEntryDatatableService
             $query->skip($start)->take(max(1, $length));
         }
 
+        if ($showRehireable) {
+            $query->with([
+                'employmentPeriods' => fn ($periods) => $periods
+                    ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+                    ->orderByDesc('sequence'),
+            ]);
+        }
+
         /** @var Collection<int, PersonalRequisitionFichaEntry> $entries */
         $entries = $query->get();
 
         $rows = $entries
-            ->map(fn (PersonalRequisitionFichaEntry $entry): array => $this->formatRow($entry, $estado, $canManage))
+            ->map(fn (PersonalRequisitionFichaEntry $entry): array => $this->formatRow(
+                $entry,
+                $estado,
+                $canManage,
+                $showRehireable,
+            ))
             ->values()
             ->all();
 
@@ -158,8 +176,12 @@ final class EmployeeFichaEntryDatatableService
     /**
      * @return array<int, string>
      */
-    private function formatRow(PersonalRequisitionFichaEntry $entry, string $estado, bool $canManage): array
-    {
+    private function formatRow(
+        PersonalRequisitionFichaEntry $entry,
+        string $estado,
+        bool $canManage,
+        bool $showRehireable = false,
+    ): array {
         $status = $entry->employmentStatus();
         $statusLabel = $entry->employmentStatusLabel();
 
@@ -171,7 +193,7 @@ final class EmployeeFichaEntryDatatableService
             )
             : '—';
 
-        $fichaHref = $canManage && $estado === 'en_ficha'
+        $fichaHref = $estado === 'en_ficha'
             ? route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
             : '';
 
@@ -185,6 +207,10 @@ final class EmployeeFichaEntryDatatableService
             e(DisplayDate::date($entry->terminationDate())),
             $statusCell,
         ];
+
+        if ($showRehireable) {
+            $cells[] = e($entry->rehireableLabel() ?: '—');
+        }
 
         if ($estado === 'en_ficha') {
             $cells[] = e($entry->movedBy?->name ?: '—');
