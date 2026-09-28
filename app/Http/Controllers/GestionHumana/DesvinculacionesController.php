@@ -193,6 +193,7 @@ class DesvinculacionesController extends Controller
     {
         $result = $this->bulkTerminationService->lookupActiveByDocument(
             (string) $request->validated('document_number'),
+            (int) auth()->id(),
         );
 
         if (! $result['ok']) {

@@ -213,6 +213,7 @@ class AcreditacionesController extends Controller
                 $this->activeAcreditadoFilterQuery($filters),
             ),
             'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
+            'exportApoUrl' => route('gestion-humana.acreditaciones.export-apo'),
             'exportUrl' => route(
                 'gestion-humana.acreditaciones.acreditados.export',
                 $this->activeAcreditadoFilterQuery($filters),
@@ -318,18 +319,67 @@ class AcreditacionesController extends Controller
         $filters = $this->acreditadoFiltersFromRequest($request);
 
         if ($updatedCount === 0) {
-            return redirect()
-                ->route('gestion-humana.acreditaciones.acreditados', $this->activeAcreditadoFilterQuery($filters))
-                ->with('error', 'No se actualizó ningún registro.');
+            return $this->redirectAfterBulkAcreditadoUpdate(
+                $request,
+                $filters,
+                error: 'No se actualizó ningún registro.',
+            );
         }
 
         $message = $updatedCount === 1
             ? '1 acreditado actualizado.'
             : "{$updatedCount} acreditados actualizados.";
 
-        return redirect()
-            ->route('gestion-humana.acreditaciones.acreditados', $this->activeAcreditadoFilterQuery($filters))
-            ->with('status', $message);
+        return $this->redirectAfterBulkAcreditadoUpdate(
+            $request,
+            $filters,
+            status: $message,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function redirectAfterBulkAcreditadoUpdate(
+        Request $request,
+        array $filters,
+        ?string $status = null,
+        ?string $error = null,
+    ): RedirectResponse {
+        if ((string) $request->input('_return_context') === 'export_apo') {
+            $returnIds = collect($request->input('_return_ids', $request->input('ids', [])))
+                ->map(fn ($id): int => (int) $id)
+                ->filter(fn (int $id): bool => $id > 0)
+                ->unique()
+                ->take((int) config('acreditaciones.limits.bulk_max_ids', 500))
+                ->values()
+                ->all();
+
+            $redirect = redirect()->route(
+                'gestion-humana.acreditaciones.export-apo',
+                $returnIds === [] ? [] : ['ids' => $returnIds],
+            );
+
+            if ($error !== null) {
+                return $redirect->with('error', $error);
+            }
+
+            return $redirect->with(
+                'status',
+                ($status ?? 'Acreditados actualizados.').' Se revalidaron los candidatos en Export Apo.',
+            );
+        }
+
+        $redirect = redirect()->route(
+            'gestion-humana.acreditaciones.acreditados',
+            $this->activeAcreditadoFilterQuery($filters),
+        );
+
+        if ($error !== null) {
+            return $redirect->with('error', $error);
+        }
+
+        return $redirect->with('status', $status ?? 'Acreditados actualizados.');
     }
 
     public function acreditadosLookup(Request $request): JsonResponse
@@ -867,10 +917,19 @@ class AcreditacionesController extends Controller
             'searchable' => false,
         ];
 
+        $selectColumn = [
+            'data' => 'select',
+            'title' => '',
+            'orderable' => false,
+            'searchable' => false,
+            'className' => 'cursos-registros-page__select-col',
+        ];
+
         $colaDefs = [
             AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION => [
                 'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION] ?? 'Ficha activa sin acreditación',
                 'columns' => [
+                    $selectColumn,
                     ['data' => 'document_number', 'title' => 'Cédula'],
                     ['data' => 'full_name', 'title' => 'Nombre'],
                     ['data' => 'cargo', 'title' => 'Cargo Ficha'],
@@ -881,6 +940,7 @@ class AcreditacionesController extends Controller
             AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE => [
                 'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE] ?? 'Ausente del reporte',
                 'columns' => [
+                    $selectColumn,
                     ['data' => 'document_number', 'title' => 'Cédula'],
                     ['data' => 'full_name', 'title' => 'Nombre'],
                     ['data' => 'cargo', 'title' => 'Cargo Ficha'],
@@ -892,6 +952,7 @@ class AcreditacionesController extends Controller
             AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO => [
                 'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO] ?? 'EN PROCESO ya acreditado APO',
                 'columns' => [
+                    $selectColumn,
                     ['data' => 'document_number', 'title' => 'Cédula'],
                     ['data' => 'full_name', 'title' => 'Nombre'],
                     ['data' => 'cargo_apo', 'title' => 'CARGO APO'],
@@ -904,6 +965,7 @@ class AcreditacionesController extends Controller
             AcreditacionValidacionesResultStore::COLA_VENCIDAS => [
                 'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_VENCIDAS] ?? 'Vencidas / por vencer',
                 'columns' => [
+                    $selectColumn,
                     ['data' => 'document_number', 'title' => 'Cédula'],
                     ['data' => 'full_name', 'title' => 'Nombre'],
                     ['data' => 'cargo_apo', 'title' => 'CARGO APO'],
@@ -1019,6 +1081,8 @@ class AcreditacionesController extends Controller
             'colaDefs' => $colaDefs,
             'defaultCola' => AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION,
             'datatableUrl' => route('gestion-humana.acreditaciones.validaciones.datatable'),
+            'bulkSelectableUrl' => route('gestion-humana.acreditaciones.validaciones.bulk-selectable'),
+            'exportApoUrl' => route('gestion-humana.acreditaciones.export-apo'),
             'runUrl' => route('gestion-humana.acreditaciones.validaciones.run'),
             'exportUrls' => $exportUrls,
             'exportConsolidatedUrl' => $exportConsolidatedUrl,
@@ -1095,7 +1159,23 @@ class AcreditacionesController extends Controller
             $request->runToken(),
             $request->cola(),
             $canOpenFicha,
+            canEdit: true,
         );
+    }
+
+    public function validacionesBulkSelectable(AcreditacionValidacionesDatatableRequest $request): JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $rows = $this->validacionesDatatableService->bulkSelectableRows(
+            $request,
+            (int) auth()->id(),
+            $request->fechaReporte(),
+            $request->runToken(),
+            $request->cola(),
+        );
+
+        return response()->json(['data' => $rows]);
     }
 
     public function exportValidaciones(AcreditacionValidacionesExportRequest $request): StreamedResponse|RedirectResponse
@@ -1155,6 +1235,36 @@ class AcreditacionesController extends Controller
             ->all();
 
         $settings = AcreditacionExportApoSetting::singleton();
+        $maxIds = (int) config('acreditaciones.limits.bulk_max_ids', 500);
+        $autoValidateIds = collect($request->input('ids', []))
+            ->map(fn ($id): int => (int) $id)
+            ->filter(fn (int $id): bool => $id > 0)
+            ->unique()
+            ->take($maxIds)
+            ->values()
+            ->all();
+
+        /** @var array<string, string> $renovacionLabels */
+        $renovacionLabels = config('acreditaciones.renovaciones', []);
+        $renovacionOptions = collect($renovacionLabels)
+            ->map(fn (string $label, string $value): array => [
+                'value' => $value,
+                'label' => $label,
+            ])
+            ->values()
+            ->all();
+
+        $cargoApoOptions = AcreditacionCargo::query()
+            ->active()
+            ->ordered()
+            ->get(['cargo_apo'])
+            ->map(fn (AcreditacionCargo $row): array => [
+                'value' => (string) $row->cargo_apo,
+                'label' => (string) $row->cargo_apo,
+            ])
+            ->unique('value')
+            ->values()
+            ->all();
 
         return view('areas.gestion_humana.acreditaciones.export-apo', [
             'subTabs' => $this->getAcreditacionesSubTabs('export_apo'),
@@ -1163,6 +1273,11 @@ class AcreditacionesController extends Controller
             'previewUrl' => route('gestion-humana.acreditaciones.export-apo.preview'),
             'generateUrl' => route('gestion-humana.acreditaciones.export-apo.generate'),
             'exportApoSettings' => $settings,
+            'autoValidateIds' => $autoValidateIds,
+            'cargoApoOptions' => $cargoApoOptions,
+            'renovacionOptions' => $renovacionOptions,
+            'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
+            'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
         ]);
     }
 
@@ -1394,6 +1509,23 @@ class AcreditacionesController extends Controller
             return redirect()
                 ->route('gestion-humana.acreditaciones.validaciones', $query)
                 ->with('status', $validacionesStatus);
+        }
+
+        if ((string) $request->input('_return_context') === 'export_apo') {
+            $returnIds = collect($request->input('_return_ids', []))
+                ->map(fn ($id): int => (int) $id)
+                ->filter(fn (int $id): bool => $id > 0)
+                ->unique()
+                ->take((int) config('acreditaciones.limits.bulk_max_ids', 500))
+                ->values()
+                ->all();
+
+            return redirect()
+                ->route(
+                    'gestion-humana.acreditaciones.export-apo',
+                    $returnIds === [] ? [] : ['ids' => $returnIds],
+                )
+                ->with('status', 'Acreditado actualizado correctamente. Se revalidaron los candidatos en Export Apo.');
         }
 
         return redirect()

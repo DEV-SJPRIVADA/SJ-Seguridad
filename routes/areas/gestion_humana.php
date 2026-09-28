@@ -193,6 +193,7 @@ Route::middleware(['password.changed'])
         Route::get('/validaciones', [AcreditacionesController::class, 'validaciones'])->name('validaciones');
         Route::post('/validaciones/ejecutar', [AcreditacionesController::class, 'validacionesRun'])->name('validaciones.run');
         Route::get('/validaciones/datatable', [AcreditacionesController::class, 'validacionesDatatable'])->name('validaciones.datatable');
+        Route::get('/validaciones/bulk-selectable', [AcreditacionesController::class, 'validacionesBulkSelectable'])->name('validaciones.bulk-selectable');
         Route::get('/validaciones/exportar', [AcreditacionesController::class, 'exportValidaciones'])->name('validaciones.export');
         Route::get('/validaciones/exportar-consolidado', [AcreditacionesController::class, 'exportValidacionesConsolidado'])->name('validaciones.export-consolidated');
         Route::get('/export-apo', [AcreditacionesController::class, 'exportApo'])->name('export-apo');

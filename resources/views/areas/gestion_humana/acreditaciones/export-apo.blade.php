@@ -10,6 +10,9 @@
             generateUrl: @js($generateUrl),
             defaultVigenciaPolicy: @js($defaultVigenciaPolicy),
             csrfToken: @js(csrf_token()),
+            autoValidateIds: @js($autoValidateIds ?? []),
+            lookupUrl: @js($lookupUrl ?? null),
+            bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
             settings: @js([
                 'nit' => $exportApoSettings->nit,
                 'razon_social' => $exportApoSettings->razon_social,
@@ -26,6 +29,7 @@
             ]),
         })"
         x-on:export-apo-generate.window="submitGenerate($event.detail.include)"
+        @acreditaciones-open-edit.window="openEdit($event.detail)"
     >
         <div class="app-container">
             @if (session('status'))
@@ -79,6 +83,19 @@
                                     >
                                         <x-lucide-download width="16" height="16" aria-hidden="true" />
                                         <span x-text="generateLoading ? 'Generando…' : 'Generar .xls'"></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn--primary btn--sm"
+                                        x-show="hasValidated && selectedCount > 0"
+                                        x-cloak
+                                        x-bind:disabled="previewLoading || generateLoading || submittingBulk"
+                                        x-on:click="openBulkUpdate()"
+                                        title="Actualizar seleccionados"
+                                    >
+                                        <x-lucide-list-checks width="16" height="16" aria-hidden="true" />
+                                        <span>Actualizar</span>
+                                        <span x-text="'(' + selectedCount + ')'"></span>
                                     </button>
                                     <button
                                         type="button"
@@ -168,6 +185,7 @@
                                         <th>Estado curso</th>
                                         <th>Valida</th>
                                         <th>Motivo</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -232,6 +250,30 @@
                                                 ></span>
                                             </td>
                                             <td x-text="row.motivo || '—'"></td>
+                                            <td>
+                                                <div class="cursos-registros-page__row-actions table-actions">
+                                                    <button
+                                                        type="button"
+                                                        class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit"
+                                                        title="Editar acreditado"
+                                                        aria-label="Editar acreditado"
+                                                        x-show="row.editable"
+                                                        x-cloak
+                                                        x-on:click="openEditFromRow(row)"
+                                                    >
+                                                        <x-lucide-square-pen width="16" height="16" aria-hidden="true" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
+                                                        title="Quitar de esta validación"
+                                                        aria-label="Quitar de esta validación"
+                                                        x-on:click="removeRow(row.acreditado_id)"
+                                                    >
+                                                        <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     </template>
                                 </tbody>
@@ -251,38 +293,91 @@
             </div>
         </div>
 
-        <x-modal name="export-apo-novedades" maxWidth="md">
-            <div class="modal-body">
-                <h3 class="panel-title" style="margin-bottom:0.5rem;">Incluir novedades blandas</h3>
-                <p class="panel-text" style="margin-bottom:1rem;">
-                    Hay filas con novedades blandas (curso/escuela/código). ¿Desea incluirlas en el archivo .xls?
-                    Las filas con bloqueo duro (ficha incompleta) nunca se exportan.
-                </p>
-                <div style="display:flex;gap:0.5rem;justify-content:flex-end;flex-wrap:wrap;">
+        <x-modal name="export-apo-novedades" maxWidth="lg" focusable>
+            <div class="modal-card ficha-empleados-masivos-modal">
+                <div class="ficha-empleados-masivos-modal__header">
+                    <div class="ficha-empleados-masivos-modal__heading">
+                        <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
+                            <x-lucide-triangle-alert width="18" height="18" aria-hidden="true" />
+                        </span>
+                        <div>
+                            <h3 class="ficha-empleados-masivos-modal__title" id="export-apo-novedades-title">
+                                Incluir novedades blandas
+                            </h3>
+                            <p class="ficha-empleados-masivos-modal__lead">
+                                Hay filas seleccionadas con <strong>Valida = No</strong>. Decida si las novedades leves
+                                (curso, escuela o código) deben ir en el archivo <strong>.xls</strong>.
+                            </p>
+                        </div>
+                    </div>
                     <button
                         type="button"
-                        class="btn btn--secondary btn--sm"
+                        class="ficha-empleados-masivos-modal__close"
+                        title="Cerrar"
+                        aria-label="Cerrar"
+                        x-on:click="$dispatch('close-modal', 'export-apo-novedades')"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </button>
+                </div>
+
+                <div class="ficha-empleados-masivos-modal__cards">
+                    <section class="ficha-empleados-masivos-modal__card">
+                        <div class="ficha-empleados-masivos-modal__card-head">
+                            <span class="ficha-empleados-masivos-modal__card-icon ficha-empleados-masivos-modal__card-icon--export" aria-hidden="true">
+                                <x-lucide-check-circle width="18" height="18" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <h4 class="ficha-empleados-masivos-modal__card-title">Resumen de la selección</h4>
+                                <p class="ficha-empleados-masivos-modal__card-note">
+                                    <strong x-text="selectedCount"></strong> fila(s) marcada(s)
+                                    · Válidas: <strong x-text="selectedValidCount"></strong>
+                                    · Novedades: <strong x-text="selectedSoftCount"></strong>
+                                    · Bloqueo duro: <strong x-text="selectedHardCount"></strong>
+                                </p>
+                            </div>
+                        </div>
+                        <p class="ficha-empleados-masivos-modal__export-note" style="margin:0;">
+                            Las filas con <strong>bloqueo duro</strong> (ficha incompleta o fuera del universo) <strong>nunca</strong> se exportan, elija Sí o No.
+                        </p>
+                    </section>
+                </div>
+
+                <div class="cursos-registros-page__form-actions acreditaciones-bulk-modal__actions" style="margin-top:1rem;">
+                    <button
+                        type="button"
+                        class="btn btn--secondary"
                         x-on:click="$dispatch('close-modal', 'export-apo-novedades')"
                     >
                         Cancelar
                     </button>
                     <button
                         type="button"
-                        class="btn btn--secondary btn--sm"
+                        class="btn btn--secondary"
+                        title="Exportar solo filas con Valida = Sí"
                         x-on:click="$dispatch('export-apo-generate', { include: false })"
                     >
-                        No
+                        Solo válidas
                     </button>
                     <button
                         type="button"
-                        class="btn btn--primary btn--sm"
+                        class="btn btn--primary"
+                        title="Incluir novedades blandas en el .xls"
+                        x-bind:disabled="selectedSoftCount === 0"
                         x-on:click="$dispatch('export-apo-generate', { include: true })"
                     >
-                        Sí
+                        Incluir novedades
                     </button>
                 </div>
             </div>
         </x-modal>
+
+        @include('areas.gestion_humana.acreditaciones.partials.bulk-update-modal')
+        @include('areas.gestion_humana.acreditaciones.partials.edit-modal', [
+            'cargoApoOptions' => $cargoApoOptions,
+            'renovacionOptions' => $renovacionOptions,
+            'exportApoReturn' => true,
+        ])
     </div>
 
     @push('scripts')
@@ -294,6 +389,9 @@
                     defaultVigenciaPolicy: config.defaultVigenciaPolicy,
                     csrfToken: config.csrfToken || '',
                     settings: config.settings || {},
+                    autoValidateIds: Array.isArray(config.autoValidateIds) ? config.autoValidateIds : [],
+                    lookupUrl: config.lookupUrl || '',
+                    bulkUpdateUrl: config.bulkUpdateUrl || '',
                     selected: {},
                     previewLoading: false,
                     generateLoading: false,
@@ -301,9 +399,91 @@
                     previewError: '',
                     previewRows: [],
                     previewSummary: null,
+                    bulkUpdateOpen: false,
+                    submittingBulk: false,
+                    bulkForm: {
+                        observaciones: '',
+                        fecha_solicitud: '',
+                        renovacion: '',
+                    },
+                    editOpen: false,
+                    editIdentityLocked: true,
+                    editForm: {
+                        document_number: '',
+                        full_name: '',
+                        cargo: '',
+                        cargo_apo: '',
+                        vigencia_acr: '',
+                        fecha_solicitud: '',
+                        estado: '',
+                        estado_label: '',
+                        renovacion: '',
+                        observaciones: '',
+                        update_url: '',
+                    },
+
+                    init() {
+                        if (this.autoValidateIds.length > 0) {
+                            this.$nextTick(() => {
+                                this.runValidate(this.autoValidateIds);
+                            });
+                        }
+                    },
 
                     get selectedCount() {
                         return Object.keys(this.selected).length;
+                    },
+
+                    get selectedPreviewRows() {
+                        const ids = new Set(this.selectedIds());
+                        return this.previewRows.filter((row) => ids.has(Number(row.acreditado_id)));
+                    },
+
+                    get selectedRows() {
+                        return this.selectedPreviewRows
+                            .filter((row) => row.editable !== false)
+                            .map((row) => ({
+                                id: Number(row.acreditado_id),
+                                document_number: row.document_number || '',
+                                full_name: row.full_name
+                                    || [row.nombre1, row.nombre2, row.apellido1, row.apellido2]
+                                        .filter(Boolean)
+                                        .join(' ')
+                                    || '—',
+                                cargo_apo: row.cargo_apo || '',
+                                vigencia_acr: row.vigencia_acr || '—',
+                                estado: row.estado_label || row.estado || '—',
+                            }));
+                    },
+
+                    get returnPreviewIds() {
+                        return this.previewRows
+                            .map((row) => Number(row.acreditado_id))
+                            .filter((id) => id > 0);
+                    },
+
+                    get selectedValidCount() {
+                        return this.selectedPreviewRows.filter((row) => row.valida === true).length;
+                    },
+
+                    get selectedSoftCount() {
+                        return this.selectedPreviewRows.filter(
+                            (row) => row.valida !== true && row.hard_block !== true,
+                        ).length;
+                    },
+
+                    get selectedHardCount() {
+                        return this.selectedPreviewRows.filter((row) => row.hard_block === true).length;
+                    },
+
+                    get selectedHasValidaNo() {
+                        return this.selectedPreviewRows.some((row) => row.valida !== true);
+                    },
+
+                    get bulkHasPayload() {
+                        return String(this.bulkForm.observaciones || '').trim() !== ''
+                            || String(this.bulkForm.fecha_solicitud || '').trim() !== ''
+                            || String(this.bulkForm.renovacion || '').trim() !== '';
                     },
 
                     get allSelected() {
@@ -340,19 +520,241 @@
                         return Object.keys(this.selected).map((id) => Number(id));
                     },
 
+                    removeRow(id) {
+                        const target = Number(id);
+                        this.previewRows = this.previewRows.filter((row) => Number(row.acreditado_id) !== target);
+                        delete this.selected[target];
+                        this.recomputeSummary();
+                    },
+
+                    recomputeSummary() {
+                        let validas = 0;
+                        let blandas = 0;
+                        let bloqueadas = 0;
+                        this.previewRows.forEach((row) => {
+                            if (row.hard_block === true) {
+                                bloqueadas++;
+                            } else if (row.soft_novedad === true) {
+                                blandas++;
+                            } else {
+                                validas++;
+                            }
+                        });
+                        this.previewSummary = {
+                            ...(this.previewSummary || {}),
+                            selected: this.previewRows.length,
+                            found: this.previewRows.length,
+                            validas,
+                            novedades_blandas: blandas,
+                            bloqueadas,
+                            missing_ids: [],
+                        };
+                    },
+
+                    openBulkUpdate() {
+                        if (this.selectedRows.length < 1) {
+                            this.previewError = 'Seleccione al menos un acreditado editable.';
+                            return;
+                        }
+                        this.previewError = '';
+                        this.bulkForm = { observaciones: '', fecha_solicitud: '', renovacion: '' };
+                        this.bulkUpdateOpen = true;
+                        this.submittingBulk = false;
+                        this.syncBulkRenovacion('');
+                    },
+
+                    closeBulkUpdate() {
+                        this.bulkUpdateOpen = false;
+                        this.submittingBulk = false;
+                    },
+
+                    submitBulkUpdate() {
+                        if (this.submittingBulk || this.selectedRows.length < 1 || ! this.bulkHasPayload) {
+                            return;
+                        }
+
+                        this.submittingBulk = true;
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = this.bulkUpdateUrl;
+                        form.style.display = 'none';
+
+                        const append = (name, value) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = value == null ? '' : String(value);
+                            form.appendChild(input);
+                        };
+
+                        append('_token', this.csrfToken
+                            || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                            || '');
+                        append('_return_context', 'export_apo');
+
+                        this.selectedRows.forEach((row) => append('ids[]', row.id));
+                        this.returnPreviewIds.forEach((id) => append('_return_ids[]', id));
+
+                        const observaciones = String(this.bulkForm.observaciones || '').trim();
+                        const fecha = String(this.bulkForm.fecha_solicitud || '').trim();
+                        const renovacion = String(this.bulkForm.renovacion || '').trim();
+
+                        if (observaciones !== '') {
+                            append('observaciones', observaciones);
+                        }
+                        if (fecha !== '') {
+                            append('fecha_solicitud', fecha);
+                        }
+                        if (renovacion !== '') {
+                            append('renovacion', renovacion);
+                        }
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    },
+
+                    syncBulkRenovacion(value) {
+                        this.bulkForm.renovacion = String(value || '');
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-bulk-renovacion-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
+                    },
+
+                    closeEdit() {
+                        this.editOpen = false;
+                    },
+
+                    unlockEditIdentity() {
+                        this.editIdentityLocked = false;
+                        this.editForm.document_number = '';
+                        this.editForm.full_name = '';
+                        this.editForm.cargo = '';
+                    },
+
+                    syncEditCargoApo(value) {
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-edit-cargo-apo-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
+                    },
+
+                    syncEditRenovacion(value) {
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-edit-renovacion-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
+                    },
+
+                    openEditFromRow(row) {
+                        if (! row || row.editable === false || ! row.update_url) {
+                            return;
+                        }
+                        this.openEdit({
+                            document_number: row.document_number || '',
+                            full_name: row.full_name || '',
+                            cargo: row.ficha_cargo || '',
+                            cargo_apo: row.cargo_apo || '',
+                            vigencia_acr: row.vigencia_acr || '',
+                            fecha_solicitud: row.fecha_solicitud || '',
+                            estado: row.estado || '',
+                            estado_label: row.estado_label || row.estado || '',
+                            renovacion: row.renovacion || '',
+                            observaciones: row.observaciones || '',
+                            update_url: row.update_url || '',
+                        });
+                    },
+
+                    openEdit(detail) {
+                        this.editForm = {
+                            document_number: detail?.document_number || '',
+                            full_name: detail?.full_name || '',
+                            cargo: detail?.cargo || '',
+                            cargo_apo: detail?.cargo_apo || '',
+                            vigencia_acr: detail?.vigencia_acr || '',
+                            fecha_solicitud: detail?.fecha_solicitud || '',
+                            estado: detail?.estado || '',
+                            estado_label: detail?.estado_label || detail?.estado || '',
+                            renovacion: detail?.renovacion || '',
+                            observaciones: detail?.observaciones || '',
+                            update_url: detail?.update_url || '',
+                        };
+                        this.editIdentityLocked = Boolean(this.editForm.document_number);
+                        this.editOpen = true;
+                        this.syncEditCargoApo(this.editForm.cargo_apo);
+                        this.syncEditRenovacion(this.editForm.renovacion);
+                        if (this.editForm.document_number) {
+                            this.lookupName(this.editForm.document_number, 'edit');
+                        }
+                    },
+
+                    async lookupName(cedula, mode) {
+                        const value = String(cedula || '').trim();
+                        if (! value || ! this.lookupUrl) {
+                            return;
+                        }
+                        try {
+                            const res = await fetch(this.lookupUrl + '?cedula=' + encodeURIComponent(value), {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            if (! res.ok) {
+                                return;
+                            }
+                            const data = await res.json();
+                            if (data.found && data.full_name && mode === 'edit') {
+                                this.editForm.document_number = data.document_number || value;
+                                this.editForm.full_name = data.full_name;
+                                this.editForm.cargo = data.cargo || '';
+                                this.editIdentityLocked = true;
+                            }
+                        } catch (e) {}
+                    },
+
                     currentVigenciaPolicy() {
                         const input = document.querySelector('input[name="vigencia_policy"]');
                         const value = input ? String(input.value || '').trim() : '';
                         return value || this.defaultVigenciaPolicy;
                     },
 
-                    async runValidate() {
+                    async runValidate(ids) {
                         this.previewError = '';
                         this.selected = {};
                         this.hasValidated = true;
                         this.previewLoading = true;
                         this.previewRows = [];
                         this.previewSummary = null;
+
+                        const payloadBody = {
+                            vigencia_policy: this.currentVigenciaPolicy(),
+                        };
+                        if (Array.isArray(ids) && ids.length > 0) {
+                            payloadBody.ids = ids.map((id) => Number(id)).filter((id) => id > 0);
+                        }
 
                         try {
                             const token = this.csrfToken
@@ -366,15 +768,14 @@
                                     'X-CSRF-TOKEN': token,
                                     'X-Requested-With': 'XMLHttpRequest',
                                 },
-                                body: JSON.stringify({
-                                    vigencia_policy: this.currentVigenciaPolicy(),
-                                }),
+                                body: JSON.stringify(payloadBody),
                             });
 
                             const payload = await response.json().catch(() => ({}));
                             if (! response.ok) {
                                 const msg = payload.message
                                     || payload.errors?.vigencia_policy?.[0]
+                                    || payload.errors?.ids?.[0]
                                     || 'No se pudo validar.';
                                 throw new Error(msg);
                             }
@@ -396,9 +797,15 @@
                             this.previewError = 'Seleccione al menos un candidato.';
                             return;
                         }
-                        window.dispatchEvent(new CustomEvent('open-modal', {
-                            detail: 'export-apo-novedades',
-                        }));
+
+                        if (this.selectedHasValidaNo) {
+                            window.dispatchEvent(new CustomEvent('open-modal', {
+                                detail: 'export-apo-novedades',
+                            }));
+                            return;
+                        }
+
+                        this.submitGenerate(false);
                     },
 
                     submitGenerate(includeNovedades) {
@@ -459,6 +866,7 @@
                         this.previewSummary = null;
                         this.previewLoading = false;
                         this.generateLoading = false;
+                        this.autoValidateIds = [];
                     },
                 }));
             });

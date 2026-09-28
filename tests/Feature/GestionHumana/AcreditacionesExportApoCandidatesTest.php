@@ -379,6 +379,60 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $response['summary']['found']);
     }
 
+    public function test_editor_preview_with_ids_includes_fuera_universo_as_hard_block(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '5006007008';
+        $this->createCompleteFicha($cedula);
+
+        $candidato = AcreditacionAcreditado::factory()->enProceso()->create([
+            'document_number' => $cedula,
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+        $fresco = AcreditacionAcreditado::factory()->create([
+            'document_number' => $cedula,
+            'cargo_apo' => 'VIGILANTE',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $response = $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
+                'ids' => [$candidato->id, $fresco->id, 999999],
+                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+            ])
+            ->assertOk()
+            ->json();
+
+        $byId = collect($response['rows'] ?? [])->keyBy('acreditado_id');
+        $this->assertCount(3, $response['rows']);
+        $this->assertArrayHasKey($candidato->id, $byId->all());
+        $this->assertArrayHasKey($fresco->id, $byId->all());
+        $this->assertArrayHasKey(999999, $byId->all());
+
+        $this->assertContains(
+            AcreditacionExportApoRowResolver::NOVEDAD_FUERA_UNIVERSO,
+            $byId[$fresco->id]['motivo_codes'],
+        );
+        $this->assertTrue($byId[$fresco->id]['hard_block']);
+        $this->assertContains(
+            AcreditacionExportApoRowResolver::NOVEDAD_REGISTRO_NO_ENCONTRADO,
+            $byId[999999]['motivo_codes'],
+        );
+        $this->assertContains(999999, $response['summary']['missing_ids']);
+    }
+
+    public function test_export_apo_accepts_auto_validate_ids_query(): void
+    {
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.export-apo', [
+                'ids' => [12, 34],
+            ]))
+            ->assertOk()
+            ->assertViewHas('autoValidateIds', [12, 34]);
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      */

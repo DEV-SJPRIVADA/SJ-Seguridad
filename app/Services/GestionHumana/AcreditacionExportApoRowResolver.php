@@ -27,6 +27,10 @@ final class AcreditacionExportApoRowResolver
 
     public const NOVEDAD_CARGO_AMBIGUO = 'cargo_acreditacion_ambiguo';
 
+    public const NOVEDAD_FUERA_UNIVERSO = 'fuera_universo_export_apo';
+
+    public const NOVEDAD_REGISTRO_NO_ENCONTRADO = 'registro_no_encontrado';
+
     public const POLICY_VIGENTE = 'VIGENTE';
 
     public const POLICY_VIGENTE_ACTUALIZAR = 'VIGENTE_ACTUALIZAR';
@@ -36,6 +40,8 @@ final class AcreditacionExportApoRowResolver
      */
     public const HARD_NOVEDADES = [
         self::NOVEDAD_FICHA_INCOMPLETA,
+        self::NOVEDAD_FUERA_UNIVERSO,
+        self::NOVEDAD_REGISTRO_NO_ENCONTRADO,
     ];
 
     public function __construct(
@@ -132,6 +138,16 @@ final class AcreditacionExportApoRowResolver
             'acreditado_id' => (int) $acreditado->id,
             'document_number' => (string) $acreditado->document_number,
             'cargo_apo' => (string) $acreditado->cargo_apo,
+            'full_name' => (string) $acreditado->full_name,
+            'ficha_cargo' => (string) $acreditado->cargo,
+            'vigencia_acr' => optional($acreditado->vigencia_acr)?->format('Y-m-d') ?: '',
+            'fecha_solicitud' => optional($acreditado->fecha_solicitud)?->format('Y-m-d') ?: '',
+            'estado' => (string) $acreditado->estado,
+            'estado_label' => $acreditado->estadoLabel(),
+            'renovacion' => (string) ($acreditado->renovacion ?? ''),
+            'observaciones' => (string) ($acreditado->observaciones ?? ''),
+            'update_url' => route('gestion-humana.acreditaciones.acreditados.update', $acreditado),
+            'editable' => true,
             'nombre1' => $nombre1,
             'nombre2' => $nombre2,
             'apellido1' => $apellido1,
@@ -530,11 +546,89 @@ final class AcreditacionExportApoRowResolver
             self::NOVEDAD_ESCUELA_NO_CATALOGO => 'Escuela no está en catálogo activo',
             self::NOVEDAD_CARGO_NO_RESOLUBLE => 'Cargo acreditación no resoluble',
             self::NOVEDAD_CARGO_AMBIGUO => 'Cargo acreditación ambiguo',
+            self::NOVEDAD_FUERA_UNIVERSO => 'Fuera del universo Export Apo (estado o sin ficha activa)',
+            self::NOVEDAD_REGISTRO_NO_ENCONTRADO => 'Registro no encontrado',
         ];
 
         return implode('; ', array_map(
             fn (string $code): string => $labels[$code] ?? $code,
             $codes,
         ));
+    }
+
+    /**
+     * Marca una fila resuelta como bloqueo duro (fuera del universo candidato).
+     *
+     * @param  array<string, mixed>  $resolved
+     * @return array<string, mixed>
+     */
+    public function markFueraUniverso(array $resolved): array
+    {
+        return $this->appendHardBlock($resolved, self::NOVEDAD_FUERA_UNIVERSO);
+    }
+
+    /**
+     * Stub de fila para un ID solicitado que ya no existe en Acreditados.
+     *
+     * @return array<string, mixed>
+     */
+    public function missingRecordStub(int $acreditadoId): array
+    {
+        $codes = [self::NOVEDAD_REGISTRO_NO_ENCONTRADO];
+
+        return [
+            'acreditado_id' => $acreditadoId,
+            'document_number' => '',
+            'cargo_apo' => '',
+            'full_name' => '',
+            'ficha_cargo' => '',
+            'vigencia_acr' => '',
+            'fecha_solicitud' => '',
+            'estado' => '',
+            'estado_label' => '',
+            'renovacion' => '',
+            'observaciones' => '',
+            'update_url' => '',
+            'editable' => false,
+            'nombre1' => '',
+            'nombre2' => '',
+            'apellido1' => '',
+            'apellido2' => '',
+            'fecha_nacimiento' => '',
+            'genero' => '',
+            'cargo' => '',
+            'fecha_vinculacion' => '',
+            'codigo_curso' => '',
+            'nit_escuela' => '',
+            'nro' => '',
+            'tipo_curso' => '',
+            'estado_curso' => '',
+            'valida' => false,
+            'hard_block' => true,
+            'soft_novedad' => false,
+            'motivo' => $this->motivoLabel($codes),
+            'motivo_codes' => $codes,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $resolved
+     * @return array<string, mixed>
+     */
+    private function appendHardBlock(array $resolved, string $code): array
+    {
+        /** @var list<string> $codes */
+        $codes = array_values(array_unique(array_merge(
+            array_map('strval', $resolved['motivo_codes'] ?? []),
+            [$code],
+        )));
+
+        $resolved['motivo_codes'] = $codes;
+        $resolved['hard_block'] = true;
+        $resolved['soft_novedad'] = false;
+        $resolved['valida'] = false;
+        $resolved['motivo'] = $this->motivoLabel($codes);
+
+        return $resolved;
     }
 }

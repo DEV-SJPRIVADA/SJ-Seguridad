@@ -71,4 +71,26 @@ final class AcreditacionExportApoCandidateService
             ->orderBy('id')
             ->get();
     }
+
+    /**
+     * Carga acreditados por ID sin filtrar por universo candidato (preview forzado).
+     *
+     * @param  list<int>  $ids
+     * @return Collection<int, AcreditacionAcreditado>
+     */
+    public function findByIds(array $ids): Collection
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        return AcreditacionAcreditado::query()
+            ->whereIn('id', $ids)
+            ->orderBy('document_number')
+            ->orderBy('cargo_apo')
+            ->orderBy('id')
+            ->get();
+    }
 }

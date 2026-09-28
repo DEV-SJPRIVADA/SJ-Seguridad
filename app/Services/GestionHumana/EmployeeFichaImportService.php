@@ -22,6 +22,7 @@ class EmployeeFichaImportService
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaImportValueNormalizer $valueNormalizer,
         private readonly EmployeeCursoPendingService $cursoPendingService,
+        private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
     ) {}
 
     /**
@@ -97,6 +98,15 @@ class EmployeeFichaImportService
                         $this->profileCatalogSync->syncAndSave($profile);
                         $profile = $profile->fresh();
                         $stats['imported']++;
+                    }
+
+                    if ($entry !== null && $profile !== null) {
+                        $entry = $entry->fresh();
+                        $entry?->setRelation('profile', $profile);
+                        $this->employmentPeriodService->ensureOpenPeriodIfProfileActive(
+                            $entry,
+                            (int) ($userId ?? $entry->moved_to_ficha_by ?? $entry->created_by ?? 1),
+                        );
                     }
 
                     if ($enteredFicha && $profile !== null) {

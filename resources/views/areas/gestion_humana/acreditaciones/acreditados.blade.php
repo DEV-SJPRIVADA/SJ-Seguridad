@@ -15,6 +15,7 @@
             canEdit: @js($canEdit),
             bulkSelectableUrl: @js($bulkSelectableUrl ?? null),
             bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
+            exportApoUrl: @js($exportApoUrl ?? null),
             activeFilterQuery: @js($activeFilterQuery ?? []),
         })"
         @acreditaciones-open-edit.window="openEdit($event.detail)"
@@ -152,6 +153,17 @@
                                 <div class="cursos-registros-page__table-actions">
                                     <button
                                         type="button"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        x-show="selectedCount > 0"
+                                        x-cloak
+                                        x-on:click="cargarEnExportApo()"
+                                        title="Cargar en Export Apo"
+                                        aria-label="Cargar en Export Apo"
+                                    >
+                                        <x-lucide-file-output width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
                                         class="btn btn--primary btn--sm acreditaciones-bulk-trigger"
                                         x-show="selectedCount > 0"
                                         x-cloak
@@ -264,6 +276,7 @@
                     canEdit: !!config.canEdit,
                     bulkSelectableUrl: config.bulkSelectableUrl || '',
                     bulkUpdateUrl: config.bulkUpdateUrl || '',
+                    exportApoUrl: config.exportApoUrl || '',
                     activeFilterQuery: config.activeFilterQuery || {},
                     bulkSelectableRows: [],
                     bulkSelectableLoading: false,
@@ -363,6 +376,17 @@
                             const id = Number(input.value);
                             input.checked = !! this.selectedMap[id];
                         });
+                    },
+                    cargarEnExportApo() {
+                        const ids = this.selectedIds;
+                        if (ids.length < 1 || ! this.exportApoUrl) {
+                            return;
+                        }
+                        const url = new URL(this.exportApoUrl, window.location.origin);
+                        ids.forEach((id) => {
+                            url.searchParams.append('ids[]', String(id));
+                        });
+                        window.location.href = url.toString();
                     },
                     openBulkUpdate() {
                         if (this.selectedCount < 1) {

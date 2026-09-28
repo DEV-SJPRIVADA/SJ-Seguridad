@@ -32,7 +32,11 @@
         x-data="validacionesPage({
             hasRun: {{ $hasRun ? 'true' : 'false' }},
             activeCola: @js($defaultCola),
-            lookupUrl: @js($lookupUrl)
+            lookupUrl: @js($lookupUrl),
+            bulkSelectableUrl: @js($bulkSelectableUrl ?? null),
+            exportApoUrl: @js($exportApoUrl ?? null),
+            fechaReporte: @js($fecha),
+            runToken: @js($runToken),
         })"
         @acreditaciones-open-edit.window="openEdit($event.detail)"
     >
@@ -321,6 +325,17 @@
                                                     >
                                                         <x-lucide-x width="18" height="18" aria-hidden="true" />
                                                     </button>
+                                                    <button
+                                                        type="button"
+                                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                                        x-show="selectedCount > 0"
+                                                        x-cloak
+                                                        x-on:click="cargarEnExportApo()"
+                                                        title="Cargar en Export Apo"
+                                                        aria-label="Cargar en Export Apo"
+                                                    >
+                                                        <x-lucide-file-output width="18" height="18" aria-hidden="true" />
+                                                    </button>
                                                     @if (! empty($exportUrls[$colaCode]))
                                                         <x-export-excel
                                                             :route="$exportUrls[$colaCode]"
@@ -350,7 +365,22 @@
                                             <thead>
                                                 <tr>
                                                     @foreach ($colaDef['columns'] as $column)
-                                                        <th>{{ $column['title'] }}</th>
+                                                        @if (($column['data'] ?? '') === 'select')
+                                                            <th class="cursos-registros-page__select-col" data-orderable="false">
+                                                                <label class="cursos-registros-page__select-label" title="Seleccionar todos los del filtro actual">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        class="cursos-registros-page__select-checkbox"
+                                                                        x-bind:checked="allEligibleSelected(@js($colaCode))"
+                                                                        x-bind:disabled="bulkSelectableLoading || eligibleRowsFor(@js($colaCode)).length === 0"
+                                                                        x-on:change="toggleSelectAll(@js($colaCode), $event.target.checked)"
+                                                                        aria-label="Seleccionar todos"
+                                                                    >
+                                                                </label>
+                                                            </th>
+                                                        @else
+                                                            <th>{{ $column['title'] }}</th>
+                                                        @endif
                                                     @endforeach
                                                 </tr>
                                             </thead>
@@ -412,6 +442,13 @@
                     hasRun: !!config.hasRun,
                     activeCola: config.activeCola,
                     lookupUrl: config.lookupUrl,
+                    bulkSelectableUrl: config.bulkSelectableUrl || '',
+                    exportApoUrl: config.exportApoUrl || '',
+                    fechaReporte: config.fechaReporte || '',
+                    runToken: config.runToken || '',
+                    bulkSelectableByCola: {},
+                    bulkSelectableLoading: false,
+                    selectedMap: {},
                     editOpen: false,
                     editIdentityLocked: true,
                     editForm: {
@@ -426,6 +463,126 @@
                         renovacion: '',
                         observaciones: '',
                         update_url: '',
+                    },
+                    get selectedIds() {
+                        return Object.keys(this.selectedMap)
+                            .filter((id) => this.selectedMap[id])
+                            .map((id) => Number(id));
+                    },
+                    get selectedCount() {
+                        return this.selectedIds.length;
+                    },
+                    eligibleRowsFor(cola) {
+                        return Array.isArray(this.bulkSelectableByCola[cola])
+                            ? this.bulkSelectableByCola[cola]
+                            : [];
+                    },
+                    allEligibleSelected(cola) {
+                        const rows = this.eligibleRowsFor(cola);
+                        if (rows.length === 0) {
+                            return false;
+                        }
+                        return rows.every((row) => this.selectedMap[row.id]);
+                    },
+                    isSelected(id) {
+                        return !! this.selectedMap[id];
+                    },
+                    toggleRow(id, checked) {
+                        this.selectedMap = {
+                            ...this.selectedMap,
+                            [id]: !! checked,
+                        };
+                    },
+                    toggleSelectAll(cola, checked) {
+                        const rows = this.eligibleRowsFor(cola);
+                        const next = { ...this.selectedMap };
+                        rows.forEach((row) => {
+                            if (checked) {
+                                next[row.id] = true;
+                            } else {
+                                delete next[row.id];
+                            }
+                        });
+                        this.selectedMap = next;
+                        this.syncPageCheckboxes(cola);
+                    },
+                    syncPageCheckboxes(cola) {
+                        const selector = cola
+                            ? '.js-validaciones-datatable[data-dt-cola="' + cola + '"] .js-validaciones-row-select'
+                            : '.js-validaciones-row-select';
+                        document.querySelectorAll(selector).forEach((input) => {
+                            const id = Number(input.value);
+                            input.checked = !! this.selectedMap[id];
+                        });
+                    },
+                    collectColaFilters(cola) {
+                        const form = document.querySelector('.js-validaciones-cola-filters[data-cola="' + cola + '"]');
+                        const filters = {};
+                        if (! form) {
+                            return filters;
+                        }
+                        const data = new FormData(form);
+                        data.forEach((value, key) => {
+                            const trimmed = String(value || '').trim();
+                            if (trimmed !== '') {
+                                filters[key] = trimmed;
+                            }
+                        });
+                        return filters;
+                    },
+                    async loadBulkSelectable(cola) {
+                        if (! this.bulkSelectableUrl || ! this.runToken || ! cola) {
+                            this.bulkSelectableByCola = {
+                                ...this.bulkSelectableByCola,
+                                [cola]: [],
+                            };
+                            return;
+                        }
+                        this.bulkSelectableLoading = true;
+                        try {
+                            const url = new URL(this.bulkSelectableUrl, window.location.origin);
+                            url.searchParams.set('fecha_reporte', this.fechaReporte);
+                            url.searchParams.set('run_token', this.runToken);
+                            url.searchParams.set('cola', cola);
+                            const filters = this.collectColaFilters(cola);
+                            Object.keys(filters).forEach((key) => {
+                                url.searchParams.set(key, filters[key]);
+                            });
+                            const res = await fetch(url.toString(), {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            if (! res.ok) {
+                                this.bulkSelectableByCola = {
+                                    ...this.bulkSelectableByCola,
+                                    [cola]: [],
+                                };
+                                return;
+                            }
+                            const payload = await res.json();
+                            this.bulkSelectableByCola = {
+                                ...this.bulkSelectableByCola,
+                                [cola]: Array.isArray(payload.data) ? payload.data : [],
+                            };
+                        } catch (e) {
+                            this.bulkSelectableByCola = {
+                                ...this.bulkSelectableByCola,
+                                [cola]: [],
+                            };
+                        } finally {
+                            this.bulkSelectableLoading = false;
+                            this.syncPageCheckboxes(cola);
+                        }
+                    },
+                    cargarEnExportApo() {
+                        const ids = this.selectedIds;
+                        if (ids.length < 1 || ! this.exportApoUrl) {
+                            return;
+                        }
+                        const url = new URL(this.exportApoUrl, window.location.origin);
+                        ids.forEach((id) => {
+                            url.searchParams.append('ids[]', String(id));
+                        });
+                        window.location.href = url.toString();
                     },
                     setCola(cola) {
                         this.activeCola = cola;
@@ -524,6 +681,14 @@
                 }
 
                 const tables = {};
+
+                function getAlpineRoot() {
+                    const root = document.querySelector('.acreditaciones-validaciones-page');
+                    if (! root || ! window.Alpine) {
+                        return null;
+                    }
+                    return window.Alpine.$data(root);
+                }
 
                 function collectColaFilters(cola) {
                     const form = document.querySelector('.js-validaciones-cola-filters[data-cola="' + cola + '"]');
@@ -657,7 +822,8 @@
                         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                         pageLength: 25,
                         responsive: false,
-                        order: [[0, 'asc']],
+                        order: [[1, 'asc']],
+                        columnDefs: [{ targets: [0], orderable: false, searchable: false }],
                     });
 
                     api.on('xhr.dt', function (_event, _settings, json) {
@@ -665,6 +831,25 @@
                         if (json && typeof json.recordsFiltered !== 'undefined') {
                             updateMeta(json.recordsFiltered);
                         }
+                        const alpine = getAlpineRoot();
+                        if (alpine && typeof alpine.loadBulkSelectable === 'function') {
+                            alpine.loadBulkSelectable(cola);
+                        }
+                    });
+
+                    api.on('draw.dt', function () {
+                        const alpine = getAlpineRoot();
+                        if (alpine && typeof alpine.syncPageCheckboxes === 'function') {
+                            alpine.syncPageCheckboxes(cola);
+                        }
+                    });
+
+                    $table.on('change', '.js-validaciones-row-select', function () {
+                        const alpine = getAlpineRoot();
+                        if (! alpine) {
+                            return;
+                        }
+                        alpine.toggleRow(Number(this.value), this.checked);
                     });
 
                     $table.on('click', '.js-validaciones-edit', function () {

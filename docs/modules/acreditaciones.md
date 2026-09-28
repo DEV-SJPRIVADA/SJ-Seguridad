@@ -16,7 +16,7 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
-  - **Export Apo** (FEAT-039) — candidatos (universo estados + Ficha activa); **Validar** carga preview con columnas SuperVigilancia A–X + Valida/motivo (sin DT ni filtros de listado); selección manual; política vigencia; modal incluir novedades blandas; generación `.xls` (Writer Xls; **sin** Valida/motivo); seq diario persistido; audit generate.
+  - **Export Apo** (FEAT-039) — candidatos (universo estados + Ficha activa); **Validar** carga preview con columnas SuperVigilancia A–X + Valida/motivo (sin DT ni filtros de listado); selección manual; **quitar fila** solo en front (no sale al `.xls`); política vigencia; modal incluir novedades blandas; generación `.xls` (Writer Xls; **sin** Valida/motivo); seq diario persistido; audit generate. Desde **Acreditados** / **Validaciones**: selección (todas las páginas del filtro) + botón icono **Cargar en Export Apo** abre preview solo de esos IDs (fuera de universo → bloqueo duro/`motivo`).
   - **Dashboard** (FEAT-039) — KPIs Acreditados por estado, conteo candidatos / novedad potencial, ultimas corridas Export Apo; metrics JSON; **sin** mutaciones; **sin** ApexCharts obligatorio.
 - Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
@@ -74,10 +74,11 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/validaciones` | `validaciones` | Shell fecha + gate + botón Ejecutar + resultados. `acreditaciones.edit` |
 | POST | `/validaciones/ejecutar` | `validaciones.run` | Body: `fecha_reporte` ≤ hoy; responde conteos + `run_token`. `acreditaciones.edit` |
 | GET | `/validaciones/datatable` | `validaciones.datatable` | JSON DT; params `run_token`, `cola`, protocolo DT. `acreditaciones.edit` |
+| GET | `/validaciones/bulk-selectable` | `validaciones.bulk-selectable` | JSON ids del filtro (todas las páginas) con `acreditado_id` para Export Apo. `acreditaciones.edit` |
 | GET | `/validaciones/exportar` | `validaciones.export` | Excel por cola (`run_token`, `cola`). `acreditaciones.edit` |
 | GET | `/validaciones/exportar-consolidado` | `validaciones.export-consolidated` | Excel 4 hojas (`run_token`). `acreditaciones.edit` |
-| GET | `/export-apo` | `export-apo` | Shell Validar + preview columnas SuperVigilancia (≠ export listado Acreditados / Reporte Diario / Validaciones). **`acreditaciones.edit`** |
-| POST | `/export-apo/preview` | `export-apo.preview` | Body: `vigencia_policy` (+ `ids` opcional) → filas APO + Valida/motivo. Sin `ids` = universo completo. `acreditaciones.edit` |
+| GET | `/export-apo` | `export-apo` | Shell Validar + preview columnas SuperVigilancia. Query opcional `ids[]` → auto-Validar esos IDs. **`acreditaciones.edit`** |
+| POST | `/export-apo/preview` | `export-apo.preview` | Body: `vigencia_policy` (+ `ids` opcional) → filas APO + Valida/motivo. Sin `ids` = universo completo; con `ids` incluye fuera de universo como bloqueo duro. `acreditaciones.edit` |
 | POST | `/export-apo/generar` | `export-apo.generate` | Body: ids + policy + `include_novedades` → `.xls` + run. `acreditaciones.edit` |
 
 > **Nota:** no existe ruta `validaciones.gate` JSON; el gate se evalúa en el GET shell (y al POST ejecutar).
@@ -539,6 +540,9 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.11 | 2026-09-28 | Export Apo: editar acreditado por fila + Actualizar masivo de seleccionados (vuelve y revalida). |
+| 1.10 | 2026-09-28 | Modal novedades Export Apo: diseño chrome; solo si selección tiene Valida=No; si todas válidas genera directo. |
+| 1.9 | 2026-09-28 | Acreditados/Validaciones: checks + seleccionar filtro completo → Cargar en Export Apo (auto-Validar IDs); preview fuera de universo = bloqueo; quitar fila en front. |
 | 1.8 | 2026-09-28 | Export Apo NitEscuela: snapshot NIT del registro; si vacío, código de No.CURSO → catálogo Escuelas. |
 | 1.7 | 2026-09-28 | Export Apo: solo preview SuperVigilancia (sin DT/filtros); Validar = universo completo; columnas A–X + Valida/Motivo. |
 | 1.6 | 2026-09-28 | Export Apo: Validar bajo demanda + Preview restaurado; match F\|R acepta `cargo_acredit` como código de catálogo (p. ej. `2` = ESCOLTA). |

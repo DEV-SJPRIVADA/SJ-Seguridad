@@ -14,7 +14,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 - **Acreditados** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel y carga masiva con plantilla.
 - **Reporte Diario** — carga diaria de uno o dos Excel de la APO (En proceso y/o Acreditados APO), consulta por fecha, filtros, exportar e histórico de cargas. Es un **archivo histórico** de lo que envió la APO ese día; **no** actualiza por sí solo el listado de Acreditados ni Ficha.
 - **Validaciones** — solo con permiso de edición: elige una fecha de reporte, comprueba que ese día tenga **ambos** Excel APO cargados, ejecuta el cruce y obtiene **cuatro colas** para actuar (abrir Ficha, editar o crear acreditado) y exportar. Los resultados viven **solo en pantalla** de esa corrida (no hay histórico de validaciones guardado).
-- **Export Apo** — solo con permiso de edición: al entrar la pantalla está vacía; con **Validar** carga el preview SuperVigilancia (columnas del archivo + Valida/motivo), selecciona filas, decide si incluir novedades leves y descarga el `.xls`.
+- **Export Apo** — solo con permiso de edición: al entrar la pantalla está vacía; con **Validar** carga el preview SuperVigilancia (columnas del archivo + Valida/motivo), selecciona filas, puede **quitar** filas del preview, decide si incluir novedades leves y descarga el `.xls`. También puede llegar desde Acreditados o Validaciones con filas marcadas (botón **Cargar en Export Apo**).
 - **Catálogo** — solo con permiso de edición: administrar las filas de cargos (Manager / APO / Informe / Acreditación) y los **parámetros de empresa** usados en Export Apo (Nit, razón social, direcciones, etc.; una sola fila editable).
 
 **En esta versión (Acreditados):**
@@ -134,9 +134,11 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 ### Filtrar, exportar y eliminar (Acreditados)
 
 1. Use los filtros (estado de acreditación, estado en ficha, cédula, cargo, CARGO APO, rango de fechas de vigencia). Por defecto solo aparecen empleados **activos en ficha**; elija «Desvinculados» o «Todos (ficha)» para ver inactivos. Los botones de filtrar, limpiar y exportar son iconos (pase el cursor para ver la ayuda).
-2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro) y usar **Actualizar seleccionados** para poner la misma observación y/o fecha de solicitud a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO.
-3. Para Excel del listado, use el icono de Excel: se descarga según los filtros actuales. Incluye el estado calculado.
-4. Para eliminar, confirme en el aviso: el registro desaparece de forma permanente.
+2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro, todas las páginas) y usar **Actualizar seleccionados** para poner la misma observación y/o fecha de solicitud a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO.
+3. Con filas marcadas, el botón icono **Cargar en Export Apo** abre Export Apo y valida solo esos registros (aunque no estén en el universo habitual: aparecerán bloqueados con motivo).
+4. Use **Nuevo** o **Editar** para un registro puntual. El estado se calcula solo; no se elige a mano.
+5. Para Excel del listado, use el icono de Excel: se descarga según los filtros actuales. Incluye el estado calculado.
+6. Para eliminar, confirme en el aviso: el registro desaparece de forma permanente.
 
 ### Carga masiva de Acreditados (importación)
 
@@ -173,6 +175,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
    - Si ambos están cargados, podrá usar **Ejecutar validaciones**.
 4. Pulse **Ejecutar validaciones**. No se ejecuta solo al entrar ni al cambiar la fecha; al cambiar la fecha se limpian los resultados hasta una nueva ejecución.
 5. Tras ejecutar verá el resumen de conteos y las **cuatro colas**. Cada cola tiene **filtros** propios (cédula, nombre y campos de la cola); en **Ficha activa sin acreditación** el **Cargo Ficha** es un selector con los cargos activos del catálogo de Ficha. Use la lupa para aplicar y la X para limpiar. Los resultados son de esa corrida en pantalla; si sale y vuelve, o la sesión de resultados expiró, debe ejecutar de nuevo.
+6. En las colas con acreditado existente puede marcar filas (o «seleccionar todos» del filtro actual) y usar el botón **Cargar en Export Apo** para validar solo esos IDs en Export Apo. En **Ficha activa sin acreditación** no hay ID de acreditado: primero cree el registro con **Nuevo**.
 
 ### Interpretar las cuatro colas
 
@@ -192,11 +195,11 @@ Tras crear o editar desde una cola, conviene **volver a ejecutar** para refresca
 
 ### Generar Export Apo (SuperVigilancia)
 
-1. Con permiso de edición, abra la pestaña **Export Apo**. Al entrar **no** se muestra listado: la pantalla queda vacía a propósito.
+1. Con permiso de edición, abra la pestaña **Export Apo**. Al entrar **no** se muestra listado: la pantalla queda vacía a propósito. Si llegó desde Acreditados o Validaciones con el botón **Cargar en Export Apo**, el sistema valida automáticamente solo esos IDs.
 2. Elija la **política de vigencia** de cursos (solo vigentes, o vigentes + por actualizar).
-3. Pulse **Validar**. El sistema carga todos los candidatos (EN PROCESO, POR VENCER o DESACREDITADO con Ficha activa) en una tabla con las columnas SuperVigilancia (**Nit**, **RazonSocial**, **TipoDocumento**, **NoDocumento**, nombres/apellidos, fechas, **Genero**, **Cargo**, **CodigoCurso**, **NitEscuela**, **Nro**, datos de empresa, etc.), más **Estado curso**, **Valida** y **Motivo** (solo en pantalla; no van al Excel).
-4. Marque las filas que desea incluir (mínimo una). Una misma persona con dos cargos aparece dos veces.
-5. Al generar el archivo, si hay novedades leves el sistema pregunta si las **incluye** (Sí) o si solo descarga las filas válidas (No). Las filas con **ficha incompleta** no salen aunque elija Sí.
+3. Pulse **Validar** (sin selección previa carga todo el universo; con IDs precargados solo esos). El sistema muestra columnas SuperVigilancia más **Estado curso**, **Valida** y **Motivo** (solo en pantalla; no van al Excel). Filas fuera del universo aparecen bloqueadas con motivo.
+4. Marque las filas a exportar. Puede **editar** un acreditado (lápiz), **quitar** una fila del preview (basura) o, con varias marcadas, usar **Actualizar** para cambiar observación/fecha/renovación en bloque. Tras guardar vuelve a Export Apo y revalida el mismo conjunto.
+5. Pulse **Generar .xls**. Si entre las filas marcadas hay alguna con **Valida = No**, aparece un modal para decidir si incluye las novedades leves; si todas son válidas, descarga directo. Las filas con bloqueo duro no salen en ningún caso.
 6. Confirme la descarga. El archivo es `.xls`, una sola hoja, con las columnas oficiales SuperVigilancia. El género va como **1** o **2**. El nombre incluye el Nit de parámetros, la fecha y un número correlativo del día.
 7. Si el código de curso o el cargo de acreditación no están bien cargados en Catálogo Cursos, corrija allí y vuelva a **Validar**.
 
@@ -227,6 +230,7 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.16 | 2026-09-28 | Feature | Acreditados/Validaciones: Cargar en Export Apo; quitar fila en preview; fuera de universo = bloqueo. |
 | 1.15 | 2026-09-28 | Feature | Export Apo: se elimina listado DT/filtros; Validar muestra solo preview con columnas APO. |
 | 1.14 | 2026-09-28 | Feature | Export Apo: se restaura Preview SuperVigilancia; match F\|R acepta `cargo_acredit` como código de catálogo. |
 | 1.13 | 2026-09-28 | Feature | Export Apo: pantalla vacía hasta Validar; columnas tipo/estado curso solo en vista. |

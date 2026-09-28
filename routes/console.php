@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Services\GestionHumana\EmployeeCursoEscuelaBackfillService;
+use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Inspiring;
@@ -175,3 +176,26 @@ Artisan::command('cursos:backfill-escuelas {--limit= : Maximo de filas a escanea
 
     return self::SUCCESS;
 })->purpose('Completa codigo/NIT/nombre de escuela en registros de curso desde No.CURSO');
+
+Artisan::command('ficha:backfill-active-periods {--limit= : Maximo de perfiles a escanear} {--user= : ID usuario opened_by}', function () {
+    $limitOption = $this->option('limit');
+    $limit = $limitOption !== null && $limitOption !== '' ? max(1, (int) $limitOption) : null;
+    $userId = max(0, (int) $this->option('user'));
+
+    /** @var EmployeeFichaEmploymentPeriodService $service */
+    $service = app(EmployeeFichaEmploymentPeriodService::class);
+    $stats = $service->backfillMissingActivePeriods($limit, $userId);
+
+    $this->info('Backfill periodos activos para perfiles activo sin vinculo abierto');
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Escaneados', (string) $stats['scanned']],
+            ['Periodos abiertos', (string) $stats['opened']],
+            ['Omitidos', (string) $stats['skipped']],
+            ['Fallidos', (string) $stats['failed']],
+        ]
+    );
+
+    return self::SUCCESS;
+})->purpose('Abre periodo laboral para empleados activo en ficha sin periodo abierto');

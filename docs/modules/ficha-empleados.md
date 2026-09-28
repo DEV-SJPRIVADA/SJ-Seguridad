@@ -158,6 +158,8 @@ Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo cre
 
 Cada fila = un contrato/vinculo con la empresa (secuencia 1, 2, 3…). Solo un periodo `activo` por empleado.
 
+**Invariante:** perfil `employment_status = activo` (ficha ya movida) **debe** tener periodo abierto. Si falta (legado / import / fecha retiro vaciada), `ensureOpenPeriodIfProfileActive` lo crea al abrir la ficha, al guardar, en **import masivo SJ**, o al lookup de Desvinculaciones masivos. Backfill: `php artisan ficha:backfill-active-periods`.
+
 | Campo clave | Notas |
 | --- | --- |
 | `personal_requisition_id` | Requisicion origen del vinculo (reingreso siempre por requisicion) |
@@ -247,7 +249,7 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - Normalización al importar (`EmployeeFichaImportValueNormalizer`): `CEDULA`→`C`, `Masculino`→`M`, `Ahorro`→`1`, riesgo/contrato/salario/forma pago vía catálogo a código corto. La export nómina (`PlantillaMasivosMapper`) reaplica normalización al escribir celdas (archivo binario sin cambio).
 - Si vienen partes de nombre, se usan tal cual y se compone `full_name`; si solo viene `nombre`, se parte con `EmployeeFichaNameParser` (compatibilidad plantillas antiguas).
 - **Actualización:** al reimportar una cédula ya en ficha, el servicio sincroniza también la entrada (`hired_full_name` + partes de nombre) con el perfil, para que listado y título coincidan con el formulario.
-- `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). No crea periodo ni seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
+- `fecha_retiro` → `termination_date` + `employment_status` (`activo`/`desvinculado`). Si queda `activo`, el import **abre periodo** si faltaba (`ensureOpenPeriodIfProfileActive`). No cierra periodo ni crea seguimiento de Desvinculaciones; para desvincular con causal/cartas use el tablero Desvinculaciones.
 - Plantilla vacía y **Exportar datos para actualizar** comparten las mismas claves (`import_columns` + `EmployeeFichaImportRowMapper`).
 - Fuera de alcance del import SJ hacia columnas de nómina no listadas: otros `payroll_extra` de formulario (jornada, CCF code, etc.) y Archivo (`archive_shelf` / `archive_box`).
 - Seed catálogos: `php artisan employee-ficha:seed-catalogs --from=docs/Contratacion`.

@@ -20,6 +20,7 @@ final class AcreditacionValidacionesDatatableService
         string $runToken,
         string $cola,
         bool $canOpenFicha = false,
+        bool $canEdit = false,
     ): JsonResponse {
         $draw = (int) $request->input('draw', 1);
         $payload = $this->resultStore->get($userId, $fechaReporte, $runToken);
@@ -54,7 +55,7 @@ final class AcreditacionValidacionesDatatableService
         $filtered = $this->applySearch($filtered, $request);
         $recordsFiltered = $filtered->count();
 
-        $ordered = $this->applyOrdering($filtered, $request, $cola);
+        $ordered = $this->applyOrdering($filtered, $request, $cola, $canEdit);
 
         $start = max(0, (int) $request->input('start', 0));
         $length = (int) $request->input('length', 10);
@@ -67,7 +68,7 @@ final class AcreditacionValidacionesDatatableService
         $page = $ordered
             ->slice($start, min($maxLength, $length))
             ->values()
-            ->map(fn (array $row): array => $this->formatRow($row, $cola, $canOpenFicha))
+            ->map(fn (array $row): array => $this->formatRow($row, $cola, $canOpenFicha, $canEdit))
             ->all();
 
         return response()->json([
@@ -77,6 +78,51 @@ final class AcreditacionValidacionesDatatableService
             'data' => $page,
             'expired' => false,
         ]);
+    }
+
+    /**
+     * IDs de acreditados del filtro actual (todas las páginas) para cargar en Export Apo.
+     *
+     * @return list<array{
+     *     id: int,
+     *     document_number: string,
+     *     full_name: string,
+     *     cargo_apo: string,
+     *     estado: string
+     * }>
+     */
+    public function bulkSelectableRows(
+        Request $request,
+        int $userId,
+        string $fechaReporte,
+        string $runToken,
+        string $cola,
+    ): array {
+        $payload = $this->resultStore->get($userId, $fechaReporte, $runToken);
+
+        if ($payload === null || ! $this->resultStore->isValidCola($cola)) {
+            return [];
+        }
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $payload['colas'][$cola] ?? [];
+        $filtered = $this->rowFilter->apply(collect($rows), $request, $cola);
+        $filtered = $this->applySearch($filtered, $request);
+
+        $maxIds = (int) config('acreditaciones.limits.bulk_max_ids', 500);
+
+        return $filtered
+            ->filter(fn (array $row): bool => (int) ($row['acreditado_id'] ?? 0) > 0)
+            ->take($maxIds)
+            ->map(fn (array $row): array => [
+                'id' => (int) $row['acreditado_id'],
+                'document_number' => (string) ($row['document_number'] ?? ''),
+                'full_name' => (string) ($row['full_name'] ?? ''),
+                'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
+                'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -110,9 +156,13 @@ final class AcreditacionValidacionesDatatableService
      * @param  Collection<int, array<string, mixed>>  $rows
      * @return Collection<int, array<string, mixed>>
      */
-    private function applyOrdering(Collection $rows, Request $request, string $cola): Collection
+    private function applyOrdering(Collection $rows, Request $request, string $cola, bool $canEdit): Collection
     {
-        $orderColumnIndex = (int) $request->input('order.0.column', 0);
+        $orderColumnIndex = (int) $request->input('order.0.column', $canEdit ? 1 : 0);
+        if ($canEdit) {
+            $orderColumnIndex = max(0, $orderColumnIndex - 1);
+        }
+
         $orderDir = strtolower((string) $request->input('order.0.dir', 'asc')) === 'desc' ? 'desc' : 'asc';
         $columns = $this->sortableColumns($cola);
         $field = $columns[$orderColumnIndex] ?? $columns[0] ?? 'document_number';
@@ -168,12 +218,12 @@ final class AcreditacionValidacionesDatatableService
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
-    private function formatRow(array $row, string $cola, bool $canOpenFicha): array
+    private function formatRow(array $row, string $cola, bool $canOpenFicha, bool $canEdit): array
     {
         $dash = '—';
         $actions = $this->formatActionsCell($row, $cola, $canOpenFicha);
 
-        return match ($cola) {
+        $base = match ($cola) {
             AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION => [
                 'document_number' => e((string) ($row['document_number'] ?? '')),
                 'full_name' => e((string) ($row['full_name'] ?? '')),
@@ -208,6 +258,42 @@ final class AcreditacionValidacionesDatatableService
             ],
             default => $row,
         };
+
+        if ($canEdit) {
+            return array_merge(['select' => $this->formatSelectCell($row)], $base);
+        }
+
+        return $base;
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function formatSelectCell(array $row): string
+    {
+        $acreditadoId = (int) ($row['acreditado_id'] ?? 0);
+
+        if ($acreditadoId <= 0) {
+            return '<span class="cursos-registros-page__select-label" title="Sin registro en Acreditados">—</span>';
+        }
+
+        $payload = e(json_encode([
+            'id' => $acreditadoId,
+            'document_number' => (string) ($row['document_number'] ?? ''),
+            'full_name' => (string) ($row['full_name'] ?? ''),
+            'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
+            'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
+        ], JSON_UNESCAPED_UNICODE));
+
+        return sprintf(
+            '<label class="cursos-registros-page__select-label">'.
+            '<input type="checkbox" class="cursos-registros-page__select-checkbox js-validaciones-row-select" '.
+            'value="%d" data-validaciones-row="%s" aria-label="Seleccionar cédula %s">'.
+            '</label>',
+            $acreditadoId,
+            $payload,
+            e((string) ($row['document_number'] ?? '')),
+        );
     }
 
     /**

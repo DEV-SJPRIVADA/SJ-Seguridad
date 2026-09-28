@@ -507,6 +507,10 @@ class FichaEmpleadosController extends Controller
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
         $this->profilePrefill->ensureWorkCityFromRequisition($fichaEntry, $profile);
         $profile->refresh();
+        $this->employmentPeriodService->ensureOpenPeriodIfProfileActive(
+            $fichaEntry,
+            (int) (auth()->id() ?? $fichaEntry->moved_to_ficha_by ?? 1),
+        );
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
         $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
         $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
@@ -631,6 +635,14 @@ class FichaEmpleadosController extends Controller
         }
 
         $profile->refresh();
+
+        if ($profile->employment_status === EmployeeFichaProfile::STATUS_ACTIVO) {
+            $this->employmentPeriodService->ensureOpenPeriodIfProfileActive(
+                $fichaEntry,
+                (int) $request->user()->id,
+            );
+        }
+
         $after = $this->profileAuditSnapshot($profile);
 
         if ($before['employment_status'] !== $after['employment_status']) {

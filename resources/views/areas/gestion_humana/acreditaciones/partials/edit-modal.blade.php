@@ -1,7 +1,9 @@
 {{-- Variables: $cargoApoOptions, $renovacionOptions — estado Alpine en página padre (editOpen, editForm, lookupName).
-     Opcional: $validacionesReturn para volver a Validaciones tras guardar. --}}
+     Opcional: $validacionesReturn para volver a Validaciones tras guardar.
+     Opcional: $exportApoReturn=true para volver a Export Apo (usa returnPreviewIds en Alpine). --}}
 @php
     $validacionesReturn = $validacionesReturn ?? null;
+    $exportApoReturn = (bool) ($exportApoReturn ?? false);
 @endphp
 <div
     class="cursos-registros-page__modal"
@@ -49,6 +51,11 @@
                     <input type="hidden" name="_return_context" value="validaciones">
                     <input type="hidden" name="_return_fecha_reporte" value="{{ $validacionesReturn['fecha_reporte'] ?? '' }}">
                     <input type="hidden" name="_return_run_token" value="{{ $validacionesReturn['run_token'] ?? '' }}">
+                @elseif ($exportApoReturn)
+                    <input type="hidden" name="_return_context" value="export_apo">
+                    <template x-for="id in returnPreviewIds" :key="'edit-return-' + id">
+                        <input type="hidden" name="_return_ids[]" x-bind:value="id">
+                    </template>
                 @endif
 
                 <div class="cursos-registros-page__form-grid">

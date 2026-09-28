@@ -33,11 +33,12 @@ final class AcreditacionExportApoPreviewService
             $this->candidateService->allCandidates(),
             $vigenciaPolicy,
             requestedIds: [],
+            forceOutsideUniverse: false,
         );
     }
 
     /**
-     * Preview de IDs seleccionados (revalidación / subset).
+     * Preview de IDs seleccionados (incluye fuera del universo → bloqueo duro).
      *
      * @param  list<int>  $ids
      * @return array{
@@ -57,14 +58,15 @@ final class AcreditacionExportApoPreviewService
         $requestedIds = array_values(array_unique(array_filter(array_map('intval', $ids))));
 
         return $this->buildPreview(
-            $this->candidateService->findCandidatesByIds($requestedIds),
+            $this->candidateService->findByIds($requestedIds),
             $vigenciaPolicy,
             $requestedIds,
+            forceOutsideUniverse: true,
         );
     }
 
     /**
-     * @param  Collection<int, AcreditacionAcreditado>  $candidates
+     * @param  Collection<int, AcreditacionAcreditado>  $acreditados
      * @param  list<int>  $requestedIds
      * @return array{
      *     rows: list<array<string, mixed>>,
@@ -78,18 +80,45 @@ final class AcreditacionExportApoPreviewService
      *     },
      * }
      */
-    private function buildPreview(Collection $candidates, string $vigenciaPolicy, array $requestedIds): array
-    {
+    private function buildPreview(
+        Collection $acreditados,
+        string $vigenciaPolicy,
+        array $requestedIds,
+        bool $forceOutsideUniverse,
+    ): array {
         $policy = $this->rowResolver->normalizePolicy($vigenciaPolicy);
-        $foundIds = $candidates->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        $foundIds = $acreditados->pluck('id')->map(fn ($id): int => (int) $id)->all();
         $missingIds = $requestedIds === []
             ? []
             : array_values(array_diff($requestedIds, $foundIds));
 
-        $rows = $candidates
-            ->map(fn (AcreditacionAcreditado $row): array => $this->rowResolver->resolve($row, $policy))
+        $candidateIdSet = [];
+        if ($forceOutsideUniverse && $requestedIds !== []) {
+            $candidateIdSet = array_fill_keys(
+                $this->candidateService->findCandidatesByIds($requestedIds)
+                    ->pluck('id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->all(),
+                true,
+            );
+        }
+
+        $rows = $acreditados
+            ->map(function (AcreditacionAcreditado $row) use ($policy, $forceOutsideUniverse, $candidateIdSet): array {
+                $resolved = $this->rowResolver->resolve($row, $policy);
+
+                if ($forceOutsideUniverse && ! isset($candidateIdSet[(int) $row->id])) {
+                    $resolved = $this->rowResolver->markFueraUniverso($resolved);
+                }
+
+                return $resolved;
+            })
             ->values()
             ->all();
+
+        foreach ($missingIds as $missingId) {
+            $rows[] = $this->rowResolver->missingRecordStub((int) $missingId);
+        }
 
         $validas = 0;
         $blandas = 0;
