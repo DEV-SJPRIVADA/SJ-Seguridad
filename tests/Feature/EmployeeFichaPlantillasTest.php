@@ -249,6 +249,50 @@ class EmployeeFichaPlantillasTest extends TestCase
         ]);
     }
 
+    public function test_import_update_syncs_entry_hired_full_name_with_profile(): void
+    {
+        $manager = $this->managerUser();
+        $entry = $this->createInFichaEntry('987654321', 'Manuel Tic');
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '987654321',
+            'full_name' => 'Manuel Tic',
+            'first_surname' => 'Manuel',
+            'first_name' => 'Tic',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '987654321',
+            'primer_apellido' => 'PEDRO',
+            'primer_nombre' => 'PRUEBA3',
+            'fecha_ingreso' => '2026-08-26',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ])
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertSessionHas('import_result', function (array $result): bool {
+                return ($result['updated'] ?? 0) === 1 && ($result['failed'] ?? 0) === 0;
+            });
+
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'document_number' => '987654321',
+            'first_surname' => 'PEDRO',
+            'first_name' => 'PRUEBA3',
+            'full_name' => 'PEDRO PRUEBA3',
+        ]);
+
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'hired_document' => '987654321',
+            'first_surname' => 'PEDRO',
+            'first_name' => 'PRUEBA3',
+            'hired_full_name' => 'PEDRO PRUEBA3',
+        ]);
+    }
+
     public function test_import_composes_full_name_from_split_columns_when_nombre_empty(): void
     {
         $manager = $this->managerUser();

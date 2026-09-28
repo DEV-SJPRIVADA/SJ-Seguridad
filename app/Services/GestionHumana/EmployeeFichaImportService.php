@@ -293,13 +293,16 @@ class EmployeeFichaImportService
 
         if ($entry !== null) {
             $enteredFicha = false;
+            $attributes = $this->entryNameAttributesFromImport($data, $entry->hired_full_name);
 
             if ($entry->moved_to_ficha_at === null) {
-                $entry->update([
-                    'moved_to_ficha_at' => now(),
-                    'moved_to_ficha_by' => $userId,
-                ]);
+                $attributes['moved_to_ficha_at'] = now();
+                $attributes['moved_to_ficha_by'] = $userId;
                 $enteredFicha = true;
+            }
+
+            if ($attributes !== []) {
+                $entry->update($attributes);
             }
 
             return [
@@ -315,24 +318,47 @@ class EmployeeFichaImportService
             $requisitionId = PersonalRequisition::query()->where('code', $code)->value('id');
         }
 
-        $nameParts = $this->resolveImportNameParts($data);
+        $nameAttributes = $this->entryNameAttributesFromImport($data, $cedula);
 
-        $entry = PersonalRequisitionFichaEntry::query()->create([
+        $entry = PersonalRequisitionFichaEntry::query()->create(array_merge([
             'personal_requisition_id' => $requisitionId,
             'hired_document' => $cedula,
-            'hired_full_name' => $nameParts['full_name'] !== '' ? $nameParts['full_name'] : $cedula,
-            'first_surname' => $nameParts['first_surname'],
-            'second_surname' => $nameParts['second_surname'],
-            'first_name' => $nameParts['first_name'],
-            'second_name' => $nameParts['second_name'],
+            'hired_full_name' => $cedula,
             'moved_to_ficha_at' => now(),
             'moved_to_ficha_by' => $userId,
             'created_by' => $userId,
-        ]);
+        ], $nameAttributes));
 
         return [
             'entry' => $entry,
             'entered_ficha' => true,
+        ];
+    }
+
+    /**
+     * Atributos de identidad para la entrada de ficha. Solo incluye nombre cuando
+     * el Excel trae un nombre usable (evita borrar hired_full_name con fila vacía).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function entryNameAttributesFromImport(array $data, ?string $fallbackFullName = null): array
+    {
+        $nameParts = $this->resolveImportNameParts($data);
+        $fullName = $nameParts['full_name'] !== ''
+            ? $nameParts['full_name']
+            : trim((string) $fallbackFullName);
+
+        if ($fullName === '') {
+            return [];
+        }
+
+        return [
+            'hired_full_name' => $fullName,
+            'first_surname' => $nameParts['first_surname'],
+            'second_surname' => $nameParts['second_surname'],
+            'first_name' => $nameParts['first_name'],
+            'second_name' => $nameParts['second_name'],
         ];
     }
 

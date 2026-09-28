@@ -125,7 +125,7 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). El orden sigue el extracto tipo nompr07; al final van opcionales `codigo_ciudad_trabajo`, `ciudad_trabajo` y `codigo_requisicion`. Puede pegar valores legibles (`CEDULA`, `Masculino`, `Ahorro`); el sistema los guarda como códigos (`C`, `M`, `1`) para la plantilla de nómina.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
-5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica).
+5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica) y también sincroniza el nombre del listado (`hired_full_name`) con los apellidos/nombres del Excel.
 
 **Exportar datos para actualizar:** sin rango de fechas exporta solo **activos**; con fechas filtra por **fecha de ingreso**. Respeta la búsqueda activa del listado (`q`).
 
@@ -146,6 +146,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.13 | 2026-09-28 | Ficha | Import masivo: al actualizar una cédula existente, el nombre del listado (`hired_full_name`) se sincroniza con los campos del formulario. |
 | 1.12 | 2026-09-18 | Ficha | Listado Empleados: se retira la columna **Fecha contrato** (quedan ingreso y retiro). |
 | 1.11 | 2026-09-18 | Ficha | Campo **Fecha desvinculación** visible/editable en el formulario de ficha (junto a fecha ingreso). |
 | 1.10 | 2026-09-18 | Ficha | Plantilla import alineada a orden nompr07 (campos nuevos opcionales); normaliza CEDULA/Masculino/Ahorro a C/M/1; plantilla nómina sin cambio. |
