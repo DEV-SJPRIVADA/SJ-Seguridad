@@ -47,7 +47,14 @@
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="filter_cargo">Cargo</label>
-                                    <input id="filter_cargo" name="cargo" type="text" class="form-input" value="{{ $filters['cargo'] }}">
+                                    <x-searchable-select
+                                        id="filter_cargo"
+                                        name="cargo"
+                                        :options="$filterCargoFichaOptions"
+                                        :value="$filters['cargo']"
+                                        placeholder="Todos"
+                                        :allow-clear="true"
+                                    />
                                 </div>
                                 <div class="form-field">
                                     <label class="form-label" for="filter_cargo_apo">CARGO APO</label>
@@ -445,6 +452,7 @@
                         this.editIdentityLocked = false;
                         this.editForm.document_number = '';
                         this.editForm.full_name = '';
+                        this.editForm.cargo = '';
                     },
                     syncEditCargoApo(value) {
                         this.$nextTick(() => {
@@ -492,13 +500,13 @@
                         this.editOpen = true;
                         this.syncEditCargoApo(this.editForm.cargo_apo);
                         this.syncEditRenovacion(this.editForm.renovacion);
+                        if (this.editForm.document_number) {
+                            this.lookupName(this.editForm.document_number, 'edit');
+                        }
                     },
                     async lookupName(cedula, mode) {
                         const value = String(cedula || '').trim();
                         if (! value || ! this.lookupUrl) {
-                            return;
-                        }
-                        if (mode === 'edit' && this.editIdentityLocked) {
                             return;
                         }
                         try {
@@ -513,6 +521,7 @@
                                 if (mode === 'edit') {
                                     this.editForm.document_number = data.document_number || value;
                                     this.editForm.full_name = data.full_name;
+                                    this.editForm.cargo = data.cargo || '';
                                     this.editIdentityLocked = true;
                                 }
                             }

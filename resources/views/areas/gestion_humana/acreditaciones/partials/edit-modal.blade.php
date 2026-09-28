@@ -1,4 +1,8 @@
-{{-- Variables: $cargoApoOptions — estado Alpine en página padre (editOpen, editForm, lookupName). --}}
+{{-- Variables: $cargoApoOptions, $renovacionOptions — estado Alpine en página padre (editOpen, editForm, lookupName).
+     Opcional: $validacionesReturn para volver a Validaciones tras guardar. --}}
+@php
+    $validacionesReturn = $validacionesReturn ?? null;
+@endphp
 <div
     class="cursos-registros-page__modal"
     x-show="editOpen"
@@ -41,6 +45,11 @@
             <form method="POST" :action="editForm.update_url" class="cursos-registros-page__form">
                 @csrf
                 @method('PATCH')
+                @if (! empty($validacionesReturn))
+                    <input type="hidden" name="_return_context" value="validaciones">
+                    <input type="hidden" name="_return_fecha_reporte" value="{{ $validacionesReturn['fecha_reporte'] ?? '' }}">
+                    <input type="hidden" name="_return_run_token" value="{{ $validacionesReturn['run_token'] ?? '' }}">
+                @endif
 
                 <div class="cursos-registros-page__form-grid">
                     <div class="form-field">
@@ -92,8 +101,9 @@
                             type="text"
                             class="form-input"
                             maxlength="255"
-                            required
+                            readonly
                             x-model="editForm.cargo"
+                            placeholder="Se completa desde Ficha"
                         >
                     </div>
 

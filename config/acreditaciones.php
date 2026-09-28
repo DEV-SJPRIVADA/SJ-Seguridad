@@ -62,6 +62,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Validaciones (FEAT-038) — corrida efímera en caché
+    |--------------------------------------------------------------------------
+    */
+    'validaciones' => [
+        'cache_ttl_seconds' => 5400, // 1.5 h (rango Brief 1–2 h)
+        'colas' => [
+            'sin_acreditacion' => 'Ficha activa sin acreditación',
+            'ausente_reporte' => 'Acreditado ausente del reporte del día',
+            'en_proceso_ya_acreditado' => 'EN PROCESO en sistema / ACREDITADO en APO',
+            'vencidas' => 'Vencidas / por vencer',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Import Excel (T4) — claves fila 1 / labels fila 2
     |--------------------------------------------------------------------------
     */

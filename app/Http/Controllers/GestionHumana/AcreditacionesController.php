@@ -5,9 +5,12 @@ namespace App\Http\Controllers\GestionHumana;
 use App\Exports\AcreditacionesImportTemplateExport;
 use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesDatatableRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesExportRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionReporteDiarioRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\RunAcreditacionValidacionesRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionCargoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\UpdateAcreditacionAcreditadoRequest;
@@ -16,7 +19,9 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionCargo;
 use App\Models\AcreditacionReporteDiarioFila;
 use App\Models\EmployeeFichaProfile;
+use App\Models\PayrollCatalogItem;
 use App\Services\Access\AcreditacionesAccessService;
+use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\AcreditacionAcreditadoDatatableService;
 use App\Services\GestionHumana\AcreditacionAcreditadoListService;
 use App\Services\GestionHumana\AcreditacionCargoCatalogService;
@@ -26,6 +31,11 @@ use App\Services\GestionHumana\AcreditacionImportService;
 use App\Services\GestionHumana\AcreditacionReporteDiarioDatatableService;
 use App\Services\GestionHumana\AcreditacionReporteDiarioImportService;
 use App\Services\GestionHumana\AcreditacionReporteDiarioListService;
+use App\Services\GestionHumana\AcreditacionValidacionesDatatableService;
+use App\Services\GestionHumana\AcreditacionValidacionesExportService;
+use App\Services\GestionHumana\AcreditacionValidacionesGateService;
+use App\Services\GestionHumana\AcreditacionValidacionesResultStore;
+use App\Services\GestionHumana\AcreditacionValidacionesRunnerService;
 use App\Traits\HasAcreditacionesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -54,6 +64,12 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionReporteDiarioImportService $reporteDiarioImportService,
         private readonly AcreditacionReporteDiarioListService $reporteDiarioListService,
         private readonly AcreditacionReporteDiarioDatatableService $reporteDiarioDatatableService,
+        private readonly AcreditacionValidacionesGateService $validacionesGateService,
+        private readonly AcreditacionValidacionesRunnerService $validacionesRunnerService,
+        private readonly AcreditacionValidacionesResultStore $validacionesResultStore,
+        private readonly AcreditacionValidacionesDatatableService $validacionesDatatableService,
+        private readonly AcreditacionValidacionesExportService $validacionesExportService,
+        private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -129,6 +145,26 @@ class AcreditacionesController extends Controller
             $cargoApoOptions,
         );
 
+        $filterCargoFichaOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            PayrollCatalogItem::query()
+                ->ofType('position')
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['name'])
+                ->pluck('name')
+                ->map(fn (mixed $name): string => trim((string) $name))
+                ->filter(fn (string $name): bool => $name !== '')
+                ->unique(fn (string $name): string => mb_strtolower($name))
+                ->values()
+                ->map(fn (string $name): array => [
+                    'value' => $name,
+                    'label' => $name,
+                ])
+                ->all(),
+        );
+
         $filterFichaEstadoOptions = [
             ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos en ficha'],
             ['value' => EmployeeFichaProfile::STATUS_DESVINCULADO, 'label' => 'Desvinculados'],
@@ -143,6 +179,7 @@ class AcreditacionesController extends Controller
             'filterRenovacionOptions' => $filterRenovacionOptions,
             'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
             'filterCargoApoOptions' => $filterCargoApoOptions,
+            'filterCargoFichaOptions' => $filterCargoFichaOptions,
             'cargoApoOptions' => $cargoApoOptions,
             'renovacionOptions' => $renovacionOptions,
             'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
@@ -286,7 +323,7 @@ class AcreditacionesController extends Controller
 
         $profile = EmployeeFichaProfile::query()
             ->where('document_number', $cedula)
-            ->first(['id', 'document_number', 'full_name']);
+            ->first(['id', 'document_number', 'full_name', 'position_name']);
 
         if ($profile === null) {
             return response()->json(['found' => false]);
@@ -296,6 +333,7 @@ class AcreditacionesController extends Controller
             'found' => true,
             'document_number' => $profile->document_number,
             'full_name' => $profile->full_name,
+            'cargo' => trim((string) ($profile->position_name ?? '')),
             'employee_ficha_profile_id' => $profile->id,
         ]);
     }
@@ -303,7 +341,11 @@ class AcreditacionesController extends Controller
     public function storeAcreditado(StoreAcreditacionAcreditadoRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $payload = $this->acreditadoPayloadFromValidated($validated, $request->resolvedFullName());
+        $payload = $this->acreditadoPayloadFromValidated(
+            $validated,
+            $request->resolvedFullName(),
+            $request->resolvedCargo(),
+        );
 
         $acreditado = AcreditacionAcreditado::query()->create([
             ...$payload,
@@ -324,9 +366,11 @@ class AcreditacionesController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return redirect()
-            ->route('gestion-humana.acreditaciones.acreditados')
-            ->with('status', 'Acreditado creado correctamente.');
+        return $this->redirectAfterAcreditadoMutation(
+            $request,
+            'Acreditado creado correctamente. Vuelva a ejecutar validaciones para actualizar las colas.',
+            'Acreditado creado correctamente.',
+        );
     }
 
     public function updateAcreditado(
@@ -348,6 +392,7 @@ class AcreditacionesController extends Controller
         $payload = $this->acreditadoPayloadFromValidated(
             $request->validated(),
             $request->resolvedFullName(),
+            $request->resolvedCargo(),
         );
 
         $acreditacionAcreditado->update([
@@ -364,12 +409,12 @@ class AcreditacionesController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return redirect()
-            ->route(
-                'gestion-humana.acreditaciones.acreditados',
-                $this->activeAcreditadoFilterQuery($this->acreditadoFiltersFromRequest($request)),
-            )
-            ->with('status', 'Acreditado actualizado correctamente.');
+        return $this->redirectAfterAcreditadoMutation(
+            $request,
+            'Acreditado actualizado correctamente. Vuelva a ejecutar validaciones para actualizar las colas.',
+            'Acreditado actualizado correctamente.',
+            $this->activeAcreditadoFilterQuery($this->acreditadoFiltersFromRequest($request)),
+        );
     }
 
     public function destroyAcreditado(AcreditacionAcreditado $acreditacionAcreditado): RedirectResponse
@@ -767,15 +812,313 @@ class AcreditacionesController extends Controller
         return response()->json(['data' => $cargas]);
     }
 
-    public function validaciones(): View
+    public function validaciones(Request $request): View
     {
-        abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
 
-        return view('areas.gestion_humana.acreditaciones.placeholder', [
-            'subTabs' => $this->getAcreditacionesSubTabs('validaciones'),
-            'pageTitle' => 'Validaciones',
-            'pageDescription' => 'Gestion humana — validaciones de acreditaciones',
+        $today = Carbon::now(config('app.timezone'))->toDateString();
+        $fecha = $this->reporteDiarioListService->resolveFecha($request->input('fecha_reporte'));
+        $gate = $this->validacionesGateService->evaluate($fecha);
+        $reporteDiarioUrl = route('gestion-humana.acreditaciones.reporte-diario', [
+            'fecha_reporte' => $fecha,
         ]);
+
+        $runToken = trim((string) $request->input('run_token', ''));
+        $runPayload = null;
+        $runExpired = false;
+
+        if ($runToken !== '') {
+            $runPayload = $this->validacionesResultStore->get(
+                (int) auth()->id(),
+                $fecha,
+                $runToken,
+            );
+            $runExpired = $runPayload === null;
+        }
+
+        /** @var array<string, string> $colaLabels */
+        $colaLabels = config('acreditaciones.validaciones.colas', []);
+
+        $actionsColumn = [
+            'data' => 'actions',
+            'title' => 'Acciones',
+            'orderable' => false,
+            'searchable' => false,
+        ];
+
+        $colaDefs = [
+            AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION => [
+                'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION] ?? 'Ficha activa sin acreditación',
+                'columns' => [
+                    ['data' => 'document_number', 'title' => 'Cédula'],
+                    ['data' => 'full_name', 'title' => 'Nombre'],
+                    ['data' => 'cargo', 'title' => 'Cargo Ficha'],
+                    ['data' => 'personal_tipo', 'title' => 'Tipo'],
+                    $actionsColumn,
+                ],
+            ],
+            AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE => [
+                'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE] ?? 'Ausente del reporte',
+                'columns' => [
+                    ['data' => 'document_number', 'title' => 'Cédula'],
+                    ['data' => 'full_name', 'title' => 'Nombre'],
+                    ['data' => 'cargo', 'title' => 'Cargo Ficha'],
+                    ['data' => 'cargo_apo', 'title' => 'CARGO APO'],
+                    ['data' => 'estado', 'title' => 'Estado'],
+                    $actionsColumn,
+                ],
+            ],
+            AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO => [
+                'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO] ?? 'EN PROCESO ya acreditado APO',
+                'columns' => [
+                    ['data' => 'document_number', 'title' => 'Cédula'],
+                    ['data' => 'full_name', 'title' => 'Nombre'],
+                    ['data' => 'cargo_apo', 'title' => 'CARGO APO'],
+                    ['data' => 'estado', 'title' => 'Estado'],
+                    ['data' => 'fecha_solicitud', 'title' => 'Fecha solicitud'],
+                    ['data' => 'vigencia_apo', 'title' => 'VIGEN.ACR APO'],
+                    $actionsColumn,
+                ],
+            ],
+            AcreditacionValidacionesResultStore::COLA_VENCIDAS => [
+                'label' => $colaLabels[AcreditacionValidacionesResultStore::COLA_VENCIDAS] ?? 'Vencidas / por vencer',
+                'columns' => [
+                    ['data' => 'document_number', 'title' => 'Cédula'],
+                    ['data' => 'full_name', 'title' => 'Nombre'],
+                    ['data' => 'cargo_apo', 'title' => 'CARGO APO'],
+                    ['data' => 'estado', 'title' => 'Estado'],
+                    ['data' => 'vigencia_acr', 'title' => 'Vigencia ACR'],
+                    $actionsColumn,
+                ],
+            ],
+        ];
+
+        /** @var array<string, string> $estadoLabels */
+        $estadoLabels = config('acreditaciones.estados', []);
+        $filterEstadoOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            collect($estadoLabels)
+                ->map(fn (string $label, string $code): array => [
+                    'value' => $code,
+                    'label' => $label,
+                ])
+                ->values()
+                ->all(),
+        );
+
+        $filterPersonalTipoOptions = [
+            ['value' => '', 'label' => 'Todos'],
+            ['value' => 'OPERATIVO', 'label' => 'Operativo'],
+            ['value' => 'ADMINISTRATIVO', 'label' => 'Administrativo'],
+        ];
+
+        $filterCargoFichaOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            PayrollCatalogItem::query()
+                ->ofType('position')
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['name'])
+                ->pluck('name')
+                ->map(fn (mixed $name): string => trim((string) $name))
+                ->filter(fn (string $name): bool => $name !== '')
+                ->unique(fn (string $name): string => mb_strtolower($name))
+                ->values()
+                ->map(fn (string $name): array => [
+                    'value' => $name,
+                    'label' => $name,
+                ])
+                ->all(),
+        );
+
+        /** @var array<string, string> $renovacionLabels */
+        $renovacionLabels = config('acreditaciones.renovaciones', []);
+        $renovacionOptions = collect($renovacionLabels)
+            ->map(fn (string $label, string $code): array => [
+                'value' => $code,
+                'label' => $label,
+            ])
+            ->values()
+            ->all();
+
+        $cargoApoOptions = AcreditacionCargo::query()
+            ->active()
+            ->orderBy('cargo_apo')
+            ->get(['cargo_apo'])
+            ->pluck('cargo_apo')
+            ->unique(fn (string $apo): string => mb_strtolower(trim($apo)))
+            ->values()
+            ->map(fn (string $apo): array => [
+                'value' => $apo,
+                'label' => $apo,
+            ])
+            ->all();
+
+        $filterCargoApoOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            $cargoApoOptions,
+        );
+
+        $effectiveRunToken = $runPayload['run_token'] ?? null;
+        $exportQueryBase = [
+            'fecha_reporte' => $fecha,
+            'run_token' => $effectiveRunToken,
+        ];
+
+        $exportUrls = [];
+        foreach (array_keys($colaDefs) as $colaCode) {
+            $exportUrls[$colaCode] = $effectiveRunToken
+                ? route('gestion-humana.acreditaciones.validaciones.export', [
+                    ...$exportQueryBase,
+                    'cola' => $colaCode,
+                ])
+                : null;
+        }
+
+        $exportConsolidatedUrl = $effectiveRunToken
+            ? route('gestion-humana.acreditaciones.validaciones.export-consolidated', $exportQueryBase)
+            : null;
+
+        $showNuevoModal = (string) old('_return_context') === 'validaciones'
+            && $request->session()->has('errors');
+
+        return view('areas.gestion_humana.acreditaciones.validaciones', [
+            'subTabs' => $this->getAcreditacionesSubTabs('validaciones'),
+            'canEdit' => true,
+            'today' => $today,
+            'fecha' => $fecha,
+            'gate' => $gate,
+            'gateOk' => $gate['ok'],
+            'reporteDiarioUrl' => $reporteDiarioUrl,
+            'runToken' => $effectiveRunToken,
+            'runCounts' => $runPayload['counts'] ?? null,
+            'runExpired' => $runExpired,
+            'colaLabels' => $colaLabels,
+            'colaDefs' => $colaDefs,
+            'defaultCola' => AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION,
+            'datatableUrl' => route('gestion-humana.acreditaciones.validaciones.datatable'),
+            'runUrl' => route('gestion-humana.acreditaciones.validaciones.run'),
+            'exportUrls' => $exportUrls,
+            'exportConsolidatedUrl' => $exportConsolidatedUrl,
+            'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
+            'cargoApoOptions' => $cargoApoOptions,
+            'filterCargoApoOptions' => $filterCargoApoOptions,
+            'filterEstadoOptions' => $filterEstadoOptions,
+            'filterPersonalTipoOptions' => $filterPersonalTipoOptions,
+            'filterCargoFichaOptions' => $filterCargoFichaOptions,
+            'renovacionOptions' => $renovacionOptions,
+            'showNuevoModal' => $showNuevoModal,
+            'validacionesReturn' => [
+                'fecha_reporte' => $fecha,
+                'run_token' => $effectiveRunToken,
+            ],
+        ]);
+    }
+
+    public function validacionesRun(RunAcreditacionValidacionesRequest $request): RedirectResponse|JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $fecha = $request->fechaReporte();
+        $gate = $this->validacionesGateService->evaluate($fecha);
+
+        if (! $gate['ok']) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $gate['message'],
+                    'gate' => $gate,
+                ], 422);
+            }
+
+            return redirect()
+                ->route('gestion-humana.acreditaciones.validaciones', [
+                    'fecha_reporte' => $fecha,
+                ])
+                ->with('error', $gate['message']);
+        }
+
+        $result = $this->validacionesRunnerService->run($fecha);
+        $stored = $this->validacionesResultStore->put(
+            (int) auth()->id(),
+            $fecha,
+            $result,
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'run_token' => $stored['run_token'],
+                'fecha_reporte' => $fecha,
+                'counts' => $stored['counts'],
+            ]);
+        }
+
+        return redirect()
+            ->route('gestion-humana.acreditaciones.validaciones', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $stored['run_token'],
+            ])
+            ->with('status', 'Validaciones ejecutadas. Revise las cuatro colas abajo.');
+    }
+
+    public function validacionesDatatable(AcreditacionValidacionesDatatableRequest $request): JsonResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $canOpenFicha = $this->fichaEmpleadosAccess->canManage(auth()->user());
+
+        return $this->validacionesDatatableService->respond(
+            $request,
+            (int) auth()->id(),
+            $request->fechaReporte(),
+            $request->runToken(),
+            $request->cola(),
+            $canOpenFicha,
+        );
+    }
+
+    public function exportValidaciones(AcreditacionValidacionesExportRequest $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $result = $this->validacionesExportService->exportCola(
+            (int) auth()->id(),
+            $request->fechaReporte(),
+            $request->runToken(),
+            $request->cola(),
+            $request->filters(),
+        );
+
+        if (is_array($result)) {
+            return redirect()
+                ->route('gestion-humana.acreditaciones.validaciones', [
+                    'fecha_reporte' => $request->fechaReporte(),
+                ])
+                ->with('error', $result['error']);
+        }
+
+        return $result;
+    }
+
+    public function exportValidacionesConsolidado(AcreditacionValidacionesExportRequest $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $result = $this->validacionesExportService->exportConsolidated(
+            (int) auth()->id(),
+            $request->fechaReporte(),
+            $request->runToken(),
+        );
+
+        if (is_array($result)) {
+            return redirect()
+                ->route('gestion-humana.acreditaciones.validaciones', [
+                    'fecha_reporte' => $request->fechaReporte(),
+                ])
+                ->with('error', $result['error']);
+        }
+
+        return $result;
     }
 
     public function exportApo(): View
@@ -894,6 +1237,38 @@ class AcreditacionesController extends Controller
         return redirect()
             ->route('gestion-humana.acreditaciones.catalogo')
             ->with('status', 'Cargo de acreditación eliminado.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $acreditadosQuery
+     */
+    private function redirectAfterAcreditadoMutation(
+        Request $request,
+        string $validacionesStatus,
+        string $acreditadosStatus,
+        array $acreditadosQuery = [],
+    ): RedirectResponse {
+        if ((string) $request->input('_return_context') === 'validaciones') {
+            $fecha = trim((string) $request->input('_return_fecha_reporte', ''));
+            $token = trim((string) $request->input('_return_run_token', ''));
+
+            if ($fecha === '') {
+                $fecha = Carbon::now(config('app.timezone'))->toDateString();
+            }
+
+            $query = ['fecha_reporte' => $fecha];
+            if ($token !== '') {
+                $query['run_token'] = $token;
+            }
+
+            return redirect()
+                ->route('gestion-humana.acreditaciones.validaciones', $query)
+                ->with('status', $validacionesStatus);
+        }
+
+        return redirect()
+            ->route('gestion-humana.acreditaciones.acreditados', $acreditadosQuery)
+            ->with('status', $acreditadosStatus);
     }
 
     /**
@@ -1025,7 +1400,7 @@ class AcreditacionesController extends Controller
      * @param  array<string, mixed>  $validated
      * @return array<string, mixed>
      */
-    private function acreditadoPayloadFromValidated(array $validated, string $fullName): array
+    private function acreditadoPayloadFromValidated(array $validated, string $fullName, string $cargo): array
     {
         $vigencia = isset($validated['vigencia_acr']) && $validated['vigencia_acr'] !== null
             ? Carbon::parse($validated['vigencia_acr'])
@@ -1037,7 +1412,7 @@ class AcreditacionesController extends Controller
         return [
             'document_number' => (string) $validated['document_number'],
             'full_name' => $fullName,
-            'cargo' => (string) $validated['cargo'],
+            'cargo' => $cargo,
             'cargo_apo' => (string) $validated['cargo_apo'],
             'vigencia_acr' => $validated['vigencia_acr'] ?? null,
             'fecha_solicitud' => $validated['fecha_solicitud'] ?? null,

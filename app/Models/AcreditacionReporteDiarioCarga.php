@@ -86,4 +86,10 @@ class AcreditacionReporteDiarioCarga extends Model
 
         return false;
     }
+
+    public function bothOriginsLoaded(): bool
+    {
+        return $this->origenHasPriorData(AcreditacionReporteDiarioFila::ORIGEN_PROCESO)
+            && $this->origenHasPriorData(AcreditacionReporteDiarioFila::ORIGEN_ACREDITADO);
+    }
 }

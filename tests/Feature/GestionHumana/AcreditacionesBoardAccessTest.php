@@ -113,7 +113,7 @@ class AcreditacionesBoardAccessTest extends TestCase
             ->assertSee('Dashboard', false)
             ->assertSee('Acreditados', false)
             ->assertSee('Reporte Diario', false)
-            ->assertSee('Validaciones', false)
+            ->assertDontSee('Validaciones', false)
             ->assertSee('Export Apo', false)
             ->assertDontSee('Catálogo', false)
             ->assertSee('Próximamente', false);
@@ -131,7 +131,7 @@ class AcreditacionesBoardAccessTest extends TestCase
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.acreditaciones.validaciones'))
-            ->assertOk();
+            ->assertForbidden();
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.acreditaciones.export-apo'))
@@ -155,10 +155,11 @@ class AcreditacionesBoardAccessTest extends TestCase
         $service = app(AcreditacionesAccessService::class);
 
         $this->assertSame(
-            ['dashboard', 'acreditados', 'reporte_diario', 'validaciones', 'export_apo'],
+            ['dashboard', 'acreditados', 'reporte_diario', 'export_apo'],
             $service->visibleTabsFor($viewer)
         );
         $this->assertNotContains('catalogo', $service->visibleTabsFor($viewer));
+        $this->assertNotContains('validaciones', $service->visibleTabsFor($viewer));
     }
 
     public function test_editor_sees_catalogo_tab(): void

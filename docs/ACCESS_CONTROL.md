@@ -181,19 +181,20 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 
 ### Acreditaciones (Gestion humana)
 
-Tablero **Acreditaciones** (Acreditados, Reporte Diario APO, Catálogo; placeholders Dashboard / Validaciones / Export Apo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
+Tablero **Acreditaciones** (Acreditados, Reporte Diario APO, Validaciones, Catálogo; placeholders Dashboard / Export Apo). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
 
 | Permiso | Uso |
 | --- | --- |
 | `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
-| `acreditaciones.view` | Shell, Acreditados (lectura), Reporte Diario (ver/filtrar/export/cargas), export Excel, placeholders |
-| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo, cargar/reemplazar Reporte Diario (implica view en servicio de acceso) |
+| `acreditaciones.view` | Shell, Acreditados (lectura), Reporte Diario (ver/filtrar/export/cargas), export Excel, placeholders Dashboard/Export Apo. **No** ve ni opera Validaciones |
+| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo, cargar/reemplazar Reporte Diario, **Validaciones** (pestaña, gate, ejecutar, listados, export, acciones) (implica view en servicio de acceso) |
 
-- Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). Catálogo solo con `acreditaciones.edit`.
+- Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). **Catálogo** y **Validaciones** solo con `acreditaciones.edit` (mismo patrón de visibilidad en `AcreditacionesAccessService`).
+- Acción **Abrir Ficha** desde Validaciones: además requiere permiso de gestión de Ficha (`ficha_empleados.manage`); no abre la pestaña Validaciones por sí solo.
 - Bypass: `manage.users`.
-- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto. **Sin permiso Spatie nuevo** para Validaciones (FEAT-038).
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Acreditaciones*).
-- Dependencia operativa: cédula debe existir en Ficha empleados (`employee_ficha_profiles`).
+- Dependencia operativa: cédula debe existir en Ficha empleados (`employee_ficha_profiles`) para Acreditados; Validaciones lee Ficha/Acreditados/Reporte Diario sin migraciones nuevas.
 - Doc: [`docs/modules/acreditaciones.md`](modules/acreditaciones.md), [`docs/user/acreditaciones.md`](user/acreditaciones.md).
 
 ### Selección (Gestion humana)

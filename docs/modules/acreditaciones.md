@@ -1,41 +1,44 @@
 # Modulo Acreditaciones
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/acreditaciones.md`.
-> Features: FEAT-036 (fase 1) + FEAT-037 (Reporte Diario APO, 2026-09-24, aprobado con observaciones).
+> Features: FEAT-036 (fase 1) + FEAT-037 (Reporte Diario APO) + FEAT-038 (Validaciones, 2026-09-25, aprobado con observaciones).
 
 ## Objetivo
 
-Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia, solicitud en tramite, estados automaticos), administrar el **catalogo de cargos** (Manager / APO / Informe / Acreditacion) y conservar el **historico diario de snapshots APO** (Reporte Diario).
+Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia, solicitud en tramite, estados automaticos), administrar el **catalogo de cargos** (Manager / APO / Informe / Acreditacion), conservar el **historico diario de snapshots APO** (Reporte Diario) y **cruzar** Ficha activa / Acreditados / Reporte Diario en la pestana **Validaciones**.
 
 ## Alcance actual
 
 - Tablero sidebar **Acreditaciones** (`board` key `acreditaciones`, hogar `gestion_humana`, `base_area_tab => false`).
-- Pestanas: **Dashboard**, **Acreditados**, **Reporte Diario**, **Validaciones**, **Export Apo**, **Catálogo** (esta ultima solo con `acreditaciones.edit`).
+- Pestanas: **Dashboard**, **Acreditados**, **Reporte Diario**, **Validaciones**, **Export Apo**, **Catálogo**. **Catálogo** y **Validaciones** solo visibles/operativas con `acreditaciones.edit`.
 - **Funcional:**
   - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario.
   - **Catálogo** cargos — seed 17 + CRUD.
-  - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (En proceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator`.
-- **Placeholders** («Próximamente»): Dashboard, Validaciones, Export Apo — sin endpoints de negocio ni KPIs.
-- Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
+  - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (En proceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
+  - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
+- **Placeholders** («Próximamente»): Dashboard, Export Apo — sin endpoints de negocio ni KPIs.
+- Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario ni Validaciones. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
 - Cedula obligatoria en `employee_ficha_profiles` **solo** en Acreditados; en Reporte Diario la cedula ausente en Ficha **no** bloquea.
-- ESTADO (Acreditados) solo calculado (`AcreditacionEstadoCalculator`); no editable. Reporte Diario: Estado APO del Excel En proceso tal cual; filas con Vigen.Acr muestran/persisten `ACREDITADO` (sin calculadora del módulo Acreditados).
-- Audit: `AcreditacionesAuditLogService` → `SystemAuditService` (`module=acreditaciones`, `area=gestion_humana`). Solo mutaciones (+ resumen import Acreditados y Reporte Diario).
-- Selectores: `<x-searchable-select>` (prohibido Select2). Export: `BaseExport` + `<x-export-excel>` (prohibido `excelHtml5`).
+- ESTADO (Acreditados) solo calculado (`AcreditacionEstadoCalculator`); no editable. Reporte Diario: Estado APO del Excel En proceso tal cual; filas con Vigen.Acr muestran/persisten `ACREDITADO` (sin calculadora del módulo Acreditados). Validaciones **lee** `estado` ya persistido (no recalcula).
+- Audit: `AcreditacionesAuditLogService` → `SystemAuditService` (`module=acreditaciones`, `area=gestion_humana`). Solo mutaciones (+ resumen import Acreditados y Reporte Diario). **No** auditar la corrida de Validaciones (solo lectura).
+- Selectores: `<x-searchable-select>` (prohibido Select2). Export: `BaseExport` + `<x-export-excel>` (prohibido `excelHtml5`); consolidado Validaciones = clase dedicada multi-hoja.
 - Borrado **duro** en Acreditados (sin soft-delete). Replace duro por origen en Reporte Diario (sin versionado del mismo dia).
 
 ### Fuera de alcance
 
-- Logica de negocio de Dashboard, **Validaciones**, Export Apo (siguen placeholder).
-- Cruce / enriquecimiento Reporte Diario ↔ Ficha o `acreditacion_acreditados` (queda para Validaciones).
-- Bridge, upsert o sync hacia Acreditados del sistema desde Reporte Diario.
+- Logica de negocio de Dashboard y Export Apo (siguen placeholder).
+- Historico de corridas de Validaciones; «marcar revisado» / motivo / estados de cola.
+- Bridge, upsert o sync masivo hacia Acreditados desde Reporte Diario o Validaciones.
+- Match fuzzy / «contiene» de cargos en Validaciones.
 - Recalcular estados del snapshot APO con `AcreditacionEstadoCalculator`.
 - Versionado / soft-delete de cargas del mismo dia; comparacion dia vs dia / diff.
 - Notificaciones por correo.
 - Soft-delete / historial versionado de Acreditados.
 - Bridge editable Ficha ↔ Acreditados; sync automatico de nombres tras cambio en Ficha.
-- Derivar campo CARGO desde el catalogo (Acreditados).
-- Permiso nuevo / cambios de paquetes en `config/access.php` (FEAT-037).
+- Derivar campo CARGO desde el catalogo de acreditaciones (sí se deriva desde Ficha `position_name`).
+- Permiso nuevo / cambios de paquetes en `config/access.php` (FEAT-037/038).
+- Auto-ejecucion de Validaciones al entrar o al cambiar fecha.
 - Select2 / `excelHtml5` / Repository / `migrate:fresh`.
 
 ## Rutas
@@ -66,8 +69,14 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | POST | `/reporte-diario/importar` | `reporte-diario.import` | Multipart: fecha, 1–2 files, `confirm_replace` opcional. `acreditaciones.edit` |
 | GET | `/reporte-diario/importar/reporte/{token}` | `reporte-diario.import-report` | Fallos cache ~1 h. `acreditaciones.edit` |
 | GET | `/reporte-diario/cargas` | `reporte-diario.cargas` | JSON listado cabeceras (metadata). `acreditaciones.view` |
-| GET | `/validaciones` | `validaciones` | Placeholder. `acreditaciones.view` |
-| GET | `/export-apo` | `export-apo` | Placeholder (≠ export listado Acreditados ni Reporte Diario). `acreditaciones.view` |
+| GET | `/validaciones` | `validaciones` | Shell fecha + gate + botón Ejecutar + resultados. `acreditaciones.edit` |
+| POST | `/validaciones/ejecutar` | `validaciones.run` | Body: `fecha_reporte` ≤ hoy; responde conteos + `run_token`. `acreditaciones.edit` |
+| GET | `/validaciones/datatable` | `validaciones.datatable` | JSON DT; params `run_token`, `cola`, protocolo DT. `acreditaciones.edit` |
+| GET | `/validaciones/exportar` | `validaciones.export` | Excel por cola (`run_token`, `cola`). `acreditaciones.edit` |
+| GET | `/validaciones/exportar-consolidado` | `validaciones.export-consolidated` | Excel 4 hojas (`run_token`). `acreditaciones.edit` |
+| GET | `/export-apo` | `export-apo` | Placeholder (≠ export listado Acreditados ni Reporte Diario ni Validaciones). `acreditaciones.view` |
+
+> **Nota:** no existe ruta `validaciones.gate` JSON; el gate se evalúa en el GET shell (y al POST ejecutar).
 | GET | `/catalogo` | `catalogo` | Listado catalogo. `acreditaciones.edit` |
 | POST | `/catalogo` | `catalogo.store` | Crear. `acreditaciones.edit` |
 | PATCH | `/catalogo/{acreditacionCargo}` | `catalogo.update` | Editar. `acreditaciones.edit` |
@@ -78,10 +87,12 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | Permiso | Uso |
 | --- | --- |
 | `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
-| `acreditaciones.view` | Shell, Acreditados (lectura), Reporte Diario (ver/filtrar/export/listado cargas), export; placeholders Dashboard/Validaciones/Export Apo (tambien implica view si tiene `acreditaciones.edit`) |
-| `acreditaciones.edit` | CRUD Acreditados, import Acreditados, Catálogo, **cargar/reemplazar** Excel Reporte Diario |
+| `acreditaciones.view` | Shell, Acreditados (lectura), Reporte Diario (ver/filtrar/export/listado cargas), export; placeholders Dashboard/Export Apo. **No** ve ni opera Validaciones |
+| `acreditaciones.edit` | CRUD Acreditados, import Acreditados, Catálogo, **cargar/reemplazar** Excel Reporte Diario, **Validaciones** (pestaña, gate, ejecutar, DT, export, acciones) |
+| `ficha_empleados.manage` | Solo para habilitar acción **Abrir Ficha** en Validaciones (ruta destino `editFicha`); no abre la pestaña Validaciones |
 
-**Sin permiso nuevo** para Reporte Diario (reutiliza view/edit).  
+**Sin permiso nuevo** para Reporte Diario ni Validaciones (reutilizan view/edit).  
+`AcreditacionesAccessService::visibleTabs`: oculta `catalogo` y `validaciones` si `!canEdit` (mismo patrón).  
 **Paquetes recomendados:** consulta = board + `acreditaciones.view`; operativo = board + view + edit.
 
 Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_areas`, `acreditaciones_tabs`, `admin_permission_groups`).  
@@ -92,10 +103,13 @@ Sync: `php artisan app:sync-permissions` + re-login.
 
 | Clase | Responsabilidad |
 | --- | --- |
-| `App\Http\Controllers\GestionHumana\AcreditacionesController` | Shell, placeholders, Acreditados, Reporte Diario (`reporteDiario*`), import/export, Catálogo (vertical slice) |
+| `App\Http\Controllers\GestionHumana\AcreditacionesController` | Shell, placeholders, Acreditados, Reporte Diario (`reporteDiario*`), Validaciones (`validaciones*`), import/export, Catálogo (vertical slice) |
 | `StoreAcreditacionAcreditadoRequest` / `UpdateAcreditacionAcreditadoRequest` | Ficha obligatoria, al menos una fecha, `cargo_apo` activo en catalogo, unique cedula+APO |
 | `ImportAcreditacionAcreditadoRequest` | Archivo Excel import Acreditados |
 | `ImportAcreditacionReporteDiarioRequest` | Fecha ≤ hoy; ≥1 archivo (`file_proceso` / `file_acreditado`); mimes xlsx/xls/csv; `confirm_replace` boolean |
+| `RunAcreditacionValidacionesRequest` | POST ejecutar: `fecha_reporte` ≤ hoy; `authorize` = `canEdit` |
+| `AcreditacionValidacionesDatatableRequest` | Query DT: `run_token` (uuid), `cola` ∈ COLAS; `authorize` = `canEdit` |
+| `AcreditacionValidacionesExportRequest` | Query export cola/consolidado: `run_token`, `cola` (solo export por cola); `authorize` = `canEdit` |
 | `StoreAcreditacionCargoRequest` / `UpdateAcreditacionCargoRequest` | CRUD catalogo + reglas rename APO |
 
 ## Vistas
@@ -104,11 +118,12 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | --- | --- |
 | `areas/gestion_humana/acreditaciones/acreditados.blade.php` | Shell DT server-side + filtros + export |
 | `areas/gestion_humana/acreditaciones/reporte-diario.blade.php` | Listado DT + filtros fecha/origen/busqueda + modal carga + modal cargas + export |
+| `areas/gestion_humana/acreditaciones/validaciones.blade.php` | Shell fecha + gate + Ejecutar + 4 colas DT + exports; reusa `nuevo-modal` / `edit-modal` |
 | `areas/gestion_humana/acreditaciones/catalogo.blade.php` | Listado + CRUD catalogo |
-| `areas/gestion_humana/acreditaciones/placeholder.blade.php` | Dashboard / Validaciones / Export Apo |
+| `areas/gestion_humana/acreditaciones/placeholder.blade.php` | Dashboard / Export Apo |
 | `areas/gestion_humana/acreditaciones/partials/subnav.blade.php` | Pestanas `.module-tab` |
-| `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal crear acreditado |
-| `areas/gestion_humana/acreditaciones/partials/edit-modal.blade.php` | Modal editar (identidad bloqueable, CARGO APO searchable-select) |
+| `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal crear acreditado (tambien desde Validaciones cola `sin_acreditacion`) |
+| `areas/gestion_humana/acreditaciones/partials/edit-modal.blade.php` | Modal editar (identidad bloqueable, CARGO APO searchable-select; tambien desde Validaciones) |
 | `areas/gestion_humana/acreditaciones/partials/bulk-update-modal.blade.php` | Modal actualizar seleccionados (fecha solicitud / observaciones) |
 | `areas/gestion_humana/acreditaciones/partials/masivos-modal.blade.php` | Modal import masivo Acreditados |
 
@@ -127,7 +142,7 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | --- | --- | --- |
 | `document_number` | string(50) | CEDULA; index |
 | `full_name` | string(255) | Snapshot desde Ficha |
-| `cargo` | string(255) | Texto formulario/Excel (no derivado catalogo) |
+| `cargo` | string(255) | Derivado de Ficha (`position_name`); no editable libre |
 | `cargo_apo` | string(255) | Tipo (= CARGO APO); parte del unique |
 | `vigencia_acr` | date nullable | VIGEN.ACR (vencimiento) |
 | `fecha_solicitud` | date nullable | FECHA SOLICITUD |
@@ -191,10 +206,10 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 
 | Clase | Rol |
 | --- | --- |
-| `AcreditacionesAccessService` | Board / view / edit + tabs visibles (oculta Catálogo sin edit) |
+| `AcreditacionesAccessService` | Board / view / edit + tabs visibles (oculta Catálogo y Validaciones sin edit) |
 | `HasAcreditacionesTabs` | Trait vistas (tab activa / subnav) |
 | `AcreditacionesAuditLogService` | Wrapper audit (`acreditacion_acreditado`, `acreditacion_cargo`, `acreditacion_import`, `acreditacion_reporte_diario_carga`) |
-| `AcreditacionEstadoCalculator` | Prioridad estados Acreditados + `syncAll` (chunk 200); **no** usado en Reporte Diario |
+| `AcreditacionEstadoCalculator` | Prioridad estados Acreditados + `syncAll` (chunk 200); **no** usado en Reporte Diario ni en el cruce de Validaciones |
 | `AcreditacionAcreditadoListService` | Query filtrada Acreditados (export / reuso) |
 | `AcreditacionAcreditadoDatatableService` | DT server-side Acreditados; tope length 100; sin `-1` |
 | `AcreditacionImportService` | Upsert Excel Acreditados; reporte fallos |
@@ -202,19 +217,27 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `AcreditacionReporteDiarioListService` | Query filtrada + listado cargas; export reusa `all(filters)` |
 | `AcreditacionReporteDiarioDatatableService` | DT server-side Reporte Diario; tope length 100 |
 | `AcreditacionCargoCatalogService` | Proteccion delete/rename APO referenciado |
+| `AcreditacionCargoMatchNormalizer` | Normaliza cedula/cargo (trim, espacios, uppercase MB, strip diacriticos) para match exacto |
+| `AcreditacionValidacionesGateService` | Gate: cabecera del dia + `origenHasPriorData(PROCESO)` + `origenHasPriorData(ACREDITADO)` |
+| `AcreditacionValidacionesRunnerService` | Calcula las 4 colas; `sin_acreditacion` incluye cargo Ficha + personal_tipo; arma `ficha_entry_id` cuando aplica |
+| `AcreditacionValidacionesResultStore` | Cache get/put keyed `user_id` + fecha + `run_token`; TTL `config('acreditaciones.validaciones.cache_ttl_seconds')` (5400 s); `get` valida `user_id` del payload |
+| `AcreditacionValidacionesRowFilter` | Filtros AJAX por cola sobre filas en cache (cédula, nombre, cargo, cargo_apo, estado, personal_tipo) |
+| `AcreditacionValidacionesDatatableService` | DT server-side por cola desde cache + RowFilter; tope length 100; sin `-1` |
+| `AcreditacionValidacionesExportService` | Export por cola (`BaseExport`) + consolidado (`AcreditacionValidacionesConsolidatedExport`, 4 hojas) |
 | `SyncAcreditacionEstadosCommand` | `acreditaciones:sync-estados` (`--date`, `--dry-run`) |
 
-Config headers/origenes: `config/acreditaciones.php` → `reporte_diario`.  
+Config headers/origenes/validaciones: `config/acreditaciones.php` → `reporte_diario`, `validaciones`.  
 Nav: `NavigationResolver`, `SidebarVisibilityService`, `User`.  
-Schedule: `bootstrap/app.php` → diario **06:20** `America/Bogota`, `withoutOverlapping` (solo sync estados Acreditados; no aplica a Reporte Diario).
+Schedule: `bootstrap/app.php` → diario **06:20** `America/Bogota`, `withoutOverlapping` (solo sync estados Acreditados; no aplica a Reporte Diario ni Validaciones).
 
 ## Reglas de negocio
 
 ### Acceso
 
-1. Solo `acreditaciones.view` (+ board): ve pestanas operativas/placeholders, Acreditados lectura, Reporte Diario (filtrar/export/cargas); **sin** botones mutacion ni Catálogo ni carga de reporte.
-2. `acreditaciones.edit`: CRUD Acreditados + import + Catálogo + cargar/reemplazar Reporte Diario.
+1. Solo `acreditaciones.view` (+ board): ve pestanas operativas/placeholders (Dashboard, Export Apo), Acreditados lectura, Reporte Diario (filtrar/export/cargas); **sin** botones mutacion, **sin** Catálogo, **sin** Validaciones, **sin** carga de reporte.
+2. `acreditaciones.edit`: CRUD Acreditados + import + Catálogo + cargar/reemplazar Reporte Diario + **Validaciones** (shell, ejecutar, DT, export, acciones UI).
 3. Bypass: `manage.users`.
+4. Abrir Ficha (Validaciones): además requiere `ficha_empleados.manage` (via `FichaEmpleadosAccessService::canManage`) y `ficha_entry_id` resuelto; si no → ocultar acción. No filtra filas de cola.
 
 ### Estados Acreditados (persistidos)
 
@@ -242,15 +265,16 @@ Prioridad (`AcreditacionEstadoCalculator`):
 
 5. Unicidad: un registro por `(document_number, cargo_apo)`.
 6. `cargo_apo` debe existir como valor **activo** en `acreditacion_cargos` (comparacion trim + case-insensitive via `forCargoApo`).
-7. Filtros listado/export: `estado` (acreditacion), `ficha_estado` (`activo` por defecto | `desvinculado` | `todos` via `employee_ficha_profiles.employment_status` por cedula), `document_number` (parcial), `cargo` (parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
-8. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones` y/o `fecha_solicitud` (al menos un campo); con fecha → recalcula estado (EN PROCESO).
-9. Eliminar: confirmacion UI; DELETE fisico.
+7. `cargo` (texto) se toma siempre de `employee_ficha_profiles.position_name` (lookup/alta/edicion/import); si la ficha no tiene cargo → error.
+8. Filtros listado/export: `estado` (acreditacion), `ficha_estado` (`activo` por defecto | `desvinculado` | `todos` via `employee_ficha_profiles.employment_status` por cedula), `document_number` (parcial), `cargo` (select cargos Ficha activos / parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
+9. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones` y/o `fecha_solicitud` (al menos un campo); con fecha → recalcula estado (EN PROCESO).
+10. Eliminar: confirmacion UI; DELETE fisico.
 
 ### Catalogo
 
-10. Seed 17 filas idempotente (`AcreditacionCargoSeeder`, upsert por manager+APO).
-11. DELETE bloqueado si es la **ultima** fila activa con ese `cargo_apo` y hay acreditados con ese tipo.
-12. UPDATE de `cargo_apo` bloqueado si el valor anterior esta referenciado por acreditados (editar Manager/Informe/Acreditacion libremente).
+11. Seed 17 filas idempotente (`AcreditacionCargoSeeder`, upsert por manager+APO).
+12. DELETE bloqueado si es la **ultima** fila activa con ese `cargo_apo` y hay acreditados con ese tipo.
+13. UPDATE de `cargo_apo` bloqueado si el valor anterior esta referenciado por acreditados (editar Manager/Informe/Acreditacion libremente).
 
 ### Reporte Diario APO (FEAT-037)
 
@@ -274,14 +298,36 @@ Origenes:
 23. **Ver cargas**: JSON de cabeceras (fecha, conteos, quien/cuando, nombres archivo); elegir una aplica filtro fecha al listado.
 24. Export: columnas Origen, Apellido1–2, Nombre1–2, Nombre completo, IdNum, Cargo, Estado (APO), Vigen.Acr; respeta filtros. `filteredQuery()->get()` sin tope — volumen tipico ~2000 filas/dia (aceptable v1).
 
+### Validaciones (FEAT-038)
+
+Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acreditaciones.validaciones.colas')`):
+
+| Code | Label UI | Fuente |
+| --- | --- | --- |
+| `sin_acreditacion` | Ficha activa sin acreditación | `employee_ficha_profiles` activos sin ninguna fila en `acreditacion_acreditados`. Filas incluyen `cargo` (`position_name`) y `personal_tipo` (`OPERATIVO` si `operating_area_key=operaciones` en la requisición vinculada; `ADMINISTRATIVO` si hay otra área; vacío sin requisición) |
+| `ausente_reporte` | Acreditado ausente del reporte del día | Acreditados cuyo par `(norm(doc), norm(cargo_apo))` ∉ unión de pares del reporte (cualquier origen). Columna `cargo` = `position_name` de Ficha (no el texto histórico del acreditado) |
+| `en_proceso_ya_acreditado` | EN PROCESO en sistema / ACREDITADO en APO | Acreditados `EN_PROCESO` cuyo par ∈ filas origen `ACREDITADO` del día. Incluye `vigencia_apo` = `vigencia_acr` de la fila APO del match cédula+cargo |
+| `vencidas` | Vencidas / por vencer | Acreditados `estado IN (DESACREDITADO, POR_VENCER)`; **independiente** del reporte |
+
+25. Pestaña / todos los endpoints `validaciones*`: `canEdit`. Usuario solo view → 403 y sin tab.
+26. Fecha default UI = hoy (`America/Bogota`); futuro → 422 al ejecutar. **No** auto-ejecutar al entrar ni al cambiar fecha (cambiar fecha limpia resultados en UI).
+27. Gate OK solo si existe cabecera del día **y** `origenHasPriorData(PROCESO)` **y** `origenHasPriorData(ACREDITADO)`. Sin cabecera / falta origen → mensaje + link a Reporte Diario; no ejecuta.
+28. Al Ejecutar (gate OK): Runner arma 4 colas → ResultStore cache (`acreditaciones:validaciones:{userId}:{fecha}:{token}`, TTL 5400 s) → responde conteos + `run_token`.
+29. DT / export leen solo la corrida del `run_token` del usuario; cache miss / token ajeno → vacío o 422 («Ejecute validaciones primero»).
+30. Match cédula: trim + case-insensitive via normalizer. Match cargo: **solo** `cargo_apo` (Acreditados) vs `cargo` (fila reporte); igualdad exacta del string normalizado (trim, colapsar espacios, `mb_strtoupper`, strip diacríticos NFD). **Prohibido** `str_contains` / fuzzy / usar campo `cargo` texto libre del acreditado.
+31. Granularidad: una fila por par cédula+cargo en colas 2–4; cola 1 una fila por cédula Ficha (con cargo Ficha + tipo personal).
+32. Acciones: Abrir Ficha (si manage Ficha + entry); Editar → modal existente por `acreditado_id`; Nuevo (solo `sin_acreditacion`) → modal crear con cédula precargada + lookup. Tras mutación: UX pide re-ejecutar (sin «marcar revisado»).
+33. Export por cola: `BaseExport` + `<x-export-excel>`. Consolidado: `AcreditacionValidacionesConsolidatedExport` (4 hojas). Sin histórico en BD; **sin migración**.
+33b. Filtros por cola (AJAX en DT, `AcreditacionValidacionesRowFilter`): cédula/nombre en todas; `sin_acreditacion` + cargo Ficha + personal_tipo; restantes + cargo/cargo_apo/estado según columnas.
+
 ### Placeholders
 
-25. Dashboard / Validaciones / Export Apo: vista «Próximamente»; sin JSON de metricas ni mutaciones.
+34. Dashboard / Export Apo: vista «Próximamente»; sin JSON de metricas ni mutaciones.
 
 ### Auditoria
 
-26. Eventos: `acreditacion_acreditado` create/update/delete; `acreditacion_cargo` create/update/delete; `acreditacion_import` (resumen ok/fail Acreditados); `acreditacion_reporte_diario_carga` action `imported` (fecha, origins, by_origen ok/fail, replaced, carga_id).
-27. No auditar GET/list/datatable/export ni sync diario fila a fila.
+35. Eventos: `acreditacion_acreditado` create/update/delete; `acreditacion_cargo` create/update/delete; `acreditacion_import` (resumen ok/fail Acreditados); `acreditacion_reporte_diario_carga` action `imported` (fecha, origins, by_origen ok/fail, replaced, carga_id).
+36. No auditar GET/list/datatable/export, sync diario fila a fila, ni la corrida de Validaciones.
 
 ## Import / export Excel
 
@@ -294,7 +340,7 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 | --- | --- | --- |
 | `document_number` | CEDULA | Si; required; debe existir en Ficha |
 | `full_name` | NOMBRE COMPLETO | Ignorado (ayuda humana) |
-| `cargo` | CARGO | Si; texto |
+| `cargo` | CARGO | Se ignora el valor Excel; se toma `position_name` de Ficha (obligatorio en ficha) |
 | `cargo_apo` | CARGO APO | Si; tipo / unique key |
 | `vigencia_acr` | VIGEN.ACR | Si; date, vacío o «en proceso» → vigencia null + estado EN PROCESO; opcional si hay fecha_solicitud |
 | `fecha_solicitud` | FECHA SOLICITUD | Si; date; opcional si VIGEN.ACR es fecha, vacío o «en proceso» |
@@ -313,31 +359,40 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 - Headers esperados ACREDITADO: Apellido1, Apellido2, Nombre1, Nombre2, IdNum, Cargo, Vigen.Acr.
 - Export: `BaseExport` + `<x-export-excel>`; auth `acreditaciones.view`.
 
-> Observacion review FEAT-036 #1 / FEAT-037 #3: exports hacen `filteredQuery()->get()` sin tope; volumen alto puede saturar memoria. Follow-up: chunk/stream si crece el filtro.
+### Export Validaciones
+
+- Por cola: `AcreditacionValidacionesExportService` + `BaseExport`; query `run_token` + `cola`; auth `acreditaciones.edit`.
+- Consolidado: `App\Exports\AcreditacionValidacionesConsolidatedExport` (PhpSpreadsheet, 4 hojas = 4 colas); query `run_token`.
+- UI: `<x-export-excel>` en la vista Validaciones.
+- Sin token / cache expirada → error claro (422 o redirect).
+
+> Observacion review FEAT-036 #1 / FEAT-037 #3: exports Acreditados/Reporte Diario hacen `filteredQuery()->get()` sin tope; volumen alto puede saturar memoria. Follow-up: chunk/stream si crece el filtro. Validaciones exporta desde cache de la corrida (volumen acotado a las colas).
 
 ## JavaScript / assets
 
-- DataTables `serverSide: true` en Acreditados y Reporte Diario (clase distinta de `.js-datatable`; tope `datatable_max_length` = 100).
-- Filtros y forms con `<x-searchable-select>` + Alpine (filtro origen Reporte Diario).
+- DataTables `serverSide: true` en Acreditados, Reporte Diario y Validaciones (4 tablas por cola; tope `datatable_max_length` = 100; sin `-1`).
+- Filtros y forms con `<x-searchable-select>` + Alpine (filtro origen Reporte Diario). Fecha Validaciones: `input type="date"`.
 - Confirmacion UI borrado duro Acreditados; modal import masivo; confirm replace Reporte Diario.
+- Validaciones: botón Ejecutar (no auto); acciones delegadas Abrir Ficha / Editar / Nuevo; reuso modales Acreditados.
 - Sin entry Vite dedicada de charts (placeholders Dashboard).
 
 ## Validacion local
 
 1. `php artisan migrate` (aditivo) + `php artisan db:seed --class=AcreditacionCargoSeeder` + `php artisan app:sync-permissions`.
-2. Asignar manualmente board + view (+ edit) a usuario GH; verificar sidebar y pestanas.
+2. Asignar manualmente board + view (+ edit) a usuario GH; verificar sidebar y pestanas (Validaciones solo con edit).
 3. Seed catalogo visible; CRUD una fila de prueba; probar bloqueo delete/rename APO con acreditados.
 4. CRUD Acreditados con cedula real de Ficha; filtros, export, plantilla e import upsert.
 5. Casos estado: solicitud, vencido, por vencer (≤21), acreditado; ambas fechas vacias rechazado.
 6. Reporte Diario: carga 1 y 2 orígenes; replace parcial; fecha futura rechazada; headers invalidos sin mutar; ver cargas; export.
-7. `php artisan acreditaciones:sync-estados` (y `--dry-run` si aplica).
-8. `php artisan test --compact --filter=Acreditacion` (incluye `AcreditacionesReporteDiarioTest`).
+7. Validaciones: día con ambos orígenes → Ejecutar → 4 colas; día parcial → gate falla; acciones Ficha/editar/nuevo; export cola + consolidado; usuario solo view sin tab.
+8. `php artisan acreditaciones:sync-estados` (y `--dry-run` si aplica).
+9. `php artisan test --compact --filter=Acreditacion` (incluye `AcreditacionesReporteDiarioTest`, `AcreditacionesValidacionesTest`).
 
 ## Riesgos y pendientes
 
 | Riesgo / pendiente | Notas |
 | --- | --- |
-| Export sin tope de memoria | FEAT-036 obs. #1 / FEAT-037 obs. #3: chunk/stream o tope documentado |
+| Export sin tope de memoria | FEAT-036 obs. #1 / FEAT-037 obs. #3: chunk/stream o tope documentado (Acreditados/Reporte Diario) |
 | Unique Form Request vs `forCargoApo` | Review FEAT-036 obs. #2: `Rule::unique` exacto vs LOWER/TRIM en import |
 | Tests sin asercion `audit_logs` | FEAT-036 obs. #3; FEAT-037 obs. #2 (import reporte diario) |
 | Calculator sin fechas → `ACREDITADO` | FEAT-036 obs. #4: path defensivo; Form Request ya rechaza |
@@ -349,14 +404,19 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 | Confirm replace UX | FEAT-037 obs. #4: checkbox puede venir pre-marcado tras error |
 | Perdida datos por replace duro | Confirm UI; sin versionado (ley negocio); documentado en doc usuario |
 | Listado cargas sin paginar | FEAT-037 nit N2: `cargasList()->get()` OK v1 |
+| `cargo_apo` ≠ texto Cargo Excel APO | FEAT-038: normalización estricta; falsos «ausentes» si redacción distinta — sin fuzzy v1 |
+| Cache Validaciones expirada / multi-servidor | TTL 5400 s; mensaje «vuelva a ejecutar»; store default del entorno |
+| Test aislamiento token entre editores | FEAT-038 obs. #1: follow-up opcional (key ya aísla por user_id) |
+| Mapa Ficha Abrir Ficha vs case cédula | FEAT-038 obs. #2: riesgo bajo (cédulas numéricas) |
 
 ## Archivos clave
 
 - Config: `config/acreditaciones.php`, `config/access.php`, `config/audit.php`
-- Migrations: `*_create_acreditacion_cargos_table`, `*_create_acreditacion_acreditados_table`, `*_create_acreditacion_reporte_diario_cargas_table`, `*_create_acreditacion_reporte_diario_filas_table`
+- Migrations: `*_create_acreditacion_cargos_table`, `*_create_acreditacion_acreditados_table`, `*_create_acreditacion_reporte_diario_cargas_table`, `*_create_acreditacion_reporte_diario_filas_table` (**sin** migración FEAT-038)
 - Seeder: `AcreditacionCargoSeeder`
 - Factories: `AcreditacionAcreditadoFactory`, `AcreditacionCargoFactory`, `AcreditacionReporteDiarioCargaFactory`, `AcreditacionReporteDiarioFilaFactory`
-- Tests: `tests/Feature/GestionHumana/Acreditacion*.php`, `Acreditaciones*Test.php`, `AcreditacionesReporteDiarioTest.php`
+- Tests: `tests/Feature/GestionHumana/Acreditacion*.php`, `Acreditaciones*Test.php`, `AcreditacionesReporteDiarioTest.php`, `AcreditacionesValidacionesTest.php`
+- Export Validaciones: `app/Exports/AcreditacionValidacionesConsolidatedExport.php`
 - Vistas: `resources/views/areas/gestion_humana/acreditaciones/`
 - Schedule: `bootstrap/app.php`
 
@@ -371,12 +431,13 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 | Doc usuario | `docs/user/acreditaciones.md` |
 
 Shared-files FEAT-036: `config/access.php`, rutas GH, nav, `config/audit.php`, schedule, `PermissionCatalog`.  
-Shared-files FEAT-037: `routes/areas/gestion_humana.php` (sin `access.php`).
+Shared-files FEAT-037: `routes/areas/gestion_humana.php` (sin `access.php`).  
+Shared-files FEAT-038: `routes/areas/gestion_humana.php` (sin `access.php`).
 
 ## Referencias
 
-- Feature Brief: [`docs/briefs/FEAT-036.md`](../briefs/FEAT-036.md), [`docs/briefs/FEAT-037.md`](../briefs/FEAT-037.md)
-- Review: [`docs/reviews/FEAT-036.md`](../reviews/FEAT-036.md), [`docs/reviews/FEAT-037.md`](../reviews/FEAT-037.md)
+- Feature Brief: [`docs/briefs/FEAT-036.md`](../briefs/FEAT-036.md), [`docs/briefs/FEAT-037.md`](../briefs/FEAT-037.md), [`docs/briefs/FEAT-038.md`](../briefs/FEAT-038.md)
+- Review: [`docs/reviews/FEAT-036.md`](../reviews/FEAT-036.md), [`docs/reviews/FEAT-037.md`](../reviews/FEAT-037.md), [`docs/reviews/FEAT-038.md`](../reviews/FEAT-038.md)
 - Doc usuario: [`docs/user/acreditaciones.md`](../user/acreditaciones.md)
 - Access: [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md)
 - Ownership: [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md)
@@ -385,5 +446,8 @@ Shared-files FEAT-037: `routes/areas/gestion_humana.php` (sin `access.php`).
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.4 | 2026-09-25 | CARGO en Acreditados/masivos derivado de Ficha `position_name` (lookup, store/update, import). |
+| 1.3 | 2026-09-25 | Validaciones: filtros por cola; `sin_acreditacion` con Cargo Ficha + Tipo admin/operativo (área requisición). |
+| 1.2 | 2026-09-25 | FEAT-038: Validaciones operativa (gate ambos orígenes, Ejecutar, 4 colas, cache efímera, acciones, export cola+consolidado; permiso solo edit). |
 | 1.1 | 2026-09-24 | FEAT-037: Reporte Diario APO operativo (tablas, rutas, carga/replace, DT, export, cargas). |
 | 1.0 | 2026-09-23 | FEAT-036: tablero Acreditaciones fase 1 (shell, Acreditados, Catálogo, import, sync). |

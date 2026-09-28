@@ -103,6 +103,7 @@ class AcreditacionesAcreditadosTest extends TestCase
         $row = AcreditacionAcreditado::query()->where('document_number', '9999')->first();
         $this->assertNotNull($row);
         $this->assertSame('Nombre Desde Ficha', $row->full_name);
+        $this->assertSame('GUARDA', $row->cargo);
         $this->assertSame(AcreditacionAcreditado::ESTADO_ACREDITADO, $row->estado);
     }
 
@@ -170,14 +171,14 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->actingAs($editor)
             ->patch(route('gestion-humana.acreditaciones.acreditados.update', $row), $this->validPayload([
                 'document_number' => '4004',
-                'cargo' => 'GUARDA EDIT',
+                'cargo' => 'GUARDA EDIT IGNORADO',
                 'cargo_apo' => $cargo->cargo_apo,
                 'vigencia_acr' => now()->addDays(5)->toDateString(),
             ]))
             ->assertRedirect();
 
         $row->refresh();
-        $this->assertSame('GUARDA EDIT', $row->cargo);
+        $this->assertSame('GUARDA', $row->cargo);
         $this->assertSame(AcreditacionAcreditado::ESTADO_POR_VENCER, $row->estado);
 
         $this->actingAs($editor)
@@ -515,10 +516,10 @@ class AcreditacionesAcreditadosTest extends TestCase
             ->assertSessionHasErrors('cargo_apo');
     }
 
-    public function test_lookup_returns_ficha_name(): void
+    public function test_lookup_returns_ficha_name_and_cargo(): void
     {
         $editor = $this->editorUser();
-        $this->createFicha('9009', 'Lookup Nombre');
+        $this->createFicha('9009', 'Lookup Nombre', 'Vigilante Ficha');
 
         $this->actingAs($editor)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.lookup', ['cedula' => '9009']))
@@ -527,6 +528,7 @@ class AcreditacionesAcreditadosTest extends TestCase
                 'found' => true,
                 'document_number' => '9009',
                 'full_name' => 'Lookup Nombre',
+                'cargo' => 'Vigilante Ficha',
             ]);
     }
 
@@ -538,7 +540,7 @@ class AcreditacionesAcreditadosTest extends TestCase
     {
         return array_merge([
             'document_number' => '1000',
-            'cargo' => 'GUARDA',
+            'cargo' => 'IGNORADO CLIENTE',
             'cargo_apo' => 'VIGILANTE',
             'vigencia_acr' => '2027-01-01',
             'fecha_solicitud' => null,
@@ -546,11 +548,15 @@ class AcreditacionesAcreditadosTest extends TestCase
         ], $overrides);
     }
 
-    private function createFicha(string $documentNumber, string $fullName): EmployeeFichaProfile
-    {
+    private function createFicha(
+        string $documentNumber,
+        string $fullName,
+        string $positionName = 'GUARDA',
+    ): EmployeeFichaProfile {
         return EmployeeFichaProfile::query()->create([
             'document_number' => $documentNumber,
             'full_name' => $fullName,
+            'position_name' => $positionName,
         ]);
     }
 

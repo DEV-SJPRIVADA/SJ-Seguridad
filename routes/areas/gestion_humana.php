@@ -190,6 +190,10 @@ Route::middleware(['password.changed'])
         Route::get('/reporte-diario/importar/reporte/{token}', [AcreditacionesController::class, 'downloadReporteDiarioImportReport'])->name('reporte-diario.import-report');
         Route::get('/reporte-diario/cargas', [AcreditacionesController::class, 'reporteDiarioCargas'])->name('reporte-diario.cargas');
         Route::get('/validaciones', [AcreditacionesController::class, 'validaciones'])->name('validaciones');
+        Route::post('/validaciones/ejecutar', [AcreditacionesController::class, 'validacionesRun'])->name('validaciones.run');
+        Route::get('/validaciones/datatable', [AcreditacionesController::class, 'validacionesDatatable'])->name('validaciones.datatable');
+        Route::get('/validaciones/exportar', [AcreditacionesController::class, 'exportValidaciones'])->name('validaciones.export');
+        Route::get('/validaciones/exportar-consolidado', [AcreditacionesController::class, 'exportValidacionesConsolidado'])->name('validaciones.export-consolidated');
         Route::get('/export-apo', [AcreditacionesController::class, 'exportApo'])->name('export-apo');
         Route::get('/catalogo', [AcreditacionesController::class, 'catalogo'])->name('catalogo');
         Route::post('/catalogo', [AcreditacionesController::class, 'storeCatalogo'])->name('catalogo.store');
