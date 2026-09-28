@@ -8,6 +8,7 @@ use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Support\ColombianCurrencyParser;
 use App\Support\ImportFailureRow;
+use App\Support\SpanishNameEncodingFixer;
 use App\Support\SpreadsheetCellReader;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -380,11 +381,11 @@ class EmployeeFichaImportService
      */
     private function resolveImportNameParts(array $data): array
     {
-        $firstSurname = $this->stringOrNull($data['primer_apellido'] ?? null);
-        $secondSurname = $this->stringOrNull($data['segundo_apellido'] ?? null);
-        $firstName = $this->stringOrNull($data['primer_nombre'] ?? null);
-        $secondName = $this->stringOrNull($data['segundo_nombre'] ?? null);
-        $nombre = trim((string) ($data['nombre'] ?? ''));
+        $firstSurname = $this->nameOrNull($data['primer_apellido'] ?? null);
+        $secondSurname = $this->nameOrNull($data['segundo_apellido'] ?? null);
+        $firstName = $this->nameOrNull($data['primer_nombre'] ?? null);
+        $secondName = $this->nameOrNull($data['segundo_nombre'] ?? null);
+        $nombre = SpanishNameEncodingFixer::fixPersonName(trim((string) ($data['nombre'] ?? '')));
         $hasParts = $firstSurname !== null || $secondSurname !== null || $firstName !== null || $secondName !== null;
 
         if ($hasParts) {
@@ -437,9 +438,14 @@ class EmployeeFichaImportService
         PayrollCatalogItem::upsertPair('economic_activity', $this->stringOrNull($data['actividad_economica'] ?? null), $this->stringOrNull($data['nombre_actividad_economica'] ?? null));
     }
 
+    private function nameOrNull(mixed $value): ?string
+    {
+        return SpanishNameEncodingFixer::fixPersonNameOrNull($value);
+    }
+
     private function stringOrNull(mixed $value): ?string
     {
-        $value = trim((string) ($value ?? ''));
+        $value = trim(SpanishNameEncodingFixer::normalizeEncoding((string) ($value ?? '')));
 
         return $value === '' ? null : $value;
     }

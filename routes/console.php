@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Services\GestionHumana\EmployeeCursoEscuelaBackfillService;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
+use App\Services\GestionHumana\EmployeeFichaNameEncodingHealService;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Inspiring;
@@ -199,3 +200,25 @@ Artisan::command('ficha:backfill-active-periods {--limit= : Maximo de perfiles a
 
     return self::SUCCESS;
 })->purpose('Abre periodo laboral para empleados activo en ficha sin periodo abierto');
+
+Artisan::command('ficha:fix-name-encoding {--limit= : Maximo de registros a escanear por tabla}', function () {
+    $limitOption = $this->option('limit');
+    $limit = $limitOption !== null && $limitOption !== '' ? max(1, (int) $limitOption) : null;
+
+    /** @var EmployeeFichaNameEncodingHealService $service */
+    $service = app(EmployeeFichaNameEncodingHealService::class);
+    $stats = $service->heal($limit);
+
+    $this->info('Reparacion de nombres con ? (Ñ/Ó perdido por encoding)');
+    $this->table(
+        ['Metrica', 'Valor'],
+        [
+            ['Perfiles escaneados', (string) $stats['scanned']],
+            ['Perfiles actualizados', (string) $stats['updated_profiles']],
+            ['Entradas ficha actualizadas', (string) $stats['updated_entries']],
+            ['Requisiciones actualizadas', (string) $stats['updated_requisitions']],
+        ]
+    );
+
+    return self::SUCCESS;
+})->purpose('Corrige nombres de empleados con ? (MU?OZ→MUÑOZ, LE?N→LEÓN)');

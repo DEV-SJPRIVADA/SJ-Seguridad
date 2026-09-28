@@ -126,6 +126,7 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
 4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica) y también sincroniza el nombre del listado (`hired_full_name`) con los apellidos/nombres del Excel.
+6. Si el Excel trae nombres con `?` por encoding roto (p. ej. `MU?OZ`), el import los corrige a `Ñ`/`Ó` al guardar.
 
 **Exportar datos para actualizar:** sin rango de fechas exporta solo **activos**; con fechas filtra por **fecha de ingreso**. Respeta la búsqueda activa del listado (`q`).
 
@@ -146,6 +147,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.14 | 2026-09-28 | Ficha | Import masivo repara nombres con `?` (Ñ/Ó); comando `ficha:fix-name-encoding` para datos ya guardados. |
 | 1.13 | 2026-09-28 | Ficha | Import masivo: al actualizar una cédula existente, el nombre del listado (`hired_full_name`) se sincroniza con los campos del formulario. |
 | 1.12 | 2026-09-18 | Ficha | Listado Empleados: se retira la columna **Fecha contrato** (quedan ingreso y retiro). |
 | 1.11 | 2026-09-18 | Ficha | Campo **Fecha desvinculación** visible/editable en el formulario de ficha (junto a fecha ingreso). |
