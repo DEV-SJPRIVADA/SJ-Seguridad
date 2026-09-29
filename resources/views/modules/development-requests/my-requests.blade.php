@@ -8,10 +8,6 @@
             <div class="panel development-requests-page__panel">
                 <div class="panel__header panel__header--compact">
                     <div class="development-requests-page__header-row">
-                        <div>
-                            <h3 class="panel-title">Mis solicitudes</h3>
-                            <p class="panel-text panel-text--compact">Solicitudes de desarrollo creadas por usted.</p>
-                        </div>
                         <a href="{{ route('development-requests.create', ['module' => $module]) }}" class="btn btn--primary btn--sm">Nueva</a>
                     </div>
                 </div>

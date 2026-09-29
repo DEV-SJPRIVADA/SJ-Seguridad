@@ -1,16 +1,17 @@
 <x-app-layout>
     @php
         $showCreateModal = (bool) ($showCreateModal ?? false);
+        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+            || ($filters['date_from'] ?? '') !== ''
+            || ($filters['date_to'] ?? '') !== ''
+            || ($filters['commercial_client_id'] ?? '') !== ''
+            || ($filters['responsable_user_id'] ?? '') !== ''
+            || ($filters['city_code'] ?? '') !== ''
+            || ($filters['position_code'] ?? '') !== '';
     @endphp
 
     <x-slot name="header">
         @include('areas.gestion_humana.seleccion.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Ingreso</h2>
-                <p class="panel-text">Gestion humana — registros de ingreso</p>
-            </div>
-        </div>
     </x-slot>
 
     <div
@@ -34,7 +35,14 @@
 
             <div class="panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
-                    <div class="req-manage-shell__filters">
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+                        <div class="req-manage-filters__panel-body">
                         <form method="GET" action="{{ route('gestion-humana.seleccion.ingresos') }}" class="req-manage-filters">
                             <div class="cursos-registros-page__filters">
                                 <div class="form-field">
@@ -108,6 +116,8 @@
                                 </div>
                             </div>
                         </form>
+                        </div>
+                    </details>
 
                         <div class="cursos-registros-page__table-toolbar">
                             <p class="req-manage-filters__meta">
@@ -129,7 +139,6 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
 
                     <div class="data-table-wrap req-manage-shell__table cursos-registros-page__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')

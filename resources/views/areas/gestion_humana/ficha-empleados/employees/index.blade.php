@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
-        <div class="app-container ficha-empleados-page__workspace-header">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Empleados</h2>
-                <p class="panel-text">Gestion humana — lista de espera y ficha de empleados contratados</p>
-            </div>
-        </div>
     </x-slot>
 
     @php

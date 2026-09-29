@@ -32,11 +32,6 @@
             @endif
 
             <div class="panel comercial-services-panel">
-                <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Listado de servicios</h3>
-                    <p class="panel-text panel-text--compact">Contrato, asesor, NIT o portafolio · cada servicio pertenece a un cliente</p>
-                </div>
-
                 <div class="panel__body req-manage-shell">
                     <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">
@@ -47,17 +42,13 @@
                         </summary>
 
                         <div class="req-manage-filters__panel-body">
-                            <div class="req-manage-filters__head">
-                                <div class="req-manage-filters__actions comercial-services-filters__actions">
-                                    <x-export-excel route="{{ route('comercial.matriz.services.export', request()->query()) }}" />
-                                    @if ($hasActiveFilters)
+                            @if ($hasActiveFilters)
+                                <div class="req-manage-filters__head">
+                                    <div class="req-manage-filters__actions comercial-services-filters__actions">
                                         <a href="{{ route('comercial.matriz.services.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                    @endif
-                                    @if ($canManage)
-                                        <a href="{{ route('comercial.matriz.services.create') }}" class="btn btn--primary btn--sm">Nuevo servicio</a>
-                                    @endif
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
 
                             <div class="req-manage-filters__toolbar">
                                 <form method="GET" class="req-manage-filters__search-col">
@@ -125,26 +116,48 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($services->count()) }} {{ $services->count() === 1 ? 'servicio' : 'servicios' }}">
-                                <strong>{{ number_format($services->count()) }}</strong>
-                                {{ $services->count() === 1 ? 'servicio' : 'servicios' }}
-                                @if ($filters['q'] ?? '')
-                                    · Busqueda: <strong>{{ $filters['q'] }}</strong>
-                                @endif
-                                @if ($filters['portfolio'] ?? '')
-                                    · Portafolio: <strong>{{ $portfolios[$filters['portfolio']] ?? $filters['portfolio'] }}</strong>
-                                @endif
-                                @if ($filters['vigencia'] ?? '')
-                                    · Vigencia: <strong>{{ $filters['vigencia'] === 'expiring' ? 'Por vencer (30 días)' : 'Vencido' }}</strong>
-                                @endif
-                                @if ($filters['status'] ?? '')
-                                    · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
-                                @endif
-                                · El Excel exporta el detalle completo segun estos filtros
-                            </p>
                         </div>
                     </details>
+
+                    <div class="cursos-registros-page__table-toolbar">
+                        <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($services->count()) }} {{ $services->count() === 1 ? 'servicio' : 'servicios' }}">
+                            <strong>{{ number_format($services->count()) }}</strong>
+                            {{ $services->count() === 1 ? 'servicio' : 'servicios' }}
+                            @if ($filters['q'] ?? '')
+                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                            @endif
+                            @if ($filters['portfolio'] ?? '')
+                                · Portafolio: <strong>{{ $portfolios[$filters['portfolio']] ?? $filters['portfolio'] }}</strong>
+                            @endif
+                            @if ($filters['vigencia'] ?? '')
+                                · Vigencia: <strong>{{ $filters['vigencia'] === 'expiring' ? 'Por vencer (30 días)' : 'Vencido' }}</strong>
+                            @endif
+                            @if ($filters['status'] ?? '')
+                                · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
+                            @endif
+                            · El Excel exporta el detalle completo segun estos filtros
+                        </p>
+
+                        <div class="cursos-registros-page__table-actions">
+                            <x-export-excel
+                                route="{{ route('comercial.matriz.services.export', request()->query()) }}"
+                                label=""
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar a Excel"
+                                aria-label="Exportar a Excel"
+                            />
+                            @if ($canManage)
+                                <a
+                                    href="{{ route('comercial.matriz.services.create') }}"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Nuevo servicio"
+                                    aria-label="Nuevo servicio"
+                                >
+                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                </a>
+                            @endif
+                        </div>
+                    </div>
 
                     <div class="data-table-wrap req-manage-shell__table comercial-services-page__table-wrap">
                         <table

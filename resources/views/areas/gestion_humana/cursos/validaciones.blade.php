@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.cursos.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Validaciones</h2>
-                <p class="panel-text">Activos sin curso y cursos por actualizar o vencidos</p>
-            </div>
-        </div>
     </x-slot>
 
     <div
@@ -72,6 +66,11 @@
                             role="tabpanel"
                         >
                             <div class="av-cola-panel__toolbar">
+                                <details class="req-manage-filters req-manage-filters__panel">
+                                    <summary class="req-manage-filters__panel-toggle">
+                                        <span>Filtros</span>
+                                    </summary>
+                                    <div class="req-manage-filters__panel-body">
                                 <form
                                     class="req-manage-filters js-cursos-validaciones-filters"
                                     data-cola="{{ $colaKey }}"
@@ -186,6 +185,8 @@
                                         </div>
                                     </div>
                                 </form>
+                                    </div>
+                                </details>
                             </div>
 
                             <div class="data-table-wrap data-table-wrap--booting req-manage-shell__table av-cola-panel__table">

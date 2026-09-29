@@ -2,16 +2,17 @@
     @php
         $showNuevoModal = $canEdit && $errors->any() && ! $errors->has('import_file');
         $showMasivosModal = $errors->has('import_file');
+        $hasActiveFilters = ($filters['document_number'] ?? '') !== ''
+            || ($filters['full_name'] ?? '') !== ''
+            || ($filters['curso_tipo_id'] ?? '') !== ''
+            || ($filters['vigencia'] ?? '') !== ''
+            || (($filters['estado'] ?? 'todos') !== '' && ($filters['estado'] ?? 'todos') !== 'todos')
+            || (bool) ($filters['solo_actualizar'] ?? false)
+            || (is_array($filters['document_numbers'] ?? null) && ($filters['document_numbers'] ?? []) !== []);
     @endphp
 
     <x-slot name="header">
         @include('areas.gestion_humana.cursos.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Cursos</h2>
-                <p class="panel-text">Gestion humana — registros de cursos por persona (solo activos en Ficha)</p>
-            </div>
-        </div>
     </x-slot>
 
     <div
@@ -46,8 +47,15 @@
 
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
-                    <div class="req-manage-shell__filters">
-                        @unless ($colaMode ?? false)
+                    @unless ($colaMode ?? false)
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+                        <div class="req-manage-filters__panel-body">
                         <form method="GET" action="{{ route('gestion-humana.cursos.registros') }}" class="req-manage-filters">
                             <div class="cursos-registros-page__filters">
                                 <div class="form-field">
@@ -136,9 +144,11 @@
                                 </div>
                             </div>
                         </form>
-                        @endunless
+                        </div>
+                    </details>
+                    @endunless
 
-                        <div class="cursos-registros-page__table-toolbar">
+                    <div class="cursos-registros-page__table-toolbar">
                             @if ($colaMode ?? false)
                                 <p class="req-manage-filters__meta">
                                     {{ $pendingRows->count() }} nuevo(s) sin curso
@@ -187,7 +197,6 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
 
                     @if ($colaMode ?? false)
                         @include('areas.gestion_humana.cursos.partials.nuevos-sin-curso-table', [

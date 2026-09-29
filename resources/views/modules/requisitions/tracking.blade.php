@@ -30,11 +30,6 @@
     <div class="page-section req-manage-page">
         <div class="app-container">
             <div class="panel">
-                <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Mis requisiciones</h3>
-                    <p class="panel-text panel-text--compact">Consulta de solicitudes del area actual con filtros de estado, cliente y vista rapida de tus propios requerimientos.</p>
-                </div>
-
                 <div class="panel__body req-manage-shell">
                     <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">

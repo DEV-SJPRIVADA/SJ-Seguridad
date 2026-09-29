@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.desvinculaciones.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Masivos</h2>
-                <p class="panel-text">Gestion humana — desvinculaciones masivas</p>
-            </div>
-        </div>
     </x-slot>
 
     <div class="page-section desvinculaciones-masivos-page">

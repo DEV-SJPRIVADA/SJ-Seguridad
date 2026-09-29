@@ -5,13 +5,6 @@
 
     <div class="page-section development-requests-page development-requests-page--queue">
         <div class="app-container">
-            <div class="page-header-inner development-requests-page__intro">
-                <h2 class="page-title">Bandeja TIC</h2>
-                <p class="page-subtitle">
-                    Solicitudes radicadas y en curso. Filtre, exporte y abra el detalle para transicionar estado, UAT y chat.
-                </p>
-            </div>
-
             <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis development-requests-kpis">
                 <div class="req-dashboard-kpi req-dashboard-kpi--total">
                     <p class="req-dashboard-kpi__label">Recibidos</p>
@@ -67,10 +60,6 @@
             <div class="panel development-requests-page__panel">
                 <div class="panel__header panel__header--compact">
                     <div class="development-requests-page__header-row">
-                        <div>
-                            <h3 class="panel-title">Listado operativo</h3>
-                            <p class="panel-text panel-text--compact">Resultados segun filtros aplicados.</p>
-                        </div>
                         <x-export-excel route="{{ route('development-requests.tic-queue.export', ['module' => $module, ...request()->query()]) }}" />
                     </div>
                 </div>
