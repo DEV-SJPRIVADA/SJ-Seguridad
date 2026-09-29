@@ -44,6 +44,7 @@ use App\Services\GestionHumana\AcreditacionValidacionesExportService;
 use App\Services\GestionHumana\AcreditacionValidacionesGateService;
 use App\Services\GestionHumana\AcreditacionValidacionesResultStore;
 use App\Services\GestionHumana\AcreditacionValidacionesRunnerService;
+use App\Support\DocumentNumberListParser;
 use App\Traits\HasAcreditacionesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -90,25 +91,42 @@ class AcreditacionesController extends Controller
         return redirect()->route('gestion-humana.acreditaciones.acreditados', $request->query());
     }
 
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
-        $payload = $this->dashboardService->metrics();
+        $filters = $this->dashboardFiltersFromRequest($request);
+        $payload = $this->dashboardService->metrics($filters);
+
+        $filterCargoApoOptions = array_merge(
+            [['value' => '', 'label' => 'Todos']],
+            $this->dashboardService->cargoApoOptions(),
+        );
+
+        $filterFichaEstadoOptions = [
+            ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos en ficha'],
+            ['value' => EmployeeFichaProfile::STATUS_DESVINCULADO, 'label' => 'Desvinculados'],
+            ['value' => 'todos', 'label' => 'Todos (ficha)'],
+        ];
 
         return view('areas.gestion_humana.acreditaciones.dashboard', [
             'subTabs' => $this->getAcreditacionesSubTabs('dashboard'),
+            'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.acreditaciones.dashboard.metrics'),
-            'canEditExportApo' => $this->acreditacionesAccess->canEdit(auth()->user()),
+            'filterCargoApoOptions' => $filterCargoApoOptions,
+            'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
+            'yearOptions' => $this->dashboardService->yearOptions(),
         ]);
     }
 
-    public function dashboardMetrics(): JsonResponse
+    public function dashboardMetrics(Request $request): JsonResponse
     {
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
-        return response()->json($this->dashboardService->metrics());
+        return response()->json(
+            $this->dashboardService->metrics($this->dashboardFiltersFromRequest($request))
+        );
     }
 
     public function acreditados(Request $request): View
@@ -1536,9 +1554,11 @@ class AcreditacionesController extends Controller
     /**
      * @return array{
      *     document_number: string,
+     *     document_numbers: list<string>,
      *     cargo: string,
      *     cargo_apo: string,
      *     estado: string,
+     *     renovacion: string,
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
      *     ficha_estado: string,
@@ -1557,6 +1577,9 @@ class AcreditacionesController extends Controller
 
         return [
             'document_number' => trim((string) $request->input('document_number', '')),
+            'document_numbers' => app(DocumentNumberListParser::class)->fromInput(
+                $request->input('document_numbers'),
+            ),
             'cargo' => trim((string) $request->input('cargo', '')),
             'cargo_apo' => trim((string) $request->input('cargo_apo', '')),
             'estado' => (string) $request->input('estado', 'todos'),
@@ -1570,6 +1593,7 @@ class AcreditacionesController extends Controller
     /**
      * @param  array{
      *     document_number: string,
+     *     document_numbers: list<string>,
      *     cargo: string,
      *     cargo_apo: string,
      *     estado: string,
@@ -1586,6 +1610,11 @@ class AcreditacionesController extends Controller
 
         if ($filters['document_number'] !== '') {
             $query['document_number'] = $filters['document_number'];
+        }
+
+        if ($filters['document_numbers'] !== []) {
+            $query['document_numbers'] = app(DocumentNumberListParser::class)
+                ->toQueryValue($filters['document_numbers']);
         }
 
         if ($filters['cargo'] !== '') {
@@ -1656,6 +1685,26 @@ class AcreditacionesController extends Controller
         }
 
         return $query;
+    }
+
+    /**
+     * @return array{
+     *     fecha_desde: string,
+     *     fecha_hasta: string,
+     *     cargo_apo: string,
+     *     ficha_estado: string,
+     *     anio: int,
+     * }
+     */
+    private function dashboardFiltersFromRequest(Request $request): array
+    {
+        return [
+            'fecha_desde' => trim((string) $request->query('fecha_desde', '')),
+            'fecha_hasta' => trim((string) $request->query('fecha_hasta', '')),
+            'cargo_apo' => trim((string) $request->query('cargo_apo', '')),
+            'ficha_estado' => trim((string) $request->query('ficha_estado', EmployeeFichaProfile::STATUS_ACTIVO)),
+            'anio' => (int) $request->query('anio', now()->year),
+        ];
     }
 
     /**

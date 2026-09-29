@@ -33,7 +33,7 @@ class CommercialMatrixImportTest extends TestCase
     {
         $viewer = User::factory()->create(['must_change_password' => false, 'area_key' => 'comercial']);
         $viewer->assignRole('usuario');
-        $viewer->givePermissionTo('comercial.matriz.view');
+        $viewer->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         $this->actingAs($viewer)
             ->get(route('comercial.matriz.clients.import-template'))
@@ -196,7 +196,7 @@ class CommercialMatrixImportTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.manage');
+        $user->givePermissionTo(['comercial.clients.edit', 'comercial.services.edit']);
 
         return $user;
     }

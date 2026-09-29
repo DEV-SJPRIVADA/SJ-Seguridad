@@ -72,6 +72,14 @@
                                         <x-lucide-eye width="16" height="16" aria-hidden="true" />
                                         <span x-text="previewLoading ? 'Validando…' : 'Validar'"></span>
                                     </button>
+                                    <div class="multi-cedula-filter-slot" x-show="hasValidated" x-cloak>
+                                        <x-multi-cedula-filter
+                                            id="export-apo-preview"
+                                            name="document_numbers"
+                                            value=""
+                                            :submit-on-apply="false"
+                                        />
+                                    </div>
                                     <button
                                         type="button"
                                         class="btn btn--primary btn--sm"
@@ -397,7 +405,9 @@
                     generateLoading: false,
                     hasValidated: false,
                     previewError: '',
+                    allPreviewRows: [],
                     previewRows: [],
+                    documentNumbersFilter: [],
                     previewSummary: null,
                     bulkUpdateOpen: false,
                     submittingBulk: false,
@@ -423,11 +433,73 @@
                     },
 
                     init() {
+                        window.addEventListener('multi-cedula-applied', (event) => {
+                            if (! event.detail || event.detail.id !== 'export-apo-preview') {
+                                return;
+                            }
+                            this.documentNumbersFilter = Array.isArray(event.detail.documents)
+                                ? event.detail.documents
+                                : [];
+                            this.applyPreviewFilter();
+                        });
+
                         if (this.autoValidateIds.length > 0) {
                             this.$nextTick(() => {
                                 this.runValidate(this.autoValidateIds);
                             });
                         }
+                    },
+
+                    normalizeCedula(value) {
+                        if (window.MultiCedulaFilter && typeof window.MultiCedulaFilter.normalizeDocument === 'function') {
+                            return window.MultiCedulaFilter.normalizeDocument(value);
+                        }
+                        const digits = String(value || '').replace(/\D+/g, '');
+                        return digits !== '' ? digits : String(value || '').trim().toLowerCase();
+                    },
+
+                    applyPreviewFilter() {
+                        const docs = this.documentNumbersFilter;
+                        if (! Array.isArray(docs) || docs.length === 0) {
+                            this.previewRows = this.allPreviewRows.slice();
+                        } else {
+                            const set = {};
+                            docs.forEach((doc) => {
+                                const normalized = this.normalizeCedula(doc);
+                                if (normalized) {
+                                    set[normalized] = true;
+                                }
+                            });
+                            this.previewRows = this.allPreviewRows.filter((row) => {
+                                const normalized = this.normalizeCedula(row.document_number || '');
+                                return normalized !== '' && set[normalized];
+                            });
+                        }
+
+                        const visible = new Set(
+                            this.previewRows.map((row) => Number(row.acreditado_id)).filter((id) => id > 0),
+                        );
+                        Object.keys(this.selected).forEach((id) => {
+                            if (! visible.has(Number(id))) {
+                                delete this.selected[id];
+                            }
+                        });
+
+                        this.refreshPreviewSummaryFromVisible();
+                    },
+
+                    refreshPreviewSummaryFromVisible() {
+                        const rows = this.previewRows;
+                        this.previewSummary = {
+                            ...(this.previewSummary || {}),
+                            selected: rows.length,
+                            found: rows.length,
+                            validas: rows.filter((row) => row.valida === true).length,
+                            novedades_blandas: rows.filter(
+                                (row) => row.valida !== true && row.hard_block !== true,
+                            ).length,
+                            bloqueadas: rows.filter((row) => row.hard_block === true).length,
+                        };
                     },
 
                     get selectedCount() {
@@ -522,6 +594,7 @@
 
                     removeRow(id) {
                         const target = Number(id);
+                        this.allPreviewRows = this.allPreviewRows.filter((row) => Number(row.acreditado_id) !== target);
                         this.previewRows = this.previewRows.filter((row) => Number(row.acreditado_id) !== target);
                         delete this.selected[target];
                         this.recomputeSummary();
@@ -746,6 +819,7 @@
                         this.selected = {};
                         this.hasValidated = true;
                         this.previewLoading = true;
+                        this.allPreviewRows = [];
                         this.previewRows = [];
                         this.previewSummary = null;
 
@@ -780,9 +854,11 @@
                                 throw new Error(msg);
                             }
 
-                            this.previewRows = Array.isArray(payload.rows) ? payload.rows : [];
+                            this.allPreviewRows = Array.isArray(payload.rows) ? payload.rows : [];
                             this.previewSummary = payload.summary || null;
+                            this.applyPreviewFilter();
                         } catch (error) {
+                            this.allPreviewRows = [];
                             this.previewRows = [];
                             this.previewSummary = null;
                             this.previewError = error?.message || 'Error al validar.';
@@ -862,11 +938,34 @@
                         this.selected = {};
                         this.hasValidated = false;
                         this.previewError = '';
+                        this.allPreviewRows = [];
                         this.previewRows = [];
+                        this.documentNumbersFilter = [];
                         this.previewSummary = null;
                         this.previewLoading = false;
                         this.generateLoading = false;
                         this.autoValidateIds = [];
+
+                        const hidden = document.querySelector('[data-multi-cedula-hidden][data-multi-cedula-for="export-apo-preview"]');
+                        if (hidden) {
+                            hidden.value = '';
+                        }
+                        const textarea = document.querySelector('[data-multi-cedula-textarea][data-multi-cedula-for="export-apo-preview"]');
+                        if (textarea) {
+                            textarea.value = '';
+                        }
+                        const btn = document.querySelector('[data-multi-cedula-open][data-multi-cedula-for="export-apo-preview"]');
+                        if (btn) {
+                            btn.classList.remove('req-manage-filters__icon-btn--primary');
+                            btn.classList.add('req-manage-filters__icon-btn--ghost');
+                            btn.setAttribute('title', 'Filtrar varias cédulas');
+                            btn.setAttribute('aria-label', 'Filtrar varias cédulas');
+                        }
+                        const badge = document.querySelector('[data-multi-cedula-badge][data-multi-cedula-for="export-apo-preview"]');
+                        if (badge) {
+                            badge.hidden = true;
+                            badge.textContent = '0';
+                        }
                     },
                 }));
             });

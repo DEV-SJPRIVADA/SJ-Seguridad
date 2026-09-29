@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Comercial\UpdateCommercialClientChecklistRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialClientDocumentItem;
+use App\Services\Access\CommercialAccessService;
 use App\Services\Comercial\CommercialAuditLogService;
 use App\Support\CommercialDocumentCatalog;
 use App\Support\DisplayDate;
@@ -23,6 +24,7 @@ class CommercialClientChecklistController extends Controller
 
     public function __construct(
         private readonly CommercialAuditLogService $auditLogService,
+        private readonly CommercialAccessService $commercialAccess,
     ) {}
 
     public function index(Request $request): View
@@ -194,10 +196,7 @@ class CommercialClientChecklistController extends Controller
     private function authorizeView(): void
     {
         abort_unless(
-            auth()->user()?->can('comercial.matriz.view')
-            || auth()->user()?->can('comercial.matriz.manage')
-            || auth()->user()?->can('view.board.comercial.matriz_clientes')
-            || auth()->user()?->can('manage.users'),
+            auth()->user() !== null && $this->commercialAccess->canViewClients(auth()->user()),
             403
         );
     }
@@ -205,14 +204,15 @@ class CommercialClientChecklistController extends Controller
     private function authorizeManage(): void
     {
         abort_unless(
-            auth()->user()?->can('comercial.matriz.manage')
-            || auth()->user()?->can('manage.users'),
+            auth()->user() !== null && $this->commercialAccess->canEditClients(auth()->user()),
             403
         );
     }
 
     private function canManage(): bool
     {
-        return (bool) (auth()->user()?->can('comercial.matriz.manage') || auth()->user()?->can('manage.users'));
+        $user = auth()->user();
+
+        return $user !== null && $this->commercialAccess->canEditClients($user);
     }
 }

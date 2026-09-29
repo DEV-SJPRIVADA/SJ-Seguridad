@@ -2,11 +2,16 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Support\DocumentNumberListParser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 final class AcreditacionValidacionesRowFilter
 {
+    public function __construct(
+        private readonly DocumentNumberListParser $documentNumberListParser,
+    ) {}
+
     /**
      * @param  Collection<int, array<string, mixed>>  $rows
      * @return Collection<int, array<string, mixed>>
@@ -18,12 +23,13 @@ final class AcreditacionValidacionesRowFilter
 
     /**
      * @param  Collection<int, array<string, mixed>>  $rows
-     * @param  array<string, string>  $filters
+     * @param  array<string, mixed>  $filters
      * @return Collection<int, array<string, mixed>>
      */
     public function applyFilters(Collection $rows, array $filters, string $cola): Collection
     {
         $documentNumber = $filters['document_number'] ?? '';
+        $documentNumbers = $this->documentNumberListParser->fromInput($filters['document_numbers'] ?? null);
         $fullName = $filters['full_name'] ?? '';
         $cargo = $filters['cargo'] ?? '';
         $cargoApo = $filters['cargo_apo'] ?? '';
@@ -32,6 +38,7 @@ final class AcreditacionValidacionesRowFilter
 
         if (
             $documentNumber === ''
+            && $documentNumbers === []
             && $fullName === ''
             && $cargo === ''
             && $cargoApo === ''
@@ -43,6 +50,7 @@ final class AcreditacionValidacionesRowFilter
 
         return $rows->filter(function (array $row) use (
             $documentNumber,
+            $documentNumbers,
             $fullName,
             $cargo,
             $cargoApo,
@@ -51,6 +59,13 @@ final class AcreditacionValidacionesRowFilter
             $cola,
         ): bool {
             if ($documentNumber !== '' && ! $this->contains((string) ($row['document_number'] ?? ''), $documentNumber)) {
+                return false;
+            }
+
+            if (
+                $documentNumbers !== []
+                && ! $this->documentNumberListParser->matches((string) ($row['document_number'] ?? ''), $documentNumbers)
+            ) {
                 return false;
             }
 
@@ -91,7 +106,15 @@ final class AcreditacionValidacionesRowFilter
     }
 
     /**
-     * @return array<string, string>
+     * @return array{
+     *     document_number: string,
+     *     document_numbers: list<string>,
+     *     full_name: string,
+     *     cargo: string,
+     *     cargo_apo: string,
+     *     estado: string,
+     *     personal_tipo: string,
+     * }
      */
     public function filtersFromRequest(Request $request): array
     {
@@ -107,6 +130,9 @@ final class AcreditacionValidacionesRowFilter
 
         return [
             'document_number' => trim($request->string('document_number')->toString()),
+            'document_numbers' => $this->documentNumberListParser->fromInput(
+                $request->input('document_numbers'),
+            ),
             'full_name' => trim($request->string('full_name')->toString()),
             'cargo' => trim($request->string('cargo')->toString()),
             'cargo_apo' => trim($request->string('cargo_apo')->toString()),

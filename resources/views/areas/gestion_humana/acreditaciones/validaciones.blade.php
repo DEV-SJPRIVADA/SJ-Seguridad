@@ -317,6 +317,12 @@
                                                     >
                                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
                                                     </button>
+                                                    <x-multi-cedula-filter
+                                                        :id="'validaciones-'.$colaCode"
+                                                        name="document_numbers"
+                                                        value=""
+                                                        :submit-on-apply="false"
+                                                    />
                                                     <button
                                                         type="button"
                                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost js-validaciones-cola-filters-clear"
@@ -709,7 +715,7 @@
                 function buildColaExportUrl(baseUrl, cola) {
                     const url = new URL(baseUrl, window.location.origin);
                     const filters = collectColaFilters(cola);
-                    ['document_number', 'full_name', 'cargo', 'cargo_apo', 'estado', 'personal_tipo'].forEach(function (key) {
+                    ['document_number', 'document_numbers', 'full_name', 'cargo', 'cargo_apo', 'estado', 'personal_tipo'].forEach(function (key) {
                         url.searchParams.delete(key);
                     });
                     Object.keys(filters).forEach(function (key) {
@@ -738,6 +744,27 @@
                 function clearColaFilters(form) {
                     form.querySelectorAll('input[type="text"], input[type="search"]').forEach(function (input) {
                         input.value = '';
+                    });
+                    form.querySelectorAll('[data-multi-cedula-hidden]').forEach(function (input) {
+                        input.value = '';
+                        const uid = input.getAttribute('data-multi-cedula-for');
+                        const btn = form.querySelector('[data-multi-cedula-open][data-multi-cedula-for="' + uid + '"]');
+                        if (btn) {
+                            btn.classList.remove('req-manage-filters__icon-btn--primary');
+                            btn.classList.add('req-manage-filters__icon-btn--ghost');
+                            btn.setAttribute('title', 'Filtrar varias cédulas');
+                            btn.setAttribute('aria-label', 'Filtrar varias cédulas');
+                        }
+                        const badge = form.querySelector('[data-multi-cedula-badge][data-multi-cedula-for="' + uid + '"]')
+                            || document.querySelector('[data-multi-cedula-badge][data-multi-cedula-for="' + uid + '"]');
+                        if (badge) {
+                            badge.hidden = true;
+                            badge.textContent = '0';
+                        }
+                        const textarea = document.querySelector('[data-multi-cedula-textarea][data-multi-cedula-for="' + uid + '"]');
+                        if (textarea) {
+                            textarea.value = '';
+                        }
                     });
                     form.querySelectorAll('.searchable-select-wrap').forEach(function (wrap) {
                         if (typeof Alpine === 'undefined' || !Alpine.$data) {
@@ -885,6 +912,19 @@
                             syncColaExportLinks();
                         });
                     }
+                });
+
+                window.addEventListener('multi-cedula-applied', function (event) {
+                    const root = event.detail && event.detail.root;
+                    if (!root) {
+                        return;
+                    }
+                    const form = root.closest('.js-validaciones-cola-filters');
+                    if (!form) {
+                        return;
+                    }
+                    reloadColaTable(String(form.getAttribute('data-cola') || ''));
+                    syncColaExportLinks();
                 });
 
                 document.querySelectorAll('.js-validaciones-cola-export').forEach(function (link) {

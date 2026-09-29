@@ -22,6 +22,8 @@
                 <div class="comercial-detail__toolbar-actions">
                     @if ($canManage)
                         <a href="{{ route('comercial.matriz.clients.edit', $client) }}" class="btn btn--secondary btn--sm">Editar cliente</a>
+                    @endif
+                    @if ($canEditServices)
                         <a href="{{ route('comercial.matriz.services.create', ['client' => $client->id]) }}" class="btn btn--primary btn--sm">Agregar servicio</a>
                     @endif
                 </div>
@@ -152,7 +154,7 @@
                                                 <span class="status-pill {{ $estadoPillClass }}">{{ $estadoLabel }}</span>
                                             </td>
                                             <td class="table-actions">
-                                                @if ($canManage)
+                                                @if ($canEditServices)
                                                     <div class="comercial-detail__row-actions">
                                                         <a href="{{ route('comercial.matriz.services.edit', $service) }}" class="btn btn--secondary btn--sm">Editar</a>
                                                         @if (! $service->is_active)
@@ -197,14 +199,18 @@
                         </div>
                     </div>
 
-                    @if ($canManage)
+                    @if ($canManage || $canEditServices)
                         <div class="panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">Acciones</h3>
                             </div>
                             <div class="panel__body comercial-detail__aside-actions">
-                                <a href="{{ route('comercial.matriz.clients.edit', $client) }}" class="btn btn--secondary">Editar cliente</a>
-                                <a href="{{ route('comercial.matriz.services.create', ['client' => $client->id]) }}" class="btn btn--primary">Agregar servicio</a>
+                                @if ($canManage)
+                                    <a href="{{ route('comercial.matriz.clients.edit', $client) }}" class="btn btn--secondary">Editar cliente</a>
+                                @endif
+                                @if ($canEditServices)
+                                    <a href="{{ route('comercial.matriz.services.create', ['client' => $client->id]) }}" class="btn btn--primary">Agregar servicio</a>
+                                @endif
                             </div>
                         </div>
                     @endif

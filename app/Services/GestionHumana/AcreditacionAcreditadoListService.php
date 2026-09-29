@@ -4,14 +4,20 @@ namespace App\Services\GestionHumana;
 
 use App\Models\AcreditacionAcreditado;
 use App\Models\EmployeeFichaProfile;
+use App\Support\DocumentNumberListParser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class AcreditacionAcreditadoListService
 {
+    public function __construct(
+        private readonly DocumentNumberListParser $documentNumberListParser,
+    ) {}
+
     /**
      * @param  array{
      *     document_number?: string|null,
+     *     document_numbers?: list<string>|string|null,
      *     cargo?: string|null,
      *     cargo_apo?: string|null,
      *     estado?: string|null,
@@ -33,6 +39,14 @@ class AcreditacionAcreditadoListService
         $cedula = trim((string) ($filters['document_number'] ?? ''));
         if ($cedula !== '') {
             $query->where('document_number', 'like', '%'.$cedula.'%');
+        }
+
+        $documentNumbers = $this->documentNumberListParser->fromInput($filters['document_numbers'] ?? null);
+        if ($documentNumbers !== []) {
+            $query->whereIn(
+                'document_number',
+                $this->documentNumberListParser->lookupValues($documentNumbers),
+            );
         }
 
         $cargo = trim((string) ($filters['cargo'] ?? ''));

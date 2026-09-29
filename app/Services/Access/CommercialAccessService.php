@@ -21,33 +21,73 @@ class CommercialAccessService
             return true;
         }
 
-        if ($user->can('comercial.matriz.view') || $user->can('comercial.matriz.manage')) {
-            return true;
-        }
-
-        return $user->can('view.board.comercial.matriz_clientes')
-            || $user->can('view.board.comercial.servicios_comerciales')
-            || $user->can('manage.commercial.parameters');
+        return $this->canViewClients($user)
+            || $this->canViewServices($user)
+            || $this->canEditParameters($user);
     }
 
-    public function canAccessTab(User $user, string $tab): bool
+    public function canViewDashboard(User $user): bool
     {
         if ($this->isAdminBypass($user)) {
             return true;
         }
 
-        if ($tab === 'parametros') {
-            return $user->can('manage.commercial.parameters')
-                || $user->can('comercial.matriz.manage');
-        }
+        return $user->can('view.board.comercial.dashboard');
+    }
 
-        if ($user->can('comercial.matriz.view') || $user->can('comercial.matriz.manage')) {
+    public function canViewClients(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
             return true;
         }
 
+        return $user->can('comercial.clients.view')
+            || $user->can('comercial.clients.edit');
+    }
+
+    public function canEditClients(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('comercial.clients.edit');
+    }
+
+    public function canViewServices(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('comercial.services.view')
+            || $user->can('comercial.services.edit');
+    }
+
+    public function canEditServices(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('comercial.services.edit');
+    }
+
+    public function canEditParameters(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('comercial.parameters.edit');
+    }
+
+    public function canAccessTab(User $user, string $tab): bool
+    {
         return match ($tab) {
-            'clientes' => $user->can('view.board.comercial.matriz_clientes'),
-            'servicios' => $user->can('view.board.comercial.servicios_comerciales'),
+            'clientes' => $this->canViewClients($user),
+            'servicios' => $this->canViewServices($user),
+            'parametros' => $this->canEditParameters($user),
             default => false,
         };
     }

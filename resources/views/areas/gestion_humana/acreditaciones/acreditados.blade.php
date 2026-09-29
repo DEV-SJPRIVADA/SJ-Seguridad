@@ -118,6 +118,11 @@
                                     >
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
                                     </button>
+                                    <x-multi-cedula-filter
+                                        id="acreditados"
+                                        name="document_numbers"
+                                        :value="$filters['document_numbers'] ?? []"
+                                    />
                                     <a
                                         href="{{ route('gestion-humana.acreditaciones.acreditados') }}"
                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"

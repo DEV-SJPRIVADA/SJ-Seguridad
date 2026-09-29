@@ -321,7 +321,9 @@
             </tr>
             <tr class="value-row">
                 <td class="label-cell">TIPO DE PROGRAMACION:</td>
-                <td colspan="5">{{ $cell($isBlank ? null : $requisition->programmingType?->name) }}</td>
+                <td style="width: 25%;">{{ $cell($isBlank ? null : $requisition->programmingType?->name) }}</td>
+                <td class="bg-gray text-center" style="width: 15%;">CCOS CR</td>
+                <td colspan="3">{{ $cell($isBlank ? null : ($requisition->cost_center ?? '')) }}</td>
             </tr>
         </table>
 

@@ -125,6 +125,11 @@ Route::middleware(['password.changed'])
         Route::post('/registros/{employeeCurso}/documento', [CursosController::class, 'uploadDocument'])->name('registros.document.upload');
         Route::delete('/registros/{employeeCurso}/documento', [CursosController::class, 'destroyDocument'])->name('registros.document.destroy');
 
+        Route::get('/validaciones', [CursosController::class, 'validaciones'])->name('validaciones');
+        Route::get('/validaciones/datatable', [CursosController::class, 'validacionesDatatable'])->name('validaciones.datatable');
+        Route::get('/validaciones/exportar', [CursosController::class, 'validacionesExport'])->name('validaciones.export');
+        Route::get('/validaciones/bulk-selectable', [CursosController::class, 'validacionesBulkSelectable'])->name('validaciones.bulk-selectable');
+
         Route::get('/catalogo', [CursosCatalogController::class, 'index'])->name('catalogo');
         Route::get('/catalogo/opciones', [CursosCatalogController::class, 'options'])->name('catalogo.options');
         Route::post('/catalogo/escuelas', [CursosCatalogController::class, 'storeEscuela'])->name('catalogo.escuelas.store');

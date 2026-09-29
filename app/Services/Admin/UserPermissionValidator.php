@@ -100,8 +100,11 @@ class UserPermissionValidator
         }
 
         $commercialScoped = $permissionSet->intersect([
-            'comercial.matriz.view',
-            'comercial.matriz.manage',
+            'comercial.clients.view',
+            'comercial.clients.edit',
+            'comercial.services.view',
+            'comercial.services.edit',
+            'comercial.parameters.edit',
         ]);
 
         if ($commercialScoped->isNotEmpty()) {
@@ -110,7 +113,7 @@ class UserPermissionValidator
             );
 
             if (! $hasCommercialBoard) {
-                $warnings[] = 'Marco funciones de Matriz comercial, pero no habilito tableros visibles en Comercial.';
+                $warnings[] = 'Marco funciones de Gestion Clientes, pero no habilito tableros visibles en Comercial.';
             }
         }
 

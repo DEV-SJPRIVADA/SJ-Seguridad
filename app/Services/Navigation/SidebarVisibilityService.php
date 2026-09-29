@@ -247,10 +247,7 @@ class SidebarVisibilityService
     private function shouldShowDashboardBoard(User $user, string $areaKey): bool
     {
         if ($areaKey === 'comercial') {
-            return $user->can('comercial.matriz.view')
-                || $user->can('comercial.matriz.manage')
-                || $user->can('view.board.comercial.dashboard')
-                || $user->can('view.area.comercial');
+            return $this->commercialAccess->canViewDashboard($user);
         }
 
         if ($areaKey === 'compras') {

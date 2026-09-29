@@ -14,8 +14,8 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 - Boards (sidebar):
   - `dashboard` (etiqueta: **Dashboard**) — redirige a `comercial/dashboard`
   - `gestion_clientes` (etiqueta: **Gestion Clientes**) — pestañas **Clientes** y **Servicios** (`.module-tab`, partial `gestion-clientes-subnav`)
-- Pestañas del tablero Gestion Clientes (FEAT-017): rutas sin cambio (`comercial/clientes/*`, `comercial/servicios/*`); visibilidad por pestaña con permisos legacy `view.board.comercial.matriz_clientes` y `view.board.comercial.servicios_comerciales`
-- **Parametros (FEAT-018):** pestaña `comercial/parametros` — CRUD de sectores, tipos de cliente/servicio y portafolios (`commercial_portfolios` con `slug`); permiso `manage.commercial.parameters` o `comercial.matriz.manage`
+- Pestañas del tablero Gestion Clientes (FEAT-017): rutas sin cambio (`comercial/clientes/*`, `comercial/servicios/*`); visibilidad por pestaña con `comercial.clients.view|edit` y `comercial.services.view|edit`
+- **Parametros (FEAT-018):** pestaña `comercial/parametros` — CRUD de sectores, tipos de cliente/servicio y portafolios (`commercial_portfolios` con `slug`); permiso `comercial.parameters.edit`
 - Dashboard: filtros portafolio/ciudad (stock); año/mes para **clientes nuevos** (`created_at`) y tendencia de altas (`contract_start`); KPIs (total clientes, clientes nuevos, activos, por vencer ≤30, vencidos, inactivos) y **ApexCharts** via Vite (`resources/js/comercial-dashboard-charts.js` + defaults `resources/js/charts/apex-defaults.js`). **FEAT-010:** Chart.js retirado; misma libreria que GH y Operaciones.
 - Listado clientes: NIT, cliente, ciudad, portafolio(s), tipos de servicio, conteos, **Estado** (**Activo** = al menos un servicio con `is_active = true`; **Inactivo** = todos los servicios con `is_active = false` o sin servicios); filtros GET `q`, `city`, `status=active|inactive`
 - Listado servicios (FEAT-016): columnas NIT, Cliente, Contrato, Tipo servicio, Portafolio, Asesor, Inicio, Fin, **Estado**, Acciones; estado del servicio = baja logica (`is_active`) + contrato; filtros `vigencia=expiring|expired` (30 dias, solo contrato activo)
@@ -44,7 +44,7 @@ Digitalizar la matriz comercial MT-CO-01 con tableros en Comercial:
 
 Una sola plantilla Excel (**Matriz comercial**) con clientes, servicios y checklist documental. Una fila = un servicio; los datos del cliente y del checklist se repiten o actualizan por NIT.
 
-### Web (usuarios con `comercial.matriz.manage`)
+### Web (usuarios con `comercial.clients.edit`)
 
 En **Comercial → Clientes**, boton de carga masiva (icono upload):
 
@@ -125,15 +125,15 @@ Desde la ficha del cliente, “Agregar servicio” abre el alta de servicios con
 
 ## Permisos
 
-- `comercial.matriz.view` — ver clientes, servicios y dashboard
-- `comercial.matriz.manage` — crear/editar cliente y servicios, inactivar
-- `view.board.comercial.dashboard` / `view.area.comercial` — tambien habilitan el dashboard
-- `view.board.comercial.gestion_clientes` — muestra el tablero **Gestion Clientes** en sidebar (migracion: quien tenia `matriz_clientes` o `servicios_comerciales`)
-- `view.board.comercial.matriz_clientes` — pestaña **Clientes** dentro de Gestion Clientes
-- `view.board.comercial.servicios_comerciales` — pestaña **Servicios** dentro de Gestion Clientes
-- `manage.commercial.parameters` — pestaña **Parametros** (CRUD catalogos); tambien accesible con `comercial.matriz.manage`
-- Quien tenga `comercial.matriz.*` ve el tablero y ambas pestañas; con solo uno de los permisos de pestaña ve unicamente esa pestaña
-- Assignables en Admin usuarios → Alcance Comercial (*Ver tableros* / *Matriz comercial*)
+- `comercial.clients.view` — ver clientes, checklist y export (filtros; sin editar)
+- `comercial.clients.edit` — crear/editar cliente, checklist, import masivo (implica view)
+- `comercial.services.view` — ver servicios y export
+- `comercial.services.edit` — crear/editar/activar/inactivar servicios (implica view)
+- `comercial.parameters.edit` — pestaña **Catalogos** (CRUD)
+- `view.board.comercial.dashboard` — dashboard KPI (permiso propio)
+- `view.board.comercial.gestion_clientes` — muestra el tablero **Gestion Clientes** en sidebar
+- Legacy ocultos en Admin (migracion `2026_09_29_100000_…`): `comercial.matriz.view` / `manage`, `manage.commercial.parameters`, `view.board.comercial.matriz_clientes` / `servicios_comerciales`
+- Assignables en Admin usuarios → Alcance Comercial (*Ver tableros* / *Gestion Clientes (funciones)*)
 - `manage.users` puede administrar (bypass)
 
 El tablero Gestion Clientes y el dashboard KPI solo aplican al area Comercial. Servicio de acceso: `CommercialAccessService`.

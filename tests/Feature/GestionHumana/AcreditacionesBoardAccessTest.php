@@ -116,8 +116,9 @@ class AcreditacionesBoardAccessTest extends TestCase
             ->assertDontSee('Validaciones', false)
             ->assertDontSee('Catálogo', false)
             ->assertDontSee('Próximamente', false)
-            ->assertSee('Candidatos exportables', false)
-            ->assertSee('Últimas corridas Export Apo', false);
+            ->assertDontSee('Candidatos exportables', false)
+            ->assertDontSee('Últimas corridas Export Apo', false)
+            ->assertSee('Por estado', false);
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.acreditaciones.acreditados'))

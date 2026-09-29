@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
 use App\Models\CommercialServiceType;
+use App\Services\Access\CommercialAccessService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -14,6 +15,10 @@ use Illuminate\Support\Collection;
 
 class CommercialDashboardController extends Controller
 {
+    public function __construct(
+        private readonly CommercialAccessService $commercialAccess,
+    ) {}
+
     public function __invoke(Request $request): View
     {
         $this->authorizeView();
@@ -212,14 +217,7 @@ class CommercialDashboardController extends Controller
     private function authorizeView(): void
     {
         abort_unless(
-            auth()->user()?->can('comercial.matriz.view')
-            || auth()->user()?->can('comercial.matriz.manage')
-            || auth()->user()?->can('view.board.comercial.matriz_clientes')
-            || auth()->user()?->can('view.board.comercial.servicios_comerciales')
-            || auth()->user()?->can('view.board.comercial.dashboard')
-            || auth()->user()?->can('view.area.comercial')
-            || auth()->user()?->can('manage.area.comercial')
-            || auth()->user()?->can('manage.users'),
+            auth()->user() !== null && $this->commercialAccess->canViewDashboard(auth()->user()),
             403
         );
     }

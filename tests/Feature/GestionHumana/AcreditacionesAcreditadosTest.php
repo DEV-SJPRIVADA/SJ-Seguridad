@@ -460,6 +460,81 @@ class AcreditacionesAcreditadosTest extends TestCase
         );
     }
 
+    public function test_multi_cedula_filter_is_exact_and_export_respects_it(): void
+    {
+        $viewer = $this->viewerUser();
+        $cargo = $this->activeCargo('ESCOLTA');
+        $this->createFicha('8101', 'Multi Uno');
+        $this->createFicha('8102', 'Multi Dos');
+        $this->createFicha('8103', 'Multi Tres');
+
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '8101',
+            'full_name' => 'Multi Uno',
+            'cargo_apo' => $cargo->cargo_apo,
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '8102',
+            'full_name' => 'Multi Dos',
+            'cargo_apo' => $cargo->cargo_apo,
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '8103',
+            'full_name' => 'Multi Tres',
+            'cargo_apo' => $cargo->cargo_apo,
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.acreditaciones.acreditados', [
+                'document_numbers' => "8101\n8102",
+            ]))
+            ->assertOk()
+            ->assertSee('Filtrar varias cédulas', false)
+            ->assertSee('8101', false);
+
+        $datatable = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'document_numbers' => '8101,8102',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(2, $datatable['recordsFiltered']);
+
+        $export = $this->actingAs($viewer)
+            ->get(route('gestion-humana.acreditaciones.acreditados.export', [
+                'document_numbers' => '8101,8102',
+            ]));
+
+        $export->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            (string) $export->headers->get('content-type'),
+        );
+
+        $temp = tempnam(sys_get_temp_dir(), 'acred-multi-');
+        $this->assertNotFalse($temp);
+        file_put_contents($temp, $export->streamedContent());
+
+        try {
+            $zip = new \ZipArchive;
+            $this->assertTrue($zip->open($temp));
+            $sharedStrings = (string) $zip->getFromName('xl/sharedStrings.xml');
+            $zip->close();
+            $this->assertStringContainsString('Multi Uno', $sharedStrings);
+            $this->assertStringContainsString('Multi Dos', $sharedStrings);
+            $this->assertStringNotContainsString('Multi Tres', $sharedStrings);
+        } finally {
+            @unlink($temp);
+        }
+    }
+
     public function test_delete_last_active_apo_blocked_when_acreditados_exist(): void
     {
         $editor = $this->editorUser();

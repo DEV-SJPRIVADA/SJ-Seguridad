@@ -108,6 +108,11 @@
                                     <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
                                     </button>
+                                    <x-multi-cedula-filter
+                                        id="cursos-registros"
+                                        name="document_numbers"
+                                        :value="$filters['document_numbers'] ?? []"
+                                    />
                                     <a href="{{ route('gestion-humana.cursos.registros') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
                                         <x-lucide-x width="18" height="18" aria-hidden="true" />
                                     </a>

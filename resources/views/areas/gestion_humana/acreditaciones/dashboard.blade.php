@@ -14,13 +14,84 @@
         x-data="acreditacionesDashboardPage(@js([
             'metricsUrl' => $metricsUrl,
             'initial' => $initialPayload,
-            'canEditExportApo' => $canEditExportApo,
-            'exportApoUrl' => route('gestion-humana.acreditaciones.export-apo'),
+            'filters' => $filters,
         ]))"
         x-init="init()"
     >
         <div class="app-container section-stack">
+            <div class="panel cursos-dashboard-page__filters-panel">
+                <div class="panel__body panel__body--compact">
+                    <div class="cursos-dashboard-page__filters">
+                        <div class="form-field">
+                            <label class="form-label" for="dash_fecha_desde">Fecha solicitud desde</label>
+                            <input
+                                id="dash_fecha_desde"
+                                type="date"
+                                class="form-input"
+                                x-model="filters.fecha_desde"
+                                @change="scheduleRefresh()"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="dash_fecha_hasta">Fecha solicitud hasta</label>
+                            <input
+                                id="dash_fecha_hasta"
+                                type="date"
+                                class="form-input"
+                                x-model="filters.fecha_hasta"
+                                @change="scheduleRefresh()"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="dash_cargo_apo">Cargo APO</label>
+                            <x-searchable-select
+                                id="dash_cargo_apo"
+                                name="cargo_apo"
+                                :options="$filterCargoApoOptions"
+                                :value="$filters['cargo_apo']"
+                                placeholder="Todos"
+                                :allow-clear="true"
+                                x-on:change="onSelectChange('cargo_apo', $event)"
+                            />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="dash_ficha_estado">Estado ficha</label>
+                            <x-searchable-select
+                                id="dash_ficha_estado"
+                                name="ficha_estado"
+                                :options="$filterFichaEstadoOptions"
+                                :value="$filters['ficha_estado']"
+                                placeholder="Activos en ficha"
+                                :allow-clear="false"
+                                x-on:change="onSelectChange('ficha_estado', $event)"
+                            />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="dash_anio">Año tendencia</label>
+                            <select
+                                id="dash_anio"
+                                class="form-input"
+                                x-model.number="filters.anio"
+                                @change="scheduleRefresh()"
+                            >
+                                @foreach ($yearOptions as $year)
+                                    <option value="{{ $year }}" @selected((int) $filters['anio'] === (int) $year)>{{ $year }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-field cursos-dashboard-page__filter-meta">
+                            <span class="panel-text" x-show="loading" x-cloak>Actualizando…</span>
+                            <span class="panel-text" x-show="!loading && error" x-text="error" x-cloak></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="cursos-dashboard-page__kpi-grid">
+                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#0f172a;">
+                    <p class="cursos-dashboard-page__kpi-label" x-text="labels.total">Total</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="kpis.total">0</p>
+                </div>
                 <div class="card cursos-dashboard-page__kpi" style="border-left-color:#0369a1;">
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.en_proceso">EN PROCESO</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.en_proceso">0</p>
@@ -37,98 +108,79 @@
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.desacreditado">DESACREDITADO</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.desacreditado">0</p>
                 </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#7c3aed;">
-                    <p class="cursos-dashboard-page__kpi-label" x-text="labels.candidatos">Candidatos exportables</p>
-                    <p class="cursos-dashboard-page__kpi-value" x-text="kpis.candidatos">0</p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#ea580c;">
-                    <p class="cursos-dashboard-page__kpi-label" x-text="labels.con_novedad_blanda">Con novedad blanda</p>
-                    <p class="cursos-dashboard-page__kpi-value" x-text="novedadDisplay()">0</p>
-                </div>
             </div>
 
-            <div class="panel" x-show="loading" x-cloak>
-                <div class="panel__body panel__body--compact">
-                    <p class="panel-text">Actualizando indicadores…</p>
-                </div>
-            </div>
-
-            <div class="panel" x-show="!loading && error" x-cloak>
-                <div class="panel__body panel__body--compact">
-                    <p class="panel-text" x-text="error"></p>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel__header panel-heading-row">
-                    <div>
-                        <h3 class="panel-title">Últimas corridas Export Apo</h3>
-                        <p class="panel-text">Historial reciente de archivos SuperVigilancia generados</p>
+            <div class="cursos-dashboard-page__charts">
+                <div class="panel">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Por estado</h3>
                     </div>
-                    <template x-if="canEditExportApo">
-                        <a
-                            :href="exportApoUrl"
-                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            title="Ir a Export Apo"
-                            aria-label="Ir a Export Apo"
-                        >
-                            <x-lucide-download width="18" height="18" aria-hidden="true" />
-                        </a>
-                    </template>
+                    <div class="panel__body">
+                        <div id="acreditaciones-chart-estado" class="cursos-dashboard-page__chart"></div>
+                    </div>
                 </div>
-                <div class="panel__body req-manage-shell">
-                    <div class="req-manage-table-scroll">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Seq</th>
-                                    <th>Archivo</th>
-                                    <th>Usuario</th>
-                                    <th>Filas exportadas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-if="recentRuns.length === 0">
-                                    <tr>
-                                        <td colspan="5" class="panel-text">Aún no hay corridas registradas.</td>
-                                    </tr>
-                                </template>
-                                <template x-for="run in recentRuns" :key="run.id">
-                                    <tr>
-                                        <td x-text="run.export_date"></td>
-                                        <td x-text="String(run.seq).padStart(3, '0')"></td>
-                                        <td x-text="run.file_name"></td>
-                                        <td x-text="run.user_name"></td>
-                                        <td x-text="run.rows_exported"></td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                <div class="panel">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Por cargo APO</h3>
+                    </div>
+                    <div class="panel__body">
+                        <div id="acreditaciones-chart-cargo" class="cursos-dashboard-page__chart"></div>
+                    </div>
+                </div>
+                <div class="panel cursos-dashboard-page__chart-wide">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Tendencia solicitudes <span x-text="filters.anio"></span></h3>
+                    </div>
+                    <div class="panel__body">
+                        <div id="acreditaciones-chart-trend" class="cursos-dashboard-page__chart cursos-dashboard-page__chart--tall"></div>
+                    </div>
+                </div>
+                <div class="panel cursos-dashboard-page__chart-wide">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Tendencia vencimientos <span x-text="filters.anio"></span></h3>
+                        <p class="panel-text">Acreditaciones con VIGEN.ACR en cada mes</p>
+                    </div>
+                    <div class="panel__body">
+                        <div id="acreditaciones-chart-trend-vencimientos" class="cursos-dashboard-page__chart cursos-dashboard-page__chart--tall"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    @vite(['resources/js/acreditaciones-dashboard-charts.js'])
+
     @push('scripts')
         <script>
             function acreditacionesDashboardPage(config) {
                 return {
                     metricsUrl: config.metricsUrl,
-                    canEditExportApo: !!config.canEditExportApo,
-                    exportApoUrl: config.exportApoUrl || '',
+                    filters: { ...config.filters },
                     kpis: { ...(config.initial?.kpis || {}) },
                     labels: { ...(config.initial?.labels || {}) },
-                    recentRuns: Array.isArray(config.initial?.recent_runs) ? config.initial.recent_runs : [],
                     loading: false,
                     error: '',
+                    refreshTimer: null,
                     init() {
-                        // Payload inicial ya viene del servidor; metrics JSON disponible para refresh futuro.
+                        if (typeof window.renderAcreditacionesDashboardCharts === 'function') {
+                            window.renderAcreditacionesDashboardCharts(config.initial?.charts);
+                        } else {
+                            window.addEventListener('load', () => {
+                                window.renderAcreditacionesDashboardCharts?.(config.initial?.charts);
+                            }, { once: true });
+                        }
                     },
-                    novedadDisplay() {
-                        const value = this.kpis.con_novedad_blanda;
-                        return value === null || typeof value === 'undefined' ? '—' : value;
+                    onSelectChange(key, event) {
+                        let value = event?.detail?.value;
+                        if (value === undefined || value === null) {
+                            value = event?.target?.value ?? '';
+                        }
+                        this.filters[key] = value;
+                        this.scheduleRefresh();
+                    },
+                    scheduleRefresh() {
+                        clearTimeout(this.refreshTimer);
+                        this.refreshTimer = setTimeout(() => this.refresh(), 300);
                     },
                     async refresh() {
                         if (!this.metricsUrl) {
@@ -139,7 +191,15 @@
                         this.error = '';
 
                         try {
-                            const response = await fetch(this.metricsUrl, {
+                            const params = new URLSearchParams();
+                            Object.entries(this.filters).forEach(([key, value]) => {
+                                if (value === null || value === undefined || value === '') {
+                                    return;
+                                }
+                                params.set(key, String(value));
+                            });
+
+                            const response = await fetch(`${this.metricsUrl}?${params.toString()}`, {
                                 headers: {
                                     'Accept': 'application/json',
                                     'X-Requested-With': 'XMLHttpRequest',
@@ -148,13 +208,16 @@
                             });
 
                             if (!response.ok) {
-                                throw new Error('No se pudieron cargar los indicadores.');
+                                throw new Error('No se pudieron actualizar los indicadores.');
                             }
 
                             const payload = await response.json();
                             this.kpis = { ...(payload.kpis || {}) };
                             this.labels = { ...(payload.labels || this.labels) };
-                            this.recentRuns = Array.isArray(payload.recent_runs) ? payload.recent_runs : [];
+                            if (payload.filters) {
+                                this.filters = { ...this.filters, ...payload.filters };
+                            }
+                            window.renderAcreditacionesDashboardCharts?.(payload.charts);
                         } catch (e) {
                             this.error = e?.message || 'Error al actualizar el dashboard.';
                         } finally {

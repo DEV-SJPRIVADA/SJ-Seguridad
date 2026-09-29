@@ -277,7 +277,7 @@ class CommercialAuditTest extends TestCase
     public function test_clients_export_writes_clients_excel_audit_event(): void
     {
         $manager = $this->matrizManager();
-        $manager->givePermissionTo('comercial.matriz.view');
+        $manager->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         CommercialClient::query()->create([
             'nit' => '900888006-1',
@@ -330,7 +330,7 @@ class CommercialAuditTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.manage');
+        $user->givePermissionTo(['comercial.clients.edit', 'comercial.services.edit']);
 
         return $user;
     }
@@ -342,7 +342,7 @@ class CommercialAuditTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('manage.commercial.parameters');
+        $user->givePermissionTo('comercial.parameters.edit');
 
         return $user;
     }

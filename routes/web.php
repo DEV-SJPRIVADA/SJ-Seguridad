@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Mail\PersonalRequisitionNotification;
 use App\Models\PersonalRequisition;
+use App\Services\Access\CommercialAccessService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -43,13 +44,7 @@ Route::get('/dashboard', function () {
                         return [
                             'key' => $boardKey,
                             'label' => $boardLabel,
-                            'can_view' => $key === 'comercial' && (
-                                $user->can('view.board.comercial.gestion_clientes')
-                                || $user->can('comercial.matriz.view')
-                                || $user->can('comercial.matriz.manage')
-                                || $user->can('view.board.comercial.matriz_clientes')
-                                || $user->can('view.board.comercial.servicios_comerciales')
-                            ),
+                            'can_view' => $key === 'comercial' && app(CommercialAccessService::class)->canViewGestionClientesBoard($user),
                         ];
                     }
 

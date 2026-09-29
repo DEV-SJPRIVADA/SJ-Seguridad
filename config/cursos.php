@@ -35,4 +35,11 @@ return [
         'ACTUALIZADO' => 'ACTUALIZADO',
         'PENDIENTE' => 'PENDIENTE',
     ],
+
+    'validaciones' => [
+        'colas' => [
+            'sin_curso' => 'Activos sin curso',
+            'por_actualizar_vencidos' => 'Por actualizar / vencidos',
+        ],
+    ],
 ];

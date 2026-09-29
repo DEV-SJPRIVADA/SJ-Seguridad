@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana;
 
 use App\Models\EmployeeCurso;
+use App\Support\DocumentNumberListParser;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -10,9 +11,14 @@ use Illuminate\Support\Collection;
 
 class EmployeeCursoListService
 {
+    public function __construct(
+        private readonly DocumentNumberListParser $documentNumberListParser,
+    ) {}
+
     /**
      * @param  array{
      *     document_number?: string|null,
+     *     document_numbers?: list<string>|string|null,
      *     full_name?: string|null,
      *     curso_tipo_id?: int|string|null,
      *     vigencia?: string|null,
@@ -33,6 +39,14 @@ class EmployeeCursoListService
         $cedula = trim((string) ($filters['document_number'] ?? ''));
         if ($cedula !== '') {
             $query->where('document_number', 'like', '%'.$cedula.'%');
+        }
+
+        $documentNumbers = $this->documentNumberListParser->fromInput($filters['document_numbers'] ?? null);
+        if ($documentNumbers !== []) {
+            $query->whereIn(
+                'document_number',
+                $this->documentNumberListParser->lookupValues($documentNumbers),
+            );
         }
 
         $name = trim((string) ($filters['full_name'] ?? ''));

@@ -44,6 +44,7 @@
 ## Convenciones actuales
 - El control de acceso usa `spatie/laravel-permission`. Roles base `super-admin`, `administrador`, `usuario` los crea `database/seeders/RoleAndPermissionSeeder.php` (los antiguos `coordinador` y `consulta` fueron migrados a `usuario`).
 - Permisos del sistema, areas y tableros viven en `config/access.php` (`system_permissions`, `areas`, `boards`, `area_actions`).
+- **Permisos por pestana (modelo objetivo):** `view` / `edit` por pestana (referencia Comercial). Antes de definir permisos en pestanas o features nuevas, preguntar al usuario. Regla: [`.cursor/rules/permissions-per-tab.mdc`](.cursor/rules/permissions-per-tab.mdc).
 - La gestion inicial de usuarios esta en el modulo `admin/users`.
 - **Navegacion chrome:** areas (sidebar `.sidebar-link`), tableros y pestanas (`.module-tab`) comparten el mismo estilo pill; padding del contenedor a los botones `0.2rem`. Ver `.cursor/rules/nav-chrome-ui.mdc` y `docs/modules/branding.md`.
 - **Botones icon-only:** chrome/filtros usan `.req-manage-filters__icon-btn` (`--primary` / `--ghost` / `--danger`); acciones de fila usan `.cursos-catalogo-page__icon-btn`. No crear familias CSS por modulo. Ver `.cursor/rules/icon-buttons-ui.mdc` y `docs/modules/branding.md`.

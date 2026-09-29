@@ -11,7 +11,11 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 - **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo.
-- **Cursos** — listado paginado (carga por paginas), filtros, alta/edicion/eliminacion, documento, export Excel e import masivo. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
+- **Cursos** — listado paginado (carga por paginas), filtros (incluye **varias cédulas** con icono, exacto, sin historial), alta/edicion/eliminacion, documento, export Excel e import masivo. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
+- **Validaciones** — colas de hallazgo en vivo (sin gate de reporte):
+  - **Activos sin curso**: personas activas en Ficha sin ningún registro de curso. Con edición: **Agregar curso**.
+  - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Con edición: editar y marcar SOLICITADO.
+  - Coexiste con la cola **Nuevos sin curso** dentro de la pestaña Cursos (esa es la bandeja operativa de pendientes encolados).
 - **Catalogo** — tablero de tarjetas (como en Ficha empleados): elija **Tipos de curso** o **Escuelas** (CODIGO, NIT, NOMBRE) para gestionar cada uno.
 
 **En esta version:** el import **no** sube PDFs/imagenes; el documento se carga fila a fila. Desde **Ficha empleados** solo se consultan y descargan cursos (no se editan alla).
@@ -44,7 +48,7 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 ### Marcar varios a SOLICITADO
 
-1. Filtre el listado (por vigencia, estado, tipo, etc.).
+1. Filtre el listado (por vigencia, estado, tipo, cédula o varias cédulas con el icono de lista — exacto, máximo 500, sin historial —, etc.).
 2. Marque filas con el checkbox de la izquierda, o use el checkbox del encabezado para seleccionar **todos los elegibles** del resultado filtrado (no incluye los que ya están SOLICITADO).
 3. Pulse **Marcar SOLICITADO**.
 4. Revise el listado del modal, lea el aviso de que **no se puede revertir** desde esta acción, marque la casilla de confirmación y ejecute.
@@ -71,6 +75,8 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.12 | 2026-09-29 | Nueva pestaña Validaciones: activos sin curso + por actualizar/vencidos (una fila por curso); reutiliza cursos.view/edit; coexiste con cola Nuevos sin curso. |
+| 1.11 | 2026-09-29 | Registros: filtro varias cédulas (modal, exacto, max 500, sin historial); el Excel respeta ese filtro. |
 | 1.10 | 2026-09-17 | Selector de escuela solo muestra nombre; import identifica escuela por No.CURSO. |
 | 1.9 | 2026-09-17 | Registros: obligatoriedad de escuela; se guardan codigo y NIT. |
 | 1.8 | 2026-09-17 | Catalogo: tablero de tarjetas (tipos / escuelas) como en Ficha empleados. |

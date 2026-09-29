@@ -8,6 +8,7 @@ use App\Models\CommercialClientType;
 use App\Models\CommercialPortfolio;
 use App\Models\CommercialSector;
 use App\Models\CommercialServiceType;
+use App\Services\Access\CommercialAccessService;
 use App\Services\Comercial\CommercialAuditLogService;
 use App\Traits\HasGestionClientesTabs;
 use Illuminate\Contracts\View\View;
@@ -28,6 +29,7 @@ class CommercialParameterController extends Controller
 
     public function __construct(
         private readonly CommercialAuditLogService $auditLogService,
+        private readonly CommercialAccessService $commercialAccess,
     ) {}
 
     public function index(): View
@@ -190,12 +192,8 @@ class CommercialParameterController extends Controller
 
     private function authorizeParameters(): void
     {
-        $user = auth()->user();
-
         abort_unless(
-            $user?->can('manage.commercial.parameters')
-            || $user?->can('comercial.matriz.manage')
-            || $user?->can('manage.users'),
+            auth()->user() !== null && $this->commercialAccess->canEditParameters(auth()->user()),
             403
         );
     }

@@ -616,6 +616,48 @@ class AcreditacionesValidacionesTest extends TestCase
         }
     }
 
+    public function test_export_cola_applies_multi_cedula_exact_filter(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-08-29';
+        $this->seedBothOriginsCarga($editor->id, $fecha);
+        $this->createFichaWithRequisitionArea('992001', 'Multi Val A', 'operaciones', 'Vigilante');
+        $this->createFichaWithRequisitionArea('992002', 'Multi Val B', 'gestion_humana', 'Auxiliar');
+        $this->createFichaWithRequisitionArea('992003', 'Multi Val C', 'operaciones', 'Escolta');
+
+        $payload = $this->runAndGetPayload($editor, $fecha);
+        $token = $payload['run_token'];
+
+        $response = $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.validaciones.export', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $token,
+                'cola' => AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION,
+                'document_numbers' => '992001,992002',
+            ]));
+
+        $response->assertOk();
+
+        $temp = tempnam(sys_get_temp_dir(), 'valmulti');
+        $this->assertNotFalse($temp);
+        file_put_contents($temp, $response->streamedContent());
+
+        try {
+            $spreadsheet = IOFactory::load($temp);
+            $sheet = $spreadsheet->getActiveSheet();
+            $values = [];
+            foreach ($sheet->toArray(null, true, true, true) as $row) {
+                $values[] = implode('|', array_map(static fn ($v): string => trim((string) $v), $row));
+            }
+            $joined = implode("\n", $values);
+            $this->assertStringContainsString('992001', $joined);
+            $this->assertStringContainsString('992002', $joined);
+            $this->assertStringNotContainsString('992003', $joined);
+        } finally {
+            @unlink($temp);
+        }
+    }
+
     public function test_export_consolidated_returns_excel_with_valid_token(): void
     {
         $editor = $this->editorUser();
