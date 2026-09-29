@@ -1,6 +1,8 @@
-{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false --}}
+{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false, $canEditRequiresCourses ?? false, $canEditRequiresAcreditacion ?? false --}}
 @php
     $identityLocked = (bool) ($lockIdentityFields ?? false);
+    $showRequirementFlags = ($canEditRequiresCourses ?? false) || ($canEditRequiresAcreditacion ?? false)
+        || ($canViewRequirementFlags ?? false);
 
     $payrollExtra = static function (string $key, mixed $default = null) use ($profile): mixed {
         return old('payroll_extra.'.$key, $profile->payrollExtraValue($key, $default));
@@ -500,3 +502,54 @@
         </div>
     </div>
 </section>
+
+@if ($showRequirementFlags ?? false)
+<section class="ficha-empleados-form__section">
+    <header class="ficha-empleados-form__section-head">
+        <h3 class="ficha-empleados-form__section-title">Cursos y acreditación</h3>
+        <p class="ficha-empleados-form__section-lead">
+            Si desactiva un requisito, la persona no aparecerá en las validaciones de ese módulo.
+        </p>
+    </header>
+    <div class="form-grid form-grid--two ficha-empleados-form__grid">
+        <div class="form-field">
+            <label class="cursos-registros-page__checkbox-label">
+                @if ($canEditRequiresCourses ?? false)
+                    <input type="hidden" name="requires_courses" value="0">
+                @endif
+                <input
+                    id="requires_courses"
+                    name="requires_courses"
+                    type="checkbox"
+                    value="1"
+                    data-requirement-flag="1"
+                    data-lock-disabled="{{ ($canEditRequiresCourses ?? false) ? '0' : '1' }}"
+                    @checked(old('requires_courses', ($profile->requires_courses ?? true) ? '1' : '0') == '1')
+                    @disabled(! ($canEditRequiresCourses ?? false))
+                >
+                Requiere cursos
+            </label>
+            @error('requires_courses')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+        <div class="form-field">
+            <label class="cursos-registros-page__checkbox-label">
+                @if ($canEditRequiresAcreditacion ?? false)
+                    <input type="hidden" name="requires_acreditacion" value="0">
+                @endif
+                <input
+                    id="requires_acreditacion"
+                    name="requires_acreditacion"
+                    type="checkbox"
+                    value="1"
+                    data-requirement-flag="1"
+                    data-lock-disabled="{{ ($canEditRequiresAcreditacion ?? false) ? '0' : '1' }}"
+                    @checked(old('requires_acreditacion', ($profile->requires_acreditacion ?? true) ? '1' : '0') == '1')
+                    @disabled(! ($canEditRequiresAcreditacion ?? false))
+                >
+                Requiere acreditación
+            </label>
+            @error('requires_acreditacion')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+    </div>
+</section>
+@endif

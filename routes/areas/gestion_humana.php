@@ -187,6 +187,8 @@ Route::middleware(['password.changed'])
         Route::post('/acreditados/importar', [AcreditacionesController::class, 'importAcreditados'])->name('acreditados.import');
         Route::get('/acreditados/importar/reporte/{token}', [AcreditacionesController::class, 'downloadImportReport'])->name('acreditados.import-report');
         Route::post('/acreditados', [AcreditacionesController::class, 'storeAcreditado'])->name('acreditados.store');
+        Route::post('/acreditados/pendientes/{pending}/omitir', [AcreditacionesController::class, 'omitAcreditacionPending'])
+            ->name('acreditados.pendientes.omit');
         Route::patch('/acreditados/{acreditacionAcreditado}', [AcreditacionesController::class, 'updateAcreditado'])->name('acreditados.update');
         Route::delete('/acreditados/{acreditacionAcreditado}', [AcreditacionesController::class, 'destroyAcreditado'])->name('acreditados.destroy');
         Route::get('/reporte-diario', [AcreditacionesController::class, 'reporteDiario'])->name('reporte-diario');

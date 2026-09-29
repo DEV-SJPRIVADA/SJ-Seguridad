@@ -543,6 +543,41 @@ class CursosController extends Controller
 
     public function store(StoreEmployeeCursoRequest $request): RedirectResponse
     {
+        if (! $request->wantsCourseRecord()) {
+            $cedula = (string) $request->validated('document_number');
+
+            EmployeeFichaProfile::query()
+                ->where('document_number', $cedula)
+                ->update(['requires_courses' => false]);
+
+            $pending = EmployeeCursoPending::query()
+                ->forDocumentNumber($cedula)
+                ->pending()
+                ->first();
+
+            if ($pending !== null) {
+                $this->pendingService->omit(
+                    $pending,
+                    'No requiere cursos',
+                    auth()->id(),
+                );
+            }
+
+            $this->auditLogService->logEvent(
+                eventType: 'employee_curso',
+                action: 'disable_requires_courses',
+                metadata: [
+                    'document_number' => $cedula,
+                    'requires_courses' => false,
+                    'pending_omitted' => $pending !== null,
+                ],
+                userId: (int) auth()->id(),
+            );
+
+            return $this->redirectAfterCursoMutation($request)
+                ->with('status', 'Ficha actualizada: la persona no requiere cursos.');
+        }
+
         $validated = $request->validated();
         $payload = $this->payloadFromValidated($validated);
 
@@ -567,6 +602,10 @@ class CursosController extends Controller
             $curso,
             auth()->id(),
         );
+
+        EmployeeFichaProfile::query()
+            ->where('document_number', $curso->document_number)
+            ->update(['requires_courses' => true]);
 
         $this->auditLogService->logEvent(
             eventType: 'employee_curso',

@@ -9,7 +9,7 @@
         <div class="app-container">
             <div class="panel-heading-row">
                 <h2 class="panel-title panel-title--page">Cursos</h2>
-                <p class="panel-text">Gestion humana — registros de cursos por persona</p>
+                <p class="panel-text">Gestion humana — registros de cursos por persona (solo activos en Ficha)</p>
             </div>
         </div>
     </x-slot>
@@ -264,114 +264,11 @@
                     'show' => $showNuevoModal,
                 ])
 
-                <div
-                    class="cursos-registros-page__modal"
-                    x-show="editOpen"
-                    x-cloak
-                    @keydown.escape.window="editOpen = false"
-                >
-                    <div class="cursos-registros-page__modal-backdrop" @click="editOpen = false"></div>
-                    <div class="cursos-registros-page__modal-panel panel" role="dialog" aria-modal="true">
-                        <div class="panel__header panel-heading-row">
-                            <h3 class="panel-title">Editar registro</h3>
-                            <button type="button" class="btn btn--ghost btn--sm" @click="editOpen = false">Cerrar</button>
-                        </div>
-                        <div class="panel__body">
-                            <form method="POST" :action="editForm.update_url" class="cursos-registros-page__form">
-                                @csrf
-                                @method('PATCH')
-                                <div class="cursos-registros-page__form-grid">
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_document_number">CEDULA</label>
-                                        <input
-                                            id="edit_document_number"
-                                            name="document_number"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="50"
-                                            required
-                                            x-model="editForm.document_number"
-                                            @blur="lookupName($event.target.value, 'edit')"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_full_name">NOMBRE COMPLETO</label>
-                                        <input
-                                            id="edit_full_name"
-                                            name="full_name"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="255"
-                                            required
-                                            x-model="editForm.full_name"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_curso_tipo_id">TIPO CURSO</label>
-                                        <select id="edit_curso_tipo_id" name="curso_tipo_id" class="form-input" required x-model="editForm.curso_tipo_id">
-                                            @foreach ($tipoOptions as $opt)
-                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_curso_escuela_id">ESCUELA</label>
-                                        <select id="edit_curso_escuela_id" name="curso_escuela_id" class="form-input" required x-model="editForm.curso_escuela_id">
-                                            <option value="">Seleccionar escuela</option>
-                                            @foreach ($escuelaOptions as $opt)
-                                                <option value="{{ $opt['value'] }}">{{ $opt['label'] }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_fecha_expedicion">FECHA EXPEDICION</label>
-                                        <input
-                                            id="edit_fecha_expedicion"
-                                            name="fecha_expedicion"
-                                            type="date"
-                                            class="form-input"
-                                            required
-                                            x-model="editForm.fecha_expedicion"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_numero_curso">No.CURSO</label>
-                                        <input
-                                            id="edit_numero_curso"
-                                            name="numero_curso"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="100"
-                                            required
-                                            x-model="editForm.numero_curso"
-                                        >
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="edit_estado">ESTADO</label>
-                                        <select id="edit_estado" name="estado" class="form-input" x-model="editForm.estado" required>
-                                            <option value="SOLICITADO">SOLICITADO</option>
-                                            <option value="ACTUALIZADO">ACTUALIZADO</option>
-                                            <option value="PENDIENTE">PENDIENTE</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-field cursos-registros-page__form-span">
-                                        <label class="form-label" for="edit_observaciones">OBSERVACIONES</label>
-                                        <textarea
-                                            id="edit_observaciones"
-                                            name="observaciones"
-                                            class="form-input"
-                                            rows="2"
-                                            x-model="editForm.observaciones"
-                                        ></textarea>
-                                    </div>
-                                </div>
-                                <div class="cursos-registros-page__form-actions">
-                                    <button type="submit" class="btn btn--primary">Actualizar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                @include('areas.gestion_humana.cursos.partials.editar-modal', [
+                    'tipoOptions' => $tipoOptions,
+                    'escuelaOptions' => $escuelaOptions,
+                    'estadoOptions' => $estadoOptions,
+                ])
 
                 <div
                     class="cursos-registros-page__modal"
@@ -551,6 +448,7 @@
                         omit_reason: '',
                     },
                     editOpen: false,
+                    editIdentityLocked: false,
                     editForm: {
                         id: null,
                         document_number: '',
@@ -668,6 +566,33 @@
                         }
                         this.omitOpen = false;
                     },
+                    syncEditSelect(selector, value) {
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector(selector);
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
+                    },
+                    syncEditSelects() {
+                        this.syncEditSelect('.js-edit-curso-tipo-select', this.editForm.curso_tipo_id);
+                        this.syncEditSelect('.js-edit-curso-escuela-select', this.editForm.curso_escuela_id);
+                        this.syncEditSelect('.js-edit-estado-select', this.editForm.estado);
+                    },
+                    closeEdit() {
+                        this.editOpen = false;
+                    },
+                    unlockEditIdentity() {
+                        this.editIdentityLocked = false;
+                        this.editForm.document_number = '';
+                        this.editForm.full_name = '';
+                    },
                     openCreateBlank() {
                         window.dispatchEvent(new CustomEvent('cursos-nuevo-reset'));
                         this.$dispatch('open-modal', 'cursos-nuevo');
@@ -682,10 +607,26 @@
                         this.$dispatch('open-modal', 'cursos-nuevo');
                     },
                     openEdit(row) {
-                        this.editForm = { ...row };
+                        this.editForm = {
+                            id: row.id || null,
+                            document_number: row.document_number || '',
+                            full_name: row.full_name || '',
+                            curso_tipo_id: row.curso_tipo_id || '',
+                            curso_escuela_id: row.curso_escuela_id || '',
+                            fecha_expedicion: row.fecha_expedicion || '',
+                            numero_curso: row.numero_curso || '',
+                            estado: row.estado || 'ACTUALIZADO',
+                            observaciones: row.observaciones || '',
+                            update_url: row.update_url || '',
+                        };
+                        this.editIdentityLocked = Boolean(this.editForm.document_number);
                         this.editOpen = true;
                         this.bulkConfirmOpen = false;
                         this.omitOpen = false;
+                        this.syncEditSelects();
+                        if (this.editForm.document_number) {
+                            this.lookupName(this.editForm.document_number, 'edit');
+                        }
                     },
                     async lookupName(cedula, target) {
                         const value = String(cedula || '').trim();
@@ -705,7 +646,9 @@
                                 return;
                             }
                             if (target === 'edit') {
+                                this.editForm.document_number = data.document_number || value;
                                 this.editForm.full_name = data.full_name;
+                                this.editIdentityLocked = true;
                             }
                         } catch (e) {
                             // ignore lookup errors

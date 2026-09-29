@@ -1,4 +1,11 @@
 {{-- Variables: $tipoOptions, $escuelaOptions, $estadoOptions, $lookupUrl, $show --}}
+@php
+    $requiresCoursesOld = old('requires_courses', '1');
+    $requiresCoursesChecked = $requiresCoursesOld === true
+        || $requiresCoursesOld === 1
+        || $requiresCoursesOld === '1'
+        || $requiresCoursesOld === 'true';
+@endphp
 <x-modal name="cursos-nuevo" maxWidth="2xl" :show="$show" focusable>
     <div
         class="modal-card ficha-empleados-masivos-modal cursos-registros-page__create-modal"
@@ -7,6 +14,7 @@
             identityLocked: {{ $show && old('document_number') ? 'true' : 'false' }},
             documentNumber: @js(old('document_number', '')),
             fullName: @js(old('full_name', '')),
+            requiresCourses: {{ $requiresCoursesChecked ? 'true' : 'false' }},
             async lookupName(cedula) {
                 const value = String(cedula || '').trim();
                 if (!value || this.identityLocked) return;
@@ -35,7 +43,7 @@
             },
         }"
         x-on:cursos-nuevo-prefill.window="applyPrefill($event.detail)"
-        x-on:cursos-nuevo-reset.window="unlockIdentity()"
+        x-on:cursos-nuevo-reset.window="unlockIdentity(); requiresCourses = true"
     >
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
@@ -46,6 +54,7 @@
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo registro</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
                         La cédula y el nombre se toman de Ficha empleados (solo lectura tras la búsqueda).
+                        Si desactiva «Requiere cursos», puede guardar solo esa marca en ficha sin datos del curso.
                     </p>
                 </div>
             </div>
@@ -115,102 +124,130 @@
                         type="text"
                         class="form-input"
                         maxlength="255"
-                        required
+                        x-bind:required="requiresCourses"
                         readonly
                         x-model="fullName"
                         x-ref="createName"
                     >
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_curso_tipo_id">TIPO CURSO</label>
-                    <x-searchable-select
-                        id="create_curso_tipo_id"
-                        name="curso_tipo_id"
-                        :options="$tipoOptions"
-                        :value="old('curso_tipo_id')"
-                        placeholder="Seleccionar tipo"
-                        :required="true"
-                    />
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_curso_escuela_id">ESCUELA</label>
-                    <x-searchable-select
-                        id="create_curso_escuela_id"
-                        name="curso_escuela_id"
-                        :options="$escuelaOptions"
-                        :value="old('curso_escuela_id')"
-                        placeholder="Seleccionar escuela"
-                        :required="true"
-                    />
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_fecha_expedicion">FECHA EXPEDICION</label>
-                    <input
-                        id="create_fecha_expedicion"
-                        name="fecha_expedicion"
-                        type="date"
-                        class="form-input"
-                        required
-                        value="{{ old('fecha_expedicion') }}"
-                    >
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_numero_curso">No.CURSO</label>
-                    <input
-                        id="create_numero_curso"
-                        name="numero_curso"
-                        type="text"
-                        class="form-input"
-                        maxlength="100"
-                        required
-                        value="{{ old('numero_curso') }}"
-                    >
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_estado">ESTADO</label>
-                    <x-searchable-select
-                        id="create_estado"
-                        name="estado"
-                        :options="$estadoOptions"
-                        :value="old('estado', \App\Models\EmployeeCurso::ESTADO_ACTUALIZADO)"
-                        placeholder="Seleccione estado"
-                        :required="true"
-                    />
-                </div>
                 <div class="form-field cursos-registros-page__form-span">
-                    <label class="form-label" for="create_observaciones">OBSERVACIONES</label>
-                    <textarea
-                        id="create_observaciones"
-                        name="observaciones"
-                        class="form-input"
-                        rows="2"
-                    >{{ old('observaciones') }}</textarea>
-                </div>
-                <div class="form-field cursos-registros-page__form-span">
-                    <label class="form-label" for="create_document">DOCUMENTO (opcional)</label>
-                    <div class="cursos-registros-page__file-picker" x-data="{ fileName: '' }">
+                    <label class="cursos-registros-page__checkbox-label">
+                        <input type="hidden" name="requires_courses" value="0">
                         <input
-                            id="create_document"
-                            name="document"
-                            type="file"
-                            class="cursos-registros-page__file-input"
-                            accept=".pdf,.jpg,.jpeg,.png,.webp"
-                            @change="fileName = $event.target.files?.[0]?.name || ''"
+                            id="create_requires_courses"
+                            name="requires_courses"
+                            type="checkbox"
+                            value="1"
+                            x-model="requiresCourses"
                         >
-                        <span class="cursos-registros-page__file-name" x-text="fileName || 'Sin archivo seleccionado'"></span>
-                        <div class="cursos-registros-page__file-actions">
-                            <label for="create_document" class="btn btn--secondary btn--sm">
-                                <x-lucide-upload width="15" height="15" aria-hidden="true" />
-                                Elegir archivo
-                            </label>
+                        Esta persona requiere cursos
+                    </label>
+                    <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;" x-show="!requiresCourses" x-cloak>
+                        Al guardar se actualizará la ficha (no requiere cursos) y no se creará un registro de curso.
+                    </p>
+                </div>
+
+                <fieldset
+                    class="cursos-registros-page__form-span"
+                    style="border:0;margin:0;padding:0;min-inline-size:0;"
+                    :disabled="!requiresCourses"
+                >
+                    <div class="cursos-registros-page__form-grid" :class="{ 'opacity-50': !requiresCourses }">
+                        <div class="form-field">
+                            <label class="form-label" for="create_curso_tipo_id">TIPO CURSO</label>
+                            <x-searchable-select
+                                id="create_curso_tipo_id"
+                                name="curso_tipo_id"
+                                :options="$tipoOptions"
+                                :value="old('curso_tipo_id')"
+                                placeholder="Seleccionar tipo"
+                                :required="true"
+                            />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_curso_escuela_id">ESCUELA</label>
+                            <x-searchable-select
+                                id="create_curso_escuela_id"
+                                name="curso_escuela_id"
+                                :options="$escuelaOptions"
+                                :value="old('curso_escuela_id')"
+                                placeholder="Seleccionar escuela"
+                                :required="true"
+                            />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_fecha_expedicion">FECHA EXPEDICION</label>
+                            <input
+                                id="create_fecha_expedicion"
+                                name="fecha_expedicion"
+                                type="date"
+                                class="form-input"
+                                required
+                                value="{{ old('fecha_expedicion') }}"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_numero_curso">No.CURSO</label>
+                            <input
+                                id="create_numero_curso"
+                                name="numero_curso"
+                                type="text"
+                                class="form-input"
+                                maxlength="100"
+                                required
+                                value="{{ old('numero_curso') }}"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_estado">ESTADO</label>
+                            <x-searchable-select
+                                id="create_estado"
+                                name="estado"
+                                :options="$estadoOptions"
+                                :value="old('estado', \App\Models\EmployeeCurso::ESTADO_ACTUALIZADO)"
+                                placeholder="Seleccione estado"
+                                :required="true"
+                            />
+                        </div>
+                        <div class="form-field cursos-registros-page__form-span">
+                            <label class="form-label" for="create_observaciones">OBSERVACIONES</label>
+                            <textarea
+                                id="create_observaciones"
+                                name="observaciones"
+                                class="form-input"
+                                rows="2"
+                            >{{ old('observaciones') }}</textarea>
+                        </div>
+                        <div class="form-field cursos-registros-page__form-span">
+                            <label class="form-label" for="create_document">DOCUMENTO (opcional)</label>
+                            <div class="cursos-registros-page__file-picker" x-data="{ fileName: '' }">
+                                <input
+                                    id="create_document"
+                                    name="document"
+                                    type="file"
+                                    class="cursos-registros-page__file-input"
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                    @change="fileName = $event.target.files?.[0]?.name || ''"
+                                >
+                                <span class="cursos-registros-page__file-name" x-text="fileName || 'Sin archivo seleccionado'"></span>
+                                <div class="cursos-registros-page__file-actions">
+                                    <label for="create_document" class="btn btn--secondary btn--sm">
+                                        <x-lucide-upload width="15" height="15" aria-hidden="true" />
+                                        Elegir archivo
+                                    </label>
+                                </div>
+                            </div>
+                            <p class="panel-text">PDF, JPG, PNG o WEBP. Máximo 10 MB.</p>
                         </div>
                     </div>
-                    <p class="panel-text">PDF, JPG, PNG o WEBP. Máximo 10 MB.</p>
-                </div>
+                </fieldset>
             </div>
             <div class="cursos-registros-page__form-actions">
                 <button type="button" class="btn btn--secondary" x-on:click="$dispatch('close-modal', 'cursos-nuevo')">Cancelar</button>
-                <button type="submit" class="btn btn--primary">Guardar</button>
+                <button type="submit" class="btn btn--primary">
+                    <span x-show="requiresCourses">Guardar</span>
+                    <span x-show="!requiresCourses" x-cloak>Guardar (no requiere cursos)</span>
+                </button>
             </div>
         </form>
     </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\GestionHumana;
 
 use App\Http\Requests\GestionHumana\Concerns\EmployeeFichaProfileFieldRules;
+use App\Services\Access\FichaEmpleadosAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateEmployeeFichaProfileRequest extends FormRequest
@@ -11,7 +12,9 @@ class UpdateEmployeeFichaProfileRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return $this->user()?->can('ficha_empleados.manage') ?? false;
+        $user = $this->user();
+
+        return $user !== null && app(FichaEmpleadosAccessService::class)->canManage($user);
     }
 
     /**

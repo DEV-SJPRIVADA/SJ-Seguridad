@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana;
 
 use App\Models\EmployeeCurso;
+use App\Models\EmployeeFichaProfile;
 use App\Support\DocumentNumberListParser;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,6 +32,8 @@ class EmployeeCursoListService
     public function filteredQuery(array $filters, bool $ordered = true): Builder
     {
         $query = EmployeeCurso::query()->with(['cursoTipo', 'cursoEscuela']);
+
+        $this->constrainToActiveFicha($query);
 
         if ($ordered) {
             $query->orderByDesc('fecha_expedicion')->orderByDesc('id');
@@ -96,6 +99,22 @@ class EmployeeCursoListService
         }
 
         return $query;
+    }
+
+    /**
+     * Dashboard y registros solo operan sobre personal activo en Ficha.
+     */
+    private function constrainToActiveFicha(Builder $query): void
+    {
+        $query->whereExists(function ($sub): void {
+            $sub->selectRaw('1')
+                ->from('employee_ficha_profiles')
+                ->whereColumn(
+                    'employee_ficha_profiles.document_number',
+                    'employee_cursos.document_number',
+                )
+                ->where('employee_ficha_profiles.employment_status', EmployeeFichaProfile::STATUS_ACTIVO);
+        });
     }
 
     /**

@@ -67,6 +67,7 @@ final class EmployeeCursoValidacionesService
     {
         $query = EmployeeFichaProfile::query()
             ->where('employment_status', EmployeeFichaProfile::STATUS_ACTIVO)
+            ->where('requires_courses', true)
             ->whereNotExists(function ($sub): void {
                 $sub->selectRaw('1')
                     ->from('employee_cursos')
@@ -114,7 +115,8 @@ final class EmployeeCursoValidacionesService
                 $sub->selectRaw('1')
                     ->from('employee_ficha_profiles as efp')
                     ->whereColumn('efp.document_number', 'employee_cursos.document_number')
-                    ->where('efp.employment_status', EmployeeFichaProfile::STATUS_ACTIVO);
+                    ->where('efp.employment_status', EmployeeFichaProfile::STATUS_ACTIVO)
+                    ->where('efp.requires_courses', true);
             })
             ->where(function ($q) use ($actualizarThreshold): void {
                 $q->whereNull('fecha_expedicion')

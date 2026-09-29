@@ -15,8 +15,11 @@ use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
+use App\Services\Access\CursosAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\GestionHumana\EmployeeAcreditacionPendingService;
 use App\Services\GestionHumana\EmployeeCursoDocumentService;
 use App\Services\GestionHumana\EmployeeCursoPendingService;
 use App\Services\GestionHumana\EmployeeFichaAuditLogService;
@@ -61,6 +64,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeTerminationFollowupService $terminationFollowupService,
         private readonly EmployeeCursoDocumentService $cursoDocumentService,
         private readonly EmployeeCursoPendingService $cursoPendingService,
+        private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
     ) {}
 
     public function index(Request $request): View
@@ -505,6 +509,10 @@ class FichaEmpleadosController extends Controller
         $this->authorizeView();
 
         $canManage = $this->canManage();
+        $user = auth()->user();
+        $canEditRequiresCourses = $canManage && $user !== null && app(CursosAccessService::class)->canEdit($user);
+        $canEditRequiresAcreditacion = $canManage && $user !== null && app(AcreditacionesAccessService::class)->canEdit($user);
+        $canViewRequirementFlags = $canEditRequiresCourses || $canEditRequiresAcreditacion;
         $fichaEntry->load(['requisition.position', 'requisition.city', 'requisition.client', 'requisition.contractType', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
 
@@ -540,6 +548,9 @@ class FichaEmpleadosController extends Controller
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
             'employeeCursos' => $employeeCursos,
             'canViewEmployeeCursos' => $this->fichaEmpleadosAccess->canView(auth()->user()),
+            'canEditRequiresCourses' => $canEditRequiresCourses,
+            'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion,
+            'canViewRequirementFlags' => $canViewRequirementFlags,
         ]);
     }
 
@@ -604,6 +615,16 @@ class FichaEmpleadosController extends Controller
         $attributes = $this->mergeProfilePayrollExtra($profile, $validated);
         $attributes['phone_secondary'] = $request->input('phone_secondary');
         $attributes = $this->mergeWorkCityFromRequisitionIfMissing($fichaEntry, $attributes);
+
+        $user = $request->user();
+        if ($user !== null && $this->canManage()) {
+            if (app(CursosAccessService::class)->canEdit($user)) {
+                $attributes['requires_courses'] = $request->boolean('requires_courses');
+            }
+            if (app(AcreditacionesAccessService::class)->canEdit($user)) {
+                $attributes['requires_acreditacion'] = $request->boolean('requires_acreditacion');
+            }
+        }
 
         $firstSurname = trim((string) ($attributes['first_surname'] ?? $profile->first_surname));
         $secondSurname = array_key_exists('second_surname', $attributes) ? trim((string) $attributes['second_surname']) : $profile->second_surname;
@@ -827,13 +848,16 @@ class FichaEmpleadosController extends Controller
             return;
         }
 
-        $this->cursoPendingService->enqueueIfEligible([
+        $payload = [
             'document_number' => $documentNumber,
             'full_name' => $profile?->full_name ?? $entry->hired_full_name,
             'employee_ficha_profile_id' => $profile?->id,
             'personal_requisition_ficha_entry_id' => $entry->id,
             'enqueued_by' => $userId,
-        ]);
+        ];
+
+        $this->cursoPendingService->enqueueIfEligible($payload);
+        $this->acreditacionPendingService->enqueueIfEligible($payload);
     }
 
     /**

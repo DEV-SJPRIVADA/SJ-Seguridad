@@ -23,6 +23,7 @@ class EmployeeFichaImportService
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaImportValueNormalizer $valueNormalizer,
         private readonly EmployeeCursoPendingService $cursoPendingService,
+        private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
         private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
     ) {}
 
@@ -111,13 +112,15 @@ class EmployeeFichaImportService
                     }
 
                     if ($enteredFicha && $profile !== null) {
-                        $this->cursoPendingService->enqueueIfEligible([
+                        $pendingPayload = [
                             'document_number' => $cedula,
                             'full_name' => $profile->full_name,
                             'employee_ficha_profile_id' => $profile->id,
                             'personal_requisition_ficha_entry_id' => $entry?->id,
                             'enqueued_by' => $userId,
-                        ]);
+                        ];
+                        $this->cursoPendingService->enqueueIfEligible($pendingPayload);
+                        $this->acreditacionPendingService->enqueueIfEligible($pendingPayload);
                     }
                 });
             } catch (\Throwable $e) {

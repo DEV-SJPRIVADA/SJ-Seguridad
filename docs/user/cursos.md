@@ -10,12 +10,12 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
-- **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo.
-- **Cursos** — listado paginado (carga por paginas), filtros (incluye **varias cédulas** con icono, exacto, sin historial), alta/edicion/eliminacion, documento, export Excel e import masivo. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
+- **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo. Solo considera personal **activo en Ficha**.
+- **Cursos** — listado paginado (carga por paginas), filtros (incluye **varias cédulas** con icono, exacto, sin historial), alta/edicion/eliminacion, documento, export Excel e import masivo. Solo lista cursos de personal **activo en Ficha**. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
 - **Validaciones** — colas de hallazgo en vivo (sin gate de reporte):
-  - **Activos sin curso**: personas activas en Ficha sin ningún registro de curso. Con edición: **Agregar curso**.
+  - **Activos sin curso**: personas activas en Ficha con **Requiere cursos** activo y sin ningún registro de curso. Con edición: **Agregar curso**.
   - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Con edición: editar y marcar SOLICITADO.
-  - Coexiste con la cola **Nuevos sin curso** dentro de la pestaña Cursos (esa es la bandeja operativa de pendientes encolados).
+  - Coexiste con la cola **Nuevos sin curso** dentro de la pestaña Cursos (pendientes al entrar a ficha; **Omitir** si no aplica cursos). Al guardar un curso desde el modal debe dejar activo «Requiere cursos»; en **Ficha empleados** puede ajustarse con permiso de ficha + cursos.
 - **Catalogo** — tablero de tarjetas (como en Ficha empleados): elija **Tipos de curso** o **Escuelas** (CODIGO, NIT, NOMBRE) para gestionar cada uno.
 
 **En esta version:** el import **no** sube PDFs/imagenes; el documento se carga fila a fila. Desde **Ficha empleados** solo se consultan y descargan cursos (no se editan alla).

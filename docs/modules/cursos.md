@@ -12,13 +12,15 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 - Pestanas **Dashboard**, **Cursos** (registros), **Validaciones** y **Catalogo** (tablero de tarjetas: tipos + escuelas; `?catalog=`).
 - Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit` (bypass `manage.users`). **Validaciones** reutiliza `cursos.view` / `cursos.edit` (sin claves nuevas por pestana).
 - **Validaciones** (colas en vivo, DataTables server-side):
-  - `sin_curso`: perfiles Ficha **activo** sin ninguna fila en `employee_cursos`.
+  - `sin_curso`: perfiles Ficha **activo** con `requires_courses = true` y sin ninguna fila en `employee_cursos`.
   - `por_actualizar_vencidos`: una fila por curso con vigencia `ACTUALIZAR` o `VENCIDO` de personas activas.
   - Acciones con `cursos.edit`: Agregar curso (sin curso), editar + marcar SOLICITADO (por actualizar/vencidos).
-  - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (pending queue).
+  - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (`employee_curso_pending`; solo `cursos.edit`; encola al **entrar a ficha** post-deploy, no retroactivo).
+  - Ficha: `employee_ficha_profiles.requires_courses` (default true). Modal «Nuevo registro»: con check activo exige datos de curso; desactivado solo actualiza ficha (`requires_courses=false`) y omite pending si existe. Editable en ficha con `ficha_empleados.manage` + `cursos.edit`.
   - Servicios: `EmployeeCursoValidacionesService`, `EmployeeCursoValidacionesDatatableService`.
-- Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton).
+- Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton). **Solo personal activo en Ficha** (misma regla que Registros vía `EmployeeCursoListService`).
   - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
+- Registros / export / bulk-selectable: solo cursos cuya cédula tiene `employee_ficha_profiles.employment_status = activo`.
 - Unicidad de registro: `(document_number, numero_curso)`.
 - Filtro multi-cédula: query `document_numbers` (exacto, max 500, modal compartido `<x-multi-cedula-filter>`; sin historial). Coexiste con `document_number` parcial.
 - Al crear/editar registro: seleccionar **escuela** del catalogo (solo nombre en el selector); se guardan snapshot `escuela_codigo`, `escuela_nit` y `escuela_nombre` (mas FK `curso_escuela_id`).
