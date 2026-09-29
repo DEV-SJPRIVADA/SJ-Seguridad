@@ -1,7 +1,7 @@
 <x-app-layout>
     @php
         $showNuevoModal = $canEdit && $errors->any() && ! $errors->has('import_file');
-        $showMasivosModal = $canEdit && $errors->has('import_file');
+        $showMasivosModal = $canEdit && $errors->has('import_file') && ! ($colaMode ?? false);
     @endphp
 
     <x-slot name="header">
@@ -17,8 +17,10 @@
             bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
             exportApoUrl: @js($exportApoUrl ?? null),
             activeFilterQuery: @js($activeFilterQuery ?? []),
+            colaMode: @js($colaMode ?? false),
         })"
         @acreditaciones-open-edit.window="openEdit($event.detail)"
+        @open-acreditaciones-nuevo-from-pending.window="openCreateFromPending($event.detail)"
     >
         <div class="app-container">
             @php
@@ -40,6 +42,7 @@
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-shell__filters">
+                        @unless ($colaMode ?? false)
                         <form method="GET" action="{{ route('gestion-humana.acreditaciones.acreditados') }}" class="req-manage-filters">
                             <div class="cursos-registros-page__filters">
                                 <div class="form-field">
@@ -147,61 +150,86 @@
                                 El rango de fechas filtra por <strong>VIGEN.ACR</strong> (vencimiento).
                             </p>
                         </form>
+                        @endunless
 
                         <div class="cursos-registros-page__table-toolbar">
-                            <p class="req-manage-filters__meta">
-                                <strong id="acreditados-count">…</strong>
-                                <span id="acreditados-count-label">registro(s)</span>
-                            </p>
+                            @if ($colaMode ?? false)
+                                <p class="req-manage-filters__meta">
+                                    {{ $pendingRows->count() }} nuevo(s) sin acreditación
+                                    <a href="{{ $colaExitUrl }}" class="cursos-registros-page__cola-exit">Volver a acreditados</a>
+                                </p>
+                            @else
+                                <p class="req-manage-filters__meta">
+                                    <strong id="acreditados-count">…</strong>
+                                    <span id="acreditados-count-label">registro(s)</span>
+                                </p>
+                            @endif
 
                             @if ($canEdit)
                                 <div class="cursos-registros-page__table-actions">
-                                    <button
-                                        type="button"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                        x-show="selectedCount > 0"
-                                        x-cloak
-                                        x-on:click="cargarEnExportApo()"
-                                        title="Cargar en Export Apo"
-                                        aria-label="Cargar en Export Apo"
+                                    <a
+                                        href="{{ ($colaMode ?? false) ? $colaExitUrl : $colaQueueUrl }}"
+                                        class="ficha-empleados-filters__pending-link cursos-registros-page__nuevos-link {{ ($colaMode ?? false) ? 'is-active' : '' }}"
+                                        title="Nuevos sin acreditación"
+                                        aria-label="Nuevos sin acreditación: {{ number_format($pendingCount ?? 0) }}"
                                     >
-                                        <x-lucide-file-output width="18" height="18" aria-hidden="true" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="btn btn--primary btn--sm acreditaciones-bulk-trigger"
-                                        x-show="selectedCount > 0"
-                                        x-cloak
-                                        x-on:click="openBulkUpdate()"
-                                        title="Actualizar seleccionados"
-                                    >
-                                        <x-lucide-list-checks width="16" height="16" aria-hidden="true" />
-                                        <span>Actualizar</span>
-                                        <span class="acreditaciones-bulk-trigger__count" x-text="selectedCount"></span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                        title="Plantilla masivos — importar"
-                                        aria-label="Plantilla masivos — importar"
-                                        x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-masivos')"
-                                    >
-                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                        title="Nuevo acreditado"
-                                        aria-label="Nuevo acreditado"
-                                        x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-nuevo')"
-                                    >
-                                        <x-lucide-plus width="18" height="18" aria-hidden="true" />
-                                    </button>
+                                        <x-ri-pass-pending-fill width="24" height="24" aria-hidden="true" />
+                                        <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount ?? 0) }}</span>
+                                    </a>
+
+                                    @unless ($colaMode ?? false)
+                                        <button
+                                            type="button"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                            x-show="selectedCount > 0"
+                                            x-cloak
+                                            x-on:click="cargarEnExportApo()"
+                                            title="Cargar en Export Apo"
+                                            aria-label="Cargar en Export Apo"
+                                        >
+                                            <x-lucide-file-output width="18" height="18" aria-hidden="true" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn btn--primary btn--sm acreditaciones-bulk-trigger"
+                                            x-show="selectedCount > 0"
+                                            x-cloak
+                                            x-on:click="openBulkUpdate()"
+                                            title="Actualizar seleccionados"
+                                        >
+                                            <x-lucide-list-checks width="16" height="16" aria-hidden="true" />
+                                            <span>Actualizar</span>
+                                            <span class="acreditaciones-bulk-trigger__count" x-text="selectedCount"></span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                            title="Plantilla masivos — importar"
+                                            aria-label="Plantilla masivos — importar"
+                                            x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-masivos')"
+                                        >
+                                            <x-lucide-upload width="18" height="18" aria-hidden="true" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                            title="Nuevo acreditado"
+                                            aria-label="Nuevo acreditado"
+                                            x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-nuevo')"
+                                        >
+                                            <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                        </button>
+                                    @endunless
                                 </div>
                             @endif
                         </div>
                     </div>
 
+                    @if ($colaMode ?? false)
+                        @include('areas.gestion_humana.acreditaciones.partials.nuevos-sin-acreditacion-table', [
+                            'pendingRows' => $pendingRows,
+                        ])
+                    @else
                     <div class="data-table-wrap req-manage-shell__table cursos-registros-page__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')
                         <table
@@ -244,17 +272,72 @@
                             <tbody></tbody>
                         </table>
                     </div>
+                    @endif
                 </div>
             </div>
 
             @if ($canEdit)
                 @include('areas.gestion_humana.acreditaciones.partials.bulk-update-modal')
 
+                <div
+                    class="cursos-registros-page__modal"
+                    x-show="omitOpen"
+                    x-cloak
+                    @keydown.escape.window="closeOmit()"
+                >
+                    <div class="cursos-registros-page__modal-backdrop" @click="closeOmit()"></div>
+                    <div
+                        class="cursos-registros-page__modal-panel panel cursos-registros-page__omit-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="acreditaciones-omit-title"
+                    >
+                        <div class="panel__header panel-heading-row">
+                            <h3 id="acreditaciones-omit-title" class="panel-title">No aplica / omitir</h3>
+                            <button type="button" class="btn btn--ghost btn--sm" @click="closeOmit()">Cerrar</button>
+                        </div>
+                        <div class="panel__body">
+                            <p class="panel-text">
+                                Se omitirá a
+                                <strong x-text="omitForm.full_name || omitForm.document_number"></strong>
+                                (cédula <span x-text="omitForm.document_number"></span>) de la cola «Nuevos sin acreditación».
+                                En ficha quedará marcado que <strong>no requiere acreditación</strong>.
+                            </p>
+                            <form
+                                method="POST"
+                                :action="omitForm.omit_url"
+                                @submit="submittingOmit = true"
+                            >
+                                @csrf
+                                <div class="form-field">
+                                    <label class="form-label" for="acreditaciones_omit_reason">Motivo (opcional)</label>
+                                    <textarea
+                                        id="acreditaciones_omit_reason"
+                                        name="omit_reason"
+                                        class="form-input"
+                                        rows="2"
+                                        maxlength="1000"
+                                        x-model="omitForm.omit_reason"
+                                    ></textarea>
+                                </div>
+                                <div class="cursos-registros-page__form-actions">
+                                    <button type="button" class="btn btn--secondary" @click="closeOmit()">Cancelar</button>
+                                    <button type="submit" class="btn btn--primary" :disabled="submittingOmit">
+                                        <span x-show="! submittingOmit">Confirmar omitir</span>
+                                        <span x-show="submittingOmit">Guardando…</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 @include('areas.gestion_humana.acreditaciones.partials.nuevo-modal', [
                     'cargoApoOptions' => $cargoApoOptions,
                     'renovacionOptions' => $renovacionOptions,
                     'lookupUrl' => $lookupUrl,
                     'show' => $showNuevoModal,
+                    'returnContext' => ($colaMode ?? false) ? 'nuevos_sin_acreditacion' : null,
                 ])
 
                 @include('areas.gestion_humana.acreditaciones.partials.masivos-modal', [
@@ -283,6 +366,15 @@
                     bulkUpdateUrl: config.bulkUpdateUrl || '',
                     exportApoUrl: config.exportApoUrl || '',
                     activeFilterQuery: config.activeFilterQuery || {},
+                    colaMode: !!config.colaMode,
+                    omitOpen: false,
+                    submittingOmit: false,
+                    omitForm: {
+                        document_number: '',
+                        full_name: '',
+                        omit_url: '',
+                        omit_reason: '',
+                    },
                     bulkSelectableRows: [],
                     bulkSelectableLoading: false,
                     selectedMap: {},
@@ -510,6 +602,34 @@
                                 }
                             } catch (e) {}
                         });
+                    },
+                    openOmit(row) {
+                        this.omitForm = {
+                            document_number: row.document_number || '',
+                            full_name: row.full_name || '',
+                            omit_url: row.omit_url || '',
+                            omit_reason: '',
+                        };
+                        this.submittingOmit = false;
+                        this.omitOpen = true;
+                        this.editOpen = false;
+                        this.bulkUpdateOpen = false;
+                    },
+                    closeOmit() {
+                        if (this.submittingOmit) {
+                            return;
+                        }
+                        this.omitOpen = false;
+                    },
+                    openCreateFromPending(row) {
+                        window.dispatchEvent(new CustomEvent('acreditaciones-nuevo-prefill', {
+                            detail: {
+                                document_number: row.document_number || '',
+                                full_name: row.full_name || '',
+                                cargo: row.cargo || '',
+                            },
+                        }));
+                        this.$dispatch('open-modal', 'acreditaciones-nuevo');
                     },
                     openEdit(detail) {
                         this.editForm = {

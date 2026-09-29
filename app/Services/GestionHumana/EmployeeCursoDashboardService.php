@@ -4,6 +4,7 @@ namespace App\Services\GestionHumana;
 
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
+use App\Models\EmployeeFichaProfile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -189,6 +190,18 @@ class EmployeeCursoDashboardService
     public function yearOptions(): array
     {
         $years = EmployeeCurso::query()
+            ->whereExists(function ($sub): void {
+                $sub->selectRaw('1')
+                    ->from('employee_ficha_profiles')
+                    ->whereColumn(
+                        'employee_ficha_profiles.document_number',
+                        'employee_cursos.document_number',
+                    )
+                    ->where(
+                        'employee_ficha_profiles.employment_status',
+                        EmployeeFichaProfile::STATUS_ACTIVO,
+                    );
+            })
             ->orderByDesc('created_at')
             ->limit(500)
             ->pluck('created_at')

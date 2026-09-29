@@ -78,6 +78,8 @@ trait EmployeeFichaProfileFieldRules
             'account_type' => [$required, 'string', 'max:10', new PayrollCatalogCode('account_type')],
             'account_number' => [$required, 'string', 'max:50'],
             'payment_method_code' => [$required, 'string', 'max:50', new PayrollCatalogCode('payment_method')],
+            'requires_courses' => ['sometimes', 'boolean'],
+            'requires_acreditacion' => ['sometimes', 'boolean'],
             'economic_activity_code' => ['nullable', 'string', 'max:50', new PayrollCatalogCode('economic_activity')],
             'economic_activity_name' => ['nullable', 'string', 'max:150'],
             'linkage_type' => ['nullable', 'string', 'max:100', new PayrollCatalogCode('linkage_type')],

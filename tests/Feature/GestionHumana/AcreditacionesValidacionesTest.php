@@ -266,6 +266,38 @@ class AcreditacionesValidacionesTest extends TestCase
         $this->assertSame('Vigilante Ficha', $sin['cargo'] ?? null);
     }
 
+    public function test_cola_sin_acreditacion_does_not_skip_low_id_when_chunking(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-16';
+        $this->seedBothOriginsCarga($editor->id, $fecha);
+
+        // Target created first (low id) with a document_number that sorts after filler docs.
+        $this->createFicha('1151963257', 'Target No Skip', EmployeeFichaProfile::STATUS_ACTIVO);
+
+        $now = now();
+        $filler = [];
+        for ($i = 1; $i <= 500; $i++) {
+            $filler[] = [
+                'document_number' => sprintf('0000%04d', $i),
+                'full_name' => 'Filler '.$i,
+                'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+                'requires_acreditacion' => true,
+                'requires_courses' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+        EmployeeFichaProfile::query()->insert($filler);
+
+        $payload = $this->runAndGetPayload($editor, $fecha);
+        $docs = collect($payload['colas'][AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION])
+            ->pluck('document_number')
+            ->all();
+
+        $this->assertContains('1151963257', $docs);
+    }
+
     public function test_cola_sin_acreditacion_resolves_personal_tipo_from_requisition_area(): void
     {
         $editor = $this->editorUser();

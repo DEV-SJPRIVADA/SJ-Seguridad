@@ -2,21 +2,19 @@
 
 namespace App\Services\GestionHumana;
 
-use App\Models\EmployeeCurso;
-use App\Models\EmployeeCursoPending;
+use App\Models\AcreditacionAcreditado;
+use App\Models\EmployeeAcreditacionPending;
 use App\Models\EmployeeFichaProfile;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
-class EmployeeCursoPendingService
+class EmployeeAcreditacionPendingService
 {
     public function __construct(
-        private readonly CursosAuditLogService $auditLogService,
+        private readonly AcreditacionesAuditLogService $auditLogService,
     ) {}
 
     /**
-     * Encola si es elegible (uso futuro T2 / hooks Ficha). Idempotente.
-     *
      * @param  array{
      *     document_number: string,
      *     full_name?: string|null,
@@ -25,7 +23,7 @@ class EmployeeCursoPendingService
      *     enqueued_by?: int|null,
      * }  $data
      */
-    public function enqueueIfEligible(array $data): ?EmployeeCursoPending
+    public function enqueueIfEligible(array $data): ?EmployeeAcreditacionPending
     {
         $documentNumber = trim((string) ($data['document_number'] ?? ''));
 
@@ -33,16 +31,16 @@ class EmployeeCursoPendingService
             return null;
         }
 
-        return DB::transaction(function () use ($documentNumber, $data): ?EmployeeCursoPending {
-            if ($this->hasCursoHistory($documentNumber)) {
+        return DB::transaction(function () use ($documentNumber, $data): ?EmployeeAcreditacionPending {
+            if ($this->hasAcreditacionHistory($documentNumber)) {
                 return null;
             }
 
-            $existingClosed = EmployeeCursoPending::query()
+            $existingClosed = EmployeeAcreditacionPending::query()
                 ->forDocumentNumber($documentNumber)
                 ->whereIn('status', [
-                    EmployeeCursoPending::STATUS_OMITTED,
-                    EmployeeCursoPending::STATUS_RESOLVED,
+                    EmployeeAcreditacionPending::STATUS_OMITTED,
+                    EmployeeAcreditacionPending::STATUS_RESOLVED,
                 ])
                 ->lockForUpdate()
                 ->exists();
@@ -51,7 +49,7 @@ class EmployeeCursoPendingService
                 return null;
             }
 
-            $existingPending = EmployeeCursoPending::query()
+            $existingPending = EmployeeAcreditacionPending::query()
                 ->forDocumentNumber($documentNumber)
                 ->pending()
                 ->lockForUpdate()
@@ -85,7 +83,7 @@ class EmployeeCursoPendingService
                 $fullName = (string) ($profile->full_name ?? '');
             }
 
-            $pending = EmployeeCursoPending::query()->create([
+            $pending = EmployeeAcreditacionPending::query()->create([
                 'document_number' => $documentNumber,
                 'full_name' => $fullName !== '' ? $fullName : null,
                 'employee_ficha_profile_id' => $profile?->id
@@ -93,16 +91,16 @@ class EmployeeCursoPendingService
                 'personal_requisition_ficha_entry_id' => isset($data['personal_requisition_ficha_entry_id'])
                     ? (int) $data['personal_requisition_ficha_entry_id']
                     : ($profile?->personal_requisition_ficha_entry_id),
-                'status' => EmployeeCursoPending::STATUS_PENDING,
+                'status' => EmployeeAcreditacionPending::STATUS_PENDING,
                 'enqueued_at' => now(),
                 'enqueued_by' => $data['enqueued_by'] ?? null,
             ]);
 
             $this->auditLogService->logEvent(
-                eventType: 'employee_curso_pending',
+                eventType: 'employee_acreditacion_pending',
                 action: 'enqueue',
                 metadata: [
-                    'employee_curso_pending_id' => $pending->id,
+                    'employee_acreditacion_pending_id' => $pending->id,
                     'document_number' => $pending->document_number,
                 ],
                 model: $pending,
@@ -115,17 +113,17 @@ class EmployeeCursoPendingService
 
     public function resolveByDocument(
         string $documentNumber,
-        ?EmployeeCurso $curso = null,
+        ?AcreditacionAcreditado $acreditado = null,
         ?int $userId = null,
-    ): ?EmployeeCursoPending {
+    ): ?EmployeeAcreditacionPending {
         $documentNumber = trim($documentNumber);
 
         if ($documentNumber === '') {
             return null;
         }
 
-        return DB::transaction(function () use ($documentNumber, $curso, $userId): ?EmployeeCursoPending {
-            $pending = EmployeeCursoPending::query()
+        return DB::transaction(function () use ($documentNumber, $acreditado, $userId): ?EmployeeAcreditacionPending {
+            $pending = EmployeeAcreditacionPending::query()
                 ->forDocumentNumber($documentNumber)
                 ->pending()
                 ->lockForUpdate()
@@ -136,21 +134,21 @@ class EmployeeCursoPendingService
             }
 
             $pending->update([
-                'status' => EmployeeCursoPending::STATUS_RESOLVED,
+                'status' => EmployeeAcreditacionPending::STATUS_RESOLVED,
                 'resolved_at' => now(),
                 'resolved_by' => $userId,
-                'resolved_via' => EmployeeCursoPending::RESOLVED_VIA_FIRST_CURSO,
-                'employee_curso_id' => $curso?->id,
+                'resolved_via' => EmployeeAcreditacionPending::RESOLVED_VIA_FIRST_ACREDITADO,
+                'acreditacion_acreditado_id' => $acreditado?->id,
             ]);
 
             $this->auditLogService->logEvent(
-                eventType: 'employee_curso_pending',
+                eventType: 'employee_acreditacion_pending',
                 action: 'resolve',
                 metadata: [
-                    'employee_curso_pending_id' => $pending->id,
+                    'employee_acreditacion_pending_id' => $pending->id,
                     'document_number' => $pending->document_number,
-                    'employee_curso_id' => $curso?->id,
-                    'resolved_via' => EmployeeCursoPending::RESOLVED_VIA_FIRST_CURSO,
+                    'acreditacion_acreditado_id' => $acreditado?->id,
+                    'resolved_via' => EmployeeAcreditacionPending::RESOLVED_VIA_FIRST_ACREDITADO,
                 ],
                 model: $pending->fresh(),
                 userId: $userId,
@@ -161,21 +159,21 @@ class EmployeeCursoPendingService
     }
 
     public function omit(
-        EmployeeCursoPending $pending,
+        EmployeeAcreditacionPending $pending,
         ?string $reason = null,
         ?int $userId = null,
-    ): EmployeeCursoPending {
-        if ($pending->status !== EmployeeCursoPending::STATUS_PENDING) {
+    ): EmployeeAcreditacionPending {
+        if ($pending->status !== EmployeeAcreditacionPending::STATUS_PENDING) {
             return $pending;
         }
 
-        return DB::transaction(function () use ($pending, $reason, $userId): EmployeeCursoPending {
-            $locked = EmployeeCursoPending::query()
+        return DB::transaction(function () use ($pending, $reason, $userId): EmployeeAcreditacionPending {
+            $locked = EmployeeAcreditacionPending::query()
                 ->whereKey($pending->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($locked->status !== EmployeeCursoPending::STATUS_PENDING) {
+            if ($locked->status !== EmployeeAcreditacionPending::STATUS_PENDING) {
                 return $locked;
             }
 
@@ -185,7 +183,7 @@ class EmployeeCursoPendingService
             }
 
             $locked->update([
-                'status' => EmployeeCursoPending::STATUS_OMITTED,
+                'status' => EmployeeAcreditacionPending::STATUS_OMITTED,
                 'omitted_at' => now(),
                 'omitted_by' => $userId,
                 'omit_reason' => $omitReason,
@@ -193,14 +191,14 @@ class EmployeeCursoPendingService
 
             EmployeeFichaProfile::query()
                 ->where('document_number', $locked->document_number)
-                ->update(['requires_courses' => false]);
+                ->update(['requires_acreditacion' => false]);
 
             $this->auditLogService->logEvent(
-                eventType: 'employee_curso_pending',
+                eventType: 'employee_acreditacion_pending',
                 action: 'omit',
                 reason: $omitReason,
                 metadata: [
-                    'employee_curso_pending_id' => $locked->id,
+                    'employee_acreditacion_pending_id' => $locked->id,
                     'document_number' => $locked->document_number,
                 ],
                 model: $locked->fresh(),
@@ -213,17 +211,17 @@ class EmployeeCursoPendingService
 
     public function countPendingActivos(): int
     {
-        return EmployeeCursoPending::query()
+        return EmployeeAcreditacionPending::query()
             ->pendingWithActiveProfile()
             ->count();
     }
 
     /**
-     * @return Collection<int, EmployeeCursoPending>
+     * @return Collection<int, EmployeeAcreditacionPending>
      */
     public function listPendingActivos(): Collection
     {
-        return EmployeeCursoPending::query()
+        return EmployeeAcreditacionPending::query()
             ->pendingWithActiveProfile()
             ->with(['employeeFichaProfile:id,document_number,full_name,employment_status'])
             ->orderByDesc('enqueued_at')
@@ -231,10 +229,10 @@ class EmployeeCursoPendingService
             ->get();
     }
 
-    public function hasCursoHistory(string $documentNumber): bool
+    public function hasAcreditacionHistory(string $documentNumber): bool
     {
-        return EmployeeCurso::query()
-            ->forDocumentNumber(trim($documentNumber))
+        return AcreditacionAcreditado::query()
+            ->where('document_number', trim($documentNumber))
             ->exists();
     }
 }

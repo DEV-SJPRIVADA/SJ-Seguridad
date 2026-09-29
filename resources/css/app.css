@@ -10076,25 +10076,29 @@ a.sj-pagination__item:hover {
     overflow: auto;
 }
 
-.acreditaciones-edit-modal {
+.acreditaciones-edit-modal,
+.cursos-edit-modal {
     width: min(42rem, 100%);
     padding: 0;
     overflow: hidden;
 }
 
-.acreditaciones-edit-modal .ficha-empleados-masivos-modal {
+.acreditaciones-edit-modal .ficha-empleados-masivos-modal,
+.cursos-edit-modal .ficha-empleados-masivos-modal {
     margin: 0;
     box-shadow: none;
 }
 
-.acreditaciones-edit-modal__hint {
+.acreditaciones-edit-modal__hint,
+.cursos-edit-modal__hint {
     margin: 0.85rem 0 0;
     font-size: 0.82rem;
     color: #64748b;
     line-height: 1.4;
 }
 
-.acreditaciones-edit-modal__actions {
+.acreditaciones-edit-modal__actions,
+.cursos-edit-modal__actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;

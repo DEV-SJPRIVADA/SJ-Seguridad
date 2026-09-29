@@ -620,6 +620,7 @@ class AcreditacionesAcreditadosTest extends TestCase
             'vigencia_acr' => '2027-01-01',
             'fecha_solicitud' => null,
             'observaciones' => null,
+            'requires_acreditacion' => '1',
         ], $overrides);
     }
 

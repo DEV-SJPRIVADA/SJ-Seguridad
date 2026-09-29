@@ -11,6 +11,7 @@ use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcredit
 use App\Http\Requests\GestionHumana\Acreditaciones\GenerateAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionReporteDiarioRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\OmitEmployeeAcreditacionPendingRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\PreviewAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\RunAcreditacionValidacionesRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
@@ -22,6 +23,7 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionCargo;
 use App\Models\AcreditacionExportApoSetting;
 use App\Models\AcreditacionReporteDiarioFila;
+use App\Models\EmployeeAcreditacionPending;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Services\Access\AcreditacionesAccessService;
@@ -44,6 +46,7 @@ use App\Services\GestionHumana\AcreditacionValidacionesExportService;
 use App\Services\GestionHumana\AcreditacionValidacionesGateService;
 use App\Services\GestionHumana\AcreditacionValidacionesResultStore;
 use App\Services\GestionHumana\AcreditacionValidacionesRunnerService;
+use App\Services\GestionHumana\EmployeeAcreditacionPendingService;
 use App\Support\DocumentNumberListParser;
 use App\Traits\HasAcreditacionesTabs;
 use Illuminate\Contracts\View\View;
@@ -82,6 +85,7 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionExportApoPreviewService $exportApoPreviewService,
         private readonly AcreditacionExportApoGenerateService $exportApoGenerateService,
         private readonly AcreditacionDashboardService $dashboardService,
+        private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -134,6 +138,17 @@ class AcreditacionesController extends Controller
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
         $canEdit = $this->acreditacionesAccess->canEdit(auth()->user());
+        $colaMode = (string) $request->query('cola', '') === 'nuevos-sin-acreditacion';
+
+        if ($colaMode && ! $canEdit) {
+            abort(403);
+        }
+
+        $pendingCount = $canEdit ? $this->acreditacionPendingService->countPendingActivos() : 0;
+        $pendingRows = $colaMode
+            ? $this->acreditacionPendingService->listPendingActivos()
+            : collect();
+
         $filters = $this->acreditadoFiltersFromRequest($request);
 
         /** @var array<string, string> $estadoLabels */
@@ -213,6 +228,11 @@ class AcreditacionesController extends Controller
         return view('areas.gestion_humana.acreditaciones.acreditados', [
             'subTabs' => $this->getAcreditacionesSubTabs('acreditados'),
             'canEdit' => $canEdit,
+            'colaMode' => $colaMode,
+            'pendingCount' => $pendingCount,
+            'pendingRows' => $pendingRows,
+            'colaQueueUrl' => route('gestion-humana.acreditaciones.acreditados', ['cola' => 'nuevos-sin-acreditacion']),
+            'colaExitUrl' => route('gestion-humana.acreditaciones.acreditados'),
             'filters' => $filters,
             'filterEstadoOptions' => $filterEstadoOptions,
             'filterRenovacionOptions' => $filterRenovacionOptions,
@@ -427,8 +447,61 @@ class AcreditacionesController extends Controller
         ]);
     }
 
+    public function omitAcreditacionPending(
+        OmitEmployeeAcreditacionPendingRequest $request,
+        EmployeeAcreditacionPending $pending,
+    ): RedirectResponse {
+        $this->acreditacionPendingService->omit(
+            $pending,
+            $request->validated('omit_reason'),
+            $request->user()?->id,
+        );
+
+        return redirect()
+            ->route('gestion-humana.acreditaciones.acreditados', ['cola' => 'nuevos-sin-acreditacion'])
+            ->with('status', 'Persona omitida de la cola «Nuevos sin acreditación».');
+    }
+
     public function storeAcreditado(StoreAcreditacionAcreditadoRequest $request): RedirectResponse
     {
+        if (! $request->wantsAcreditadoRecord()) {
+            $cedula = (string) $request->validated('document_number');
+
+            EmployeeFichaProfile::query()
+                ->where('document_number', $cedula)
+                ->update(['requires_acreditacion' => false]);
+
+            $pending = EmployeeAcreditacionPending::query()
+                ->forDocumentNumber($cedula)
+                ->pending()
+                ->first();
+
+            if ($pending !== null) {
+                $this->acreditacionPendingService->omit(
+                    $pending,
+                    'No requiere acreditación',
+                    auth()->id(),
+                );
+            }
+
+            $this->auditLogService->logEvent(
+                eventType: 'acreditacion_acreditado',
+                action: 'disable_requires_acreditacion',
+                metadata: [
+                    'document_number' => $cedula,
+                    'requires_acreditacion' => false,
+                    'pending_omitted' => $pending !== null,
+                ],
+                userId: (int) auth()->id(),
+            );
+
+            return $this->redirectAfterAcreditadoMutation(
+                $request,
+                'Ficha actualizada: la persona no requiere acreditación. Vuelva a ejecutar validaciones.',
+                'Ficha actualizada: la persona no requiere acreditación.',
+            );
+        }
+
         $validated = $request->validated();
         $payload = $this->acreditadoPayloadFromValidated(
             $validated,
@@ -441,6 +514,16 @@ class AcreditacionesController extends Controller
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
         ]);
+
+        $this->acreditacionPendingService->resolveByDocument(
+            (string) $acreditado->document_number,
+            $acreditado,
+            auth()->id(),
+        );
+
+        EmployeeFichaProfile::query()
+            ->where('document_number', $acreditado->document_number)
+            ->update(['requires_acreditacion' => true]);
 
         $this->auditLogService->logEvent(
             eventType: 'acreditacion_acreditado',
@@ -1527,6 +1610,12 @@ class AcreditacionesController extends Controller
             return redirect()
                 ->route('gestion-humana.acreditaciones.validaciones', $query)
                 ->with('status', $validacionesStatus);
+        }
+
+        if ((string) $request->input('_return_context') === 'nuevos_sin_acreditacion') {
+            return redirect()
+                ->route('gestion-humana.acreditaciones.acreditados', ['cola' => 'nuevos-sin-acreditacion'])
+                ->with('status', $acreditadosStatus);
         }
 
         if ((string) $request->input('_return_context') === 'export_apo') {

@@ -62,6 +62,7 @@
         x-data="{
             canManage: {{ $canManageFicha ? 'true' : 'false' }},
             isEditing: {{ $startInEditMode ? 'true' : 'false' }},
+            saveValidationMessage: '',
             init() {
                 this.$watch('isEditing', () => this.syncFieldLock());
                 this.$nextTick(() => this.syncFieldLock());
@@ -83,8 +84,44 @@
                 });
 
                 root.querySelectorAll('input[type=checkbox], input[type=radio], select').forEach((el) => {
+                    if (el.dataset.lockDisabled === '1') {
+                        el.disabled = true;
+                        return;
+                    }
+
                     el.disabled = ! editable;
                 });
+            },
+            handleFichaSubmit(event) {
+                this.saveValidationMessage = '';
+
+                if (! this.canManage || ! this.isEditing) {
+                    event.preventDefault();
+                    this.saveValidationMessage = 'Habilita la edición antes de guardar la ficha.';
+                    return;
+                }
+
+                const form = event.target;
+                if (! form.checkValidity()) {
+                    event.preventDefault();
+
+                    const invalid = form.querySelector(':invalid');
+                    if (invalid) {
+                        const wrap = invalid.closest('.form-field')
+                            || invalid.closest('.searchable-select')
+                            || invalid.closest('.ficha-empleados-form__section')
+                            || invalid;
+                        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (typeof invalid.focus === 'function') {
+                            try { invalid.focus({ preventScroll: true }); } catch (e) { invalid.focus(); }
+                        }
+                        if (typeof invalid.reportValidity === 'function') {
+                            invalid.reportValidity();
+                        }
+                    }
+
+                    this.saveValidationMessage = 'Hay campos obligatorios incompletos. Completa los marcados (suelen estar más arriba en el formulario) e intenta de nuevo.';
+                }
             },
         }"
     >
@@ -103,6 +140,13 @@
                     </ul>
                 </div>
             @endif
+
+            <div
+                class="alert alert--danger ficha-empleados-page__alert"
+                x-show="saveValidationMessage"
+                x-cloak
+                x-text="saveValidationMessage"
+            ></div>
 
             <div class="panel-heading-row" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -155,7 +199,7 @@
                 class="panel ficha-empleados-form"
                 :class="{ 'ficha-empleados-form--readonly': !isEditing }"
                 id="ficha-empleados-form"
-                @submit="if (!canManage || !isEditing) { $event.preventDefault() }"
+                @submit="handleFichaSubmit($event)"
             >
                 @csrf
                 @method('PATCH')
@@ -178,6 +222,9 @@
                             'profile' => $profile,
                             'catalogs' => $catalogs,
                             'lockIdentityFields' => false,
+                            'canEditRequiresCourses' => $canEditRequiresCourses ?? false,
+                            'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion ?? false,
+                            'canViewRequirementFlags' => $canViewRequirementFlags ?? false,
                         ])
                     </div>
                 </div>

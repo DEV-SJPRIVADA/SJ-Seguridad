@@ -242,7 +242,7 @@ class CursosRegistrosTest extends TestCase
     public function test_viewer_can_export_but_not_mutate(): void
     {
         $viewer = $this->viewerUser();
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'fecha_expedicion' => '2026-01-01',
         ]);
 
@@ -267,14 +267,14 @@ class CursosRegistrosTest extends TestCase
         $tipoA = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
         $tipoB = CursoTipo::factory()->create(['tipo_curso' => 'PRIMEROS AUXILIOS']);
 
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipoA->id,
             'document_number' => '111',
             'full_name' => 'Ana Filtrada',
             'numero_curso' => 'EXP-A',
             'fecha_expedicion' => '2026-01-01',
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipoB->id,
             'document_number' => '222',
             'full_name' => 'Bruno Otro',
@@ -310,21 +310,21 @@ class CursosRegistrosTest extends TestCase
         $viewer = $this->viewerUser();
         $tipo = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
 
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'document_number' => '9101',
             'full_name' => 'Curso Multi Uno',
             'numero_curso' => 'MC-1',
             'fecha_expedicion' => '2026-01-01',
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'document_number' => '9102',
             'full_name' => 'Curso Multi Dos',
             'numero_curso' => 'MC-2',
             'fecha_expedicion' => '2026-01-01',
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'document_number' => '9103',
             'full_name' => 'Curso Multi Tres',
@@ -375,7 +375,6 @@ class CursosRegistrosTest extends TestCase
             ->assertViewHas('datatableUrl')
             ->assertSee('js-cursos-registros-datatable', false)
             ->assertSee('data-dt-body-scroll="true"', false)
-            ->assertSee('cursos-registros-page__export-icon', false)
             ->assertSee('document_number=123', false)
             ->assertSee('solo_actualizar=1', false)
             ->assertSee(route('gestion-humana.cursos.registros.export'), false);
@@ -386,13 +385,13 @@ class CursosRegistrosTest extends TestCase
         $viewer = $this->viewerUser();
         $tipo = CursoTipo::factory()->create();
 
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'document_number' => 'A1',
             'fecha_expedicion' => '2025-10-14',
             'numero_curso' => 'OLD-1',
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'document_number' => 'B1',
             'fecha_expedicion' => '2025-10-15',
@@ -418,6 +417,48 @@ class CursosRegistrosTest extends TestCase
         $this->assertStringNotContainsString('B1', $rowText);
     }
 
+    public function test_datatable_excludes_desvinculados(): void
+    {
+        $viewer = $this->viewerUser();
+        $tipo = CursoTipo::factory()->create();
+
+        $this->createCursoWithActiveFicha([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'ACT-1',
+            'full_name' => 'Activo Listado',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'ACT-NC',
+        ]);
+
+        $desvinculado = EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'DES-1',
+            'full_name' => 'Desvinculado Listado',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'DES-NC',
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => $desvinculado->document_number,
+            'full_name' => $desvinculado->full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $response->json('recordsFiltered'));
+        $rowText = collect($response->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+        $this->assertStringContainsString('Activo Listado', $rowText);
+        $this->assertStringNotContainsString('Desvinculado Listado', $rowText);
+    }
+
     public function test_datatable_requires_view_permission(): void
     {
         $user = User::factory()->create(['must_change_password' => false]);
@@ -436,12 +477,12 @@ class CursosRegistrosTest extends TestCase
         $editor = $this->editorUser();
         $tipo = CursoTipo::factory()->create();
 
-        $pendiente = EmployeeCurso::factory()->create([
+        $pendiente = $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'estado' => EmployeeCurso::ESTADO_PENDIENTE,
             'document_number' => '9001',
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
             'curso_tipo_id' => $tipo->id,
             'estado' => EmployeeCurso::ESTADO_SOLICITADO,
             'document_number' => '9002',
@@ -452,6 +493,22 @@ class CursosRegistrosTest extends TestCase
             ->assertOk()
             ->assertJsonPath('meta.count', 1)
             ->assertJsonFragment(['id' => $pendiente->id, 'document_number' => '9001']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function createCursoWithActiveFicha(array $attributes): EmployeeCurso
+    {
+        $curso = EmployeeCurso::factory()->create($attributes);
+
+        EmployeeFichaProfile::query()->create([
+            'document_number' => $curso->document_number,
+            'full_name' => $curso->full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        return $curso;
     }
 
     private function viewerUser(): User

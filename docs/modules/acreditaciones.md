@@ -12,7 +12,8 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
 - Tablero sidebar **Acreditaciones** (`board` key `acreditaciones`, hogar `gestion_humana`, `base_area_tab => false`).
 - Pestanas: **Dashboard**, **Acreditados**, **Reporte Diario**, **Validaciones**, **Export Apo**, **Catálogo**. **Catálogo**, **Validaciones** y **Export Apo** solo visibles/operativas con `acreditaciones.edit`. **Dashboard** con `acreditaciones.view`.
 - **Funcional:**
-  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario.
+  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al entrar a ficha post-deploy). Coexiste con Validaciones `sin_acreditacion`.
+  - Ficha: `requires_acreditacion` (default true). Modal «Nuevo acreditado»: check activo exige datos; desactivado solo actualiza ficha y omite pending. Validaciones excluyen flag false. Editable en ficha con `ficha_empleados.manage` + `acreditaciones.edit`.
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
@@ -355,7 +356,7 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 
 | Code | Label UI | Fuente |
 | --- | --- | --- |
-| `sin_acreditacion` | Ficha activa sin acreditación | `employee_ficha_profiles` activos sin ninguna fila en `acreditacion_acreditados`. Filas incluyen `cargo` (`position_name`) y `personal_tipo` (`OPERATIVO` si `operating_area_key=operaciones` en la requisición vinculada; `ADMINISTRATIVO` si hay otra área; vacío sin requisición) |
+| `sin_acreditacion` | Ficha activa sin acreditación | `employee_ficha_profiles` activos con `requires_acreditacion=true` y sin ninguna fila en `acreditacion_acreditados`. Iteración con `lazyById` **sin** `orderBy(document_number)` (evita saltar filas); orden final en memoria. Filas incluyen `cargo` (`position_name`) y `personal_tipo` (`OPERATIVO` si `operating_area_key=operaciones` en la requisición vinculada; `ADMINISTRATIVO` si hay otra área; vacío sin requisición) |
 | `ausente_reporte` | Acreditado ausente del reporte del día | Acreditados cuyo par `(norm(doc), norm(cargo_apo))` ∉ unión de pares del reporte (cualquier origen). Columna `cargo` = `position_name` de Ficha (no el texto histórico del acreditado) |
 | `en_proceso_ya_acreditado` | EN PROCESO en sistema / ACREDITADO en APO | Acreditados `EN_PROCESO` cuyo par ∈ filas origen `ACREDITADO` del día. Incluye `vigencia_apo` = `vigencia_acr` de la fila APO del match cédula+cargo |
 | `vencidas` | Vencidas / por vencer | Acreditados `estado IN (DESACREDITADO, POR_VENCER)`; **independiente** del reporte |

@@ -20,12 +20,33 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
         return $user !== null && app(AcreditacionesAccessService::class)->canEdit($user);
     }
 
+    public function wantsAcreditadoRecord(): bool
+    {
+        if (! $this->exists('requires_acreditacion')) {
+            return true;
+        }
+
+        return $this->boolean('requires_acreditacion');
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $obsMax = (int) config('acreditaciones.limits.observaciones_max', 5000);
+
+        if (! $this->wantsAcreditadoRecord()) {
+            return [
+                'document_number' => [
+                    'required',
+                    'string',
+                    'max:'.(int) config('acreditaciones.limits.document_number_max', 50),
+                    Rule::exists('employee_ficha_profiles', 'document_number'),
+                ],
+                'requires_acreditacion' => ['nullable', 'boolean'],
+            ];
+        }
 
         return [
             'document_number' => [
@@ -50,6 +71,7 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
             'fecha_solicitud' => ['nullable', 'date'],
             'renovacion' => ['nullable', 'string', Rule::in(AcreditacionAcreditado::RENOVACIONES)],
             'observaciones' => ['nullable', 'string', 'max:'.$obsMax],
+            'requires_acreditacion' => ['nullable', 'boolean'],
         ];
     }
 
@@ -73,6 +95,10 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                if (! $this->wantsAcreditadoRecord()) {
+                    return;
+                }
+
                 $vigencia = $this->input('vigencia_acr');
                 $solicitud = $this->input('fecha_solicitud');
 
@@ -122,6 +148,12 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
             'renovacion' => $this->nullableTrim('renovacion'),
             'observaciones' => $this->nullableTrim('observaciones'),
         ]);
+
+        if ($this->exists('requires_acreditacion')) {
+            $this->merge([
+                'requires_acreditacion' => $this->boolean('requires_acreditacion'),
+            ]);
+        }
     }
 
     /**

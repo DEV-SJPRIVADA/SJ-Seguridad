@@ -18,6 +18,7 @@ class AcreditacionImportService
 {
     public function __construct(
         private readonly AcreditacionEstadoCalculator $estadoCalculator,
+        private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
     ) {}
 
     /**
@@ -153,11 +154,19 @@ class AcreditacionImportService
                         $existing->update($payload);
                         $stats['updated']++;
                     } else {
-                        AcreditacionAcreditado::query()->create([
+                        $created = AcreditacionAcreditado::query()->create([
                             ...$payload,
                             'created_by' => $userId,
                         ]);
                         $stats['imported']++;
+                        $this->acreditacionPendingService->resolveByDocument(
+                            $cedula,
+                            $created,
+                            $userId,
+                        );
+                        EmployeeFichaProfile::query()
+                            ->where('document_number', $cedula)
+                            ->update(['requires_acreditacion' => true]);
                     }
                 });
             } catch (\Throwable $e) {

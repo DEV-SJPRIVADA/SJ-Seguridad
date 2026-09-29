@@ -17,11 +17,35 @@ class StoreEmployeeCursoRequest extends FormRequest
         return $user !== null && app(CursosAccessService::class)->canEdit($user);
     }
 
+    public function wantsCourseRecord(): bool
+    {
+        // Sin el campo (p. ej. clientes/tests antiguos) se asume que sí requiere curso.
+        // Con hidden+checkbox del modal, `0`/`false` desactiva la creación del registro.
+        if (! $this->exists('requires_courses')) {
+            return true;
+        }
+
+        return $this->boolean('requires_courses');
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        if (! $this->wantsCourseRecord()) {
+            return [
+                'document_number' => [
+                    'required',
+                    'string',
+                    'max:50',
+                    Rule::exists('employee_ficha_profiles', 'document_number'),
+                ],
+                'full_name' => ['nullable', 'string', 'max:255'],
+                'requires_courses' => ['nullable', 'boolean'],
+            ];
+        }
+
         return [
             'document_number' => ['required', 'string', 'max:50'],
             'full_name' => ['required', 'string', 'max:255'],
@@ -47,6 +71,7 @@ class StoreEmployeeCursoRequest extends FormRequest
                 'mimes:'.implode(',', config('cursos.document.mimes', ['pdf', 'jpg', 'jpeg', 'png', 'webp'])),
                 'max:'.(int) config('cursos.document.max_kilobytes', 10240),
             ],
+            'requires_courses' => ['nullable', 'boolean'],
         ];
     }
 
@@ -57,6 +82,7 @@ class StoreEmployeeCursoRequest extends FormRequest
     {
         return [
             'document_number.required' => 'La cédula es obligatoria.',
+            'document_number.exists' => 'La cédula no existe en Ficha empleados.',
             'full_name.required' => 'El nombre completo es obligatorio.',
             'curso_tipo_id.required' => 'El tipo de curso es obligatorio.',
             'curso_tipo_id.exists' => 'El tipo de curso no existe en el catálogo.',
@@ -83,6 +109,12 @@ class StoreEmployeeCursoRequest extends FormRequest
             'estado' => $estado,
             'observaciones' => $this->nullableTrim('observaciones'),
         ]);
+
+        if ($this->exists('requires_courses')) {
+            $this->merge([
+                'requires_courses' => $this->boolean('requires_courses'),
+            ]);
+        }
     }
 
     private function nullableTrim(string $key): ?string

@@ -125,8 +125,8 @@ final class AcreditacionValidacionesRunnerService
 
         EmployeeFichaProfile::query()
             ->active()
+            ->where('requires_acreditacion', true)
             ->with(['fichaEntry.requisition:id,operating_area_key'])
-            ->orderBy('document_number')
             ->lazyById(500)
             ->each(function (EmployeeFichaProfile $profile) use (&$rows, $acreditadoLookup): void {
                 $doc = $this->normalizer->normalizeDocument($profile->document_number);
@@ -146,6 +146,14 @@ final class AcreditacionValidacionesRunnerService
                         : null,
                 ];
             });
+
+        usort(
+            $rows,
+            fn (array $a, array $b): int => strcmp(
+                (string) ($a['document_number'] ?? ''),
+                (string) ($b['document_number'] ?? ''),
+            ),
+        );
 
         return $rows;
     }
@@ -182,7 +190,10 @@ final class AcreditacionValidacionesRunnerService
                     return;
                 }
 
-                $rows[] = $this->formatAcreditadoRow($acreditado, $fichaByDoc);
+                $row = $this->formatAcreditadoRow($acreditado, $fichaByDoc);
+                if ($row !== null) {
+                    $rows[] = $row;
+                }
             });
 
         return $rows;
@@ -209,6 +220,9 @@ final class AcreditacionValidacionesRunnerService
                 }
 
                 $row = $this->formatAcreditadoRow($acreditado, $fichaByDoc);
+                if ($row === null) {
+                    return;
+                }
                 $row['vigencia_apo'] = $acreditadoVigencia[$key] ?? null;
                 $rows[] = $row;
             });
@@ -232,14 +246,17 @@ final class AcreditacionValidacionesRunnerService
             ->orderBy('id')
             ->lazyById(500)
             ->each(function (AcreditacionAcreditado $acreditado) use (&$rows, $fichaByDoc): void {
-                $rows[] = $this->formatAcreditadoRow($acreditado, $fichaByDoc);
+                $row = $this->formatAcreditadoRow($acreditado, $fichaByDoc);
+                if ($row !== null) {
+                    $rows[] = $row;
+                }
             });
 
         return $rows;
     }
 
     /**
-     * @return array<string, array{ficha_entry_id: int|null, cargo: string}>
+     * @return array<string, array{ficha_entry_id: int|null, cargo: string, requires_acreditacion: bool}>
      */
     private function fichaContextByDocumentMap(): array
     {
@@ -258,6 +275,7 @@ final class AcreditacionValidacionesRunnerService
                         ? (int) $profile->personal_requisition_ficha_entry_id
                         : null,
                     'cargo' => trim((string) ($profile->position_name ?? '')),
+                    'requires_acreditacion' => (bool) ($profile->requires_acreditacion ?? true),
                 ];
             });
 
@@ -265,13 +283,17 @@ final class AcreditacionValidacionesRunnerService
     }
 
     /**
-     * @param  array<string, array{ficha_entry_id: int|null, cargo: string}>  $fichaByDoc
-     * @return array<string, mixed>
+     * @param  array<string, array{ficha_entry_id: int|null, cargo: string, requires_acreditacion?: bool}>  $fichaByDoc
+     * @return array<string, mixed>|null
      */
-    private function formatAcreditadoRow(AcreditacionAcreditado $acreditado, array $fichaByDoc = []): array
+    private function formatAcreditadoRow(AcreditacionAcreditado $acreditado, array $fichaByDoc = []): ?array
     {
         $doc = (string) $acreditado->document_number;
-        $ficha = $fichaByDoc[$doc] ?? ['ficha_entry_id' => null, 'cargo' => ''];
+        $ficha = $fichaByDoc[$doc] ?? ['ficha_entry_id' => null, 'cargo' => '', 'requires_acreditacion' => true];
+
+        if (! ($ficha['requires_acreditacion'] ?? true)) {
+            return null;
+        }
 
         return [
             'acreditado_id' => $acreditado->id,

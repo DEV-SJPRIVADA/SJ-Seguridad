@@ -47,6 +47,8 @@ class EmployeeFichaProfile extends Model
         'contract_end_date',
         'termination_date',
         'employment_status',
+        'requires_courses',
+        'requires_acreditacion',
         'work_center_name',
         'cost_center_code',
         'cost_center_name',
@@ -85,6 +87,8 @@ class EmployeeFichaProfile extends Model
             'termination_date' => 'date',
             'salary' => 'decimal:2',
             'payroll_extra' => 'array',
+            'requires_courses' => 'boolean',
+            'requires_acreditacion' => 'boolean',
         ];
     }
 

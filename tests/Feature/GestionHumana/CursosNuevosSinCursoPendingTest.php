@@ -216,6 +216,9 @@ class CursosNuevosSinCursoPendingTest extends TestCase
         $this->assertSame(EmployeeCursoPending::STATUS_OMITTED, $pending->status);
         $this->assertSame('No aplica', $pending->omit_reason);
         $this->assertSame(0, app(EmployeeCursoPendingService::class)->countPendingActivos());
+
+        $activo->refresh();
+        $this->assertFalse($activo->requires_courses);
     }
 
     public function test_store_resolves_pending_without_updating_ficha_profile(): void
@@ -248,6 +251,7 @@ class CursosNuevosSinCursoPendingTest extends TestCase
                 'fecha_expedicion' => '2026-01-01',
                 'numero_curso' => 'ECSP015-T1',
                 'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
+                'requires_courses' => '1',
             ])
             ->assertRedirect(route('gestion-humana.cursos.registros'));
 
@@ -259,6 +263,36 @@ class CursosNuevosSinCursoPendingTest extends TestCase
         $profile->refresh();
         $this->assertSame('Nombre Ficha Original', $profile->full_name);
         $this->assertSame('8001', $profile->document_number);
+        $this->assertTrue($profile->requires_courses);
+    }
+
+    public function test_store_with_requires_courses_unchecked_sets_flag_false(): void
+    {
+        $editor = $this->editorUser();
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'document_number' => '8003',
+            'full_name' => 'Sin Requiere Curso',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_courses' => true,
+        ]);
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.cursos.validaciones'))
+            ->post(route('gestion-humana.cursos.registros.store'), [
+                'document_number' => '8003',
+                'full_name' => 'Sin Requiere Curso',
+                'requires_courses' => '0',
+                '_return_context' => 'validaciones',
+                'cola' => 'sin_curso',
+            ])
+            ->assertRedirect(route('gestion-humana.cursos.validaciones', ['cola' => 'sin_curso']));
+
+        $profile->refresh();
+        $this->assertFalse($profile->requires_courses);
+        $this->assertDatabaseMissing('employee_cursos', [
+            'document_number' => '8003',
+        ]);
     }
 
     public function test_import_insert_resolves_pending_update_does_not(): void

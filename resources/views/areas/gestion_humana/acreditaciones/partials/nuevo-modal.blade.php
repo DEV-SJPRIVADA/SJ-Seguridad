@@ -1,6 +1,12 @@
-{{-- Variables: $cargoApoOptions, $lookupUrl, $show, $validacionesReturn (opcional) --}}
+{{-- Variables: $cargoApoOptions, $lookupUrl, $show, $validacionesReturn (opcional), $returnContext (opcional) --}}
 @php
     $validacionesReturn = $validacionesReturn ?? null;
+    $returnContext = $returnContext ?? null;
+    $requiresAcreditacionOld = old('requires_acreditacion', '1');
+    $requiresAcreditacionChecked = $requiresAcreditacionOld === true
+        || $requiresAcreditacionOld === 1
+        || $requiresAcreditacionOld === '1'
+        || $requiresAcreditacionOld === 'true';
 @endphp
 <x-modal name="acreditaciones-nuevo" maxWidth="2xl" :show="$show" focusable>
     <div
@@ -11,6 +17,7 @@
             documentNumber: @js(old('document_number', '')),
             fullName: @js(old('full_name', '')),
             cargo: @js(old('cargo', '')),
+            requiresAcreditacion: {{ $requiresAcreditacionChecked ? 'true' : 'false' }},
             async lookupName(cedula) {
                 const value = String(cedula || '').trim();
                 if (!value || this.identityLocked) return;
@@ -46,8 +53,12 @@
                     this.lookupName(doc);
                 }
             },
+            prefillFromPending(detail) {
+                this.prefillFromValidaciones(detail);
+            },
         }"
         @acreditaciones-open-nuevo.window="prefillFromValidaciones($event.detail)"
+        @acreditaciones-nuevo-prefill.window="prefillFromPending($event.detail)"
     >
         <div class="ficha-empleados-masivos-modal__header">
             <div class="ficha-empleados-masivos-modal__heading">
@@ -57,7 +68,7 @@
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo acreditado</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        La cédula debe existir en Ficha empleados. El nombre y el estado se resuelven en servidor.
+                        La cédula debe existir en Ficha empleados. Si desactiva «Requiere acreditación», puede guardar solo esa marca en ficha.
                     </p>
                 </div>
             </div>
@@ -91,6 +102,8 @@
                 <input type="hidden" name="_return_context" value="validaciones">
                 <input type="hidden" name="_return_fecha_reporte" value="{{ $validacionesReturn['fecha_reporte'] ?? '' }}">
                 <input type="hidden" name="_return_run_token" value="{{ $validacionesReturn['run_token'] ?? '' }}">
+            @elseif (! empty($returnContext))
+                <input type="hidden" name="_return_context" value="{{ $returnContext }}">
             @endif
             <div class="cursos-registros-page__form-grid">
                 <div class="form-field">
@@ -132,84 +145,109 @@
                         placeholder="Se completa desde Ficha"
                     >
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_cargo">CARGO</label>
-                    <input
-                        id="create_cargo"
-                        name="cargo"
-                        type="text"
-                        class="form-input"
-                        maxlength="255"
-                        readonly
-                        x-model="cargo"
-                        placeholder="Se completa desde Ficha"
-                    >
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_cargo_apo">CARGO APO</label>
-                    <x-searchable-select
-                        id="create_cargo_apo"
-                        name="cargo_apo"
-                        :options="$cargoApoOptions"
-                        :value="old('cargo_apo')"
-                        placeholder="Seleccionar CARGO APO"
-                        :required="true"
-                        :allow-clear="false"
-                    />
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_vigencia_acr">VIGEN.ACR</label>
-                    <input
-                        id="create_vigencia_acr"
-                        name="vigencia_acr"
-                        type="date"
-                        class="form-input"
-                        value="{{ old('vigencia_acr') }}"
-                    >
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_estado">ESTADO</label>
-                    <input
-                        id="create_estado"
-                        type="text"
-                        class="form-input"
-                        readonly
-                        value="Automático"
-                        title="Se calcula al guardar"
-                    >
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_renovacion">RENOVACIONES</label>
-                    <x-searchable-select
-                        id="create_renovacion"
-                        name="renovacion"
-                        :options="$renovacionOptions"
-                        :value="old('renovacion', '')"
-                        placeholder="Sin renovación"
-                        :allow-clear="true"
-                    />
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_fecha_solicitud">FECHA SOLICITUD</label>
-                    <input
-                        id="create_fecha_solicitud"
-                        name="fecha_solicitud"
-                        type="date"
-                        class="form-input"
-                        value="{{ old('fecha_solicitud') }}"
-                    >
-                </div>
                 <div class="form-field cursos-registros-page__form-span">
-                    <label class="form-label" for="create_observaciones">OBSERVACIONES</label>
-                    <textarea
-                        id="create_observaciones"
-                        name="observaciones"
-                        class="form-input"
-                        rows="2"
-                    >{{ old('observaciones') }}</textarea>
+                    <label class="cursos-registros-page__checkbox-label">
+                        <input type="hidden" name="requires_acreditacion" value="0">
+                        <input
+                            id="create_requires_acreditacion"
+                            name="requires_acreditacion"
+                            type="checkbox"
+                            value="1"
+                            x-model="requiresAcreditacion"
+                        >
+                        Esta persona requiere acreditación
+                    </label>
+                    <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;" x-show="!requiresAcreditacion" x-cloak>
+                        Al guardar se actualizará la ficha (no requiere acreditación) y no se creará un acreditado.
+                    </p>
                 </div>
+
+                <fieldset
+                    class="cursos-registros-page__form-span"
+                    style="border:0;margin:0;padding:0;min-inline-size:0;"
+                    :disabled="!requiresAcreditacion"
+                >
+                    <div class="cursos-registros-page__form-grid" :class="{ 'opacity-50': !requiresAcreditacion }">
+                        <div class="form-field">
+                            <label class="form-label" for="create_cargo">CARGO</label>
+                            <input
+                                id="create_cargo"
+                                name="cargo"
+                                type="text"
+                                class="form-input"
+                                maxlength="255"
+                                readonly
+                                x-model="cargo"
+                                placeholder="Se completa desde Ficha"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_cargo_apo">CARGO APO</label>
+                            <x-searchable-select
+                                id="create_cargo_apo"
+                                name="cargo_apo"
+                                :options="$cargoApoOptions"
+                                :value="old('cargo_apo')"
+                                placeholder="Seleccionar CARGO APO"
+                                :required="true"
+                                :allow-clear="false"
+                            />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_vigencia_acr">VIGEN.ACR</label>
+                            <input
+                                id="create_vigencia_acr"
+                                name="vigencia_acr"
+                                type="date"
+                                class="form-input"
+                                value="{{ old('vigencia_acr') }}"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_estado">ESTADO</label>
+                            <input
+                                id="create_estado"
+                                type="text"
+                                class="form-input"
+                                readonly
+                                value="Automático"
+                                title="Se calcula al guardar"
+                            >
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_renovacion">RENOVACIONES</label>
+                            <x-searchable-select
+                                id="create_renovacion"
+                                name="renovacion"
+                                :options="$renovacionOptions"
+                                :value="old('renovacion', '')"
+                                placeholder="Sin renovación"
+                                :allow-clear="true"
+                            />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="create_fecha_solicitud">FECHA SOLICITUD</label>
+                            <input
+                                id="create_fecha_solicitud"
+                                name="fecha_solicitud"
+                                type="date"
+                                class="form-input"
+                                value="{{ old('fecha_solicitud') }}"
+                            >
+                        </div>
+                        <div class="form-field cursos-registros-page__form-span">
+                            <label class="form-label" for="create_observaciones">OBSERVACIONES</label>
+                            <textarea
+                                id="create_observaciones"
+                                name="observaciones"
+                                class="form-input"
+                                rows="2"
+                            >{{ old('observaciones') }}</textarea>
+                        </div>
+                    </div>
+                </fieldset>
             </div>
-            <p class="panel-text" style="font-size:0.85rem;">
+            <p class="panel-text" style="font-size:0.85rem;" x-show="requiresAcreditacion">
                 Debe indicar al menos una fecha (VIGEN.ACR o FECHA SOLICITUD). El ESTADO no es editable.
             </p>
             <div class="cursos-registros-page__form-actions">

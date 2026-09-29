@@ -4,6 +4,7 @@ namespace Tests\Feature\GestionHumana;
 
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
+use App\Models\EmployeeFichaProfile;
 use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
@@ -41,26 +42,30 @@ class CursosDashboardTest extends TestCase
         $tipoA = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
         $tipoB = CursoTipo::factory()->create(['tipo_curso' => 'REENTRENAMIENTO']);
 
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
+            'document_number' => '1001',
             'curso_tipo_id' => $tipoA->id,
             'fecha_expedicion' => now()->subDays(10)->toDateString(),
             'estado' => EmployeeCurso::ESTADO_SOLICITADO,
             'document_path' => null,
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
+            'document_number' => '1002',
             'curso_tipo_id' => $tipoB->id,
             'fecha_expedicion' => now()->subDays(400)->toDateString(),
             'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
             'document_path' => 'employee-cursos/x.pdf',
             'document_original_name' => 'x.pdf',
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
+            'document_number' => '1003',
             'curso_tipo_id' => $tipoA->id,
             'fecha_expedicion' => now()->subDays(350)->toDateString(),
             'estado' => EmployeeCurso::ESTADO_PENDIENTE,
             'document_path' => null,
         ]);
-        EmployeeCurso::factory()->create([
+        $this->createCursoWithActiveFicha([
+            'document_number' => '1004',
             'curso_tipo_id' => $tipoB->id,
             'fecha_expedicion' => now()->subDays(400)->toDateString(),
             'estado' => EmployeeCurso::ESTADO_SOLICITADO,
@@ -112,6 +117,64 @@ class CursosDashboardTest extends TestCase
         $this->assertSame([], $filtered['charts']['pendientes_renovacion_by_tipo']['labels']);
         $this->assertSame([], $filtered['charts']['pendientes_renovacion_by_tipo']['actualizar']);
         $this->assertSame([], $filtered['charts']['pendientes_renovacion_by_tipo']['vencidos']);
+    }
+
+    public function test_dashboard_metrics_exclude_desvinculados_and_without_ficha(): void
+    {
+        $viewer = $this->viewerUser();
+        $tipo = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
+
+        $this->createCursoWithActiveFicha([
+            'document_number' => '2001',
+            'full_name' => 'Activo',
+            'curso_tipo_id' => $tipo->id,
+            'fecha_expedicion' => now()->toDateString(),
+            'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
+        ]);
+
+        $desvinculado = EmployeeCurso::factory()->create([
+            'document_number' => '2002',
+            'full_name' => 'Desvinculado',
+            'curso_tipo_id' => $tipo->id,
+            'fecha_expedicion' => now()->toDateString(),
+            'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => $desvinculado->document_number,
+            'full_name' => $desvinculado->full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ]);
+
+        EmployeeCurso::factory()->create([
+            'document_number' => '2003',
+            'full_name' => 'Sin Ficha',
+            'curso_tipo_id' => $tipo->id,
+            'fecha_expedicion' => now()->toDateString(),
+            'estado' => EmployeeCurso::ESTADO_ACTUALIZADO,
+        ]);
+
+        $metrics = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.dashboard.metrics'))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(1, $metrics['kpis']['total']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function createCursoWithActiveFicha(array $attributes): EmployeeCurso
+    {
+        $curso = EmployeeCurso::factory()->create($attributes);
+
+        EmployeeFichaProfile::query()->create([
+            'document_number' => $curso->document_number,
+            'full_name' => $curso->full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        return $curso;
     }
 
     private function viewerUser(): User
