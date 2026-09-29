@@ -14,6 +14,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 - Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton).
   - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
 - Unicidad de registro: `(document_number, numero_curso)`.
+- Filtro multi-cédula: query `document_numbers` (exacto, max 500, modal compartido `<x-multi-cedula-filter>`; sin historial). Coexiste con `document_number` parcial.
 - Al crear/editar registro: seleccionar **escuela** del catalogo (solo nombre en el selector); se guardan snapshot `escuela_codigo`, `escuela_nit` y `escuela_nombre` (mas FK `curso_escuela_id`).
 - Import masivo: la escuela se resuelve automaticamente desde `No.CURSO` (digitos a la izquierda del primer `-`, p. ej. `ECSP0015-M256412` → codigo `15` / `015`).
 - Listado Registros: si el snapshot viene vacío (cargas antiguas), la tabla resuelve en caliente desde No.CURSO + catálogo. Para persistir: `php artisan cursos:backfill-escuelas`.
@@ -100,6 +101,7 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.15 | 2026-09-29 | Registros: filtro varias cédulas (`document_numbers`, exacto, max 500, sin historial); export respeta el filtro. |
 | 1.14 | 2026-09-28 | Registros: fallback UI escuela desde No.CURSO; comando `cursos:backfill-escuelas`. |
 | 1.13 | 2026-09-28 | Export Apo NitEscuela: fallback código desde No.CURSO → catálogo Escuelas. |
 | 1.12 | 2026-09-28 | Match Export Apo: `cargo_acredit` acepta nombre APO o código `cargo_acreditacion`. |

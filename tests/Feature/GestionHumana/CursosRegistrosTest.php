@@ -305,6 +305,63 @@ class CursosRegistrosTest extends TestCase
         $this->assertStringNotContainsString('Bruno Otro', $sharedStrings);
     }
 
+    public function test_multi_cedula_filter_export_is_exact(): void
+    {
+        $viewer = $this->viewerUser();
+        $tipo = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
+
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => '9101',
+            'full_name' => 'Curso Multi Uno',
+            'numero_curso' => 'MC-1',
+            'fecha_expedicion' => '2026-01-01',
+        ]);
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => '9102',
+            'full_name' => 'Curso Multi Dos',
+            'numero_curso' => 'MC-2',
+            'fecha_expedicion' => '2026-01-01',
+        ]);
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => '9103',
+            'full_name' => 'Curso Multi Tres',
+            'numero_curso' => 'MC-3',
+            'fecha_expedicion' => '2026-01-01',
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.cursos.registros', [
+                'document_numbers' => '9101,9102',
+            ]))
+            ->assertOk()
+            ->assertSee('Filtrar varias cédulas', false);
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.cursos.registros.export', [
+                'document_numbers' => '9101,9102',
+            ]))
+            ->assertOk();
+
+        $temp = tempnam(sys_get_temp_dir(), 'cursos-multi-');
+        file_put_contents($temp, $response->streamedContent());
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($temp));
+        $sharedStrings = (string) $zip->getFromName('xl/sharedStrings.xml');
+        $zip->close();
+
+        if (is_file($temp)) {
+            unlink($temp);
+        }
+
+        $this->assertStringContainsString('Curso Multi Uno', $sharedStrings);
+        $this->assertStringContainsString('Curso Multi Dos', $sharedStrings);
+        $this->assertStringNotContainsString('Curso Multi Tres', $sharedStrings);
+    }
+
     public function test_registros_page_includes_datatable_and_export_icon(): void
     {
         $viewer = $this->viewerUser();

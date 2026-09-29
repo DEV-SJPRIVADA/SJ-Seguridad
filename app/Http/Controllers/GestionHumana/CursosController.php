@@ -25,6 +25,7 @@ use App\Services\GestionHumana\EmployeeCursoEstadoSyncService;
 use App\Services\GestionHumana\EmployeeCursoImportService;
 use App\Services\GestionHumana\EmployeeCursoListService;
 use App\Services\GestionHumana\EmployeeCursoPendingService;
+use App\Support\DocumentNumberListParser;
 use App\Traits\HasCursosTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -647,6 +648,7 @@ class CursosController extends Controller
     /**
      * @return array{
      *     document_number: string,
+     *     document_numbers: list<string>,
      *     full_name: string,
      *     curso_tipo_id: string,
      *     vigencia: string,
@@ -658,6 +660,9 @@ class CursosController extends Controller
     {
         return [
             'document_number' => trim((string) $request->input('document_number', '')),
+            'document_numbers' => app(DocumentNumberListParser::class)->fromInput(
+                $request->input('document_numbers'),
+            ),
             'full_name' => trim((string) $request->input('full_name', '')),
             'curso_tipo_id' => (string) $request->input('curso_tipo_id', ''),
             'vigencia' => strtoupper(trim((string) $request->input('vigencia', ''))),
@@ -691,6 +696,7 @@ class CursosController extends Controller
     /**
      * @param  array{
      *     document_number: string,
+     *     document_numbers: list<string>,
      *     full_name: string,
      *     curso_tipo_id: string,
      *     vigencia: string,
@@ -705,6 +711,11 @@ class CursosController extends Controller
 
         if ($filters['document_number'] !== '') {
             $query['document_number'] = $filters['document_number'];
+        }
+
+        if ($filters['document_numbers'] !== []) {
+            $query['document_numbers'] = app(DocumentNumberListParser::class)
+                ->toQueryValue($filters['document_numbers']);
         }
 
         if ($filters['full_name'] !== '') {

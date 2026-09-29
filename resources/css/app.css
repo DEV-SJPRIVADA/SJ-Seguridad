@@ -9359,6 +9359,144 @@ a.sj-pagination__item:hover {
     flex: 0 0 auto;
 }
 
+.cursos-registros-page__filter-actions .multi-cedula-filter {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Multi-cédula filter (acreditaciones / cursos / export APO) */
+.multi-cedula-filter {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    position: relative;
+    vertical-align: middle;
+}
+
+.multi-cedula-filter__trigger {
+    position: relative;
+}
+
+.multi-cedula-filter__badge {
+    position: absolute;
+    top: -0.35rem;
+    right: -0.35rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.28rem;
+    border-radius: 999px;
+    background: #be123c;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #fff;
+    pointer-events: none;
+}
+
+.multi-cedula-filter__badge[hidden] {
+    display: none !important;
+}
+
+.modal-card.ficha-empleados-masivos-modal.multi-cedula-modal {
+    padding: 1.15rem 1.25rem 1.2rem;
+    gap: 0.95rem;
+    overflow: visible;
+}
+
+.multi-cedula-modal .ficha-empleados-masivos-modal__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.multi-cedula-modal__heading-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.multi-cedula-modal__lead {
+    margin: 0.3rem 0 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.multi-cedula-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.multi-cedula-modal__body .form-label {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-soft);
+}
+
+.multi-cedula-modal__hint {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--color-text-soft);
+}
+
+.multi-cedula-modal__hint--warn {
+    color: var(--color-warning);
+    font-weight: 650;
+}
+
+.multi-cedula-modal__error {
+    margin: 0.1rem 0 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid #fecdd3;
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.multi-cedula-modal__error[hidden] {
+    display: none !important;
+}
+
+.multi-cedula-modal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.multi-cedula-modal__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.av-cola-filters > .form-field.cursos-registros-page__filter-actions .multi-cedula-filter {
+    flex: 0 0 auto;
+}
+
+.multi-cedula-filter-slot {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
 /* Acreditados: con más filtros (Renovaciones) los botones suelen ir a 2.ª fila → alineados a la derecha. */
 .acreditaciones-acreditados-page .cursos-registros-page__filters {
     display: flex;
@@ -9729,10 +9867,23 @@ a.sj-pagination__item:hover {
     gap: 0.3rem;
 }
 
-.av-cola-filters .form-input {
+.av-cola-filters .form-input:not(textarea) {
     height: var(--control-height-chrome);
     min-height: var(--control-height-chrome);
     font-size: var(--control-font-size);
+}
+
+.multi-cedula-modal__textarea,
+.av-cola-filters .multi-cedula-modal__textarea,
+.cursos-registros-page__filters .multi-cedula-modal__textarea {
+    width: 100%;
+    height: auto;
+    min-height: 14rem;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    padding: 0.7rem 0.8rem;
 }
 
 .av-cola-filters__count {

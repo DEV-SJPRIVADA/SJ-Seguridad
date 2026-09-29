@@ -16,7 +16,7 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
-  - **Export Apo** (FEAT-039) — candidatos (universo estados + Ficha activa); **Validar** carga preview con columnas SuperVigilancia A–X + Valida/motivo (sin DT ni filtros de listado); selección manual; **quitar fila** solo en front (no sale al `.xls`); política vigencia; modal incluir novedades blandas; generación `.xls` (Writer Xls; **sin** Valida/motivo); seq diario persistido; audit generate. Desde **Acreditados** / **Validaciones**: selección (todas las páginas del filtro) + botón icono **Cargar en Export Apo** abre preview solo de esos IDs (fuera de universo → bloqueo duro/`motivo`).
+  - **Export Apo** (FEAT-039) — candidatos (universo estados + Ficha activa); **Validar** carga preview con columnas SuperVigilancia A–X + Valida/motivo (sin DT ni filtros de listado); filtro **multi-cédula** solo sobre el preview (exacto, max 500, sin historial); selección manual; **quitar fila** solo en front (no sale al `.xls`); política vigencia; modal incluir novedades blandas; generación `.xls` (Writer Xls; **sin** Valida/motivo); seq diario persistido; audit generate. Desde **Acreditados** / **Validaciones**: selección (todas las páginas del filtro) + botón icono **Cargar en Export Apo** abre preview solo de esos IDs (fuera de universo → bloqueo duro/`motivo`).
   - **Dashboard** — KPIs por estado (Total + EN PROCESO / ACREDITADO / POR VENCER / DESACREDITADO), filtros (fecha solicitud, cargo APO, `ficha_estado` activo por defecto, año tendencia) y gráficos ApexCharts (estado, cargo APO, tendencia mensual). Los filtros afectan KPIs y gráficos. Sin corridas Export Apo ni KPIs de candidatos/novedad.
 - Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
@@ -316,7 +316,7 @@ Prioridad (`AcreditacionEstadoCalculator`):
 5. Unicidad: un registro por `(document_number, cargo_apo)`.
 6. `cargo_apo` debe existir como valor **activo** en `acreditacion_cargos` (comparacion trim + case-insensitive via `forCargoApo`).
 7. `cargo` (texto) se toma siempre de `employee_ficha_profiles.position_name` (lookup/alta/edicion/import); si la ficha no tiene cargo → error.
-8. Filtros listado/export: `estado` (acreditacion), `ficha_estado` (`activo` por defecto | `desvinculado` | `todos` via `employee_ficha_profiles.employment_status` por cedula), `document_number` (parcial), `cargo` (select cargos Ficha activos / parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
+8. Filtros listado/export: `estado` (acreditacion), `ficha_estado` (`activo` por defecto | `desvinculado` | `todos` via `employee_ficha_profiles.employment_status` por cedula), `document_number` (parcial), **`document_numbers`** (lista exacta, max 500, UI modal multi-cédula sin historial), `cargo` (select cargos Ficha activos / parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
 9. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones` y/o `fecha_solicitud` (al menos un campo); con fecha → recalcula estado (EN PROCESO).
 10. Eliminar: confirmacion UI; DELETE fisico.
 
@@ -540,6 +540,7 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.14 | 2026-09-29 | Filtro multi-cédula (`document_numbers`, exacto, max 500, sin historial) en Acreditados, Validaciones (4 colas), Export Apo preview y componente compartido. |
 | 1.13 | 2026-09-29 | Dashboard: filtro `ficha_estado` (activo por defecto, alineado con listado/export Acreditados). |
 | 1.12 | 2026-09-29 | Dashboard: filtros + gráficos ApexCharts; se quitan KPIs candidatos/novedad y tabla de corridas Export Apo. |
 | 1.11 | 2026-09-28 | Export Apo: editar acreditado por fila + Actualizar masivo de seleccionados (vuelve y revalida). |

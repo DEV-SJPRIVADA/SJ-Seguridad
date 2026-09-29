@@ -44,6 +44,7 @@ use App\Services\GestionHumana\AcreditacionValidacionesExportService;
 use App\Services\GestionHumana\AcreditacionValidacionesGateService;
 use App\Services\GestionHumana\AcreditacionValidacionesResultStore;
 use App\Services\GestionHumana\AcreditacionValidacionesRunnerService;
+use App\Support\DocumentNumberListParser;
 use App\Traits\HasAcreditacionesTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -1553,9 +1554,11 @@ class AcreditacionesController extends Controller
     /**
      * @return array{
      *     document_number: string,
+     *     document_numbers: list<string>,
      *     cargo: string,
      *     cargo_apo: string,
      *     estado: string,
+     *     renovacion: string,
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
      *     ficha_estado: string,
@@ -1574,6 +1577,9 @@ class AcreditacionesController extends Controller
 
         return [
             'document_number' => trim((string) $request->input('document_number', '')),
+            'document_numbers' => app(DocumentNumberListParser::class)->fromInput(
+                $request->input('document_numbers'),
+            ),
             'cargo' => trim((string) $request->input('cargo', '')),
             'cargo_apo' => trim((string) $request->input('cargo_apo', '')),
             'estado' => (string) $request->input('estado', 'todos'),
@@ -1587,6 +1593,7 @@ class AcreditacionesController extends Controller
     /**
      * @param  array{
      *     document_number: string,
+     *     document_numbers: list<string>,
      *     cargo: string,
      *     cargo_apo: string,
      *     estado: string,
@@ -1603,6 +1610,11 @@ class AcreditacionesController extends Controller
 
         if ($filters['document_number'] !== '') {
             $query['document_number'] = $filters['document_number'];
+        }
+
+        if ($filters['document_numbers'] !== []) {
+            $query['document_numbers'] = app(DocumentNumberListParser::class)
+                ->toQueryValue($filters['document_numbers']);
         }
 
         if ($filters['cargo'] !== '') {
