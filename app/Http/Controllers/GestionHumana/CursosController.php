@@ -25,6 +25,8 @@ use App\Services\GestionHumana\EmployeeCursoEstadoSyncService;
 use App\Services\GestionHumana\EmployeeCursoImportService;
 use App\Services\GestionHumana\EmployeeCursoListService;
 use App\Services\GestionHumana\EmployeeCursoPendingService;
+use App\Services\GestionHumana\EmployeeCursoValidacionesDatatableService;
+use App\Services\GestionHumana\EmployeeCursoValidacionesService;
 use App\Support\DocumentNumberListParser;
 use App\Traits\HasCursosTabs;
 use Illuminate\Contracts\View\View;
@@ -51,6 +53,8 @@ class CursosController extends Controller
         private readonly EmployeeCursoDocumentService $documentService,
         private readonly EmployeeCursoEstadoSyncService $estadoSyncService,
         private readonly EmployeeCursoPendingService $pendingService,
+        private readonly EmployeeCursoValidacionesService $validacionesService,
+        private readonly EmployeeCursoValidacionesDatatableService $validacionesDatatableService,
         private readonly CursosImportTemplateExport $importTemplateExport,
         private readonly EmployeeCursoImportService $importService,
     ) {}
@@ -192,6 +196,217 @@ class CursosController extends Controller
         ]);
     }
 
+    public function validaciones(Request $request): View
+    {
+        abort_unless($this->cursosAccess->canView(auth()->user()), 403);
+
+        $canEdit = $this->cursosAccess->canEdit(auth()->user());
+        $counts = $this->validacionesService->counts();
+        $colaLabels = $this->validacionesService->colaLabels();
+        $defaultCola = EmployeeCursoValidacionesService::COLA_SIN_CURSO;
+
+        $tipoOptions = CursoTipo::query()
+            ->ordered()
+            ->get(['id', 'tipo_curso'])
+            ->map(fn (CursoTipo $tipo): array => [
+                'value' => (string) $tipo->id,
+                'label' => $tipo->tipo_curso,
+            ])
+            ->values()
+            ->all();
+
+        $escuelaOptions = CursoEscuela::query()
+            ->active()
+            ->whereNotNull('nombre')
+            ->where('nombre', '!=', '')
+            ->orderBy('nombre')
+            ->orderBy('id')
+            ->get(['id', 'nombre'])
+            ->map(fn (CursoEscuela $escuela): array => [
+                'value' => (string) $escuela->id,
+                'label' => $escuela->nombre,
+            ])
+            ->values()
+            ->all();
+
+        $estadoOptions = [
+            ['value' => EmployeeCurso::ESTADO_SOLICITADO, 'label' => 'SOLICITADO'],
+            ['value' => EmployeeCurso::ESTADO_ACTUALIZADO, 'label' => 'ACTUALIZADO'],
+            ['value' => EmployeeCurso::ESTADO_PENDIENTE, 'label' => 'PENDIENTE'],
+        ];
+
+        $colaDefs = [
+            EmployeeCursoValidacionesService::COLA_SIN_CURSO => [
+                'label' => $colaLabels[EmployeeCursoValidacionesService::COLA_SIN_CURSO] ?? 'Activos sin curso',
+                'columns' => array_values(array_filter([
+                    ['data' => 0, 'title' => 'Cédula'],
+                    ['data' => 1, 'title' => 'Nombre'],
+                    ['data' => 2, 'title' => 'Cargo'],
+                    $canEdit ? ['data' => 3, 'title' => 'Acciones', 'orderable' => false, 'searchable' => false] : null,
+                ])),
+            ],
+            EmployeeCursoValidacionesService::COLA_POR_ACTUALIZAR_VENCIDOS => [
+                'label' => $colaLabels[EmployeeCursoValidacionesService::COLA_POR_ACTUALIZAR_VENCIDOS] ?? 'Por actualizar / vencidos',
+                'columns' => array_values(array_filter([
+                    $canEdit ? ['data' => 0, 'title' => '', 'orderable' => false, 'searchable' => false] : null,
+                    ['data' => $canEdit ? 1 : 0, 'title' => 'Cédula'],
+                    ['data' => $canEdit ? 2 : 1, 'title' => 'Nombre'],
+                    ['data' => $canEdit ? 3 : 2, 'title' => 'Tipo curso'],
+                    ['data' => $canEdit ? 4 : 3, 'title' => 'No.CURSO'],
+                    ['data' => $canEdit ? 5 : 4, 'title' => 'Fecha exp.'],
+                    ['data' => $canEdit ? 6 : 5, 'title' => 'Vigencia'],
+                    ['data' => $canEdit ? 7 : 6, 'title' => 'Estado'],
+                    $canEdit ? ['data' => 8, 'title' => 'Acciones', 'orderable' => false, 'searchable' => false] : null,
+                ])),
+            ],
+        ];
+
+        $exportUrls = [];
+        foreach (EmployeeCursoValidacionesService::COLAS as $colaCode) {
+            $exportUrls[$colaCode] = route('gestion-humana.cursos.validaciones.export', ['cola' => $colaCode]);
+        }
+
+        $sessionErrors = $request->session()->get('errors');
+        $showNuevoModal = $canEdit
+            && $sessionErrors
+            && method_exists($sessionErrors, 'any')
+            && $sessionErrors->any()
+            && (string) old('_return_context') === 'validaciones';
+
+        return view('areas.gestion_humana.cursos.validaciones', [
+            'subTabs' => $this->getCursosSubTabs('validaciones'),
+            'canEdit' => $canEdit,
+            'counts' => $counts,
+            'colaLabels' => $colaLabels,
+            'colaDefs' => $colaDefs,
+            'defaultCola' => $defaultCola,
+            'tipoOptions' => $tipoOptions,
+            'escuelaOptions' => $escuelaOptions,
+            'estadoOptions' => $estadoOptions,
+            'filterTipoOptions' => array_merge(
+                [['value' => '', 'label' => 'Todos']],
+                $tipoOptions,
+            ),
+            'filterEstadoOptions' => [
+                ['value' => 'todos', 'label' => 'Todos'],
+                ['value' => EmployeeCurso::ESTADO_SOLICITADO, 'label' => 'SOLICITADO'],
+                ['value' => EmployeeCurso::ESTADO_ACTUALIZADO, 'label' => 'ACTUALIZADO'],
+                ['value' => EmployeeCurso::ESTADO_PENDIENTE, 'label' => 'PENDIENTE'],
+            ],
+            'filterVigenciaOptions' => [
+                ['value' => '', 'label' => 'Todas (ACTUALIZAR + VENCIDO)'],
+                ['value' => EmployeeCurso::VIGENCIA_ACTUALIZAR, 'label' => 'ACTUALIZAR'],
+                ['value' => EmployeeCurso::VIGENCIA_VENCIDO, 'label' => 'VENCIDO'],
+            ],
+            'lookupUrl' => route('gestion-humana.cursos.registros.lookup'),
+            'datatableUrl' => route('gestion-humana.cursos.validaciones.datatable'),
+            'bulkSelectableUrl' => route('gestion-humana.cursos.validaciones.bulk-selectable'),
+            'bulkMarkSolicitadoUrl' => route('gestion-humana.cursos.registros.bulk-mark-solicitado'),
+            'exportUrls' => $exportUrls,
+            'showNuevoModal' => $showNuevoModal,
+        ]);
+    }
+
+    public function validacionesDatatable(Request $request): JsonResponse
+    {
+        abort_unless($this->cursosAccess->canView(auth()->user()), 403);
+
+        $cola = (string) $request->query('cola', EmployeeCursoValidacionesService::COLA_SIN_CURSO);
+        if (! $this->validacionesService->isValidCola($cola)) {
+            return response()->json(['error' => 'Cola no válida.'], 422);
+        }
+
+        return $this->validacionesDatatableService->respond(
+            $request,
+            $cola,
+            $this->validacionesFiltersFromRequest($request),
+            $this->cursosAccess->canEdit(auth()->user()),
+        );
+    }
+
+    public function validacionesExport(Request $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->cursosAccess->canView(auth()->user()), 403);
+
+        $cola = (string) $request->query('cola', '');
+        if (! $this->validacionesService->isValidCola($cola)) {
+            return redirect()
+                ->route('gestion-humana.cursos.validaciones')
+                ->with('error', 'Cola de validación no válida.');
+        }
+
+        $filters = $this->validacionesFiltersFromRequest($request);
+        $columns = $this->validacionesService->exportColumns($cola);
+        $label = $this->validacionesService->colaLabels()[$cola] ?? $cola;
+
+        if ($cola === EmployeeCursoValidacionesService::COLA_SIN_CURSO) {
+            $data = $this->validacionesService->sinCursoQuery($filters)
+                ->get(['document_number', 'full_name', 'position_name'])
+                ->map(fn (EmployeeFichaProfile $profile): array => [
+                    'document_number' => (string) $profile->document_number,
+                    'full_name' => (string) ($profile->full_name ?: ''),
+                    'position_name' => (string) ($profile->position_name ?: ''),
+                ]);
+        } else {
+            $data = $this->validacionesService->porActualizarVencidosQuery($filters)
+                ->with(['cursoTipo:id,tipo_curso'])
+                ->get()
+                ->map(fn (EmployeeCurso $curso): array => [
+                    'document_number' => (string) $curso->document_number,
+                    'full_name' => (string) $curso->full_name,
+                    'tipo_curso' => (string) ($curso->cursoTipo?->tipo_curso ?: ''),
+                    'numero_curso' => (string) $curso->numero_curso,
+                    'fecha_expedicion' => optional($curso->fecha_expedicion)?->format('Y-m-d') ?: '',
+                    'vigencia' => $curso->computeVigencia(),
+                    'estado' => (string) ($curso->estado ?: ''),
+                ]);
+        }
+
+        return (new BaseExport(
+            $data,
+            $columns,
+            sprintf('cursos_validaciones_%s.xlsx', $cola),
+            sprintf('Cursos validaciones — %s', $label),
+        ))->download();
+    }
+
+    public function validacionesBulkSelectable(Request $request): JsonResponse
+    {
+        abort_unless($this->cursosAccess->canEdit(auth()->user()), 403);
+
+        $filters = $this->validacionesFiltersFromRequest($request);
+        $rows = $this->validacionesService->porActualizarVencidosQuery($filters, ordered: false)
+            ->with(['cursoTipo:id,tipo_curso'])
+            ->where('estado', '!=', EmployeeCurso::ESTADO_SOLICITADO)
+            ->orderByDesc('fecha_expedicion')
+            ->orderByDesc('id')
+            ->get([
+                'id',
+                'document_number',
+                'full_name',
+                'curso_tipo_id',
+                'numero_curso',
+                'estado',
+                'fecha_expedicion',
+            ])
+            ->map(fn (EmployeeCurso $curso): array => [
+                'id' => $curso->id,
+                'document_number' => $curso->document_number,
+                'full_name' => $curso->full_name,
+                'tipo_curso' => $curso->cursoTipo?->tipo_curso ?? '—',
+                'numero_curso' => $curso->numero_curso,
+                'estado' => $curso->estado ?: '—',
+                'vigencia' => $curso->computeVigencia(),
+            ])
+            ->values()
+            ->all();
+
+        return response()->json([
+            'data' => $rows,
+            'meta' => ['count' => count($rows)],
+        ]);
+    }
+
     public function omitPending(
         OmitEmployeeCursoPendingRequest $request,
         EmployeeCursoPending $pending,
@@ -259,8 +474,7 @@ class CursosController extends Controller
         $filters = $this->filtersFromRequest($request);
 
         if ($updatedCount === 0) {
-            return redirect()
-                ->route('gestion-humana.cursos.registros', $this->activeFilterQuery($filters))
+            return $this->redirectAfterCursoMutation($request, $this->activeFilterQuery($filters))
                 ->with('error', 'No se actualizó ningún registro. Los seleccionados ya estaban en SOLICITADO o no eran válidos.');
         }
 
@@ -272,8 +486,7 @@ class CursosController extends Controller
             $message .= " Se omitieron {$skippedAlreadySolicitado} que ya estaban solicitados.";
         }
 
-        return redirect()
-            ->route('gestion-humana.cursos.registros', $this->activeFilterQuery($filters))
+        return $this->redirectAfterCursoMutation($request, $this->activeFilterQuery($filters))
             ->with('status', $message);
     }
 
@@ -368,8 +581,7 @@ class CursosController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return redirect()
-            ->route('gestion-humana.cursos.registros')
+        return $this->redirectAfterCursoMutation($request)
             ->with('status', 'Registro de curso creado correctamente.');
     }
 
@@ -412,8 +624,7 @@ class CursosController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return redirect()
-            ->route('gestion-humana.cursos.registros', $request->query())
+        return $this->redirectAfterCursoMutation($request, $request->query())
             ->with('status', 'Registro de curso actualizado correctamente.');
     }
 
@@ -739,6 +950,48 @@ class CursosController extends Controller
         }
 
         return $query;
+    }
+
+    /**
+     * @return array{
+     *     document_number: string,
+     *     document_numbers: list<string>,
+     *     full_name: string,
+     *     curso_tipo_id: string,
+     *     vigencia: string,
+     *     estado: string,
+     * }
+     */
+    private function validacionesFiltersFromRequest(Request $request): array
+    {
+        $documentNumbers = app(DocumentNumberListParser::class)->fromInput(
+            $request->input('document_numbers', $request->query('document_numbers'))
+        );
+
+        return [
+            'document_number' => trim((string) $request->input('document_number', '')),
+            'document_numbers' => $documentNumbers,
+            'full_name' => trim((string) $request->input('full_name', '')),
+            'curso_tipo_id' => (string) $request->input('curso_tipo_id', ''),
+            'vigencia' => strtoupper(trim((string) $request->input('vigencia', ''))),
+            'estado' => (string) $request->input('estado', 'todos'),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function redirectAfterCursoMutation(Request $request, array $query = []): RedirectResponse
+    {
+        $returnContext = (string) $request->input('_return_context', $request->query('_return_context', ''));
+
+        if ($returnContext === 'validaciones') {
+            return redirect()->route('gestion-humana.cursos.validaciones', array_filter([
+                'cola' => (string) $request->input('cola', $request->query('cola', '')),
+            ]));
+        }
+
+        return redirect()->route('gestion-humana.cursos.registros', $query);
     }
 
     /**

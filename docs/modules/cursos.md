@@ -9,8 +9,14 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
 
 ## Alcance actual
 
-- Pestanas **Dashboard**, **Cursos** (registros) y **Catalogo** (tablero de tarjetas: tipos + escuelas; `?catalog=`).
-- Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit` (bypass `manage.users`).
+- Pestanas **Dashboard**, **Cursos** (registros), **Validaciones** y **Catalogo** (tablero de tarjetas: tipos + escuelas; `?catalog=`).
+- Permisos: `view.board.gestion_humana.cursos`, `cursos.view`, `cursos.edit` (bypass `manage.users`). **Validaciones** reutiliza `cursos.view` / `cursos.edit` (sin claves nuevas por pestana).
+- **Validaciones** (colas en vivo, DataTables server-side):
+  - `sin_curso`: perfiles Ficha **activo** sin ninguna fila en `employee_cursos`.
+  - `por_actualizar_vencidos`: una fila por curso con vigencia `ACTUALIZAR` o `VENCIDO` de personas activas.
+  - Acciones con `cursos.edit`: Agregar curso (sin curso), editar + marcar SOLICITADO (por actualizar/vencidos).
+  - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (pending queue).
+  - Servicios: `EmployeeCursoValidacionesService`, `EmployeeCursoValidacionesDatatableService`.
 - Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton).
   - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
 - Unicidad de registro: `(document_number, numero_curso)`.
@@ -52,7 +58,11 @@ Prefijo: `/gestion-humana/cursos` · nombre `gestion-humana.cursos.`
 | GET | `/registros/plantilla-importacion` | `registros.import-template` | Plantilla vacia. `cursos.edit` |
 | POST | `/registros/importar` | `registros.import` | Carga masiva. `cursos.edit` |
 | GET | `/registros/importar/reporte/{token}` | `registros.import-report` | Fallos (token ~1 h) |
-| CRUD + documento | `/registros/...` | store/update/destroy/upload/download | Segun permiso |
+| GET | `/registros/...` | CRUD + documento | Segun permiso |
+| GET | `/validaciones` | `validaciones` | Colas sin curso / por actualizar·vencidos |
+| GET | `/validaciones/datatable` | `validaciones.datatable` | JSON DataTables por `cola` |
+| GET | `/validaciones/exportar` | `validaciones.export` | Excel de la cola (`cola` + filtros) |
+| GET | `/validaciones/bulk-selectable` | `validaciones.bulk-selectable` | Elegibles SOLICITADO en cola vencidos. `cursos.edit` |
 | GET | `/catalogo` | `catalogo` | Tablero de catalogos (`?catalog=tipos|escuelas` abre seccion) |
 | POST/PATCH/DELETE | `/catalogo/...` | `catalogo.*` | CRUD tipos |
 | POST/PATCH/DELETE | `/catalogo/escuelas/...` | `catalogo.escuelas.*` | CRUD escuelas (codigo, nit, nombre) |

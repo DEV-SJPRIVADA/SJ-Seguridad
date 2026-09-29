@@ -217,6 +217,7 @@ return [
     'cursos_tabs' => [
         'dashboard' => 'Dashboard',
         'registros' => 'Cursos',
+        'validaciones' => 'Validaciones',
         'catalogo' => 'Catálogo',
     ],
 

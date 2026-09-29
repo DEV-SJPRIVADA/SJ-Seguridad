@@ -76,6 +76,12 @@
             enctype="multipart/form-data"
         >
             @csrf
+            @if (! empty($returnContext))
+                <input type="hidden" name="_return_context" value="{{ $returnContext }}">
+                @if (! empty($returnCola))
+                    <input type="hidden" name="cola" value="{{ $returnCola }}">
+                @endif
+            @endif
             <div class="cursos-registros-page__form-grid">
                 <div class="form-field">
                     <label class="form-label" for="create_document_number">CEDULA</label>
