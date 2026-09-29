@@ -54,7 +54,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         $this->actingAs($user)
             ->get(route('comercial.matriz.clients.index'))
@@ -80,7 +80,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         $activeClient = CommercialClient::query()->create([
             'nit' => '900111222',
@@ -131,7 +131,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         $client = CommercialClient::query()->create([
             'nit' => '900333445',
@@ -346,7 +346,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo('comercial.clients.view');
 
         $this->actingAs($user)
             ->get(route('comercial.matriz.clients.checklist.index'))
@@ -354,7 +354,7 @@ class CommercialMatrixTest extends TestCase
             ->assertSee('Checklist documental')
             ->assertSee('Gestion Clientes', false)
             ->assertSee('Clientes', false)
-            ->assertSee('Servicios', false);
+            ->assertDontSee('href="'.route('comercial.matriz.services.index').'"', false);
     }
 
     public function test_gestion_clientes_board_redirects_to_first_visible_tab(): void
@@ -365,7 +365,7 @@ class CommercialMatrixTest extends TestCase
         ]);
         $clientsOnly->assignRole('usuario');
         $clientsOnly->givePermissionTo('view.board.comercial.gestion_clientes');
-        $clientsOnly->givePermissionTo('view.board.comercial.matriz_clientes');
+        $clientsOnly->givePermissionTo('comercial.clients.view');
 
         $this->actingAs($clientsOnly)
             ->get(route('dashboard', ['module' => 'comercial', 'board' => 'gestion_clientes']))
@@ -377,7 +377,7 @@ class CommercialMatrixTest extends TestCase
         ]);
         $servicesOnly->assignRole('usuario');
         $servicesOnly->givePermissionTo('view.board.comercial.gestion_clientes');
-        $servicesOnly->givePermissionTo('view.board.comercial.servicios_comerciales');
+        $servicesOnly->givePermissionTo('comercial.services.view');
 
         $this->actingAs($servicesOnly)
             ->get(route('dashboard', ['module' => 'comercial', 'board' => 'gestion_clientes']))
@@ -391,7 +391,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $clientsOnly->assignRole('usuario');
-        $clientsOnly->givePermissionTo('view.board.comercial.matriz_clientes');
+        $clientsOnly->givePermissionTo('comercial.clients.view');
 
         $this->actingAs($clientsOnly)
             ->get(route('comercial.matriz.clients.index'))
@@ -404,7 +404,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $servicesOnly->assignRole('usuario');
-        $servicesOnly->givePermissionTo('view.board.comercial.servicios_comerciales');
+        $servicesOnly->givePermissionTo('comercial.services.view');
 
         $this->actingAs($servicesOnly)
             ->get(route('comercial.matriz.services.index'))
@@ -471,7 +471,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         $nav = app(NavigationResolver::class)->resolve($user, 'comercial.matriz.clients.index');
         $comercial = collect($nav['appNavigation'])->firstWhere('key', 'comercial');
@@ -489,7 +489,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo(['comercial.matriz.manage', 'manage.commercial.parameters']);
+        $user->givePermissionTo(['comercial.clients.edit', 'comercial.services.edit', 'comercial.parameters.edit']);
 
         $nav = app(NavigationResolver::class)->resolve($user, 'comercial.parameters.index');
         $comercial = collect($nav['appNavigation'])->firstWhere('key', 'comercial');
@@ -507,7 +507,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo('comercial.clients.view');
 
         $client = CommercialClient::query()->create([
             'nit' => '900111225',
@@ -814,7 +814,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo(['comercial.clients.view', 'comercial.services.view']);
 
         $this->actingAs($user)
             ->get(route('comercial.parameters.index'))
@@ -828,7 +828,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('manage.commercial.parameters');
+        $user->givePermissionTo('comercial.parameters.edit');
 
         $this->actingAs($user)
             ->get(route('comercial.parameters.index'))
@@ -891,7 +891,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('manage.commercial.parameters');
+        $user->givePermissionTo('comercial.parameters.edit');
 
         $this->actingAs($user)
             ->post(route('comercial.parameters.store', ['type' => 'portfolios']), [
@@ -944,13 +944,48 @@ class CommercialMatrixTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
-    public function test_matriz_manager_can_access_parameters_tab(): void
+    public function test_clients_editor_cannot_access_services_or_parameters(): void
+    {
+        $user = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'comercial',
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo('comercial.clients.edit');
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.index'))
+            ->assertOk()
+            ->assertDontSee('href="'.route('comercial.matriz.services.index').'"', false);
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.clients.create'))
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.index'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('comercial.matriz.services.create'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('comercial.parameters.index'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('comercial.dashboard'))
+            ->assertForbidden();
+    }
+
+    public function test_matriz_manager_cannot_access_parameters_without_parameters_edit(): void
     {
         $user = $this->matrizManager();
 
         $this->actingAs($user)
             ->get(route('comercial.parameters.index'))
-            ->assertOk();
+            ->assertForbidden();
     }
 
     private function matrizManager(): User
@@ -960,8 +995,7 @@ class CommercialMatrixTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
-        $user->givePermissionTo('comercial.matriz.manage');
+        $user->givePermissionTo(['comercial.clients.edit', 'comercial.services.edit']);
 
         return $user;
     }

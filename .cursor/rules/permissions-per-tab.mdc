@@ -1,0 +1,56 @@
+---
+description: Modelo de permisos por pestana (view/edit) — preguntar al usuario en features nuevas
+alwaysApply: true
+---
+
+# Permisos por pestana (modelo objetivo)
+
+Patron canónico (referencia viva: **Comercial / Gestion Clientes** + `CommercialAccessService`).
+
+## Modelo
+
+| Tipo | Ejemplo | Rol |
+| --- | --- | --- |
+| Tablero sidebar | `view.board.{area}.{tablero}` | Solo muestra el tablero en navegacion |
+| Consulta por pestana | `{modulo}.{pestana}.view` | Ver, filtrar, export; **sin** mutar |
+| Edicion por pestana | `{modulo}.{pestana}.edit` | CRUD / acciones de escritura |
+| Catalogos | `{modulo}.parameters.edit` (o equivalente) | Solo si hay pestana de catalogos |
+
+Reglas:
+
+1. **`edit` implica `view`** en el `*AccessService` del modulo (no depender de herencia Spatie).
+2. **No** crear packs del estilo `*.matriz.view` / `*.manage` que abran varias pestanas a la vez.
+3. Dashboard / KPI: permiso de tablero **propio** (`view.board.…dashboard`) salvo que el usuario diga lo contrario.
+4. Labels Admin legibles (`Clientes: Ver`, no `view.board…matriz_clientes`).
+5. Legacy: migrar usuarios + ocultar en `admin_hidden_permissions`; no borrar Spatie de golpe.
+
+## Obligatorio — preguntar al usuario
+
+Antes de **definir, renombrar o cablear** permisos al:
+
+- anadir una **pestana** nueva a un tablero,
+- anadir una **funcionalidad** con mutaciones (CRUD, import, bulk, checklist, export sensible),
+- migrar permisos de un area al modelo nuevo,
+
+**detenerse y preguntar** (no inventar el mapa):
+
+1. ¿Hace falta `view` y `edit` separados para esta pestana/accion?
+2. ¿El dashboard / shell del tablero usa permiso propio o se deriva de algun `view`?
+3. ¿Catalogos / parametros van con `*.parameters.edit` u otro?
+4. ¿Hay que migrar automaticamente a quien tenia el permiso viejo?
+
+Sin respuesta del usuario: no crear claves nuevas en `config/access.php` ni gates en controladores.
+
+## Al implementar (tras OK del usuario)
+
+- Claves en `config/access.php` (`area_indicador_permissions` / `system_permissions` + grupo Admin UI).
+- Logica centralizada en `App\Services\Access\*AccessService` (o del modulo).
+- Controllers: `authorizeView` / `authorizeManage` (o edit) delegan al servicio.
+- Vistas: botones de mutacion solo con `edit`.
+- Migracion Spatie de datos si hay legacy; tests Feature de acceso.
+- Actualizar `docs/ACCESS_CONTROL.md` y `docs/modules/{modulo}.md`.
+
+## Referencia
+
+- Codigo: `app/Services/Access/CommercialAccessService.php`, `config/access.php` (grupo Comercial).
+- Doc: [`docs/ACCESS_CONTROL.md`](../../docs/ACCESS_CONTROL.md).

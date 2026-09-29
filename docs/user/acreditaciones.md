@@ -10,7 +10,7 @@ Apoyar a Gestión Humana en el control del personal acreditado: vigencia de la a
 
 Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
-- **Dashboard** — lectura: resumen de acreditados por estado, candidatos a exportar, posibles novedades y últimas generaciones del archivo APO.
+- **Dashboard** — lectura: KPIs por estado, filtros (fecha solicitud, cargo APO, estado en ficha, año) y gráficos. Por defecto solo empleados **activos en ficha**. Los filtros actualizan KPIs y gráficos.
 - **Acreditados** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel y carga masiva con plantilla.
 - **Reporte Diario** — carga diaria de uno o dos Excel de la APO (En proceso y/o Acreditados APO), consulta por fecha, filtros, exportar e histórico de cargas. Es un **archivo histórico** de lo que envió la APO ese día; **no** actualiza por sí solo el listado de Acreditados ni Ficha.
 - **Validaciones** — solo con permiso de edición: elige una fecha de reporte, comprueba que ese día tenga **ambos** Excel APO cargados, ejecuta el cruce y obtiene **cuatro colas** para actuar (abrir Ficha, editar o crear acreditado) y exportar. Los resultados viven **solo en pantalla** de esa corrida (no hay histórico de validaciones guardado).
@@ -58,7 +58,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 **En esta versión (Dashboard):**
 
-- Visible con permiso de **consulta**. Muestra conteos por estado, candidatos a export, estimación de novedades y las últimas generaciones Export Apo. No permite generar ni editar desde aquí.
+- Visible con permiso de **consulta**. Muestra KPIs por estado, filtros y gráficos (estado, cargo APO, tendencia). No permite generar ni editar desde aquí.
 
 ## Definiciones
 
@@ -96,7 +96,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 | Novedad dura / bloqueo | Ficha incompleta (faltan datos de identidad obligatorios). Esa fila **nunca** se exporta. |
 | Política de vigencia (cursos) | Criterio para aceptar el curso: solo **VIGENTE**, o **VIGENTE + ACTUALIZAR**. |
 | CódigoCurso | Código APO del tipo de curso (campo CURSOS en Catálogo Cursos). |
-| Dashboard | Pantalla de lectura con indicadores y últimas corridas de Export Apo. |
+| Dashboard | Pantalla de lectura con KPIs, filtros y gráficos de acreditados. |
 
 ## Responsabilidades
 
@@ -118,8 +118,8 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 ### Consultar el Dashboard
 
 1. Abra la pestaña **Dashboard**.
-2. Revise los conteos de acreditados por estado, cuántos son candidatos a Export Apo y cuántos tendrían novedad potencial.
-3. Consulte la tabla de **últimas generaciones** del archivo SuperVigilancia (quién generó, nombre de archivo, opciones y cantidades).
+2. Use los filtros (fecha de solicitud, cargo APO, estado en ficha, año de tendencia) si quiere acotar el universo. Por defecto solo se cuentan empleados **activos en ficha** (alineado con Acreditados/export); elija «Desvinculados» o «Todos (ficha)» para ampliar.
+3. Revise los KPIs por estado y los gráficos (incluye tendencia de solicitudes y de vencimientos VIGEN.ACR); al cambiar un filtro se actualizan juntos.
 4. Esta pantalla es solo lectura; para generar el archivo use **Export Apo**.
 
 ### Registrar o editar un acreditado
@@ -230,6 +230,8 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.18 | 2026-09-29 | Feature | Dashboard: por defecto solo empleados activos en ficha; filtro Estado ficha (activos/desvinculados/todos). |
+| 1.17 | 2026-09-29 | Feature | Dashboard: quita candidatos/novedad/corridas Export Apo; filtros + gráficos ApexCharts. |
 | 1.16 | 2026-09-28 | Feature | Acreditados/Validaciones: Cargar en Export Apo; quitar fila en preview; fuera de universo = bloqueo. |
 | 1.15 | 2026-09-28 | Feature | Export Apo: se elimina listado DT/filtros; Validar muestra solo preview con columnas APO. |
 | 1.14 | 2026-09-28 | Feature | Export Apo: se restaura Preview SuperVigilancia; match F\|R acepta `cargo_acredit` como código de catálogo. |

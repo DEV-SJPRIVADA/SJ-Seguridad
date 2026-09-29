@@ -4,6 +4,11 @@ return [
     // Permisos ocultos en Admin (compatibilidad legacy en codigo; no asignar a usuarios nuevos).
     'admin_hidden_permissions' => [
         'manage.requisitions',
+        'manage.commercial.parameters',
+        'comercial.matriz.view',
+        'comercial.matriz.manage',
+        'view.board.comercial.matriz_clientes',
+        'view.board.comercial.servicios_comerciales',
     ],
 
     'system_permissions' => [
@@ -13,7 +18,9 @@ return [
         'system.view.audit' => 'Ver auditoria global del sistema',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
         'manage.requisition.parameters' => 'Administrar catalogos de requisiciones',
-        'manage.commercial.parameters' => 'Administrar catalogos comerciales',
+        'manage.commercial.parameters' => 'Administrar catalogos comerciales (legacy)',
+        'comercial.matriz.view' => 'Matriz comercial: Ver clientes y servicios (legacy)',
+        'comercial.matriz.manage' => 'Matriz comercial: Administrar clientes y servicios (legacy)',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
@@ -69,8 +76,11 @@ return [
             'operations.export' => 'Indicadores: Exportar PDF y Excel',
         ],
         'comercial' => [
-            'comercial.matriz.view' => 'Matriz comercial: Ver clientes y servicios',
-            'comercial.matriz.manage' => 'Matriz comercial: Administrar clientes y servicios',
+            'comercial.clients.view' => 'Clientes: Ver',
+            'comercial.clients.edit' => 'Clientes: Editar',
+            'comercial.services.view' => 'Servicios: Ver',
+            'comercial.services.edit' => 'Servicios: Editar',
+            'comercial.parameters.edit' => 'Catalogos: Editar',
         ],
     ],
 
@@ -494,13 +504,13 @@ return [
                         ],
                     ],
                     'matriz' => [
-                        'label' => 'Matriz comercial (funciones)',
+                        'label' => 'Gestion Clientes (funciones)',
                         'permissions' => [
-                            'comercial.matriz.view',
-                            'comercial.matriz.manage',
-                            'manage.commercial.parameters',
-                            'view.board.comercial.matriz_clientes',
-                            'view.board.comercial.servicios_comerciales',
+                            'comercial.clients.view',
+                            'comercial.clients.edit',
+                            'comercial.services.view',
+                            'comercial.services.edit',
+                            'comercial.parameters.edit',
                         ],
                     ],
                 ],

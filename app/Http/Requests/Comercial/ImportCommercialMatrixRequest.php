@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Comercial;
 
+use App\Services\Access\CommercialAccessService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ImportCommercialMatrixRequest extends FormRequest
@@ -10,10 +11,7 @@ class ImportCommercialMatrixRequest extends FormRequest
     {
         $user = $this->user();
 
-        return $user !== null && (
-            $user->can('comercial.matriz.manage')
-            || $user->can('manage.users')
-        );
+        return $user !== null && app(CommercialAccessService::class)->canEditClients($user);
     }
 
     /**

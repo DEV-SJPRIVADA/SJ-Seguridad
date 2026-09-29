@@ -427,12 +427,7 @@ class NavigationResolver
                     ->values();
 
                 if ($key === 'comercial'
-                    && (
-                        $user->can('comercial.matriz.view')
-                        || $user->can('comercial.matriz.manage')
-                        || $user->can('view.board.comercial.matriz_clientes')
-                        || $user->can('view.board.comercial.servicios_comerciales')
-                    )
+                    && $this->commercialAccess->canViewDashboard($user)
                     && $boardItems->doesntContain('label', config('access.boards.dashboard'))
                     && $this->sidebarVisibility->shouldShowBoard($user, 'comercial', 'dashboard')
                 ) {

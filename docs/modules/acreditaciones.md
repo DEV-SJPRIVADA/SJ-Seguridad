@@ -17,7 +17,7 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
   - **Export Apo** (FEAT-039) — candidatos (universo estados + Ficha activa); **Validar** carga preview con columnas SuperVigilancia A–X + Valida/motivo (sin DT ni filtros de listado); selección manual; **quitar fila** solo en front (no sale al `.xls`); política vigencia; modal incluir novedades blandas; generación `.xls` (Writer Xls; **sin** Valida/motivo); seq diario persistido; audit generate. Desde **Acreditados** / **Validaciones**: selección (todas las páginas del filtro) + botón icono **Cargar en Export Apo** abre preview solo de esos IDs (fuera de universo → bloqueo duro/`motivo`).
-  - **Dashboard** (FEAT-039) — KPIs Acreditados por estado, conteo candidatos / novedad potencial, ultimas corridas Export Apo; metrics JSON; **sin** mutaciones; **sin** ApexCharts obligatorio.
+  - **Dashboard** — KPIs por estado (Total + EN PROCESO / ACREDITADO / POR VENCER / DESACREDITADO), filtros (fecha solicitud, cargo APO, `ficha_estado` activo por defecto, año tendencia) y gráficos ApexCharts (estado, cargo APO, tendencia mensual). Los filtros afectan KPIs y gráficos. Sin corridas Export Apo ni KPIs de candidatos/novedad.
 - Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
 - Cedula obligatoria en `employee_ficha_profiles` **solo** en Acreditados; en Reporte Diario la cedula ausente en Ficha **no** bloquea. Export Apo exige Ficha **activa** + campos identidad completos (bloqueo duro si incompleta).
@@ -130,7 +130,7 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | `areas/gestion_humana/acreditaciones/reporte-diario.blade.php` | Listado DT + filtros fecha/origen/busqueda + modal carga + modal cargas + export |
 | `areas/gestion_humana/acreditaciones/validaciones.blade.php` | Shell fecha + gate + Ejecutar + 4 colas DT + exports; reusa `nuevo-modal` / `edit-modal` |
 | `areas/gestion_humana/acreditaciones/catalogo.blade.php` | Listado + CRUD catalogo + sección params Export Apo (fila unica) |
-| `areas/gestion_humana/acreditaciones/dashboard.blade.php` | KPIs + candidatos/novedad + ultimas corridas |
+| `areas/gestion_humana/acreditaciones/dashboard.blade.php` | Filtros + KPIs por estado + gráficos ApexCharts |
 | `areas/gestion_humana/acreditaciones/export-apo.blade.php` | Vacío hasta **Validar**; preview columnas SuperVigilancia A–X + Sel/Valida/Motivo; modal novedades + generar `.xls` |
 | `areas/gestion_humana/acreditaciones/partials/subnav.blade.php` | Pestanas `.module-tab` |
 | `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal crear acreditado (tambien desde Validaciones cola `sin_acreditacion`) |
@@ -273,7 +273,7 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `AcreditacionExportApoRowResolver` | Ficha/cargo/curso/novedades; Genero 1/2; match F\|R |
 | `AcreditacionExportApoPreviewService` | Preview Valida/motivo por ids seleccionados |
 | `AcreditacionExportApoGenerateService` | Seq diario + writer `.xls` + persist run + audit |
-| `AcreditacionDashboardService` | KPIs + novedad potencial + ultimas corridas |
+| `AcreditacionDashboardService` | KPIs + charts filtrados (fecha solicitud, cargo APO, ficha_estado, año) |
 | `SyncAcreditacionEstadosCommand` | `acreditaciones:sync-estados` (`--date`, `--dry-run`) |
 
 Config: `config/acreditaciones.php` → `reporte_diario`, `validaciones`, **`export_apo`** (headers A–X, politicas vigencia, seq_pad, dashboard_last_n / dashboard_novedad_*).  
@@ -400,10 +400,10 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 45. Writer: `App\Exports\AcreditacionExportApoXlsExport` (PhpSpreadsheet `Writer\Xls`); **no** BaseExport / excelHtml5.
 46. Tab + rutas Export Apo: **`acreditaciones.edit`**. GET sin edit → 403.
 
-### Dashboard (FEAT-039)
+### Dashboard
 
-47. Lectura con `acreditaciones.view`: conteos Acreditados por `estado`; conteo candidatos (mismo universo SQL Export Apo); conteo novedad potencial vía Resolver (chunk; tope `dashboard_novedad_max_scan`); tabla últimas N corridas (`dashboard_last_n`, default 20).
-48. Política default del KPI novedad: `config('acreditaciones.export_apo.dashboard_novedad_policy')` = **`VIGENTE_ACTUALIZAR`** *(desviación vs brief S que sugería VIGENTE; decisión UX más permisiva — review obs. #2)*.
+47. Lectura con `acreditaciones.view`: KPIs (Total + conteos por `estado`) y gráficos (estado, cargo APO, tendencia solicitudes por `fecha_solicitud`, tendencia vencimientos por `vigencia_acr`).
+48. Filtros compartidos KPIs/gráficos: `fecha_desde`/`fecha_hasta` (solicitud), `cargo_apo`, `ficha_estado` (`activo` por defecto | `desvinculado` | `todos`, mismo criterio que listado/export Acreditados vía `employee_ficha_profiles`), `anio` (ambas tendencias mensuales). Endpoint `dashboard.metrics` JSON. Sin corridas Export Apo ni KPIs candidatos/novedad.
 49. Endpoint `dashboard.metrics` JSON; sin mutaciones; sin ApexCharts obligatorio.
 
 ### Auditoria
@@ -462,7 +462,7 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 - Filtros y forms con `<x-searchable-select>` + Alpine (origen Reporte Diario; política vigencia Export Apo). Fecha Validaciones: `input type="date"`.
 - Confirmacion UI borrado duro Acreditados; modal import masivo; confirm replace Reporte Diario; **modal Sí/No novedades blandas** antes de generar Export Apo.
 - Validaciones: botón Ejecutar (no auto); acciones delegadas Abrir Ficha / Editar / Nuevo; reuso modales Acreditados.
-- Dashboard Acreditaciones: KPIs sin ApexCharts obligatorio (sin entry Vite dedicada de charts).
+- Dashboard Acreditaciones: filtros + KPIs + ApexCharts (`resources/js/acreditaciones-dashboard-charts.js`).
 
 ## Validacion local
 
@@ -540,6 +540,8 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.13 | 2026-09-29 | Dashboard: filtro `ficha_estado` (activo por defecto, alineado con listado/export Acreditados). |
+| 1.12 | 2026-09-29 | Dashboard: filtros + gráficos ApexCharts; se quitan KPIs candidatos/novedad y tabla de corridas Export Apo. |
 | 1.11 | 2026-09-28 | Export Apo: editar acreditado por fila + Actualizar masivo de seleccionados (vuelve y revalida). |
 | 1.10 | 2026-09-28 | Modal novedades Export Apo: diseño chrome; solo si selección tiene Valida=No; si todas válidas genera directo. |
 | 1.9 | 2026-09-28 | Acreditados/Validaciones: checks + seleccionar filtro completo → Cargar en Export Apo (auto-Validar IDs); preview fuera de universo = bloqueo; quitar fila en front. |

@@ -11,6 +11,7 @@ use App\Http\Requests\Comercial\StoreCommercialClientRequest;
 use App\Http\Requests\Comercial\UpdateCommercialClientRequest;
 use App\Models\CommercialClient;
 use App\Models\CommercialService;
+use App\Services\Access\CommercialAccessService;
 use App\Services\Comercial\CommercialAuditLogService;
 use App\Services\Comercial\CommercialMatrixImportService;
 use App\Support\DisplayDate;
@@ -31,6 +32,7 @@ class CommercialClientController extends Controller
         private readonly CommercialMatrixImportTemplateExport $importTemplateExport,
         private readonly CommercialMatrixImportService $importService,
         private readonly CommercialAuditLogService $auditLogService,
+        private readonly CommercialAccessService $commercialAccess,
     ) {}
 
     public function index(Request $request): View
@@ -249,6 +251,7 @@ class CommercialClientController extends Controller
             'portfolios' => CommercialService::portfolios(),
             'filters' => ['portfolio' => $portfolio],
             'canManage' => $this->canManage(),
+            'canEditServices' => $this->canEditServices(),
             'subTabs' => $this->getGestionClientesSubTabs('clientes'),
         ]);
     }
@@ -490,10 +493,7 @@ class CommercialClientController extends Controller
     private function authorizeView(): void
     {
         abort_unless(
-            auth()->user()?->can('comercial.matriz.view')
-            || auth()->user()?->can('comercial.matriz.manage')
-            || auth()->user()?->can('view.board.comercial.matriz_clientes')
-            || auth()->user()?->can('manage.users'),
+            auth()->user() !== null && $this->commercialAccess->canViewClients(auth()->user()),
             403
         );
     }
@@ -501,15 +501,23 @@ class CommercialClientController extends Controller
     private function authorizeManage(): void
     {
         abort_unless(
-            auth()->user()?->can('comercial.matriz.manage')
-            || auth()->user()?->can('manage.users'),
+            auth()->user() !== null && $this->commercialAccess->canEditClients(auth()->user()),
             403
         );
     }
 
     private function canManage(): bool
     {
-        return (bool) (auth()->user()?->can('comercial.matriz.manage') || auth()->user()?->can('manage.users'));
+        $user = auth()->user();
+
+        return $user !== null && $this->commercialAccess->canEditClients($user);
+    }
+
+    private function canEditServices(): bool
+    {
+        $user = auth()->user();
+
+        return $user !== null && $this->commercialAccess->canEditServices($user);
     }
 
     /**

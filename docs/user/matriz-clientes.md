@@ -29,10 +29,14 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 
 | Rol / perfil | Responsabilidad |
 | --- | --- |
-| Comercial — consulta | Ver dashboard, clientes y servicios. |
-| Comercial — gestion | Crear/editar clientes y servicios; inactivar servicios. |
+| Comercial — consulta clientes | Permiso **Clientes: Ver**; listados, filtros, export y checklist en lectura. |
+| Comercial — edicion clientes | Permiso **Clientes: Editar**; crear/editar clientes, checklist e import. |
+| Comercial — consulta servicios | Permiso **Servicios: Ver**. |
+| Comercial — edicion servicios | Permiso **Servicios: Editar**. |
+| Comercial — catalogos | Permiso **Catalogos: Editar**. |
+| Comercial — dashboard | Permiso de tablero **Dashboard** (independiente de clientes/servicios). |
 | Gestion Humana / solicitantes | Usar clientes de la matriz al crear requisiciones (solo lectura en Requisiciones). |
-| Administrador | Permisos comercial.matriz.view / manage en Admin usuarios. |
+| Administrador | Asigna permisos en Admin → usuarios (grupo Comercial). |
 
 ## Desarrollo
 
@@ -76,7 +80,7 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 
 ### Carga masiva (clientes + servicios + checklist)
 
-1. En **Comercial → Clientes**, pulse el icono de **carga masiva** (requiere permiso de gestion).
+1. En **Comercial → Clientes**, pulse el icono de **carga masiva** (requiere **Clientes: Editar**).
 2. **Descargar plantilla vacia** para conocer columnas y formato.
 3. Opcional: **Exportar datos para actualizar** (respeta filtros del listado), edite el Excel y vuelva a subirlo.
 4. **Elegir archivo** (.xlsx) y **Importar**. Revise el resumen en pantalla y, si hubo filas no cargadas, use **Descargar reporte de filas fallidas (.xlsx)**.
@@ -87,6 +91,7 @@ Una fila del Excel corresponde a **un servicio**. Incluye NIT, datos del cliente
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.5 | 2026-09-29 | Permisos | View/edit por pestaña (Clientes, Servicios) + Catalogos: Editar; Dashboard con permiso propio. |
 | 1.1 | 2026-09-23 | UI | Clientes (listado/detalle) y editar servicio: secciones, meta y aside alineados al branding. |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-07-22 | Documentacion | Excel MT-CO-01 fuera del repo; import con ruta explicita |

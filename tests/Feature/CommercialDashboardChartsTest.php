@@ -27,7 +27,7 @@ class CommercialDashboardChartsTest extends TestCase
             'area_key' => 'comercial',
         ]);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.view');
+        $user->givePermissionTo('view.board.comercial.dashboard');
 
         $response = $this->actingAs($user)->get(route('comercial.dashboard'));
 

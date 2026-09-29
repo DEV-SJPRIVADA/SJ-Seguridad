@@ -86,7 +86,7 @@ class ImportFailureReportTest extends TestCase
         $owner = $this->matrizManager();
         $other = User::factory()->create(['must_change_password' => false, 'area_key' => 'comercial']);
         $other->assignRole('usuario');
-        $other->givePermissionTo('comercial.matriz.manage');
+        $other->givePermissionTo(['comercial.clients.edit', 'comercial.services.edit']);
 
         $path = $this->makeCommercialSpreadsheet([
             'nit' => '900777002',
@@ -107,7 +107,7 @@ class ImportFailureReportTest extends TestCase
     {
         $user = User::factory()->create(['must_change_password' => false, 'area_key' => 'comercial']);
         $user->assignRole('usuario');
-        $user->givePermissionTo('comercial.matriz.manage');
+        $user->givePermissionTo(['comercial.clients.edit', 'comercial.services.edit']);
 
         return $user;
     }
