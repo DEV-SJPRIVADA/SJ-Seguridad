@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.archivo.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Historial de consultas</h2>
-                <p class="panel-text">Registro de consultas de historias laborales y seguimiento de entregas</p>
-            </div>
-        </div>
     </x-slot>
 
     <div class="page-section archivo-page">
@@ -17,14 +11,19 @@
 
             <div class="panel">
                 <div class="panel__body panel__body--compact">
-                    <div class="req-manage-filters">
-                        <div class="req-manage-filters__head">
-                            <div class="panel-heading-row panel-heading-row--wrap">
-                                <h3 class="panel-title">Consultas registradas</h3>
-                                <p class="panel-text">Filtre por cedula, nombre, concepto o persona de entrega</p>
-                            </div>
-                        </div>
-
+                    @php
+                        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+                            || ($filters['month'] ?? null)
+                            || ($filters['week'] ?? null);
+                    @endphp
+                    <details class="req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+                        <div class="req-manage-filters__panel-body">
                         <form method="GET" class="archivo-consult-history-filters">
                             <div class="archivo-consult-history-filters__row">
                                 <div class="archivo-consult-history-filters__field">
@@ -88,12 +87,13 @@
                                 </div>
                             </div>
                         </form>
+                        </div>
+                    </details>
 
                         <p class="req-manage-filters__meta">
                             <strong>{{ number_format($items->count()) }}</strong>
                             {{ $items->count() === 1 ? 'registro' : 'registros' }}
                         </p>
-                    </div>
 
                     <div class="data-table-wrap">
                         <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">

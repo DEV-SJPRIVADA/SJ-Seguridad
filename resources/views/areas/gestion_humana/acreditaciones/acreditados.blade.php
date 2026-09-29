@@ -2,6 +2,15 @@
     @php
         $showNuevoModal = $canEdit && $errors->any() && ! $errors->has('import_file');
         $showMasivosModal = $canEdit && $errors->has('import_file') && ! ($colaMode ?? false);
+        $hasActiveFilters = ($filters['document_number'] ?? '') !== ''
+            || ($filters['cargo'] ?? '') !== ''
+            || ($filters['cargo_apo'] ?? '') !== ''
+            || (($filters['estado'] ?? 'todos') !== '' && ($filters['estado'] ?? 'todos') !== 'todos')
+            || (($filters['renovacion'] ?? 'todos') !== '' && ($filters['renovacion'] ?? 'todos') !== 'todos')
+            || (($filters['ficha_estado'] ?? 'activo') !== '' && ($filters['ficha_estado'] ?? 'activo') !== 'activo')
+            || ($filters['vigencia_desde'] ?? '') !== ''
+            || ($filters['vigencia_hasta'] ?? '') !== ''
+            || (is_array($filters['document_numbers'] ?? null) && ($filters['document_numbers'] ?? []) !== []);
     @endphp
 
     <x-slot name="header">
@@ -41,8 +50,15 @@
 
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
-                    <div class="req-manage-shell__filters">
-                        @unless ($colaMode ?? false)
+                    @unless ($colaMode ?? false)
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+                        <div class="req-manage-filters__panel-body">
                         <form method="GET" action="{{ route('gestion-humana.acreditaciones.acreditados') }}" class="req-manage-filters">
                             <div class="cursos-registros-page__filters">
                                 <div class="form-field">
@@ -150,7 +166,9 @@
                                 El rango de fechas filtra por <strong>VIGEN.ACR</strong> (vencimiento).
                             </p>
                         </form>
-                        @endunless
+                        </div>
+                    </details>
+                    @endunless
 
                         <div class="cursos-registros-page__table-toolbar">
                             @if ($colaMode ?? false)
@@ -223,7 +241,6 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
 
                     @if ($colaMode ?? false)
                         @include('areas.gestion_humana.acreditaciones.partials.nuevos-sin-acreditacion-table', [

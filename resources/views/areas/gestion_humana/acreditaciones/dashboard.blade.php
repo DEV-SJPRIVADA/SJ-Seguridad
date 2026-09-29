@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.acreditaciones.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Dashboard</h2>
-                <p class="panel-text">Gestion humana — indicadores de acreditaciones</p>
-            </div>
-        </div>
     </x-slot>
 
     <div

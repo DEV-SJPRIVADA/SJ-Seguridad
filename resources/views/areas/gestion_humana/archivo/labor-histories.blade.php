@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.archivo.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Historias Laborales</h2>
-                <p class="panel-text">Gestion humana — ubicacion documental de empleados (estantes y cajas)</p>
-            </div>
-        </div>
     </x-slot>
 
     <div class="page-section archivo-page req-manage-page">
@@ -44,7 +38,18 @@
 
             <div class="panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
-                    <div class="req-manage-filters archivo-page__filters">
+                    @php
+                        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+                            || ($filters['consultation'] ?? null);
+                    @endphp
+                    <details class="req-manage-filters req-manage-filters__panel archivo-page__filters" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+                        <div class="req-manage-filters__panel-body">
                         <div class="archivo-page__filters-row">
                             <div class="archivo-page__filters-left">
                                 <form method="GET" class="archivo-page__search-group">
@@ -81,8 +86,23 @@
                                     Consulta multiple
                                 </button>
                             </div>
+                        </div>
+                        </div>
+                    </details>
 
-                            <div class="archivo-page__filters-actions">
+                        <div class="cursos-registros-page__table-toolbar">
+                            <p class="req-manage-filters__meta">
+                                <strong id="archivo-entries-count">…</strong>
+                                <span id="archivo-entries-count-label">empleados</span>
+                                @if ($filters['q'] ?? '')
+                                    · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                @endif
+                                @if ($activeConsultation ?? null)
+                                    · Consulta #{{ $activeConsultation->id }}
+                                @endif
+                            </p>
+
+                            <div class="cursos-registros-page__table-actions archivo-page__filters-actions">
                                 @if ($canExportArchive ?? false)
                                     <button
                                         type="button"
@@ -109,18 +129,6 @@
                                 @endif
                             </div>
                         </div>
-
-                        <p class="req-manage-filters__meta">
-                            <strong id="archivo-entries-count">…</strong>
-                            <span id="archivo-entries-count-label">empleados</span>
-                            @if ($filters['q'] ?? '')
-                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
-                            @endif
-                            @if ($activeConsultation ?? null)
-                                · Consulta #{{ $activeConsultation->id }}
-                            @endif
-                        </p>
-                    </div>
 
                     @if ($activeConsultation ?? null)
                         <div class="archivo-consult-banner">

@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.desvinculaciones.partials.subnav', ['subTabs' => $subTabs])
-        <div class="app-container">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Seguimientos</h2>
-                <p class="panel-text">Gestion humana — checklist post-retiro</p>
-            </div>
-        </div>
     </x-slot>
 
     <div class="page-section desvinculaciones-seguimientos-page">
@@ -28,91 +22,106 @@
                 x-init="init()"
             >
                 <div class="panel__body panel__body--compact">
+                    @php
+                        $hasActiveFilters = ($filters['q'] ?? '') !== ''
+                            || ($filters['fecha_desde'] ?? '') !== ''
+                            || ($filters['fecha_hasta'] ?? '') !== ''
+                            || (($filters['status'] ?? 'todos') !== 'todos');
+                    @endphp
+
                     @unless ($canEditSeguimientos)
                         <p class="panel-text desvinculaciones-seguimientos__readonly-notice">
                             Vista de solo lectura. Para editar checks o fecha de nomina necesita el permiso de edicion de Seguimientos.
                         </p>
                     @endunless
 
-                    <div class="req-manage-filters desvinculaciones-seguimientos__filters">
-                        <div class="req-manage-filters__toolbar desvinculaciones-seguimientos__toolbar">
-                            <div class="desvinculaciones-seguimientos__filters-main">
-                                <div class="req-manage-filters__search-col desvinculaciones-seguimientos__search">
-                                    <label class="req-manage-filters__label" for="seguimientos-search-q">Buscar</label>
-                                    <div class="req-manage-filters__search-group">
-                                        <input
-                                            id="seguimientos-search-q"
-                                            type="search"
-                                            class="form-input"
-                                            placeholder="Cedula o nombre"
-                                            x-model="q"
-                                            x-on:keydown.enter.prevent="applyFilters()"
-                                            autocomplete="off"
-                                        >
-                                        <button type="button" class="btn btn--primary btn--sm" x-on:click="applyFilters()">
-                                            Buscar
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="desvinculaciones-seguimientos__date-range" role="group" aria-label="Rango fecha entregado nomina">
-                                    <span class="req-manage-filters__label desvinculaciones-seguimientos__date-range-title">
-                                        FECHA ENTREGADO NOMINA
-                                    </span>
-                                    <div class="desvinculaciones-seguimientos__date-fields">
-                                        <div class="desvinculaciones-seguimientos__date-field">
-                                            <label class="req-manage-filters__label" for="seguimientos-fecha-desde">Desde</label>
+                    <details class="req-manage-filters req-manage-filters__panel desvinculaciones-seguimientos__filters" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            <span class="req-manage-filters__panel-badge" x-show="hasActiveFilters" x-cloak>Activos</span>
+                        </summary>
+                        <div class="req-manage-filters__panel-body">
+                            <div class="req-manage-filters__toolbar desvinculaciones-seguimientos__toolbar">
+                                <div class="desvinculaciones-seguimientos__filters-main">
+                                    <div class="req-manage-filters__search-col desvinculaciones-seguimientos__search">
+                                        <label class="req-manage-filters__label" for="seguimientos-search-q">Buscar</label>
+                                        <div class="req-manage-filters__search-group">
                                             <input
-                                                id="seguimientos-fecha-desde"
-                                                type="date"
-                                                class="form-input desvinculaciones-seguimientos__date-input"
-                                                x-model="fechaDesde"
-                                                x-on:change="applyFilters()"
+                                                id="seguimientos-search-q"
+                                                type="search"
+                                                class="form-input"
+                                                placeholder="Cedula o nombre"
+                                                x-model="q"
+                                                x-on:keydown.enter.prevent="applyFilters()"
+                                                autocomplete="off"
                                             >
+                                            <button type="button" class="btn btn--primary btn--sm" x-on:click="applyFilters()">
+                                                Buscar
+                                            </button>
                                         </div>
-                                        <div class="desvinculaciones-seguimientos__date-field">
-                                            <label class="req-manage-filters__label" for="seguimientos-fecha-hasta">Hasta</label>
-                                            <input
-                                                id="seguimientos-fecha-hasta"
-                                                type="date"
-                                                class="form-input desvinculaciones-seguimientos__date-input"
-                                                x-model="fechaHasta"
-                                                x-on:change="applyFilters()"
-                                            >
+                                    </div>
+
+                                    <div class="desvinculaciones-seguimientos__date-range" role="group" aria-label="Rango fecha entregado nomina">
+                                        <span class="req-manage-filters__label desvinculaciones-seguimientos__date-range-title">
+                                            FECHA ENTREGADO NOMINA
+                                        </span>
+                                        <div class="desvinculaciones-seguimientos__date-fields">
+                                            <div class="desvinculaciones-seguimientos__date-field">
+                                                <label class="req-manage-filters__label" for="seguimientos-fecha-desde">Desde</label>
+                                                <input
+                                                    id="seguimientos-fecha-desde"
+                                                    type="date"
+                                                    class="form-input desvinculaciones-seguimientos__date-input"
+                                                    x-model="fechaDesde"
+                                                    x-on:change="applyFilters()"
+                                                >
+                                            </div>
+                                            <div class="desvinculaciones-seguimientos__date-field">
+                                                <label class="req-manage-filters__label" for="seguimientos-fecha-hasta">Hasta</label>
+                                                <input
+                                                    id="seguimientos-fecha-hasta"
+                                                    type="date"
+                                                    class="form-input desvinculaciones-seguimientos__date-input"
+                                                    x-model="fechaHasta"
+                                                    x-on:change="applyFilters()"
+                                                >
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="desvinculaciones-seguimientos__export">
-                                <a
-                                    x-bind:href="exportHref"
-                                    class="btn btn--secondary btn--sm desvinculaciones-seguimientos__export-btn"
-                                    title="Exportar a Excel"
-                                >
-                                    <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />                                    
-                                </a>
+                            <div class="desvinculaciones-seguimientos__status-chips" role="group" aria-label="Filtro de estado">
+                                <template x-for="opt in statusOptions" :key="opt.value">
+                                    <button
+                                        type="button"
+                                        class="module-tab"
+                                        x-bind:class="{ 'module-tab--active': status === opt.value }"
+                                        x-on:click="setStatus(opt.value)"
+                                        x-text="opt.label"
+                                    ></button>
+                                </template>
                             </div>
                         </div>
+                    </details>
 
-                        <div class="desvinculaciones-seguimientos__status-chips" role="group" aria-label="Filtro de estado">
-                            <template x-for="opt in statusOptions" :key="opt.value">
-                                <button
-                                    type="button"
-                                    class="module-tab"
-                                    x-bind:class="{ 'module-tab--active': status === opt.value }"
-                                    x-on:click="setStatus(opt.value)"
-                                    x-text="opt.label"
-                                ></button>
-                            </template>
-                        </div>
-
+                    <div class="cursos-registros-page__table-toolbar desvinculaciones-seguimientos__table-toolbar">
                         <p class="req-manage-filters__meta">
                             <strong x-text="totalFormatted"></strong>
                             <span x-text="total === 1 ? 'seguimiento' : 'seguimientos'"></span>
                             <span x-show="savingCount > 0" x-cloak> · Guardando…</span>
                             <span x-show="saveError" class="text-danger" x-cloak x-text="saveError"></span>
                         </p>
+
+                        <div class="cursos-registros-page__table-actions desvinculaciones-seguimientos__export">
+                            <a
+                                x-bind:href="exportHref"
+                                class="btn btn--secondary btn--sm desvinculaciones-seguimientos__export-btn"
+                                title="Exportar a Excel"
+                            >
+                                <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
+                            </a>
+                        </div>
                     </div>
 
                     <div class="data-table-wrap desvinculaciones-seguimientos__table-wrap" x-bind:class="{ 'data-table-wrap--booting': loading }">
@@ -351,6 +360,13 @@
 
                     get totalFormatted() {
                         return Number(this.total || 0).toLocaleString('es-CO');
+                    },
+
+                    get hasActiveFilters() {
+                        return (this.q || '').trim() !== ''
+                            || (this.fechaDesde || '') !== ''
+                            || (this.fechaHasta || '') !== ''
+                            || (this.status || 'todos') !== 'todos';
                     },
 
                     get exportHref() {

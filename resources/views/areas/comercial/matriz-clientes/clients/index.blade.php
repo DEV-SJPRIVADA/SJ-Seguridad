@@ -28,34 +28,6 @@
             <x-import-result-modal download-route="comercial.matriz.clients.import-report" />
 
             <div class="panel comercial-clients-panel">
-                <div class="panel__header panel__header--compact">
-                    <div class="comercial-list__header-row">
-                        <div>
-                            <h3 class="panel-title">Listado de clientes</h3>
-                            <p class="panel-text panel-text--compact">NIT, nombre o ciudad · varios servicios por cliente</p>
-                        </div>
-                        <div class="comercial-list__header-actions">
-                            <x-export-excel route="{{ route('comercial.matriz.clients.export', request()->query()) }}" />
-                            @if ($canManage)
-                                <button
-                                    type="button"
-                                    class="btn btn--secondary btn--sm"
-                                    title="Carga masiva"
-                                    aria-label="Carga masiva"
-                                    x-data=""
-                                    x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
-                                >
-                                    <x-lucide-upload width="16" height="16" aria-hidden="true" />
-                                </button>
-                            @endif
-                            <a href="{{ route('comercial.matriz.clients.checklist.index') }}" class="btn btn--secondary btn--sm">Checklist</a>
-                            @if ($canManage)
-                                <a href="{{ route('comercial.matriz.clients.create') }}" class="btn btn--primary btn--sm">Nuevo cliente</a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
                 <div class="panel__body req-manage-shell">
                     <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">
@@ -66,13 +38,13 @@
                         </summary>
 
                         <div class="req-manage-filters__panel-body">
-                            <div class="req-manage-filters__head">
-                                <div class="req-manage-filters__actions comercial-clients-filters__actions">
-                                    @if ($hasActiveFilters)
+                            @if ($hasActiveFilters)
+                                <div class="req-manage-filters__head">
+                                    <div class="req-manage-filters__actions comercial-clients-filters__actions">
                                         <a href="{{ route('comercial.matriz.clients.index') }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                    @endif
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
 
                             <div class="req-manage-filters__toolbar">
                                 <form method="GET" class="req-manage-filters__search-col">
@@ -126,23 +98,65 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($clients->count()) }} {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}">
-                                <strong>{{ number_format($clients->count()) }}</strong>
-                                {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}
-                                @if ($filters['q'] ?? '')
-                                    · Busqueda: <strong>{{ $filters['q'] }}</strong>
-                                @endif
-                                @if ($filters['city'] ?? '')
-                                    · Ciudad: <strong>{{ $filters['city'] }}</strong>
-                                @endif
-                                @if ($filters['status'] ?? '')
-                                    · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
-                                @endif
-                                · El Excel exporta el detalle completo segun estos filtros
-                            </p>
                         </div>
                     </details>
+
+                    <div class="cursos-registros-page__table-toolbar">
+                        <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($clients->count()) }} {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}">
+                            <strong>{{ number_format($clients->count()) }}</strong>
+                            {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}
+                            @if ($filters['q'] ?? '')
+                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                            @endif
+                            @if ($filters['city'] ?? '')
+                                · Ciudad: <strong>{{ $filters['city'] }}</strong>
+                            @endif
+                            @if ($filters['status'] ?? '')
+                                · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
+                            @endif
+                            · El Excel exporta el detalle completo segun estos filtros
+                        </p>
+
+                        <div class="cursos-registros-page__table-actions">
+                            <x-export-excel
+                                route="{{ route('comercial.matriz.clients.export', request()->query()) }}"
+                                label=""
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar a Excel"
+                                aria-label="Exportar a Excel"
+                            />
+                            @if ($canManage)
+                                <button
+                                    type="button"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    title="Carga masiva"
+                                    aria-label="Carga masiva"
+                                    x-data=""
+                                    x-on:click.prevent="$dispatch('open-modal', 'comercial-masivos')"
+                                >
+                                    <x-lucide-upload width="18" height="18" aria-hidden="true" />
+                                </button>
+                            @endif
+                            <a
+                                href="{{ route('comercial.matriz.clients.checklist.index') }}"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Checklist"
+                                aria-label="Checklist"
+                            >
+                                <x-lucide-list-checks width="18" height="18" aria-hidden="true" />
+                            </a>
+                            @if ($canManage)
+                                <a
+                                    href="{{ route('comercial.matriz.clients.create') }}"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Nuevo cliente"
+                                    aria-label="Nuevo cliente"
+                                >
+                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                </a>
+                            @endif
+                        </div>
+                    </div>
 
                     <div class="data-table-wrap req-manage-shell__table comercial-clients-page__table-wrap">
                         <table

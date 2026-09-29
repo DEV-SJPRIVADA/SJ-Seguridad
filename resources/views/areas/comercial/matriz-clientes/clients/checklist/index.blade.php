@@ -1,12 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.comercial.partials.gestion-clientes-subnav', ['subTabs' => $subTabs])
-        <div class="app-container comercial-checklist-page__workspace-header">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">Checklist documental</h2>
-                <p class="panel-text">Comercial — matriz por cliente (NIT)</p>
-            </div>
-        </div>
     </x-slot>
 
     @php

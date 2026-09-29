@@ -198,6 +198,11 @@
                                     role="tabpanel"
                                 >
                                     <div class="av-cola-panel__toolbar">
+                                        <details class="req-manage-filters req-manage-filters__panel">
+                                            <summary class="req-manage-filters__panel-toggle">
+                                                <span>Filtros</span>
+                                            </summary>
+                                            <div class="req-manage-filters__panel-body">
                                         <form
                                             class="req-manage-filters js-validaciones-cola-filters"
                                             data-cola="{{ $colaCode }}"
@@ -356,6 +361,8 @@
                                                 </div>
                                             </div>
                                         </form>
+                                            </div>
+                                        </details>
                                     </div>
                                     <div class="data-table-wrap data-table-wrap--booting req-manage-shell__table av-cola-panel__table">
                                         <table
