@@ -249,6 +249,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-09-29 | Impresión FO-GH-22: fila TIPO DE PROGRAMACION + CCOS CR (`cost_center`) en la misma línea |
 | 2026-09-24 | Impresión FO-GH-22: recepción GH = `created_at` del primer status log `solicitada` (`humanResourcesReceivedAt`) |
 | 2026-09-23 | Filtro reclutador en Dashboard y Gestion; KPI Total respeta filtros; mes dashboard por defecto = mes actual |
 | 2026-08-21 | Catalogos Parametros: persistir seccion activa con `?catalog=` tras CRUD |
