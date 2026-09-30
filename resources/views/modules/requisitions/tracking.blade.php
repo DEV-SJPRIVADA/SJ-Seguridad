@@ -39,16 +39,6 @@
                             @endif
                         </summary>
 
-                        <div class="req-manage-filters__panel-body">
-                            <div class="req-manage-filters__head">
-                                <div class="req-manage-filters__actions">
-                                    <x-export-excel route="{{ route('requisitions.tracking.export', ['module' => $moduleKey, ...request()->query()]) }}" />
-                                    @if ($hasActiveFilters)
-                                        <a href="{{ route('requisitions.tracking', ['module' => $moduleKey]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
-                                    @endif
-                                </div>
-                            </div>
-
                             <div class="req-manage-filters__toolbar">
                                 <form method="GET" id="tracking-search-form" class="req-manage-filters__search-col">
                                     @if ($filters['status'] ?? '')
@@ -84,9 +74,38 @@
                                             <label class="req-manage-filters__label" for="tracking-date-to">Hasta</label>
                                             <input type="date" id="tracking-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
                                         </div>
-                                        <div class="req-manage-filters__query-submit">
+                                        <div class="req-manage-filters__query-actions">
                                             <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
-                                            <button type="submit" class="btn btn--primary">Buscar</button>
+                                            <div class="req-manage-filters__query-actions-row">
+                                                <button
+                                                    type="submit"
+                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                                    title="Buscar"
+                                                    aria-label="Buscar"
+                                                >
+                                                    <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                                </button>
+                                                @if ($hasActiveFilters)
+                                                    <a
+                                                        href="{{ route('requisitions.tracking', ['module' => $moduleKey]) }}"
+                                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                        title="Limpiar filtros"
+                                                        aria-label="Limpiar filtros"
+                                                    >
+                                                        <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="req-manage-filters__query-export">
+                                            <span class="req-manage-filters__label req-manage-filters__label--spacer" aria-hidden="true">&nbsp;</span>
+                                            <x-export-excel
+                                                route="{{ route('requisitions.tracking.export', ['module' => $moduleKey, ...request()->query()]) }}"
+                                                label=""
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                title="Exportar Excel"
+                                                aria-label="Exportar Excel"
+                                            />
                                         </div>
                                     </div>
                                 </form>
@@ -163,9 +182,9 @@
                                 </form>
                             </div>
 
-                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($requisitions->total()) }} {{ $requisitions->total() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}">
-                                <strong>{{ number_format($requisitions->total()) }}</strong>
-                                {{ $requisitions->total() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}
+                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($requisitions->count()) }} {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}">
+                                <strong>{{ number_format($requisitions->count()) }}</strong>
+                                {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}
                                 @if ($filters['status'] ?? '')
                                     · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
                                 @endif
@@ -192,15 +211,15 @@
                         </div>
                     </details>
 
-                    <div class="data-table-wrap req-manage-shell__table">
+                    <div class="data-table-wrap req-manage-shell__table data-table-wrap--booting">
+                        @include('partials.data-table-loader')
                         <table
                             class="data-table js-datatable"
                             style="width:100%"
-                            data-order='[[1, "desc"]]'
+                            data-order='[[0, "desc"]]'
                             data-dt-responsive="false"
                             data-dt-compact="true"
                             data-dt-body-scroll="true"
-                            data-server-pagination
                         >
                             <thead>
                                 <tr>
@@ -272,12 +291,6 @@
                             </tbody>
                         </table>
                     </div>
-
-                    @if ($requisitions->hasPages())
-                        <div class="req-manage-shell__pagination pagination-wrap">
-                            {{ $requisitions->links() }}
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>

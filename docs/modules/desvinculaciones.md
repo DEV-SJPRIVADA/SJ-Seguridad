@@ -87,7 +87,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 
 | Vista | Descripcion |
 | --- | --- |
-| `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: filas, lookup blur/Enter, +fila / borrar, Desvincular, reporte, descarga ZIP |
+| `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: iconos superior derecha (multi-cedula / +fila), filas con trash, Desvincular/limpiar/ZIP icon-only; lookup blur/Enter; modal pegar hasta 500; reporte |
 | `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | Tabla checks + fecha nomina (autosave), filtros (q, status, rango FECHA ENTREGADO NOMINA), export Excel, OK TODO RO, icono revertir + modal motivo |
 | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestanas `module-tab` Masivos / Seguimientos |
 | `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
@@ -167,11 +167,12 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 
 4. Columnas: CEDULA | NOMBRE (RO tras lookup) | FECHA DESVINCULACION | TIPO CARTA | FIRMA | Causal / Recontratable / Observaciones (opc.).
 5. Lookup: activo + periodo abierto → nombre; si no → mensaje y no procesable.
+5b. **Multi-cedula (UI):** icono clipboard abre modal en el mismo `x-data`; pegar hasta **500** (linea/coma/;). Lookup secuencial al endpoint existente; llena filas vacias / agrega filas; omite duplicadas ya en grilla y no encontradas; resumen bajo toolbar (agregadas / duplicadas / no procesables).
 6. Fecha unica UI → mismo valor en `last_work_day` y `termination_date` del periodo.
 7. Causal vacia → null; rehire omitido → null (no forzar false); notas vacias → null.
 8. Plantilla + firma **requeridas** por fila; 1 `template_id` (tipo UI: `desvinculacion` con archivo en disco).
 9. Duplicados de cedula en el lote → 422 previo (no procesa).
-10. Sin confirmacion previa; sin tope de filas.
+10. Sin confirmacion previa; sin tope de filas en proceso (tope 500 solo en pegado multi-cedula).
 11. Por fila exitosa: close + sync desvinculado + followup + intento carta; fallo carta → desvinculado + `letter_generated=false` + fallo tipo `letter`; fallo cierre → sin followup + fallo tipo `termination`; lote continua.
 12. Al terminar: reporte; si ≥1 carta → token ZIP; UI limpia grilla (no navega a Seguimientos).
 

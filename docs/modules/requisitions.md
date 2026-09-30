@@ -139,7 +139,7 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 ## Reglas de negocio
 
 - Solicitar solo en `area_key` con `requisitions.tab.solicitar`.
-- Mis requisiciones: solo lectura del **area base** del usuario.
+- Mis requisiciones: solo lectura del **area base** del usuario; listado con DataTables client-side (buscador/paginacion DT) como Gestion; acciones Ver solicitud / Ver Rq.
 - Acciones de fila: **Ver solicitud** (`tracking.show`, resumen) e icono **Ver Rq** (`tracking.view-rq`, mismo formulario de Gestion/editar en solo lectura + historiales, sin Guardar).
 - Gestion: todas las areas; filtro «Solo mis solicitudes» reduce a creadas por el autenticado.
 - `leader_name` y `requesting_area_key` del usuario autenticado al crear.

@@ -56,14 +56,15 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 ### Usar Masivos
 
 1. Entre a Gestion Humana → tablero **Desvinculaciones** → pestana **Masivos**.
-2. En cada fila escriba la **cedula** y salga del campo (o pulse Enter). Si el empleado esta activo, aparece el **nombre**. Si no existe, esta inactivo o no tiene vinculo abierto, vera un mensaje y esa fila no es procesable.
-3. Complete por fila: **FECHA DESVINCULACION**, **TIPO CARTA** y **FIRMA** (obligatorios). Causal, recontratable y observaciones son opcionales.
-4. La grilla inicia con **2 filas**; use **+ fila** para agregar mas lineas o elimine filas que no vaya a usar. No pegue un Excel completo como requisito de esta version.
-5. No puede repetir la misma cedula dos veces en el mismo lote: el sistema lo rechaza antes de procesar.
-6. Pulse **Desvincular** (no pide confirmacion previa ni tiene tope de filas). El sistema procesa todas las filas: si una falla, las demas siguen.
-7. Al terminar vera el **reporte** (exitos y fallos). Si al menos una carta se genero, se descarga un **ZIP** con esas cartas y la grilla se limpia.
-8. Si un empleado quedo desvinculado pero **sin carta**, aparecera en el reporte como fallo de carta; igual figura en Seguimientos con «tiene carta» en No. Para generar la carta despues, use **Ficha empleados** (permiso de desvincular) → Generar cartas.
-9. **Importante sobre el ZIP:** la descarga es de un solo uso. Si necesita el archivo de nuevo y ya consumio el enlace, no reintente el mismo boton; vuelva a generar cartas desde Ficha o archive el ZIP a tiempo.
+2. Cargue filas de una en una (cedula + Enter/blur) o use el icono de **varias cedulas** para pegar un listado (max. 500). El sistema agrega las que existan activas, omite duplicadas en la grilla y las no encontradas, y muestra un resumen.
+3. En cada fila, si cargo cedula manualmente y sale del campo (o pulsa Enter), aparece el **nombre** si el empleado esta activo. Si no existe, esta inactivo o no tiene vinculo abierto, vera un mensaje y esa fila no es procesable.
+4. Complete por fila: **FECHA DESVINCULACION**, **TIPO CARTA** y **FIRMA** (obligatorios). Causal, recontratable y observaciones son opcionales.
+5. La grilla inicia con **2 filas**; use **+ fila** para agregar mas lineas o elimine filas que no vaya a usar.
+6. No puede repetir la misma cedula dos veces en el mismo lote: el sistema lo rechaza antes de procesar (y el pegado masivo tambien omite duplicadas).
+7. Pulse **Desvincular** (no pide confirmacion previa ni tiene tope de filas). El sistema procesa todas las filas: si una falla, las demas siguen.
+8. Al terminar vera el **reporte** (exitos y fallos). Si al menos una carta se genero, se descarga un **ZIP** con esas cartas y la grilla se limpia.
+9. Si un empleado quedo desvinculado pero **sin carta**, aparecera en el reporte como fallo de carta; igual figura en Seguimientos con «tiene carta» en No. Para generar la carta despues, use **Ficha empleados** (permiso de desvincular) → Generar cartas.
+10. **Importante sobre el ZIP:** la descarga es de un solo uso. Si necesita el archivo de nuevo y ya consumio el enlace, no reintente el mismo boton; vuelva a generar cartas desde Ficha o archive el ZIP a tiempo.
 
 ### Usar Seguimientos
 
@@ -86,6 +87,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.3 | 2026-09-30 | Agencia | Masivos: pegado multi-cedula (max. 500) con lookup, omision de duplicadas/no encontradas y resumen |
 | 1.2 | 2026-09-15 | Agencia | Filtro rango FECHA ENTREGADO NOMINA + export Excel en Seguimientos |
 | 1.1 | 2026-09-14 | Agencia | Revertir desvinculacion por fila en Seguimientos (motivo + icono) |
 | 1.0 | 2026-09-14 | Documentador FEAT-031 | Version inicial: Masivos, Seguimientos, paquete de permisos, relacion con Ficha; sin Excel, colores ni correo. |
