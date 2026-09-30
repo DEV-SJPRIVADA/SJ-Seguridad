@@ -4784,7 +4784,6 @@ a {
 .req-form-readonly .searchable-select {
     pointer-events: none;
 }
-}
 
 /* Requisiciones ÃÂ¢ÃÂÃÂ filtros de gestion */
 .req-manage-filters {
@@ -11029,15 +11028,42 @@ a.sj-pagination__item:hover {
     flex-wrap: wrap;
 }
 
+@media (max-width: 1100px) {
+    .dev-req-detail-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    }
+
+    .dev-req-detail-layout__rail--history {
+        grid-column: 1 / -1;
+        position: static;
+        max-height: none;
+        order: 2;
+    }
+
+    .dev-req-detail-layout__main {
+        order: 1;
+    }
+
+    .dev-req-detail-layout__rail--side {
+        order: 1;
+    }
+}
+
 @media (max-width: 960px) {
     .dev-req-form-layout,
     .dev-req-detail-layout {
         grid-template-columns: 1fr;
     }
 
-    .dev-req-form-aside {
+    .dev-req-form-aside,
+    .dev-req-detail-layout__rail {
         position: static;
-        order: -1;
+        max-height: none;
+        order: initial;
+    }
+
+    .dev-req-detail-layout__rail--history {
+        order: 3;
     }
 }
 
@@ -11077,7 +11103,11 @@ a.sj-pagination__item:hover {
 }
 
 /* Solicitudes de desarrollo — detalle y bandeja */
-.development-requests-page--detail > .app-container,
+.development-requests-page--detail > .app-container {
+    width: min(1480px, calc(100% - 1.25rem));
+    max-width: min(1480px, calc(100% - 1.25rem));
+}
+
 .development-requests-page--queue > .app-container {
     width: min(1180px, calc(100% - 1.5rem));
     max-width: min(1180px, calc(100% - 1.5rem));
@@ -11115,8 +11145,8 @@ a.sj-pagination__item:hover {
 
 .dev-req-detail-layout {
     display: grid;
-    gap: 1.25rem;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+    gap: 1rem;
+    grid-template-columns: minmax(280px, 1fr) minmax(0, 1.45fr) minmax(260px, 0.95fr);
     align-items: start;
     flex: 1 1 auto;
     min-height: 0;
@@ -11127,6 +11157,201 @@ a.sj-pagination__item:hover {
     flex-direction: column;
     gap: 1.1rem;
     min-width: 0;
+}
+
+.dev-req-detail-layout__rail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.dev-req-detail-layout__rail--history {
+    position: sticky;
+    top: 0.75rem;
+    max-height: calc(100vh - 1.5rem);
+    overflow: auto;
+}
+
+.dev-req-detail-layout__rail--side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+}
+
+.dev-req-detail-layout__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.dev-req-detail-layout__rail .dev-req-form__section,
+.dev-req-detail-layout__rail .panel {
+    margin: 0;
+}
+
+.dev-req-detail-layout__rail--side .panel__header--with-action {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.dev-req-detail-layout__rail--side .panel__header--with-action .panel-text {
+    margin-bottom: 0;
+}
+
+.dev-req-detail-layout__rail--side .panel__header--with-action .req-manage-filters__icon-btn {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.dev-req-detail__history-panel {
+    flex: 0 0 auto;
+}
+
+.dev-req-timeline--scroll {
+    height: 16rem;
+    max-height: 16rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+    overscroll-behavior: contain;
+}
+
+.dev-req-detail-layout__rail--history .dev-req-chat {
+    max-height: min(22rem, 40vh);
+    overflow-y: auto;
+    padding-right: 0.15rem;
+}
+
+.dev-req-aside-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, #fbfdff 0%, var(--brand-white) 72%);
+    box-shadow: var(--shadow-soft);
+}
+
+.dev-req-aside-card--tips {
+    background: linear-gradient(180deg, #fffdf7 0%, var(--brand-white) 70%);
+    border-color: #f1e4c4;
+}
+
+.dev-req-aside-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.dev-req-aside-card__icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: var(--brand-navy);
+    color: var(--brand-white);
+}
+
+.dev-req-aside-card__icon--tips {
+    background: #b45309;
+}
+
+.dev-req-aside-card__icon svg {
+    display: block;
+}
+
+.dev-req-aside-card__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+    line-height: 1.25;
+}
+
+.dev-req-aside-card__desc {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.dev-req-aside-card__facts {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.dev-req-aside-card__fact {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.5rem 0.65rem;
+    align-items: center;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid #e8eef5;
+    border-radius: 12px;
+    background: var(--brand-white);
+}
+
+.dev-req-aside-card__fact dt {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.dev-req-aside-card__fact dd {
+    margin: 0;
+    min-width: 0;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--brand-navy);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.dev-req-aside-card__tips {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.dev-req-aside-card__tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #f1e4c4;
+    border-radius: 12px;
+    background: var(--brand-white);
+    font-size: 0.84rem;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.dev-req-aside-card__tip-num {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    background: #fff7ed;
+    color: #b45309;
+    font-size: 0.72rem;
+    font-weight: 800;
 }
 
 .dev-req-form__section-step--alert {

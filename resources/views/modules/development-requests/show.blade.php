@@ -71,6 +71,91 @@
             </div>
 
             <div class="dev-req-detail-layout">
+                <aside class="dev-req-detail-layout__rail dev-req-detail-layout__rail--history" aria-label="Historial y conversacion">
+                    <section class="dev-req-form__section dev-req-detail__history-panel">
+                        <header class="dev-req-form__section-head">
+                            <span class="dev-req-form__section-step" aria-hidden="true">
+                                <x-lucide-history width="16" height="16" />
+                            </span>
+                            <div>
+                                <h3 class="dev-req-form__section-title">Historial de estados</h3>
+                                <p class="dev-req-form__section-desc">Transiciones con usuario y comentario.</p>
+                            </div>
+                        </header>
+
+                        <ol class="dev-req-timeline dev-req-timeline--scroll">
+                            @forelse ($developmentRequest->statusLogs as $log)
+                                <li class="dev-req-timeline__item">
+                                    <div class="dev-req-timeline__marker" aria-hidden="true"></div>
+                                    <div class="dev-req-timeline__content">
+                                        <p class="dev-req-timeline__title">
+                                            {{ $log->from_status ? (\App\Models\DevelopmentRequest::estadosLabels()[$log->from_status] ?? $log->from_status) : 'Inicio' }}
+                                            →
+                                            {{ \App\Models\DevelopmentRequest::estadosLabels()[$log->to_status] ?? $log->to_status }}
+                                        </p>
+                                        <p class="dev-req-timeline__meta">
+                                            <x-date-table :value="$log->created_at" datetime />
+                                            @if ($log->user) · {{ $log->user->name }} @endif
+                                        </p>
+                                        @if ($log->comment)
+                                            <p class="dev-req-timeline__comment">{{ $log->comment }}</p>
+                                        @endif
+                                    </div>
+                                </li>
+                            @empty
+                                <li class="dev-req-timeline__empty">Sin historial.</li>
+                            @endforelse
+                        </ol>
+                    </section>
+
+                    <section class="dev-req-form__section development-requests-page__panel" id="conversation">
+                        <header class="dev-req-form__section-head">
+                            <span class="dev-req-form__section-step" aria-hidden="true">
+                                <x-lucide-messages-square width="16" height="16" />
+                            </span>
+                            <div>
+                                <h3 class="dev-req-form__section-title">Conversacion</h3>
+                                <p class="dev-req-form__section-desc">Los participantes reciben correo al publicar un mensaje.</p>
+                            </div>
+                        </header>
+
+                        <div class="dev-req-chat">
+                            @forelse ($developmentRequest->messages as $message)
+                                <article class="dev-req-chat__message">
+                                    <div class="dev-req-chat__avatar" aria-hidden="true">
+                                        {{ strtoupper(substr($message->user?->name ?? '?', 0, 1)) }}
+                                    </div>
+                                    <div class="dev-req-chat__bubble">
+                                        <div class="dev-req-chat__head">
+                                            <strong>{{ $message->user?->name ?? 'Usuario' }}</strong>
+                                            <span class="text-caption"><x-date-table :value="$message->created_at" datetime /></span>
+                                        </div>
+                                        <p class="dev-req-chat__body">{{ $message->body }}</p>
+                                    </div>
+                                </article>
+                            @empty
+                                <p class="dev-req-form__section-desc">Aun no hay mensajes.</p>
+                            @endforelse
+                        </div>
+
+                        @if ($canComment)
+                            <form
+                                method="POST"
+                                action="{{ route('development-requests.messages.store', ['module' => $module, 'development_request' => $developmentRequest, 'from' => $from]) }}"
+                                class="dev-req-chat__composer"
+                            >
+                                @csrf
+                                <div class="form-field">
+                                    <label class="form-label" for="body">Nuevo mensaje</label>
+                                    <textarea name="body" id="body" class="form-textarea" rows="3" required maxlength="5000">{{ old('body') }}</textarea>
+                                    <x-input-error :messages="$errors->get('body')" />
+                                </div>
+                                <button type="submit" class="btn btn--primary">Enviar mensaje</button>
+                            </form>
+                        @endif
+                    </section>
+                </aside>
+
                 <div class="dev-req-detail-layout__main">
                     <div class="dev-req-form__meta">
                         <div class="dev-req-form__meta-item">
@@ -231,109 +316,44 @@
                             @endforeach
                         </section>
                     @endif
-
-                    <section class="dev-req-form__section">
-                        <header class="dev-req-form__section-head">
-                            <span class="dev-req-form__section-step" aria-hidden="true">
-                                <x-lucide-history width="16" height="16" />
-                            </span>
-                            <div>
-                                <h3 class="dev-req-form__section-title">Historial de estados</h3>
-                                <p class="dev-req-form__section-desc">Transiciones registradas con usuario y comentario.</p>
-                            </div>
-                        </header>
-
-                        <ol class="dev-req-timeline">
-                            @forelse ($developmentRequest->statusLogs as $log)
-                                <li class="dev-req-timeline__item">
-                                    <div class="dev-req-timeline__marker" aria-hidden="true"></div>
-                                    <div class="dev-req-timeline__content">
-                                        <p class="dev-req-timeline__title">
-                                            {{ $log->from_status ? (\App\Models\DevelopmentRequest::estadosLabels()[$log->from_status] ?? $log->from_status) : 'Inicio' }}
-                                            →
-                                            {{ \App\Models\DevelopmentRequest::estadosLabels()[$log->to_status] ?? $log->to_status }}
-                                        </p>
-                                        <p class="dev-req-timeline__meta">
-                                            <x-date-table :value="$log->created_at" datetime />
-                                            @if ($log->user) · {{ $log->user->name }} @endif
-                                        </p>
-                                        @if ($log->comment)
-                                            <p class="dev-req-timeline__comment">{{ $log->comment }}</p>
-                                        @endif
-                                    </div>
-                                </li>
-                            @empty
-                                <li class="dev-req-timeline__empty">Sin historial.</li>
-                            @endforelse
-                        </ol>
-                    </section>
-
-                    <section class="dev-req-form__section development-requests-page__panel" id="conversation">
-                        <header class="dev-req-form__section-head">
-                            <span class="dev-req-form__section-step" aria-hidden="true">
-                                <x-lucide-messages-square width="16" height="16" />
-                            </span>
-                            <div>
-                                <h3 class="dev-req-form__section-title">Conversacion</h3>
-                                <p class="dev-req-form__section-desc">Los participantes reciben correo al publicar un mensaje.</p>
-                            </div>
-                        </header>
-
-                        <div class="dev-req-chat">
-                            @forelse ($developmentRequest->messages as $message)
-                                <article class="dev-req-chat__message">
-                                    <div class="dev-req-chat__avatar" aria-hidden="true">
-                                        {{ strtoupper(substr($message->user?->name ?? '?', 0, 1)) }}
-                                    </div>
-                                    <div class="dev-req-chat__bubble">
-                                        <div class="dev-req-chat__head">
-                                            <strong>{{ $message->user?->name ?? 'Usuario' }}</strong>
-                                            <span class="text-caption"><x-date-table :value="$message->created_at" datetime /></span>
-                                        </div>
-                                        <p class="dev-req-chat__body">{{ $message->body }}</p>
-                                    </div>
-                                </article>
-                            @empty
-                                <p class="dev-req-form__section-desc">Aun no hay mensajes.</p>
-                            @endforelse
-                        </div>
-
-                        @if ($canComment)
-                            <form
-                                method="POST"
-                                action="{{ route('development-requests.messages.store', ['module' => $module, 'development_request' => $developmentRequest, 'from' => $from]) }}"
-                                class="dev-req-chat__composer"
-                            >
-                                @csrf
-                                <div class="form-field">
-                                    <label class="form-label" for="body">Nuevo mensaje</label>
-                                    <textarea name="body" id="body" class="form-textarea" rows="3" required maxlength="5000">{{ old('body') }}</textarea>
-                                    <x-input-error :messages="$errors->get('body')" />
-                                </div>
-                                <button type="submit" class="btn btn--primary">Enviar mensaje</button>
-                            </form>
-                        @endif
-                    </section>
                 </div>
 
-                <aside class="dev-req-form-aside">
+                <aside class="dev-req-detail-layout__rail dev-req-detail-layout__rail--side" aria-label="Acciones y conversacion">
+                    <div class="dev-req-detail-layout__actions">
                     @if (! $hasAsideActions)
-                        <div class="panel">
-                            <div class="panel__header">
-                                <h3 class="panel-title">Resumen</h3>
-                                <p class="panel-text">Datos rapidos de seguimiento.</p>
-                            </div>
-                            <div class="panel__body">
-                                <ul class="dev-req-form-guide__list">
-                                    <li class="dev-req-form-guide__item">Estado: {{ $developmentRequest->estadoLabel() }}</li>
-                                    <li class="dev-req-form-guide__item">Prioridad: {{ $developmentRequest->prioridadLabel() }}</li>
-                                    <li class="dev-req-form-guide__item">Area: {{ $developmentRequest->areaLabel() }}</li>
-                                    @if ($developmentRequest->assignedProgrammer)
-                                        <li class="dev-req-form-guide__item">Programador: {{ $developmentRequest->assignedProgrammer->name }}</li>
-                                    @endif
-                                </ul>
-                            </div>
-                        </div>
+                        <section class="dev-req-aside-card">
+                            <header class="dev-req-aside-card__head">
+                                <span class="dev-req-aside-card__icon" aria-hidden="true">
+                                    <x-lucide-clipboard-list width="16" height="16" />
+                                </span>
+                                <div>
+                                    <h3 class="dev-req-aside-card__title">Resumen</h3>
+                                    <p class="dev-req-aside-card__desc">Datos rapidos de seguimiento</p>
+                                </div>
+                            </header>
+                            <dl class="dev-req-aside-card__facts">
+                                <div class="dev-req-aside-card__fact">
+                                    <dt>Estado</dt>
+                                    <dd>
+                                        <span class="status-pill {{ $statusPill }}">{{ $developmentRequest->estadoLabel() }}</span>
+                                    </dd>
+                                </div>
+                                <div class="dev-req-aside-card__fact">
+                                    <dt>Prioridad</dt>
+                                    <dd>{{ $developmentRequest->prioridadLabel() }}</dd>
+                                </div>
+                                <div class="dev-req-aside-card__fact">
+                                    <dt>Area</dt>
+                                    <dd>{{ $developmentRequest->areaLabel() }}</dd>
+                                </div>
+                                @if ($developmentRequest->assignedProgrammer)
+                                    <div class="dev-req-aside-card__fact">
+                                        <dt>Programador</dt>
+                                        <dd>{{ $developmentRequest->assignedProgrammer->name }}</dd>
+                                    </div>
+                                @endif
+                            </dl>
+                        </section>
                     @endif
 
                     @if ($canLeaderDecide)
@@ -378,15 +398,31 @@
                             ];
                         @endphp
                         <div class="panel">
-                            <div class="panel__header">
-                                <h3 class="panel-title">Gestion TIC</h3>
-                                <p class="panel-text">Transicion, asignacion y bloque interno.</p>
-                            </div>
-                            <div class="panel__body">
-                                <form method="POST" action="{{ route('development-requests.tic.transition', ['module' => $module, 'development_request' => $developmentRequest]) }}" class="dev-req-tic-form">
-                                    @csrf
-                                    @method('PATCH')
+                            <form
+                                method="POST"
+                                action="{{ route('development-requests.tic.transition', ['module' => $module, 'development_request' => $developmentRequest]) }}"
+                                class="dev-req-tic-form"
+                                id="dev-req-tic-form"
+                            >
+                                @csrf
+                                @method('PATCH')
 
+                                <div class="panel__header panel__header--with-action">
+                                    <div>
+                                        <h3 class="panel-title">Gestion TIC</h3>
+                                        <p class="panel-text">Transicion, asignacion y bloque interno.</p>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        title="Actualizar estado"
+                                        aria-label="Actualizar estado"
+                                    >
+                                        <x-lucide-refresh-cw width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                <div class="panel__body">
                                     <div class="form-field">
                                         <label class="form-label">Nuevo estado</label>
                                         <x-searchable-select
@@ -472,10 +508,8 @@
                                         <textarea name="comment" id="comment" class="form-textarea" rows="2" placeholder="Obligatorio al devolver o rechazar">{{ old('comment') }}</textarea>
                                         <x-input-error :messages="$errors->get('comment')" />
                                     </div>
-
-                                    <button type="submit" class="btn btn--primary">Actualizar estado</button>
-                                </form>
-                            </div>
+                                </div>
+                            </form>
                         </div>
                     @endif
 
@@ -511,17 +545,31 @@
                         </div>
                     @endif
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Recordatorio</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="dev-req-form-guide__list">
-                                <li class="dev-req-form-guide__item">Usa el chat para aclaraciones; dispara correo a participantes.</li>
-                                <li class="dev-req-form-guide__item">Al devolver o rechazar, deja comentario claro.</li>
-                                <li class="dev-req-form-guide__item">Prioridad efectiva = confirmada TIC o sugerida.</li>
-                            </ul>
-                        </div>
+                    <section class="dev-req-aside-card dev-req-aside-card--tips">
+                        <header class="dev-req-aside-card__head">
+                            <span class="dev-req-aside-card__icon dev-req-aside-card__icon--tips" aria-hidden="true">
+                                <x-lucide-lightbulb width="16" height="16" />
+                            </span>
+                            <div>
+                                <h3 class="dev-req-aside-card__title">Recordatorio</h3>
+                                <p class="dev-req-aside-card__desc">Buenas practicas al gestionar la solicitud</p>
+                            </div>
+                        </header>
+                        <ol class="dev-req-aside-card__tips">
+                            <li class="dev-req-aside-card__tip">
+                                <span class="dev-req-aside-card__tip-num" aria-hidden="true">1</span>
+                                <span>Usa el chat para aclaraciones; dispara correo a participantes.</span>
+                            </li>
+                            <li class="dev-req-aside-card__tip">
+                                <span class="dev-req-aside-card__tip-num" aria-hidden="true">2</span>
+                                <span>Al devolver o rechazar, deja comentario claro.</span>
+                            </li>
+                            <li class="dev-req-aside-card__tip">
+                                <span class="dev-req-aside-card__tip-num" aria-hidden="true">3</span>
+                                <span>Prioridad efectiva = confirmada TIC o sugerida.</span>
+                            </li>
+                        </ol>
+                    </section>
                     </div>
                 </aside>
             </div>
