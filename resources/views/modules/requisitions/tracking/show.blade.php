@@ -6,7 +6,7 @@
     <div class="page-section">
         <div class="app-container">
             <article class="req-approval-letter">
-                <h1 class="req-approval-letter__title">Detalle de requisicion</h1>
+                <h1 class="req-approval-letter__title">Ver solicitud</h1>
 
                 <div class="alert alert--info ficha-empleados-page__alert">
                     Estado actual:

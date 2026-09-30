@@ -244,9 +244,24 @@
                                         </td>
                                         <td><x-date-table :value="$requisition->status_changed_at" datetime empty="Sin cambios" /></td>
                                         <td class="table-actions">
-                                            <a href="{{ route('requisitions.tracking.show', ['module' => $moduleKey, 'requisition' => $requisition]) }}" class="btn btn--secondary btn--sm">
-                                                Ver detalle
-                                            </a>
+                                            <div class="cursos-catalogo-page__row-actions">
+                                                <a
+                                                    href="{{ route('requisitions.tracking.show', ['module' => $moduleKey, 'requisition' => $requisition]) }}"
+                                                    class="cursos-catalogo-page__icon-btn"
+                                                    title="Ver solicitud"
+                                                    aria-label="Ver solicitud"
+                                                >
+                                                    <x-lucide-eye width="16" height="16" aria-hidden="true" />
+                                                </a>
+                                                <a
+                                                    href="{{ route('requisitions.tracking.view-rq', ['module' => $moduleKey, 'requisition' => $requisition]) }}"
+                                                    class="cursos-catalogo-page__icon-btn"
+                                                    title="Ver Rq"
+                                                    aria-label="Ver Rq"
+                                                >
+                                                    <x-lucide-file-text width="16" height="16" aria-hidden="true" />
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
