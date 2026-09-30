@@ -44,6 +44,19 @@ class EmployeeTerminationFollowup extends Model
         'check_reporte_noved' => 'REP. NOVED',
     ];
 
+    /**
+     * Campos de fecha permitidos para el filtro de rango Desde/Hasta.
+     *
+     * @var array<string, string>
+     */
+    public const DATE_FILTER_FIELDS = [
+        'registered_at' => 'FECHA DE REGISTRO',
+        'termination_date' => 'FECHA DESVINCULACION',
+        'payroll_delivered_at' => 'FECHA ENTREGADO NOMINA',
+    ];
+
+    public const DEFAULT_DATE_FILTER_FIELD = 'payroll_delivered_at';
+
     protected $fillable = [
         'personal_requisition_ficha_entry_id',
         'employee_ficha_employment_period_id',
@@ -158,6 +171,8 @@ class EmployeeTerminationFollowup extends Model
     }
 
     /**
+     * Completo para filtros: los 8 checks en verdadero y con FECHA ENTREGADO NOMINA.
+     *
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
@@ -167,10 +182,12 @@ class EmployeeTerminationFollowup extends Model
             $query->where($field, true);
         }
 
-        return $query;
+        return $query->whereNotNull('payroll_delivered_at');
     }
 
     /**
+     * Incompleto: OK TODO en No (falta algún check) o sin FECHA ENTREGADO NOMINA.
+     *
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
@@ -180,6 +197,7 @@ class EmployeeTerminationFollowup extends Model
             foreach (self::CHECK_FIELDS as $field) {
                 $inner->orWhere($field, false);
             }
+            $inner->orWhereNull('payroll_delivered_at');
         });
     }
 
@@ -207,26 +225,43 @@ class EmployeeTerminationFollowup extends Model
     }
 
     /**
-     * Filtra por rango de FECHA ENTREGADO NOMINA (`payroll_delivered_at`).
+     * Filtra por rango de fecha sobre la columna indicada (`registered_at`, `termination_date` o `payroll_delivered_at`).
      * Extremos opcionales; si ambos vienen invertidos se intercambian.
      *
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    public function scopePayrollDeliveredBetween(Builder $query, ?string $from, ?string $to): Builder
+    public function scopeDateFieldBetween(Builder $query, string $column, ?string $from, ?string $to): Builder
     {
+        if (! array_key_exists($column, self::DATE_FILTER_FIELDS)) {
+            $column = self::DEFAULT_DATE_FILTER_FIELD;
+        }
+
+        if ($from === null && $to === null) {
+            return $query;
+        }
+
         if ($from !== null && $to !== null && $from > $to) {
             [$from, $to] = [$to, $from];
         }
 
         if ($from !== null) {
-            $query->whereDate('payroll_delivered_at', '>=', $from);
+            $query->whereDate($column, '>=', $from);
         }
 
         if ($to !== null) {
-            $query->whereDate('payroll_delivered_at', '<=', $to);
+            $query->whereDate($column, '<=', $to);
         }
 
         return $query;
+    }
+
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopePayrollDeliveredBetween(Builder $query, ?string $from, ?string $to): Builder
+    {
+        return $query->dateFieldBetween('payroll_delivered_at', $from, $to);
     }
 }

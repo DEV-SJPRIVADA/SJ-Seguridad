@@ -55,9 +55,15 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
 
 1. En Gestion Humana abra el tablero **MT-GH-04 Novedades**.
 2. Elija la pestana de la hoja que le corresponde.
-3. Use **Filtros** (cedula/nombre y fechas) y, si tiene permiso, **Exportar** o **Historial**.
+3. Use **Filtros**:
+   - Por defecto ve la **quincena actual** del **mes actual** (selector mes tipo `YYYY-MM` + Quincena #1/#2).
+   - El filtro aplica a la **fecha de inicio** (en Retiros, a la **fecha de retiro**).
+   - Si elige **Inicio/Retiro desde** o **hasta** (basta uno), el rango de fechas prima y se vacían mes y quincena.
+   - Al cambiar mes o quincena se vacían los datepickers de rango.
+   - **Limpiar** restaura mes y quincena actuales.
+   - Con permiso, use también **Exportar** o **Historial**.
 4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha.
-5. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura).
+5. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 
 ### Retiros automaticos
 
@@ -67,6 +73,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.3 | 2026-09-30 | Agent | Filtros mes (YYYY-MM) + quincena; rango fechas opcional con precedencia; limpiar = periodo actual. Obs. Nómina en verde cuando ya tiene valor (listado + modal). |
 | 1.2 | 2026-09-30 | Agent | Modales +: secciones Empleado/Novedad; lookup cédula precarga Ficha (blur/Enter/botón buscar). |
 | 1.1 | 2026-09-30 | AgentSj | Label UI del tablero: MT-GH-04 Novedades (antes Reportes-Novedades). |
 | 1.0 | 2026-09-30 | Documentador | Version inicial FEAT-040. |

@@ -110,6 +110,55 @@ class ReportesNovedadesRetirosTest extends TestCase
             ->assertJsonPath('recordsFiltered', 0);
     }
 
+    public function test_retiros_datatable_filters_by_mes_quincena_on_fecha_retiro(): void
+    {
+        $editor = $this->editorUser();
+
+        ReportesNovedadesRetiro::query()->create([
+            'document_number' => '9009009009',
+            'employee_name' => 'Retiro Q1',
+            'cargo' => 'Guardia',
+            'destino' => 'Cliente',
+            'novedad' => 'RETIRO',
+            'fecha_retiro' => '2026-09-05',
+            'motivo_retiro' => 'RENUNCIA',
+            'observaciones' => 'Q1',
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]);
+        ReportesNovedadesRetiro::query()->create([
+            'document_number' => '9019019019',
+            'employee_name' => 'Retiro Q2',
+            'cargo' => 'Guardia',
+            'destino' => 'Cliente',
+            'novedad' => 'RETIRO',
+            'fecha_retiro' => '2026-09-20',
+            'motivo_retiro' => 'RENUNCIA',
+            'observaciones' => 'Q2',
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]);
+
+        $q1 = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.retiros.datatable', [
+                'mes' => '2026-09',
+                'quincena' => '1',
+            ]))
+            ->assertOk();
+        $this->assertSame(1, $q1->json('recordsFiltered'));
+        $this->assertStringContainsString('Retiro Q1', $q1->json('data.0.1'));
+
+        $hastaOnly = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.retiros.datatable', [
+                'fecha_hasta' => '2026-09-10',
+                'mes' => '2026-09',
+                'quincena' => '2',
+            ]))
+            ->assertOk();
+        $this->assertSame(1, $hastaOnly->json('recordsFiltered'));
+        $this->assertStringContainsString('Retiro Q1', $hastaOnly->json('data.0.1'));
+    }
+
     public function test_manual_crud_review_ownership_and_export(): void
     {
         $editor = $this->editorUser();

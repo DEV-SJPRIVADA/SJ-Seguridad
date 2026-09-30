@@ -90,7 +90,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Vista | Descripcion |
 | --- | --- |
 | `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: iconos superior derecha (multi-cedula / +fila), filas con trash, Desvincular/limpiar/ZIP icon-only; lookup blur/Enter; modal pegar hasta 500; reporte |
-| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | Tabla checks + fecha nomina (autosave), filtros (q, status, rango FECHA ENTREGADO NOMINA), export Excel, OK TODO RO, icono revertir + modal motivo |
+| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | Tabla checks + fecha nomina (autosave), filtros (q, status, selector campo fecha + rango Desde/Hasta, limpiar → incompletos), export Excel, OK TODO RO, icono revertir + modal motivo |
 | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestanas `module-tab` Masivos / Seguimientos |
 | `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
 
@@ -118,8 +118,11 @@ Migracion: `2026_09_14_103500_create_employee_termination_followups_table.php` (
 Modelo: `App\Models\EmployeeTerminationFollowup`
 
 - Constantes `CHECK_FIELDS` / `CHECK_LABELS` (labels UI en mayusculas).
-- Accessor `ok_todo` / `isOkTodo()` = AND de los 8 checks.
-- Scopes: `search`, `okTodo`, `incompletos`, `sinCarta`, `statusFilter` (`todos` \| `incompletos` \| `ok_todo` \| `sin_carta`).
+- Accessor `ok_todo` / `isOkTodo()` = AND de los 8 checks (columna UI; no exige fecha nómina).
+- Scopes: `search`, `okTodo`, `incompletos`, `sinCarta`, `statusFilter` (`todos` \| `incompletos` \| `ok_todo` \| `sin_carta`), `dateFieldBetween` / `payrollDeliveredBetween`.
+  - **`ok_todo` (filtro):** 8 checks true **y** `payroll_delivered_at` no nulo.
+  - **`incompletos` (filtro):** algún check en false **o** sin `payroll_delivered_at` (default al cargar la vista / datatable sin `status`).
+  - **Rango fechas:** columna elegida con `fecha_campo` (`DATE_FILTER_FIELDS`; default `payroll_delivered_at`).
 - Relaciones: `fichaEntry`, `employmentPeriod`, `creator`.
 - Relaciones inversas: `EmployeeFichaEmploymentPeriod::terminationFollowup()`, `PersonalRequisitionFichaEntry::terminationFollowups()`.
 - Factory: `EmployeeTerminationFollowupFactory`.
@@ -185,7 +188,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 15. Causal, rehire, notas, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo).
 16. 8 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms.
 17. OK TODO solo lectura, calculado.
-18. Filtros: `q` (cedula/nombre) + status `todos` / `incompletos` / `ok_todo` / `sin_carta` + rango `fecha_desde` / `fecha_hasta` sobre `payroll_delivered_at` (scope `payrollDeliveredBetween`; extremos opcionales).
+18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` (sin chip Todos; default incompletos) + selector `fecha_campo` + rango Desde/Hasta. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda vacíos.
 19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 8 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
 20. **Revertir** por fila (permiso edit): modal con motivo; anula fila Retiros en MT-GH-04 Novedades (si existe), reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
 

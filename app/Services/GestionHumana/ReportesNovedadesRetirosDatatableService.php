@@ -4,10 +4,11 @@ namespace App\Services\GestionHumana;
 
 use App\Models\ReportesNovedadesRetiro;
 use App\Support\DisplayDate;
+use App\Support\ReportesNovedadesPeriodFilter;
+use App\Support\ReportesNovedadesUi;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 final class ReportesNovedadesRetirosDatatableService
@@ -56,19 +57,17 @@ final class ReportesNovedadesRetirosDatatableService
     public function filteredQuery(array $filters): Builder
     {
         $q = trim((string) ($filters['q'] ?? ''));
-        $fechaDesde = $this->parseDate($filters['fecha_desde'] ?? null);
-        $fechaHasta = $this->parseDate($filters['fecha_hasta'] ?? null);
 
-        return ReportesNovedadesRetiro::query()
+        $query = ReportesNovedadesRetiro::query()
             ->when($q !== '', function (Builder $query) use ($q): void {
                 $like = '%'.$q.'%';
                 $query->where(function (Builder $inner) use ($like): void {
                     $inner->where('document_number', 'like', $like)
                         ->orWhere('employee_name', 'like', $like);
                 });
-            })
-            ->when($fechaDesde !== null, fn (Builder $query) => $query->whereDate('fecha_retiro', '>=', $fechaDesde))
-            ->when($fechaHasta !== null, fn (Builder $query) => $query->whereDate('fecha_retiro', '<=', $fechaHasta))
+            });
+
+        return ReportesNovedadesPeriodFilter::applyToQuery($query, $filters, 'fecha_retiro')
             ->orderByDesc('fecha_retiro')
             ->orderByDesc('id');
     }
@@ -115,7 +114,7 @@ final class ReportesNovedadesRetirosDatatableService
             e(DisplayDate::date($row->fecha_retiro) ?: '—'),
             e((string) ($row->motivo_retiro ?: '—')),
             e((string) ($row->observaciones ?: '—')),
-            e((string) ($row->observacion_nomina ?: '—')),
+            ReportesNovedadesUi::observacionNominaCell($row->observacion_nomina),
         ];
 
         if ($canEdit || $canReview) {
@@ -188,20 +187,6 @@ final class ReportesNovedadesRetirosDatatableService
             e(route('gestion-humana.reportes-novedades.retiros.historial', ['id' => $row->id])),
             $this->historySvg(),
         );
-    }
-
-    private function parseDate(mixed $value): ?Carbon
-    {
-        $raw = trim((string) $value);
-        if ($raw === '') {
-            return null;
-        }
-
-        try {
-            return Carbon::parse($raw)->startOfDay();
-        } catch (\Throwable) {
-            return null;
-        }
     }
 
     private function csrfField(): string

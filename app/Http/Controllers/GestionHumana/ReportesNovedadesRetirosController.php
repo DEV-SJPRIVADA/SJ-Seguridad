@@ -12,6 +12,7 @@ use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\GestionHumana\ReportesNovedadesAuditLogService;
 use App\Services\GestionHumana\ReportesNovedadesHistorialService;
 use App\Services\GestionHumana\ReportesNovedadesRetirosDatatableService;
+use App\Support\ReportesNovedadesPeriodFilter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -59,8 +60,8 @@ class ReportesNovedadesRetirosController extends Controller
             'canReview' => $canReview,
             'canExport' => $canExport,
             'filters' => $filters,
-            'datatableUrl' => route('gestion-humana.reportes-novedades.retiros.datatable', array_filter($filters)),
-            'exportUrl' => route('gestion-humana.reportes-novedades.retiros.export', array_filter($filters)),
+            'datatableUrl' => route('gestion-humana.reportes-novedades.retiros.datatable', ReportesNovedadesPeriodFilter::toQueryParams($filters)),
+            'exportUrl' => route('gestion-humana.reportes-novedades.retiros.export', ReportesNovedadesPeriodFilter::toQueryParams($filters)),
             'historialUrl' => route('gestion-humana.reportes-novedades.retiros.historial'),
             'lookupUrl' => route('gestion-humana.reportes-novedades.lookup'),
             'storeUrl' => route('gestion-humana.reportes-novedades.retiros.store'),
@@ -231,15 +232,20 @@ class ReportesNovedadesRetirosController extends Controller
     }
 
     /**
-     * @return array{q: string, fecha_desde: string, fecha_hasta: string}
+     * @return array{
+     *     q: string,
+     *     mes: string,
+     *     quincena: string,
+     *     fecha_desde: string,
+     *     fecha_hasta: string,
+     *     period_active: bool,
+     *     period_desde: string|null,
+     *     period_hasta: string|null
+     * }
      */
     private function filtersFromRequest(Request $request): array
     {
-        return [
-            'q' => trim((string) $request->query('q', '')),
-            'fecha_desde' => trim((string) $request->query('fecha_desde', '')),
-            'fecha_hasta' => trim((string) $request->query('fecha_hasta', '')),
-        ];
+        return ReportesNovedadesPeriodFilter::resolveFromRequest($request);
     }
 
     /**

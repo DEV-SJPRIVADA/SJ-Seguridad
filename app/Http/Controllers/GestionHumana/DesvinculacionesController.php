@@ -81,10 +81,19 @@ class DesvinculacionesController extends Controller
             'exportUrl' => route('gestion-humana.desvinculaciones.seguimientos.export'),
             'filters' => [
                 'q' => request()->string('q')->toString(),
-                'status' => request()->string('status')->toString() ?: 'todos',
+                'status' => array_key_exists('status', request()->query())
+                    ? request()->string('status')->toString()
+                    : 'incompletos',
+                'fecha_campo' => array_key_exists(request()->string('fecha_campo')->toString(), EmployeeTerminationFollowup::DATE_FILTER_FIELDS)
+                    ? request()->string('fecha_campo')->toString()
+                    : EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
                 'fecha_desde' => request()->string('fecha_desde')->toString(),
                 'fecha_hasta' => request()->string('fecha_hasta')->toString(),
             ],
+            'fechaCampoOptions' => collect(EmployeeTerminationFollowup::DATE_FILTER_FIELDS)
+                ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
+                ->values()
+                ->all(),
         ]);
     }
 
@@ -101,12 +110,18 @@ class DesvinculacionesController extends Controller
 
         $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'string', 'in:todos,incompletos,ok_todo,sin_carta'],
+            'status' => ['nullable', 'string', 'in:,incompletos,ok_todo,sin_carta'],
+            'fecha_campo' => ['nullable', 'string', 'in:registered_at,termination_date,payroll_delivered_at'],
             'fecha_desde' => ['nullable', 'date'],
             'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
         ]);
 
         $rows = $this->followupDatatableService->filteredQuery($request)->get();
+
+        $fechaCampo = trim($request->string('fecha_campo')->toString());
+        if (! array_key_exists($fechaCampo, EmployeeTerminationFollowup::DATE_FILTER_FIELDS)) {
+            $fechaCampo = EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD;
+        }
 
         $this->auditLogService->logEvent(
             eventType: 'export',
@@ -114,7 +129,10 @@ class DesvinculacionesController extends Controller
             metadata: [
                 'row_count' => $rows->count(),
                 'q' => trim($request->string('q')->toString()),
-                'status' => $request->string('status')->toString() ?: 'todos',
+                'status' => array_key_exists('status', $request->query())
+                    ? (string) $request->query('status', '')
+                    : 'incompletos',
+                'fecha_campo' => $fechaCampo,
                 'fecha_desde' => $request->date('fecha_desde')?->toDateString(),
                 'fecha_hasta' => $request->date('fecha_hasta')?->toDateString(),
             ],

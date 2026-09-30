@@ -1,8 +1,6 @@
 <x-app-layout>
     @php
-        $hasActiveFilters = ($filters['q'] ?? '') !== ''
-            || ($filters['fecha_desde'] ?? '') !== ''
-            || ($filters['fecha_hasta'] ?? '') !== '';
+        $hasActiveFilters = \App\Support\ReportesNovedadesPeriodFilter::hasNonDefaultUiFilters($filters);
     @endphp
 
     <x-slot name="header">
@@ -39,35 +37,14 @@
                         </summary>
                         <div class="req-manage-filters__panel-body">
                             <form method="GET" action="{{ route('gestion-humana.reportes-novedades.vacaciones') }}" class="req-manage-filters">
-                                <div class="cursos-registros-page__filters">
-                                    <div class="form-field">
-                                        <label class="form-label" for="filter_q">Buscar</label>
-                                        <input id="filter_q" name="q" type="search" class="form-input" value="{{ $filters['q'] }}" placeholder="Cédula o nombre…">
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="filter_fecha_desde">Inicio desde</label>
-                                        <input id="filter_fecha_desde" name="fecha_desde" type="date" class="form-input" value="{{ $filters['fecha_desde'] }}">
-                                    </div>
-                                    <div class="form-field">
-                                        <label class="form-label" for="filter_fecha_hasta">Inicio hasta</label>
-                                        <input id="filter_fecha_hasta" name="fecha_hasta" type="date" class="form-input" value="{{ $filters['fecha_hasta'] }}">
-                                    </div>
-                                    <div class="form-field cursos-registros-page__filter-actions">
-                                        <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
-                                            <x-lucide-search width="18" height="18" aria-hidden="true" />
-                                        </button>
-                                        <a href="{{ route('gestion-humana.reportes-novedades.vacaciones') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
-                                            <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                        </a>
-                                        @if ($canExport)
-                                            <x-export-excel
-                                                route="{{ $exportUrl }}"
-                                                label=""
-                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                            />
-                                        @endif
-                                    </div>
-                                </div>
+                                @include('areas.gestion_humana.reportes_novedades.partials.period-filters', [
+                                    'filters' => $filters,
+                                    'clearUrl' => route('gestion-humana.reportes-novedades.vacaciones'),
+                                    'canExport' => $canExport,
+                                    'exportUrl' => $exportUrl,
+                                    'fechaDesdeLabel' => 'Inicio desde',
+                                    'fechaHastaLabel' => 'Inicio hasta',
+                                ])
                             </form>
                         </div>
                     </details>

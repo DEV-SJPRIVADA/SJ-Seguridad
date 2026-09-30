@@ -111,6 +111,7 @@ Namespace requests: `App\Http\Requests\GestionHumana\ReportesNovedades\`.
 | `.../partials/subnav.blade.php` | Pestanas module-tab |
 | `.../partials/*-form-fields.blade.php` | Campos por hoja en secciones numeradas (Empleado / Novedad / …) |
 | `.../partials/employee-lookup-fields.blade.php` | Lookup cedula compartido (paso 1) |
+| `.../partials/period-filters.blade.php` | Filtros compartidos: mes (`type=month` YYYY-MM) + quincena + rango fechas + limpiar |
 | `.../partials/historial-modal.blade.php` | Modal Historial compartido (timeline de auditoría) |
 
 ## Modelos y tablas
@@ -139,6 +140,7 @@ Convenciones: `created_by` / `updated_by` (FK users `nullOnDelete`), timestamps,
 | `ReportesNovedadesFichaLookupService` | Cedula → prefill |
 | `ReportesNovedadesHistorialService` | Lectura `audit_logs` filtrada por modulo + hoja/fila |
 | `ReportesNovedades*DatatableService` | Query + format row por hoja (tope length 100) |
+| `ReportesNovedadesPeriodFilter` | Resuelve mes/quincena (default actuales) vs `fecha_desde`/`fecha_hasta` (priman si hay al menos uno); aplica a `fecha_inicio` o `fecha_retiro` |
 | `ReportesNovedadesRetiroSyncService` | `ensureFromFollowup` / `annulFromFollowup` |
 
 Config: `config/reportes_novedades.php` (catalogos + `retiros_novedad_default` = `RETIRO`). Audit: `config/audit.php` → modulo `reportes_novedades`.
@@ -171,6 +173,13 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
 6. Alta manual Retiros permitida (sin FK followup).
 7. Filas soft-deleted Retiros **no** aparecen en DT/export por defecto.
 8. Destroy Retiros (GH): soft-delete (alinea con annul auto).
+9. Filtros de listado/export (todas las hojas):
+   - Por defecto: **mes** actual (`YYYY-MM`) + **quincena** actual (#1 = 01–15, #2 = 16–fin de mes).
+   - Columna filtrada: `fecha_inicio` (Vacaciones / Incapacidades / Permisos) o `fecha_retiro` (Retiros).
+   - Si hay `fecha_desde` **o** `fecha_hasta`, el rango prima y se vacían mes/quincena en la UI.
+   - Al cambiar mes/quincena se vacían los datepickers de rango.
+   - Limpiar vuelve a la URL sin query → mes + quincena actuales.
+10. `observacion_nomina` con valor: celda del listado en pill verde (`status-pill--success`); input del modal con fondo verde (`.rn-novedad-form__input--nomina-filled`).
 
 ## JavaScript / assets
 
@@ -189,7 +198,7 @@ Clases `App\Exports\ReportesNovedades{Vacaciones|Incapacidades|Retiros|Permisos}
 2. Asignar paquete GH y/o Nómina en Admin (subgroup MT-GH-04 Novedades).
 3. Vacaciones: CRUD + review + export + historial; smoke otras hojas.
 4. Desvincular (Ficha o Masivos) → fila en Retiros; revertir → desaparece.
-5. `php artisan test --compact --filter=ReportesNovedades` (28 tests en review FEAT-040).
+5. `php artisan test --compact --filter=ReportesNovedades` (+ unit `ReportesNovedadesPeriodFilter`).
 6. `vendor/bin/pint --dirty --format agent` tras PHP.
 
 ## Riesgos y pendientes (incl. observaciones del review)

@@ -4,10 +4,11 @@ namespace App\Services\GestionHumana;
 
 use App\Models\ReportesNovedadesIncapacidad;
 use App\Support\DisplayDate;
+use App\Support\ReportesNovedadesPeriodFilter;
+use App\Support\ReportesNovedadesUi;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 final class ReportesNovedadesIncapacidadesDatatableService
@@ -56,19 +57,17 @@ final class ReportesNovedadesIncapacidadesDatatableService
     public function filteredQuery(array $filters): Builder
     {
         $q = trim((string) ($filters['q'] ?? ''));
-        $fechaDesde = $this->parseDate($filters['fecha_desde'] ?? null);
-        $fechaHasta = $this->parseDate($filters['fecha_hasta'] ?? null);
 
-        return ReportesNovedadesIncapacidad::query()
+        $query = ReportesNovedadesIncapacidad::query()
             ->when($q !== '', function (Builder $query) use ($q): void {
                 $like = '%'.$q.'%';
                 $query->where(function (Builder $inner) use ($like): void {
                     $inner->where('document_number', 'like', $like)
                         ->orWhere('employee_name', 'like', $like);
                 });
-            })
-            ->when($fechaDesde !== null, fn (Builder $query) => $query->whereDate('fecha_inicio', '>=', $fechaDesde))
-            ->when($fechaHasta !== null, fn (Builder $query) => $query->whereDate('fecha_fin', '<=', $fechaHasta))
+            });
+
+        return ReportesNovedadesPeriodFilter::applyToQuery($query, $filters, 'fecha_inicio')
             ->orderByDesc('fecha_inicio')
             ->orderByDesc('id');
     }
@@ -140,7 +139,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
             e(DisplayDate::date($row->fecha_fin)),
             e(DisplayDate::date($row->fecha_recepcion) ?: '—'),
             e((string) ($row->diasEntregaCalculados() ?? '—')),
-            e((string) ($row->observacion_nomina ?: '—')),
+            ReportesNovedadesUi::observacionNominaCell($row->observacion_nomina),
         ];
 
         if ($canEdit || $canReview) {
@@ -220,20 +219,6 @@ final class ReportesNovedadesIncapacidadesDatatableService
             e(route('gestion-humana.reportes-novedades.incapacidades.historial', ['id' => $row->id])),
             $this->historySvg(),
         );
-    }
-
-    private function parseDate(mixed $value): ?Carbon
-    {
-        $raw = trim((string) $value);
-        if ($raw === '') {
-            return null;
-        }
-
-        try {
-            return Carbon::parse($raw)->startOfDay();
-        } catch (\Throwable) {
-            return null;
-        }
     }
 
     private function csrfField(): string

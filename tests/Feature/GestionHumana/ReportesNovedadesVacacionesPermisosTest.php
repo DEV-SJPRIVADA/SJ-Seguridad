@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
@@ -34,6 +35,72 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             ->getJson(route('gestion-humana.reportes-novedades.vacaciones.datatable'))
             ->assertOk()
             ->assertJsonStructure(['draw', 'recordsTotal', 'recordsFiltered', 'data']);
+    }
+
+    public function test_vacaciones_datatable_filters_by_mes_quincena_on_fecha_inicio(): void
+    {
+        $editor = $this->editorUser('vacaciones');
+
+        ReportesNovedadesVacacion::query()->create($this->vacacionAttributes([
+            'document_number' => '1111111111',
+            'employee_name' => 'Q1',
+            'fecha_inicio' => '2026-09-10',
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]));
+        ReportesNovedadesVacacion::query()->create($this->vacacionAttributes([
+            'document_number' => '2222222222',
+            'employee_name' => 'Q2',
+            'fecha_inicio' => '2026-09-20',
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]));
+        ReportesNovedadesVacacion::query()->create($this->vacacionAttributes([
+            'document_number' => '3333333333',
+            'employee_name' => 'OtroMes',
+            'fecha_inicio' => '2026-08-05',
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]));
+
+        $q1 = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.vacaciones.datatable', [
+                'mes' => '2026-09',
+                'quincena' => '1',
+            ]))
+            ->assertOk();
+        $this->assertSame(1, $q1->json('recordsFiltered'));
+        $this->assertStringContainsString('Q1', $q1->json('data.0.1'));
+
+        $range = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.vacaciones.datatable', [
+                'fecha_desde' => '2026-09-15',
+                'mes' => '2026-09',
+                'quincena' => '1',
+            ]))
+            ->assertOk();
+        $this->assertSame(1, $range->json('recordsFiltered'));
+        $this->assertStringContainsString('Q2', $range->json('data.0.1'));
+    }
+
+    public function test_vacaciones_index_defaults_mes_and_quincena(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-30'));
+        $editor = $this->editorUser('vacaciones');
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.reportes-novedades.vacaciones'))
+            ->assertOk()
+            ->assertViewHas('filters', function (array $filters): bool {
+                return $filters['mes'] === '2026-09'
+                    && $filters['quincena'] === '2'
+                    && $filters['period_active'] === true
+                    && $filters['fecha_desde'] === '';
+            })
+            ->assertSee('name="mes"', false)
+            ->assertSee('type="month"', false);
+
+        Carbon::setTestNow();
     }
 
     public function test_review_can_view_and_export_but_cannot_store_vacaciones(): void

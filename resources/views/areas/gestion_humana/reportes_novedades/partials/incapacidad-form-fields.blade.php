@@ -250,10 +250,15 @@
                         id="{{ $prefix }}_observacion_nomina"
                         @if ($canReviewNomina) name="observacion_nomina" @endif
                         type="text"
-                        class="form-input"
+                        class="form-input{{ (! $alpine && filled($v['observacion_nomina'] ?? null)) ? ' rn-novedad-form__input--nomina-filled' : '' }}"
                         maxlength="255"
                         @disabled(! $canReviewNomina)
-                        @if ($alpine) x-model="form.observacion_nomina" @else value="{{ $v['observacion_nomina'] ?? '' }}" @endif
+                        @if ($alpine)
+                            x-model="form.observacion_nomina"
+                            :class="{ 'rn-novedad-form__input--nomina-filled': (form.observacion_nomina || '').toString().trim() !== '' }"
+                        @else
+                            value="{{ $v['observacion_nomina'] ?? '' }}"
+                        @endif
                     >
                 </div>
             </div>
