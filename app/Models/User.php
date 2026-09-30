@@ -11,6 +11,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SeleccionAccessService;
 use App\Services\Access\SupplyAccessService;
@@ -462,6 +463,28 @@ class User extends Authenticatable
             'validaciones' => route('gestion-humana.acreditaciones.validaciones'),
             'export_apo' => route('gestion-humana.acreditaciones.export-apo'),
             'catalogo' => route('gestion-humana.acreditaciones.catalogo'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function reportesNovedadesBoardTabsFor(): Collection
+    {
+        return collect(app(ReportesNovedadesAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultReportesNovedadesBoardUrl(): string
+    {
+        $tabs = $this->reportesNovedadesBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'vacaciones' => route('gestion-humana.reportes-novedades.vacaciones'),
+            'incapacidades' => route('gestion-humana.reportes-novedades.incapacidades'),
+            'retiros' => route('gestion-humana.reportes-novedades.retiros'),
+            'permisos' => route('gestion-humana.reportes-novedades.permisos'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }

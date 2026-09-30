@@ -68,7 +68,7 @@ class DesvinculacionesSeguimientosTest extends TestCase
 
         $response = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
-                'status' => 'todos',
+                'status' => '',
             ]));
 
         $response->assertOk();
@@ -84,11 +84,20 @@ class DesvinculacionesSeguimientosTest extends TestCase
             'document_number' => '3333333333',
             'full_name' => 'Incompleto Perez',
         ]);
+        $completeChecksNoDate = $this->createFollowup([
+            'document_number' => '3434343434',
+            'full_name' => 'Checks Sin Fecha',
+        ]);
+        $completeChecksNoDate->forceFill(array_fill_keys(EmployeeTerminationFollowup::CHECK_FIELDS, true))->save();
+
         $complete = $this->createFollowup([
             'document_number' => '4444444444',
             'full_name' => 'Completo Gomez',
         ]);
-        $complete->forceFill(array_fill_keys(EmployeeTerminationFollowup::CHECK_FIELDS, true))->save();
+        $complete->forceFill(array_merge(
+            array_fill_keys(EmployeeTerminationFollowup::CHECK_FIELDS, true),
+            ['payroll_delivered_at' => '2026-03-15'],
+        ))->save();
 
         $this->actingAs($viewer)
             ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
@@ -100,9 +109,47 @@ class DesvinculacionesSeguimientosTest extends TestCase
 
         $this->actingAs($viewer)
             ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
-                'q' => 'Incompleto',
-                'status' => 'todos',
+                'status' => 'incompletos',
             ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 2);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'q' => 'Incompleto',
+                'status' => '',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $incomplete->id);
+    }
+
+    public function test_seguimientos_defaults_to_incompletos_without_status(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $incomplete = $this->createFollowup([
+            'document_number' => '3535353535',
+            'full_name' => 'Solo Incompleto',
+        ]);
+        $complete = $this->createFollowup([
+            'document_number' => '3636363636',
+            'full_name' => 'Completo Con Fecha',
+        ]);
+        $complete->forceFill(array_merge(
+            array_fill_keys(EmployeeTerminationFollowup::CHECK_FIELDS, true),
+            ['payroll_delivered_at' => '2026-03-20'],
+        ))->save();
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.desvinculaciones.seguimientos'))
+            ->assertOk()
+            ->assertViewHas('filters', function (array $filters): bool {
+                return ($filters['status'] ?? '') === 'incompletos';
+            });
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable'))
             ->assertOk()
             ->assertJsonPath('recordsFiltered', 1)
             ->assertJsonPath('data.0.id', $incomplete->id);
@@ -122,13 +169,97 @@ class DesvinculacionesSeguimientosTest extends TestCase
 
         $this->actingAs($viewer)
             ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
-                'status' => 'todos',
+                'status' => '',
+                'fecha_campo' => 'payroll_delivered_at',
                 'fecha_desde' => '2026-03-01',
                 'fecha_hasta' => '2026-03-31',
             ]))
             ->assertOk()
             ->assertJsonPath('recordsFiltered', 1)
             ->assertJsonPath('data.0.id', $inside->id);
+    }
+
+    public function test_seguimientos_datatable_filters_by_selected_date_field(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $byTermination = $this->createFollowup([
+            'document_number' => '5757575757',
+            'full_name' => 'Por Desvinculacion',
+            'termination_date' => '2026-05-10',
+        ]);
+        $byRegistration = $this->createFollowup([
+            'document_number' => '5858585858',
+            'full_name' => 'Por Registro',
+            'termination_date' => '2026-01-01',
+        ]);
+        $byRegistration->forceFill(['registered_at' => '2026-05-12 09:00:00'])->save();
+        $byTermination->forceFill([
+            'registered_at' => '2026-01-02 09:00:00',
+            'payroll_delivered_at' => '2026-05-20',
+        ])->save();
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => '',
+                'fecha_campo' => 'termination_date',
+                'fecha_desde' => '2026-05-01',
+                'fecha_hasta' => '2026-05-31',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $byTermination->id);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => '',
+                'fecha_campo' => 'registered_at',
+                'fecha_desde' => '2026-05-01',
+                'fecha_hasta' => '2026-05-31',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $byRegistration->id);
+    }
+
+    public function test_date_range_without_status_ignores_incompletos_until_status_selected(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $incomplete = $this->createFollowup([
+            'document_number' => '5959595959',
+            'full_name' => 'Incompleto Con Nomina',
+        ]);
+        $complete = $this->createFollowup([
+            'document_number' => '6060606060',
+            'full_name' => 'Completo Con Nomina',
+        ]);
+        $incomplete->forceFill(['payroll_delivered_at' => '2026-06-10'])->save();
+        $complete->forceFill(array_merge(
+            array_fill_keys(EmployeeTerminationFollowup::CHECK_FIELDS, true),
+            ['payroll_delivered_at' => '2026-06-12'],
+        ))->save();
+
+        $onlyDates = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => '',
+                'fecha_campo' => 'payroll_delivered_at',
+                'fecha_desde' => '2026-06-01',
+                'fecha_hasta' => '2026-06-30',
+            ]))
+            ->assertOk();
+        $this->assertSame(2, $onlyDates->json('recordsFiltered'));
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => 'ok_todo',
+                'fecha_campo' => 'payroll_delivered_at',
+                'fecha_desde' => '2026-06-01',
+                'fecha_hasta' => '2026-06-30',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $complete->id);
     }
 
     public function test_export_seguimientos_excel_uses_filters_and_audits(): void
@@ -257,8 +388,10 @@ class DesvinculacionesSeguimientosTest extends TestCase
             ->get(route('gestion-humana.desvinculaciones.seguimientos'))
             ->assertOk()
             ->assertSee('Vista de solo lectura', false)
-            ->assertSee('Exportar Excel', false)
-            ->assertSee('FECHA ENTREGADO NOMINA', false);
+            ->assertSee('Exportar a Excel', false)
+            ->assertSee('FECHA ENTREGADO NOMINA', false)
+            ->assertSee('Campo fecha', false)
+            ->assertSee('Limpiar filtros', false);
     }
 
     public function test_revert_reactivates_employee_deletes_followup_and_letter(): void

@@ -15,9 +15,11 @@
                     'checkFields' => $checkFields,
                     'checkLabels' => $checkLabels,
                     'initialQ' => $filters['q'] ?? '',
-                    'initialStatus' => $filters['status'] ?? 'todos',
+                    'initialStatus' => $filters['status'] ?? 'incompletos',
+                    'initialFechaCampo' => $filters['fecha_campo'] ?? \App\Models\EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
                     'initialFechaDesde' => $filters['fecha_desde'] ?? '',
                     'initialFechaHasta' => $filters['fecha_hasta'] ?? '',
+                    'defaultFechaCampo' => \App\Models\EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
                 ]))"
                 x-init="init()"
             >
@@ -26,7 +28,7 @@
                         $hasActiveFilters = ($filters['q'] ?? '') !== ''
                             || ($filters['fecha_desde'] ?? '') !== ''
                             || ($filters['fecha_hasta'] ?? '') !== ''
-                            || (($filters['status'] ?? 'todos') !== 'todos');
+                            || (($filters['status'] ?? 'incompletos') !== 'incompletos');
                     @endphp
 
                     @unless ($canEditSeguimientos)
@@ -55,16 +57,33 @@
                                                 x-on:keydown.enter.prevent="applyFilters()"
                                                 autocomplete="off"
                                             >
-                                            <button type="button" class="btn btn--primary btn--sm" x-on:click="applyFilters()">
-                                                Buscar
+                                            <button
+                                                type="button"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                                title="Filtrar"
+                                                aria-label="Filtrar"
+                                                x-on:click="applyFilters()"
+                                            >
+                                                <x-lucide-search width="18" height="18" aria-hidden="true" />
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div class="desvinculaciones-seguimientos__date-range" role="group" aria-label="Rango fecha entregado nomina">
-                                        <span class="req-manage-filters__label desvinculaciones-seguimientos__date-range-title">
-                                            FECHA ENTREGADO NOMINA
-                                        </span>
+                                    <div class="form-field desvinculaciones-seguimientos__fecha-campo">
+                                        <label class="req-manage-filters__label" for="seguimientos-fecha-campo">Campo fecha</label>
+                                        <x-searchable-select
+                                            id="seguimientos-fecha-campo"
+                                            name="fecha_campo"
+                                            :options="$fechaCampoOptions"
+                                            :value="$filters['fecha_campo'] ?? \App\Models\EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD"
+                                            placeholder="Campo fecha…"
+                                            :allow-clear="false"
+                                            :required="false"
+                                            x-on:change="onFechaCampoChange($event)"
+                                        />
+                                    </div>
+
+                                    <div class="desvinculaciones-seguimientos__date-range" role="group" aria-label="Rango de fechas">
                                         <div class="desvinculaciones-seguimientos__date-fields">
                                             <div class="desvinculaciones-seguimientos__date-field">
                                                 <label class="req-manage-filters__label" for="seguimientos-fecha-desde">Desde</label>
@@ -73,7 +92,7 @@
                                                     type="date"
                                                     class="form-input desvinculaciones-seguimientos__date-input"
                                                     x-model="fechaDesde"
-                                                    x-on:change="applyFilters()"
+                                                    x-on:change="onDateRangeChange()"
                                                 >
                                             </div>
                                             <div class="desvinculaciones-seguimientos__date-field">
@@ -83,10 +102,22 @@
                                                     type="date"
                                                     class="form-input desvinculaciones-seguimientos__date-input"
                                                     x-model="fechaHasta"
-                                                    x-on:change="applyFilters()"
+                                                    x-on:change="onDateRangeChange()"
                                                 >
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div class="desvinculaciones-seguimientos__filter-actions">
+                                        <button
+                                            type="button"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                            title="Limpiar filtros"
+                                            aria-label="Limpiar filtros"
+                                            x-on:click="clearFilters()"
+                                        >
+                                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -325,11 +356,12 @@
                     checkFields: config.checkFields || [],
                     checkLabels: config.checkLabels || {},
                     q: config.initialQ || '',
-                    status: config.initialStatus || 'todos',
+                    status: config.initialStatus || 'incompletos',
+                    fechaCampo: config.initialFechaCampo || config.defaultFechaCampo || 'payroll_delivered_at',
+                    defaultFechaCampo: config.defaultFechaCampo || 'payroll_delivered_at',
                     fechaDesde: config.initialFechaDesde || '',
                     fechaHasta: config.initialFechaHasta || '',
                     statusOptions: [
-                        { value: 'todos', label: 'Todos' },
                         { value: 'incompletos', label: 'Incompletos' },
                         { value: 'ok_todo', label: 'OK TODO' },
                         { value: 'sin_carta', label: 'Sin carta' },
@@ -366,7 +398,7 @@
                         return (this.q || '').trim() !== ''
                             || (this.fechaDesde || '') !== ''
                             || (this.fechaHasta || '') !== ''
-                            || (this.status || 'todos') !== 'todos';
+                            || this.status !== 'incompletos';
                     },
 
                     get exportHref() {
@@ -374,9 +406,8 @@
                         if (this.q) {
                             params.set('q', this.q);
                         }
-                        if (this.status && this.status !== 'todos') {
-                            params.set('status', this.status);
-                        }
+                        params.set('status', this.status == null ? 'incompletos' : String(this.status));
+                        params.set('fecha_campo', this.fechaCampo || this.defaultFechaCampo);
                         if (this.fechaDesde) {
                             params.set('fecha_desde', this.fechaDesde);
                         }
@@ -390,7 +421,8 @@
                     filterParams() {
                         return {
                             q: this.q || '',
-                            status: this.status || 'todos',
+                            status: this.status == null ? 'incompletos' : String(this.status),
+                            fecha_campo: this.fechaCampo || this.defaultFechaCampo,
                             fecha_desde: this.fechaDesde || '',
                             fecha_hasta: this.fechaHasta || '',
                         };
@@ -403,6 +435,60 @@
                     applyFilters() {
                         this.page = 1;
                         this.load();
+                    },
+
+                    clearFilters() {
+                        this.q = '';
+                        this.status = 'incompletos';
+                        this.fechaDesde = '';
+                        this.fechaHasta = '';
+                        this.fechaCampo = this.defaultFechaCampo;
+                        this.setFechaCampoSelect(this.fechaCampo);
+                        this.page = 1;
+                        this.load();
+                    },
+
+                    setFechaCampoSelect(value) {
+                        const sel = document.getElementById('seguimientos-fecha-campo');
+                        if (! sel || ! window.Alpine) {
+                            return;
+                        }
+                        const wrap = sel.closest('[x-data]');
+                        if (wrap) {
+                            const data = window.Alpine.$data(wrap);
+                            data.value = value;
+                            const opt = (data.options || []).find((item) => String(item.value) === String(value));
+                            data.selectedLabel = opt ? opt.label : '';
+                        }
+                    },
+
+                    onFechaCampoChange(event) {
+                        let value = event?.detail?.value;
+                        if (value === undefined || value === null) {
+                            value = event?.target?.value ?? '';
+                        }
+                        value = String(value || '').trim() || this.defaultFechaCampo;
+                        if (this.fechaCampo === value) {
+                            return;
+                        }
+                        this.fechaCampo = value;
+                        if ((this.fechaDesde || '') !== '' || (this.fechaHasta || '') !== '') {
+                            this.applyFilters();
+                        }
+                    },
+
+                    onDateRangeChange() {
+                        const hasDateRange = (this.fechaDesde || '').trim() !== ''
+                            || (this.fechaHasta || '').trim() !== '';
+
+                        if (hasDateRange) {
+                            // Rango activo: desactiva chips de estado hasta que el usuario elija uno.
+                            this.status = '';
+                        } else if (this.status === '') {
+                            this.status = 'incompletos';
+                        }
+
+                        this.applyFilters();
                     },
 
                     setStatus(value) {

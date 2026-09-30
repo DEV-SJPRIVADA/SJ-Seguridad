@@ -46,7 +46,7 @@ final class TerminationFollowupDatatableService
     }
 
     /**
-     * Query filtrada (busqueda, estado, rango fecha entregado nomina) ordenada por id desc.
+     * Query filtrada (busqueda, estado, rango por campo de fecha) ordenada por id desc.
      *
      * @return Builder<EmployeeTerminationFollowup>
      */
@@ -54,13 +54,14 @@ final class TerminationFollowupDatatableService
     {
         $q = trim($request->string('q')->toString());
         $status = $this->resolveStatusFilter($request);
+        $fechaCampo = $this->resolveDateFieldFilter($request);
         $fechaDesde = $this->resolveDateFilter($request, 'fecha_desde');
         $fechaHasta = $this->resolveDateFilter($request, 'fecha_hasta');
 
         return EmployeeTerminationFollowup::query()
             ->search($q)
             ->statusFilter($status)
-            ->payrollDeliveredBetween($fechaDesde, $fechaHasta)
+            ->dateFieldBetween($fechaCampo, $fechaDesde, $fechaHasta)
             ->orderByDesc('id');
     }
 
@@ -147,11 +148,30 @@ final class TerminationFollowupDatatableService
 
     private function resolveStatusFilter(Request $request): string
     {
-        $status = strtolower(trim($request->string('status')->toString()));
+        // status= (vacío) = sin filtro de estado (p. ej. solo rango de fechas).
+        // Sin clave status = default incompletos.
+        if (! array_key_exists('status', $request->query())) {
+            return 'incompletos';
+        }
+
+        $status = strtolower(trim((string) $request->query('status', '')));
+
+        if ($status === '') {
+            return '';
+        }
 
         return in_array($status, ['incompletos', 'ok_todo', 'sin_carta'], true)
             ? $status
-            : 'todos';
+            : 'incompletos';
+    }
+
+    private function resolveDateFieldFilter(Request $request): string
+    {
+        $field = trim($request->string('fecha_campo')->toString());
+
+        return array_key_exists($field, EmployeeTerminationFollowup::DATE_FILTER_FIELDS)
+            ? $field
+            : EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD;
     }
 
     private function resolveDateFilter(Request $request, string $key): ?string

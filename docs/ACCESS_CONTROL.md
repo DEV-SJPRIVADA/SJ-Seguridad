@@ -184,6 +184,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - En area `gestion_humana`, tableros de area unica (no transversales de solicitante):
   - `ficha_empleados` — **Ficha empleados** (`view.board.gestion_humana.ficha_empleados` + `ficha_empleados.view` / `manage` / `terminate`)
   - `desvinculaciones` — **Desvinculaciones** (`view.board.gestion_humana.desvinculaciones` + `desvinculaciones.view` / `masivos` / `seguimientos.edit`)
+  - `reportes_novedades` — **MT-GH-04 Novedades** (`view.board.gestion_humana.reportes_novedades` + `reportes_novedades.{hoja}.view` / `edit` / `review` × Vacaciones, Incapacidades, Retiros, Permisos)
   - `cursos` — **Cursos** (`view.board.gestion_humana.cursos` + `cursos.view` / `edit`)
   - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
   - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
@@ -240,7 +241,47 @@ Tablero **Desvinculaciones** (Masivos + Seguimientos). Paquete V1: asignar los *
 - Bypass: `manage.users`.
 - Seed: `super-admin` todos; rol `administrador` **no** recibe el paquete por defecto (asignacion manual).
 - Relacion Ficha: terminate individual y cartas siguen con `ficha_empleados.terminate`; crean/actualizan seguimiento como side-effect.
+- Side-effect FEAT-040: al crear followup (Ficha o Masivos) se asegura fila en **MT-GH-04 Novedades → Retiros**; al revertir se soft-deletea. No exige `reportes_novedades.retiros.edit`.
 - Doc: [`docs/modules/desvinculaciones.md`](modules/desvinculaciones.md), [`docs/user/desvinculaciones.md`](user/desvinculaciones.md).
+
+### MT-GH-04 Novedades (Gestion humana)
+
+Tablero **MT-GH-04 Novedades** (clave `reportes_novedades`; Vacaciones, Incapacidades, Retiros, Permisos). Modelo por hoja: `view` / `edit` / `review` (tercer verbo para Nómina). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`).
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.reportes_novedades` | Ver tablero **MT-GH-04 Novedades** en sidebar GH |
+| `reportes_novedades.vacaciones.view` | Vacaciones: ver / filtrar / export / historial |
+| `reportes_novedades.vacaciones.edit` | Vacaciones: CRUD columnas GH |
+| `reportes_novedades.vacaciones.review` | Vacaciones: editar columnas Nómina |
+| `reportes_novedades.incapacidades.view` | Incapacidades: ver / filtrar / export / historial |
+| `reportes_novedades.incapacidades.edit` | Incapacidades: CRUD columnas GH |
+| `reportes_novedades.incapacidades.review` | Incapacidades: review Nómina (`observacion_nomina`, `dias_entrega`) |
+| `reportes_novedades.retiros.view` | Retiros: ver / filtrar / export / historial |
+| `reportes_novedades.retiros.edit` | Retiros: CRUD columnas GH (manual) |
+| `reportes_novedades.retiros.review` | Retiros: review Nómina |
+| `reportes_novedades.permisos.view` | Permisos: ver / filtrar / export / historial |
+| `reportes_novedades.permisos.edit` | Permisos: CRUD columnas GH |
+| `reportes_novedades.permisos.review` | Permisos: review Nómina |
+
+**Implicaciones** (`ReportesNovedadesAccessService`):
+
+| Otorgado | Efecto |
+| --- | --- |
+| `.edit` | Puede `.view` (aunque Spatie no tenga view) |
+| `.review` | Puede `.view` + export; **no** implica `.edit` |
+| `.edit` | **No** escribe cols Nómina |
+| `.review` | **No** create/delete ni muta cols GH |
+
+**Paquetes tipicos:** GH = board + 4× (`view`+`edit`); Nómina = board + 4× `.review`; consulta = `.view` (+ board).
+
+- Pestanas: `vacaciones`, `incapacidades`, `retiros`, `permisos` (`config/access.php` → `reportes_novedades_tabs`).
+- Sidebar: board **o** cualquier permiso funcional de hoja.
+- Bypass: `manage.users`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *MT-GH-04 Novedades*, incluye labels *Revisar (Nomina)*).
+- Lookup cedula → Ficha exige poder **editar** al menos una hoja.
+- Doc: [`docs/modules/reportes-novedades.md`](modules/reportes-novedades.md), [`docs/user/reportes-novedades.md`](user/reportes-novedades.md).
 
 ### Plantillas Word (Gestion humana)
 

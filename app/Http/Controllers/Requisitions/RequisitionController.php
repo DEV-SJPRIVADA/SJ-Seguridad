@@ -455,13 +455,12 @@ class RequisitionController extends Controller
         $filters = PersonalRequisitionFilterBag::fromTrackingRequest($request);
 
         $requisitions = PersonalRequisition::query()
-            ->with(['client', 'position', 'requester', 'city', 'statusLogs.author'])
+            ->with(['client', 'position', 'requester', 'city', 'statusLogs'])
             ->where('requesting_area_key', $this->trackingAreaScope($user))
             ->tap(fn ($query) => $filters->applyCommonFilters($query, includeRequesterInSearch: true))
             ->when($filters->mineOnly, fn ($query) => $query->where('requested_by', $user?->id))
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
+            ->orderByDesc('code')
+            ->get();
 
         return view('modules.requisitions.tracking', [
             'catalogs' => $this->catalogs(),

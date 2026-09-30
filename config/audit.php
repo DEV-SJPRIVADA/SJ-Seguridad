@@ -59,6 +59,10 @@ return [
             'label' => 'Acreditaciones',
             'area' => 'gestion_humana',
         ],
+        'reportes_novedades' => [
+            'label' => 'MT-GH-04 Novedades',
+            'area' => 'gestion_humana',
+        ],
         'development_requests' => [
             'label' => 'Solicitudes de desarrollo',
             'area' => 'tic',

@@ -12,6 +12,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SeleccionAccessService;
 use App\Services\Access\SupplyAccessService;
@@ -31,6 +32,7 @@ class SidebarVisibilityService
         private readonly CursosAccessService $cursosAccess,
         private readonly SeleccionAccessService $seleccionAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
+        private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
     ) {}
@@ -62,6 +64,7 @@ class SidebarVisibilityService
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'seleccion' => $this->shouldShowSeleccionBoard($user, $areaKey),
             'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
+            'reportes_novedades' => $this->shouldShowReportesNovedadesBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -222,6 +225,15 @@ class SidebarVisibilityService
         }
 
         return $this->acreditacionesAccess->canViewAcreditacionesBoard($user);
+    }
+
+    private function shouldShowReportesNovedadesBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->reportesNovedadesAccess->canViewReportesNovedadesBoard($user);
     }
 
     private function shouldShowIndicadoresBoard(User $user, string $areaKey): bool

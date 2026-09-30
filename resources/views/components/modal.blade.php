@@ -11,6 +11,7 @@ $maxWidth = [
     'lg' => 'modal-panel--lg',
     'xl' => 'modal-panel--xl',
     '2xl' => 'modal-panel--2xl',
+    '3xl' => 'modal-panel--3xl',
 ][$maxWidth];
 @endphp
 

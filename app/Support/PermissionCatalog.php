@@ -70,6 +70,10 @@ class PermissionCatalog
                                 return true;
                             }
 
+                            if ($boardKey === 'reportes_novedades' && $areaKey !== 'gestion_humana') {
+                                return true;
+                            }
+
                             return false;
                         })
                         ->map(fn (string $boardKey) => "view.board.{$areaKey}.{$boardKey}")

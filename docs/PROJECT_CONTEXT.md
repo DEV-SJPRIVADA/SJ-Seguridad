@@ -26,7 +26,7 @@
 - **Documentos de Calidad:** biblioteca por area, mis documentos, administracion centralizada
 - **Indicadores (Operaciones):** captura FT-OP, dashboard, ajustes (periodos, metas, auditoria), consolidado, export PDF/Excel
 - **Comercial:** dashboard KPI, matriz clientes (NIT), servicios por portafolio; importacion MT-CO-01
-- **Gestion humana (area):** Ficha empleados, Desvinculaciones, Cursos, **Selección** (Ingreso / Examen ocupacional / Dashboard / Catalogos), Archivo, Plantillas Word
+- **Gestion humana (area):** Ficha empleados, Desvinculaciones, **MT-GH-04 Novedades** (Vacaciones / Incapacidades / Retiros / Permisos; review Nómina), Cursos, **Selección** (Ingreso / Examen ocupacional / Dashboard / Catalogos), Archivo, Plantillas Word
 - Modulos base configurados en navegacion: gestion humana, operaciones, programacion, juridico, comercial, calidad, admin y financiero, compras
 - Correo local: Laragon Mailpit (`MAIL_MAILER=smtp`, puerto `1025`; ver `docs/LOCAL_SETUP.md`)
 

@@ -9,6 +9,11 @@ use App\Http\Controllers\GestionHumana\DesvinculacionesController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
+use App\Http\Controllers\GestionHumana\ReportesNovedadesController;
+use App\Http\Controllers\GestionHumana\ReportesNovedadesIncapacidadesController;
+use App\Http\Controllers\GestionHumana\ReportesNovedadesPermisosController;
+use App\Http\Controllers\GestionHumana\ReportesNovedadesRetirosController;
+use App\Http\Controllers\GestionHumana\ReportesNovedadesVacacionesController;
 use App\Http\Controllers\GestionHumana\SeleccionController;
 use App\Http\Controllers\GestionHumana\TerminationLetterController;
 use Illuminate\Support\Facades\Route;
@@ -211,4 +216,48 @@ Route::middleware(['password.changed'])
         Route::patch('/catalogo/export-apo-params', [AcreditacionesController::class, 'updateExportApoParams'])->name('catalogo.export-apo-params.update');
         Route::patch('/catalogo/{acreditacionCargo}', [AcreditacionesController::class, 'updateCatalogo'])->name('catalogo.update');
         Route::delete('/catalogo/{acreditacionCargo}', [AcreditacionesController::class, 'destroyCatalogo'])->name('catalogo.destroy');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/reportes-novedades')
+    ->name('gestion-humana.reportes-novedades.')
+    ->group(function (): void {
+        Route::get('/', [ReportesNovedadesController::class, 'index'])->name('index');
+        Route::post('/lookup', [ReportesNovedadesController::class, 'lookup'])->name('lookup');
+
+        Route::get('/vacaciones', [ReportesNovedadesVacacionesController::class, 'index'])->name('vacaciones');
+        Route::get('/vacaciones/datatable', [ReportesNovedadesVacacionesController::class, 'datatable'])->name('vacaciones.datatable');
+        Route::get('/vacaciones/exportar', [ReportesNovedadesVacacionesController::class, 'export'])->name('vacaciones.export');
+        Route::get('/vacaciones/historial', [ReportesNovedadesVacacionesController::class, 'historial'])->name('vacaciones.historial');
+        Route::post('/vacaciones', [ReportesNovedadesVacacionesController::class, 'store'])->name('vacaciones.store');
+        Route::patch('/vacaciones/{vacacion}', [ReportesNovedadesVacacionesController::class, 'update'])->name('vacaciones.update');
+        Route::patch('/vacaciones/{vacacion}/review', [ReportesNovedadesVacacionesController::class, 'review'])->name('vacaciones.review');
+        Route::delete('/vacaciones/{vacacion}', [ReportesNovedadesVacacionesController::class, 'destroy'])->name('vacaciones.destroy');
+
+        Route::get('/incapacidades', [ReportesNovedadesIncapacidadesController::class, 'index'])->name('incapacidades');
+        Route::get('/incapacidades/datatable', [ReportesNovedadesIncapacidadesController::class, 'datatable'])->name('incapacidades.datatable');
+        Route::get('/incapacidades/exportar', [ReportesNovedadesIncapacidadesController::class, 'export'])->name('incapacidades.export');
+        Route::get('/incapacidades/historial', [ReportesNovedadesIncapacidadesController::class, 'historial'])->name('incapacidades.historial');
+        Route::post('/incapacidades', [ReportesNovedadesIncapacidadesController::class, 'store'])->name('incapacidades.store');
+        Route::patch('/incapacidades/{incapacidad}', [ReportesNovedadesIncapacidadesController::class, 'update'])->name('incapacidades.update');
+        Route::patch('/incapacidades/{incapacidad}/review', [ReportesNovedadesIncapacidadesController::class, 'review'])->name('incapacidades.review');
+        Route::delete('/incapacidades/{incapacidad}', [ReportesNovedadesIncapacidadesController::class, 'destroy'])->name('incapacidades.destroy');
+
+        Route::get('/retiros', [ReportesNovedadesRetirosController::class, 'index'])->name('retiros');
+        Route::get('/retiros/datatable', [ReportesNovedadesRetirosController::class, 'datatable'])->name('retiros.datatable');
+        Route::get('/retiros/exportar', [ReportesNovedadesRetirosController::class, 'export'])->name('retiros.export');
+        Route::get('/retiros/historial', [ReportesNovedadesRetirosController::class, 'historial'])->name('retiros.historial');
+        Route::post('/retiros', [ReportesNovedadesRetirosController::class, 'store'])->name('retiros.store');
+        Route::patch('/retiros/{retiro}', [ReportesNovedadesRetirosController::class, 'update'])->name('retiros.update');
+        Route::patch('/retiros/{retiro}/review', [ReportesNovedadesRetirosController::class, 'review'])->name('retiros.review');
+        Route::delete('/retiros/{retiro}', [ReportesNovedadesRetirosController::class, 'destroy'])->name('retiros.destroy');
+
+        Route::get('/permisos', [ReportesNovedadesPermisosController::class, 'index'])->name('permisos');
+        Route::get('/permisos/datatable', [ReportesNovedadesPermisosController::class, 'datatable'])->name('permisos.datatable');
+        Route::get('/permisos/exportar', [ReportesNovedadesPermisosController::class, 'export'])->name('permisos.export');
+        Route::get('/permisos/historial', [ReportesNovedadesPermisosController::class, 'historial'])->name('permisos.historial');
+        Route::post('/permisos', [ReportesNovedadesPermisosController::class, 'store'])->name('permisos.store');
+        Route::patch('/permisos/{permiso}', [ReportesNovedadesPermisosController::class, 'update'])->name('permisos.update');
+        Route::patch('/permisos/{permiso}/review', [ReportesNovedadesPermisosController::class, 'review'])->name('permisos.review');
+        Route::delete('/permisos/{permiso}', [ReportesNovedadesPermisosController::class, 'destroy'])->name('permisos.destroy');
     });

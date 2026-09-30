@@ -37,6 +37,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
 | Desvinculaciones | [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md) | [`user/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/desvinculaciones.md) |
+| MT-GH-04 Novedades | [`modules/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/reportes-novedades.md) | [`user/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/user/reportes-novedades.md) |
 | Cursos | [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md) | [`user/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cursos.md) |
 | Selección | [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md) | [`user/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/seleccion.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md) | [`user/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/acreditaciones.md) |
@@ -58,6 +59,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 - [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)
 - [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md)
+- [`modules/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/reportes-novedades.md)
 - [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md)
 - [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md)
 - [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md)

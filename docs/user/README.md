@@ -19,6 +19,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Requisiciones | [`modules/requisitions.md`](../modules/requisitions.md) | [`requisitions.md`](requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](../modules/ficha-empleados.md) | [`ficha-empleados.md`](ficha-empleados.md) |
 | Desvinculaciones | [`modules/desvinculaciones.md`](../modules/desvinculaciones.md) | [`desvinculaciones.md`](desvinculaciones.md) |
+| MT-GH-04 Novedades | [`modules/reportes-novedades.md`](../modules/reportes-novedades.md) | [`reportes-novedades.md`](reportes-novedades.md) |
 | Cursos | [`modules/cursos.md`](../modules/cursos.md) | [`cursos.md`](cursos.md) |
 | Selección | [`modules/seleccion.md`](../modules/seleccion.md) | [`seleccion.md`](seleccion.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](../modules/acreditaciones.md) | [`acreditaciones.md`](acreditaciones.md) |
