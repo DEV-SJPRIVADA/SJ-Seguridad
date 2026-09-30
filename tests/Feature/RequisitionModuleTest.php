@@ -929,10 +929,35 @@ class RequisitionModuleTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertSee('Detalle de requisicion');
+        $response->assertSee('Ver solicitud');
         $response->assertSee('REQ-2026-0110');
         $response->assertSee('Perfil detalle');
         $response->assertDontSee('<title>Requisición de Personal', false);
+    }
+
+    public function test_requester_with_seguimiento_can_view_tracking_full_rq_readonly(): void
+    {
+        PermissionCatalog::sync();
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+        $requester->givePermissionTo('requisitions.tab.seguimiento');
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes($requester, 'REQ-2026-0111', 'operaciones', 'Perfil ver rq'));
+
+        $response = $this->actingAs($requester)->get(route('requisitions.tracking.view-rq', [
+            'module' => 'operaciones',
+            'requisition' => $requisition,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Ver Rq');
+        $response->assertSee('REQ-2026-0111');
+        $response->assertSee('solo lectura');
+        $response->assertDontSee('Guardar cambios');
     }
 
     public function test_management_rejection_comment_visible_in_tracking_and_approval_views(): void

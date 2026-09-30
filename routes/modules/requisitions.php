@@ -23,6 +23,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/
     Route::middleware('requisition.tab:seguimiento')->group(function () {
         Route::get('/seguimiento', [RequisitionController::class, 'tracking'])->name('tracking');
         Route::get('/seguimiento/exportar', [RequisitionController::class, 'trackingExport'])->name('tracking.export');
+        Route::get('/seguimiento/{requisition}/ver-rq', [RequisitionController::class, 'trackingViewRq'])->name('tracking.view-rq');
         Route::get('/seguimiento/{requisition}', [RequisitionController::class, 'trackingShow'])->name('tracking.show');
     });
 

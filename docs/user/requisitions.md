@@ -280,31 +280,34 @@ permisos para modificar Catálogos
 15. Opcional: indique Fecha inicio y Fecha fin (fecha de solicitud) y
     pulse Buscar para acotar la lista.
 
-16. Exporte a Excel si tiene la opción disponible; el archivo trae todos
+16. En Acciones use **Ver solicitud** (resumen) o **Ver Rq** (formulario
+    completo solo lectura, con historiales).
+
+17. Exporte a Excel si tiene la opción disponible; el archivo trae todos
     los campos de la requisición según los filtros activos.
 
 ### Consultar el dashboard (Gestión Humana)
 
-17. Abra la pestaña Dashboard del tablero Requisiciones.
+18. Abra la pestaña Dashboard del tablero Requisiciones.
 
-18. Revise los KPIs (Total, Solicitadas, En gestión, Contratadas,
+19. Revise los KPIs (Total, Solicitadas, En gestión, Contratadas,
     Canceladas). Todos los KPIs y los gráficos respetan los filtros
     (cliente, cargo, ciudad, estado, año, mes y reclutador).
 
-19. Use los filtros disponibles (incluye **Reclutador**: Todos, Sin
+20. Use los filtros disponibles (incluye **Reclutador**: Todos, Sin
     reclutador o un reclutador activo). El mes inicia en el mes actual;
     la pantalla se actualiza al cambiar los filtros.
 
-20. Revise los gráficos de tendencia, estado, ciudad y cliente.
+21. Revise los gráficos de tendencia, estado, ciudad y cliente.
 
 ### Gestionar requisiciones (Gestión Humana)
 
-21. Al correo electrónico de los implicados en el proceso de selección
+22. Al correo electrónico de los implicados en el proceso de selección
     llegara la notificación con los datos de la requisición.
 
-22. Abra la pestaña Gestión.
+23. Abra la pestaña Gestión.
 
-23. Por defecto el listado muestra requisiciones En curso (sin
+24. Por defecto el listado muestra requisiciones En curso (sin
     Contratado ni Cancelada). Use el filtro de estados **Todos** para
     ver todos los estados, los demás para filtrar uno en concreto, o
     búsqueda, rango de Fecha solicitud y **Reclutador** (Todos / Sin
@@ -312,7 +315,7 @@ permisos para modificar Catálogos
 
     ![Captura de pantalla de gestión de requisiciones](assets/image2.png)
 
-24. Seleccione el botón abrir de la requisición a iniciar proceso
+25. Seleccione el botón abrir de la requisición a iniciar proceso
     complete datos de compensación y contrato, cambie el estado a **En
     Gestión** y guarde cambios.
 
@@ -356,7 +359,7 @@ permisos para modificar Catálogos
 - Contrato de arrendamiento: valor definido para el pago por uso de
   transporte propio del empleado.
 
-25. **El director de Gestión** **Humana** ingresa a la misma ruta busca
+26. **El director de Gestión** **Humana** ingresa a la misma ruta busca
     la requisición, la abre, valida y edita Estructura del servicio si
     necesita corregir horarios, descansos o condiciones del puesto; el
     campo es obligatorio al guardar. Cambia el estado a **Aprobada** y
@@ -364,7 +367,7 @@ permisos para modificar Catálogos
 
     Los cambios quedan en el Historial de cambios.
 
-26. **El reclutador, Analista o asistente de Selección** inicia el
+27. **El reclutador, Analista o asistente de Selección** inicia el
     proceso de selección, cuando tenga a la persona seleccionada busca
     la requisición cambia el estado a Contratado, complete fecha de
     contratación, valide campos de compensación obligatorios y, en la
@@ -377,29 +380,29 @@ permisos para modificar Catálogos
   si es la misma persona (el registro de la lista de espera se resigna a
   la requisición actual).
 
-27. Exporte a Excel; incluye todos los campos de la requisición
+28. Exporte a Excel; incluye todos los campos de la requisición
     (incluida compensación) según los filtros activos.
 
-28. Descargue la **plantilla FO-GH-22 vacía** (icono de impresora junto
+29. Descargue la **plantilla FO-GH-22 vacía** (icono de impresora junto
     al Excel) si necesita el formato físico en blanco para diligenciar a
     mano; abra e imprima en tamaño carta.
 
-29. Imprima la ficha de una requisición existente (icono de impresora en
+30. Imprima la ficha de una requisición existente (icono de impresora en
     la fila) si necesita el documento con los datos ya cargados. La
     **fecha y hora de recepción en Gestión Humana** se toma del momento
     en que la solicitud quedó en estado Solicitada.
 
 ### Administrar parámetros
 
-30. Acceda a Catálogos (requiere permiso).
+31. Acceda a Catálogos (requiere permiso).
 
-31. Mantenga catálogos: cargos, motivos, ciudades, tipos de
+32. Mantenga catálogos: cargos, motivos, ciudades, tipos de
     programación, uniformes, Correos de notificación y Tipos de
     notificación (asignar correos por tipo de aviso).
 
 ### Notificaciones
 
-32. Si requiere que se notifique a las solicitudes de requisición deberá
+33. Si requiere que se notifique a las solicitudes de requisición deberá
     solicitarlo al administrador del sistema (Admin → Configuración de
     notificaciones). Hay un aviso **Nueva requisición** y otro de
     **destinatarios adicionales** (misma lista para alta y cambios de
@@ -409,15 +412,15 @@ permisos para modificar Catálogos
 
 ### Autorizar requisiciones cargo nuevo (Gerencia)
 
-33. Ingrese con usuario que tenga permiso Autorizar cargo nuevo
+34. Ingrese con usuario que tenga permiso Autorizar cargo nuevo
     (gerencia) (rol administrador).
 
-34. Abra Requisiciones → Gestión humana → Autorización gerencia.
+35. Abra Requisiciones → Gestión humana → Autorización gerencia.
 
-35. Revise la lista (solo pendientes). Abra Revisar, Autorizar o
+36. Revise la lista (solo pendientes). Abra Revisar, Autorizar o
     Rechazar (comentario obligatorio al rechazar).
 
-36. Tras autorizar, la solicitud pasa a Solicitada y Gestión humana
+37. Tras autorizar, la solicitud pasa a Solicitada y Gestión humana
     puede continuar. Si rechaza, queda Cancelada.
 
 ### Activar encargados de selección (solo Gestión humana)
@@ -425,17 +428,17 @@ permisos para modificar Catálogos
 Esta sección aparece únicamente en el tablero Requisiciones del área
 Gestión humana, pestaña Catálogos.
 
-37. Entre a Requisiciones → Gestion humana → Catálogos.
+38. Entre a Requisiciones → Gestion humana → Catálogos.
 
-38. Abra la tarjeta Encargados de selección.
+39. Abra la tarjeta Encargados de selección.
 
-39. Revise la tabla de usuarios activos del área Gestión humana (nombre
+40. Revise la tabla de usuarios activos del área Gestión humana (nombre
     y correo).
 
-40. Use el interruptor (toggle) en la columna Encargado para activar o
+41. Use el interruptor (toggle) en la columna Encargado para activar o
     desactivar a cada persona.
 
-41. Solo los usuarios con toggle activo aparecen en la lista Reclutador
+42. Solo los usuarios con toggle activo aparecen en la lista Reclutador
     al editar requisiciones en Gestión (cualquier área solicitante).
 
 Nota: el permiso relacionado puede verse en Administración de usuarios,
@@ -447,6 +450,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.4         | 2026-09-30                 | Mis requisiciones: Ver solicitud + Ver Rq (solo lectura) |
 | 1.3         | 2026-09-24                 | Impresión FO-GH-22: recepción GH = momento Solicitada |
 | 1.2         | 2026-09-24                 | Plantilla FO-GH-22 vacía descargable desde Gestión |
 | 1.1         | 2026-09-23                 | Filtro por reclutador en Dashboard y Gestión; KPI Total respeta filtros; mes por defecto = mes actual |

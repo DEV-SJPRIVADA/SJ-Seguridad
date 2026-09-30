@@ -4774,6 +4774,18 @@ a {
     flex-wrap: wrap;
 }
 
+.req-form-readonly__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.req-form-readonly .searchable-select {
+    pointer-events: none;
+}
+}
+
 /* Requisiciones ÃÂ¢ÃÂÃÂ filtros de gestion */
 .req-manage-filters {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);

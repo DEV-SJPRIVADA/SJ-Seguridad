@@ -498,6 +498,35 @@ class RequisitionController extends Controller
         ]);
     }
 
+    public function trackingViewRq(string $module, PersonalRequisition $requisition): View
+    {
+        $this->abortIfUnknownModule($module);
+        abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
+
+        return view('modules.requisitions.tracking.view-rq', [
+            'areaOptions' => config('access.areas'),
+            'catalogs' => $this->catalogs($requisition),
+            'moduleKey' => $module,
+            'moduleLabel' => config("access.areas.{$requisition->requesting_area_key}", config("access.areas.{$module}")),
+            'requisition' => $requisition->load([
+                'client',
+                'city',
+                'clientType',
+                'position',
+                'programmingType',
+                'requestReason',
+                'requester',
+                'statusLogs.author',
+                'changeLogs.author',
+            ]),
+            'sexOptions' => $this->sexOptions(),
+            'statusLabels' => PersonalRequisition::statuses(),
+            'subTabs' => $this->getRequisitionSubTabs($module, 'seguimiento'),
+            'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
+            'selectedCommercialClient' => CommercialClientBridge::findForRequisition($requisition),
+        ]);
+    }
+
     public function print(string $module, PersonalRequisition $requisition): View
     {
         $this->abortIfUnknownModule($module);

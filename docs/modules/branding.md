@@ -117,6 +117,8 @@ Un solo look. Regla Cursor: [`.cursor/rules/icon-buttons-ui.mdc`](../../.cursor/
 | Nuevo | `--primary` | `lucide-plus` |
 | Elegir archivo | `--ghost` | `lucide-file-up` |
 | Editar (fila) | `cursos-catalogo-page__icon-btn` | pencil |
+| Ver solicitud / ver (fila) | `cursos-catalogo-page__icon-btn` | eye |
+| Ver formulario / Ver Rq (fila) | `cursos-catalogo-page__icon-btn` | file-text |
 | Eliminar (fila) | `…--danger` | trash-2 |
 
 Obligatorio: `title` + `aria-label`. Prohibido crear `*{modulo}*__icon-btn` o usar `ficha-empleados-filters__bulk-icon` en codigo nuevo.

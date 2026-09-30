@@ -52,7 +52,8 @@ Middleware comun: `auth`, `active`, `password.changed`.
 | GET | `/requisitions/{module}/clientes/buscar` | `requisitions.clients.search` | `solicitar` (JSON, `q` min. 2) |
 | GET | `/requisitions/{module}/seguimiento` | `requisitions.tracking` | `seguimiento` |
 | GET | `/requisitions/{module}/seguimiento/exportar` | `requisitions.tracking.export` | `seguimiento` |
-| GET | `/requisitions/{module}/seguimiento/{requisition}` | `requisitions.tracking.show` | `seguimiento` |
+| GET | `/requisitions/{module}/seguimiento/{requisition}/ver-rq` | `requisitions.tracking.view-rq` | `seguimiento` (solo lectura, formulario completo) |
+| GET | `/requisitions/{module}/seguimiento/{requisition}` | `requisitions.tracking.show` | `seguimiento` (resumen / ver solicitud) |
 | GET | `/requisitions/{module}/gestion` | `requisitions.manage` | `gestion` |
 | GET | `/requisitions/{module}/gestion/exportar` | `requisitions.export` | `gestion` |
 | GET | `/requisitions/{module}/gestion/imprimir-plantilla` | `requisitions.print-template` | `gestion` — FO-GH-22 vacío |
@@ -139,6 +140,7 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 
 - Solicitar solo en `area_key` con `requisitions.tab.solicitar`.
 - Mis requisiciones: solo lectura del **area base** del usuario.
+- Acciones de fila: **Ver solicitud** (`tracking.show`, resumen) e icono **Ver Rq** (`tracking.view-rq`, mismo formulario de Gestion/editar en solo lectura + historiales, sin Guardar).
 - Gestion: todas las areas; filtro «Solo mis solicitudes» reduce a creadas por el autenticado.
 - `leader_name` y `requesting_area_key` del usuario autenticado al crear.
 - Cliente: buscador sobre `commercial_clients` si el tipo no es Interno; Interno → `Cliente interno SJ Seguridad` en `requisition_clients`.
