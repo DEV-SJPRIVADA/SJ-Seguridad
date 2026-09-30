@@ -12,7 +12,7 @@ Tablero **Solicitudes desarrollo**:
 
 - En el area del solicitante: **Nueva solicitud** y **Mis solicitudes**.
 - En **TIC** (hogar del proceso): **Aprobacion lider**, **Bandeja TIC** (indicadores, listado, Excel).
-- Detalle de cada solicitud: datos FO-TIC-23, anexos, historial, chat, gestion TIC y UAT segun rol/estado.
+- Detalle de cada solicitud: datos FO-TIC-23, anexos, historial (columna izquierda) y chat (columna derecha), gestion TIC y UAT segun rol/estado.
 
 ## Definiciones
 
