@@ -22,7 +22,6 @@ class ReviewIncapacidadRequest extends FormRequest
     {
         return [
             'observacion_nomina' => ['nullable', 'string', 'max:255'],
-            'dias_entrega' => ['nullable', 'integer', 'min:0', 'max:65535'],
         ];
     }
 
@@ -33,10 +32,6 @@ class ReviewIncapacidadRequest extends FormRequest
             $this->merge([
                 'observacion_nomina' => $value === '' ? null : $value,
             ]);
-        }
-
-        if ($this->exists('dias_entrega') && $this->input('dias_entrega') === '') {
-            $this->merge(['dias_entrega' => null]);
         }
     }
 }

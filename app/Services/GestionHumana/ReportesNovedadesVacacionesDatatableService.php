@@ -68,7 +68,7 @@ final class ReportesNovedadesVacacionesDatatableService
                 });
             })
             ->when($fechaDesde !== null, fn (Builder $query) => $query->whereDate('fecha_inicio', '>=', $fechaDesde))
-            ->when($fechaHasta !== null, fn (Builder $query) => $query->whereDate('fecha_fin', '<=', $fechaHasta))
+            ->when($fechaHasta !== null, fn (Builder $query) => $query->whereDate('fecha_inicio', '<=', $fechaHasta))
             ->orderByDesc('fecha_inicio')
             ->orderByDesc('id');
     }
@@ -89,10 +89,6 @@ final class ReportesNovedadesVacacionesDatatableService
                 'key' => static fn (ReportesNovedadesVacacion $row): string => optional($row->fecha_inicio)?->format('Y-m-d') ?? '',
                 'label' => 'FECHA INICIO',
             ],
-            [
-                'key' => static fn (ReportesNovedadesVacacion $row): string => optional($row->fecha_fin)?->format('Y-m-d') ?? '',
-                'label' => 'FECHA FIN',
-            ],
             ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
             ['key' => 'observacion_nomina', 'label' => 'OBSERVACION NOMINA'],
         ];
@@ -111,7 +107,6 @@ final class ReportesNovedadesVacacionesDatatableService
             e((string) $row->novedad),
             e((string) $row->dias_novedad),
             e(DisplayDate::date($row->fecha_inicio)),
-            e(DisplayDate::date($row->fecha_fin)),
             e((string) ($row->observaciones ?: '—')),
             e((string) ($row->observacion_nomina ?: '—')),
         ];
@@ -136,7 +131,6 @@ final class ReportesNovedadesVacacionesDatatableService
             'novedad' => $row->novedad,
             'dias_novedad' => $row->dias_novedad,
             'fecha_inicio' => optional($row->fecha_inicio)?->format('Y-m-d'),
-            'fecha_fin' => optional($row->fecha_fin)?->format('Y-m-d'),
             'observaciones' => $row->observaciones,
             'observacion_nomina' => $row->observacion_nomina,
             'update_url' => route('gestion-humana.reportes-novedades.vacaciones.update', $row),

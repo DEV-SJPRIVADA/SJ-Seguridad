@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('novedad', 80);
             $table->unsignedSmallInteger('dias_novedad');
             $table->date('fecha_inicio')->index();
-            $table->date('fecha_fin')->index();
             $table->text('observaciones')->nullable();
             $table->string('observacion_nomina', 255)->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

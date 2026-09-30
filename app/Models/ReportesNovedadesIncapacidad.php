@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class ReportesNovedadesIncapacidad extends Model
 {
@@ -67,5 +68,23 @@ class ReportesNovedadesIncapacidad extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Fórmula Excel MT-GH-04:
+     * SI(fecha_inicio="";"";SI(ESBLANCO(fecha_envio_final);HOY()-fecha_inicio;fecha_envio_final-fecha_inicio))
+     */
+    public function diasEntregaCalculados(?Carbon $asOf = null): ?int
+    {
+        if ($this->fecha_inicio === null) {
+            return null;
+        }
+
+        $inicio = $this->fecha_inicio->copy()->startOfDay();
+        $fin = $this->fecha_envio_final !== null
+            ? $this->fecha_envio_final->copy()->startOfDay()
+            : ($asOf ?? now())->copy()->startOfDay();
+
+        return (int) $inicio->diffInDays($fin, false);
     }
 }

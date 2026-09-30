@@ -67,6 +67,7 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
         $row = ReportesNovedadesVacacion::query()->where('document_number', '1001001001')->first();
         $this->assertNotNull($row);
         $this->assertSame('VACACIONES DISF', $row->novedad);
+        $this->assertSame('2026-09-01', optional($row->fecha_inicio)?->format('Y-m-d'));
         $this->assertNull($row->observacion_nomina);
 
         $this->actingAs($editor)
@@ -302,7 +303,6 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             'novedad' => 'VACACIONES DISF',
             'dias_novedad' => 5,
             'fecha_inicio' => '2026-09-01',
-            'fecha_fin' => '2026-09-05',
             'observaciones' => 'Obs GH',
         ], $overrides);
     }
@@ -313,7 +313,7 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
      */
     private function vacacionAttributes(array $overrides = []): array
     {
-        return array_merge($this->vacacionPayload(), $overrides);
+        return $this->vacacionPayload($overrides);
     }
 
     /**

@@ -104,19 +104,21 @@ Namespace requests: `App\Http\Requests\GestionHumana\ReportesNovedades\`.
 
 | Vista | Descripcion |
 | --- | --- |
-| `areas/gestion_humana/reportes_novedades/vacaciones.blade.php` | Listado DT + filtros + modales |
+| `areas/gestion_humana/reportes_novedades/vacaciones.blade.php` | Listado DT + filtros + modal Nuevo (`rn-novedad-modal`: header con acento, body scroll, footer fijo) |
 | `.../incapacidades.blade.php` | Idem |
 | `.../retiros.blade.php` | Idem |
 | `.../permisos.blade.php` | Idem |
 | `.../partials/subnav.blade.php` | Pestanas module-tab |
-| `.../partials/*-form-fields.blade.php` | Campos formulario por hoja |
+| `.../partials/*-form-fields.blade.php` | Campos por hoja en secciones numeradas (Empleado / Novedad / …) |
+| `.../partials/employee-lookup-fields.blade.php` | Lookup cedula compartido (paso 1) |
+| `.../partials/historial-modal.blade.php` | Modal Historial compartido (timeline de auditoría) |
 
 ## Modelos y tablas
 
 | Modelo | Tabla | Notas |
 | --- | --- | --- |
-| `ReportesNovedadesVacacion` | `reportes_novedades_vacaciones` | Col Nómina: `observacion_nomina` |
-| `ReportesNovedadesIncapacidad` | `reportes_novedades_incapacidades` | Cols Nómina: `observacion_nomina`, `dias_entrega` |
+| `ReportesNovedadesVacacion` | `reportes_novedades_vacaciones` | Col Nómina: `observacion_nomina`. Sin `fecha_fin` (solo inicio + días). |
+| `ReportesNovedadesIncapacidad` | `reportes_novedades_incapacidades` | Col Nómina: `observacion_nomina`. `dias_entrega` **calculado** (no editable): si hay `fecha_envio_final` → envío−inicio; si no → hoy−inicio (`diasEntregaCalculados()`). |
 | `ReportesNovedadesRetiro` | `reportes_novedades_retiros` | SoftDeletes; FK `employee_termination_followup_id` unique; col Nómina `observacion_nomina` |
 | `ReportesNovedadesPermiso` | `reportes_novedades_permisos` | Col Nómina: `observacion_nomina`; `marca_gh` boolean |
 
@@ -125,7 +127,7 @@ Convenciones: `created_by` / `updated_by` (FK users `nullOnDelete`), timestamps,
 ### Ownership de columnas (resumen)
 
 - **GH:** datos de empleado, catalogos, fechas, dias, observaciones GH, flags operativos.
-- **Nómina:** `observacion_nomina` (todas); `dias_entrega` (solo Incapacidades).
+- **Nómina:** `observacion_nomina` (todas). En Incapacidades, `dias_entrega` es calculado (no review).
 - Update GH **no** incluye cols Nómina en fillable del request; review **solo** cols Nómina.
 
 ## Servicios / access / audit

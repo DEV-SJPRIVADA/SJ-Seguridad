@@ -49,7 +49,7 @@
                                         <input id="filter_fecha_desde" name="fecha_desde" type="date" class="form-input" value="{{ $filters['fecha_desde'] }}">
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="filter_fecha_hasta">Fin hasta</label>
+                                        <label class="form-label" for="filter_fecha_hasta">Inicio hasta</label>
                                         <input id="filter_fecha_hasta" name="fecha_hasta" type="date" class="form-input" value="{{ $filters['fecha_hasta'] }}">
                                     </div>
                                     <div class="form-field cursos-registros-page__filter-actions">
@@ -91,9 +91,9 @@
                                 <button
                                     type="button"
                                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    x-on:click.prevent="openCreate()"
                                     title="Nueva vacación"
                                     aria-label="Nueva vacación"
-                                    x-on:click.prevent="$dispatch('open-modal', 'rn-vacacion-nuevo')"
                                 >
                                     <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                 </button>
@@ -118,7 +118,6 @@
                                     <th>Novedad</th>
                                     <th>Días</th>
                                     <th>Inicio</th>
-                                    <th>Fin</th>
                                     <th>Observaciones</th>
                                     <th>Obs. Nómina</th>
                                     <th>Acciones</th>
@@ -131,16 +130,17 @@
             </div>
 
             @if ($canEdit)
-                <x-modal name="rn-vacacion-nuevo" maxWidth="2xl" :show="$showCreateModal" focusable>
-                    <div class="modal-card ficha-empleados-masivos-modal">
-                        <div class="ficha-empleados-masivos-modal__header">
+                <x-modal name="rn-vacacion-nuevo" maxWidth="3xl" :show="$showCreateModal" focusable>
+                    <div class="modal-card ficha-empleados-masivos-modal rn-novedad-modal">
+                        <div class="ficha-empleados-masivos-modal__header rn-novedad-modal__header">
                             <div class="ficha-empleados-masivos-modal__heading">
-                                <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                <span class="ficha-empleados-masivos-modal__heading-icon rn-novedad-modal__icon" aria-hidden="true">
+                                    <x-lucide-calendar-days width="18" height="18" aria-hidden="true" />
                                 </span>
                                 <div>
+                                    <p class="rn-novedad-modal__eyebrow">Reportes de novedades</p>
                                     <h3 class="ficha-empleados-masivos-modal__title">Nueva vacación</h3>
-                                    <p class="ficha-empleados-masivos-modal__lead">Columnas Gestion Humana.</p>
+                                    <p class="ficha-empleados-masivos-modal__lead">Busque la cédula para precargar datos de Ficha y complete la novedad.</p>
                                 </div>
                             </div>
                             <button type="button" class="ficha-empleados-masivos-modal__close" aria-label="Cerrar" x-on:click="$dispatch('close-modal', 'rn-vacacion-nuevo')">
@@ -158,39 +158,46 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ $storeUrl }}" class="cursos-registros-page__form">
+                        <form method="POST" action="{{ $storeUrl }}" class="cursos-registros-page__form rn-novedad-modal__form">
                             @csrf
-                            @include('areas.gestion_humana.reportes_novedades.partials.vacacion-form-fields', [
-                                'prefix' => 'create',
-                                'mode' => 'create',
-                                'novedadOptions' => $novedadOptions,
-                                'canEditGh' => true,
-                                'canReviewNomina' => false,
-                                'showNomina' => false,
-                                'alpine' => false,
-                                'values' => [
-                                    'document_number' => old('document_number', ''),
-                                    'employee_name' => old('employee_name', ''),
-                                    'cargo' => old('cargo', ''),
-                                    'destino' => old('destino', ''),
-                                    'novedad' => old('novedad', ''),
-                                    'dias_novedad' => old('dias_novedad', ''),
-                                    'fecha_inicio' => old('fecha_inicio', ''),
-                                    'fecha_fin' => old('fecha_fin', ''),
-                                    'observaciones' => old('observaciones', ''),
-                                    'observacion_nomina' => '',
-                                ],
-                            ])
-                            <div class="ficha-empleados-masivos-modal__footer">
-                                <button type="button" class="btn btn--ghost" x-on:click="$dispatch('close-modal', 'rn-vacacion-nuevo')">Cancelar</button>
-                                <button type="submit" class="btn btn--primary">Guardar</button>
+                            <div class="rn-novedad-modal__body">
+                                @include('areas.gestion_humana.reportes_novedades.partials.vacacion-form-fields', [
+                                    'prefix' => 'create',
+                                    'mode' => 'create',
+                                    'novedadOptions' => $novedadOptions,
+                                    'canEditGh' => true,
+                                    'canReviewNomina' => false,
+                                    'showNomina' => false,
+                                    'alpine' => true,
+                                    'values' => [
+                                        'document_number' => old('document_number', ''),
+                                        'employee_name' => old('employee_name', ''),
+                                        'cargo' => old('cargo', ''),
+                                        'destino' => old('destino', ''),
+                                        'novedad' => old('novedad', ''),
+                                        'dias_novedad' => old('dias_novedad', ''),
+                                        'fecha_inicio' => old('fecha_inicio', ''),
+                                        'observaciones' => old('observaciones', ''),
+                                        'observacion_nomina' => '',
+                                    ],
+                                ])
+                            </div>
+                            <div class="ficha-empleados-masivos-modal__footer rn-novedad-modal__footer">
+                                <button type="button" class="btn btn--ghost" x-on:click="$dispatch('close-modal', 'rn-vacacion-nuevo')">
+                                    <x-lucide-x width="16" height="16" aria-hidden="true" />
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn--primary">
+                                    <x-lucide-save width="16" height="16" aria-hidden="true" />
+                                    Guardar
+                                </button>
                             </div>
                         </form>
                     </div>
                 </x-modal>
             @endif
 
-            <x-modal name="rn-vacacion-editar" maxWidth="2xl" focusable>
+            <x-modal name="rn-vacacion-editar" maxWidth="3xl" focusable>
                 <div class="modal-card ficha-empleados-masivos-modal">
                     <div class="ficha-empleados-masivos-modal__header">
                         <div class="ficha-empleados-masivos-modal__heading">
@@ -233,42 +240,27 @@
                 </div>
             </x-modal>
 
-            <x-modal name="rn-historial" maxWidth="2xl" focusable>
-                <div class="modal-card ficha-empleados-masivos-modal">
-                    <div class="ficha-empleados-masivos-modal__header">
-                        <div class="ficha-empleados-masivos-modal__heading">
-                            <span class="ficha-empleados-masivos-modal__heading-icon" aria-hidden="true">
-                                <x-lucide-history width="18" height="18" aria-hidden="true" />
-                            </span>
-                            <div>
-                                <h3 class="ficha-empleados-masivos-modal__title">Historial</h3>
-                                <p class="ficha-empleados-masivos-modal__lead">Eventos de auditoría de Vacaciones.</p>
-                            </div>
-                        </div>
-                        <button type="button" class="ficha-empleados-masivos-modal__close" aria-label="Cerrar" x-on:click="$dispatch('close-modal', 'rn-historial')">
-                            <x-lucide-x width="18" height="18" aria-hidden="true" />
-                        </button>
-                    </div>
-                    <div class="ficha-empleados-masivos-modal__body">
-                        <p class="panel-text" x-show="historialLoading">Cargando…</p>
-                        <p class="panel-text" x-show="!historialLoading && historialItems.length === 0">Sin eventos.</p>
-                        <ul class="space-y-2" x-show="!historialLoading && historialItems.length > 0">
-                            <template x-for="item in historialItems" :key="item.id">
-                                <li class="border-b border-slate-200 py-2 text-sm">
-                                    <div class="font-medium" x-text="item.created_at_display"></div>
-                                    <div x-text="(item.user_name || 'Sistema') + ' — ' + item.summary"></div>
-                                </li>
-                            </template>
-                        </ul>
-                    </div>
-                </div>
-            </x-modal>
+            @include('areas.gestion_humana.reportes_novedades.partials.historial-modal', [
+                'sheetLabel' => 'Vacaciones',
+            ])
         </div>
     </div>
 
     @push('scripts')
         <script>
             function reportesNovedadesVacaciones(config) {
+                const emptyForm = () => ({
+                    document_number: '',
+                    employee_name: '',
+                    cargo: '',
+                    destino: '',
+                    novedad: '',
+                    dias_novedad: '',
+                    fecha_inicio: '',
+                    observaciones: '',
+                    observacion_nomina: '',
+                });
+
                 return {
                     lookupUrl: config.lookupUrl,
                     canEdit: !!config.canEdit,
@@ -279,20 +271,32 @@
                     editUpdateUrl: '',
                     editReviewUrl: '',
                     form: {
-                        document_number: '',
-                        employee_name: '',
-                        cargo: '',
-                        destino: '',
-                        novedad: '',
-                        dias_novedad: '',
-                        fecha_inicio: '',
-                        fecha_fin: '',
-                        observaciones: '',
+                        document_number: @js(old('document_number', '')),
+                        employee_name: @js(old('employee_name', '')),
+                        cargo: @js(old('cargo', '')),
+                        destino: @js(old('destino', '')),
+                        novedad: @js(old('novedad', '')),
+                        dias_novedad: @js(old('dias_novedad', '')),
+                        fecha_inicio: @js(old('fecha_inicio', '')),
+                        observaciones: @js(old('observaciones', '')),
                         observacion_nomina: '',
                     },
                     lookupMessage: '',
+                    lookupOk: false,
+                    lookupLoading: false,
                     historialLoading: false,
                     historialItems: [],
+                    openCreate() {
+                        this.form = emptyForm();
+                        this.lookupMessage = '';
+                        this.lookupOk = false;
+                        this.lookupLoading = false;
+                        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-vacacion-nuevo' }));
+                        this.$nextTick(() => {
+                            this.setSearchableValue('create_novedad', '');
+                            document.getElementById('create_document_number')?.focus();
+                        });
+                    },
                     openEdit(row) {
                         this.form = {
                             document_number: row.document_number || '',
@@ -302,7 +306,6 @@
                             novedad: row.novedad || '',
                             dias_novedad: row.dias_novedad ?? '',
                             fecha_inicio: row.fecha_inicio || '',
-                            fecha_fin: row.fecha_fin || '',
                             observaciones: row.observaciones || '',
                             observacion_nomina: row.observacion_nomina || '',
                         };
@@ -316,6 +319,7 @@
                             this.editTitle = 'Revisión Nómina';
                         }
                         this.lookupMessage = '';
+                        this.lookupOk = false;
                         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-vacacion-editar' }));
                         this.$nextTick(() => {
                             this.setSearchableValue('edit_novedad', row.novedad || '');
@@ -337,6 +341,9 @@
                         if (!cedula || !this.canEdit) {
                             return;
                         }
+                        this.lookupLoading = true;
+                        this.lookupOk = false;
+                        this.lookupMessage = 'Consultando Ficha…';
                         try {
                             const response = await fetch(this.lookupUrl, {
                                 method: 'POST',
@@ -349,17 +356,64 @@
                             });
                             const data = await response.json();
                             if (data.found) {
-                                this.form.employee_name = data.employee_name || this.form.employee_name;
-                                this.form.cargo = data.cargo || this.form.cargo;
-                                this.form.destino = data.destino || this.form.destino;
+                                this.form.document_number = data.document_number || cedula;
+                                this.form.employee_name = data.employee_name || '';
+                                this.form.cargo = data.cargo || '';
+                                this.form.destino = data.destino || '';
+                                this.lookupOk = true;
                                 this.lookupMessage = 'Datos precargados desde Ficha.';
                             } else {
+                                this.lookupOk = false;
                                 this.lookupMessage = data.message || 'No encontrado en Ficha; complete manualmente.';
                             }
                         } catch (e) {
+                            this.lookupOk = false;
                             this.lookupMessage = 'No se pudo consultar Ficha.';
+                        } finally {
+                            this.lookupLoading = false;
                         }
                     },
+                    historialActionKind(item) {
+                        const action = String(item?.action || '').toLowerCase();
+                        const eventType = String(item?.event_type || '').toLowerCase();
+                        if (action === 'create' || eventType.includes('created') || eventType.endsWith('_create')) {
+                            return 'create';
+                        }
+                        if (action === 'review' || eventType.includes('review')) {
+                            return 'review';
+                        }
+                        if (action === 'delete' || eventType.includes('deleted') || eventType.includes('delete')) {
+                            return 'delete';
+                        }
+                        if (action === 'export' || eventType === 'export' || action.includes('excel')) {
+                            return 'update';
+                        }
+                        if (action === 'update' || eventType.includes('updated') || eventType.includes('update')) {
+                            return 'update';
+                        }
+                        return 'update';
+                    },
+
+                    historialActionLabel(item) {
+                        const kind = this.historialActionKind(item);
+                        const labels = {
+                            create: 'Alta',
+                            update: 'Actualización',
+                            review: 'Revisión',
+                            delete: 'Eliminación',
+                        };
+                        if (String(item?.action || '').toLowerCase() === 'export' || String(item?.event_type || '') === 'export') {
+                            return 'Exportación';
+                        }
+                        return labels[kind] || 'Evento';
+                    },
+
+                    historialActionClass(item, type = 'badge') {
+                        const kind = this.historialActionKind(item);
+                        const prefix = type === 'dot' ? 'rn-historial-modal__dot--' : 'rn-historial-modal__badge--';
+                        return { [prefix + kind]: true };
+                    },
+
                     async openHistorial(detail) {
                         const url = detail?.url || '';
                         if (!url) {
@@ -405,7 +459,7 @@
                     pageLength: 25,
                     responsive: false,
                     order: [[6, 'desc']],
-                    columnDefs: [{ targets: [10], orderable: false, searchable: false }],
+                    columnDefs: [{ targets: [9], orderable: false, searchable: false }],
                 });
 
                 api.on('xhr.dt', function (_event, _settings, json) {

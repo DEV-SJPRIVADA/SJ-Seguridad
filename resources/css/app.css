@@ -468,7 +468,7 @@ a {
     line-height: 1.6;
 }
 
-/* Comercial ÃÂ¢ÃÂÃÂ clientes (matriz): cabecera compacta, titulo + texto en fila */
+/* Comercial ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ clientes (matriz): cabecera compacta, titulo + texto en fila */
 .comercial-clients-page {
     padding-top: 0.35rem;
     padding-bottom: 0.5rem;
@@ -702,7 +702,7 @@ a {
     padding: 0.65rem 0.85rem;
 }
 
-/* Comercial — listado / detalle cliente / formulario servicio */
+/* Comercial â listado / detalle cliente / formulario servicio */
 .comercial-list__header-row {
     display: flex;
     align-items: flex-start;
@@ -1064,7 +1064,7 @@ a {
     }
 }
 
-/* Comercial ÃÂ¢ÃÂÃÂ checklist documental */
+/* Comercial ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ checklist documental */
 .comercial-checklist-page__workspace-header {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
@@ -1123,7 +1123,7 @@ a {
     margin-top: 0.5rem !important;
 }
 
-/* Ficha empleados ÃÂ¢ÃÂÃÂ filtros compactos */
+/* Ficha empleados ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ filtros compactos */
 .ficha-empleados-filters {
     margin-bottom: 0.5rem !important;
     padding: 0.65rem 0.85rem !important;
@@ -1304,7 +1304,7 @@ a {
     }
 }
 
-/* Legacy — no usar en codigo nuevo; preferir .req-manage-filters__icon-btn */
+/* Legacy â no usar en codigo nuevo; preferir .req-manage-filters__icon-btn */
 .ficha-empleados-filters__bulk-icon {
     display: inline-flex;
     align-items: center;
@@ -2592,7 +2592,7 @@ a {
     border: 0;
 }
 
-/* Plantillas Word — pagina */
+/* Plantillas Word â pagina */
 .plantillas-word-page {
     padding-top: 0.35rem;
     padding-bottom: 0.75rem;
@@ -2868,7 +2868,7 @@ a {
     }
 }
 
-/* Ficha empleados ÃÂ¢ÃÂÃÂ formulario crear/editar: ancho contenido y scroll contenido */
+/* Ficha empleados ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ formulario crear/editar: ancho contenido y scroll contenido */
 .ficha-empleados-page--form {
     padding-bottom: 0.25rem;
 }
@@ -2887,7 +2887,7 @@ a {
     padding: 0.75rem 1rem;
 }
 
-/* Scroll contenido: overrides definitivos en layouts/app.blade.php (inline, despuÃÂÃÂ©s de Vite) */
+/* Scroll contenido: overrides definitivos en layouts/app.blade.php (inline, despuÃÂÃÂÃÂÃÂ©s de Vite) */
 .app-shell:has(.ficha-empleados-page--form) {
     overflow: hidden;
 }
@@ -3845,7 +3845,7 @@ a {
     justify-content: flex-end;
 }
 
-/* Requisiciones ÃÂ¢ÃÂÃÂ formulario de solicitud */
+/* Requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ formulario de solicitud */
 .req-form-layout {
     display: grid;
     gap: 1.5rem;
@@ -4121,7 +4121,7 @@ a {
     grid-column: 1 / -1;
 }
 
-/* Autorizacion gerencia ÃÂ¢ÃÂÃÂ detalle (estilo carta / correo) */
+/* Autorizacion gerencia ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ detalle (estilo carta / correo) */
 .req-approval-letter {
     max-width: 40rem;
     margin: 0 auto;
@@ -4256,7 +4256,7 @@ a {
     color: #333;
 }
 
-/* Admin ÃÂ¢ÃÂÃÂ configuracion de notificaciones */
+/* Admin ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ configuracion de notificaciones */
 [x-cloak] {
     display: none !important;
 }
@@ -4785,7 +4785,7 @@ a {
     pointer-events: none;
 }
 
-/* Requisiciones ÃÂ¢ÃÂÃÂ filtros de gestion */
+/* Requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ filtros de gestion */
 .req-manage-filters {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid var(--color-border);
@@ -5017,7 +5017,7 @@ a {
     justify-content: flex-start;
 }
 
-/* Requisiciones ÃÂ¢ÃÂÃÂ gestion: layout tabla protagonista */
+/* Requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ gestion: layout tabla protagonista */
 .req-manage-page .panel {
     display: flex;
     flex-direction: column;
@@ -5422,7 +5422,7 @@ a {
     text-overflow: ellipsis;
 }
 
-/* Admin ÃÂ¢ÃÂÃÂ auditoria global (patron req-manage) */
+/* Admin ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ auditoria global (patron req-manage) */
 .audit-page.req-manage-page .audit-filters__query-row {
     margin-top: 0;
 }
@@ -5521,7 +5521,7 @@ a {
     }
 }
 
-/* Requisiciones ÃÂ¢ÃÂÃÂ filtros: tablet en adelante, fechas en 2 columnas */
+/* Requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ filtros: tablet en adelante, fechas en 2 columnas */
 @media (min-width: 480px) {
     .req-manage-filters__row {
         display: grid;
@@ -5793,7 +5793,7 @@ a.sj-pagination__item:hover {
     }
 }
 
-/* DataTables ÃÂ¢ÃÂÃÂ paginacion alineada con sj-pagination */
+/* DataTables ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ paginacion alineada con sj-pagination */
 .dataTables_wrapper::after {
     content: '';
     display: block;
@@ -6034,7 +6034,7 @@ a.sj-pagination__item:hover {
     color: #fff;
 }
 
-/* Bandeja compras ÃÂ¢ÃÂÃÂ toolbar compacto: campos izq, estado der */
+/* Bandeja compras ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ toolbar compacto: campos izq, estado der */
 .req-manage-filters--bandeja .req-manage-filters__toolbar--bandeja {
     display: flex;
     flex-direction: column;
@@ -6139,7 +6139,7 @@ a.sj-pagination__item:hover {
     max-width: 100%;
 }
 
-/* Dashboard requisiciones ÃÂ¢ÃÂÃÂ KPI */
+/* Dashboard requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ KPI */
 .req-dashboard-kpis {
     gap: 0.75rem;
 }
@@ -6230,7 +6230,7 @@ a.sj-pagination__item:hover {
     --req-kpi-accent: #be123c;
 }
 
-/* Dashboard compras ÃÂ¢ÃÂÃÂ KPI (misma lÃÂÃÂ­nea visual que requisiciones) */
+/* Dashboard compras ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ KPI (misma lÃÂÃÂÃÂÃÂ­nea visual que requisiciones) */
 .dashboard-stat-grid.dashboard-stat-grid--compras-kpis {
     display: flex;
     flex-wrap: nowrap;
@@ -6346,7 +6346,7 @@ a.sj-pagination__item:hover {
     }
 }
 
-/* Dashboard requisiciones ÃÂ¢ÃÂÃÂ grÃÂÃÂ¡ficos uniformes */
+/* Dashboard requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ grÃÂÃÂÃÂÃÂ¡ficos uniformes */
 .req-dashboard-charts {
     --req-chart-height: clamp(240px, 28vw, 300px);
     max-width: 100%;
@@ -7058,6 +7058,10 @@ a.sj-pagination__item:hover {
 
 .modal-panel--2xl {
     max-width: 42rem;
+}
+
+.modal-panel--3xl {
+    max-width: 48rem;
 }
 
 .guest-shell {
@@ -8893,7 +8897,7 @@ a.sj-pagination__item:hover {
     }
 }
 
-/* FEAT-031 ÃÂ¢ÃÂÃÂ Desvinculaciones Masivos */
+/* FEAT-031 ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Desvinculaciones Masivos */
 .app-main:has(.desvinculaciones-masivos-page) {
     display: flex;
     flex-direction: column;
@@ -9209,7 +9213,7 @@ a.sj-pagination__item:hover {
     color: var(--color-danger, #b91c1c);
 }
 
-/* FEAT-031 ÃÂ¢ÃÂÃÂ Desvinculaciones Seguimientos */
+/* FEAT-031 ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Desvinculaciones Seguimientos */
 .app-main:has(.desvinculaciones-seguimientos-page) {
     display: flex;
     flex-direction: column;
@@ -9591,7 +9595,7 @@ a.sj-pagination__item:hover {
     align-items: center;
 }
 
-/* Multi-cédula filter (acreditaciones / cursos / export APO) */
+/* Multi-cÃ©dula filter (acreditaciones / cursos / export APO) */
 .multi-cedula-filter {
     display: inline-flex;
     align-items: center;
@@ -9723,7 +9727,7 @@ a.sj-pagination__item:hover {
     flex: 0 0 auto;
 }
 
-/* Acreditados: con más filtros (Renovaciones) los botones suelen ir a 2.ª fila → alineados a la derecha. */
+/* Acreditados: con mÃ¡s filtros (Renovaciones) los botones suelen ir a 2.Âª fila â alineados a la derecha. */
 .acreditaciones-acreditados-page .cursos-registros-page__filters {
     display: flex;
     flex-wrap: wrap;
@@ -9756,7 +9760,7 @@ a.sj-pagination__item:hover {
     gap: 0.5rem;
 }
 
-/* ── Validaciones (acreditaciones) ───────────────────────────────────────── */
+/* ââ Validaciones (acreditaciones) âââââââââââââââââââââââââââââââââââââââââ */
 .acreditaciones-validaciones-page .cursos-registros-panel {
     overflow: hidden;
 }
@@ -10523,7 +10527,7 @@ a.sj-pagination__item:hover {
     margin-top: 1rem;
 }
 
-/* FEAT-032 Cursos catalogo ÃÂ acciones icono */
+/* FEAT-032 Cursos catalogo ÃÂÃÂ acciones icono */
 .cursos-catalogo-page__row-actions {
     display: inline-flex;
     flex-direction: row;
@@ -10584,7 +10588,7 @@ a.sj-pagination__item:hover {
 }
 
 .cursos-catalogo-page__header {
-    /* mismo ancho del contenido de catálogo */
+    /* mismo ancho del contenido de catÃ¡logo */
 }
 
 .cursos-catalogo-page__filters-row {
@@ -10713,7 +10717,7 @@ a.sj-pagination__item:hover {
     height: 320px;
 }
 
-/* FEAT-035 Selección dashboard */
+/* FEAT-035 SelecciÃ³n dashboard */
 .seleccion-dashboard-page__filters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
@@ -10776,7 +10780,7 @@ a.sj-pagination__item:hover {
     height: 320px;
 }
 
-/* Solicitudes de desarrollo — ancho contenido 80%; pestanas a ancho normal */
+/* Solicitudes de desarrollo â ancho contenido 80%; pestanas a ancho normal */
 .app-main:has(.development-requests-page) {
     display: flex;
     flex-direction: column;
@@ -10895,7 +10899,7 @@ a.sj-pagination__item:hover {
     }
 }
 
-/* Solicitudes de desarrollo — formulario Nueva / Editar */
+/* Solicitudes de desarrollo â formulario Nueva / Editar */
 .development-requests-page--form > .app-container {
     width: min(1120px, calc(100% - 1.5rem));
     max-width: min(1120px, calc(100% - 1.5rem));
@@ -11301,7 +11305,7 @@ a.sj-pagination__item:hover {
     }
 }
 
-/* Solicitudes de desarrollo — detalle y bandeja */
+/* Solicitudes de desarrollo â detalle y bandeja */
 .development-requests-page--detail > .app-container {
     width: min(1480px, calc(100% - 1.25rem));
     max-width: min(1480px, calc(100% - 1.25rem));
@@ -11812,7 +11816,7 @@ a.sj-pagination__item:hover {
     color: var(--brand-navy);
 }
 
-/* Solicitudes de compra — formulario Nueva y detalle */
+/* Solicitudes de compra â formulario Nueva y detalle */
 .purchase-requests-page--form > .app-container,
 .purchase-requests-page--detail > .app-container {
     width: min(1180px, calc(100% - 1.5rem));
@@ -12352,7 +12356,7 @@ a.sj-pagination__item:hover {
     gap: 0.85rem;
 }
 
-/* Solicitudes de compra — listados Mis solicitudes / Bandeja */
+/* Solicitudes de compra â listados Mis solicitudes / Bandeja */
 .purchase-requests-page--list > .app-container {
     width: min(1280px, calc(100% - 1.5rem));
     max-width: min(1280px, calc(100% - 1.5rem));
@@ -12539,4 +12543,538 @@ a.sj-pagination__item:hover {
     .seleccion-dashboard-page__charts {
         grid-template-columns: 1fr;
     }
+}
+
+/* MT-GH-04 Novedades — formularios modal */
+.rn-novedad-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    max-height: min(92vh, 52rem);
+}
+
+.rn-novedad-modal .ficha-empleados-masivos-modal__header,
+.rn-novedad-modal__header {
+    position: relative;
+    margin: 0;
+    padding: 1.15rem 1.25rem 1.05rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 90%, transparent);
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--brand-navy, #003366) 7%, #fff) 0%, #fff 62%),
+        #fff;
+}
+
+.rn-novedad-modal__header::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--brand-navy, #003366), var(--brand-blue, #1d4ed8));
+}
+
+.rn-novedad-modal .ficha-empleados-masivos-modal__heading-icon,
+.rn-novedad-modal__icon {
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--brand-navy, #003366) 10%, #fff);
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 16%, var(--color-border, #dbe3ef));
+    color: var(--brand-navy, #003366);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.rn-novedad-modal__eyebrow {
+    display: inline-block;
+    margin: 0 0 0.2rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.rn-novedad-modal .ficha-empleados-masivos-modal__title {
+    font-size: 1.12rem;
+}
+
+.rn-novedad-modal .ficha-empleados-masivos-modal__lead {
+    margin-top: 0.2rem;
+    max-width: 36rem;
+}
+
+.rn-novedad-modal__form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.rn-novedad-modal__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 1rem 1.25rem 0.35rem;
+    background: #f8fafc;
+}
+
+.rn-novedad-modal .ficha-empleados-masivos-modal__alert {
+    margin: 0.85rem 1.25rem 0;
+}
+
+.rn-novedad-modal__footer,
+.rn-novedad-modal .ficha-empleados-masivos-modal__footer {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.9rem 1.25rem 1.1rem;
+    border-top: 1px solid var(--color-border, #dbe3ef);
+    background: #fff;
+    box-shadow: 0 -8px 18px rgb(15 23 42 / 3%);
+}
+
+.rn-novedad-modal__footer .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+}
+
+.rn-novedad-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.1rem 0 0.55rem;
+}
+
+.rn-novedad-form__section {
+    margin: 0;
+    padding: 1rem 1.05rem 1.05rem;
+    border: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 92%, transparent);
+    border-radius: 0.9rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
+.rn-novedad-form__section--nomina {
+    background: linear-gradient(180deg, #f8fbff 0%, #fff 70%);
+    border-color: color-mix(in srgb, #93c5fd 45%, var(--color-border, #dbe3ef));
+}
+
+.rn-novedad-form__section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed color-mix(in srgb, var(--color-border, #dbe3ef) 88%, transparent);
+}
+
+.rn-novedad-form__section-step {
+    position: relative;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--brand-navy, #003366) 10%, #fff);
+    color: var(--brand-navy, #003366);
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 14%, var(--color-border, #dbe3ef));
+}
+
+.rn-novedad-form__section-step--nomina {
+    background: color-mix(in srgb, #2563eb 14%, #fff);
+    color: #1d4ed8;
+    border-color: color-mix(in srgb, #2563eb 22%, #e2e8f0);
+}
+
+.rn-novedad-form__section-index {
+    position: absolute;
+    top: -0.35rem;
+    right: -0.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding: 0 0.2rem;
+    border-radius: 999px;
+    background: var(--brand-navy, #003366);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.rn-novedad-form__section-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    line-height: 1.25;
+}
+
+.rn-novedad-form__section-desc {
+    margin: 0.18rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--color-muted, #64748b);
+}
+
+.rn-novedad-form__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem 0.95rem;
+}
+
+.rn-novedad-form .form-field {
+    margin: 0;
+}
+
+.rn-novedad-form .form-label {
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.rn-novedad-form .form-input,
+.rn-novedad-form .searchable-select-trigger {
+    min-height: 2.4rem;
+}
+
+.rn-novedad-form__span,
+.rn-novedad-form__cedula {
+    grid-column: 1 / -1;
+}
+
+.rn-novedad-form__cedula-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.rn-novedad-form__cedula-row .form-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.rn-novedad-form__cedula-row .req-manage-filters__icon-btn {
+    flex: 0 0 auto;
+    align-self: stretch;
+    min-height: 2.4rem;
+}
+
+.rn-novedad-form__lookup-msg {
+    margin: 0.4rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--color-muted, #64748b);
+}
+
+.rn-novedad-form__lookup-msg--ok {
+    color: var(--color-success, #047857);
+}
+
+.rn-novedad-form__lookup-msg--warn {
+    color: var(--color-warning, #92400e);
+}
+
+.rn-novedad-form__spinner {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 999px;
+    animation: rn-novedad-spin 0.7s linear infinite;
+}
+
+@keyframes rn-novedad-spin {
+    to { transform: rotate(360deg); }
+}
+
+.rn-novedad-form__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.4rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.55rem;
+    background: #f8fafc;
+    font-size: 0.875rem;
+    color: #334155;
+}
+
+.ficha-empleados-masivos-modal:not(.rn-novedad-modal) .rn-novedad-form {
+    max-height: min(68vh, 36rem);
+    overflow: auto;
+    padding-right: 0.15rem;
+}
+
+.ficha-empleados-masivos-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border, #d6dde8) 90%, transparent);
+}
+
+@media (max-width: 640px) {
+    .rn-novedad-form__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rn-novedad-modal__body,
+    .rn-novedad-modal .ficha-empleados-masivos-modal__header,
+    .rn-novedad-modal__footer {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Historial modal — timeline */
+.rn-historial-modal {
+    max-height: min(88vh, 42rem);
+}
+
+.rn-historial-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.95rem 1.25rem 1.2rem;
+    background: #f8fafc;
+}
+
+.rn-historial-modal__meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.rn-historial-modal__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border, #dbe3ef);
+    background: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.rn-historial-modal__state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 12rem;
+    padding: 1.5rem 1rem;
+    border: 1px dashed color-mix(in srgb, var(--color-border, #dbe3ef) 90%, transparent);
+    border-radius: 0.9rem;
+    background: #fff;
+    text-align: center;
+}
+
+.rn-historial-modal__state-title {
+    margin: 0.35rem 0 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.rn-historial-modal__state-desc {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.rn-historial-modal__spinner {
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 2px solid color-mix(in srgb, var(--brand-navy, #003366) 18%, #e2e8f0);
+    border-top-color: var(--brand-navy, #003366);
+    border-radius: 999px;
+    animation: rn-novedad-spin 0.7s linear infinite;
+}
+
+.rn-historial-modal__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.8rem;
+    background: color-mix(in srgb, var(--brand-navy, #003366) 8%, #fff);
+    color: var(--brand-navy, #003366);
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 12%, var(--color-border, #dbe3ef));
+}
+
+.rn-historial-modal__timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0.15rem 0 0.25rem 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.rn-historial-modal__timeline::before {
+    content: "";
+    position: absolute;
+    top: 0.55rem;
+    bottom: 0.55rem;
+    left: 0.72rem;
+    width: 2px;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--brand-navy, #003366) 28%, #e2e8f0),
+        color-mix(in srgb, var(--color-border, #dbe3ef) 80%, transparent)
+    );
+}
+
+.rn-historial-modal__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.1rem 1fr;
+    gap: 0.75rem;
+    align-items: start;
+}
+
+.rn-historial-modal__dot {
+    position: relative;
+    z-index: 1;
+    width: 0.78rem;
+    height: 0.78rem;
+    margin-top: 0.85rem;
+    margin-left: 0.12rem;
+    border-radius: 999px;
+    background: var(--brand-navy, #003366);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-navy, #003366) 28%, #e2e8f0);
+}
+
+.rn-historial-modal__dot--create {
+    background: var(--color-success, #047857);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success, #047857) 28%, #e2e8f0);
+}
+
+.rn-historial-modal__dot--update {
+    background: #0369a1;
+    box-shadow: 0 0 0 2px color-mix(in srgb, #0369a1 28%, #e2e8f0);
+}
+
+.rn-historial-modal__dot--review {
+    background: #7c3aed;
+    box-shadow: 0 0 0 2px color-mix(in srgb, #7c3aed 28%, #e2e8f0);
+}
+
+.rn-historial-modal__dot--delete {
+    background: var(--color-danger, #be123c);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger, #be123c) 28%, #e2e8f0);
+}
+
+.rn-historial-modal__card {
+    padding: 0.8rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 92%, transparent);
+    border-radius: 0.8rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
+.rn-historial-modal__card-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.65rem;
+    margin-bottom: 0.4rem;
+}
+
+.rn-historial-modal__when {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+.rn-historial-modal__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #334155;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.rn-historial-modal__badge--create {
+    color: var(--color-success, #047857);
+    background: var(--color-success-soft, #ecfdf5);
+    border-color: color-mix(in srgb, var(--color-success, #047857) 22%, #e2e8f0);
+}
+
+.rn-historial-modal__badge--update {
+    color: #0369a1;
+    background: #f0f9ff;
+    border-color: color-mix(in srgb, #0369a1 22%, #e2e8f0);
+}
+
+.rn-historial-modal__badge--review {
+    color: #6d28d9;
+    background: #f5f3ff;
+    border-color: color-mix(in srgb, #7c3aed 22%, #e2e8f0);
+}
+
+.rn-historial-modal__badge--delete {
+    color: var(--color-danger, #be123c);
+    background: var(--color-danger-soft, #fff1f2);
+    border-color: color-mix(in srgb, var(--color-danger, #be123c) 22%, #e2e8f0);
+}
+
+.rn-historial-modal__summary {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #0f172a;
+}
+
+.rn-historial-modal__actor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.rn-historial-modal__actor-icon {
+    display: inline-flex;
+    color: #94a3b8;
+}
+
+.rn-historial-modal__reason {
+    margin: 0.55rem 0 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 0.8rem;
+    color: #475569;
+    line-height: 1.4;
 }

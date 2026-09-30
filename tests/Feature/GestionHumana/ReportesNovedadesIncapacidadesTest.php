@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
@@ -45,7 +46,10 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
         $row = ReportesNovedadesIncapacidad::query()->where('document_number', '5005005005')->firstOrFail();
         $this->assertSame('EG', $row->tipo_incapacidad);
         $this->assertNull($row->observacion_nomina);
-        $this->assertNull($row->dias_entrega);
+        $this->assertSame(
+            (int) Carbon::parse('2026-09-01')->startOfDay()->diffInDays(now()->startOfDay(), false),
+            $row->dias_entrega
+        );
 
         $this->actingAs($editor)
             ->from(route('gestion-humana.reportes-novedades.incapacidades'))
@@ -60,6 +64,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
                     'document_number' => '5005005005',
                     'employee_name' => 'Incap Editada',
                     'tipo_incapacidad' => 'ARL',
+                    'fecha_envio_final' => '2026-09-05',
                 ]),
                 [
                     'observacion_nomina' => 'No debe',
@@ -72,7 +77,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
         $this->assertSame('Incap Editada', $row->employee_name);
         $this->assertSame('ARL', $row->tipo_incapacidad);
         $this->assertNull($row->observacion_nomina);
-        $this->assertNull($row->dias_entrega);
+        $this->assertSame(4, $row->dias_entrega);
 
         $this->actingAs($reviewer)
             ->patch(route('gestion-humana.reportes-novedades.incapacidades.review', $row), [
@@ -85,7 +90,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
 
         $row->refresh();
         $this->assertSame('OK Nomina', $row->observacion_nomina);
-        $this->assertSame(2, $row->dias_entrega);
+        $this->assertSame(4, $row->dias_entrega);
         $this->assertSame('Incap Editada', $row->employee_name);
         $this->assertSame('ARL', $row->tipo_incapacidad);
 

@@ -20,7 +20,6 @@ class ReportesNovedadesVacacion extends Model
         'novedad',
         'dias_novedad',
         'fecha_inicio',
-        'fecha_fin',
         'observaciones',
         'observacion_nomina',
         'created_by',
@@ -32,7 +31,6 @@ class ReportesNovedadesVacacion extends Model
         return [
             'dias_novedad' => 'integer',
             'fecha_inicio' => 'date',
-            'fecha_fin' => 'date',
             'created_by' => 'integer',
             'updated_by' => 'integer',
         ];

@@ -43,7 +43,6 @@ class ReportesNovedadesIncapacidadesController extends Controller
 
     private const NOMINA_FIELDS = [
         'observacion_nomina',
-        'dias_entrega',
     ];
 
     public function __construct(
@@ -103,6 +102,7 @@ class ReportesNovedadesIncapacidadesController extends Controller
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
         ]);
+        $this->syncDiasEntrega($row);
 
         $this->auditLogService->logEvent(
             eventType: 'incapacidades_novedad',
@@ -131,6 +131,7 @@ class ReportesNovedadesIncapacidadesController extends Controller
             'extemporanea' => (bool) ($payload['extemporanea'] ?? false),
             'updated_by' => auth()->id(),
         ]);
+        $this->syncDiasEntrega($incapacidad);
 
         $this->auditLogService->logModelChange(
             eventType: 'incapacidades_novedad',
@@ -280,5 +281,12 @@ class ReportesNovedadesIncapacidadesController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function syncDiasEntrega(ReportesNovedadesIncapacidad $row): void
+    {
+        $row->forceFill([
+            'dias_entrega' => $row->diasEntregaCalculados(),
+        ])->saveQuietly();
     }
 }

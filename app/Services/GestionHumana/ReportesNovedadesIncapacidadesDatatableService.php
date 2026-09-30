@@ -116,8 +116,11 @@ final class ReportesNovedadesIncapacidadesDatatableService
                 'label' => 'EXTEMPORANEA',
             ],
             ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
+            [
+                'key' => static fn (ReportesNovedadesIncapacidad $row): string => (string) ($row->diasEntregaCalculados() ?? ''),
+                'label' => 'DIAS ENTREGA',
+            ],
             ['key' => 'observacion_nomina', 'label' => 'OBSERVACION NOMINA'],
-            ['key' => 'dias_entrega', 'label' => 'DIAS ENTREGA'],
         ];
     }
 
@@ -136,8 +139,8 @@ final class ReportesNovedadesIncapacidadesDatatableService
             e(DisplayDate::date($row->fecha_inicio)),
             e(DisplayDate::date($row->fecha_fin)),
             e(DisplayDate::date($row->fecha_recepcion) ?: '—'),
+            e((string) ($row->diasEntregaCalculados() ?? '—')),
             e((string) ($row->observacion_nomina ?: '—')),
-            e((string) ($row->dias_entrega ?? '—')),
         ];
 
         if ($canEdit || $canReview) {
@@ -170,7 +173,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
             'extemporanea' => (bool) $row->extemporanea,
             'observaciones' => $row->observaciones,
             'observacion_nomina' => $row->observacion_nomina,
-            'dias_entrega' => $row->dias_entrega,
+            'dias_entrega' => $row->diasEntregaCalculados(),
             'update_url' => route('gestion-humana.reportes-novedades.incapacidades.update', $row),
             'review_url' => route('gestion-humana.reportes-novedades.incapacidades.review', $row),
             'historial_url' => route('gestion-humana.reportes-novedades.incapacidades.historial', ['id' => $row->id]),
