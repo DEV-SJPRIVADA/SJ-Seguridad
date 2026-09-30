@@ -12,6 +12,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SeleccionAccessService;
 use App\Services\Access\SupplyAccessService;
@@ -33,6 +34,7 @@ class NavigationResolver
         private readonly CursosAccessService $cursosAccess,
         private readonly SeleccionAccessService $seleccionAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
+        private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
@@ -292,6 +294,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'reportes_novedades') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->reportesNovedadesAccess->canViewReportesNovedadesBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.reportes-novedades.index',
+                                'url' => $user->defaultReportesNovedadesBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -406,6 +425,7 @@ class NavigationResolver
                             $boardKey === 'cursos' => str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana',
                             $boardKey === 'seleccion' => str_starts_with((string) $routeName, 'gestion-humana.seleccion.') && $key === 'gestion_humana',
                             $boardKey === 'acreditaciones' => str_starts_with((string) $routeName, 'gestion-humana.acreditaciones.') && $key === 'gestion_humana',
+                            $boardKey === 'reportes_novedades' => str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
@@ -500,6 +520,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.seleccion.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.acreditaciones.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.') && $key === 'gestion_humana'
                 );
 
                 return [

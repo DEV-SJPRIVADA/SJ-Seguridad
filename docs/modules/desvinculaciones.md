@@ -20,6 +20,8 @@ Tablero de area **Gestion Humana** para (1) desvincular varios empleados activos
 
 **Post-V1 (activo):** filtro rango **FECHA ENTREGADO NOMINA** + export Excel de Seguimientos (`BaseExport`).
 
+**Integracion FEAT-040 (MT-GH-04 Novedades):** al crear un followup (`ensureForClosedPeriod`, desde Ficha terminate o Masivos) se llama `ReportesNovedadesRetiroSyncService::ensureFromFollowup` (alta idempotente en hoja Retiros; `observacion_nomina` vacia). Al **revertir**, `annulFromFollowup` soft-deletea la fila Retiros vinculada **antes** de eliminar el followup. No exige permisos `reportes_novedades.*` al actor. Detalle: [`docs/modules/reportes-novedades.md`](reportes-novedades.md).
+
 ## Rutas
 
 Archivo: `routes/areas/gestion_humana.php`  
@@ -128,7 +130,7 @@ Modelo: `App\Models\EmployeeTerminationFollowup`
 | --- | --- |
 | `DesvinculacionesAccessService` | Board / view / masivos / edit + bypass `manage.users`; `visibleTabsFor` |
 | `BulkTerminationService` | Lookup activo; `process` por fila (TX close+sync+followup; carta fuera de TX); ZIP lote; audit `bulk_termination` |
-| `EmployeeTerminationFollowupService` | `ensureForClosedPeriod`, `markLetterGenerated`, `updatePartial`, `revert` (+ audit) |
+| `EmployeeTerminationFollowupService` | `ensureForClosedPeriod` (+ sync Retiros FEAT-040), `markLetterGenerated`, `updatePartial`, `revert` (+ annul Retiros + audit) |
 | `EmployeeFichaEmploymentPeriodService::reopenClosedPeriod` | Reactiva periodo cerrado y sincroniza perfil a activo |
 | `TerminationFollowupDatatableService` | Query + format row (incluye `ok_todo`, labels carta) |
 | `DesvinculacionesAuditLogService` | Wrapper `module=desvinculaciones`, `area=gestion_humana` |
@@ -185,7 +187,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 17. OK TODO solo lectura, calculado.
 18. Filtros: `q` (cedula/nombre) + status `todos` / `incompletos` / `ok_todo` / `sin_carta` + rango `fecha_desde` / `fecha_hasta` sobre `payroll_delivered_at` (scope `payrollDeliveredBetween`; extremos opcionales).
 19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 8 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
-20. **Revertir** por fila (permiso edit): modal con motivo; reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
+20. **Revertir** por fila (permiso edit): modal con motivo; anula fila Retiros en MT-GH-04 Novedades (si existe), reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
 
 ## JavaScript / assets
 
@@ -226,5 +228,6 @@ Seguimientos: `App\Exports\BaseExport` via `GET .../seguimientos/exportar`. Resp
 - Review: [`docs/reviews/FEAT-031.md`](../reviews/FEAT-031.md)
 - Doc usuario: [`docs/user/desvinculaciones.md`](../user/desvinculaciones.md)
 - Ficha empleados: [`docs/modules/ficha-empleados.md`](ficha-empleados.md)
+- MT-GH-04 Novedades (Retiros auto): [`docs/modules/reportes-novedades.md`](reportes-novedades.md)
 - Plantillas Word: [`docs/modules/plantillas-word.md`](plantillas-word.md)
 - Guia documentacion: [`docs/DOCUMENTATION.md`](../DOCUMENTATION.md)

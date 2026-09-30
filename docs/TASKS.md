@@ -32,6 +32,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-040 | Reportes-Novedades GH→Nómina (4 hojas + review + retiros auto) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-040-run-log.md`](runs/FEAT-040-run-log.md) | 2026-09-30 |
 | FEAT-039 | Export Apo SuperVigilancia (.xls) + Dashboard Acreditaciones | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-039-run-log.md`](runs/FEAT-039-run-log.md) | 2026-09-28 |
 | FEAT-038 | Validaciones Acreditaciones (cruces Ficha / Acreditados / Reporte Diario) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-038-run-log.md`](runs/FEAT-038-run-log.md) | 2026-09-25 |
 | FEAT-037 | Reporte Diario APO (carga diaria 2 Excel + histórico) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-037-run-log.md`](runs/FEAT-037-run-log.md) | 2026-09-24 |

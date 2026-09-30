@@ -75,11 +75,11 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 5. **OK TODO** se calcula solo: pasa a Si cuando los ocho checks estan en verdadero; no se puede forzar a mano.
 6. Use **Exportar Excel** para descargar el listado con los filtros activos (incluye cedula, nombre, cargo, tipo desvinculacion, fechas, checks, OK TODO y observaciones).
 7. Si el caso esta **sin carta**, regenere la carta en **Ficha empleados** del empleado (vinculo cerrado → Generar cartas). Al generar con exito, Seguimientos mostrara que ya tiene carta.
-8. No se elimina ni se oculta un seguimiento de forma silenciosa. Para **revertir** la desvinculacion (reactivar al empleado): use el icono de reabrir en la fila, confirme con un **motivo obligatorio**. El sistema deja al empleado activo, quita la fila de Seguimientos y borra las cartas de ese retiro.
+8. No se elimina ni se oculta un seguimiento de forma silenciosa. Para **revertir** la desvinculacion (reactivar al empleado): use el icono de reabrir en la fila, confirme con un **motivo obligatorio**. El sistema deja al empleado activo, quita la fila de Seguimientos, borra las cartas de ese retiro y, si habia una fila automatica en **MT-GH-04 Novedades → Retiros**, esa novedad deja de mostrarse alli.
 
 ### Relacion con Ficha empleados
 
-1. Desvincular desde la ficha (un empleado) tambien crea el seguimiento automaticamente.
+1. Desvincular desde la ficha (un empleado) tambien crea el seguimiento automaticamente y alimenta **MT-GH-04 Novedades → Retiros**.
 2. Generar la carta desde la ficha marca «tiene carta generada» en Seguimientos.
 3. Las reglas del formulario individual de Ficha (campos obligatorios de causal, fechas y recontratable) no cambian; Masivos es mas flexible en esos opcionales.
 
@@ -87,6 +87,8 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.5 | 2026-09-30 | Agent | Label tablero novedades: MT-GH-04 Novedades |
+| 1.4 | 2026-09-30 | Documentador FEAT-040 | Nota: desvincular/revertir sincroniza Retiros en Reportes-Novedades |
 | 1.3 | 2026-09-30 | Agencia | Masivos: pegado multi-cedula (max. 500) con lookup, omision de duplicadas/no encontradas y resumen |
 | 1.2 | 2026-09-15 | Agencia | Filtro rango FECHA ENTREGADO NOMINA + export Excel en Seguimientos |
 | 1.1 | 2026-09-14 | Agencia | Revertir desvinculacion por fila en Seguimientos (motivo + icono) |

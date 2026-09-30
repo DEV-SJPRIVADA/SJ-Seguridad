@@ -15,6 +15,7 @@ class EmployeeTerminationFollowupService
     public function __construct(
         private readonly DesvinculacionesAuditLogService $auditLogService,
         private readonly EmployeeFichaEmploymentPeriodService $periodService,
+        private readonly ReportesNovedadesRetiroSyncService $retiroSyncService,
     ) {}
 
     /**
@@ -37,12 +38,14 @@ class EmployeeTerminationFollowupService
                 $existing->save();
             }
 
+            $this->retiroSyncService->ensureFromFollowup($existing, $userId);
+
             return $existing->fresh();
         }
 
         $entry->loadMissing('profile');
 
-        return EmployeeTerminationFollowup::query()->create([
+        $followup = EmployeeTerminationFollowup::query()->create([
             'personal_requisition_ficha_entry_id' => $entry->id,
             'employee_ficha_employment_period_id' => $period->id,
             'document_number' => (string) ($entry->hired_document ?: $entry->profile?->document_number),
@@ -57,6 +60,10 @@ class EmployeeTerminationFollowupService
             'letter_generated' => $letterGenerated,
             'created_by' => $userId,
         ]);
+
+        $this->retiroSyncService->ensureFromFollowup($followup, $userId);
+
+        return $followup->fresh();
     }
 
     public function markLetterGenerated(
@@ -112,6 +119,8 @@ class EmployeeTerminationFollowupService
         ];
 
         DB::transaction(function () use ($followup, $period, $user, $reason, $metadata): void {
+            $this->retiroSyncService->annulFromFollowup($followup, $user->id);
+
             $this->periodService->reopenClosedPeriod($period);
 
             $followup->delete();

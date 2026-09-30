@@ -48,6 +48,7 @@ Registro en `config/audit.php` → clave `modules`.
 | `purchase_requests` | Compras | `compras` (fijo) | `App\Services\PurchaseRequests\PurchaseRequestAuditLogService` | Solo UI global |
 | `quality_documents` | Documentos calidad | `calidad` (fijo) | `App\Services\QualityDocuments\QualityDocumentAuditLogService` | Solo UI global |
 | `ficha_empleados` | Ficha empleados | `gestion_humana` (fijo) | `App\Services\GestionHumana\EmployeeFichaAuditLogService` | Solo UI global |
+| `reportes_novedades` | MT-GH-04 Novedades | `gestion_humana` (fijo) | `App\Services\GestionHumana\ReportesNovedadesAuditLogService` | Historial por pestana (modal) + UI global |
 
 **Nota suministros:** `config/audit.php` declara `area => null` para el slug; la columna `area` en cada fila refleja el area solicitante de la operacion.
 
@@ -71,6 +72,7 @@ Cada modulo fija `module` y `area` y delega a `SystemAuditService`:
 | `App\Services\PurchaseRequests\PurchaseRequestAuditLogService` | `purchase_requests` / `compras` | Solicitudes compra, aprobacion director, bandeja procesamiento |
 | `App\Services\QualityDocuments\QualityDocumentAuditLogService` | `quality_documents` / `calidad` | CRUD documentos calidad + exports |
 | `App\Services\GestionHumana\EmployeeFichaAuditLogService` | `ficha_empleados` / `gestion_humana` | Alta/promocion ficha, perfil laboral, import/export masivos |
+| `App\Services\GestionHumana\ReportesNovedadesAuditLogService` | `reportes_novedades` / `gestion_humana` | CRUD/review/export por hoja + retiro_auto create/annul |
 
 Inyeccion por constructor; no hay facades nuevas.
 
@@ -270,6 +272,19 @@ Ver FEAT-021. Escritura via `Indicadores\AuditLogService`. Eventos `info`: `admi
 | `export` | `import_template_data` | `FichaEmpleadosController::exportImportTemplate` | — | `metadata`: row_count |
 
 **No registrar:** `index` GET; `importTemplate`; `exportArchiveTemplate` (archivo GH); `downloadImportReport`; `FichaEmpleadosCatalogController`; flujos requisicion/archivo.
+
+### Modulo `reportes_novedades` (`area = gestion_humana`) — FEAT-040
+
+| event_type | action | Cuando | auditable | Payload resumido |
+| --- | --- | --- | --- | --- |
+| `{sheet}_novedad` | `create` / `update` / `delete` / `review` | Controllers por hoja (store/update/destroy/review) | Modelo de la hoja | `metadata.sheet`, id, document_number; before/after en mutaciones |
+| `export` | `{sheet}_excel` | Export por hoja | — | `metadata`: sheet, row_count / filtros |
+| `retiro_auto` | `create` | `ReportesNovedadesRetiroSyncService::ensureFromFollowup` | `ReportesNovedadesRetiro` | followup_id, document_number |
+| `retiro_auto` | `annul` | `annulFromFollowup` (revert desvinculacion) | `ReportesNovedadesRetiro` | followup_id |
+
+`{sheet}` ∈ `vacaciones` \| `incapacidades` \| `retiros` \| `permisos`. Historial por pestana via `ReportesNovedadesHistorialService` (lectura acotada; no es pestana Auditoria del tablero).
+
+**No registrar:** GET index/datatable/historial (lectura); lookup Ficha.
 
 ## Puntos de instrumentacion (v1)
 

@@ -43,6 +43,18 @@ return [
         'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
+        'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
+        'reportes_novedades.vacaciones.edit' => 'Vacaciones: Editar',
+        'reportes_novedades.vacaciones.review' => 'Vacaciones: Revisar (Nomina)',
+        'reportes_novedades.incapacidades.view' => 'Incapacidades: Ver',
+        'reportes_novedades.incapacidades.edit' => 'Incapacidades: Editar',
+        'reportes_novedades.incapacidades.review' => 'Incapacidades: Revisar (Nomina)',
+        'reportes_novedades.retiros.view' => 'Retiros: Ver',
+        'reportes_novedades.retiros.edit' => 'Retiros: Editar',
+        'reportes_novedades.retiros.review' => 'Retiros: Revisar (Nomina)',
+        'reportes_novedades.permisos.view' => 'Permisos: Ver',
+        'reportes_novedades.permisos.edit' => 'Permisos: Editar',
+        'reportes_novedades.permisos.review' => 'Permisos: Revisar (Nomina)',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
@@ -116,6 +128,7 @@ return [
         'cursos' => 'Cursos',
         'seleccion' => 'Selección',
         'acreditaciones' => 'Acreditaciones',
+        'reportes_novedades' => 'MT-GH-04 Novedades',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'documentos' => 'Biblioteca Calidad',
@@ -181,6 +194,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'reportes_novedades' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -235,6 +252,13 @@ return [
         'validaciones' => 'Validaciones',
         'export_apo' => 'Export Apo',
         'catalogo' => 'Catálogo',
+    ],
+
+    'reportes_novedades_tabs' => [
+        'vacaciones' => 'Vacaciones',
+        'incapacidades' => 'Incapacidades',
+        'retiros' => 'Retiros',
+        'permisos' => 'Permisos',
     ],
 
     'comercial_gestion_tab_board_keys' => [
@@ -397,6 +421,7 @@ return [
                             'view.board.gestion_humana.cursos',
                             'view.board.gestion_humana.seleccion',
                             'view.board.gestion_humana.acreditaciones',
+                            'view.board.gestion_humana.reportes_novedades',
                         ],
                     ],
                     'ficha_empleados' => [
@@ -448,6 +473,23 @@ return [
                         'permissions' => [
                             'acreditaciones.view',
                             'acreditaciones.edit',
+                        ],
+                    ],
+                    'reportes_novedades' => [
+                        'label' => 'MT-GH-04 Novedades',
+                        'permissions' => [
+                            'reportes_novedades.vacaciones.view',
+                            'reportes_novedades.vacaciones.edit',
+                            'reportes_novedades.vacaciones.review',
+                            'reportes_novedades.incapacidades.view',
+                            'reportes_novedades.incapacidades.edit',
+                            'reportes_novedades.incapacidades.review',
+                            'reportes_novedades.retiros.view',
+                            'reportes_novedades.retiros.edit',
+                            'reportes_novedades.retiros.review',
+                            'reportes_novedades.permisos.view',
+                            'reportes_novedades.permisos.edit',
+                            'reportes_novedades.permisos.review',
                         ],
                     ],
                 ],
