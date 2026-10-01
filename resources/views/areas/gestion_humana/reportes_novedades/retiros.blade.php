@@ -61,7 +61,7 @@
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                 title="Historial de la hoja"
                                 aria-label="Historial de la hoja"
-                                x-on:click.prevent="openHistorial({ url: @js($historialUrl) })"
+                                x-on:click.prevent="openHistorial({ url: @js($historialUrl), filterable: true })"
                             >
                                 <x-lucide-history width="18" height="18" aria-hidden="true" />
                             </button>
@@ -275,6 +275,18 @@
                     lookupLoading: false,
                     historialLoading: false,
                     historialItems: [],
+                    historialFilterable: false,
+                    historialBaseUrl: '',
+                    historialFilters: {
+                        q: '',
+                        action: '',
+                        date_from: '',
+                        date_to: '',
+                    },
+                    get historialHasFilters() {
+                        const f = this.historialFilters || {};
+                        return Boolean((f.q || '').trim() || f.action || f.date_from || f.date_to);
+                    },
                     openCreate() {
                         this.form = emptyForm();
                         this.lookupMessage = '';
@@ -407,14 +419,45 @@
                         return { [prefix + kind]: true };
                     },
 
-                    async openHistorial(detail) {
-                        const url = detail?.url || '';
-                        if (!url) {
+                    historialQueryUrl() {
+                        const base = this.historialBaseUrl || '';
+                        if (! base) {
+                            return '';
+                        }
+                        const url = new URL(base, window.location.origin);
+                        if (this.historialFilterable) {
+                            const f = this.historialFilters || {};
+                            const q = (f.q || '').trim();
+                            if (q) {
+                                url.searchParams.set('q', q);
+                            } else {
+                                url.searchParams.delete('q');
+                            }
+                            if (f.action) {
+                                url.searchParams.set('action', f.action);
+                            } else {
+                                url.searchParams.delete('action');
+                            }
+                            if (f.date_from) {
+                                url.searchParams.set('date_from', f.date_from);
+                            } else {
+                                url.searchParams.delete('date_from');
+                            }
+                            if (f.date_to) {
+                                url.searchParams.set('date_to', f.date_to);
+                            } else {
+                                url.searchParams.delete('date_to');
+                            }
+                        }
+                        return url.pathname + url.search;
+                    },
+                    async fetchHistorial() {
+                        const url = this.historialQueryUrl();
+                        if (! url) {
                             return;
                         }
                         this.historialLoading = true;
                         this.historialItems = [];
-                        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-historial' }));
                         try {
                             const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
                             const data = await response.json();
@@ -424,6 +467,39 @@
                         } finally {
                             this.historialLoading = false;
                         }
+                    },
+                    async openHistorial(detail) {
+                        const url = detail?.url || '';
+                        if (! url) {
+                            return;
+                        }
+                        this.historialFilterable = !!detail?.filterable;
+                        this.historialBaseUrl = url;
+                        if (this.historialFilterable) {
+                            this.historialFilters = {
+                                q: '',
+                                action: '',
+                                date_from: '',
+                                date_to: '',
+                            };
+                        }
+                        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-historial' }));
+                        await this.fetchHistorial();
+                    },
+                    applyHistorialFilters() {
+                        if (! this.historialFilterable) {
+                            return;
+                        }
+                        this.fetchHistorial();
+                    },
+                    clearHistorialFilters() {
+                        this.historialFilters = {
+                            q: '',
+                            action: '',
+                            date_from: '',
+                            date_to: '',
+                        };
+                        this.fetchHistorial();
                     },
                 };
             }

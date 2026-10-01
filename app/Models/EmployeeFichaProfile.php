@@ -24,6 +24,7 @@ class EmployeeFichaProfile extends Model
         'second_name',
         'document_type',
         'birth_date',
+        'birth_place',
         'age',
         'expedition_city_code',
         'expedition_city_name',

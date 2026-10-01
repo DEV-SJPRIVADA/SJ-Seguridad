@@ -59,6 +59,7 @@ class LetterVariableBuilder
             $variables['SEGUNDO_NOMBRE'] = (string) ($profile->second_name ?: $entry->second_name);
             $variables['TIPO_DOCUMENTO'] = (string) $profile->document_type;
             $variables['FECHA_NACIMIENTO'] = $this->formatLongDate($profile->birth_date);
+            $variables['LUGAR_NACIMIENTO'] = (string) ($profile->birth_place ?? '');
             $variables['EDAD'] = $profile->age !== null ? (string) $profile->age : '';
             $variables['CIUDAD_EXPEDICION'] = (string) $profile->expedition_city_name;
             $variables['FECHA_EXPEDICION'] = $this->formatLongDate($profile->expedition_date);

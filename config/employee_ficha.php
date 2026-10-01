@@ -396,6 +396,7 @@ return [
             'SEGUNDO_NOMBRE' => 'Segundo nombre',
             'TIPO_DOCUMENTO' => 'Tipo de documento',
             'FECHA_NACIMIENTO' => 'Fecha de nacimiento',
+            'LUGAR_NACIMIENTO' => 'Lugar de nacimiento',
             'EDAD' => 'Edad',
             'CIUDAD_EXPEDICION' => 'Ciudad de expedicion del documento',
             'FECHA_EXPEDICION' => 'Fecha de expedicion del documento',

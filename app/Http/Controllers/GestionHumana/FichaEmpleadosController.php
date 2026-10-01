@@ -4,6 +4,7 @@ namespace App\Http\Controllers\GestionHumana;
 
 use App\Exports\EmployeeFichaArchiveTemplateExport;
 use App\Exports\EmployeeFichaImportTemplateExport;
+use App\Exports\PersonalRequisitionFichaEntryExport;
 use App\Exports\PlantillaMasivosExport;
 use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
@@ -148,6 +149,38 @@ class FichaEmpleadosController extends Controller
         return $this->plantillaMasivosExport->download(
             $entries,
             'plantilla_masivos_'.now()->format('Y-m-d').'.xlsx'
+        );
+    }
+
+    public function exportPendientes(Request $request): StreamedResponse|RedirectResponse
+    {
+        $this->authorizeView();
+
+        $q = trim($request->string('q')->toString());
+
+        $entries = $this->entryListQuery($q, 'pendientes')
+            ->with(PersonalRequisitionFichaEntryExport::relationNames())
+            ->orderByDesc('created_at')
+            ->get();
+
+        if ($entries->isEmpty()) {
+            return redirect()
+                ->route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes'])
+                ->withErrors(['export' => 'No hay pendientes para exportar con los filtros seleccionados.']);
+        }
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'pendientes_excel',
+            metadata: [
+                'row_count' => $entries->count(),
+                'q' => $q !== '' ? $q : null,
+            ],
+        );
+
+        return PersonalRequisitionFichaEntryExport::downloadPendientes(
+            $entries,
+            'ficha_empleados_pendientes_'.now()->format('Y-m-d').'.xlsx',
         );
     }
 

@@ -178,6 +178,21 @@
             <x-input-error :messages="$errors->get('birth_date')" />
         </div>
         <div class="form-field">
+            <label class="form-label" for="birth_place">Lugar de nacimiento <span class="text-danger">*</span></label>
+            <input
+                id="birth_place"
+                type="text"
+                name="birth_place"
+                class="form-input"
+                value="{{ old('birth_place', $profile->birth_place) }}"
+                maxlength="255"
+                required
+                autocomplete="off"
+                @readonly($identityLocked)
+            >
+            <x-input-error :messages="$errors->get('birth_place')" />
+        </div>
+        <div class="form-field">
             <label class="form-label" for="sex">Género <span class="text-danger">*</span></label>
             <x-searchable-select
                 id="sex"

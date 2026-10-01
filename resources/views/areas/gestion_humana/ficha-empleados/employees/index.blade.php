@@ -135,6 +135,16 @@
                                     </a>
                                 @endif
 
+                                @if ($pendingActive)
+                                    <x-export-excel
+                                        route="{{ route('gestion-humana.ficha-empleados.employees.export-pendientes', request()->query()) }}"
+                                        label=""
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Exportar pendientes a Excel"
+                                        aria-label="Exportar pendientes a Excel"
+                                    />
+                                @endif
+
                                 @if ($currentEstado === 'en_ficha')
                                     <button
                                         type="button"

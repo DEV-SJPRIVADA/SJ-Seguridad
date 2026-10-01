@@ -11,6 +11,7 @@ use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\Access\FormacionAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -30,6 +31,7 @@ class SidebarVisibilityService
         private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
+        private readonly FormacionAccessService $formacionAccess,
         private readonly SeleccionAccessService $seleccionAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
@@ -62,6 +64,7 @@ class SidebarVisibilityService
             'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
+            'formacion' => $this->shouldShowFormacionBoard($user, $areaKey),
             'seleccion' => $this->shouldShowSeleccionBoard($user, $areaKey),
             'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
             'reportes_novedades' => $this->shouldShowReportesNovedadesBoard($user, $areaKey),
@@ -207,6 +210,15 @@ class SidebarVisibilityService
         }
 
         return $this->cursosAccess->canViewCursosBoard($user);
+    }
+
+    private function shouldShowFormacionBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->formacionAccess->canViewBoard($user);
     }
 
     private function shouldShowSeleccionBoard(User $user, string $areaKey): bool

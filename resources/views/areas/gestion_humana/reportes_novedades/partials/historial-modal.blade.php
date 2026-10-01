@@ -29,6 +29,80 @@
         </div>
 
         <div class="rn-historial-modal__body">
+            <form
+                class="rn-historial-modal__filters"
+                x-show="historialFilterable"
+                x-cloak
+                x-on:submit.prevent="applyHistorialFilters()"
+            >
+                <div class="rn-historial-modal__filters-grid">
+                    <div class="rn-historial-modal__filter-field rn-historial-modal__filter-field--search">
+                        <label class="rn-historial-modal__filter-label" for="rn-historial-q">Buscar</label>
+                        <input
+                            id="rn-historial-q"
+                            type="search"
+                            class="form-input"
+                            placeholder="Cédula, usuario…"
+                            x-model="historialFilters.q"
+                        >
+                    </div>
+                    <div class="rn-historial-modal__filter-field">
+                        <label class="rn-historial-modal__filter-label" for="rn-historial-action">Acción</label>
+                        <select id="rn-historial-action" class="form-select" x-model="historialFilters.action">
+                            <option value="">Todas</option>
+                            <option value="create">Alta</option>
+                            <option value="update">Actualización</option>
+                            <option value="review">Revisión</option>
+                            <option value="delete">Eliminación</option>
+                            <option value="export">Exportación</option>
+                            <option value="annul">Anulación</option>
+                        </select>
+                    </div>
+                    <div class="rn-historial-modal__filter-field">
+                        <label class="rn-historial-modal__filter-label" for="rn-historial-date-from">Desde</label>
+                        <input
+                            id="rn-historial-date-from"
+                            type="date"
+                            class="form-input"
+                            x-model="historialFilters.date_from"
+                        >
+                    </div>
+                    <div class="rn-historial-modal__filter-field">
+                        <label class="rn-historial-modal__filter-label" for="rn-historial-date-to">Hasta</label>
+                        <input
+                            id="rn-historial-date-to"
+                            type="date"
+                            class="form-input"
+                            x-model="historialFilters.date_to"
+                        >
+                    </div>
+                    <div class="rn-historial-modal__filter-actions">
+                        <span class="rn-historial-modal__filter-label rn-historial-modal__filter-label--spacer" aria-hidden="true">&nbsp;</span>
+                        <div class="rn-historial-modal__filter-actions-row">
+                            <button
+                                type="submit"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                title="Filtrar historial"
+                                aria-label="Filtrar historial"
+                            >
+                                <x-lucide-search width="18" height="18" aria-hidden="true" />
+                            </button>
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Limpiar filtros"
+                                aria-label="Limpiar filtros del historial"
+                                x-on:click.prevent="clearHistorialFilters()"
+                                x-show="historialHasFilters"
+                                x-cloak
+                            >
+                                <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
             <div class="rn-historial-modal__meta" x-show="! historialLoading" x-cloak>
                 <span class="rn-historial-modal__count">
                     <span x-text="historialItems.length"></span>

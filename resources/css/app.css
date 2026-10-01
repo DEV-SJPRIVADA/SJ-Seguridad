@@ -1640,7 +1640,8 @@ a {
     width: 100%;
 }
 
-.ficha-empleados-masivos-modal__import-actions [data-ficha-import-submit]:disabled {
+.ficha-empleados-masivos-modal__import-actions [data-ficha-import-submit]:disabled,
+.ficha-empleados-masivos-modal__import-actions [data-formacion-import-submit]:disabled {
     opacity: 0.55;
     cursor: not-allowed;
 }
@@ -1660,6 +1661,73 @@ a {
 
 .ficha-empleados-masivos-modal__file-name:not(:empty) {
     color: var(--color-text);
+}
+
+/* Formación import modal — toolbar compacta + confirmación (icon-only, sin dos cards altas) */
+.formacion-import-modal .ficha-empleados-masivos-modal__cards {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+}
+
+.formacion-import-modal__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+.formacion-import-modal__file-name {
+    flex: 1 1 10rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.formacion-import-modal__actions {
+    display: inline-flex !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+    grid-template-columns: none;
+}
+
+.formacion-import-modal__actions .req-manage-filters__icon-btn {
+    width: auto;
+}
+
+.formacion-import-modal__confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid #f0c674;
+    background: #fffbeb;
+    cursor: pointer;
+    user-select: none;
+}
+
+.formacion-import-modal__confirm:hover {
+    border-color: #d97706;
+    background: #fef3c7;
+}
+
+.formacion-import-modal__checkbox {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.1rem;
+    flex: 0 0 auto;
+    accent-color: #d97706;
+    cursor: pointer;
+}
+
+.formacion-import-modal__confirm-text {
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1.35;
+    color: #78350f;
 }
 
 .acreditaciones-reporte-diario-file-actions {
@@ -13116,6 +13184,59 @@ a.req-dashboard-kpi:focus-visible {
     overflow: auto;
     padding: 0.95rem 1.25rem 1.2rem;
     background: #f8fafc;
+}
+
+.rn-historial-modal__filters {
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.85rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
+.rn-historial-modal__filters-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: flex-end;
+}
+
+.rn-historial-modal__filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    flex: 1 1 8.5rem;
+    min-width: 0;
+}
+
+.rn-historial-modal__filter-field--search {
+    flex: 1 1 12rem;
+}
+
+.rn-historial-modal__filter-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.rn-historial-modal__filter-label--spacer {
+    visibility: hidden;
+}
+
+.rn-historial-modal__filter-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    flex: 0 0 auto;
+}
+
+.rn-historial-modal__filter-actions-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .rn-historial-modal__meta {

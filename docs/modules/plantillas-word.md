@@ -98,7 +98,7 @@ Config estable: `config/employee_ficha.php` â†’ `word_document_type_codes.d
 - Generacion de cartas (Ficha): `TerminationLetterPackGeneratorService` â€” por IDs, 1â†’docx / Nâ†’zip, sin gate por causal; ver doc Ficha.
 - Audit: `EmployeeFichaAuditLogService` â€” `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete).
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — procesamiento XML directo del `.docx` via `ZipArchive` + `DOMDocument`. **No usa TemplateProcessor de PhpWord.** Para cada parrafo `<w:p>` del XML (document, headers, footers, footnotes), concatena el texto de todos los `<w:r><w:t>`, busca/emplaza placeholders en el texto concatenado, y escribe el resultado en un unico `<w:t>` del primer run. Esto maneja correctamente los **placeholders fragmentados** por Word (split-runs).
-- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder generico (~90 variables) que extrae datos de `EmployeeFichaProfile`, `EmployeeFichaEmploymentPeriod`, `PersonalRequisitionFichaEntry` y `PersonalRequisition`.
+- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder generico (~90 variables) que extrae datos de `EmployeeFichaProfile`, `EmployeeFichaEmploymentPeriod`, `PersonalRequisitionFichaEntry` y `PersonalRequisition`. Incluye `[LUGAR_NACIMIENTO]` desde `employee_ficha_profiles.birth_place` (lista de apoyo en UI: `config/employee_ficha.php` → `letter_placeholders`).
 
 ### DocxRenderer: manejo de placeholders fragmentados (split-runs)
 

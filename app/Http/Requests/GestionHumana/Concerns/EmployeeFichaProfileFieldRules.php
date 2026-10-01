@@ -42,6 +42,7 @@ trait EmployeeFichaProfileFieldRules
             'second_name' => ['nullable', 'string', 'max:100'],
             'document_type' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('document_type')],
             'birth_date' => ['nullable', 'date'],
+            'birth_place' => [$required, 'string', 'max:255'],
             'expedition_city_code' => ['nullable', 'string', 'max:20', new PayrollCatalogCode('city')],
             'expedition_city_name' => ['nullable', 'string', 'max:100'],
             'expedition_date' => ['nullable', 'date'],

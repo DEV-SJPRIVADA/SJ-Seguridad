@@ -36,6 +36,7 @@ trait EmployeeFichaMasivosPayload
         return array_merge([
             'first_surname' => 'Perez',
             'first_name' => 'Juan',
+            'birth_place' => 'Bogota',
             'sex' => 'M',
             'hire_date' => now()->subMonth()->toDateString(),
             'position_code' => 'VIG',

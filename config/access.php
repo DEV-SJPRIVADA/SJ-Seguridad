@@ -39,6 +39,8 @@ return [
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
         'cursos.view' => 'Cursos: Ver listado, filtros y export Excel',
         'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
+        'formacion.view' => 'Formación: Ver Dashboard, listado, filtros y export Excel',
+        'formacion.edit' => 'Formación: Descargar plantilla e importar (replace-all)',
         'seleccion.view' => 'Selección: Ver dashboard, listados y export Excel',
         'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
@@ -126,6 +128,7 @@ return [
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
         'cursos' => 'Cursos',
+        'formacion' => 'Formación',
         'seleccion' => 'Selección',
         'acreditaciones' => 'Acreditaciones',
         'reportes_novedades' => 'MT-GH-04 Novedades',
@@ -186,6 +189,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'formacion' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'seleccion' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
@@ -236,6 +243,11 @@ return [
         'registros' => 'Cursos',
         'validaciones' => 'Validaciones',
         'catalogo' => 'Catálogo',
+    ],
+
+    'formacion_tabs' => [
+        'dashboard' => 'Dashboard',
+        'formaciones' => 'Formaciones',
     ],
 
     'seleccion_tabs' => [
@@ -419,6 +431,7 @@ return [
                             'view.board.gestion_humana.plantillas_word',
                             'view.board.gestion_humana.desvinculaciones',
                             'view.board.gestion_humana.cursos',
+                            'view.board.gestion_humana.formacion',
                             'view.board.gestion_humana.seleccion',
                             'view.board.gestion_humana.acreditaciones',
                             'view.board.gestion_humana.reportes_novedades',
@@ -459,6 +472,13 @@ return [
                         'permissions' => [
                             'cursos.view',
                             'cursos.edit',
+                        ],
+                    ],
+                    'formacion' => [
+                        'label' => 'Formación',
+                        'permissions' => [
+                            'formacion.view',
+                            'formacion.edit',
                         ],
                     ],
                     'seleccion' => [

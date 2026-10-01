@@ -10,6 +10,7 @@ use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
+use App\Services\Access\FormacionAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -417,6 +418,26 @@ class User extends Authenticatable
             'dashboard' => route('gestion-humana.cursos.dashboard'),
             'catalogo' => route('gestion-humana.cursos.catalogo'),
             'registros' => route('gestion-humana.cursos.registros'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function formacionBoardTabsFor(): Collection
+    {
+        return collect(app(FormacionAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultFormacionBoardUrl(): string
+    {
+        $tabs = $this->formacionBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('gestion-humana.formacion.dashboard'),
+            'formaciones' => route('gestion-humana.formacion.formaciones'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }
