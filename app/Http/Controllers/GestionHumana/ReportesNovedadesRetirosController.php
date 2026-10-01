@@ -221,12 +221,14 @@ class ReportesNovedadesRetirosController extends Controller
 
         $rowId = $request->query('id');
         $rowId = $rowId !== null && $rowId !== '' ? (int) $rowId : null;
+        $filters = $rowId === null ? $this->historialService->filtersFromRequest($request) : [];
 
         return response()->json([
             'data' => $this->historialService->forSheet(
                 self::SHEET,
                 ReportesNovedadesRetiro::class,
                 $rowId,
+                filters: $filters,
             ),
         ]);
     }

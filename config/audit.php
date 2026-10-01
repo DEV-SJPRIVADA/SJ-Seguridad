@@ -51,6 +51,10 @@ return [
             'label' => 'Cursos',
             'area' => 'gestion_humana',
         ],
+        'formacion' => [
+            'label' => 'Formación',
+            'area' => 'gestion_humana',
+        ],
         'seleccion' => [
             'label' => 'Selección',
             'area' => 'gestion_humana',

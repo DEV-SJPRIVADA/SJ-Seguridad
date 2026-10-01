@@ -21,6 +21,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Desvinculaciones | [`modules/desvinculaciones.md`](../modules/desvinculaciones.md) | [`desvinculaciones.md`](desvinculaciones.md) |
 | MT-GH-04 Novedades | [`modules/reportes-novedades.md`](../modules/reportes-novedades.md) | [`reportes-novedades.md`](reportes-novedades.md) |
 | Cursos | [`modules/cursos.md`](../modules/cursos.md) | [`cursos.md`](cursos.md) |
+| Formación | [`modules/formacion.md`](../modules/formacion.md) | [`formacion.md`](formacion.md) |
 | Selección | [`modules/seleccion.md`](../modules/seleccion.md) | [`seleccion.md`](seleccion.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](../modules/acreditaciones.md) | [`acreditaciones.md`](acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](../modules/plantillas-word.md) | [`plantillas-word.md`](plantillas-word.md) |

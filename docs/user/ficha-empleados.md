@@ -52,13 +52,14 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. Abra la pestaña **Empleados**; por defecto se muestra la pill **Pendientes**.
 3. Use el buscador (cedula, nombre o codigo de requisicion) para filtrar.
 4. Revise las columnas: codigo de requisicion, cedula, nombre, cargo, cliente, ciudad y fecha de contratacion.
+5. Para descargar el listado a Excel, use el icono de Excel en la barra de acciones (respeta la búsqueda activa).
 
 ### Gestionar Empleado (mover un pendiente a ficha)
 
 1. En la pestaña **Empleados**, pill **Pendientes**, ubique el registro a mover.
 2. Pulse el icono **Gestionar Empleado** (visible solo con permiso de edición; al pasar el mouse muestra el nombre de la acción). Se abre el formulario de ficha; no se ejecuta ningún cambio todavía.
 3. Revise el encabezado **"Gestionar empleado — {nombre}"** y el bloque **Referencia de requisición** (solo lectura): código, cliente, cargo, salario/fecha sugeridos, texto de centro de costo y ciudad de la requisición. Esos datos de referencia **no** se exportan automáticamente a nómina.
-4. Complete el formulario de ficha: primero indique si **requiere cursos** y/o **requiere acreditación** (por defecto ambos activos); luego cédula y los **catálogos obligatorios**: sexo, fecha ingreso, cargo, salario, centro de costo (catálogo nómina), EPS, AFP, caja de compensación, forma de pago, banco, tipo y número de cuenta. Elija un valor por campo de catálogo (formato `código — nombre`); el sistema guarda código y nombre homólogo.
+4. Complete el formulario de ficha: primero indique si **requiere cursos** y/o **requiere acreditación** (por defecto ambos activos); luego cédula, **lugar de nacimiento** (obligatorio), y los **catálogos obligatorios**: sexo, fecha ingreso, cargo, salario, centro de costo (catálogo nómina), EPS, AFP, caja de compensación, forma de pago, banco, tipo y número de cuenta. Elija un valor por campo de catálogo (formato `código — nombre`); el sistema guarda código y nombre homólogo.
    - Si corrige cédula o nombre aqui, el cambio queda **solo** en la ficha del empleado; **no** se refleja en la requisicion original.
 5. Para descartar los cambios y dejar el registro intacto en **Pendientes**, use el icono **Volver** (flecha) en la barra superior (regresa a la pill Pendientes sin guardar nada).
 6. Para confirmar, use el icono **Guardar** (disquete) en la barra superior. Si la cedula ingresada ya pertenece a **otro** registro de ficha, el sistema bloquea el guardado con un mensaje de error; corrija la cedula e intente de nuevo.
@@ -150,6 +151,8 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.21 | 2026-10-01 | Agent | Export Excel del listado Pendientes (icono en barra; respeta búsqueda `q`). |
+| 1.20 | 2026-10-01 | Agent | Campo obligatorio **Lugar de nacimiento** en create/editar ficha (también `?desde=`); variable Word `[LUGAR_NACIMIENTO]`. Sin cambio en import/Selección. |
 | 1.19 | 2026-10-01 | Agent | Pendientes: accion Gestionar Empleado / reingreso pasa a icono en fila. |
 | 1.18 | 2026-10-01 | Agent | Alta / Gestionar empleado: toolbar icon-only (Volver/Guardar); seccion Cursos y acreditacion editable desde la creacion. |
 | 1.17 | 2026-10-01 | Agent | Ficha: seccion Cursos/acreditacion primero; barra de acciones icon-only (cursos, historial, editar, guardar, desvinculacion, volver). |

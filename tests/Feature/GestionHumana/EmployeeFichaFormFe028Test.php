@@ -259,4 +259,63 @@ class EmployeeFichaFormFe028Test extends TestCase
         $this->assertSame($expectedAge, (int) $profile->payrollExtraValue('age'));
         $this->assertSame('LM-KEEP', $profile->payrollExtraValue('military_book'));
     }
+
+    public function test_create_form_shows_required_birth_place_field(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertOk()
+            ->assertSee('id="birth_place"', false)
+            ->assertSee('Lugar de nacimiento', false);
+    }
+
+    public function test_store_requires_birth_place(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $payload = $this->masivosCorePayload([
+            'hired_document' => '807777777',
+            'hired_full_name' => 'Sin Lugar Nacimiento',
+            'birth_place' => '',
+        ]);
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), $payload)
+            ->assertSessionHasErrors('birth_place');
+    }
+
+    public function test_update_persists_birth_place(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '808888888',
+            'hired_full_name' => 'Lugar Nacimiento Test',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '808888888',
+            'full_name' => 'Lugar Nacimiento Test',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(
+                route('gestion-humana.ficha-empleados.employees.ficha.update', $entry),
+                $this->masivosCorePayload(['birth_place' => 'Medellin']),
+            )
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $this->assertSame('Medellin', $entry->profile->fresh()->birth_place);
+    }
 }

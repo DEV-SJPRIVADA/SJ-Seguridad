@@ -39,6 +39,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Desvinculaciones | [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md) | [`user/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/desvinculaciones.md) |
 | MT-GH-04 Novedades | [`modules/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/reportes-novedades.md) | [`user/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/user/reportes-novedades.md) |
 | Cursos | [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md) | [`user/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cursos.md) |
+| Formación | [`modules/formacion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/formacion.md) | [`user/formacion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/formacion.md) |
 | Selección | [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md) | [`user/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/seleccion.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md) | [`user/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md) | [`user/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/user/plantillas-word.md) |
@@ -61,6 +62,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md)
 - [`modules/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/reportes-novedades.md)
 - [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md)
+- [`modules/formacion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/formacion.md)
 - [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md)
 - [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md)
 - [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md)

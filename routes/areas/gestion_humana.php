@@ -8,6 +8,7 @@ use App\Http\Controllers\GestionHumana\CursosController;
 use App\Http\Controllers\GestionHumana\DesvinculacionesController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
+use App\Http\Controllers\GestionHumana\FormacionController;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesIncapacidadesController;
@@ -37,6 +38,7 @@ Route::middleware(['password.changed'])
         Route::get('/', [FichaEmpleadosController::class, 'index'])->name('index');
         Route::get('/datatable', [FichaEmpleadosController::class, 'datatable'])->name('datatable');
         Route::get('/exportar', [FichaEmpleadosController::class, 'exportExcel'])->name('export');
+        Route::get('/exportar-pendientes', [FichaEmpleadosController::class, 'exportPendientes'])->name('export-pendientes');
         Route::get('/plantilla-importacion', [FichaEmpleadosController::class, 'importTemplate'])->name('import-template');
         Route::get('/plantilla-importacion/exportar', [FichaEmpleadosController::class, 'exportImportTemplate'])->name('export-import-template');
         Route::get('/exportar-archivo', [FichaEmpleadosController::class, 'exportArchiveTemplate'])->name('export-archive-template');
@@ -143,6 +145,21 @@ Route::middleware(['password.changed'])
         Route::post('/catalogo', [CursosCatalogController::class, 'store'])->name('catalogo.store');
         Route::patch('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'update'])->name('catalogo.update');
         Route::delete('/catalogo/{cursoTipo}', [CursosCatalogController::class, 'destroy'])->name('catalogo.destroy');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/formacion')
+    ->name('gestion-humana.formacion.')
+    ->group(function (): void {
+        Route::get('/', [FormacionController::class, 'index'])->name('index');
+        Route::get('/dashboard', [FormacionController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [FormacionController::class, 'dashboardMetrics'])->name('dashboard.metrics');
+        Route::get('/formaciones', [FormacionController::class, 'formaciones'])->name('formaciones');
+        Route::get('/formaciones/datatable', [FormacionController::class, 'formacionesDatatable'])->name('formaciones.datatable');
+        Route::get('/formaciones/exportar', [FormacionController::class, 'formacionesExport'])->name('formaciones.export');
+        Route::get('/formaciones/plantilla-importacion', [FormacionController::class, 'importTemplate'])->name('formaciones.import-template');
+        Route::post('/formaciones/importar', [FormacionController::class, 'import'])->name('formaciones.import');
+        Route::get('/formaciones/opciones', [FormacionController::class, 'formacionesOptions'])->name('formaciones.options');
     });
 
 Route::middleware(['password.changed'])

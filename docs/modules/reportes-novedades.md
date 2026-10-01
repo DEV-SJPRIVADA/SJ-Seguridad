@@ -161,7 +161,7 @@ Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultReportesNov
 | `export` / `{sheet}_excel` | Export Excel |
 | `retiro_auto` / `create`\|`annul` | Hook desvinculacion |
 
-Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja.
+Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja. El modal de **historial de hoja** (toolbar) admite filtros `q` (cédula/usuario), `action` y `date_from`/`date_to`. El historial por fila no muestra filtros.
 
 ## Reglas de negocio
 

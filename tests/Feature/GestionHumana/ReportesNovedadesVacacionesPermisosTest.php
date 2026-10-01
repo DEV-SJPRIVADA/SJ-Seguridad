@@ -276,6 +276,47 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             ->assertJsonFragment(['action' => 'create']);
     }
 
+    public function test_vacaciones_sheet_historial_supports_filters(): void
+    {
+        $editor = $this->editorUser('vacaciones');
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.reportes-novedades.vacaciones.store'), $this->vacacionPayload([
+                'document_number' => '2112112112',
+            ]))
+            ->assertRedirect();
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.reportes-novedades.vacaciones.store'), $this->vacacionPayload([
+                'document_number' => '3113113113',
+            ]))
+            ->assertRedirect();
+
+        $matched = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.vacaciones.historial', [
+                'q' => '2112112112',
+                'action' => 'create',
+            ]))
+            ->assertOk()
+            ->json('data');
+
+        $this->assertNotEmpty($matched);
+        $this->assertTrue(collect($matched)->every(
+            fn (array $item): bool => ($item['action'] ?? null) === 'create'
+                && str_contains((string) ($item['summary'] ?? ''), '2112112112')
+        ));
+
+        $filteredOut = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.vacaciones.historial', [
+                'q' => '2112112112',
+                'action' => 'delete',
+            ]))
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame([], $filteredOut);
+    }
+
     public function test_permisos_smoke_crud_review_export_and_invalid_catalog(): void
     {
         $editor = $this->editorUser('permisos');

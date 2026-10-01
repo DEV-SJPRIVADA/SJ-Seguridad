@@ -186,10 +186,28 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `desvinculaciones` — **Desvinculaciones** (`view.board.gestion_humana.desvinculaciones` + `desvinculaciones.view` / `masivos` / `seguimientos.edit`)
   - `reportes_novedades` — **MT-GH-04 Novedades** (`view.board.gestion_humana.reportes_novedades` + `reportes_novedades.{hoja}.view` / `edit` / `review` × Vacaciones, Incapacidades, Retiros, Permisos)
   - `cursos` — **Cursos** (`view.board.gestion_humana.cursos` + `cursos.view` / `edit`)
+  - `formacion` — **Formación** (`view.board.gestion_humana.formacion` + `formacion.view` / `edit`)
   - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
   - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
+
+### Formación (Gestion humana)
+
+Tablero **Formación** (Dashboard + Formaciones: listado, export, plantilla e import replace-all). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`). Independiente del tablero **Cursos**.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.formacion` | Ver tablero **Formación** en sidebar GH |
+| `formacion.view` | Dashboard, listado Formaciones, filtros, export Excel |
+| `formacion.edit` | Descargar plantilla e importar (replace-all; implica view en servicio de acceso) |
+
+- Pestanas: `dashboard`, `formaciones` (`config/access.php` → `formacion_tabs`). Sin pestaña parámetros.
+- Bypass: `manage.users`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto. **Sin** migración automática de permisos legacy.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Formación*).
+- Mutación única: import replace-all (confirma UI + valida headers/filas antes de borrar dataset).
+- Doc: [`docs/modules/formacion.md`](modules/formacion.md), [`docs/user/formacion.md`](user/formacion.md).
 
 ### Acreditaciones (Gestion humana)
 

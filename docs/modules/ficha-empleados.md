@@ -92,7 +92,8 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | GET | `/gestion-humana/ficha-empleados/empleados/nuevo` | `gestion-humana.ficha-empleados.employees.create` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/empleados/nuevo` | `gestion-humana.ficha-empleados.employees.store` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados` | `gestion-humana.ficha-empleados.employees.index` | `ficha_empleados.view` |
-| GET | `/gestion-humana/ficha-empleados/empleados/exportar` | `gestion-humana.ficha-empleados.employees.export` | `ficha_empleados.view` |
+| GET | `/gestion-humana/ficha-empleados/empleados/exportar` | `gestion-humana.ficha-empleados.employees.export` | `ficha_empleados.view` — Plantilla masivos (En ficha) |
+| GET | `/gestion-humana/ficha-empleados/empleados/exportar-pendientes` | `gestion-humana.ficha-empleados.employees.export-pendientes` | `ficha_empleados.view` — listado Pendientes |
 | GET | `/gestion-humana/ficha-empleados/empleados/plantilla-importacion` | `gestion-humana.ficha-empleados.employees.import-template` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados/plantilla-importacion/exportar` | `gestion-humana.ficha-empleados.employees.export-import-template` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/empleados/importar` | `gestion-humana.ficha-empleados.employees.import` | `ficha_empleados.manage` |
@@ -123,6 +124,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
   - Con `ficha_entry_id`: revalida `pending()` (`findOrFail`, 404/422 si ya fue movida por otro proceso — proteccion doble envio), actualiza `hired_document`/`hired_full_name`/`moved_to_ficha_at`/`moved_to_ficha_by` en la fila **existente** (no crea duplicado), crea o actualiza su `EmployeeFichaProfile`, aplica `requires_courses`/`requires_acreditacion` si vienen en el request, y redirige a `employees.index` (estado por defecto `en_ficha`).
   - Sin `ficha_entry_id` (alta manual): crea fila nueva (`personal_requisition_id = null`) + perfil (incluye flags de requisitos si se enviaron), redirige a `.../{id}/ficha`.
 - `exportExcel(Request $request): StreamedResponse|RedirectResponse` — export **Plantilla masivos** solo registros **En ficha**; sin rango de fechas exporta solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por fecha de ingreso.
+- `exportPendientes(Request $request): StreamedResponse|RedirectResponse` — export Excel del listado **Pendientes** (`PersonalRequisitionFichaEntryExport::downloadPendientes`); respeta búsqueda `q`; vacío → redirect con error.
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
@@ -210,7 +212,7 @@ Siete secciones: Identificación, Contacto, Contrato y nómina, Centros, Segurid
 
 ### Campos obligatorios (store + update)
 
-Cédula, nombre (create), sexo, fecha ingreso, cargo (`position_code`), salario, centro de costo (`cost_center_code`), EPS, AFP, caja compensación (`payroll_extra.ccf_code`), forma de pago, banco, tipo cuenta, número cuenta.
+Cédula, nombre (create), **lugar de nacimiento** (`birth_place`, máx. 255), sexo, fecha ingreso, cargo (`position_code`), salario, centro de costo (`cost_center_code`), EPS, AFP, caja compensación (`payroll_extra.ccf_code`), forma de pago, banco, tipo cuenta, número cuenta. Columna BD nullable (legados); el formulario UI (alta, `?desde=` y edición) lo exige. Fuera de alcance: import/export SJ, plantilla masivos y Selección. Variable Word `[LUGAR_NACIMIENTO]` vía `LetterVariableBuilder` + `config/employee_ficha.php` → `letter_placeholders`.
 
 Opcional en formulario: **fecha desvinculación** (`termination_date`) — visible junto a fecha ingreso; al guardar se sincroniza `employment_status` (misma regla que el import: fecha ≤ hoy → desvinculado). No cierra periodo ni crea seguimiento; la desvinculación formal sigue en el modal **Registrar desvinculación**.
 
@@ -262,7 +264,7 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 
 ## Export listado simple (legacy)
 
-- Clase: `App\Exports\PersonalRequisitionFichaEntryExport` — conservada; ya no expuesta en UI principal.
+- Clase: `App\Exports\PersonalRequisitionFichaEntryExport` — listado Pendientes vía `downloadPendientes()` / ruta `export-pendientes`; columnas: código RQ, cédula, nombre, cargo, cliente, ciudad, fechas, tipo (Nuevo/Reingreso), estado.
 
 ## Navegacion
 

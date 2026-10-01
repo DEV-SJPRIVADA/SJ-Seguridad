@@ -52,6 +52,7 @@ class StoreManualEmployeeFichaRequest extends FormRequest
             'first_name' => 'primer nombre',
             'second_name' => 'segundo nombre',
             'hired_full_name' => 'nombre completo',
+            'birth_place' => 'lugar de nacimiento',
             'sex' => 'género',
             'hire_date' => 'fecha ingreso',
             'termination_date' => 'fecha desvinculación',

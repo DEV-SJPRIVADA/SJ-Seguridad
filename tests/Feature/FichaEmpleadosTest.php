@@ -640,6 +640,60 @@ class FichaEmpleadosTest extends TestCase
         );
     }
 
+    public function test_ficha_empleados_export_pendientes_returns_xlsx_and_respects_search(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $match = $this->createRequisition('REQ-FICHA-PEND-OK');
+        $other = $this->createRequisition('REQ-FICHA-PEND-OTHER');
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $match->id,
+            'hired_document' => '111222333',
+            'hired_full_name' => 'Pendiente Export Match',
+        ]);
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $other->id,
+            'hired_document' => '444555666',
+            'hired_full_name' => 'Pendiente Export Other',
+        ]);
+
+        $index = $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
+        $index->assertOk();
+        $index->assertSee('Exportar pendientes a Excel', false);
+        $index->assertSee(route('gestion-humana.ficha-empleados.employees.export-pendientes', [
+            'estado' => 'pendientes',
+        ]), false);
+
+        $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.export-pendientes', [
+            'estado' => 'pendientes',
+            'q' => '111222333',
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        $this->assertStringContainsString(
+            'ficha_empleados_pendientes_',
+            $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_ficha_empleados_export_pendientes_forbidden_without_view_permission(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+        $user->assignRole('usuario');
+
+        $this->actingAs($user)
+            ->get(route('gestion-humana.ficha-empleados.employees.export-pendientes', ['estado' => 'pendientes']))
+            ->assertForbidden();
+    }
+
     public function test_ficha_empleados_export_forbidden_without_view_permission(): void
     {
         $user = User::factory()->create(['must_change_password' => false]);

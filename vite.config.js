@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/js/comercial-dashboard-charts.js',
                 'resources/js/compras-dashboard-charts.js',
                 'resources/js/cursos-dashboard-charts.js',
+                'resources/js/formacion-dashboard-charts.js',
                 'resources/js/seleccion-dashboard-charts.js',
                 'resources/js/acreditaciones-dashboard-charts.js',
                 'resources/js/requisitions-dashboard-charts.js',
