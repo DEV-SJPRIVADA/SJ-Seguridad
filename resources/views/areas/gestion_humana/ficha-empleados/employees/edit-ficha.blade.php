@@ -186,35 +186,38 @@
 
             @if ($canManageFicha)
                 <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters ficha-empleados-form__footer--letters-top">
-                    <div class="ficha-empleados-letter-actions">
+                    <div class="ficha-empleados-letter-actions ficha-empleados-page__edit-actions">
                         <template x-if="!isEditing">
                             <button
                                 type="button"
-                                class="btn btn--primary btn--sm"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                 title="Habilitar edición"
                                 aria-label="Habilitar edición"
                                 x-on:click="isEditing = true"
                             >
-                                <x-lucide-pencil width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
-                                Habilitar edición
+                                <x-lucide-pencil width="18" height="18" aria-hidden="true" />
                             </button>
                         </template>
                         <template x-if="isEditing">
                             <span class="ficha-empleados-page__title-actions-group">
                                 <button
                                     type="button"
-                                    class="btn btn--secondary btn--sm"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                     title="Cancelar edición"
                                     aria-label="Cancelar edición"
                                     x-on:click="isEditing = false"
-                                >Cancelar</button>
+                                >
+                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                </button>
                                 <button
                                     type="submit"
                                     form="ficha-empleados-form"
-                                    class="btn btn--primary btn--sm"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                     title="Guardar ficha"
                                     aria-label="Guardar ficha"
-                                >Guardar ficha</button>
+                                >
+                                    <x-lucide-save width="18" height="18" aria-hidden="true" />
+                                </button>
                             </span>
                         </template>
                     </div>

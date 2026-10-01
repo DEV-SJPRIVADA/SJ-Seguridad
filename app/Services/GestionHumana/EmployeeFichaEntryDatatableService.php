@@ -237,10 +237,22 @@ final class EmployeeFichaEntryDatatableService
         $href = route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]);
 
         return sprintf(
-            '<div class="table-actions ficha-empleados-row__actions">%s<a href="%s" class="btn btn--primary btn--sm">%s</a></div>',
+            '<div class="table-actions ficha-empleados-row__actions">%s'.
+            '<a href="%s" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit" title="%s" aria-label="%s">%s</a></div>',
             $badge,
             e($href),
             e($label),
+            e($label),
+            $this->userPenSvg(),
         );
+    }
+
+    private function userPenSvg(): string
+    {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+            '<path d="M11.5 15H7a4 4 0 0 0-4 4v2"/>'.
+            '<path d="M21.378 16.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>'.
+            '<circle cx="10" cy="7" r="4"/></svg>';
     }
 }

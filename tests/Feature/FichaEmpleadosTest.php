@@ -675,6 +675,21 @@ class FichaEmpleadosTest extends TestCase
             ->assertSee('TI — Tarjeta de identidad', false);
     }
 
+    public function test_manual_employee_create_form_shows_requirement_flags(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertOk()
+            ->assertSee('Cursos y acreditación', false)
+            ->assertSee('id="requires_courses"', false)
+            ->assertSee('id="requires_acreditacion"', false)
+            ->assertSee('aria-label="Acciones de creación"', false);
+    }
+
     public function test_manual_employee_create_stores_entry_without_requisition(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);
@@ -703,6 +718,38 @@ class FichaEmpleadosTest extends TestCase
         $this->assertNotNull($entry->moved_to_ficha_at);
         $this->assertTrue($entry->isManualEntry());
         $this->assertSame('Manual Empleado', $entry->profile?->full_name);
+        $this->assertTrue((bool) $entry->profile?->requires_courses);
+        $this->assertTrue((bool) $entry->profile?->requires_acreditacion);
+    }
+
+    public function test_manual_employee_create_can_disable_requirement_flags(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $response = $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+            $this->masivosCorePayload([
+                'first_surname' => 'Sin',
+                'first_name' => 'Requisitos',
+            ]),
+            [
+                'hired_document' => '801234568',
+                'hired_full_name' => 'Sin Requisitos',
+                'document_type' => 'C',
+                'requires_courses' => '0',
+                'requires_acreditacion' => '0',
+            ],
+        ));
+
+        $entry = PersonalRequisitionFichaEntry::query()
+            ->where('hired_document', '801234568')
+            ->first();
+
+        $this->assertNotNull($entry);
+        $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+        $this->assertFalse((bool) $entry->profile?->requires_courses);
+        $this->assertFalse((bool) $entry->profile?->requires_acreditacion);
     }
 
     public function test_manual_employee_create_rejects_duplicate_document(): void
@@ -1037,6 +1084,8 @@ class FichaEmpleadosTest extends TestCase
         $createUrl = route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]);
 
         $this->assertStringContainsString('Gestionar Empleado', $rowText);
+        $this->assertStringContainsString('cursos-catalogo-page__icon-btn', $rowText);
+        $this->assertStringNotContainsString('btn btn--primary btn--sm', $rowText);
         $this->assertStringNotContainsString('Agregar a ficha empleados', $rowText);
         $this->assertStringContainsString($createUrl, $rowText);
     }

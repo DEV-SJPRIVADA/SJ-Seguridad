@@ -2369,7 +2369,8 @@ a {
     padding-top: 0.25rem;
 }
 
-.ficha-empleados-form__section--requirements {
+.ficha-empleados-form__section--requirements,
+.ficha-empleados-form__section--document {
     margin-bottom: 0.35rem;
     padding: 1rem 1.05rem 1.05rem;
     border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 14%, var(--color-border, #dbe3ef));

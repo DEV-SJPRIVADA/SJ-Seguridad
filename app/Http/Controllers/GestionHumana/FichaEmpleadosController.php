@@ -312,10 +312,17 @@ class FichaEmpleadosController extends Controller
     {
         abort_unless($this->canManage(), 403);
 
+        // En alta: quien gestiona ficha puede definir los requisitos iniciales.
+        $canEditRequiresCourses = true;
+        $canEditRequiresAcreditacion = true;
+        $canViewRequirementFlags = true;
+
         $fichaEntry = null;
         $profile = new EmployeeFichaProfile([
             'document_type' => 'C',
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_courses' => true,
+            'requires_acreditacion' => true,
         ]);
 
         $desde = $request->query('desde');
@@ -338,6 +345,9 @@ class FichaEmpleadosController extends Controller
                 : null,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
+            'canEditRequiresCourses' => $canEditRequiresCourses,
+            'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion,
+            'canViewRequirementFlags' => $canViewRequirementFlags,
         ]);
     }
 
@@ -348,7 +358,7 @@ class FichaEmpleadosController extends Controller
         $fichaEntryId = $validated['ficha_entry_id'] ?? null;
 
         if ($fichaEntryId !== null) {
-            $entry = DB::transaction(function () use ($validated, $userId, $fichaEntryId): PersonalRequisitionFichaEntry {
+            $entry = DB::transaction(function () use ($request, $validated, $userId, $fichaEntryId): PersonalRequisitionFichaEntry {
                 $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
 
                 $hiredDocument = trim($validated['hired_document']);
@@ -390,6 +400,7 @@ class FichaEmpleadosController extends Controller
                 );
 
                 $profileAttributes = $this->mergeWorkCityFromRequisitionIfMissing($entry, $profileAttributes);
+                $profileAttributes = $this->applyRequirementFlagsForCreate($request, $profileAttributes);
 
                 $profile->fill($profileAttributes);
                 $profile->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
@@ -436,7 +447,7 @@ class FichaEmpleadosController extends Controller
                     : 'Empleado movido a Ficha empleados correctamente.');
         }
 
-        $entry = DB::transaction(function () use ($validated, $userId): PersonalRequisitionFichaEntry {
+        $entry = DB::transaction(function () use ($request, $validated, $userId): PersonalRequisitionFichaEntry {
             $hiredDocument = trim($validated['hired_document']);
             $firstSurname = trim((string) ($validated['first_surname'] ?? ''));
             $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : null;
@@ -472,6 +483,8 @@ class FichaEmpleadosController extends Controller
                     'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
                 ])
                 ->all();
+
+            $profileAttributes = $this->applyRequirementFlagsForCreate($request, $profileAttributes);
 
             $profile = EmployeeFichaProfile::query()->create($profileAttributes);
             $this->profileCatalogSync->syncAndSave($profile);
@@ -861,9 +874,27 @@ class FichaEmpleadosController extends Controller
     }
 
     /**
+     * Aplica flags de requisitos en alta / Gestionar empleado (create/store).
+     * Si el request no trae el campo, no se fuerza (queda default de BD o valor ya presente).
+     *
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
      */
+    private function applyRequirementFlagsForCreate(Request $request, array $attributes): array
+    {
+        unset($attributes['requires_courses'], $attributes['requires_acreditacion']);
+
+        if ($request->exists('requires_courses')) {
+            $attributes['requires_courses'] = $request->boolean('requires_courses');
+        }
+
+        if ($request->exists('requires_acreditacion')) {
+            $attributes['requires_acreditacion'] = $request->boolean('requires_acreditacion');
+        }
+
+        return $attributes;
+    }
+
     private function mergeProfilePayrollExtra(EmployeeFichaProfile $profile, array $attributes): array
     {
         $existing = is_array($profile->payroll_extra) ? $profile->payroll_extra : [];
