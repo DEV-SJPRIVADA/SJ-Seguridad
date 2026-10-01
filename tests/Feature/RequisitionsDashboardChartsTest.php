@@ -134,6 +134,68 @@ class RequisitionsDashboardChartsTest extends TestCase
         $response->assertSee('Reclutador Dashboard KPI', false);
     }
 
+    public function test_dashboard_trend_chart_ignores_month_other_charts_respect_it(): void
+    {
+        $viewer = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'gestion_humana',
+        ]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.dashboard',
+        ]);
+
+        $requester = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $base = $this->dashboardRequisitionAttributes($requester);
+        $currentMonth = (int) now()->month;
+        $otherMonth = $currentMonth === 1 ? 2 : 1;
+
+        PersonalRequisition::create(array_merge($base, [
+            'code' => 'REQ-2026-TREND-001',
+            'status' => PersonalRequisition::STATUS_SOLICITADA,
+            'request_date' => now()->startOfMonth()->toDateString(),
+        ]));
+        PersonalRequisition::create(array_merge($base, [
+            'code' => 'REQ-2026-TREND-002',
+            'status' => PersonalRequisition::STATUS_EN_GESTION,
+            'request_date' => now()->copy()->month($otherMonth)->startOfMonth()->toDateString(),
+        ]));
+
+        $response = $this->actingAs($viewer)->get(route('requisitions.dashboard', [
+            'module' => 'gestion_humana',
+            'year' => now()->year,
+            'month' => $currentMonth,
+        ]));
+
+        $response->assertOk();
+        $response->assertViewHas('stats', function (array $stats): bool {
+            return $stats['total'] === 1
+                && $stats['solicitada'] === 1
+                && $stats['en_gestion'] === 0;
+        });
+        $response->assertViewHas('chartData', function (array $chartData) use ($currentMonth, $otherMonth): bool {
+            $trendData = collect($chartData['trend']['data'] ?? [])->map(fn ($v) => (int) $v)->all();
+            $statusData = collect($chartData['status']['data'] ?? [])->map(fn ($v) => (int) $v);
+            $statusKeys = collect($chartData['status']['keys'] ?? [])->values();
+
+            $solicitadaIndex = $statusKeys->search(PersonalRequisition::STATUS_SOLICITADA);
+            $enGestionIndex = $statusKeys->search(PersonalRequisition::STATUS_EN_GESTION);
+
+            return ($trendData[$currentMonth - 1] ?? 0) === 1
+                && ($trendData[$otherMonth - 1] ?? 0) === 1
+                && $solicitadaIndex !== false
+                && $enGestionIndex !== false
+                && ($statusData[$solicitadaIndex] ?? 0) === 1
+                && ($statusData[$enGestionIndex] ?? 0) === 0;
+        });
+    }
+
     public function test_dashboard_kpi_links_carry_filters_to_manage(): void
     {
         $viewer = User::factory()->create([
