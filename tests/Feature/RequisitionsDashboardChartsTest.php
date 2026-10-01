@@ -54,6 +54,10 @@ class RequisitionsDashboardChartsTest extends TestCase
         $response->assertSee('requisitions-dashboard-charts', false);
         $response->assertSee('name="recruiter_id"', false);
         $response->assertSee('Sin reclutador', false);
+        $response->assertSee('"#0284c7"', false);
+        $response->assertSee('"#b45309"', false);
+        $response->assertSee('"#15803d"', false);
+        $response->assertSee('"#be123c"', false);
         $response->assertDontSee('cdn.jsdelivr.net/npm/chart.js', false);
         $response->assertDontSee('new Chart(', false);
         $response->assertDontSee('<canvas', false);

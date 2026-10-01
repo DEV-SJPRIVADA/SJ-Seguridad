@@ -176,7 +176,19 @@ class RequisitionController extends Controller
             'chartData' => [
                 'status' => [
                     'labels' => collect(PersonalRequisition::statuses())->values(),
+                    'keys' => collect(PersonalRequisition::statuses())->keys()->values(),
                     'data' => collect(PersonalRequisition::statuses())->keys()->map(fn ($k) => $statsByStatus->get($k, 0)),
+                    'colors' => collect(PersonalRequisition::statuses())->keys()->map(
+                        fn (string $key): string => match ($key) {
+                            PersonalRequisition::STATUS_SOLICITADA => '#0284c7',
+                            PersonalRequisition::STATUS_EN_GESTION => '#b45309',
+                            PersonalRequisition::STATUS_CONTRATADO => '#15803d',
+                            PersonalRequisition::STATUS_CANCELADA => '#be123c',
+                            PersonalRequisition::STATUS_APROBADA => '#0f766e',
+                            PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA => '#7e22ce',
+                            default => '#64748b',
+                        }
+                    )->values(),
                 ],
                 'trend' => [
                     'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
