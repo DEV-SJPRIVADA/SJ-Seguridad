@@ -71,7 +71,7 @@ class UpdateUserRequest extends FormRequest
             'role.exists' => 'El rol seleccionado no es valido.',
             'sede_id.exists' => 'La sede seleccionada ya no existe. Elige otra sede o deja el campo vacio.',
             'area_key.in' => 'El area base seleccionada no es valida.',
-            'password' => 'La nueva contrasena no cumple los requisitos minimos de seguridad.',
+            'password' => 'La nueva contraseña no cumple los requisitos minimos de seguridad.',
             'permissions.*.exists' => 'Uno de los permisos enviados no es valido. Recarga la pagina e intenta de nuevo.',
         ];
     }
@@ -85,7 +85,7 @@ class UpdateUserRequest extends FormRequest
             'name' => 'nombre completo',
             'document_number' => 'cedula',
             'email' => 'correo electronico',
-            'password' => 'nueva contrasena',
+            'password' => 'nueva contraseña',
             'role' => 'rol',
             'sede_id' => 'sede fisica',
             'area_key' => 'area base',

@@ -2369,8 +2369,36 @@ a {
     padding-top: 0.25rem;
 }
 
+.ficha-empleados-form__section--requirements {
+    margin-bottom: 0.35rem;
+    padding: 1rem 1.05rem 1.05rem;
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 14%, var(--color-border, #dbe3ef));
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, #f8fbff 0%, #fff 72%);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
 .ficha-empleados-form__section-head {
     margin-bottom: 0.85rem;
+}
+
+.ficha-empleados-form__section-head--row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.ficha-empleados-form__section-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--brand-navy, #003366) 10%, #fff);
+    color: var(--brand-navy, #003366);
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 14%, var(--color-border, #dbe3ef));
 }
 
 .ficha-empleados-form__section-title {
@@ -2385,6 +2413,96 @@ a {
     font-size: 0.8rem;
     color: #64748b;
     line-height: 1.45;
+}
+
+.ficha-empleados-form__requirement-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.ficha-empleados-form__requirement-item {
+    min-width: 0;
+}
+
+.ficha-empleados-form__requirement-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin: 0;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 92%, transparent);
+    border-radius: 0.8rem;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.ficha-empleados-form__requirement-card:hover {
+    border-color: color-mix(in srgb, var(--brand-navy, #003366) 28%, var(--color-border, #dbe3ef));
+    box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.ficha-empleados-form__requirement-card--locked {
+    cursor: default;
+    opacity: 0.92;
+}
+
+.ficha-empleados-form__requirement-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ficha-empleados-form__requirement-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, #2563eb 12%, #fff);
+    color: #1d4ed8;
+    border: 1px solid color-mix(in srgb, #2563eb 18%, #e2e8f0);
+}
+
+.ficha-empleados-form__requirement-card:has(.ficha-empleados-form__requirement-input:checked) {
+    border-color: color-mix(in srgb, #16a34a 35%, var(--color-border, #dbe3ef));
+    background: #f0fdf4;
+}
+
+.ficha-empleados-form__requirement-card:has(.ficha-empleados-form__requirement-input:checked) .ficha-empleados-form__requirement-icon {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+.ficha-empleados-form__requirement-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.ficha-empleados-form__requirement-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    line-height: 1.25;
+}
+
+.ficha-empleados-form__requirement-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+    .ficha-empleados-form__requirement-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .ficha-empleados-form__grid {
@@ -2406,6 +2524,13 @@ a {
     flex-wrap: wrap;
     padding: 0.5rem;
     border-top: 1px solid var(--color-border);
+}
+
+.ficha-empleados-form__footer--letters-top {
+    margin-bottom: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: #fff;
 }
 
 .ficha-empleados-form__footer .btn {
@@ -2931,11 +3056,31 @@ a {
     width: 100%;
 }
 
+.ficha-empleados-page__title-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.ficha-empleados-page__status-line {
+    margin-top: 0.45rem;
+}
+
 .ficha-empleados-page__title-actions {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
     flex-shrink: 0;
+    padding: 0.2rem;
+    border: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 88%, transparent);
+    border-radius: 0.85rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
+.ficha-empleados-page__title-actions-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .ficha-empleados-page__history-icon {

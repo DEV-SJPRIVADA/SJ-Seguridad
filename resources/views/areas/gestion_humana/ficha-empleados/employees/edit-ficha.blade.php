@@ -1,48 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
-        <div class="app-container ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
-            <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
-                <div>
-                    <h2 class="panel-title panel-title--page">Ficha — {{ $entry->hired_full_name }}</h2>
-                    <p class="panel-text">
-                        Cédula {{ $entry->hired_document }}
-                        · {{ $entry->requisitionCode() ?: 'Sin requisición' }}
-                        @if ($activePeriod)
-                            · Vinculo #{{ $activePeriod->sequence }} activo
-                        @elseif ($profile->employment_status === \App\Models\EmployeeFichaProfile::STATUS_DESVINCULADO)
-                            · Desvinculado
-                        @endif
-                    </p>
-                </div>
-                <div class="ficha-empleados-page__title-actions">
-                    @if ($canViewEmployeeCursos ?? false)
-                        <button
-                            type="button"
-                            class="ficha-empleados-page__history-icon"
-                            title="Consultar cursos"
-                            aria-label="Consultar cursos del empleado"
-                            x-data=""
-                            x-on:click="$dispatch('open-modal', 'ficha-employee-cursos')"
-                        >
-                            <x-lucide-graduation-cap width="18" height="18" aria-hidden="true" />
-                        </button>
-                    @endif
-                    @if ($employmentHistory->isNotEmpty())
-                        <button
-                            type="button"
-                            class="ficha-empleados-page__history-icon"
-                            title="Historial de vinculos"
-                            aria-label="Ver historial de vinculos"
-                            x-data=""
-                            x-on:click="$dispatch('open-modal', 'ficha-employment-history')"
-                        >
-                            <x-lucide-history width="18" height="18" aria-hidden="true" />
-                        </button>
-                    @endif
-                </div>
-            </div>
-        </div>
     </x-slot>
 
     @php
@@ -126,6 +84,84 @@
         }"
     >
         <div class="app-container">
+            <div class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
+                <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
+                    <div class="ficha-empleados-page__title-copy">
+                        <h2 class="panel-title panel-title--page">Ficha — {{ $entry->hired_full_name }}</h2>
+                        <p class="panel-text">
+                            Cédula {{ $entry->hired_document }}
+                            · {{ $entry->requisitionCode() ?: 'Sin requisición' }}
+                            @if ($activePeriod)
+                                · Vinculo #{{ $activePeriod->sequence }} activo
+                            @elseif ($profile->employment_status === \App\Models\EmployeeFichaProfile::STATUS_DESVINCULADO)
+                                · Desvinculado
+                            @endif
+                        </p>
+                        <div class="ficha-empleados-page__status-line">
+                            <template x-if="!isEditing">
+                                <span class="status-pill status-pill--muted">Solo lectura</span>
+                            </template>
+                            <template x-if="isEditing">
+                                <span class="status-pill status-pill--warning">Edición habilitada</span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="ficha-empleados-page__title-actions" role="toolbar" aria-label="Acciones de ficha">
+                        @if ($canViewEmployeeCursos ?? false)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Consultar cursos"
+                                aria-label="Consultar cursos del empleado"
+                                x-on:click="$dispatch('open-modal', 'ficha-employee-cursos')"
+                            >
+                                <x-lucide-graduation-cap width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+
+                        @if ($employmentHistory->isNotEmpty())
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Historial de vínculos"
+                                aria-label="Ver historial de vínculos"
+                                x-on:click="$dispatch('open-modal', 'ficha-employment-history')"
+                            >
+                                <x-lucide-history width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+
+                        @if ($canTerminate ?? false)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Desvinculación"
+                                aria-label="Abrir desvinculación"
+                                x-on:click.prevent="$dispatch('open-modal', 'ficha-terminate')"
+                            >
+                                <x-lucide-user-x width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+
+                        @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-actions', [
+                            'period' => $activePeriod,
+                            'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
+                            'iconOnly' => true,
+                        ])
+
+                        <a
+                            href="{{ route('gestion-humana.ficha-empleados.employees.index') }}"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Volver al listado"
+                            aria-label="Volver al listado"
+                        >
+                            <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             @if (session('status'))
                 <div class="alert alert--success ficha-empleados-page__alert">{{ session('status') }}</div>
             @endif
@@ -148,48 +184,40 @@
                 x-text="saveValidationMessage"
             ></div>
 
-            <div class="panel-heading-row" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span class="text-small" style="font-weight: 500; color: #64748b;">Estado del formulario:</span>
-                    <template x-if="!isEditing">
-                        <span class="badge" style="background-color: #f1f5f9; color: #475569; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.8rem; border: 1px solid #cbd5e1;">Solo lectura</span>
-                    </template>
-                    <template x-if="isEditing">
-                        <span class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.8rem; border: 1px solid #fde68a;">Edición habilitada</span>
-                    </template>
-                </div>
-
-                @if ($canManageFicha)
-                    <div>
+            @if ($canManageFicha)
+                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters ficha-empleados-form__footer--letters-top">
+                    <div class="ficha-empleados-letter-actions">
                         <template x-if="!isEditing">
                             <button
                                 type="button"
-                                class="btn btn--primary"
-                                @click="isEditing = true"
+                                class="btn btn--primary btn--sm"
+                                title="Habilitar edición"
+                                aria-label="Habilitar edición"
+                                x-on:click="isEditing = true"
                             >
-                                <x-lucide-edit-3 width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
+                                <x-lucide-pencil width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
                                 Habilitar edición
                             </button>
                         </template>
                         <template x-if="isEditing">
-                            <button
-                                type="button"
-                                class="btn btn--secondary"
-                                @click="isEditing = false"
-                            >
-                                Bloquear edición
-                            </button>
+                            <span class="ficha-empleados-page__title-actions-group">
+                                <button
+                                    type="button"
+                                    class="btn btn--secondary btn--sm"
+                                    title="Cancelar edición"
+                                    aria-label="Cancelar edición"
+                                    x-on:click="isEditing = false"
+                                >Cancelar</button>
+                                <button
+                                    type="submit"
+                                    form="ficha-empleados-form"
+                                    class="btn btn--primary btn--sm"
+                                    title="Guardar ficha"
+                                    aria-label="Guardar ficha"
+                                >Guardar ficha</button>
+                            </span>
                         </template>
                     </div>
-                @endif
-            </div>
-
-            @if ($canGenerateContratacionLetters)
-                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters" style="margin-bottom: 1rem;">
-                    @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-actions', [
-                        'period' => $activePeriod,
-                        'canGenerateContratacionLetters' => $canGenerateContratacionLetters,
-                    ])
                 </div>
             @endif
 
@@ -227,42 +255,6 @@
                             'canViewRequirementFlags' => $canViewRequirementFlags ?? false,
                         ])
                     </div>
-                </div>
-
-                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer">
-                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index') }}" class="btn btn--secondary">Volver</a>
-                    @if ($canTerminate ?? false)
-                        <button
-                            type="button"
-                            class="btn btn--secondary"
-                            x-data=""
-                            x-on:click.prevent="$dispatch('open-modal', 'ficha-terminate')"
-                        >Desvinculación</button>
-                    @endif
-
-                    @if ($canManageFicha)
-                        <template x-if="!isEditing">
-                            <button
-                                type="button"
-                                class="btn btn--primary"
-                                @click="isEditing = true"
-                            >
-                                <x-lucide-edit-3 width="16" height="16" aria-hidden="true" style="margin-right: 0.35rem; display: inline-block; vertical-align: middle;" />
-                                Habilitar edición
-                            </button>
-                        </template>
-
-                        <template x-if="isEditing">
-                            <div style="display: inline-flex; gap: 0.5rem; align-items: center;">
-                                <button
-                                    type="button"
-                                    class="btn btn--secondary"
-                                    @click="isEditing = false"
-                                >Cancelar</button>
-                                <button type="submit" class="btn btn--primary">Guardar ficha</button>
-                            </div>
-                        </template>
-                    @endif
                 </div>
             </form>
 

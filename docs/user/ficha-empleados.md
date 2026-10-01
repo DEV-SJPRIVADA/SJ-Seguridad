@@ -70,7 +70,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. En la pestaña **Empleados**, cambie a la pill **En ficha**.
 2. Haga clic en una fila para abrir el detalle de la ficha.
-3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, puede habilitar edición y guardar.
+3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. La **carta de contratación** se genera desde el icono de documento en la barra superior de acciones.
 4. En el filtro **Desvinculado** aparece la columna **Recontratable** (Si/No) según lo registrado al desvincular.
 
 ### Completar ficha de empleado
@@ -148,6 +148,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.17 | 2026-10-01 | Agent | Ficha: seccion Cursos/acreditacion primero; barra de acciones icon-only (cursos, historial, editar, guardar, desvinculacion, volver). |
 | 1.16 | 2026-09-28 | Ficha | Listado Desvinculado: columna Recontratable (Si/No). |
 | 1.15 | 2026-09-28 | Ficha | Permiso solo ver: puede abrir la ficha en solo lectura; sin editar/guardar. |
 | 1.14 | 2026-09-28 | Ficha | Import masivo repara nombres con `?` (Ñ/Ó); comando `ficha:fix-name-encoding` para datos ya guardados. |
