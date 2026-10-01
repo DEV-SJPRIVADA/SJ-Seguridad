@@ -203,7 +203,7 @@ Cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas envia
 - Parametros: tablero de tarjetas + detalle por `?catalog=`; botones Agregar/Editar/Eliminar como iconos (regla `icon-buttons-ui`).
 - Gestion: filtros + pills; default **En curso** (excluye contratado/cancelada); `include_closed=1` = Todos; filtro `recruiter_id` (`''` = todos, `none` = sin asignar, id = reclutador activo); en la misma fila: búsqueda, fechas, reclutador, `client_id` / `position_id` / `city_id` (todos aplican con Buscar); DataTables.
 - Seguimiento: mismos filtros + export Excel.
-- Dashboard: KPIs Total / Solicitadas / En gestion / Contratadas / Canceladas; filtro reclutador (misma semántica); **todos** los KPIs (incluido Total) y charts respetan filtros; mes por defecto = mes actual; charts Vite `resources/js/requisitions-dashboard-charts.js` + `#requisitions-chart-data`. Donut **Distribución por Estado** usa los mismos colores de acento que los KPI (`solicitada` `#0284c7`, `en_gestion` `#b45309`, `contratado` `#15803d`, `cancelada` `#be123c`). Cada KPI es enlace a **Gestion** con los filtros activos del dashboard (año/mes → `date_from`/`date_to`, cliente, cargo, ciudad, reclutador) + estado del KPI (Total → `include_closed=1` si no hay estado en dashboard).
+- Dashboard: KPIs Total / Solicitadas / En gestion / Contratadas / Canceladas; filtro reclutador (misma semántica); **todos** los KPIs (incluido Total) y charts de estado/ciudad/cliente respetan filtros (incl. mes); **Tendencia de Solicitudes** usa año + filtros pero **ignora el mes** (serie anual); mes por defecto = mes actual; charts Vite `resources/js/requisitions-dashboard-charts.js` + `#requisitions-chart-data`. Donut **Distribución por Estado** usa los mismos colores de acento que los KPI (`solicitada` `#0284c7`, `en_gestion` `#b45309`, `contratado` `#15803d`, `cancelada` `#be123c`). Cada KPI es enlace a **Gestion** con los filtros activos del dashboard (año/mes → `date_from`/`date_to`, cliente, cargo, ciudad, reclutador) + estado del KPI (Total → `include_closed=1` si no hay estado en dashboard).
 - Historial de estados y historial de cambios de campos (paneles en edicion Gestion).
 
 ## Export Excel
@@ -253,6 +253,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 | --- | --- |
 | 2026-09-29 | Impresión FO-GH-22: fila TIPO DE PROGRAMACION + CCOS CR (`cost_center`) en la misma línea |
 | 2026-09-24 | Impresión FO-GH-22: recepción GH = `created_at` del primer status log `solicitada` (`humanResourcesReceivedAt`) |
+| 2026-10-01 | Tendencia de Solicitudes ignora filtro mes (serie anual); KPIs y demas charts siguen con mes |
 | 2026-10-01 | KPIs del Dashboard enlazan a Gestion arrastrando filtros; Gestion agrega cliente/cargo/ciudad |
 | 2026-09-23 | Filtro reclutador en Dashboard y Gestion; KPI Total respeta filtros; mes dashboard por defecto = mes actual |
 | 2026-08-21 | Catalogos Parametros: persistir seccion activa con `?catalog=` tras CRUD |

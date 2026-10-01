@@ -102,7 +102,7 @@ class RequisitionController extends Controller
             'recruiter_id' => $recruiterFilter ?? '',
         ];
 
-        $query = PersonalRequisition::query()
+        $baseQuery = PersonalRequisition::query()
             ->when(
                 ! $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
                 fn ($builder) => $builder->where('requesting_area_key', $module)
@@ -111,21 +111,26 @@ class RequisitionController extends Controller
             ->when($filters['position_id'], fn ($q) => $q->where('position_id', $filters['position_id']))
             ->when($filters['city_id'], fn ($q) => $q->where('city_id', $filters['city_id']))
             ->when($filters['status'], fn ($q) => $q->where('status', $filters['status']))
-            ->when($filters['year'], fn ($q) => $q->whereYear('request_date', $filters['year']))
-            ->when($filters['month'], fn ($q) => $q->whereMonth('request_date', $filters['month']));
+            ->when($filters['year'], fn ($q) => $q->whereYear('request_date', $filters['year']));
 
         if ($recruiterFilter === 'none') {
-            $query->whereNull('recruiter_id');
+            $baseQuery->whereNull('recruiter_id');
         } elseif ($recruiterFilter !== null) {
-            $query->where('recruiter_id', (int) $recruiterFilter);
+            $baseQuery->where('recruiter_id', (int) $recruiterFilter);
         }
 
-        $requisitions = $query->get();
-
-        // Datos para Gráficos
-        $statsByStatus = $requisitions->groupBy('status')->map->count();
-        $statsByMonth = $requisitions->groupBy(fn ($r) => Carbon::parse($r->request_date)->format('n'))
+        // Tendencia: año + filtros, sin mes (serie anual completa).
+        $trendRequisitions = (clone $baseQuery)->get();
+        $statsByMonth = $trendRequisitions
+            ->groupBy(fn ($r) => Carbon::parse($r->request_date)->format('n'))
             ->map->count();
+
+        // KPIs y demás gráficos: respetan también el mes.
+        $requisitions = (clone $baseQuery)
+            ->when($filters['month'], fn ($q) => $q->whereMonth('request_date', $filters['month']))
+            ->get();
+
+        $statsByStatus = $requisitions->groupBy('status')->map->count();
 
         $statsByCity = $requisitions->groupBy('city_id')->map->count()->sortDesc()->take(5);
         $cityNames = RequisitionCity::whereIn('id', $statsByCity->keys())->pluck('name', 'id');

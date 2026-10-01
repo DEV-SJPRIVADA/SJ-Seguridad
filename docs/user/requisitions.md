@@ -291,8 +291,10 @@ permisos para modificar Catálogos
 18. Abra la pestaña Dashboard del tablero Requisiciones.
 
 19. Revise los KPIs (Total, Solicitadas, En gestión, Contratadas,
-    Canceladas). Todos los KPIs y los gráficos respetan los filtros
-    (cliente, cargo, ciudad, estado, año, mes y reclutador).
+    Canceladas). Los KPIs y los gráficos de estado, ciudad y cliente
+    respetan los filtros (cliente, cargo, ciudad, estado, año, mes y
+    reclutador). La **Tendencia de Solicitudes** usa año y el resto de
+    filtros, pero no el mes (muestra los 12 meses del año).
 
 20. Use los filtros disponibles (incluye **Reclutador**: Todos, Sin
     reclutador o un reclutador activo). El mes inicia en el mes actual;
@@ -455,6 +457,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.6         | 2026-10-01                 | Tendencia de Solicitudes sin filtro mes; KPIs y demás gráficos sí lo usan |
 | 1.5         | 2026-10-01                 | Dashboard: clic en KPI abre Gestión filtrada; Gestión agrega Cliente/Cargo/Ciudad |
 | 1.4         | 2026-09-30                 | Mis requisiciones: Ver solicitud + Ver Rq (solo lectura) |
 | 1.3         | 2026-09-24                 | Impresión FO-GH-22: recepción GH = momento Solicitada |
