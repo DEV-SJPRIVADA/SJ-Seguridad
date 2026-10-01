@@ -941,6 +941,42 @@
                         activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
                     }
                 });
+
+                document.querySelectorAll('[data-module-tabs-scroller]').forEach(function(root) {
+                    var track = root.querySelector('.module-tabs-scroller__track, .module-tabs--scroll');
+                    var prev = root.querySelector('[data-tabs-scroll="prev"]');
+                    var next = root.querySelector('[data-tabs-scroll="next"]');
+                    if (! track || ! prev || ! next) {
+                        return;
+                    }
+
+                    var sync = function() {
+                        var max = Math.max(0, track.scrollWidth - track.clientWidth);
+                        var overflow = max > 2;
+                        root.classList.toggle('module-tabs-scroller--overflow', overflow);
+                        prev.disabled = ! overflow || track.scrollLeft <= 2;
+                        next.disabled = ! overflow || track.scrollLeft >= (max - 2);
+                    };
+
+                    var step = function() {
+                        return Math.max(140, Math.floor(track.clientWidth * 0.75));
+                    };
+
+                    prev.addEventListener('click', function() {
+                        track.scrollBy({ left: -step(), behavior: 'smooth' });
+                    });
+                    next.addEventListener('click', function() {
+                        track.scrollBy({ left: step(), behavior: 'smooth' });
+                    });
+                    track.addEventListener('scroll', sync, { passive: true });
+                    window.addEventListener('resize', sync);
+
+                    if (typeof ResizeObserver === 'function') {
+                        new ResizeObserver(sync).observe(track);
+                    }
+
+                    requestAnimationFrame(sync);
+                });
             });
         </script>
     </head>
@@ -983,13 +1019,33 @@
                             <div class="app-container">
                                 <div class="module-strip__inner">
                                     <p class="text-caption module-strip__label">Tableros del area</p>
-                                    <nav class="module-tabs module-tabs--scroll" aria-label="Tableros">
-                                        @foreach ($currentModuleTabs as $tab)
-                                            <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
-                                                {{ $tab['label'] }}
-                                            </a>
-                                        @endforeach
-                                    </nav>
+                                    <div class="module-tabs-scroller" data-module-tabs-scroller>
+                                        <button
+                                            type="button"
+                                            class="module-tabs-scroller__btn"
+                                            data-tabs-scroll="prev"
+                                            title="Anterior"
+                                            aria-label="Ver tableros anteriores"
+                                        >
+                                            <x-lucide-chevron-left width="16" height="16" aria-hidden="true" />
+                                        </button>
+                                        <nav class="module-tabs module-tabs--scroll module-tabs-scroller__track" aria-label="Tableros">
+                                            @foreach ($currentModuleTabs as $tab)
+                                                <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
+                                                    {{ $tab['label'] }}
+                                                </a>
+                                            @endforeach
+                                        </nav>
+                                        <button
+                                            type="button"
+                                            class="module-tabs-scroller__btn"
+                                            data-tabs-scroll="next"
+                                            title="Siguiente"
+                                            aria-label="Ver tableros siguientes"
+                                        >
+                                            <x-lucide-chevron-right width="16" height="16" aria-hidden="true" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -179,30 +179,55 @@
                 <p class="form-hint" style="margin-bottom: 0.5rem;">Vista consolidada de todas las areas solicitantes.</p>
             @endif
             <div class="dashboard-stat-grid dashboard-stat-grid--requisition-kpis req-dashboard-kpis bottom-spaced">
-                <article class="req-dashboard-kpi req-dashboard-kpi--total">
+                <a
+                    href="{{ $kpiUrls['total'] }}"
+                    class="req-dashboard-kpi req-dashboard-kpi--total"
+                    title="Ver total en Gestión"
+                    aria-label="Ver total de solicitudes en Gestión"
+                >
                     <span class="req-dashboard-kpi__label">Total solicitudes</span>
                     <span class="req-dashboard-kpi__value">{{ number_format($stats['total']) }}</span>
-                </article>
+                </a>
 
-                <article class="req-dashboard-kpi req-dashboard-kpi--solicitada">
+                <a
+                    href="{{ $kpiUrls['solicitada'] }}"
+                    class="req-dashboard-kpi req-dashboard-kpi--solicitada"
+                    title="Ver solicitadas en Gestión"
+                    aria-label="Ver solicitadas en Gestión"
+                >
                     <span class="req-dashboard-kpi__label">Solicitadas</span>
                     <span class="req-dashboard-kpi__value">{{ number_format($stats['solicitada']) }}</span>
-                </article>
+                </a>
 
-                <article class="req-dashboard-kpi req-dashboard-kpi--en-gestion">
+                <a
+                    href="{{ $kpiUrls['en_gestion'] }}"
+                    class="req-dashboard-kpi req-dashboard-kpi--en-gestion"
+                    title="Ver en gestión en Gestión"
+                    aria-label="Ver en gestión en Gestión"
+                >
                     <span class="req-dashboard-kpi__label">En gestión</span>
                     <span class="req-dashboard-kpi__value">{{ number_format($stats['en_gestion']) }}</span>
-                </article>
+                </a>
 
-                <article class="req-dashboard-kpi req-dashboard-kpi--contratado">
+                <a
+                    href="{{ $kpiUrls['contratado'] }}"
+                    class="req-dashboard-kpi req-dashboard-kpi--contratado"
+                    title="Ver contratadas en Gestión"
+                    aria-label="Ver contratadas en Gestión"
+                >
                     <span class="req-dashboard-kpi__label">Contratadas</span>
                     <span class="req-dashboard-kpi__value">{{ number_format($stats['contratado']) }}</span>
-                </article>
+                </a>
 
-                <article class="req-dashboard-kpi req-dashboard-kpi--cancelada">
+                <a
+                    href="{{ $kpiUrls['cancelada'] }}"
+                    class="req-dashboard-kpi req-dashboard-kpi--cancelada"
+                    title="Ver canceladas en Gestión"
+                    aria-label="Ver canceladas en Gestión"
+                >
                     <span class="req-dashboard-kpi__label">Canceladas</span>
                     <span class="req-dashboard-kpi__value">{{ number_format($stats['cancelada']) }}</span>
-                </article>
+                </a>
             </div>
 
             {{-- ÁREA DE GRÁFICOS CON SCROLL --}}

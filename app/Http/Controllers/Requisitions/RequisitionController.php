@@ -133,6 +133,29 @@ class RequisitionController extends Controller
         $statsByClient = $requisitions->groupBy('client_id')->map->count()->sortDesc()->take(5);
         $clientNames = RequisitionClient::whereIn('id', $statsByClient->keys())->pluck('name', 'id');
 
+        $kpiUrls = [
+            'total' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters),
+            ]),
+            'solicitada' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_SOLICITADA),
+            ]),
+            'en_gestion' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_EN_GESTION),
+            ]),
+            'contratado' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_CONTRATADO),
+            ]),
+            'cancelada' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_CANCELADA),
+            ]),
+        ];
+
         return view('modules.requisitions.dashboard', [
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
@@ -148,11 +171,24 @@ class RequisitionController extends Controller
                 'contratado' => $statsByStatus->get(PersonalRequisition::STATUS_CONTRATADO, 0),
                 'cancelada' => $statsByStatus->get(PersonalRequisition::STATUS_CANCELADA, 0),
             ],
+            'kpiUrls' => $kpiUrls,
             'dashboardGlobalScope' => $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
             'chartData' => [
                 'status' => [
                     'labels' => collect(PersonalRequisition::statuses())->values(),
+                    'keys' => collect(PersonalRequisition::statuses())->keys()->values(),
                     'data' => collect(PersonalRequisition::statuses())->keys()->map(fn ($k) => $statsByStatus->get($k, 0)),
+                    'colors' => collect(PersonalRequisition::statuses())->keys()->map(
+                        fn (string $key): string => match ($key) {
+                            PersonalRequisition::STATUS_SOLICITADA => '#0284c7',
+                            PersonalRequisition::STATUS_EN_GESTION => '#b45309',
+                            PersonalRequisition::STATUS_CONTRATADO => '#15803d',
+                            PersonalRequisition::STATUS_CANCELADA => '#be123c',
+                            PersonalRequisition::STATUS_APROBADA => '#0f766e',
+                            PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA => '#7e22ce',
+                            default => '#64748b',
+                        }
+                    )->values(),
                 ],
                 'trend' => [
                     'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
@@ -386,6 +422,7 @@ class RequisitionController extends Controller
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
             'recruiterFilterOptions' => $this->recruiterFilterOptions(),
+            'catalogs' => $this->catalogs(),
         ]);
     }
 

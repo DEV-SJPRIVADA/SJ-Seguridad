@@ -26,7 +26,7 @@
 
         <div class="form-grid form-grid--two profile-form__grid">
             <div class="form-field">
-                <x-input-label for="update_password_password" value="Nueva contrasena" />
+                <x-input-label for="update_password_password" value="Nueva contraseña" />
                 <x-password-input id="update_password_password" name="password" autocomplete="new-password" />
                 <x-input-error :messages="$errors->updatePassword->get('password')" />
             </div>

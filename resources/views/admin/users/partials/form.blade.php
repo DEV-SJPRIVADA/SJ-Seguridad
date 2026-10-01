@@ -277,7 +277,7 @@
                 </div>
                 @if ($user)
                     <div class="form-field">
-                        <label class="form-label">Nueva contrasena (opcional)</label>
+                        <label class="form-label">Nueva contraseña (opcional)</label>
                         <x-password-input name="password" autocomplete="new-password" />
                         <x-input-error :messages="$errors->get('password')" />
                         <p class="text-small text-muted">Dejar vacio para mantener la contrasena actual.</p>
@@ -285,7 +285,7 @@
                 @else
                     <div class="form-field">
                         <div class="card card--muted user-form__security-card">
-                            <p class="text-caption">Contrasena inicial</p>
+                            <p class="text-caption">Contraseña inicial</p>
                             <p class="text-small">La contrasena temporal sera la <strong>cedula</strong> ingresada. El usuario recibira un correo de bienvenida con sus credenciales.</p>
                         </div>
                     </div>

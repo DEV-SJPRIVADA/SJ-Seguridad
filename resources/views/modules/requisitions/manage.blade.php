@@ -9,7 +9,10 @@
             || ($filters['date_from'] ?? null)
             || ($filters['date_to'] ?? null)
             || ($filters['include_closed'] ?? false)
-            || ($filters['recruiter_id'] ?? '') !== '';
+            || ($filters['recruiter_id'] ?? '') !== ''
+            || ($filters['client_id'] ?? null)
+            || ($filters['position_id'] ?? null)
+            || ($filters['city_id'] ?? null);
 
         $hasDateFilters = ($filters['date_from'] ?? null) || ($filters['date_to'] ?? null);
 
@@ -19,6 +22,9 @@
             'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
             'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
             'recruiter_id' => array_key_exists('recruiter_id', $overrides) ? $overrides['recruiter_id'] : (($filters['recruiter_id'] ?? '') !== '' ? $filters['recruiter_id'] : null),
+            'client_id' => array_key_exists('client_id', $overrides) ? $overrides['client_id'] : ($filters['client_id'] ?: null),
+            'position_id' => array_key_exists('position_id', $overrides) ? $overrides['position_id'] : ($filters['position_id'] ?: null),
+            'city_id' => array_key_exists('city_id', $overrides) ? $overrides['city_id'] : ($filters['city_id'] ?: null),
             'include_closed' => array_key_exists('include_closed', $overrides)
                 ? ($overrides['include_closed'] ? '1' : null)
                 : (($filters['include_closed'] ?? false) ? '1' : null),
@@ -49,7 +55,7 @@
                                         <input type="hidden" name="include_closed" value="1">
                                     @endif
 
-                                    <div class="req-manage-filters__query-row">
+                                    <div class="req-manage-filters__query-row req-manage-filters__query-row--manage">
                                         <div class="req-manage-filters__query-field req-manage-filters__query-field--search">
                                             <label class="req-manage-filters__label" for="manage-search-input">Buscar</label>
                                             <input
@@ -69,7 +75,7 @@
                                             <label class="req-manage-filters__label" for="manage-date-to">Hasta</label>
                                             <input type="date" id="manage-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
                                         </div>
-                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--recruiter">
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--select">
                                             <label class="req-manage-filters__label" for="manage_filter_recruiter_id">Reclutador</label>
                                             <x-searchable-select
                                                 id="manage_filter_recruiter_id"
@@ -78,6 +84,39 @@
                                                 :value="$filters['recruiter_id'] ?? ''"
                                                 placeholder="Todos"
                                                 searchPlaceholder="Buscar reclutador…"
+                                            />
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--select">
+                                            <label class="req-manage-filters__label" for="manage-client-select">Cliente</label>
+                                            <x-searchable-select
+                                                id="manage-client-select"
+                                                name="client_id"
+                                                :options="$catalogs['clients']"
+                                                :value="$filters['client_id'] ?? ''"
+                                                placeholder="Todos los clientes"
+                                                searchPlaceholder="Buscar cliente…"
+                                            />
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--select">
+                                            <label class="req-manage-filters__label" for="manage-position-select">Cargo</label>
+                                            <x-searchable-select
+                                                id="manage-position-select"
+                                                name="position_id"
+                                                :options="$catalogs['positions']"
+                                                :value="$filters['position_id'] ?? ''"
+                                                placeholder="Todos los cargos"
+                                                searchPlaceholder="Buscar cargo…"
+                                            />
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__query-field--select">
+                                            <label class="req-manage-filters__label" for="manage-city-select">Ciudad</label>
+                                            <x-searchable-select
+                                                id="manage-city-select"
+                                                name="city_id"
+                                                :options="$catalogs['cities']"
+                                                :value="$filters['city_id'] ?? ''"
+                                                placeholder="Todas las ciudades"
+                                                searchPlaceholder="Buscar ciudad…"
                                             />
                                         </div>
                                         <div class="req-manage-filters__query-actions">
@@ -171,6 +210,15 @@
                                             ->firstWhere('value', (string) $filters['recruiter_id'])['label'] ?? $filters['recruiter_id'];
                                     @endphp
                                     · Reclutador: <strong>{{ $recruiterMetaLabel }}</strong>
+                                @endif
+                                @if ($filters['client_id'] ?? null)
+                                    · Cliente: <strong>{{ $catalogs['clients']->firstWhere('id', $filters['client_id'])?->name }}</strong>
+                                @endif
+                                @if ($filters['position_id'] ?? null)
+                                    · Cargo: <strong>{{ $catalogs['positions']->firstWhere('id', $filters['position_id'])?->name }}</strong>
+                                @endif
+                                @if ($filters['city_id'] ?? null)
+                                    · Ciudad: <strong>{{ $catalogs['cities']->firstWhere('id', $filters['city_id'])?->name }}</strong>
                                 @endif
                                 @if ($filters['exclude_closed'] ?? false)
                                     · Alcance: <strong>En curso</strong> (sin Contratado ni Cancelada)

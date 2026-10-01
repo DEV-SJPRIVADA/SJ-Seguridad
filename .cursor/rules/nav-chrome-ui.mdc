@@ -20,9 +20,10 @@ Estandar visual unico para los tres niveles de navegacion autenticada.
 
 1. **Mismo look:** `.sidebar-link` y `.module-tab` comparten tipografia, padding, borde, `border-radius: 999px`, colores y estados hover/activo en `resources/css/app.css`. No reinventar pills distintas por modulo.
 2. **Padding contenedor ↔ botones:** `0.2rem` en `.module-strip__inner`, `.module-subnav__inner` y `.requisition-subtabs__inner` (tambien en media queries moviles de esas clases).
-3. **Sin estilos inline** que anulen padding, `min-height` o apariencia de estas pills en vistas de modulo.
-4. **Nuevos tableros o subnavs:** reutilizar `.module-tab` / partials de subnav existentes; no crear otra familia visual (chips, botones `btn`, tabs Bootstrap, etc.).
-5. Tras cambiar CSS de navegacion: `npm run build` (o `npm run dev`).
+3. **Tableros del area:** una fila con scroll (`.module-tabs--scroll`) + flechas (`.module-tabs-scroller`) si hay overflow; no usar `flex-wrap: wrap` en esa franja.
+4. **Sin estilos inline** que anulen padding, `min-height` o apariencia de estas pills en vistas de modulo.
+5. **Nuevos tableros o subnavs:** reutilizar `.module-tab` / partials de subnav existentes; no crear otra familia visual (chips, botones `btn`, tabs Bootstrap, etc.).
+6. Tras cambiar CSS de navegacion: `npm run build` (o `npm run dev`).
 
 ## Prohibido
 

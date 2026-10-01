@@ -1,32 +1,55 @@
 <x-app-layout>
     <x-slot name="header">
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
-        <div class="app-container ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
-            <div class="panel-heading-row">
-                <h2 class="panel-title panel-title--page">
-                    @if ($isRehire ?? false)
-                        Reingreso — {{ $fichaEntry->hired_full_name }}
-                    @elseif ($fichaEntry)
-                        Gestionar empleado — {{ $fichaEntry->hired_full_name }}
-                    @else
-                        Nuevo empleado
-                    @endif
-                </h2>
-                <p class="panel-text">
-                    @if ($isRehire ?? false)
-                        Nuevo vinculo laboral desde requisicion. Los datos personales se conservan; actualice las condiciones laborales.
-                    @elseif ($fichaEntry)
-                        Completa o corrige los datos antes de moverlo a Ficha empleados.
-                    @else
-                        Registro manual sin requisición — empleados históricos o carga directa en ficha.
-                    @endif
-                </p>
-            </div>
-        </div>
     </x-slot>
 
     <div class="page-section ficha-empleados-page ficha-empleados-page--form">
         <div class="app-container">
+            <div class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
+                <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
+                    <div class="ficha-empleados-page__title-copy">
+                        <h2 class="panel-title panel-title--page">
+                            @if ($isRehire ?? false)
+                                Reingreso — {{ $fichaEntry->hired_full_name }}
+                            @elseif ($fichaEntry)
+                                Gestionar empleado — {{ $fichaEntry->hired_full_name }}
+                            @else
+                                Nuevo empleado
+                            @endif
+                        </h2>
+                        <p class="panel-text">
+                            @if ($isRehire ?? false)
+                                Nuevo vínculo laboral desde requisición. Los datos personales se conservan; actualice las condiciones laborales.
+                            @elseif ($fichaEntry)
+                                Completa o corrige los datos antes de moverlo a Ficha empleados.
+                            @else
+                                Registro manual sin requisición — empleados históricos o carga directa en ficha.
+                            @endif
+                        </p>
+                    </div>
+
+                    <div class="ficha-empleados-page__title-actions" role="toolbar" aria-label="Acciones de creación">
+                        <a
+                            href="{{ route('gestion-humana.ficha-empleados.employees.index', $fichaEntry ? ['estado' => 'pendientes'] : []) }}"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Volver al listado"
+                            aria-label="Volver al listado"
+                        >
+                            <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
+                        </a>
+                        <button
+                            type="submit"
+                            form="ficha-empleados-form"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                            title="{{ ($isRehire ?? false) ? 'Confirmar reingreso' : 'Crear empleado' }}"
+                            aria-label="{{ ($isRehire ?? false) ? 'Confirmar reingreso' : 'Crear empleado' }}"
+                        >
+                            <x-lucide-save width="18" height="18" aria-hidden="true" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             @if ($errors->any())
                 <div class="alert alert--danger ficha-empleados-page__alert">
                     <ul class="ficha-empleados-form__error-list">
@@ -56,37 +79,17 @@
                         ])
                     @endif
 
-                    <section class="ficha-empleados-form__section">
-                        <header class="ficha-empleados-form__section-head">
-                            <h3 class="ficha-empleados-form__section-title">Documento</h3>
-                            <p class="ficha-empleados-form__section-lead">Documento de identidad del empleado.</p>
-                        </header>
-                        <div class="form-grid form-grid--two ficha-empleados-form__grid">
-                            <div class="form-field">
-                                <label class="form-label" for="hired_document">Cédula <span class="text-danger">*</span></label>
-                                <input
-                                    id="hired_document"
-                                    name="hired_document"
-                                    class="form-input"
-                                    value="{{ old('hired_document', $fichaEntry->hired_document ?? '') }}"
-                                    required
-                                    autocomplete="off"
-                                    @readonly($isRehire ?? false)
-                                >
-                            </div>
-                        </div>
-                    </section>
-
                     @include('areas.gestion_humana.ficha-empleados.partials.ficha-form-fields', [
                         'profile' => $profile,
                         'catalogs' => $catalogs,
                         'lockIdentityFields' => $isRehire ?? false,
+                        'canEditRequiresCourses' => $canEditRequiresCourses ?? false,
+                        'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion ?? false,
+                        'canViewRequirementFlags' => $canViewRequirementFlags ?? false,
+                        'showHiredDocumentSection' => true,
+                        'fichaEntry' => $fichaEntry,
+                        'isRehire' => $isRehire ?? false,
                     ])
-                </div>
-
-                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer">
-                    <a href="{{ route('gestion-humana.ficha-empleados.employees.index', $fichaEntry ? ['estado' => 'pendientes'] : []) }}" class="btn btn--secondary">Volver</a>
-                    <button type="submit" class="btn btn--primary">{{ ($isRehire ?? false) ? 'Confirmar reingreso' : ($fichaEntry ? 'Crear empleado' : 'Crear empleado') }}</button>
                 </div>
             </form>
         </div>

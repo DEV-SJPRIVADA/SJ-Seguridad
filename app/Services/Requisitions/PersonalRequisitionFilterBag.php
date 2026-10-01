@@ -3,6 +3,7 @@
 namespace App\Services\Requisitions;
 
 use App\Models\PersonalRequisition;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -22,24 +23,29 @@ class PersonalRequisitionFilterBag
         public readonly bool $includeClosed = false,
         public readonly bool $excludeClosedStatuses = false,
         public readonly ?string $recruiterFilter = null,
+        public readonly ?int $positionId = null,
     ) {}
 
     public static function fromManageRequest(Request $request): self
     {
         $status = $request->string('status')->toString();
         $includeClosed = $request->boolean('include_closed');
+        $clientId = $request->integer('client_id');
+        $cityId = $request->integer('city_id');
+        $positionId = $request->integer('position_id');
 
         return new self(
             search: trim($request->string('q')->toString()),
             status: $status,
             dateFrom: self::normalizeDate($request->input('date_from')),
             dateTo: self::normalizeDate($request->input('date_to')),
-            clientId: null,
-            cityId: null,
+            clientId: $clientId > 0 ? $clientId : null,
+            cityId: $cityId > 0 ? $cityId : null,
             mineOnly: false,
             includeClosed: $includeClosed,
             excludeClosedStatuses: $status === '' && ! $includeClosed,
             recruiterFilter: self::normalizeRecruiterFilter($request->input('recruiter_id')),
+            positionId: $positionId > 0 ? $positionId : null,
         );
     }
 
@@ -47,6 +53,7 @@ class PersonalRequisitionFilterBag
     {
         $clientId = $request->integer('client_id');
         $cityId = $request->integer('city_id');
+        $positionId = $request->integer('position_id');
 
         return new self(
             search: trim($request->string('q')->toString()),
@@ -56,7 +63,87 @@ class PersonalRequisitionFilterBag
             clientId: $clientId > 0 ? $clientId : null,
             cityId: $cityId > 0 ? $cityId : null,
             mineOnly: $request->boolean('mine_only'),
+            positionId: $positionId > 0 ? $positionId : null,
         );
+    }
+
+    /**
+     * Query string de Gestion a partir de filtros del Dashboard + KPI.
+     *
+     * @param  array<string, mixed>  $dashboardFilters
+     * @return array<string, string>
+     */
+    public static function manageQueryFromDashboardFilters(array $dashboardFilters, ?string $kpiStatus = null): array
+    {
+        [$dateFrom, $dateTo] = self::dateRangeFromYearMonth(
+            $dashboardFilters['year'] ?? null,
+            $dashboardFilters['month'] ?? null,
+        );
+
+        $query = [];
+
+        foreach (['client_id', 'position_id', 'city_id'] as $key) {
+            $id = self::positiveIntOrNull($dashboardFilters[$key] ?? null);
+            if ($id !== null) {
+                $query[$key] = (string) $id;
+            }
+        }
+
+        $recruiter = self::normalizeRecruiterFilter($dashboardFilters['recruiter_id'] ?? null);
+        if ($recruiter !== null) {
+            $query['recruiter_id'] = $recruiter;
+        }
+
+        if ($dateFrom !== null) {
+            $query['date_from'] = $dateFrom;
+        }
+
+        if ($dateTo !== null) {
+            $query['date_to'] = $dateTo;
+        }
+
+        if ($kpiStatus !== null && $kpiStatus !== '') {
+            $query['status'] = $kpiStatus;
+        } else {
+            $dashboardStatus = trim((string) ($dashboardFilters['status'] ?? ''));
+            if ($dashboardStatus !== '') {
+                $query['status'] = $dashboardStatus;
+            } else {
+                $query['include_closed'] = '1';
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array{0: ?string, 1: ?string}
+     */
+    public static function dateRangeFromYearMonth(mixed $year, mixed $month): array
+    {
+        if (! is_numeric($year)) {
+            return [null, null];
+        }
+
+        $yearInt = (int) $year;
+        if ($yearInt < 2000 || $yearInt > 2100) {
+            return [null, null];
+        }
+
+        $monthInt = is_numeric($month) ? (int) $month : 0;
+        if ($monthInt >= 1 && $monthInt <= 12) {
+            $start = Carbon::create($yearInt, $monthInt, 1)->startOfDay();
+
+            return [
+                $start->toDateString(),
+                $start->copy()->endOfMonth()->toDateString(),
+            ];
+        }
+
+        return [
+            sprintf('%04d-01-01', $yearInt),
+            sprintf('%04d-12-31', $yearInt),
+        ];
     }
 
     /**
@@ -71,6 +158,7 @@ class PersonalRequisitionFilterBag
             'date_to' => $this->dateTo,
             'client_id' => $this->clientId,
             'city_id' => $this->cityId,
+            'position_id' => $this->positionId,
             'mine_only' => $this->mineOnly,
             'include_closed' => $this->includeClosed,
             'exclude_closed' => $this->excludeClosedStatuses,
@@ -86,6 +174,7 @@ class PersonalRequisitionFilterBag
             || $this->dateTo !== null
             || $this->clientId !== null
             || $this->cityId !== null
+            || $this->positionId !== null
             || $this->mineOnly
             || $this->recruiterFilter !== null;
     }
@@ -130,6 +219,10 @@ class PersonalRequisitionFilterBag
 
         if ($this->cityId !== null) {
             $query->where('city_id', $this->cityId);
+        }
+
+        if ($this->positionId !== null) {
+            $query->where('position_id', $this->positionId);
         }
 
         if ($this->excludeClosedStatuses) {
@@ -178,6 +271,21 @@ class PersonalRequisitionFilterBag
         }
 
         return null;
+    }
+
+    private static function positiveIntOrNull(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $int = (int) $value;
+
+        return $int > 0 ? $int : null;
     }
 
     private static function normalizeDate(mixed $value): ?string

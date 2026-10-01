@@ -56,12 +56,12 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 ### Gestionar Empleado (mover un pendiente a ficha)
 
 1. En la pestaña **Empleados**, pill **Pendientes**, ubique el registro a mover.
-2. Pulse **Gestionar Empleado** (visible solo con permiso de edicion). Se abre el formulario de ficha; no se ejecuta ningun cambio todavia.
+2. Pulse el icono **Gestionar Empleado** (visible solo con permiso de edición; al pasar el mouse muestra el nombre de la acción). Se abre el formulario de ficha; no se ejecuta ningún cambio todavía.
 3. Revise el encabezado **"Gestionar empleado — {nombre}"** y el bloque **Referencia de requisición** (solo lectura): código, cliente, cargo, salario/fecha sugeridos, texto de centro de costo y ciudad de la requisición. Esos datos de referencia **no** se exportan automáticamente a nómina.
-4. Complete el formulario de ficha con los **catálogos obligatorios**: sexo, fecha ingreso, cargo, salario, centro de costo (catálogo nómina), EPS, AFP, caja de compensación, forma de pago, banco, tipo y número de cuenta. Elija un valor por campo de catálogo (formato `código — nombre`); el sistema guarda código y nombre homólogo.
+4. Complete el formulario de ficha: primero indique si **requiere cursos** y/o **requiere acreditación** (por defecto ambos activos); luego cédula y los **catálogos obligatorios**: sexo, fecha ingreso, cargo, salario, centro de costo (catálogo nómina), EPS, AFP, caja de compensación, forma de pago, banco, tipo y número de cuenta. Elija un valor por campo de catálogo (formato `código — nombre`); el sistema guarda código y nombre homólogo.
    - Si corrige cédula o nombre aqui, el cambio queda **solo** en la ficha del empleado; **no** se refleja en la requisicion original.
-5. Para descartar los cambios y dejar el registro intacto en **Pendientes**, pulse **Volver** (regresa a la pill Pendientes sin guardar nada).
-6. Para confirmar, pulse **Crear empleado**. Si la cedula ingresada ya pertenece a **otro** registro de ficha, el sistema bloquea el guardado con un mensaje de error; corrija la cedula e intente de nuevo.
+5. Para descartar los cambios y dejar el registro intacto en **Pendientes**, use el icono **Volver** (flecha) en la barra superior (regresa a la pill Pendientes sin guardar nada).
+6. Para confirmar, use el icono **Guardar** (disquete) en la barra superior. Si la cedula ingresada ya pertenece a **otro** registro de ficha, el sistema bloquea el guardado con un mensaje de error; corrija la cedula e intente de nuevo.
 7. Al guardar con exito, el registro desaparece de **Pendientes**, queda con fecha y usuario que lo movio (**moved_to_ficha_at**/**moved_to_ficha_by**), y usted es redirigido al **listado principal** (pill **En ficha**), donde ya aparece el nuevo registro.
 
 **Nota:** intentar abrir "Gestionar Empleado" de un registro que ya fue movido a ficha (por ejemplo, si otra persona lo gestiono primero) muestra un error de pagina no encontrada; recargue el listado de Pendientes para ver el estado actualizado.
@@ -70,16 +70,18 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. En la pestaña **Empleados**, cambie a la pill **En ficha**.
 2. Haga clic en una fila para abrir el detalle de la ficha.
-3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, puede habilitar edición y guardar.
+3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. La **carta de contratación** se genera desde el icono de documento en la barra superior de acciones.
 4. En el filtro **Desvinculado** aparece la columna **Recontratable** (Si/No) según lo registrado al desvincular.
 
 ### Completar ficha de empleado
 
 1. En **Pendientes**, **En ficha** o **Nuevo empleado**, abra el formulario de ficha (permiso de edición).
-2. Diligencie las siete secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
-3. Los campos marcados con **\*** son obligatorios para guardar.
-4. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.
-5. En **Contrato y nómina** verá **Fecha desvinculación** (si el empleado se retiró por importación o desvinculación formal). Puede corregirla al editar; si tiene fecha ≤ hoy el estado pasa a desvinculado. La desvinculación **formal** (causal, cartas, seguimiento) se registra con **Registrar desvinculación**.
+2. En **Nuevo empleado** / **Gestionar empleado**, la primera sección es **Cursos y acreditación**: marque o desmarque si la persona requiere cursos y/o acreditación (por defecto ambos activos). Si desactiva un requisito, no aparecerá en las validaciones de ese módulo.
+3. Diligencie documento (cédula) y las secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
+4. Los campos marcados con **\*** son obligatorios para guardar.
+5. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.
+6. En **Contrato y nómina** verá **Fecha desvinculación** (si el empleado se retiró por importación o desvinculación formal). Puede corregirla al editar; si tiene fecha ≤ hoy el estado pasa a desvinculado. La desvinculación **formal** (causal, cartas, seguimiento) se registra con **Registrar desvinculación**.
+7. En alta, use los iconos de la barra superior: **Volver** y **Guardar**.
 
 ### Registrar desvinculacion
 
@@ -148,6 +150,9 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.19 | 2026-10-01 | Agent | Pendientes: accion Gestionar Empleado / reingreso pasa a icono en fila. |
+| 1.18 | 2026-10-01 | Agent | Alta / Gestionar empleado: toolbar icon-only (Volver/Guardar); seccion Cursos y acreditacion editable desde la creacion. |
+| 1.17 | 2026-10-01 | Agent | Ficha: seccion Cursos/acreditacion primero; barra de acciones icon-only (cursos, historial, editar, guardar, desvinculacion, volver). |
 | 1.16 | 2026-09-28 | Ficha | Listado Desvinculado: columna Recontratable (Si/No). |
 | 1.15 | 2026-09-28 | Ficha | Permiso solo ver: puede abrir la ficha en solo lectura; sin editar/guardar. |
 | 1.14 | 2026-09-28 | Ficha | Import masivo repara nombres con `?` (Ñ/Ó); comando `ficha:fix-name-encoding` para datos ya guardados. |

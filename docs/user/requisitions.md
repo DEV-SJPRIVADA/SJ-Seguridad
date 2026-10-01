@@ -298,24 +298,29 @@ permisos para modificar Catálogos
     reclutador o un reclutador activo). El mes inicia en el mes actual;
     la pantalla se actualiza al cambiar los filtros.
 
-21. Revise los gráficos de tendencia, estado, ciudad y cliente.
+21. Haga clic en un KPI para ir a **Gestión** con el mismo filtro
+    (fechas del mes/año, cliente, cargo, ciudad, reclutador) y el estado
+    que cuenta ese KPI. El KPI Total abre Gestión en alcance **Todos**.
+
+22. Revise los gráficos de tendencia, estado, ciudad y cliente.
 
 ### Gestionar requisiciones (Gestión Humana)
 
-22. Al correo electrónico de los implicados en el proceso de selección
+23. Al correo electrónico de los implicados en el proceso de selección
     llegara la notificación con los datos de la requisición.
 
-23. Abra la pestaña Gestión.
+24. Abra la pestaña Gestión.
 
-24. Por defecto el listado muestra requisiciones En curso (sin
+25. Por defecto el listado muestra requisiciones En curso (sin
     Contratado ni Cancelada). Use el filtro de estados **Todos** para
     ver todos los estados, los demás para filtrar uno en concreto, o
-    búsqueda, rango de Fecha solicitud y **Reclutador** (Todos / Sin
-    reclutador / activos); pulse Buscar.
+    búsqueda, rango de Fecha solicitud, **Reclutador** (Todos / Sin
+    reclutador / activos) y los filtros de **Cliente**, **Cargo** y
+    **Ciudad**; pulse Buscar.
 
     ![Captura de pantalla de gestión de requisiciones](assets/image2.png)
 
-25. Seleccione el botón abrir de la requisición a iniciar proceso
+26. Seleccione el botón abrir de la requisición a iniciar proceso
     complete datos de compensación y contrato, cambie el estado a **En
     Gestión** y guarde cambios.
 
@@ -450,6 +455,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.5         | 2026-10-01                 | Dashboard: clic en KPI abre Gestión filtrada; Gestión agrega Cliente/Cargo/Ciudad |
 | 1.4         | 2026-09-30                 | Mis requisiciones: Ver solicitud + Ver Rq (solo lectura) |
 | 1.3         | 2026-09-24                 | Impresión FO-GH-22: recepción GH = momento Solicitada |
 | 1.2         | 2026-09-24                 | Plantilla FO-GH-22 vacía descargable desde Gestión |

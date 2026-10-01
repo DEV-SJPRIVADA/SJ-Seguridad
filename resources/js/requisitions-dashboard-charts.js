@@ -9,6 +9,16 @@ import {
 /** @type {ApexCharts[]} */
 const chartInstances = [];
 
+/** Colores KPI del dashboard (fallback por clave de estado). */
+const STATUS_KPI_COLORS = {
+    solicitada: '#0284c7',
+    en_gestion: '#b45309',
+    contratado: '#15803d',
+    cancelada: '#be123c',
+    aprobada: '#0f766e',
+    pendiente_autorizacion_gerencia: '#7e22ce',
+};
+
 function readChartData() {
     const el = document.getElementById('requisitions-chart-data');
     if (!el) {
@@ -20,6 +30,22 @@ function readChartData() {
     } catch {
         return null;
     }
+}
+
+/**
+ * @param {{ colors?: string[], keys?: string[] }} status
+ * @returns {string[]}
+ */
+function statusChartColors(status) {
+    if (Array.isArray(status.colors) && status.colors.length > 0) {
+        return status.colors;
+    }
+
+    if (Array.isArray(status.keys) && status.keys.length > 0) {
+        return status.keys.map((key) => STATUS_KPI_COLORS[key] || '#64748b');
+    }
+
+    return STATUS_DONUT_COLORS;
 }
 
 function mountChart(el, options) {
@@ -71,7 +97,7 @@ function renderStatus(data) {
         chart: { ...sharedChart.chart, type: 'donut', height: '100%' },
         series: data.status.data.map(Number),
         labels: data.status.labels,
-        colors: STATUS_DONUT_COLORS,
+        colors: statusChartColors(data.status),
         legend: {
             position: 'bottom',
             horizontalAlign: 'center',
