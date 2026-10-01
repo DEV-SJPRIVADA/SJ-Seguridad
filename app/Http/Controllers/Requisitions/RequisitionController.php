@@ -133,6 +133,29 @@ class RequisitionController extends Controller
         $statsByClient = $requisitions->groupBy('client_id')->map->count()->sortDesc()->take(5);
         $clientNames = RequisitionClient::whereIn('id', $statsByClient->keys())->pluck('name', 'id');
 
+        $kpiUrls = [
+            'total' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters),
+            ]),
+            'solicitada' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_SOLICITADA),
+            ]),
+            'en_gestion' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_EN_GESTION),
+            ]),
+            'contratado' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_CONTRATADO),
+            ]),
+            'cancelada' => route('requisitions.manage', [
+                'module' => $module,
+                ...PersonalRequisitionFilterBag::manageQueryFromDashboardFilters($filters, PersonalRequisition::STATUS_CANCELADA),
+            ]),
+        ];
+
         return view('modules.requisitions.dashboard', [
             'moduleKey' => $module,
             'moduleLabel' => config("access.areas.{$module}"),
@@ -148,6 +171,7 @@ class RequisitionController extends Controller
                 'contratado' => $statsByStatus->get(PersonalRequisition::STATUS_CONTRATADO, 0),
                 'cancelada' => $statsByStatus->get(PersonalRequisition::STATUS_CANCELADA, 0),
             ],
+            'kpiUrls' => $kpiUrls,
             'dashboardGlobalScope' => $this->requisitionAccess->usesGlobalDashboardScope(auth()->user(), $module),
             'chartData' => [
                 'status' => [
@@ -386,6 +410,7 @@ class RequisitionController extends Controller
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
             'recruiterFilterOptions' => $this->recruiterFilterOptions(),
+            'catalogs' => $this->catalogs(),
         ]);
     }
 

@@ -130,6 +130,95 @@ class RequisitionsDashboardChartsTest extends TestCase
         $response->assertSee('Reclutador Dashboard KPI', false);
     }
 
+    public function test_dashboard_kpi_links_carry_filters_to_manage(): void
+    {
+        $viewer = User::factory()->create([
+            'must_change_password' => false,
+            'area_key' => 'gestion_humana',
+        ]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.dashboard',
+            'requisitions.tab.gestion',
+        ]);
+
+        $client = RequisitionClient::query()->firstOrFail();
+        $position = RequisitionPosition::query()->firstOrFail();
+        $city = RequisitionCity::query()->firstOrFail();
+        $recruiter = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+            'name' => 'Reclutador KPI Link',
+        ]);
+        $recruiter->assignRole('usuario');
+        $recruiter->givePermissionTo('requisitions.selection_officer');
+
+        $year = (int) now()->year;
+        $month = (int) now()->month;
+        $dateFrom = now()->startOfMonth()->toDateString();
+        $dateTo = now()->endOfMonth()->toDateString();
+
+        $response = $this->actingAs($viewer)->get(route('requisitions.dashboard', [
+            'module' => 'gestion_humana',
+            'year' => $year,
+            'month' => $month,
+            'client_id' => $client->id,
+            'position_id' => $position->id,
+            'city_id' => $city->id,
+            'recruiter_id' => $recruiter->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertViewHas('kpiUrls', function (array $kpiUrls) use ($client, $position, $city, $recruiter, $dateFrom, $dateTo): bool {
+            foreach (['total', 'solicitada', 'en_gestion', 'contratado', 'cancelada'] as $key) {
+                if (! isset($kpiUrls[$key]) || ! is_string($kpiUrls[$key])) {
+                    return false;
+                }
+            }
+
+            parse_str(parse_url($kpiUrls['total'], PHP_URL_QUERY) ?: '', $totalQuery);
+            parse_str(parse_url($kpiUrls['en_gestion'], PHP_URL_QUERY) ?: '', $enGestionQuery);
+
+            return ($totalQuery['include_closed'] ?? null) === '1'
+                && ($totalQuery['client_id'] ?? null) === (string) $client->id
+                && ($totalQuery['position_id'] ?? null) === (string) $position->id
+                && ($totalQuery['city_id'] ?? null) === (string) $city->id
+                && ($totalQuery['recruiter_id'] ?? null) === (string) $recruiter->id
+                && ($totalQuery['date_from'] ?? null) === $dateFrom
+                && ($totalQuery['date_to'] ?? null) === $dateTo
+                && ! isset($totalQuery['status'])
+                && ($enGestionQuery['status'] ?? null) === PersonalRequisition::STATUS_EN_GESTION
+                && ($enGestionQuery['client_id'] ?? null) === (string) $client->id
+                && ! isset($enGestionQuery['include_closed']);
+        });
+
+        $manage = $this->actingAs($viewer)->get(route('requisitions.manage', [
+            'module' => 'gestion_humana',
+            'status' => PersonalRequisition::STATUS_EN_GESTION,
+            'client_id' => $client->id,
+            'position_id' => $position->id,
+            'city_id' => $city->id,
+            'recruiter_id' => $recruiter->id,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+        ]));
+
+        $manage->assertOk();
+        $manage->assertSee('id="manage-client-select"', false);
+        $manage->assertSee('id="manage-position-select"', false);
+        $manage->assertSee('id="manage-city-select"', false);
+        $manage->assertViewHas('filters', function (array $filters) use ($client, $position, $city, $recruiter, $dateFrom, $dateTo): bool {
+            return ($filters['status'] ?? null) === PersonalRequisition::STATUS_EN_GESTION
+                && (int) ($filters['client_id'] ?? 0) === $client->id
+                && (int) ($filters['position_id'] ?? 0) === $position->id
+                && (int) ($filters['city_id'] ?? 0) === $city->id
+                && ($filters['recruiter_id'] ?? null) === (string) $recruiter->id
+                && ($filters['date_from'] ?? null) === $dateFrom
+                && ($filters['date_to'] ?? null) === $dateTo;
+        });
+    }
+
     /**
      * @return array<string, mixed>
      */

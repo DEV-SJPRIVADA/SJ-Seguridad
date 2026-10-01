@@ -280,10 +280,76 @@ a {
     align-items: center;
     gap: 0.45rem;
     flex-wrap: wrap;
+    min-width: 0;
 }
 
 .module-tabs--scroll {
+    flex-wrap: nowrap;
     max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+
+.module-tabs--scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.module-tabs--scroll .module-tab {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+}
+
+.module-tabs-scroller {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+.module-tabs-scroller__track {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.module-tabs-scroller__btn {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-text-soft);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.module-tabs-scroller--overflow .module-tabs-scroller__btn {
+    display: inline-flex;
+}
+
+.module-tabs-scroller__btn:hover:not(:disabled) {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+    background: #f8fafc;
+}
+
+.module-tabs-scroller__btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.module-tabs-scroller__btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #003366) 45%, transparent);
+    outline-offset: 2px;
 }
 
 .requisition-subtabs {
@@ -5413,6 +5479,21 @@ a {
     max-width: 100%;
 }
 
+.req-manage-filters__query-field--select {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+    max-width: 18rem;
+}
+
+.req-manage-filters__query-row--manage .req-manage-filters__query-field--search {
+    flex: 1 1 14rem;
+    max-width: 18rem;
+}
+
+.req-manage-filters__query-row--manage .req-manage-filters__query-export {
+    margin-left: 0;
+}
+
 .req-manage-filters__query-submit {
     display: flex;
     flex-direction: column;
@@ -6307,7 +6388,15 @@ a.sj-pagination__item:hover {
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     overflow: hidden;
     text-align: center;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.req-dashboard-kpi:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--req-kpi-accent) 55%, transparent);
+    outline-offset: 2px;
 }
 
 .req-dashboard-kpi::before {
@@ -8121,6 +8210,10 @@ a.sj-pagination__item:hover {
     .module-tabs .module-tab {
         flex: 0 0 auto;
         scroll-snap-align: start;
+    }
+
+    .module-tabs-scroller {
+        width: 100%;
     }
 
     /* Tableros de area + subtabs del modulo visibles en movil (dos niveles) */
