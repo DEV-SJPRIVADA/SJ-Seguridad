@@ -59,6 +59,7 @@ class FormacionFormacionesTest extends TestCase
             'fecha_inicio' => '2026-03-15',
             'mes' => 3,
             'anio' => 2026,
+            'calificacion' => null,
         ]);
 
         $viewer = $this->viewerUser();
@@ -320,6 +321,143 @@ class FormacionFormacionesTest extends TestCase
         $this->assertContains('Curso A', $cursos);
         $this->assertContains('Curso B', $cursos);
         $this->assertCount(12, $response->json('meses'));
+    }
+
+    public function test_options_cursos_depend_on_anio_and_mes(): void
+    {
+        FormacionRegistro::factory()->create([
+            'anio' => 2026,
+            'mes' => 1,
+            'nombre_curso' => 'Solo Enero',
+            'categoria' => 'A',
+            'fecha_inicio' => '2026-01-01',
+        ]);
+        FormacionRegistro::factory()->create([
+            'anio' => 2026,
+            'mes' => 2,
+            'nombre_curso' => 'Solo Febrero',
+            'categoria' => 'A',
+            'fecha_inicio' => '2026-02-01',
+        ]);
+        FormacionRegistro::factory()->create([
+            'anio' => 2025,
+            'mes' => 2,
+            'nombre_curso' => 'Otro Año',
+            'categoria' => 'A',
+            'fecha_inicio' => '2025-02-01',
+        ]);
+
+        $viewer = $this->viewerUser();
+
+        $byAnio = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.options', [
+                'anio' => 2026,
+            ]))
+            ->assertOk()
+            ->json('cursos');
+
+        $byAnioLabels = collect($byAnio)->pluck('value')->all();
+        $this->assertContains('Solo Enero', $byAnioLabels);
+        $this->assertContains('Solo Febrero', $byAnioLabels);
+        $this->assertNotContains('Otro Año', $byAnioLabels);
+
+        $byMes = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.options', [
+                'anio' => 2026,
+                'mes' => 2,
+            ]))
+            ->assertOk()
+            ->json('cursos');
+
+        $byMesLabels = collect($byMes)->pluck('value')->all();
+        $this->assertContains('Solo Febrero', $byMesLabels);
+        $this->assertNotContains('Solo Enero', $byMesLabels);
+        $this->assertNotContains('Otro Año', $byMesLabels);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.formacion.formaciones', [
+                'anio' => 2026,
+                'mes' => 2,
+                'nombre_curso' => 'Solo Enero',
+            ]))
+            ->assertOk()
+            ->assertSee('filter_nombre_curso', false)
+            ->assertDontSee('value="Solo Enero"', false);
+    }
+
+    public function test_datatable_filters_by_ciclo_person_ids(): void
+    {
+        $year = 2026;
+
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'C1',
+            'nombre_completo' => 'Ciclo Aprobado',
+            'anio' => $year,
+            'mes' => 5,
+            'nombre_curso' => 'Altura',
+            'calificacion' => '9',
+            'fecha_inicio' => '2026-05-01',
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'C1',
+            'nombre_completo' => 'Ciclo Aprobado',
+            'anio' => $year,
+            'mes' => 5,
+            'nombre_curso' => 'Defensivo',
+            'calificacion' => '8',
+            'fecha_inicio' => '2026-05-02',
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'C2',
+            'nombre_completo' => 'Ciclo Incompleto',
+            'anio' => $year,
+            'mes' => 5,
+            'nombre_curso' => 'Altura',
+            'calificacion' => '9',
+            'fecha_inicio' => '2026-05-03',
+        ]);
+
+        $viewer = $this->viewerUser();
+
+        $aprobados = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'anio' => $year,
+                'mes' => 5,
+                'ciclo' => 'aprobado',
+            ]))
+            ->assertOk();
+
+        $this->assertSame(2, $aprobados->json('recordsFiltered'));
+        $aprobadosText = $this->datatableRowText($aprobados->json('data'));
+        $this->assertStringContainsString('Ciclo Aprobado', $aprobadosText);
+        $this->assertStringNotContainsString('Ciclo Incompleto', $aprobadosText);
+
+        $incompletos = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'anio' => $year,
+                'mes' => 5,
+                'ciclo' => 'incompleto',
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $incompletos->json('recordsFiltered'));
+        $this->assertStringContainsString('Ciclo Incompleto', $this->datatableRowText($incompletos->json('data')));
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.formacion.formaciones', [
+                'anio' => $year,
+                'mes' => 5,
+                'ciclo' => 'incompleto',
+            ]))
+            ->assertOk()
+            ->assertSee('Filtrado desde Dashboard (ciclo)', false)
+            ->assertSee('Incompleto', false);
     }
 
     public function test_export_respects_filters_and_audits(): void

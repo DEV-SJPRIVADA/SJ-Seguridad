@@ -11054,6 +11054,57 @@ a.req-dashboard-kpi:focus-visible {
     color: #be123c;
 }
 
+.formacion-dashboard-page__mode-tabs {
+    display: inline-flex;
+    gap: 0.2rem;
+    padding: 0.2rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    width: fit-content;
+}
+
+.formacion-dashboard-page__mode-tab {
+    border: 0;
+    background: transparent;
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.formacion-dashboard-page__mode-tab.is-active {
+    background: #fff;
+    color: #0f172a;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.formacion-dashboard-page__ciclo-hint {
+    margin: 0 0 0.75rem;
+}
+
+.formacion-dashboard-page__kpi-link {
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.formacion-dashboard-page__kpi-link:hover,
+.formacion-dashboard-page__kpi-link:focus-visible {
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.formacion-formaciones-page__ciclo-banner a {
+    margin-left: 0.35rem;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 .formacion-dashboard-page__charts .cursos-dashboard-page__chart {
     min-height: 260px;
 }

@@ -10,7 +10,7 @@ Consultar y mantener en la plataforma el registro de formaciones que antes se ma
 
 Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 
-- **Dashboard** — indicadores del año (total, aprobados, reprobados, no realizadas), gráficos por mes / estado / categorías; filtros de año, mes, estado y curso.
+- **Dashboard** — dos modos: **Por curso** (indicadores por registro: total, aprobados, reprobados, no realizadas) y **Por persona (ciclo)** (quién completó el set de cursos del mes o del año). Filtros de año, mes, estado y curso.
 - **Formaciones** — listado paginado (carga por páginas), filtros (año, mes, categoría, curso, número de ID, nombre, estado), exportar a Excel. Con permiso de edición: descargar plantilla e importar un archivo que **reemplaza todos** los registros actuales.
 
 **En esta versión:**
@@ -25,8 +25,9 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 | Término | Significado |
 | --- | --- |
 | Formación | Registro de una persona en un curso/formación (ID, nombre, fecha de inicio, curso, calificación, categoría). |
-| Dashboard | Pantalla de indicadores (total y por estado; gráficos por mes, estado y categorías) con filtros de año, mes, estado y curso. |
+| Dashboard | Pantalla de indicadores: modo por curso (registro) o por persona (ciclo del mes/año); filtros de año, mes, estado y curso. |
 | Formaciones | Pestaña del listado operativo con filtros y exportación. |
+| Ciclo | Conjunto de cursos distintos del mes (o del año si no hay mes). Por persona se toma la mejor nota de cada curso. |
 | Plantilla | Archivo Excel vacío con las columnas exactas que debe tener la carga. |
 | Importar (reemplazo total) | Cargar un archivo que **borra todos** los registros actuales y deja solo los del archivo nuevo. |
 | Número de ID | Identificador de la persona en el Excel de formaciones. |
@@ -50,17 +51,20 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 
 ### Usar el Dashboard
 
-1. Elija **año**, y si necesita afinar: **mes**, **estado** y **curso**. El listado de cursos se limita al mes elegido (si el mes está vacío, aparecen todos los del año).
-2. Revise los KPI: total, aprobados, reprobados y no realizadas.
-3. Los gráficos (por mes, por estado y top categorías) se actualizan al cambiar cualquier filtro.
-4. Use el icono X para limpiar mes/estado/curso (el año se conserva).
+1. Elija **año**, y si necesita afinar: **mes**. En modo **Por curso** también puede filtrar por **estado** y **curso**. El listado de cursos se limita al mes elegido (si el mes está vacío, aparecen todos los del año).
+2. Alterne entre **Por curso** y **Por persona (ciclo)**.
+3. En **Por curso**: revise total, aprobados, reprobados y no realizadas; gráficos por mes, estado y categorías.
+4. En **Por persona (ciclo)**: el set son todos los cursos distintos del mes (o del año). Se cuenta la mejor nota por persona/curso. Si aprueba todos → Aprobado; si reprueba alguno → Reprobado; si hizo solo algunos → Incompleto; si no hizo ninguno → No realizado.
+5. Use el icono X para limpiar mes/estado/curso (el año se conserva).
+6. Clic en cualquier KPI abre **Formaciones** con el filtro equivalente (año/mes y estado, o personas del ciclo).
 
 ### Consultar y filtrar formaciones
 
 1. Vaya a la pestaña **Formaciones**.
-2. Use los filtros disponibles: año, mes, categoría, curso, número de ID, nombre y estado.
-3. El listado se actualiza por páginas; no se cargan todas las filas de una vez. La columna **Estado** se calcula sola y se muestra con color: calificación mayor a 7.5 → Aprobado (verde); con nota y ≤ 7.5 → Reprobado (rojo); sin calificación → No realizada (gris). Puede filtrar por ese estado.
-4. Para descargar lo filtrado a Excel, use el botón de exportar.
+2. Use los filtros disponibles: año, mes, categoría, curso, número de ID, nombre y estado. Al cambiar año o mes, el desplegable de **curso** se actualiza solo con los cursos de ese periodo (igual que en el Dashboard).
+3. Si llegó desde un KPI de ciclo, verá un aviso con el filtro de ciclo activo (puede quitarlo sin perder año/mes).
+4. El listado se actualiza por páginas; no se cargan todas las filas de una vez. La columna **Estado** se calcula sola y se muestra con color: calificación mayor a 7.5 → Aprobado (verde); con nota y ≤ 7.5 → Reprobado (rojo); sin calificación → No realizada (gris). Puede filtrar por ese estado.
+5. Para descargar lo filtrado a Excel, use el botón de exportar.
 
 ### Descargar plantilla e importar (solo edición)
 
@@ -78,6 +82,8 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-10-02 | Agent | Clic en un KPI del Dashboard abre Formaciones ya filtrado (estado o ciclo). |
+| 1.7 | 2026-10-02 | Agent | Dashboard: modo Por persona (ciclo). Formaciones: el filtro Curso se limita al año/mes como en el Dashboard. |
 | 1.6 | 2026-10-02 | Agent | Dashboard: el filtro Curso lista solo cursos del mes seleccionado (o todos si el mes está vacío). |
 | 1.5 | 2026-10-02 | Agent | Dashboard: KPIs por estado, filtros mes/estado/curso y gráfico de estado. |
 | 1.4 | 2026-10-02 | Agent | Estado con colores (verde Aprobado, rojo Reprobado, gris No realizada) y filtro por estado en Formaciones. |

@@ -4,6 +4,7 @@ import {
     BRAND_NAVY,
     STATUS_GREEN,
     STATUS_NEUTRAL,
+    STATUS_ORANGE,
     STATUS_RED,
     sharedChart,
 } from './charts/apex-defaults';
@@ -12,6 +13,7 @@ const chartInstances = {
     mes: null,
     categoria: null,
     estado: null,
+    ciclo: null,
 };
 
 function destroyChart(key) {
@@ -78,22 +80,22 @@ function renderCategoria(data) {
     chartInstances.categoria.render();
 }
 
-function renderEstado(data) {
-    const el = document.querySelector('#formacion-chart-estado');
+function renderDonut(elSelector, key, data, colors) {
+    const el = document.querySelector(elSelector);
     if (!el) {
         return;
     }
-    destroyChart('estado');
+    destroyChart(key);
     const labels = data?.labels?.length ? data.labels : ['Sin datos'];
     const series = data?.labels?.length ? data.data.map(Number) : [0];
     const hasValues = series.some((value) => Number(value) > 0);
 
-    chartInstances.estado = new ApexCharts(el, {
+    chartInstances[key] = new ApexCharts(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'donut', height: '100%' },
         series: hasValues ? series : [1],
         labels: hasValues ? labels : ['Sin datos'],
-        colors: hasValues ? [STATUS_GREEN, STATUS_RED, STATUS_NEUTRAL] : [STATUS_NEUTRAL],
+        colors: hasValues ? colors : [STATUS_NEUTRAL],
         legend: {
             position: 'bottom',
             fontSize: '12px',
@@ -126,18 +128,28 @@ function renderEstado(data) {
             enabled: hasValues,
         },
     });
-    chartInstances.estado.render();
+    chartInstances[key].render();
 }
 
-/**
- * @param {{
- *   por_mes?: { labels: string[], data: number[] },
- *   por_categoria?: { labels: string[], data: number[] },
- *   por_estado?: { labels: string[], data: number[] }
- * } | null | undefined} charts
- */
+function renderEstado(data) {
+    renderDonut('#formacion-chart-estado', 'estado', data, [STATUS_GREEN, STATUS_RED, STATUS_NEUTRAL]);
+}
+
+function renderCiclo(data) {
+    renderDonut('#formacion-chart-ciclo', 'ciclo', data, [
+        STATUS_GREEN,
+        STATUS_RED,
+        STATUS_ORANGE,
+        STATUS_NEUTRAL,
+    ]);
+}
+
 window.renderFormacionDashboardCharts = function renderFormacionDashboardCharts(charts) {
     renderMes(charts?.por_mes || { labels: [], data: [] });
     renderEstado(charts?.por_estado || { labels: [], data: [] });
     renderCategoria(charts?.por_categoria || { labels: [], data: [] });
+};
+
+window.renderFormacionCicloChart = function renderFormacionCicloChart(charts) {
+    renderCiclo(charts || { labels: [], data: [] });
 };

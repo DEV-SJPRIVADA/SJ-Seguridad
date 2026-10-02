@@ -16,8 +16,8 @@ Tablero de area **Gestion Humana** para consultar y recargar el dataset operativ
 - Permisos: `view.board.gestion_humana.formacion`, `formacion.view`, `formacion.edit`. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - **Sin** pestana parametros / `parameters.edit` / tablas de catalogo.
 - **Sin** CRUD fila a fila; unica mutacion = import replace-all.
-- Dashboard v1: total, KPIs por estado (aprobado/reprobado/no realizada), distribucion por mes (1–12), top categorias (`config('formacion.dashboard.categoria_top')`, default 10), chart donut por estado; filtros ano, mes, estado, curso.
-- Formaciones: DataTables `serverSide: true`; filtros ano, mes, categoria, curso, numero ID, nombre; export Excel; plantilla + import.
+- Dashboard v1: modos **Por curso** (registros) y **Por persona (ciclo)**; KPIs individuales por estado; KPIs ciclo (mejor nota por persona/curso; set = distinct del mes o del año); filtros ano, mes, estado, curso (curso scoped a ano/mes).
+- Formaciones: DataTables `serverSide: true`; filtros ano, mes, categoria, curso, numero ID, nombre, estado; opciones de **curso** filtradas por ano/mes (igual que Dashboard, via `formaciones.options?anio=&mes=`); export Excel; plantilla + import.
 - Audit: `FormacionAuditLogService` → `SystemAuditService` (`module=formacion`, `area=gestion_humana`). Eventos: `import_replace`, `export`.
 - Selectores: `<x-searchable-select>`. Export: `BaseExport` + `<x-export-excel>` (prohibido Select2 / `excelHtml5`).
 - Fuera V1: jobs/colas async de import, soft-delete / historial de versiones del dataset, vinculo Ficha/Cursos, CRUD individual, dashboard avanzado multi-ano.
@@ -38,7 +38,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/formaciones/exportar` | `formaciones.export` | Excel filtrado. `formacion.view` |
 | GET | `/formaciones/plantilla-importacion` | `formaciones.import-template` | Plantilla vacia. `formacion.edit` |
 | POST | `/formaciones/importar` | `formaciones.import` | Replace-all. `formacion.edit` + `confirm_replace` |
-| GET | `/formaciones/opciones` | `formaciones.options` | Distincts para filtros. `formacion.view` |
+| GET | `/formaciones/opciones` | `formaciones.options` | Distincts para filtros; query opcional `anio`/`mes` limita `cursos`. `formacion.view` |
 
 ## Permisos
 
@@ -70,8 +70,8 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 
 | Vista | Descripcion |
 | --- | --- |
-| `areas/gestion_humana/formacion/dashboard.blade.php` | KPIs + ApexCharts + filtro ano |
-| `areas/gestion_humana/formacion/formaciones.blade.php` | Shell DT server-side + filtros + export + import |
+| `areas/gestion_humana/formacion/dashboard.blade.php` | KPIs + modos Por curso / Por persona (ciclo) + ApexCharts + filtros |
+| `areas/gestion_humana/formacion/formaciones.blade.php` | Shell DT server-side + filtros (curso dinámico por ano/mes) + export + import |
 | `areas/gestion_humana/formacion/partials/subnav.blade.php` | Pestanas `.module-tab` |
 | `areas/gestion_humana/formacion/partials/import-modal.blade.php` | Modal plantilla/import + confirmacion replace-all |
 
@@ -117,9 +117,9 @@ Indices adicionales: `anio`, `mes`, compuesto `(anio, mes)`.
 | `FormacionAccessService` | Board / view / edit + tabs visibles |
 | `HasFormacionTabs` | Trait vistas (tab activa / subnav) |
 | `FormacionAuditLogService` | Wrapper audit (`module=formacion`, `area=gestion_humana`) |
-| `FormacionDatatableService` | DT server-side + filtros + opciones distinct |
+| `FormacionDatatableService` | DT server-side + filtros + opciones distinct (`courseOptions` por ano/mes) |
 | `FormacionImportService` | Parse fechas + replace-all (validate → delete → chunk insert 500) |
-| `FormacionDashboardService` | Metrics KPIs/charts por ano + filtros mes/estado/curso |
+| `FormacionDashboardService` | Metrics KPIs/charts + ciclo persona + filtros mes/estado/curso |
 
 Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultFormacionBoardUrl()` / tabs (patron Cursos).
 
@@ -158,10 +158,12 @@ Checkbox `confirm_replace` (accepted) + mensaje claro: se eliminaran todos los r
 4. Fuente de verdad operativa = tabla tras el ultimo import exitoso.
 5. Import exitoso **borra todos** los registros previos y carga el archivo.
 6. Headers invalidos o errores en filas obligatorias → **no** borrar dataset.
-7. Filtros listado: `anio`, `mes` (1–12), `categoria`, `nombre_curso`, `numero_id`, `nombre`/`nombre_completo` (like), `estado` (`aprobado`/`reprobado`/`no_realizada`).
+7. Filtros listado: `anio`, `mes` (1–12), `categoria`, `nombre_curso`, `numero_id`, `nombre`/`nombre_completo` (like), `estado` (`aprobado`/`reprobado`/`no_realizada`). Opciones de curso = distinct del ano (+ mes si aplica), mismo criterio que Dashboard.
 8. DataTables `serverSide: true`; `lengthMenu` sin `-1`; tope length en servidor (max 100).
 9. Dashboard default ano: (1) query valida 2000–2100; (2) ano calendario con datos; (3) `MAX(anio)` con datos; (4) sin datos → ano actual (metricas en cero).
-10. Distinto del tablero **Cursos** (naming / tabla / permisos `formacion_*`).
+10. Ciclo por persona: set = cursos distinct del mes (o del ano si mes vacio); 1 conteo por persona/curso con **mejor** nota; estados ciclo: aprobado (todos), reprobado (alguno), incompleto (parcial), no realizado (ninguno).
+11. Clic en KPI Dashboard → Formaciones: modo curso pasa `estado` (+ ano/mes/curso); modo ciclo pasa `ciclo` (+ ano/mes) y filtra registros de esas personas (`whereIn numero_id`).
+12. Distinto del tablero **Cursos** (naming / tabla / permisos `formacion_*`).
 
 ## JavaScript / assets
 
@@ -229,6 +231,8 @@ Boton `<x-export-excel>`. Auth: `formacion.view`.
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.8 | 2026-10-02 | Dashboard: clic en KPI navega a Formaciones con filtros (estado o ciclo + ano/mes/curso). |
+| 1.7 | 2026-10-02 | Dashboard modo **Por persona (ciclo)** (mejor nota, set mes/año); Formaciones: filtro curso dinámico por ano/mes (`formaciones.options`). |
 | 1.6 | 2026-10-02 | Dashboard: opciones de curso filtradas por ano+mes (`options.cursos` en metrics); si el curso elegido no aplica al mes, se limpia. |
 | 1.5 | 2026-10-02 | Dashboard: rediseño KPIs por estado, filtros mes/estado/curso, chart donut de estado. |
 | 1.4 | 2026-10-02 | Listado Formaciones: Estado con colores (`status-pill`) y filtro searchable-select por estado. |
