@@ -228,6 +228,98 @@ class FormacionImportTest extends TestCase
         $this->assertSame(2, FormacionRegistro::query()->count());
     }
 
+    public function test_import_rejects_file_with_only_empty_rows(): void
+    {
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'KEEP-EMPTY',
+            'nombre_completo' => 'No Borrar',
+        ]);
+
+        $path = $this->makeImportFile([
+            ['', '', '', '', '', ''],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.formacion.formaciones'))
+            ->post(route('gestion-humana.formacion.formaciones.import'), [
+                'import_file' => new UploadedFile($path, 'empty-only.xlsx', null, null, true),
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.formacion.formaciones'))
+            ->assertSessionHasErrors('import_file');
+
+        $this->assertSame(1, FormacionRegistro::query()->count());
+        $this->assertDatabaseHas('formacion_registros', [
+            'numero_id' => 'KEEP-EMPTY',
+            'nombre_completo' => 'No Borrar',
+        ]);
+    }
+
+    public function test_import_rejects_when_max_rows_exceeded(): void
+    {
+        config(['formacion.import.max_rows' => 1]);
+
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'KEEP-MAX',
+            'nombre_completo' => 'Tope Filas',
+        ]);
+
+        $path = $this->makeImportFile([
+            ['1', 'Uno', '2026-01-01', 'Curso A', '', 'Cat'],
+            ['2', 'Dos', '2026-01-02', 'Curso B', '', 'Cat'],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.formacion.formaciones'))
+            ->post(route('gestion-humana.formacion.formaciones.import'), [
+                'import_file' => new UploadedFile($path, 'too-many.xlsx', null, null, true),
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.formacion.formaciones'))
+            ->assertSessionHasErrors('import_file');
+
+        $this->assertSame(1, FormacionRegistro::query()->count());
+        $this->assertDatabaseHas('formacion_registros', [
+            'numero_id' => 'KEEP-MAX',
+        ]);
+    }
+
+    public function test_import_accepts_xlsx_with_generic_mime_type(): void
+    {
+        $path = $this->makeImportFile([
+            ['3001', 'Mime Genérico', '2026-03-01', 'Curso Mime', '', 'Obligatoria'],
+        ]);
+
+        $editor = $this->editorUser();
+
+        // Hostinger/Windows a menudo reportan octet-stream; mimes:xlsx fallaría.
+        $upload = new UploadedFile(
+            $path,
+            'formacion.xlsx',
+            'application/octet-stream',
+            null,
+            true,
+        );
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.formacion.formaciones.import'), [
+                'import_file' => $upload,
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.formacion.formaciones'))
+            ->assertSessionHas('status')
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('formacion_registros', [
+            'numero_id' => '3001',
+            'nombre_completo' => 'Mime Genérico',
+        ]);
+    }
+
     public function test_import_requires_edit_permission(): void
     {
         $viewer = $this->viewerUser();

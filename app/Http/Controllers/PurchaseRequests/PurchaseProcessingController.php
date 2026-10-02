@@ -107,7 +107,7 @@ class PurchaseProcessingController extends Controller
             ]);
         }
 
-        $supplyRequest->load(['user', 'items.product']);
+        $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'site']);
 
         return view('modules.purchase-requests.processing.process-supply', [
             'module' => $module,

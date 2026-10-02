@@ -40,6 +40,7 @@
                         <h4 class="ficha-empleados-masivos-modal__card-title">Plantilla e importar</h4>
                         <p class="ficha-empleados-masivos-modal__card-note">
                             Excel con columnas: Número de ID, Nombre completo, Fecha de inicio del curso, Nombre completo del curso, Calificación, Nombre de la categoría.
+                            Formatos: .xlsx, .xls o .csv (máx. 50 MB; el servidor PHP también debe permitirlo).
                         </p>
                     </div>
                 </div>

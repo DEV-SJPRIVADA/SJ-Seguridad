@@ -6,6 +6,7 @@ use App\Exports\FormacionExport;
 use App\Exports\FormacionImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportFormacionRequest;
+use App\Models\FormacionRegistro;
 use App\Services\Access\FormacionAccessService;
 use App\Services\GestionHumana\FormacionAuditLogService;
 use App\Services\GestionHumana\FormacionDashboardService;
@@ -42,15 +43,21 @@ class FormacionController extends Controller
     {
         abort_unless($this->formacionAccess->canView(auth()->user()), 403);
 
-        $anio = $this->dashboardAnioFromRequest($request);
-        $payload = $this->dashboardService->metrics($anio);
+        $filters = $this->dashboardFiltersFromRequest($request);
+        $anio = $filters['anio'] !== '' ? (int) $filters['anio'] : null;
+        $payload = $this->dashboardService->metrics($anio, $filters);
+        $mes = $payload['filters']['mes'] !== '' ? (int) $payload['filters']['mes'] : null;
+        $options = $this->dashboardService->filterSelectOptions($payload['anio'], $mes);
 
         return view('areas.gestion_humana.formacion.dashboard', [
             'subTabs' => $this->getFormacionSubTabs('dashboard'),
-            'filters' => ['anio' => (string) $payload['anio']],
+            'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.formacion.dashboard.metrics'),
-            'yearOptions' => $this->dashboardService->yearSelectOptions($payload['anio']),
+            'yearOptions' => $options['anios'],
+            'monthOptions' => $options['meses'],
+            'estadoOptions' => $options['estados'],
+            'cursoOptions' => $payload['options']['cursos'] ?? $options['cursos'],
         ]);
     }
 
@@ -58,8 +65,11 @@ class FormacionController extends Controller
     {
         abort_unless($this->formacionAccess->canView(auth()->user()), 403);
 
+        $filters = $this->dashboardFiltersFromRequest($request);
+        $anio = $filters['anio'] !== '' ? (int) $filters['anio'] : null;
+
         return response()->json(
-            $this->dashboardService->metrics($this->dashboardAnioFromRequest($request))
+            $this->dashboardService->metrics($anio, $filters)
         );
     }
 
@@ -86,6 +96,7 @@ class FormacionController extends Controller
             'filterMesOptions' => $options['meses'],
             'filterCategoriaOptions' => $options['categorias'],
             'filterCursoOptions' => $options['cursos'],
+            'filterEstadoOptions' => $options['estados'],
             'datatableUrl' => route('gestion-humana.formacion.formaciones.datatable', $activeQuery),
             'exportUrl' => route('gestion-humana.formacion.formaciones.export', $activeQuery),
             'importTemplateUrl' => route('gestion-humana.formacion.formaciones.import-template'),
@@ -174,10 +185,16 @@ class FormacionController extends Controller
      *     nombre_curso: string,
      *     numero_id: string,
      *     nombre: string,
+     *     estado: string,
      * }
      */
     private function filtersFromRequest(Request $request): array
     {
+        $estado = strtolower(trim((string) $request->query('estado', '')));
+        if ($estado !== '' && ! array_key_exists($estado, FormacionRegistro::ESTADO_LABELS)) {
+            $estado = '';
+        }
+
         return [
             'anio' => trim((string) $request->query('anio', '')),
             'mes' => trim((string) $request->query('mes', '')),
@@ -185,6 +202,35 @@ class FormacionController extends Controller
             'nombre_curso' => trim((string) $request->query('nombre_curso', '')),
             'numero_id' => trim((string) $request->query('numero_id', '')),
             'nombre' => trim((string) $request->query('nombre', '')),
+            'estado' => $estado,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     anio: string,
+     *     mes: string,
+     *     estado: string,
+     *     nombre_curso: string,
+     * }
+     */
+    private function dashboardFiltersFromRequest(Request $request): array
+    {
+        $anio = $this->dashboardAnioFromRequest($request);
+        $mesRaw = trim((string) $request->query('mes', ''));
+        $mes = ($mesRaw !== '' && ctype_digit($mesRaw) && (int) $mesRaw >= 1 && (int) $mesRaw <= 12)
+            ? (string) ((int) $mesRaw)
+            : '';
+        $estado = strtolower(trim((string) $request->query('estado', '')));
+        if ($estado !== '' && ! array_key_exists($estado, FormacionRegistro::ESTADO_LABELS)) {
+            $estado = '';
+        }
+
+        return [
+            'anio' => $anio !== null ? (string) $anio : '',
+            'mes' => $mes,
+            'estado' => $estado,
+            'nombre_curso' => trim((string) $request->query('nombre_curso', '')),
         ];
     }
 

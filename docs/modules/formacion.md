@@ -16,7 +16,7 @@ Tablero de area **Gestion Humana** para consultar y recargar el dataset operativ
 - Permisos: `view.board.gestion_humana.formacion`, `formacion.view`, `formacion.edit`. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - **Sin** pestana parametros / `parameters.edit` / tablas de catalogo.
 - **Sin** CRUD fila a fila; unica mutacion = import replace-all.
-- Dashboard v1: total, distribucion por mes (1–12), top categorias (`config('formacion.dashboard.categoria_top')`, default 10); filtro ano.
+- Dashboard v1: total, KPIs por estado (aprobado/reprobado/no realizada), distribucion por mes (1–12), top categorias (`config('formacion.dashboard.categoria_top')`, default 10), chart donut por estado; filtros ano, mes, estado, curso.
 - Formaciones: DataTables `serverSide: true`; filtros ano, mes, categoria, curso, numero ID, nombre; export Excel; plantilla + import.
 - Audit: `FormacionAuditLogService` → `SystemAuditService` (`module=formacion`, `area=gestion_humana`). Eventos: `import_replace`, `export`.
 - Selectores: `<x-searchable-select>`. Export: `BaseExport` + `<x-export-excel>` (prohibido Select2 / `excelHtml5`).
@@ -64,7 +64,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Clase | Responsabilidad |
 | --- | --- |
 | `App\Http\Controllers\GestionHumana\FormacionController` | Shell, dashboard, formaciones, DT, export, plantilla, import, opciones |
-| `App\Http\Requests\GestionHumana\ImportFormacionRequest` | `import_file` (xlsx/xls/csv, max 50 MB) + `confirm_replace` accepted; authorize via `canEdit` |
+| `App\Http\Requests\GestionHumana\ImportFormacionRequest` | `import_file` (`extensions:xlsx,xls,csv`, max 50 MB; no `mimes` estricto) + `confirm_replace` accepted; authorize via `canEdit` |
 
 ## Vistas
 
@@ -107,6 +107,7 @@ Indices adicionales: `anio`, `mes`, compuesto `(anio, mes)`.
 | Fecha de inicio del curso | `fecha_inicio` (+ `mes`, `anio`) |
 | Nombre completo del curso | `nombre_curso` |
 | Calificación | `calificacion` (nullable) |
+| Estado (solo UI listado) | Derivado: vacío → `No realizada`; numérico `> 7.5` → `Aprobado`; resto numérico → `Reprobado` (`FormacionRegistro::estadoFromCalificacion`). Columna con `status-pill` (success/danger/muted). Filtro `estado` = `aprobado` \| `reprobado` \| `no_realizada`. |
 | Nombre de la categoría | `categoria` |
 
 ## Servicios / jobs / mail
@@ -118,7 +119,7 @@ Indices adicionales: `anio`, `mes`, compuesto `(anio, mes)`.
 | `FormacionAuditLogService` | Wrapper audit (`module=formacion`, `area=gestion_humana`) |
 | `FormacionDatatableService` | DT server-side + filtros + opciones distinct |
 | `FormacionImportService` | Parse fechas + replace-all (validate → delete → chunk insert 500) |
-| `FormacionDashboardService` | Metrics KPIs/charts por ano |
+| `FormacionDashboardService` | Metrics KPIs/charts por ano + filtros mes/estado/curso |
 
 Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultFormacionBoardUrl()` / tabs (patron Cursos).
 
@@ -132,10 +133,10 @@ Columnas: `config/formacion.php` → `import.columns`.
 ### Flujo obligatorio
 
 1. Validar archivo + headers (fallar **antes** de borrar si faltan columnas).
-2. Parsear filas; filas vacias → skip; errores en obligatorias → **rechazar import completo** (dataset intacto).
-3. `DB::transaction`: `FormacionRegistro::query()->delete()` + `insert` por chunks de 500. **No** `TRUNCATE` / `migrate:fresh`.
+2. Parsear filas; filas vacias → skip; errores en obligatorias → **rechazar import completo** (dataset intacto). Archivo sin filas validas → rechazar (no vaciar tabla).
+3. `DB::transaction`: `FormacionRegistro::query()->delete()` + `insert` por chunks (`config formacion.import.chunk_size`, default 500). **No** `TRUNCATE` / `migrate:fresh`.
 4. Audit `import_replace` con metadata `{deleted_before, imported, skipped_empty, errors_count}` (sin volcar PII masiva).
-5. `set_time_limit(300)` en el request de import.
+5. Request síncrono endurecido para ~81k filas: `memory_limit` / `time_limit` / `max_rows` en `config/formacion.php`; reader `setReadDataOnly` + `getHighestDataRow()` (evita filas fantasma); lectura con `rawValue` (sin `getCalculatedValue`); liberar spreadsheet antes del insert.
 
 ### Columnas obligatorias (fila no vacia)
 
@@ -157,7 +158,7 @@ Checkbox `confirm_replace` (accepted) + mensaje claro: se eliminaran todos los r
 4. Fuente de verdad operativa = tabla tras el ultimo import exitoso.
 5. Import exitoso **borra todos** los registros previos y carga el archivo.
 6. Headers invalidos o errores en filas obligatorias → **no** borrar dataset.
-7. Filtros listado: `anio`, `mes` (1–12), `categoria`, `nombre_curso`, `numero_id`, `nombre`/`nombre_completo` (like).
+7. Filtros listado: `anio`, `mes` (1–12), `categoria`, `nombre_curso`, `numero_id`, `nombre`/`nombre_completo` (like), `estado` (`aprobado`/`reprobado`/`no_realizada`).
 8. DataTables `serverSide: true`; `lengthMenu` sin `-1`; tope length en servidor (max 100).
 9. Dashboard default ano: (1) query valida 2000–2100; (2) ano calendario con datos; (3) `MAX(anio)` con datos; (4) sin datos → ano actual (metricas en cero).
 10. Distinto del tablero **Cursos** (naming / tabla / permisos `formacion_*`).
@@ -197,7 +198,7 @@ Boton `<x-export-excel>`. Auth: `formacion.view`.
 | --- | --- |
 | Export ~81k en memoria | Review obs. #1: `get()` completo; riesgo Hostinger. Documentado; follow-up chunked. |
 | Import ~81k memoria/tiempo | Review obs. #2: valida todo en memoria; `set_time_limit(300)` + chunks insert. Medir con archivo real. |
-| Import 0 filas validas | Review obs. #3: headers OK + 0 filas → replace-all deja tabla vacia. Confirmacion UI mitiga; follow-up rechazar si `count($rows)===0`. |
+| Import 0 filas validas | Rechazado: no se vacía la tabla. |
 | Tests sidebar board | Review obs. #4: smoke HTTP sidebar pendiente (cableado nav OK). |
 | `recordsTotal` DT | Review obs. #5: cuenta sobre query filtrada; UI usa `recordsFiltered` (OK). |
 | DISTINCT filtros 81k | Opciones via endpoint/query indexada; no cargar 81k options al cliente. |
@@ -228,4 +229,10 @@ Boton `<x-export-excel>`. Auth: `formacion.view`.
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.6 | 2026-10-02 | Dashboard: opciones de curso filtradas por ano+mes (`options.cursos` en metrics); si el curso elegido no aplica al mes, se limpia. |
+| 1.5 | 2026-10-02 | Dashboard: rediseño KPIs por estado, filtros mes/estado/curso, chart donut de estado. |
+| 1.4 | 2026-10-02 | Listado Formaciones: Estado con colores (`status-pill`) y filtro searchable-select por estado. |
+| 1.3 | 2026-10-02 | Listado Formaciones: columna **Estado** (después de Calificación) derivada: `> 7.5` Aprobado, numérico ≤ 7.5 Reprobado, vacía/no numérica No realizada. |
+| 1.2 | 2026-10-02 | Validación import: `extensions` en lugar de `mimes` (evita rechazo por MIME octet-stream/zip); alerta visible del error real; mensaje `uploaded` por tope PHP. |
+| 1.1 | 2026-10-02 | Import: endurecer memoria/tiempo/lectura (`setReadDataOnly`, `getHighestDataRow`, `rawValue`); rechazar archivo sin filas válidas; tope `max_rows`. |
 | 1.0 | 2026-10-01 | FEAT-041: tablero Formación (Dashboard + Formaciones, import replace-all, DT server-side, export, audit). Incluye observaciones review (riesgo 81k). |

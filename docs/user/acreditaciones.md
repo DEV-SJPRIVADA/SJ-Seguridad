@@ -11,7 +11,7 @@ Apoyar a Gestión Humana en el control del personal acreditado: vigencia de la a
 Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 - **Dashboard** — lectura: KPIs por estado, filtros (fecha solicitud, cargo APO, estado en ficha, año) y gráficos. Por defecto solo empleados **activos en ficha**. Los filtros actualizan KPIs y gráficos.
-- **Acreditados** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel y carga masiva con plantilla. Con permiso de edición, el icono de cola **Nuevos sin acreditación** muestra personas que entraron a ficha y aún no tienen registro acreditado (acciones: **Nuevo acreditado** u **Omitir** si no aplica).
+- **Acreditados** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel y carga masiva con plantilla. Con permiso de edición, el icono de cola **Nuevos sin acreditación** muestra personas que entraron a ficha y aún no tienen registro acreditado (acciones icon-only: **Nuevo acreditado** u **Omitir** si no aplica).
 - **Reporte Diario** — carga diaria de uno o dos Excel de la APO (En proceso y/o Acreditados APO), consulta por fecha, filtros, exportar e histórico de cargas. Es un **archivo histórico** de lo que envió la APO ese día; **no** actualiza por sí solo el listado de Acreditados ni Ficha.
 - **Validaciones** — solo con permiso de edición: elige una fecha de reporte, comprueba que ese día tenga **ambos** Excel APO cargados, ejecuta el cruce y obtiene **cuatro colas** para actuar (abrir Ficha, editar o crear acreditado) y exportar. Los resultados viven **solo en pantalla** de esa corrida (no hay histórico de validaciones guardado).
 - **Export Apo** — solo con permiso de edición: al entrar la pantalla está vacía; con **Validar** carga el preview SuperVigilancia (columnas del archivo + Valida/motivo), selecciona filas, puede **quitar** filas del preview, decide si incluir novedades leves y descarga el `.xls`. También puede llegar desde Acreditados o Validaciones con filas marcadas (botón **Cargar en Export Apo**).
@@ -230,6 +230,7 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.20 | 2026-10-02 | Feature | Cola Nuevos sin acreditación: acciones de fila y volver pasan a iconos. |
 | 1.19 | 2026-09-29 | Feature | Filtro varias cédulas (modal, exacto, max 500, sin historial) en Acreditados, Validaciones, Export Apo preview y Cursos registros; export respeta el filtro. |
 | 1.18 | 2026-09-29 | Feature | Dashboard: por defecto solo empleados activos en ficha; filtro Estado ficha (activos/desvinculados/todos). |
 | 1.17 | 2026-09-29 | Feature | Dashboard: quita candidatos/novedad/corridas Export Apo; filtros + gráficos ApexCharts. |

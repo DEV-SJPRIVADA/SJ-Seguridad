@@ -172,9 +172,17 @@
 
                         <div class="cursos-registros-page__table-toolbar">
                             @if ($colaMode ?? false)
-                                <p class="req-manage-filters__meta">
-                                    {{ $pendingRows->count() }} nuevo(s) sin acreditación
-                                    <a href="{{ $colaExitUrl }}" class="cursos-registros-page__cola-exit">Volver a acreditados</a>
+                                <p class="req-manage-filters__meta cursos-registros-page__cola-meta">
+                                    <strong>{{ $pendingRows->count() }}</strong>
+                                    <span>nuevo(s) sin acreditación</span>
+                                    <a
+                                        href="{{ $colaExitUrl }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Volver a acreditados"
+                                        aria-label="Volver a acreditados"
+                                    >
+                                        <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
+                                    </a>
                                 </p>
                             @else
                                 <p class="req-manage-filters__meta">

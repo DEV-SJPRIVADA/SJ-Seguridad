@@ -153,7 +153,7 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 
 Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
 
-UI create/show: layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*` en `resources/css/app.css` (tokens `--brand-*`). Detalle: volver contextual (`from=mis_solicitudes|processing|approval`), CTA Procesar si viene de bandeja.
+UI create/show/edit/procesar (compra y suministro): layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*` en `resources/css/app.css`. Detalle y procesamiento: volver contextual e iconos chrome (`.req-manage-filters__icon-btn`). Reabrir (edit) alineado a Nueva solicitud. `process-supply`: costeo por linea + completar.
 Listados Mis solicitudes / Bandeja: `purchase-requests-page--list` con intro, resumen de conteo (bandeja) y panel de listado operativo; filtros bandeja conservan IDs y auto-submit.
 
 Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
@@ -193,7 +193,7 @@ Reglas de volumen (`ComprasQueueService`):
 
 La tabla DataTables ordena por **fecha descendente** (`data-order` en la columna Fecha) para no empujar los suministros detras de todas las solicitudes de compra (el default `[[0, asc]]` por Tipo ocultaba "Suministro" en paginas siguientes). Los filtros Area/Tipo (searchable-select) autoenvian el GET al cambiar, igual que las fechas.
 
-Acciones por fila: **Ver detalle** (compra → `purchase-requests.show`; suministro → `supplies.show` con `module=area_key` del pedido). **Procesar** sigue en rutas `processing.purchase` / `processing.supply`.
+Acciones por fila (icon-only): **Ver detalle** (`eye`) — compra → `purchase-requests.show`; suministro → `supplies.show` con `module=area_key` del pedido. **Procesar** (`cog`) → rutas `processing.purchase` / `processing.supply`. Limpiar filtros: icono `x` en toolbar.
 
 ## Dashboard Compras (`compras.dashboard`)
 
@@ -291,6 +291,9 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-02 | UI procesar suministro: layout pur-req e iconos chrome (alineado a procesar compra) |
+| 2026-10-02 | UI procesar/reabrir: layout pur-req (secciones + aside) e iconos chrome; mismo patrón que Nueva solicitud |
+| 2026-10-02 | Bandeja: acciones Ver detalle / Procesar y Limpiar filtros como icon-only |
 | 2026-07-31 | Modulo inicial: CRUD, bandeja, correos, FO-AD-44, import legacy |
 | 2026-07-31 | Autorizacion in-app (correo solo notifica); approval-form en show |
 | 2026-08-03 | Hogares canonicos sidebar (`SidebarVisibilityService`); permisos director en seeder/migracion |

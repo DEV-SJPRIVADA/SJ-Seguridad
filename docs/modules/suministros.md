@@ -100,13 +100,14 @@ Prefijo `supplies/{module}`:
 - `GET /solicitud/{supply_request}` (`supplies.show`) — detalle alineado visualmente a solicitud de compra
 - `GET /solicitud/{supply_request}/pdf` (`supplies.export.pdf`) — FO-AD-44, layout igual que PDF solicitud compra
 - `GET /solicitud/{supply_request}/excel` (`supplies.export.excel`) — FO-AD-44 Excel
-- `GET|POST /solicitar` (`supplies.create` / `supplies.store`) — UI catalogo + carrito
-- `GET /aprobacion-insumos` (`supplies.approval.index`)
+- `GET|POST /solicitar` (`supplies.create` / `supplies.store`) — UI catalogo + carrito con layout `pur-req-form-layout` (secciones + aside) e iconos chrome; quitar linea con `.cursos-catalogo-page__icon-btn--danger`.
+- `GET /mis-solicitudes` (`supplies.index`) — listado `purchase-requests-page--list` con toolbar Excel/Nueva y Ver detalle icon-only.
+- `GET /aprobacion-insumos` (`supplies.approval.index`) — listado `purchase-requests-page--list` + Revisar icon-only
 - `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)
 - `PATCH /aprobacion-insumos/{supply_request}` (`supplies.approval.update`)
-- `GET /insumos-aprobados` (`supplies.approved.index`) — tabla de aprobadas con filtros
+- `GET /insumos-aprobados` (`supplies.approved.index`) — listado con filtros chrome (sede/fechas/export/solicitante) y descarga FO-AD-44 icon-only
 - `GET /insumos-aprobados/{supply_request}/exportar` (`supplies.approved.export`) — Excel FO-AD-44 por solicitud
-- `GET|POST /catalogo` y `PATCH /catalogo/{product}` (catalogo)
+- `GET|POST /catalogo` y `PATCH /catalogo/{product}` (catalogo) — listado pur-req + modal crear/editar; Nuevo/Editar/Excel icon-only
 
 ### Items fuera de catalogo
 En `supply_request_items`:
@@ -132,10 +133,12 @@ Catálogo de sedes físicas con `name`, `utilization` (columna Utilización del 
 
 Vista: `resources/views/modules/supplies/show.blade.php`. Misma estructura que `purchase-requests/show`:
 
-- Cabecera con folio (`SupplyRequest::folio()`), estado en pill, acciones PDF/Excel (si exportable).
-- Grid compacto de metadatos: fecha, solicitante, area, sede, ubicacion, revisor calidad, estado compras.
+- Layout `purchase-requests-page--detail` + `pur-req-detail-layout` (main + aside), meta `pur-req-form__meta`, secciones `pur-req-form__section`.
+- Toolbar icon-only (`.req-manage-filters__icon-btn`): volver contextual, PDF/Excel FO-AD-44 (si exportable), Procesar si viene de bandeja.
+- Cabecera con folio (`SupplyRequest::folio()`), pills de estado / compras.
 - Tabla de lineas (#, foto placeholder, cantidades, descripcion, referencia, inventario, cant. autorizada).
 - Observaciones de calidad y notas del solicitante; bloque procesamiento compras si aplica.
+- Aside: resumen + guia de flujo.
 
 **Subnav:** solicitante/Calidad → pestañas Suministros; analista Compras (`purchase.tab.processing`) → pestañas Solicitudes de compra + "Volver a bandeja".
 
@@ -190,6 +193,9 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-02 | UI aprobacion/insumos-aprobados/catalogo: layout pur-req list + filtros chrome e iconos |
+| 2026-10-02 | UI mis-solicitudes/solicitar: layout pur-req (list + form) e iconos chrome; carrito de catalogo conservado |
+| 2026-10-02 | UI detalle suministro: layout pur-req (secciones + aside) e iconos chrome; mismo patron que solicitud compra |
 | 2026-08-03 | Detalle `supplies.show` alineado a solicitud compra; rutas `supplies.export.pdf` / `excel` |
 | 2026-08-03 | PDF FO-AD-44 suministro con layout identico a PDF solicitud compra |
 | 2026-08-03 | Doc corregida: estados `en_compras` y `completada` activos via bandeja Compras |

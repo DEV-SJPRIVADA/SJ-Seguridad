@@ -98,4 +98,7 @@ Segun permisos, el usuario puede:
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-08-03 | Navegacion canonica | Entrada al menu por area base vs Calidad vs Compras |
 | 1.2 | 2026-08-03 | Detalle y export | Vista detalle unificada con solicitud compra; PDF/Excel FO-AD-44 desde detalle; flujo Compras en bandeja |
+| 1.6 | 2026-10-02 | UI | Aprobacion, Insumos aprobados y Catalogo: layout e iconos alineados a solicitudes de compra. |
+| 1.5 | 2026-10-02 | UI | Mis solicitudes y Solicitar: layout e iconos alineados a solicitudes de compra. |
+| 1.4 | 2026-10-02 | UI | Detalle de suministro y procesar en bandeja: mismo layout e iconos que solicitudes de compra. |
 | 1.3 | 2026-08-28 | Bandeja compras | Insumos aprobados visibles por fecha mas reciente; filtro tipo Suministro se aplica al elegir |

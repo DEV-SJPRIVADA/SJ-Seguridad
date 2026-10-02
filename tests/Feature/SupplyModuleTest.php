@@ -261,8 +261,8 @@ class SupplyModuleTest extends TestCase
         $response = $this->actingAs($reviewer)->get(route('supplies.approval.index', ['module' => 'operaciones']));
 
         $response->assertOk();
-        $response->assertSee('>#'.$pendingOperaciones->id.'<', false);
-        $response->assertDontSee('>#'.$comercialPending->id.'<', false);
+        $response->assertSee('pur-req-list__folio">'.$pendingOperaciones->folio(), false);
+        $response->assertDontSee('pur-req-list__folio">'.$comercialPending->folio(), false);
     }
 
     public function test_default_supply_board_url_uses_first_authorized_tab(): void
@@ -448,8 +448,8 @@ class SupplyModuleTest extends TestCase
         $response = $this->actingAs($reviewer)->get(route('supplies.approved.index', ['module' => 'calidad']));
 
         $response->assertOk();
-        $response->assertSee('>#'.$requestA->id.'<', false);
-        $response->assertSee('>#'.$requestB->id.'<', false);
+        $response->assertSee('pur-req-list__folio">'.$requestA->folio(), false);
+        $response->assertSee('pur-req-list__folio">'.$requestB->folio(), false);
     }
 
     public function test_approved_index_filters_by_export_status(): void
@@ -470,8 +470,8 @@ class SupplyModuleTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertSee('>#'.$pending->id.'<', false);
-        $response->assertDontSee('>#'.$exported->id.'<', false);
+        $response->assertSee('pur-req-list__folio">'.$pending->folio(), false);
+        $response->assertDontSee('pur-req-list__folio">'.$exported->folio(), false);
     }
 
     public function test_approved_export_downloads_excel_for_single_request(): void

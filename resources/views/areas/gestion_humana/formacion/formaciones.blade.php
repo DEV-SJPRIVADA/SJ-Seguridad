@@ -5,7 +5,8 @@
             || ($filters['categoria'] ?? '') !== ''
             || ($filters['nombre_curso'] ?? '') !== ''
             || ($filters['numero_id'] ?? '') !== ''
-            || ($filters['nombre'] ?? '') !== '';
+            || ($filters['nombre'] ?? '') !== ''
+            || ($filters['estado'] ?? '') !== '';
     @endphp
 
     <x-slot name="header">
@@ -19,6 +20,11 @@
             @endif
             @if (session('error'))
                 <div class="alert alert--danger">{{ session('error') }}</div>
+            @endif
+            @if ($errors->has('import_file') || $errors->has('confirm_replace'))
+                <div class="alert alert--danger">
+                    {{ $errors->first('import_file') ?: $errors->first('confirm_replace') }}
+                </div>
             @endif
 
             <div class="panel">
@@ -73,6 +79,17 @@
                                             name="nombre_curso"
                                             :options="$filterCursoOptions"
                                             :value="$filters['nombre_curso']"
+                                            placeholder="Todos"
+                                            :allow-clear="true"
+                                        />
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_estado">Estado</label>
+                                        <x-searchable-select
+                                            id="filter_estado"
+                                            name="estado"
+                                            :options="$filterEstadoOptions"
+                                            :value="$filters['estado']"
                                             placeholder="Todos"
                                             :allow-clear="true"
                                         />
@@ -155,6 +172,7 @@
                                     <th>Año</th>
                                     <th>Curso</th>
                                     <th>Calificación</th>
+                                    <th>Estado</th>
                                     <th>Categoría</th>
                                 </tr>
                             </thead>

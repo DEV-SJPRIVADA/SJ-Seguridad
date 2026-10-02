@@ -15,6 +15,11 @@ return [
             'calificacion' => 'Calificación',
             'categoria' => 'Nombre de la categoría',
         ],
+        // Hostinger / ~81k filas: límites del request síncrono (sin cola V1).
+        'memory_limit' => '1024M',
+        'time_limit' => 600,
+        'chunk_size' => 500,
+        'max_rows' => 150000,
     ],
 
     /*
