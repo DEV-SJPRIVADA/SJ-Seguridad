@@ -152,6 +152,7 @@ final class FormacionDashboardService
             'options' => [
                 'cursos' => $cursoOptions,
             ],
+            'ciclo' => $this->buildCicloMetrics($resolvedAnio, $mes),
             'charts' => [
                 'por_mes' => [
                     'labels' => $mesLabels,
@@ -166,6 +167,181 @@ final class FormacionDashboardService
                     'data' => $estadoData,
                 ],
             ],
+        ];
+    }
+
+    /**
+     * Personas del periodo vs set de cursos distintos (mes o año completo).
+     * Mejor nota por persona/curso; ciclo: aprobado todos / reprobado alguno /
+     * incompleto (parcial) / no realizado (ninguno).
+     *
+     * @return array{
+     *     cursos_ciclo: int,
+     *     personas: int,
+     *     aprobado: int,
+     *     reprobado: int,
+     *     incompleto: int,
+     *     no_realizado: int,
+     *     charts: array{labels: list<string>, data: list<int>}
+     * }
+     */
+    public function buildCicloMetrics(int $anio, ?int $mes): array
+    {
+        $classified = $this->classifyPeopleByCiclo($anio, $mes);
+        $counts = $classified['counts'];
+        $personas = array_sum($counts);
+
+        return [
+            'cursos_ciclo' => $classified['cursos_ciclo'],
+            'personas' => $personas,
+            'aprobado' => $counts[FormacionRegistro::CICLO_APROBADO],
+            'reprobado' => $counts[FormacionRegistro::CICLO_REPROBADO],
+            'incompleto' => $counts[FormacionRegistro::CICLO_INCOMPLETO],
+            'no_realizado' => $counts[FormacionRegistro::CICLO_NO_REALIZADO],
+            'charts' => [
+                'labels' => array_values(FormacionRegistro::CICLO_LABELS),
+                'data' => [
+                    $counts[FormacionRegistro::CICLO_APROBADO],
+                    $counts[FormacionRegistro::CICLO_REPROBADO],
+                    $counts[FormacionRegistro::CICLO_INCOMPLETO],
+                    $counts[FormacionRegistro::CICLO_NO_REALIZADO],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * IDs de persona (numero_id) que caen en un estado de ciclo del periodo.
+     * Si $ciclo es null/vacío → todas las personas del periodo.
+     *
+     * @return list<string>
+     */
+    public function personIdsForCiclo(int $anio, ?int $mes, ?string $ciclo = null): array
+    {
+        $classified = $this->classifyPeopleByCiclo($anio, $mes);
+        $key = strtolower(trim((string) ($ciclo ?? '')));
+
+        if ($key === '') {
+            $all = [];
+            foreach ($classified['ids'] as $ids) {
+                foreach ($ids as $id) {
+                    $all[] = $id;
+                }
+            }
+
+            return array_values(array_unique($all));
+        }
+
+        if (! array_key_exists($key, FormacionRegistro::CICLO_LABELS)) {
+            return [];
+        }
+
+        return $classified['ids'][$key] ?? [];
+    }
+
+    /**
+     * @return array{
+     *     cursos_ciclo: int,
+     *     counts: array{aprobado: int, reprobado: int, incompleto: int, no_realizado: int},
+     *     ids: array{aprobado: list<string>, reprobado: list<string>, incompleto: list<string>, no_realizado: list<string>}
+     * }
+     */
+    public function classifyPeopleByCiclo(int $anio, ?int $mes): array
+    {
+        $emptyCounts = [
+            FormacionRegistro::CICLO_APROBADO => 0,
+            FormacionRegistro::CICLO_REPROBADO => 0,
+            FormacionRegistro::CICLO_INCOMPLETO => 0,
+            FormacionRegistro::CICLO_NO_REALIZADO => 0,
+        ];
+        $emptyIds = [
+            FormacionRegistro::CICLO_APROBADO => [],
+            FormacionRegistro::CICLO_REPROBADO => [],
+            FormacionRegistro::CICLO_INCOMPLETO => [],
+            FormacionRegistro::CICLO_NO_REALIZADO => [],
+        ];
+
+        /** @var array<string, true> $catalog */
+        $catalog = [];
+        /** @var array<string, array<string, float|null>> $bestByPerson */
+        $bestByPerson = [];
+
+        $query = FormacionRegistro::query()
+            ->where('anio', $anio)
+            ->select(['id', 'numero_id', 'nombre_curso', 'calificacion']);
+
+        if ($mes !== null) {
+            $query->where('mes', $mes);
+        }
+
+        $query->orderBy('id')->chunkById(2000, function ($rows) use (&$catalog, &$bestByPerson): void {
+            foreach ($rows as $row) {
+                $curso = trim((string) $row->nombre_curso);
+                if ($curso === '') {
+                    continue;
+                }
+
+                $catalog[$curso] = true;
+                $personId = trim((string) $row->numero_id);
+                if ($personId === '') {
+                    continue;
+                }
+
+                $score = FormacionRegistro::numericCalificacion($row->calificacion);
+                if (! isset($bestByPerson[$personId][$curso])) {
+                    $bestByPerson[$personId][$curso] = $score;
+
+                    continue;
+                }
+
+                $current = $bestByPerson[$personId][$curso];
+                if ($score === null) {
+                    continue;
+                }
+
+                if ($current === null || $score > $current) {
+                    $bestByPerson[$personId][$curso] = $score;
+                }
+            }
+        });
+
+        $cursoList = array_keys($catalog);
+        sort($cursoList);
+        $cursosCiclo = count($cursoList);
+
+        if ($cursosCiclo === 0) {
+            return [
+                'cursos_ciclo' => 0,
+                'counts' => $emptyCounts,
+                'ids' => $emptyIds,
+            ];
+        }
+
+        $counts = $emptyCounts;
+        $ids = $emptyIds;
+
+        foreach ($bestByPerson as $personId => $personCourses) {
+            $statuses = [];
+            foreach ($cursoList as $curso) {
+                $score = $personCourses[$curso] ?? null;
+                if ($score === null) {
+                    $statuses[] = FormacionRegistro::ESTADO_NO_REALIZADA;
+                } elseif ($score > 7.5) {
+                    $statuses[] = FormacionRegistro::ESTADO_APROBADO;
+                } else {
+                    $statuses[] = FormacionRegistro::ESTADO_REPROBADO;
+                }
+            }
+
+            $ciclo = FormacionRegistro::cicloStatusFromCourseStatuses($statuses);
+            $counts[$ciclo]++;
+            $ids[$ciclo][] = (string) $personId;
+        }
+
+        return [
+            'cursos_ciclo' => $cursosCiclo,
+            'counts' => $counts,
+            'ids' => $ids,
         ];
     }
 

@@ -1,12 +1,17 @@
 <x-app-layout>
     @php
+        $cicloFilter = (string) ($filters['ciclo'] ?? '');
+        $cicloLabel = $cicloFilter !== ''
+            ? (\App\Models\FormacionRegistro::CICLO_LABELS[$cicloFilter] ?? $cicloFilter)
+            : '';
         $hasActiveFilters = ($filters['anio'] ?? '') !== ''
             || ($filters['mes'] ?? '') !== ''
             || ($filters['categoria'] ?? '') !== ''
             || ($filters['nombre_curso'] ?? '') !== ''
             || ($filters['numero_id'] ?? '') !== ''
             || ($filters['nombre'] ?? '') !== ''
-            || ($filters['estado'] ?? '') !== '';
+            || ($filters['estado'] ?? '') !== ''
+            || $cicloFilter !== '';
     @endphp
 
     <x-slot name="header">
@@ -27,6 +32,16 @@
                 </div>
             @endif
 
+            @if ($cicloFilter !== '')
+                <div class="alert alert--info formacion-formaciones-page__ciclo-banner">
+                    Filtrado desde Dashboard (ciclo): <strong>{{ $cicloLabel }}</strong>.
+                    <a href="{{ route('gestion-humana.formacion.formaciones', array_filter([
+                        'anio' => $filters['anio'] ?? '',
+                        'mes' => $filters['mes'] ?? '',
+                    ])) }}">Quitar filtro de ciclo</a>
+                </div>
+            @endif
+
             <div class="panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
@@ -37,7 +52,20 @@
                             @endif
                         </summary>
                         <div class="req-manage-filters__panel-body">
-                            <form method="GET" action="{{ route('gestion-humana.formacion.formaciones') }}" class="req-manage-filters">
+                            <form
+                                method="GET"
+                                action="{{ route('gestion-humana.formacion.formaciones') }}"
+                                class="req-manage-filters"
+                                x-data="formacionFormacionesFilters(@js([
+                                    'optionsUrl' => $optionsUrl,
+                                    'anio' => $filters['anio'] ?? '',
+                                    'mes' => $filters['mes'] ?? '',
+                                    'nombre_curso' => $filters['nombre_curso'] ?? '',
+                                ]))"
+                            >
+                                @if ($cicloFilter !== '')
+                                    <input type="hidden" name="ciclo" value="{{ $cicloFilter }}">
+                                @endif
                                 <div class="cursos-registros-page__filters">
                                     <div class="form-field">
                                         <label class="form-label" for="filter_anio">Año</label>
@@ -48,6 +76,7 @@
                                             :value="$filters['anio']"
                                             placeholder="Todos"
                                             :allow-clear="true"
+                                            x-on:change="onPeriodChange('anio', $event)"
                                         />
                                     </div>
                                     <div class="form-field">
@@ -59,6 +88,7 @@
                                             :value="$filters['mes']"
                                             placeholder="Todos"
                                             :allow-clear="true"
+                                            x-on:change="onPeriodChange('mes', $event)"
                                         />
                                     </div>
                                     <div class="form-field">
@@ -81,6 +111,7 @@
                                             :value="$filters['nombre_curso']"
                                             placeholder="Todos"
                                             :allow-clear="true"
+                                            x-on:change="onCursoChange($event)"
                                         />
                                     </div>
                                     <div class="form-field">
@@ -194,6 +225,90 @@
 
     @push('scripts')
         <script>
+            function formacionFormacionesFilters(config) {
+                return {
+                    optionsUrl: config.optionsUrl,
+                    anio: String(config.anio || ''),
+                    mes: String(config.mes || ''),
+                    nombre_curso: String(config.nombre_curso || ''),
+                    refreshTimer: null,
+                    onPeriodChange(key, event) {
+                        let value = event?.detail?.value;
+                        if (value === undefined || value === null) {
+                            value = event?.target?.value ?? '';
+                        }
+                        this[key] = value === null || value === undefined ? '' : String(value);
+                        this.scheduleCursoRefresh();
+                    },
+                    onCursoChange(event) {
+                        let value = event?.detail?.value;
+                        if (value === undefined || value === null) {
+                            value = event?.target?.value ?? '';
+                        }
+                        this.nombre_curso = value === null || value === undefined ? '' : String(value);
+                    },
+                    scheduleCursoRefresh() {
+                        clearTimeout(this.refreshTimer);
+                        this.refreshTimer = setTimeout(() => this.refreshCursoOptions(), 250);
+                    },
+                    searchableSelectData(inputId) {
+                        const hidden = document.getElementById(inputId);
+                        const wrap = hidden?.closest('.searchable-select-wrap');
+                        if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                            return null;
+                        }
+                        return window.Alpine.$data(wrap);
+                    },
+                    async refreshCursoOptions() {
+                        try {
+                            const params = new URLSearchParams();
+                            if (this.anio) {
+                                params.set('anio', this.anio);
+                            }
+                            if (this.mes) {
+                                params.set('mes', this.mes);
+                            }
+                            const res = await fetch(`${this.optionsUrl}?${params.toString()}`, {
+                                headers: { Accept: 'application/json' },
+                                credentials: 'same-origin',
+                            });
+                            if (! res.ok) {
+                                return;
+                            }
+                            const payload = await res.json();
+                            this.updateCursoOptions(payload.cursos || []);
+                        } catch (_e) {
+                            // silencioso: el submit del form sigue usando el valor actual
+                        }
+                    },
+                    updateCursoOptions(cursos) {
+                        const data = this.searchableSelectData('filter_nombre_curso');
+                        if (! data) {
+                            return;
+                        }
+                        const list = Array.isArray(cursos) ? cursos : [];
+                        const placeholder = data.placeholder || 'Todos';
+                        data.options = [
+                            { value: '', label: placeholder },
+                            ...list.map((opt) => ({
+                                value: String(opt.value ?? ''),
+                                label: String(opt.label ?? opt.value ?? ''),
+                            })),
+                        ];
+                        const current = String(this.nombre_curso || '');
+                        const stillValid = current === '' || list.some((opt) => String(opt.value) === current);
+                        if (! stillValid) {
+                            this.nombre_curso = '';
+                            data.value = '';
+                            data.syncLabel?.();
+                            return;
+                        }
+                        data.value = current;
+                        data.syncLabel?.();
+                    },
+                };
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
                 const $ = window.jQuery;
                 if (! $ || ! $.fn.DataTable) {

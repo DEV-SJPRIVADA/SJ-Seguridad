@@ -7,6 +7,7 @@
         class="page-section cursos-dashboard-page formacion-dashboard-page"
         x-data="formacionDashboardPage(@js([
             'metricsUrl' => $metricsUrl,
+            'formacionesUrl' => $formacionesUrl,
             'initial' => $initialPayload,
             'filters' => $filters,
         ]))"
@@ -40,7 +41,7 @@
                                 x-on:change="onSelectChange('mes', $event)"
                             />
                         </div>
-                        <div class="form-field">
+                        <div class="form-field" x-show="mode === 'individual'" x-cloak>
                             <label class="form-label" for="dash_estado">Estado</label>
                             <x-searchable-select
                                 id="dash_estado"
@@ -52,7 +53,7 @@
                                 x-on:change="onSelectChange('estado', $event)"
                             />
                         </div>
-                        <div class="form-field">
+                        <div class="form-field" x-show="mode === 'individual'" x-cloak>
                             <label class="form-label" for="dash_nombre_curso">Curso</label>
                             <x-searchable-select
                                 id="dash_nombre_curso"
@@ -81,27 +82,126 @@
                 </div>
             </div>
 
-            <div class="cursos-dashboard-page__kpi-grid formacion-dashboard-page__kpi-grid">
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#0369a1;">
-                    <p class="cursos-dashboard-page__kpi-label">Total</p>
-                    <p class="cursos-dashboard-page__kpi-value" x-text="total"></p>
-                    <p class="formacion-dashboard-page__kpi-hint">Año <span x-text="anio"></span></p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#15803d;">
-                    <p class="cursos-dashboard-page__kpi-label">Aprobados</p>
-                    <p class="cursos-dashboard-page__kpi-value" x-text="porEstado.aprobado"></p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#be123c;">
-                    <p class="cursos-dashboard-page__kpi-label">Reprobados</p>
-                    <p class="cursos-dashboard-page__kpi-value" x-text="porEstado.reprobado"></p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#64748b;">
-                    <p class="cursos-dashboard-page__kpi-label">No realizadas</p>
-                    <p class="cursos-dashboard-page__kpi-value" x-text="porEstado.no_realizada"></p>
-                </div>
+            <div class="formacion-dashboard-page__mode-tabs" role="tablist" aria-label="Modo de indicadores">
+                <button
+                    type="button"
+                    class="formacion-dashboard-page__mode-tab"
+                    :class="{ 'is-active': mode === 'individual' }"
+                    role="tab"
+                    :aria-selected="(mode === 'individual').toString()"
+                    x-on:click="setMode('individual')"
+                >Por curso</button>
+                <button
+                    type="button"
+                    class="formacion-dashboard-page__mode-tab"
+                    :class="{ 'is-active': mode === 'persona' }"
+                    role="tab"
+                    :aria-selected="(mode === 'persona').toString()"
+                    x-on:click="setMode('persona')"
+                >Por persona (ciclo)</button>
             </div>
 
-            <div class="cursos-dashboard-page__charts formacion-dashboard-page__charts">
+            <div class="cursos-dashboard-page__kpi-grid formacion-dashboard-page__kpi-grid" x-show="mode === 'individual'" x-cloak>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#0369a1;"
+                    title="Ver registros en Formaciones"
+                    x-on:click="goToFormaciones({})"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Total registros</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="total"></p>
+                    <p class="formacion-dashboard-page__kpi-hint">Año <span x-text="anio"></span></p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#15803d;"
+                    title="Ver aprobados en Formaciones"
+                    x-on:click="goToFormaciones({ estado: 'aprobado' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Aprobados</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="porEstado.aprobado"></p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#be123c;"
+                    title="Ver reprobados en Formaciones"
+                    x-on:click="goToFormaciones({ estado: 'reprobado' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Reprobados</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="porEstado.reprobado"></p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#64748b;"
+                    title="Ver no realizadas en Formaciones"
+                    x-on:click="goToFormaciones({ estado: 'no_realizada' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">No realizadas</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="porEstado.no_realizada"></p>
+                </button>
+            </div>
+
+            <div class="cursos-dashboard-page__kpi-grid formacion-dashboard-page__kpi-grid" x-show="mode === 'persona'" x-cloak>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#0369a1;"
+                    title="Ver personas del ciclo en Formaciones"
+                    x-on:click="goToFormaciones({ ciclo: '' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Personas</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="ciclo.personas"></p>
+                    <p class="formacion-dashboard-page__kpi-hint">
+                        <span x-text="ciclo.cursos_ciclo"></span> curso(s) del ciclo
+                    </p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#15803d;"
+                    title="Ver personas que aprobaron todos"
+                    x-on:click="goToFormaciones({ ciclo: 'aprobado' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Aprobaron todos</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="ciclo.aprobado"></p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#be123c;"
+                    title="Ver personas reprobadas en ciclo"
+                    x-on:click="goToFormaciones({ ciclo: 'reprobado' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Reprobados</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="ciclo.reprobado"></p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#ca8a04;"
+                    title="Ver personas incompletas en ciclo"
+                    x-on:click="goToFormaciones({ ciclo: 'incompleto' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">Incompletos</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="ciclo.incompleto"></p>
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#64748b;"
+                    title="Ver personas no realizadas en ciclo"
+                    x-on:click="goToFormaciones({ ciclo: 'no_realizado' })"
+                >
+                    <p class="cursos-dashboard-page__kpi-label">No realizados</p>
+                    <p class="cursos-dashboard-page__kpi-value" x-text="ciclo.no_realizado"></p>
+                </button>
+            </div>
+
+            <div class="cursos-dashboard-page__charts formacion-dashboard-page__charts" x-show="mode === 'individual'" x-cloak>
                 <div class="panel cursos-dashboard-page__chart-wide">
                     <div class="panel__header">
                         <h3 class="panel-title">Distribución por mes (<span x-text="anio"></span>)</h3>
@@ -112,7 +212,7 @@
                 </div>
                 <div class="panel">
                     <div class="panel__header">
-                        <h3 class="panel-title">Por estado</h3>
+                        <h3 class="panel-title">Por estado (registro)</h3>
                     </div>
                     <div class="panel__body">
                         <div id="formacion-chart-estado" class="cursos-dashboard-page__chart"></div>
@@ -127,6 +227,23 @@
                     </div>
                 </div>
             </div>
+
+            <div class="cursos-dashboard-page__charts formacion-dashboard-page__charts" x-show="mode === 'persona'" x-cloak>
+                <div class="panel cursos-dashboard-page__chart-wide">
+                    <div class="panel__header">
+                        <h3 class="panel-title">Resultado por persona (ciclo)</h3>
+                    </div>
+                    <div class="panel__body">
+                        <p class="formacion-dashboard-page__ciclo-hint panel-text">
+                            Set = todos los cursos distintos del
+                            <span x-text="filters.mes ? 'mes seleccionado' : 'año'"></span>.
+                            Se toma la mejor nota por curso; si reprueba cualquiera → reprobado;
+                            si falta alguno → incompleto; si no hizo ninguno → no realizado.
+                        </p>
+                        <div id="formacion-chart-ciclo" class="cursos-dashboard-page__chart cursos-dashboard-page__chart--tall"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -136,9 +253,20 @@
         <script>
             function formacionDashboardPage(config) {
                 const defaultEstado = { aprobado: 0, reprobado: 0, no_realizada: 0 };
+                const defaultCiclo = {
+                    cursos_ciclo: 0,
+                    personas: 0,
+                    aprobado: 0,
+                    reprobado: 0,
+                    incompleto: 0,
+                    no_realizado: 0,
+                    charts: { labels: [], data: [] },
+                };
 
                 return {
                     metricsUrl: config.metricsUrl,
+                    formacionesUrl: config.formacionesUrl,
+                    mode: 'individual',
                     filters: {
                         anio: String(config.filters?.anio ?? ''),
                         mes: String(config.filters?.mes ?? ''),
@@ -148,17 +276,65 @@
                     total: config.initial?.total ?? 0,
                     anio: config.initial?.anio ?? '',
                     porEstado: { ...defaultEstado, ...(config.initial?.por_estado || {}) },
+                    ciclo: { ...defaultCiclo, ...(config.initial?.ciclo || {}) },
                     loading: false,
                     error: '',
                     refreshTimer: null,
                     init() {
-                        if (typeof window.renderFormacionDashboardCharts === 'function') {
-                            window.renderFormacionDashboardCharts(config.initial?.charts);
-                        } else {
-                            window.addEventListener('load', () => {
-                                window.renderFormacionDashboardCharts?.(config.initial?.charts);
-                            }, { once: true });
+                        this.$nextTick(() => this.renderChartsForMode(config.initial));
+                    },
+                    goToFormaciones(overrides = {}) {
+                        const params = new URLSearchParams();
+                        const anio = String(overrides.anio ?? this.filters.anio ?? this.anio ?? '');
+                        const mes = String(overrides.mes ?? this.filters.mes ?? '');
+                        if (anio) {
+                            params.set('anio', anio);
                         }
+                        if (mes) {
+                            params.set('mes', mes);
+                        }
+
+                        if (Object.prototype.hasOwnProperty.call(overrides, 'ciclo')) {
+                            const ciclo = String(overrides.ciclo || '');
+                            if (ciclo) {
+                                params.set('ciclo', ciclo);
+                            }
+                        } else {
+                            const curso = String(overrides.nombre_curso ?? this.filters.nombre_curso ?? '');
+                            if (curso) {
+                                params.set('nombre_curso', curso);
+                            }
+                            if (Object.prototype.hasOwnProperty.call(overrides, 'estado')) {
+                                const estado = String(overrides.estado || '');
+                                if (estado) {
+                                    params.set('estado', estado);
+                                }
+                            }
+                        }
+
+                        const query = params.toString();
+                        window.location.href = query
+                            ? `${this.formacionesUrl}?${query}`
+                            : this.formacionesUrl;
+                    },
+                    setMode(mode) {
+                        this.mode = mode === 'persona' ? 'persona' : 'individual';
+                        this.$nextTick(() => this.renderChartsForMode({
+                            charts: {
+                                por_mes: this._lastCharts?.por_mes,
+                                por_categoria: this._lastCharts?.por_categoria,
+                                por_estado: this._lastCharts?.por_estado,
+                            },
+                            ciclo: this.ciclo,
+                        }));
+                    },
+                    renderChartsForMode(payload) {
+                        this._lastCharts = payload?.charts || this._lastCharts || {};
+                        if (this.mode === 'persona') {
+                            window.renderFormacionCicloChart?.(payload?.ciclo?.charts || this.ciclo?.charts);
+                            return;
+                        }
+                        window.renderFormacionDashboardCharts?.(payload?.charts || this._lastCharts);
                     },
                     onSelectChange(key, event) {
                         let value = event?.detail?.value;
@@ -235,7 +411,11 @@
                         this.error = '';
                         try {
                             const params = new URLSearchParams();
-                            Object.entries(this.filters).forEach(([key, value]) => {
+                            const keys = this.mode === 'persona'
+                                ? ['anio', 'mes']
+                                : ['anio', 'mes', 'estado', 'nombre_curso'];
+                            keys.forEach((key) => {
+                                const value = this.filters[key];
                                 if (value === null || value === undefined || value === '') {
                                     return;
                                 }
@@ -254,12 +434,15 @@
                             this.anio = payload.anio ?? this.anio;
                             this.filters.anio = String(payload.filters?.anio ?? payload.anio ?? this.filters.anio);
                             this.filters.mes = String(payload.filters?.mes ?? this.filters.mes ?? '');
-                            this.filters.estado = String(payload.filters?.estado ?? this.filters.estado ?? '');
-                            this.filters.nombre_curso = String(payload.filters?.nombre_curso ?? '');
+                            if (this.mode === 'individual') {
+                                this.filters.estado = String(payload.filters?.estado ?? this.filters.estado ?? '');
+                                this.filters.nombre_curso = String(payload.filters?.nombre_curso ?? '');
+                                this.updateCursoOptions(payload.options?.cursos || []);
+                                this.setSelectValue('dash_nombre_curso', this.filters.nombre_curso);
+                            }
                             this.porEstado = { ...defaultEstado, ...(payload.por_estado || {}) };
-                            this.updateCursoOptions(payload.options?.cursos || []);
-                            this.setSelectValue('dash_nombre_curso', this.filters.nombre_curso);
-                            window.renderFormacionDashboardCharts?.(payload.charts);
+                            this.ciclo = { ...defaultCiclo, ...(payload.ciclo || {}) };
+                            this.$nextTick(() => this.renderChartsForMode(payload));
                         } catch (e) {
                             this.error = e?.message || 'Error al actualizar.';
                         } finally {

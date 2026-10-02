@@ -28,6 +28,10 @@ final class FormacionDatatableService
         12 => 'Diciembre',
     ];
 
+    public function __construct(
+        private readonly FormacionDashboardService $dashboardService,
+    ) {}
+
     /**
      * @param  array{
      *     anio?: int|string|null,
@@ -37,6 +41,7 @@ final class FormacionDatatableService
      *     numero_id?: string|null,
      *     nombre?: string|null,
      *     estado?: string|null,
+     *     ciclo?: string|null,
      * }  $filters
      */
     public function filteredQuery(array $filters, bool $ordered = true): Builder
@@ -48,14 +53,18 @@ final class FormacionDatatableService
         }
 
         $anio = $filters['anio'] ?? null;
+        $anioInt = null;
         if ($anio !== null && $anio !== '') {
-            $query->where('anio', (int) $anio);
+            $anioInt = (int) $anio;
+            $query->where('anio', $anioInt);
         }
 
         $mes = $filters['mes'] ?? null;
+        $mesInt = null;
         if ($mes !== null && $mes !== '') {
-            $mesInt = (int) $mes;
-            if ($mesInt >= 1 && $mesInt <= 12) {
+            $mesCandidate = (int) $mes;
+            if ($mesCandidate >= 1 && $mesCandidate <= 12) {
+                $mesInt = $mesCandidate;
                 $query->where('mes', $mesInt);
             }
         }
@@ -78,6 +87,23 @@ final class FormacionDatatableService
         $nombre = trim((string) ($filters['nombre'] ?? ''));
         if ($nombre !== '') {
             $query->where('nombre_completo', 'like', '%'.$nombre.'%');
+        }
+
+        $ciclo = strtolower(trim((string) ($filters['ciclo'] ?? '')));
+        if ($ciclo !== '' && array_key_exists($ciclo, FormacionRegistro::CICLO_LABELS)) {
+            if ($anioInt === null || $anioInt < 2000 || $anioInt > 2100) {
+                $query->whereRaw('0 = 1');
+            } else {
+                $personIds = $this->dashboardService->personIdsForCiclo($anioInt, $mesInt, $ciclo);
+                if ($personIds === []) {
+                    $query->whereRaw('0 = 1');
+                } else {
+                    $query->whereIn('numero_id', $personIds);
+                }
+            }
+
+            // El filtro ciclo ya acota personas; no mezclar con estado de registro.
+            return $query;
         }
 
         $estado = trim((string) ($filters['estado'] ?? ''));
@@ -130,6 +156,7 @@ final class FormacionDatatableService
 
     /**
      * Opciones distinct indexadas para searchable-select (no 81k filas crudas).
+     * Cursos: distinct del año (y mes si se indica), mismo criterio que Dashboard.
      *
      * @return array{
      *     anios: list<array{value: string, label: string}>,
@@ -139,7 +166,7 @@ final class FormacionDatatableService
      *     estados: list<array{value: string, label: string}>
      * }
      */
-    public function filterSelectOptions(): array
+    public function filterSelectOptions(?int $anio = null, ?int $mes = null): array
     {
         $anios = FormacionRegistro::query()
             ->select('anio')
@@ -147,9 +174,9 @@ final class FormacionDatatableService
             ->distinct()
             ->orderByDesc('anio')
             ->pluck('anio')
-            ->map(fn ($anio): array => [
-                'value' => (string) $anio,
-                'label' => (string) $anio,
+            ->map(fn ($anioValue): array => [
+                'value' => (string) $anioValue,
+                'label' => (string) $anioValue,
             ])
             ->values()
             ->all();
@@ -176,20 +203,6 @@ final class FormacionDatatableService
             ->values()
             ->all();
 
-        $cursos = FormacionRegistro::query()
-            ->select('nombre_curso')
-            ->whereNotNull('nombre_curso')
-            ->where('nombre_curso', '!=', '')
-            ->distinct()
-            ->orderBy('nombre_curso')
-            ->pluck('nombre_curso')
-            ->map(fn ($curso): array => [
-                'value' => (string) $curso,
-                'label' => (string) $curso,
-            ])
-            ->values()
-            ->all();
-
         $estados = [];
         foreach (FormacionRegistro::ESTADO_LABELS as $value => $label) {
             $estados[] = [
@@ -202,9 +215,41 @@ final class FormacionDatatableService
             'anios' => $anios,
             'meses' => $meses,
             'categorias' => $categorias,
-            'cursos' => $cursos,
+            'cursos' => $this->courseOptions($anio, $mes),
             'estados' => $estados,
         ];
+    }
+
+    /**
+     * Cursos distinct del año (y mes si se indica). Sin año → todos; sin mes → todos del año.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function courseOptions(?int $anio = null, ?int $mes = null): array
+    {
+        $query = FormacionRegistro::query()
+            ->select('nombre_curso')
+            ->whereNotNull('nombre_curso')
+            ->where('nombre_curso', '!=', '')
+            ->distinct()
+            ->orderBy('nombre_curso');
+
+        if ($anio !== null && $anio >= 2000 && $anio <= 2100) {
+            $query->where('anio', $anio);
+        }
+
+        if ($mes !== null && $mes >= 1 && $mes <= 12) {
+            $query->where('mes', $mes);
+        }
+
+        return $query
+            ->pluck('nombre_curso')
+            ->map(static fn ($curso): array => [
+                'value' => (string) $curso,
+                'label' => (string) $curso,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

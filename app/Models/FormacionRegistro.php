@@ -18,6 +18,14 @@ class FormacionRegistro extends Model
 
     public const ESTADO_NO_REALIZADA = 'no_realizada';
 
+    public const CICLO_APROBADO = 'aprobado';
+
+    public const CICLO_REPROBADO = 'reprobado';
+
+    public const CICLO_INCOMPLETO = 'incompleto';
+
+    public const CICLO_NO_REALIZADO = 'no_realizado';
+
     /**
      * @var array<string, string>
      */
@@ -25,6 +33,16 @@ class FormacionRegistro extends Model
         self::ESTADO_APROBADO => 'Aprobado',
         self::ESTADO_REPROBADO => 'Reprobado',
         self::ESTADO_NO_REALIZADA => 'No realizada',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    public const CICLO_LABELS = [
+        self::CICLO_APROBADO => 'Aprobado',
+        self::CICLO_REPROBADO => 'Reprobado',
+        self::CICLO_INCOMPLETO => 'Incompleto',
+        self::CICLO_NO_REALIZADO => 'No realizado',
     ];
 
     protected $table = 'formacion_registros';
@@ -99,6 +117,62 @@ class FormacionRegistro extends Model
         return (float) $normalized > 7.5
             ? self::ESTADO_APROBADO
             : self::ESTADO_REPROBADO;
+    }
+
+    /**
+     * Mejor calificación numérica (máximo). Vacío / no numérico → null.
+     */
+    public static function numericCalificacion(mixed $calificacion): ?float
+    {
+        $raw = trim((string) ($calificacion ?? ''));
+        if ($raw === '') {
+            return null;
+        }
+
+        $normalized = str_replace(',', '.', $raw);
+        if (! is_numeric($normalized)) {
+            return null;
+        }
+
+        return (float) $normalized;
+    }
+
+    /**
+     * Clasificación de persona en el ciclo (set de cursos del periodo).
+     *
+     * @param  list<string>  $courseStatuses  claves ESTADO_* por cada curso del set
+     */
+    public static function cicloStatusFromCourseStatuses(array $courseStatuses): string
+    {
+        if ($courseStatuses === []) {
+            return self::CICLO_NO_REALIZADO;
+        }
+
+        $aprobados = 0;
+        $reprobados = 0;
+        $noRealizadas = 0;
+
+        foreach ($courseStatuses as $status) {
+            match ($status) {
+                self::ESTADO_APROBADO => $aprobados++,
+                self::ESTADO_REPROBADO => $reprobados++,
+                default => $noRealizadas++,
+            };
+        }
+
+        if ($reprobados > 0) {
+            return self::CICLO_REPROBADO;
+        }
+
+        if ($noRealizadas === count($courseStatuses)) {
+            return self::CICLO_NO_REALIZADO;
+        }
+
+        if ($aprobados === count($courseStatuses)) {
+            return self::CICLO_APROBADO;
+        }
+
+        return self::CICLO_INCOMPLETO;
     }
 
     /**

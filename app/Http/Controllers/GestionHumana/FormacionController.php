@@ -54,6 +54,7 @@ class FormacionController extends Controller
             'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.formacion.dashboard.metrics'),
+            'formacionesUrl' => route('gestion-humana.formacion.formaciones'),
             'yearOptions' => $options['anios'],
             'monthOptions' => $options['meses'],
             'estadoOptions' => $options['estados'],
@@ -78,7 +79,15 @@ class FormacionController extends Controller
         abort_unless($this->formacionAccess->canView(auth()->user()), 403);
 
         $filters = $this->filtersFromRequest($request);
-        $options = $this->datatableService->filterSelectOptions();
+        $anio = $this->optionalAnioFromFilter($filters['anio']);
+        $mes = $this->optionalMesFromFilter($filters['mes']);
+        $options = $this->datatableService->filterSelectOptions($anio, $mes);
+
+        $cursoValues = array_column($options['cursos'], 'value');
+        if ($filters['nombre_curso'] !== '' && ! in_array($filters['nombre_curso'], $cursoValues, true)) {
+            $filters['nombre_curso'] = '';
+        }
+
         $activeQuery = $this->activeFilterQuery($filters);
 
         $canEdit = $this->formacionAccess->canEdit(auth()->user());
@@ -97,6 +106,7 @@ class FormacionController extends Controller
             'filterCategoriaOptions' => $options['categorias'],
             'filterCursoOptions' => $options['cursos'],
             'filterEstadoOptions' => $options['estados'],
+            'optionsUrl' => route('gestion-humana.formacion.formaciones.options'),
             'datatableUrl' => route('gestion-humana.formacion.formaciones.datatable', $activeQuery),
             'exportUrl' => route('gestion-humana.formacion.formaciones.export', $activeQuery),
             'importTemplateUrl' => route('gestion-humana.formacion.formaciones.import-template'),
@@ -114,11 +124,14 @@ class FormacionController extends Controller
         );
     }
 
-    public function formacionesOptions(): JsonResponse
+    public function formacionesOptions(Request $request): JsonResponse
     {
         abort_unless($this->formacionAccess->canView(auth()->user()), 403);
 
-        return response()->json($this->datatableService->filterSelectOptions());
+        $anio = $this->optionalAnioFromFilter(trim((string) $request->query('anio', '')));
+        $mes = $this->optionalMesFromFilter(trim((string) $request->query('mes', '')));
+
+        return response()->json($this->datatableService->filterSelectOptions($anio, $mes));
     }
 
     public function formacionesExport(Request $request): StreamedResponse
@@ -186,12 +199,23 @@ class FormacionController extends Controller
      *     numero_id: string,
      *     nombre: string,
      *     estado: string,
+     *     ciclo: string,
      * }
      */
     private function filtersFromRequest(Request $request): array
     {
         $estado = strtolower(trim((string) $request->query('estado', '')));
         if ($estado !== '' && ! array_key_exists($estado, FormacionRegistro::ESTADO_LABELS)) {
+            $estado = '';
+        }
+
+        $ciclo = strtolower(trim((string) $request->query('ciclo', '')));
+        if ($ciclo !== '' && ! array_key_exists($ciclo, FormacionRegistro::CICLO_LABELS)) {
+            $ciclo = '';
+        }
+
+        // KPI ciclo y estado de registro no se combinan.
+        if ($ciclo !== '') {
             $estado = '';
         }
 
@@ -203,6 +227,7 @@ class FormacionController extends Controller
             'numero_id' => trim((string) $request->query('numero_id', '')),
             'nombre' => trim((string) $request->query('nombre', '')),
             'estado' => $estado,
+            'ciclo' => $ciclo,
         ];
     }
 
@@ -256,5 +281,27 @@ class FormacionController extends Controller
             $filters,
             static fn (string $value): bool => $value !== '',
         );
+    }
+
+    private function optionalAnioFromFilter(string $raw): ?int
+    {
+        if ($raw === '' || ! ctype_digit($raw)) {
+            return null;
+        }
+
+        $anio = (int) $raw;
+
+        return ($anio >= 2000 && $anio <= 2100) ? $anio : null;
+    }
+
+    private function optionalMesFromFilter(string $raw): ?int
+    {
+        if ($raw === '' || ! ctype_digit($raw)) {
+            return null;
+        }
+
+        $mes = (int) $raw;
+
+        return ($mes >= 1 && $mes <= 12) ? $mes : null;
     }
 }

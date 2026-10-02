@@ -85,7 +85,12 @@ class FormacionDashboardTest extends TestCase
             ->assertSee('Por estado', false)
             ->assertSee('Top categorías', false)
             ->assertSee('formacion-chart-mes', false)
-            ->assertSee('formacion-chart-estado', false);
+            ->assertSee('formacion-chart-estado', false)
+            ->assertSee('Por persona (ciclo)', false)
+            ->assertSee('Por curso', false)
+            ->assertSee('formacion-dashboard-page__kpi-link', false)
+            ->assertSee('goToFormaciones', false)
+            ->assertSee(route('gestion-humana.formacion.formaciones'), false);
 
         $metrics = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.formacion.dashboard.metrics'))
@@ -278,6 +283,143 @@ class FormacionDashboardTest extends TestCase
 
         $this->assertSame('', $clearedCurso['filters']['nombre_curso']);
         $this->assertSame(2, $clearedCurso['total']);
+    }
+
+    public function test_ciclo_metrics_use_best_grade_and_month_course_set(): void
+    {
+        $viewer = $this->viewerUser();
+        $year = (int) now()->year;
+
+        // Persona 1: mejor nota en Altura = 9 (aprobado), Defensivo = 8 → ciclo aprobado
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P1',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Altura',
+            'calificacion' => '6',
+            'fecha_inicio' => sprintf('%d-03-01', $year),
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P1',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Altura',
+            'calificacion' => '9',
+            'fecha_inicio' => sprintf('%d-03-05', $year),
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P1',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Defensivo',
+            'calificacion' => '8',
+            'fecha_inicio' => sprintf('%d-03-10', $year),
+        ]);
+
+        // Persona 2: Altura aprobado, Defensivo faltante → incompleto
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P2',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Altura',
+            'calificacion' => '9',
+            'fecha_inicio' => sprintf('%d-03-12', $year),
+        ]);
+
+        // Persona 3: Altura reprobado (mejor 5) → reprobado
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P3',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Altura',
+            'calificacion' => '5',
+            'fecha_inicio' => sprintf('%d-03-15', $year),
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P3',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Defensivo',
+            'calificacion' => '9',
+            'fecha_inicio' => sprintf('%d-03-16', $year),
+        ]);
+
+        // Persona 4: solo filas sin nota en ambos cursos del set → no realizado
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P4',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Altura',
+            'calificacion' => null,
+            'fecha_inicio' => sprintf('%d-03-20', $year),
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P4',
+            'anio' => $year,
+            'mes' => 3,
+            'nombre_curso' => 'Defensivo',
+            'calificacion' => '',
+            'fecha_inicio' => sprintf('%d-03-21', $year),
+        ]);
+
+        // Curso de otro mes no entra al set de marzo
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'P1',
+            'anio' => $year,
+            'mes' => 4,
+            'nombre_curso' => 'Solo Abril',
+            'calificacion' => '9',
+            'fecha_inicio' => sprintf('%d-04-01', $year),
+        ]);
+
+        $metrics = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.dashboard.metrics', [
+                'anio' => $year,
+                'mes' => 3,
+            ]))
+            ->assertOk()
+            ->json('ciclo');
+
+        $this->assertSame(2, $metrics['cursos_ciclo']);
+        $this->assertSame(4, $metrics['personas']);
+        $this->assertSame(1, $metrics['aprobado']);
+        $this->assertSame(1, $metrics['reprobado']);
+        $this->assertSame(1, $metrics['incompleto']);
+        $this->assertSame(1, $metrics['no_realizado']);
+        $this->assertSame(['Aprobado', 'Reprobado', 'Incompleto', 'No realizado'], $metrics['charts']['labels']);
+        $this->assertSame([1, 1, 1, 1], $metrics['charts']['data']);
+    }
+
+    public function test_ciclo_without_mes_uses_all_year_courses(): void
+    {
+        $viewer = $this->viewerUser();
+        $year = (int) now()->year;
+
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'Y1',
+            'anio' => $year,
+            'mes' => 1,
+            'nombre_curso' => 'Enero',
+            'calificacion' => '9',
+            'fecha_inicio' => sprintf('%d-01-01', $year),
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'Y1',
+            'anio' => $year,
+            'mes' => 6,
+            'nombre_curso' => 'Junio',
+            'calificacion' => '9',
+            'fecha_inicio' => sprintf('%d-06-01', $year),
+        ]);
+
+        $metrics = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.dashboard.metrics', ['anio' => $year]))
+            ->assertOk()
+            ->json('ciclo');
+
+        $this->assertSame(2, $metrics['cursos_ciclo']);
+        $this->assertSame(1, $metrics['aprobado']);
+        $this->assertSame(0, $metrics['incompleto']);
     }
 
     public function test_default_anio_falls_back_to_latest_with_data(): void
