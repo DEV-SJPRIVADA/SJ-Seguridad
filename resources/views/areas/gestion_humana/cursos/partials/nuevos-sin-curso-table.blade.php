@@ -29,7 +29,7 @@
                         <div class="cursos-registros-page__row-actions">
                             <button
                                 type="button"
-                                class="btn btn--primary btn--sm"
+                                class="cursos-catalogo-page__icon-btn"
                                 title="Agregar curso"
                                 aria-label="Agregar curso"
                                 x-on:click="openCreateFromPending({
@@ -37,11 +37,11 @@
                                     full_name: @js($pending->full_name ?: ($pending->employeeFichaProfile?->full_name ?: '')),
                                 })"
                             >
-                                Agregar curso
+                                <x-lucide-plus width="16" height="16" aria-hidden="true" />
                             </button>
                             <button
                                 type="button"
-                                class="btn btn--secondary btn--sm"
+                                class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
                                 title="No aplica / omitir"
                                 aria-label="No aplica / omitir"
                                 x-on:click="openOmit(@js([
@@ -51,7 +51,7 @@
                                     'omit_url' => route('gestion-humana.cursos.registros.pendientes.omit', $pending),
                                 ]))"
                             >
-                                Omitir
+                                <x-lucide-ban width="16" height="16" aria-hidden="true" />
                             </button>
                         </div>
                     </td>

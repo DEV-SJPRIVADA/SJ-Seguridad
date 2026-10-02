@@ -36,6 +36,7 @@ final class FormacionDatatableService
      *     nombre_curso?: string|null,
      *     numero_id?: string|null,
      *     nombre?: string|null,
+     *     estado?: string|null,
      * }  $filters
      */
     public function filteredQuery(array $filters, bool $ordered = true): Builder
@@ -77,6 +78,11 @@ final class FormacionDatatableService
         $nombre = trim((string) ($filters['nombre'] ?? ''));
         if ($nombre !== '') {
             $query->where('nombre_completo', 'like', '%'.$nombre.'%');
+        }
+
+        $estado = trim((string) ($filters['estado'] ?? ''));
+        if ($estado !== '') {
+            $query->withEstado($estado);
         }
 
         return $query;
@@ -129,7 +135,8 @@ final class FormacionDatatableService
      *     anios: list<array{value: string, label: string}>,
      *     meses: list<array{value: string, label: string}>,
      *     categorias: list<array{value: string, label: string}>,
-     *     cursos: list<array{value: string, label: string}>
+     *     cursos: list<array{value: string, label: string}>,
+     *     estados: list<array{value: string, label: string}>
      * }
      */
     public function filterSelectOptions(): array
@@ -183,11 +190,20 @@ final class FormacionDatatableService
             ->values()
             ->all();
 
+        $estados = [];
+        foreach (FormacionRegistro::ESTADO_LABELS as $value => $label) {
+            $estados[] = [
+                'value' => $value,
+                'label' => $label,
+            ];
+        }
+
         return [
             'anios' => $anios,
             'meses' => $meses,
             'categorias' => $categorias,
             'cursos' => $cursos,
+            'estados' => $estados,
         ];
     }
 
@@ -235,7 +251,9 @@ final class FormacionDatatableService
             4 => $query->orderBy('anio', $direction),
             5 => $query->orderBy('nombre_curso', $direction),
             6 => $query->orderBy('calificacion', $direction),
-            7 => $query->orderBy('categoria', $direction),
+            // Estado es derivado de calificación; ordenar por la misma columna.
+            7 => $query->orderBy('calificacion', $direction),
+            8 => $query->orderBy('categoria', $direction),
             default => $query->orderByDesc('fecha_inicio')->orderByDesc('id'),
         };
     }
@@ -256,6 +274,11 @@ final class FormacionDatatableService
             e((string) $registro->anio),
             e((string) $registro->nombre_curso),
             e((string) ($registro->calificacion !== null && $registro->calificacion !== '' ? $registro->calificacion : '—')),
+            sprintf(
+                '<span class="%s">%s</span>',
+                e($registro->estadoCssClass()),
+                e($registro->estadoLabel()),
+            ),
             e((string) $registro->categoria),
         ];
     }

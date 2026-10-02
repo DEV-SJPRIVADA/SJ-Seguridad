@@ -181,7 +181,9 @@ class CursosNuevosSinCursoPendingTest extends TestCase
             ->assertSee('En Cola', false)
             ->assertSee('6001', false)
             ->assertSee('Agregar curso', false)
-            ->assertSee('Omitir', false);
+            ->assertSee('No aplica / omitir', false)
+            ->assertSee('cursos-catalogo-page__icon-btn', false)
+            ->assertSee('Volver a registros', false);
     }
 
     public function test_omit_resolves_queue_and_viewer_forbidden(): void

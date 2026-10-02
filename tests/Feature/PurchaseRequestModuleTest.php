@@ -523,7 +523,9 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertOk();
         $response->assertSee('Listado operativo', false);
         $response->assertSee($purchaseRequest->fresh()->folio());
-        $response->assertSee('Ver detalle', false);
+        $response->assertSee('aria-label="Ver detalle"', false);
+        $response->assertSee('aria-label="Procesar"', false);
+        $response->assertSee('cursos-catalogo-page__icon-btn', false);
         $response->assertSee('Filtros', false);
         $response->assertSee('mostrad', false);
     }

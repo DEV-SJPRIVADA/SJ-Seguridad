@@ -29,7 +29,7 @@
                         <div class="cursos-registros-page__row-actions">
                             <button
                                 type="button"
-                                class="btn btn--primary btn--sm"
+                                class="cursos-catalogo-page__icon-btn"
                                 title="Nuevo acreditado"
                                 aria-label="Nuevo acreditado"
                                 x-on:click="openCreateFromPending({
@@ -38,11 +38,11 @@
                                     cargo: @js(trim((string) ($pending->employeeFichaProfile?->position_name ?? ''))),
                                 })"
                             >
-                                Nuevo acreditado
+                                <x-lucide-plus width="16" height="16" aria-hidden="true" />
                             </button>
                             <button
                                 type="button"
-                                class="btn btn--secondary btn--sm"
+                                class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
                                 title="No aplica / omitir"
                                 aria-label="No aplica / omitir"
                                 x-on:click="openOmit(@js([
@@ -52,7 +52,7 @@
                                     'omit_url' => route('gestion-humana.acreditaciones.acreditados.pendientes.omit', $pending),
                                 ]))"
                             >
-                                Omitir
+                                <x-lucide-ban width="16" height="16" aria-hidden="true" />
                             </button>
                         </div>
                     </td>

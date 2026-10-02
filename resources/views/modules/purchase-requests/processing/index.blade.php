@@ -46,7 +46,14 @@
                             <div class="req-manage-filters__head">
                                 <div class="req-manage-filters__actions">
                                     @if ($hasActiveFilters)
-                                        <a href="{{ route('purchase-requests.processing.index', ['module' => $module]) }}" class="btn btn--secondary btn--sm">Limpiar filtros</a>
+                                        <a
+                                            href="{{ route('purchase-requests.processing.index', ['module' => $module]) }}"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                            title="Limpiar filtros"
+                                            aria-label="Limpiar filtros"
+                                        >
+                                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                        </a>
                                     @endif
                                 </div>
                             </div>
@@ -182,21 +189,37 @@
                                                 @if ($queueItem['tipo'] === 'purchase')
                                                     <a
                                                         href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $queueItem['id'], 'from' => 'processing']) }}"
-                                                        class="btn btn--secondary btn--sm"
-                                                    >Ver detalle</a>
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Ver detalle"
+                                                        aria-label="Ver detalle"
+                                                    >
+                                                        <x-lucide-eye width="16" height="16" aria-hidden="true" />
+                                                    </a>
                                                     <a
                                                         href="{{ route('purchase-requests.processing.purchase', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}"
-                                                        class="btn btn--secondary btn--sm"
-                                                    >Procesar</a>
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Procesar"
+                                                        aria-label="Procesar"
+                                                    >
+                                                        <x-lucide-cog width="16" height="16" aria-hidden="true" />
+                                                    </a>
                                                 @else
                                                     <a
                                                         href="{{ route('supplies.show', ['module' => $queueItem['model']->area_key, 'supply_request' => $queueItem['id']]) }}"
-                                                        class="btn btn--secondary btn--sm"
-                                                    >Ver detalle</a>
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Ver detalle"
+                                                        aria-label="Ver detalle"
+                                                    >
+                                                        <x-lucide-eye width="16" height="16" aria-hidden="true" />
+                                                    </a>
                                                     <a
                                                         href="{{ route('purchase-requests.processing.supply', ['module' => $module, 'supply_request' => $queueItem['id']]) }}"
-                                                        class="btn btn--secondary btn--sm"
-                                                    >Procesar</a>
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Procesar"
+                                                        aria-label="Procesar"
+                                                    >
+                                                        <x-lucide-cog width="16" height="16" aria-hidden="true" />
+                                                    </a>
                                                 @endif
                                             </div>
                                         </td>

@@ -10734,12 +10734,11 @@ a.req-dashboard-kpi:focus-visible {
     text-decoration: none;
 }
 
-.cursos-registros-page__cola-exit {
-    margin-left: 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #1d4ed8;
-    text-decoration: underline;
+.cursos-registros-page__cola-meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
 }
 
 .cursos-registros-page__identity-row {
@@ -11034,6 +11033,29 @@ a.req-dashboard-kpi:focus-visible {
 .cursos-dashboard-page__chart--tall {
     min-height: 300px;
     height: 320px;
+}
+
+/* Formación dashboard */
+.formacion-dashboard-page__filter-actions,
+.cursos-dashboard-page__filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+}
+
+.formacion-dashboard-page__kpi-hint {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.formacion-dashboard-page__error {
+    color: #be123c;
+}
+
+.formacion-dashboard-page__charts .cursos-dashboard-page__chart {
+    min-height: 260px;
 }
 
 /* FEAT-035 SelecciÃ³n dashboard */
@@ -12454,6 +12476,15 @@ a.req-dashboard-kpi:focus-visible {
     align-items: center;
     gap: 0.65rem;
     flex-wrap: wrap;
+}
+
+.pur-req-form-actions__group .req-manage-filters__icon-btn {
+    flex-shrink: 0;
+}
+
+.pur-req-form__item-desc {
+    font-weight: 600;
+    color: var(--color-primary);
 }
 
 .pur-req-detail__toolbar {

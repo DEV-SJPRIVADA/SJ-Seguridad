@@ -83,7 +83,9 @@ class AcreditacionesNuevosSinAcreditacionPendingTest extends TestCase
             ->assertSee('En Cola Acr', false)
             ->assertSee('6001', false)
             ->assertSee('Nuevo acreditado', false)
-            ->assertSee('Omitir', false);
+            ->assertSee('No aplica / omitir', false)
+            ->assertSee('cursos-catalogo-page__icon-btn', false)
+            ->assertSee('Volver a acreditados', false);
     }
 
     public function test_omit_sets_requires_acreditacion_false_on_ficha(): void

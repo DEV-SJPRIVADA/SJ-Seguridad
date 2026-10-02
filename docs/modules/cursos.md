@@ -15,7 +15,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
   - `sin_curso`: perfiles Ficha **activo** con `requires_courses = true` y sin ninguna fila en `employee_cursos`.
   - `por_actualizar_vencidos`: una fila por curso con vigencia `ACTUALIZAR` o `VENCIDO` de personas activas.
   - Acciones con `cursos.edit`: Agregar curso (sin curso), editar + marcar SOLICITADO (por actualizar/vencidos).
-  - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (`employee_curso_pending`; solo `cursos.edit`; encola al **entrar a ficha** post-deploy, no retroactivo).
+  - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (`employee_curso_pending`; solo `cursos.edit`; encola al **entrar a ficha** post-deploy, no retroactivo). Acciones de fila icon-only: Agregar curso (`plus`) / Omitir (`ban`); volver a registros con icono `arrow-left`.
   - Ficha: `employee_ficha_profiles.requires_courses` (default true). Modal «Nuevo registro»: con check activo exige datos de curso; desactivado solo actualiza ficha (`requires_courses=false`) y omite pending si existe. Editable en ficha con `ficha_empleados.manage` + `cursos.edit`.
   - Servicios: `EmployeeCursoValidacionesService`, `EmployeeCursoValidacionesDatatableService`.
 - Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton). **Solo personal activo en Ficha** (misma regla que Registros vía `EmployeeCursoListService`).

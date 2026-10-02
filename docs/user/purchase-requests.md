@@ -108,10 +108,11 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 1. Entre a **Compras → Solicitudes de compra → Bandeja compras**.
 2. Use **Filtros**: rango de fechas, area solicitante, tipo (Solicitud compra / Suministro) y pills de estado (Pendiente, En curso, Completado, Rechazado). Al elegir area o tipo, el listado se actualiza solo.
 3. El listado sale **mas reciente primero**. Sin filtro de fechas muestra hasta 200 registros recientes; con fechas ve el historico completo del periodo. Si no ve un suministro, revise que Tipo no este en "Solicitud compra" y que no haya un rango de fechas que lo excluya.
-4. Pulse **Ver detalle** para consultar la solicitud o el suministro sin salir del flujo de lectura.
-5. Para **procesar** una solicitud de compra: abra el flujo de procesamiento y actualice estado y comentarios de Compras.
-6. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
-7. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
+4. Pulse el icono de ojo (**Ver detalle**) para consultar la solicitud o el suministro sin salir del flujo de lectura.
+5. Pulse el icono de engranaje (**Procesar**) para actualizar estado o completar el trámite.
+6. Para **procesar** una solicitud de compra: abra el flujo de procesamiento y actualice estado y comentarios de Compras.
+7. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
+8. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
 
 ### Dashboard Compras
 
@@ -130,6 +131,9 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.15 | 2026-10-02 | UI | Procesar suministro (bandeja): diseño alineado a procesar compra; acciones con iconos. |
+| 1.14 | 2026-10-02 | UI | Procesar (bandeja) y Reabrir (mis solicitudes): diseño alineado a Nueva solicitud; acciones con iconos. |
+| 1.13 | 2026-10-02 | UI | Bandeja compras: Ver detalle, Procesar y Limpiar filtros pasan a iconos. |
 | 1.12 | 2026-09-22 | UI | Mis solicitudes y Bandeja compras: intro, resumen y listado alineados al resto del modulo. |
 | 1.11 | 2026-09-22 | UI | Nueva y detalle: secciones, guia lateral, volver contextual y CTA Procesar desde bandeja. |
 | 1.0 | 2026-07-31 | Modulo inicial | Flujo solicitante → director → Compras; FO-AD-44 |

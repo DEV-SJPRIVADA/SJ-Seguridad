@@ -41,6 +41,8 @@ class FormacionFormacionesTest extends TestCase
             ->assertViewHas('datatableUrl')
             ->assertViewHas('exportUrl')
             ->assertSee('js-formacion-formaciones-datatable', false)
+            ->assertSee('>Estado</th>', false)
+            ->assertSee('filter_estado', false)
             ->assertSee('anio=2026', false)
             ->assertSee('categoria=Obligatoria', false)
             ->assertSee(route('gestion-humana.formacion.formaciones.export'), false)
@@ -77,6 +79,135 @@ class FormacionFormacionesTest extends TestCase
         $this->assertStringContainsString('100200300', $rowText);
         $this->assertStringContainsString('Ana Formacion', $rowText);
         $this->assertStringContainsString('Primeros auxilios', $rowText);
+        $this->assertStringContainsString('No realizada', $rowText);
+    }
+
+    public function test_datatable_estado_from_calificacion(): void
+    {
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'E1',
+            'nombre_completo' => 'Aprobado Uno',
+            'calificacion' => '8',
+            'nombre_curso' => 'Curso A',
+            'categoria' => 'Obligatoria',
+            'anio' => 2026,
+            'mes' => 1,
+            'fecha_inicio' => '2026-01-01',
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'E2',
+            'nombre_completo' => 'Reprobado Dos',
+            'calificacion' => '7.5',
+            'nombre_curso' => 'Curso B',
+            'categoria' => 'Obligatoria',
+            'anio' => 2026,
+            'mes' => 1,
+            'fecha_inicio' => '2026-01-02',
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'E3',
+            'nombre_completo' => 'Vacio Tres',
+            'calificacion' => null,
+            'nombre_curso' => 'Curso C',
+            'categoria' => 'Obligatoria',
+            'anio' => 2026,
+            'mes' => 1,
+            'fecha_inicio' => '2026-01-03',
+        ]);
+
+        $viewer = $this->viewerUser();
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $byId = [];
+        foreach ($response->json('data') as $row) {
+            $byId[$row[0]] = $row;
+        }
+
+        $this->assertStringContainsString('status-pill--success', $byId['E1'][7]);
+        $this->assertStringContainsString('Aprobado', strip_tags($byId['E1'][7]));
+        $this->assertStringContainsString('status-pill--danger', $byId['E2'][7]);
+        $this->assertStringContainsString('Reprobado', strip_tags($byId['E2'][7]));
+        $this->assertStringContainsString('status-pill--muted', $byId['E3'][7]);
+        $this->assertStringContainsString('No realizada', strip_tags($byId['E3'][7]));
+    }
+
+    public function test_datatable_filters_by_estado(): void
+    {
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'A1',
+            'nombre_completo' => 'Aprobado Filtro',
+            'calificacion' => '9',
+            'nombre_curso' => 'Curso',
+            'categoria' => 'Obligatoria',
+            'anio' => 2026,
+            'mes' => 2,
+            'fecha_inicio' => '2026-02-01',
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'R1',
+            'nombre_completo' => 'Reprobado Filtro',
+            'calificacion' => '6',
+            'nombre_curso' => 'Curso',
+            'categoria' => 'Obligatoria',
+            'anio' => 2026,
+            'mes' => 2,
+            'fecha_inicio' => '2026-02-02',
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'N1',
+            'nombre_completo' => 'No Realizada Filtro',
+            'calificacion' => null,
+            'nombre_curso' => 'Curso',
+            'categoria' => 'Obligatoria',
+            'anio' => 2026,
+            'mes' => 2,
+            'fecha_inicio' => '2026-02-03',
+        ]);
+
+        $viewer = $this->viewerUser();
+
+        $aprobado = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.datatable', [
+                'estado' => 'aprobado',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $aprobado->json('recordsFiltered'));
+        $this->assertStringContainsString('A1', $this->datatableRowText($aprobado->json('data')));
+
+        $reprobado = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.datatable', [
+                'estado' => 'reprobado',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $reprobado->json('recordsFiltered'));
+        $this->assertStringContainsString('R1', $this->datatableRowText($reprobado->json('data')));
+
+        $noRealizada = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.formacion.formaciones.datatable', [
+                'estado' => 'no_realizada',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $noRealizada->json('recordsFiltered'));
+        $this->assertStringContainsString('N1', $this->datatableRowText($noRealizada->json('data')));
     }
 
     public function test_datatable_applies_filters(): void

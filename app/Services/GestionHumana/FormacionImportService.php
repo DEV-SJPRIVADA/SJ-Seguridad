@@ -8,13 +8,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\IReader;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class FormacionImportService
 {
-    private const CHUNK_SIZE = 500;
-
     /**
      * @var array<string, int>
      */
@@ -48,14 +48,31 @@ class FormacionImportService
             throw new \InvalidArgumentException('No se puede leer el archivo: '.$path);
         }
 
-        @set_time_limit(300);
+        $memoryLimit = (string) config('formacion.import.memory_limit', '1024M');
+        $timeLimit = (int) config('formacion.import.time_limit', 600);
+        $chunkSize = max(1, (int) config('formacion.import.chunk_size', 500));
+        $maxRows = max(1, (int) config('formacion.import.max_rows', 150000));
 
-        $spreadsheet = IOFactory::load($path);
+        @ini_set('memory_limit', $memoryLimit);
+        @set_time_limit($timeLimit);
+
+        $spreadsheet = $this->loadSpreadsheet($path);
         $sheet = $spreadsheet->getActiveSheet();
         $headers = $this->readHeaders($sheet);
         $this->assertRequiredHeaders($headers);
 
-        $maxRow = (int) $sheet->getHighestRow();
+        // getHighestRow() puede reportar filas “fantasma” por formato; usar datos reales.
+        $maxRow = (int) $sheet->getHighestDataRow();
+        $dataRowCount = max(0, $maxRow - 1);
+
+        if ($dataRowCount > $maxRows) {
+            $this->releaseSpreadsheet($spreadsheet);
+
+            throw new \RuntimeException(
+                "El archivo tiene demasiadas filas de datos ({$dataRowCount}). El máximo permitido es {$maxRows}. Dataset sin cambios."
+            );
+        }
+
         $rows = [];
         $skippedEmpty = 0;
         $errors = [];
@@ -76,6 +93,8 @@ class FormacionImportService
             }
         }
 
+        $this->releaseSpreadsheet($spreadsheet);
+
         if ($errors !== []) {
             $preview = implode(' ', array_slice($errors, 0, 5));
             $suffix = count($errors) > 5 ? ' …' : '';
@@ -85,13 +104,19 @@ class FormacionImportService
             );
         }
 
+        if ($rows === []) {
+            throw new \RuntimeException(
+                'Import rechazado: el archivo no contiene filas de datos válidas. Dataset sin cambios.'
+            );
+        }
+
         $deletedBefore = FormacionRegistro::query()->count();
         $now = now();
 
-        DB::transaction(function () use ($rows, $now): void {
+        DB::transaction(function () use ($rows, $now, $chunkSize): void {
             FormacionRegistro::query()->delete();
 
-            foreach (array_chunk($rows, self::CHUNK_SIZE) as $chunk) {
+            foreach (array_chunk($rows, $chunkSize) as $chunk) {
                 $payload = array_map(
                     static function (array $row) use ($now): array {
                         return [
@@ -133,6 +158,10 @@ class FormacionImportService
             return null;
         }
 
+        if ($value instanceof \DateTimeInterface) {
+            return Carbon::parse($value)->startOfDay();
+        }
+
         if (is_numeric($value)) {
             try {
                 return Carbon::instance(Date::excelToDateTimeObject((float) $value))->startOfDay();
@@ -166,13 +195,35 @@ class FormacionImportService
         }
     }
 
+    private function loadSpreadsheet(string $path): Spreadsheet
+    {
+        $reader = IOFactory::createReaderForFile($path);
+
+        if (method_exists($reader, 'setReadDataOnly')) {
+            $reader->setReadDataOnly(true);
+        }
+
+        if (method_exists($reader, 'setReadEmptyCells')) {
+            $reader->setReadEmptyCells(false);
+        }
+
+        /** @var IReader $reader */
+        return $reader->load($path);
+    }
+
+    private function releaseSpreadsheet(Spreadsheet $spreadsheet): void
+    {
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet);
+    }
+
     /**
      * @return array<string, int> header label => column index (1-based)
      */
     private function readHeaders(Worksheet $sheet): array
     {
         $headers = [];
-        $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
+        $maxCol = Coordinate::columnIndexFromString($sheet->getHighestDataColumn());
 
         for ($col = 1; $col <= $maxCol; $col++) {
             $label = trim((string) SpreadsheetCellReader::rawValue($sheet, $col, 1));
@@ -217,8 +268,9 @@ class FormacionImportService
 
         foreach ($columns as $key => $label) {
             $col = $headers[$label] ?? null;
+            // rawValue evita getCalculatedValue() (muy costoso en ~80k filas).
             $data[$key] = $col !== null
-                ? SpreadsheetCellReader::value($sheet, $col, $row)
+                ? SpreadsheetCellReader::rawValue($sheet, $col, $row)
                 : null;
         }
 
