@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Services\GestionHumana;
+
+use App\Models\EmployeeFichaEmploymentPeriod;
+use App\Models\WordDocumentType;
+
+class FichaLetterGenerateTypesBuilder
+{
+    /**
+     * Tipos activos de Plantillas Word con URLs/disponibilidad para el modal Generar Cartas.
+     *
+     * @return list<array{
+     *     code: string,
+     *     name: string,
+     *     enabled: bool,
+     *     disabled_reason: string|null,
+     *     templates_url: string|null,
+     *     generate_url: string|null,
+     *     firmas_url: string|null
+     * }>
+     */
+    public function build(
+        ?EmployeeFichaEmploymentPeriod $activePeriod,
+        ?EmployeeFichaEmploymentPeriod $letterPeriod,
+        bool $canGenerateContratacionLetters,
+        bool $canGenerateLetters,
+    ): array {
+        $contratacionCode = (string) config('employee_ficha.word_document_type_codes.contratacion');
+        $desvinculacionCode = (string) config('employee_ficha.word_document_type_codes.desvinculacion');
+
+        return WordDocumentType::query()
+            ->active()
+            ->ordered()
+            ->get(['id', 'code', 'name'])
+            ->map(function (WordDocumentType $type) use (
+                $activePeriod,
+                $letterPeriod,
+                $canGenerateContratacionLetters,
+                $canGenerateLetters,
+                $contratacionCode,
+                $desvinculacionCode,
+            ): array {
+                $code = (string) $type->code;
+                $name = (string) $type->name;
+
+                if ($code === $contratacionCode) {
+                    if ($canGenerateContratacionLetters && $activePeriod !== null) {
+                        return [
+                            'code' => $code,
+                            'name' => $name,
+                            'enabled' => true,
+                            'disabled_reason' => null,
+                            'templates_url' => route('gestion-humana.ficha-empleados.employees.contratacion.templates', $activePeriod),
+                            'generate_url' => route('gestion-humana.ficha-empleados.employees.contratacion.generate', $activePeriod),
+                            'firmas_url' => route('gestion-humana.ficha-empleados.employees.contratacion.firmas', $activePeriod),
+                        ];
+                    }
+
+                    $reason = $activePeriod === null || $activePeriod->status !== EmployeeFichaEmploymentPeriod::STATUS_ACTIVO
+                        ? 'Requiere un vínculo laboral activo.'
+                        : 'No tiene permiso para generar cartas de contratación.';
+
+                    return [
+                        'code' => $code,
+                        'name' => $name,
+                        'enabled' => false,
+                        'disabled_reason' => $reason,
+                        'templates_url' => null,
+                        'generate_url' => null,
+                        'firmas_url' => null,
+                    ];
+                }
+
+                if ($code === $desvinculacionCode) {
+                    if ($canGenerateLetters && $letterPeriod !== null) {
+                        return [
+                            'code' => $code,
+                            'name' => $name,
+                            'enabled' => true,
+                            'disabled_reason' => null,
+                            'templates_url' => route('gestion-humana.ficha-empleados.employees.period.letters.templates', $letterPeriod),
+                            'generate_url' => route('gestion-humana.ficha-empleados.employees.period.letters.generate', $letterPeriod),
+                            'firmas_url' => route('gestion-humana.ficha-empleados.employees.period.letters.firmas', $letterPeriod),
+                        ];
+                    }
+
+                    $reason = $letterPeriod === null || $letterPeriod->status !== EmployeeFichaEmploymentPeriod::STATUS_CERRADO
+                        ? 'Requiere un vínculo laboral cerrado (desvinculación).'
+                        : 'No tiene permiso para generar cartas de desvinculación.';
+
+                    return [
+                        'code' => $code,
+                        'name' => $name,
+                        'enabled' => false,
+                        'disabled_reason' => $reason,
+                        'templates_url' => null,
+                        'generate_url' => null,
+                        'firmas_url' => null,
+                    ];
+                }
+
+                return [
+                    'code' => $code,
+                    'name' => $name,
+                    'enabled' => false,
+                    'disabled_reason' => 'La generación para este tipo aún no está disponible.',
+                    'templates_url' => null,
+                    'generate_url' => null,
+                    'firmas_url' => null,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+}

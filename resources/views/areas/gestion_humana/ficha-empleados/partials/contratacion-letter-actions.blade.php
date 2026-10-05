@@ -1,27 +1,31 @@
+{{-- Icono Generar Cartas (vínculo activo → preselecciona contratación). --}}
 @props([
     'period',
     'canGenerateContratacionLetters' => false,
+    'letterGenerateTypes' => [],
     'iconOnly' => false,
 ])
+
+@php
+    $preferredTypeCode = (string) config('employee_ficha.word_document_type_codes.contratacion');
+@endphp
 
 @if ($canGenerateContratacionLetters && $period && $period->status === \App\Models\EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
     @if ($iconOnly)
         <button
             type="button"
             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-            title="Generar carta de contratación"
-            aria-label="Generar carta de contratación"
-            data-templates-url="{{ route('gestion-humana.ficha-empleados.employees.contratacion.templates', $period) }}"
-            data-generate-url="{{ route('gestion-humana.ficha-empleados.employees.contratacion.generate', $period) }}"
-            data-firmas-url="{{ route('gestion-humana.ficha-empleados.employees.contratacion.firmas', $period) }}"
+            title="Generar Cartas"
+            aria-label="Generar Cartas"
+            data-letter-types='@json($letterGenerateTypes)'
+            data-preferred-type="{{ $preferredTypeCode }}"
             x-data=""
             x-on:click.prevent="
-                $dispatch('ficha-prepare-generate-contratacion', {
-                    templatesUrl: $el.dataset.templatesUrl,
-                    generateUrl: $el.dataset.generateUrl,
-                    firmasUrl: $el.dataset.firmasUrl,
+                $dispatch('ficha-prepare-generate-cartas', {
+                    types: JSON.parse($el.dataset.letterTypes || '[]'),
+                    preferredTypeCode: $el.dataset.preferredType || '',
                 });
-                $dispatch('open-modal', 'ficha-generate-contratacion');
+                $dispatch('open-modal', 'ficha-generate-cartas');
             "
         >
             <x-lucide-file-text width="18" height="18" aria-hidden="true" />
@@ -31,19 +35,17 @@
             <button
                 type="button"
                 class="btn btn--primary btn--sm"
-                data-templates-url="{{ route('gestion-humana.ficha-empleados.employees.contratacion.templates', $period) }}"
-                data-generate-url="{{ route('gestion-humana.ficha-empleados.employees.contratacion.generate', $period) }}"
-                data-firmas-url="{{ route('gestion-humana.ficha-empleados.employees.contratacion.firmas', $period) }}"
+                data-letter-types='@json($letterGenerateTypes)'
+                data-preferred-type="{{ $preferredTypeCode }}"
                 x-data=""
                 x-on:click.prevent="
-                    $dispatch('ficha-prepare-generate-contratacion', {
-                        templatesUrl: $el.dataset.templatesUrl,
-                        generateUrl: $el.dataset.generateUrl,
-                        firmasUrl: $el.dataset.firmasUrl,
+                    $dispatch('ficha-prepare-generate-cartas', {
+                        types: JSON.parse($el.dataset.letterTypes || '[]'),
+                        preferredTypeCode: $el.dataset.preferredType || '',
                     });
-                    $dispatch('open-modal', 'ficha-generate-contratacion');
+                    $dispatch('open-modal', 'ficha-generate-cartas');
                 "
-            >Generar carta de contratacion</button>
+            >Generar Cartas</button>
         </div>
     @endif
 @endif

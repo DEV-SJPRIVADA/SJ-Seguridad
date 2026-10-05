@@ -215,7 +215,11 @@
 
                         @if (count($tipoSolicitudOptions) === 0)
                             <div class="alert alert--warning ficha-empleados-masivos-modal__alert">
-                                No hay tipos de solicitud activos. Créelos primero en la pestaña Catálogos.
+                                No hay tipos de solicitud activos.
+                                <a href="{{ route('gestion-humana.cliente-interno.catalogos', ['catalog' => 'tipos-solicitud']) }}" class="font-semibold underline">
+                                    Créelos en Catálogos → Tipos de solicitud
+                                </a>
+                                (código + nombre, botón +).
                             </div>
                         @endif
 

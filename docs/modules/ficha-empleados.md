@@ -131,7 +131,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
-- `editFicha` / `updateFicha` — consulta/edicion de ficha ya en ficha (`employee_ficha_profiles`). `editFicha` exige `canView` (lectura o manage); con solo `ficha_empleados.view` la UI queda en **solo lectura** (sin icono «Habilitar edición» / Guardar) y no ejecuta side-effects de heal (`ensureWorkCity` / `ensureOpenPeriod`). `updateFicha` exige `ficha_empleados.manage`. **No** mueve a ficha (`moved_to_ficha_at` no se toca aqui). Toolbar de acciones en cabecera: iconos `.req-manage-filters__icon-btn` (cursos, historial, desvinculacion, editar/guardar, volver). Seccion **Cursos y acreditacion** va primero en el formulario.
+- `editFicha` / `updateFicha` — consulta/edicion de ficha ya en ficha (`employee_ficha_profiles`). `editFicha` exige `canView` (lectura o manage); con solo `ficha_empleados.view` la UI queda en **solo lectura** (sin icono «Habilitar edición» / Guardar) y no ejecuta side-effects de heal (`ensureWorkCity` / `ensureOpenPeriod`). `updateFicha` exige `ficha_empleados.manage`. **No** mueve a ficha (`moved_to_ficha_at` no se toca aqui). Toolbar de acciones en cabecera: iconos `.req-manage-filters__icon-btn` (cursos, **acreditación**, historial, desvinculacion, editar/guardar, volver). Modales consulta cursos/acreditaciones (`.ficha-empleados-consult-modal`): paneles anchos (`4xl`/`5xl`), scroll horizontal+vertical y thead sticky; filas por cédula solo lectura (`ficha_empleados.view`). Seccion **Cursos y acreditacion** va primero en el formulario.
 
 > **FEAT-022:** se elimino `promote(PromoteFichaEntryRequest, PersonalRequisitionFichaEntry)` (setear `moved_to_ficha_at` de un clic sin formulario). Toda promocion de un pendiente pasa ahora por `create`/`store` en modo `desde`.
 
@@ -232,6 +232,27 @@ Permite generar cartas Word de tipo `contratacion` **antes** de mover el registr
 | Permiso | Reutiliza `ficha_empleados.manage` (sin claves Spatie nuevas) |
 | Audit | `contratacion_letter_pack` / `generate_quick` (`still_pending: true`) |
 | Tests | `tests/Feature/GestionHumana/ContratacionQuickLetterTest.php` |
+
+## Modal Generar Cartas (desde ficha En ficha)
+
+Icono de barra **Generar Cartas** (visible con vínculo **activo** + `ficha_empleados.manage` **o** con vínculo **cerrado** + `ficha_empleados.terminate`). Ambos iconos abren el **mismo modal** (`ficha-generate-cartas`); el de desvinculación preselecciona tipo `desvinculacion` y el de activo preselecciona `contratacion`. El download del último pack de desvinculación se mantiene aparte.
+
+### Comportamiento
+
+1. Lista **todos los tipos activos** de `word_document_types` (Plantillas Word).
+2. Tipos con motor: `contratacion` (período activo + manage) y `desvinculacion` (período cerrado + terminate).
+3. Tipos no aplicables o sin motor aparecen **deshabilitados** con mensaje (p. ej. «Requiere un vínculo laboral cerrado», «La generación para este tipo aún no está disponible.»).
+4. Al elegir un tipo habilitado se cargan plantillas/firmas y el POST usa la URL del tipo (`contratacion.generate` o `period.letters.generate`).
+5. UI: cards de tipo, cards compactas de plantilla, pie con iconos Cancelar / Generar y descargar.
+
+### Piezas
+
+| Pieza | Ubicación |
+| --- | --- |
+| Payload tipos | `FichaEmpleadosController::letterGenerateTypesForFicha` |
+| Icono | `partials/contratacion-letter-actions.blade.php` |
+| Modal | `partials/contratacion-letter-generate-modal.blade.php` |
+| Test | `tests/Feature/GestionHumana/ContratacionLetterGenerateModalTest.php` |
 
 ## Formulario ficha alineado a Plantilla masivos (FEAT-028)
 

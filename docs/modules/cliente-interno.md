@@ -102,7 +102,7 @@ Trait UI: `App\Traits\HasClienteInternoTabs` (subnav / pestañas visibles).
 | --- | --- |
 | `areas/gestion_humana/cliente_interno/dashboard.blade.php` | KPIs + ApexCharts + filtros año/mes |
 | `areas/gestion_humana/cliente_interno/solicitudes.blade.php` | Shell DT server-side + CRUD + export + import |
-| `areas/gestion_humana/cliente_interno/catalogos.blade.php` | Tarjetas ESTADO / SOLICITUD (`?catalog=`) |
+| `areas/gestion_humana/cliente_interno/catalogos.blade.php` | Tablero de tarjetas ESTADO / TIPOS (`?catalog=` abre gestión; sin query muestra selector) |
 | `.../partials/subnav.blade.php` | Pestañas `.module-tab` |
 | `.../partials/solicitud-form-fields.blade.php` | Campos formulario alta/edición |
 | `.../partials/import-modal.blade.php` | Confirmación replace periodo + conteo |

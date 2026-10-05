@@ -48,6 +48,14 @@ class ClienteInternoCatalogosTest extends TestCase
         $this->assertSame(4, ClienteInternoEstado::query()->count());
         $this->assertSame(0, ClienteInternoTipoSolicitud::query()->count());
 
+        // Sin ?catalog= muestra el tablero con ambas tarjetas (no salta a Estados).
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.cliente-interno.catalogos'))
+            ->assertOk()
+            ->assertSee('Tipos de solicitud', false)
+            ->assertSee('Estados', false)
+            ->assertSee('Sin tipos — créelos aquí', false);
+
         $this->actingAs($editor)
             ->get(route('gestion-humana.cliente-interno.catalogos', ['catalog' => 'estados']))
             ->assertOk()
@@ -60,7 +68,10 @@ class ClienteInternoCatalogosTest extends TestCase
         $this->actingAs($editor)
             ->get(route('gestion-humana.cliente-interno.catalogos', ['catalog' => 'tipos-solicitud']))
             ->assertOk()
-            ->assertSee('Aún no hay tipos de solicitud', false);
+            ->assertSee('Aún no hay tipos de solicitud', false)
+            ->assertSee('Agregar Tipos de solicitud', false)
+            ->assertSee('name="code"', false)
+            ->assertSee('name="name"', false);
     }
 
     public function test_store_rejects_unknown_catalog_type(): void

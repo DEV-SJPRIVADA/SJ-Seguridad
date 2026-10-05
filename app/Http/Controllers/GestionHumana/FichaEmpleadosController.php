@@ -12,6 +12,7 @@ use App\Http\Requests\GestionHumana\ImportEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\StoreManualEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\TerminateEmployeeFichaRequest;
 use App\Http\Requests\GestionHumana\UpdateEmployeeFichaProfileRequest;
+use App\Models\AcreditacionAcreditado;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
@@ -31,6 +32,7 @@ use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
+use App\Services\GestionHumana\FichaLetterGenerateTypesBuilder;
 use App\Services\GestionHumana\TerminationNovedadesConflictService;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
@@ -70,6 +72,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeCursoDocumentService $cursoDocumentService,
         private readonly EmployeeCursoPendingService $cursoPendingService,
         private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
+        private readonly FichaLetterGenerateTypesBuilder $letterGenerateTypesBuilder,
     ) {}
 
     public function index(Request $request): View
@@ -607,6 +610,10 @@ class FichaEmpleadosController extends Controller
         $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
         $documentNumber = $this->resolveEntryDocumentNumber($fichaEntry, $profile);
         $employeeCursos = $this->employeeCursosForDocumentNumber($documentNumber);
+        $employeeAcreditaciones = $this->employeeAcreditacionesForDocumentNumber($documentNumber);
+        $canViewEmployeeLookups = $this->fichaEmpleadosAccess->canView(auth()->user());
+        $canGenerateLetters = $this->canGenerateLetters($letterPeriod);
+        $canGenerateContratacionLetters = $this->canGenerateContratacionLetters($activePeriod);
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
@@ -618,14 +625,22 @@ class FichaEmpleadosController extends Controller
             'employmentHistory' => $employmentHistory,
             'letterPeriod' => $letterPeriod,
             'canManage' => $canManage,
-            'canGenerateLetters' => $this->canGenerateLetters($letterPeriod),
-            'canGenerateContratacionLetters' => $this->canGenerateContratacionLetters($activePeriod),
+            'canGenerateLetters' => $canGenerateLetters,
+            'canGenerateContratacionLetters' => $canGenerateContratacionLetters,
+            'letterGenerateTypes' => $this->letterGenerateTypesBuilder->build(
+                $activePeriod,
+                $letterPeriod,
+                $canGenerateContratacionLetters,
+                $canGenerateLetters,
+            ),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'canForceNovedadesConflict' => auth()->user()?->hasRole('super-admin') ?? false,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
             'employeeCursos' => $employeeCursos,
-            'canViewEmployeeCursos' => $this->fichaEmpleadosAccess->canView(auth()->user()),
+            'employeeAcreditaciones' => $employeeAcreditaciones,
+            'canViewEmployeeCursos' => $canViewEmployeeLookups,
+            'canViewEmployeeAcreditaciones' => $canViewEmployeeLookups,
             'canEditRequiresCourses' => $canEditRequiresCourses,
             'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion,
             'canViewRequirementFlags' => $canViewRequirementFlags,
@@ -1014,6 +1029,24 @@ class FichaEmpleadosController extends Controller
             ->with('cursoTipo')
             ->where('document_number', $documentNumber)
             ->orderByDesc('fecha_expedicion')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    /**
+     * Acreditaciones del empleado (consulta desde ficha, mismo criterio de cédula que cursos).
+     *
+     * @return Collection<int, AcreditacionAcreditado>
+     */
+    private function employeeAcreditacionesForDocumentNumber(string $documentNumber): Collection
+    {
+        if ($documentNumber === '') {
+            return collect();
+        }
+
+        return AcreditacionAcreditado::query()
+            ->where('document_number', $documentNumber)
+            ->orderByDesc('vigencia_acr')
             ->orderByDesc('id')
             ->get();
     }

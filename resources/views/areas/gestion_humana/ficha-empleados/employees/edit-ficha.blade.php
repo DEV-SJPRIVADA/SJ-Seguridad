@@ -83,23 +83,56 @@
                     this.saveValidationMessage = 'Hay campos obligatorios incompletos. Completa los marcados (suelen estar más arriba en el formulario) e intenta de nuevo.';
                 }
             },
+            // Sube al inicio: el scroll real vive en .app-main en esta vista.
+            scrollToTop() {
+                const main = document.querySelector('.app-main');
+                if (main) {
+                    main.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                const top = document.getElementById('ficha-empleados-top');
+                if (top) {
+                    top.focus({ preventScroll: true });
+                }
+            },
         }"
     >
         <div class="app-container">
-            <div class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
+            <div
+                id="ficha-empleados-top"
+                class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form"
+                tabindex="-1"
+            >
                 <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
+                    {{-- Cabecera de identidad del empleado: nombre, metadatos y modo edición --}}
                     <div class="ficha-empleados-page__title-copy">
-                        <h2 class="panel-title panel-title--page">Ficha — {{ $entry->hired_full_name }}</h2>
-                        <p class="panel-text">
-                            Cédula {{ $entry->hired_document }}
-                            · {{ $entry->requisitionCode() ?: 'Sin requisición' }}
+                        <p class="ficha-empleados-page__title-eyebrow">Ficha de empleado</p>
+                        <h2 class="ficha-empleados-page__title-name">{{ $entry->hired_full_name }}</h2>
+
+                        <div class="ficha-empleados-page__title-meta" aria-label="Datos del vínculo">
+                            <span class="ficha-empleados-page__meta-chip" title="Cédula">
+                                <x-lucide-id-card width="14" height="14" aria-hidden="true" />
+                                <span>{{ $entry->hired_document }}</span>
+                            </span>
+                            <span class="ficha-empleados-page__meta-chip" title="Requisición">
+                                <x-lucide-file-text width="14" height="14" aria-hidden="true" />
+                                <span>{{ $entry->requisitionCode() ?: 'Sin requisición' }}</span>
+                            </span>
                             @if ($activePeriod)
-                                · Vinculo #{{ $activePeriod->sequence }} activo
+                                <span class="ficha-empleados-page__meta-chip ficha-empleados-page__meta-chip--ok" title="Vínculo activo">
+                                    <x-lucide-link width="14" height="14" aria-hidden="true" />
+                                    <span>Vínculo #{{ $activePeriod->sequence }} activo</span>
+                                </span>
                             @elseif ($profile->employment_status === \App\Models\EmployeeFichaProfile::STATUS_DESVINCULADO)
-                                · Desvinculado
+                                <span class="ficha-empleados-page__meta-chip ficha-empleados-page__meta-chip--warn" title="Estado laboral">
+                                    <x-lucide-user-x width="14" height="14" aria-hidden="true" />
+                                    <span>Desvinculado</span>
+                                </span>
                             @endif
-                        </p>
-                        <div class="ficha-empleados-page__status-line">
+                        </div>
+
+                        <div class="ficha-empleados-page__status-line" aria-live="polite">
                             <template x-if="!isEditing">
                                 <span class="status-pill status-pill--muted">Solo lectura</span>
                             </template>
@@ -122,6 +155,18 @@
                             </button>
                         @endif
 
+                        @if ($canViewEmployeeAcreditaciones ?? false)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Consultar acreditación"
+                                aria-label="Consultar acreditación del empleado"
+                                x-on:click="$dispatch('open-modal', 'ficha-employee-acreditaciones')"
+                            >
+                                <x-lucide-badge-check width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+
                         @if ($employmentHistory->isNotEmpty())
                             <button
                                 type="button"
@@ -134,16 +179,20 @@
                             </button>
                         @endif
 
-                        {{-- Cartas de desvinculación: junto a Historial --}}
+                        {{-- Cartas: desvinculación (cerrado) y contratación (activo) abren el mismo modal --}}
                         @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
                             'period' => $letterPeriod ?? null,
                             'canGenerateLetters' => $canGenerateLetters ?? false,
+                            'letterGenerateTypes' => $letterGenerateTypes ?? [],
+                            'activePeriod' => $activePeriod ?? null,
+                            'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
                             'iconOnly' => true,
                         ])
 
                         @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-actions', [
                             'period' => $activePeriod,
                             'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
+                            'letterGenerateTypes' => $letterGenerateTypes ?? [],
                             'iconOnly' => true,
                         ])
 
@@ -270,6 +319,20 @@
                 </div>
             </form>
 
+            {{-- Volver al inicio del scroll tras recorrer el formulario largo --}}
+            <div class="ficha-empleados-page__scroll-top">
+                <button
+                    type="button"
+                    class="ficha-empleados-page__scroll-top-btn"
+                    title="Ir al inicio"
+                    aria-label="Ir al inicio de la ficha"
+                    x-on:click="scrollToTop()"
+                >
+                    <x-lucide-arrow-up-to-line width="18" height="18" aria-hidden="true" />
+                    <span>Ir al inicio</span>
+                </button>
+            </div>
+
             @include('areas.gestion_humana.ficha-empleados.partials.terminate-modal', [
                 'entry' => $entry,
                 'catalogs' => $catalogs,
@@ -278,23 +341,28 @@
                 'show' => $showTerminateModal,
             ])
 
-            @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-generate-modal', [
-                'canGenerateLetters' => $canGenerateLetters ?? false,
-            ])
-
             @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-generate-modal', [
                 'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
+                'canGenerateLetters' => $canGenerateLetters ?? false,
             ])
 
             @include('areas.gestion_humana.ficha-empleados.partials.employment-period-history-modal', [
                 'employmentHistory' => $employmentHistory,
                 'canGenerateLetters' => $canGenerateLetters ?? false,
+                'activePeriod' => $activePeriod ?? null,
+                'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
             ])
 
             @include('areas.gestion_humana.ficha-empleados.partials.employee-cursos-modal', [
                 'entry' => $entry,
                 'employeeCursos' => $employeeCursos ?? collect(),
                 'canViewEmployeeCursos' => $canViewEmployeeCursos ?? false,
+            ])
+
+            @include('areas.gestion_humana.ficha-empleados.partials.employee-acreditaciones-modal', [
+                'entry' => $entry,
+                'employeeAcreditaciones' => $employeeAcreditaciones ?? collect(),
+                'canViewEmployeeAcreditaciones' => $canViewEmployeeAcreditaciones ?? false,
             ])
         </div>
     </div>
