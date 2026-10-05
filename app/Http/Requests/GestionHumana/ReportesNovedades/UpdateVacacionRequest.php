@@ -31,6 +31,7 @@ class UpdateVacacionRequest extends FormRequest
             'novedad' => ['required', 'string', 'max:80', Rule::in($catalog)],
             'dias_novedad' => ['required', 'integer', 'min:0', 'max:65535'],
             'fecha_inicio' => ['required', 'date'],
+            'fecha_fin' => ['required', 'date', 'after_or_equal:fecha_inicio'],
             'observaciones' => ['nullable', 'string'],
         ];
     }
@@ -42,6 +43,7 @@ class UpdateVacacionRequest extends FormRequest
     {
         return [
             'novedad.in' => 'La novedad no es válida para Vacaciones.',
+            'fecha_fin.after_or_equal' => 'La fecha fin debe ser igual o posterior a la fecha inicio.',
         ];
     }
 

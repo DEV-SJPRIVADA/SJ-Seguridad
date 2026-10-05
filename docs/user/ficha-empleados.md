@@ -64,10 +64,10 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 4. Complete el formulario de ficha: primero indique si **requiere cursos** y/o **requiere acreditación** (por defecto ambos activos); luego cédula, **lugar de nacimiento** (obligatorio), y los **catálogos obligatorios**: sexo, fecha ingreso, cargo, salario, centro de costo (catálogo nómina), EPS, AFP, caja de compensación, forma de pago, banco, tipo y número de cuenta. Elija un valor por campo de catálogo (formato `código — nombre`); el sistema guarda código y nombre homólogo.
    - Si corrige cédula o nombre aqui, el cambio queda **solo** en la ficha del empleado; **no** se refleja en la requisicion original.
 5. Para descartar los cambios y dejar el registro intacto en **Pendientes**, use el icono **Volver** (flecha) en la barra superior (regresa a la pill Pendientes sin guardar nada).
-6. Para confirmar, use el icono **Guardar** (disquete) en la barra superior. Si la cedula ingresada ya pertenece a **otro** registro de ficha, el sistema bloquea el guardado con un mensaje de error; corrija la cedula e intente de nuevo.
+6. Para confirmar, use el icono **Guardar** (disquete) en la barra superior. Si falta un campo obligatorio, la cédula ya existe u otro dato es inválido, verá un aviso rojo arriba del formulario con la lista de motivos y, cuando aplique, el mensaje bajo el campo; la página se desplaza hacia el primer error. Corrija e intente de nuevo.
 7. Al guardar con exito, el registro desaparece de **Pendientes**, queda con fecha y usuario que lo movio (**moved_to_ficha_at**/**moved_to_ficha_by**), y usted es redirigido al **listado principal** (pill **En ficha**), donde ya aparece el nuevo registro.
 
-**Nota:** intentar abrir "Gestionar Empleado" de un registro que ya fue movido a ficha (por ejemplo, si otra persona lo gestiono primero) muestra un error de pagina no encontrada; recargue el listado de Pendientes para ver el estado actualizado.
+**Nota:** si intenta abrir **Gestionar Empleado** de un registro que ya fue movido a ficha (por ejemplo, si otra persona lo gestionó primero), el sistema lo regresa al listado de Pendientes con un mensaje explicando que el registro ya no está disponible.
 
 ### Carta de contratación desde Pendientes (antes de En ficha)
 
@@ -99,8 +99,9 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 1. Abra la ficha del empleado **activo**.
 2. Pulse **Registrar desvinculacion** (solo usuarios con permiso de desvincular).
 3. Complete causal, si es recontratable, ultimo dia de trabajo y fecha de desvinculacion.
-4. Al confirmar, el vinculo activo se cierra y el empleado queda **desvinculado** (no sale en export masivos sin rango de fechas).
-5. Automaticamente se crea (si no existia) una fila en el tablero **Desvinculaciones → Seguimientos** para el checklist post-retiro. Guia: [`desvinculaciones.md`](desvinculaciones.md).
+4. Si la persona tiene **vacaciones, incapacidad o permiso** en **MT-GH-04 Novedades** cuyas fechas se cruzan con el retiro, el sistema **no permite** desvincular y muestra el motivo. (Solo un **super-admin** puede marcar «Forzar…» para continuar.)
+5. Al confirmar, el vinculo activo se cierra y el empleado queda **desvinculado** (no sale en export masivos sin rango de fechas).
+6. Automaticamente se crea (si no existia) una fila en el tablero **Desvinculaciones → Seguimientos** para el checklist post-retiro. Guia: [`desvinculaciones.md`](desvinculaciones.md).
 
 ### Generar y descargar cartas de desvinculacion
 
@@ -161,6 +162,8 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.25 | 2026-10-05 | Agent | Alta/Gestionar empleado: errores de validación en español, alerta visible, scroll al campo y mensaje si el pendiente ya no existe (sin 404). |
+| 1.24 | 2026-10-05 | Agent | Desvinculación bloqueada si hay cruce con Vacaciones/Incapacidad/Permiso (MT-GH-04); forzar solo super-admin. |
 | 1.23 | 2026-10-05 | Agent | **Carta de contratación** desde Pendientes (formulario corto; no mueve a En ficha). |
 | 1.22 | 2026-10-05 | Agent | Generar/Descargar cartas pasan a iconos en la barra (junto a Historial de vínculos) y en el modal de historial. |
 | 1.21 | 2026-10-01 | Agent | Export Excel del listado Pendientes (icono en barra; respeta búsqueda `q`). |

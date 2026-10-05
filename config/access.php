@@ -43,6 +43,9 @@ return [
         'formacion.edit' => 'Formación: Descargar plantilla e importar (replace-all)',
         'seleccion.view' => 'Selección: Ver dashboard, listados y export Excel',
         'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
+        'cliente_interno.solicitudes.view' => 'Cliente interno: Ver solicitudes',
+        'cliente_interno.solicitudes.edit' => 'Cliente interno: Editar solicitudes',
+        'cliente_interno.parameters.edit' => 'Cliente interno: Catálogos',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
         'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
@@ -130,6 +133,7 @@ return [
         'cursos' => 'Cursos',
         'formacion' => 'Formación',
         'seleccion' => 'Selección',
+        'cliente_interno' => 'Cliente interno',
         'acreditaciones' => 'Acreditaciones',
         'reportes_novedades' => 'MT-GH-04 Novedades',
         'archivo' => 'Archivo',
@@ -197,6 +201,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'cliente_interno' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'acreditaciones' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
@@ -254,6 +262,12 @@ return [
         'dashboard' => 'Dashboard',
         'ingresos' => 'Ingreso',
         'examenes' => 'Examen ocupacional',
+        'catalogos' => 'Catálogos',
+    ],
+
+    'cliente_interno_tabs' => [
+        'dashboard' => 'Dashboard',
+        'solicitudes' => 'Solicitudes',
         'catalogos' => 'Catálogos',
     ],
 
@@ -433,6 +447,7 @@ return [
                             'view.board.gestion_humana.cursos',
                             'view.board.gestion_humana.formacion',
                             'view.board.gestion_humana.seleccion',
+                            'view.board.gestion_humana.cliente_interno',
                             'view.board.gestion_humana.acreditaciones',
                             'view.board.gestion_humana.reportes_novedades',
                         ],
@@ -486,6 +501,14 @@ return [
                         'permissions' => [
                             'seleccion.view',
                             'seleccion.edit',
+                        ],
+                    ],
+                    'cliente_interno' => [
+                        'label' => 'Cliente interno',
+                        'permissions' => [
+                            'cliente_interno.solicitudes.view',
+                            'cliente_interno.solicitudes.edit',
+                            'cliente_interno.parameters.edit',
                         ],
                     ],
                     'acreditaciones' => [

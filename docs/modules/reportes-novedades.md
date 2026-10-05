@@ -118,7 +118,7 @@ Namespace requests: `App\Http\Requests\GestionHumana\ReportesNovedades\`.
 
 | Modelo | Tabla | Notas |
 | --- | --- | --- |
-| `ReportesNovedadesVacacion` | `reportes_novedades_vacaciones` | Col Nómina: `observacion_nomina`. Sin `fecha_fin` (solo inicio + días). |
+| `ReportesNovedadesVacacion` | `reportes_novedades_vacaciones` | Col Nómina: `observacion_nomina`. Campos fecha: `fecha_inicio` + `fecha_fin` (obligatorios en formulario; backfill legacy = inicio + días − 1). |
 | `ReportesNovedadesIncapacidad` | `reportes_novedades_incapacidades` | Col Nómina: `observacion_nomina`. `dias_entrega` **calculado** (no editable): si hay `fecha_envio_final` → envío−inicio; si no → hoy−inicio (`diasEntregaCalculados()`). |
 | `ReportesNovedadesRetiro` | `reportes_novedades_retiros` | SoftDeletes; FK `employee_termination_followup_id` unique; col Nómina `observacion_nomina` |
 | `ReportesNovedadesPermiso` | `reportes_novedades_permisos` | Col Nómina: `observacion_nomina`; `marca_gh` boolean |

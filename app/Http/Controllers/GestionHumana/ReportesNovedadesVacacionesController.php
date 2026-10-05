@@ -31,6 +31,7 @@ class ReportesNovedadesVacacionesController extends Controller
         'novedad',
         'dias_novedad',
         'fecha_inicio',
+        'fecha_fin',
         'observaciones',
     ];
 

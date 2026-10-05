@@ -23,6 +23,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Cursos | [`modules/cursos.md`](../modules/cursos.md) | [`cursos.md`](cursos.md) |
 | Formación | [`modules/formacion.md`](../modules/formacion.md) | [`formacion.md`](formacion.md) |
 | Selección | [`modules/seleccion.md`](../modules/seleccion.md) | [`seleccion.md`](seleccion.md) |
+| Cliente interno | [`modules/cliente-interno.md`](../modules/cliente-interno.md) | [`cliente-interno.md`](cliente-interno.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](../modules/acreditaciones.md) | [`acreditaciones.md`](acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](../modules/plantillas-word.md) | [`plantillas-word.md`](plantillas-word.md) |
 | Suministros | [`modules/suministros.md`](../modules/suministros.md) | [`suministros.md`](suministros.md) |

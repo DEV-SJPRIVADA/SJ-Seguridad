@@ -17,7 +17,7 @@
 - Las vistas autenticadas comparten ahora una estructura comun:
   barra superior, panel lateral izquierdo para modulos autorizados y menu horizontal para tableros del modulo activo
 - **Estandar visual de pills:** areas (`.sidebar-link`), tableros y pestanas (`.module-tab`) comparten el mismo estilo; padding contenedor ↔ botones `0.2rem` (ver `docs/modules/branding.md` y `.cursor/rules/nav-chrome-ui.mdc`).
-- **Graficos (estandar):** **ApexCharts** via npm/Vite. Defaults compartidos en `resources/js/charts/apex-defaults.js`. Entries incluyen dashboards Comercial/GH (p. ej. `formacion-dashboard-charts.js`, `cursos-dashboard-charts.js`) y captura Operaciones. Sin Chart.js ni ECharts en runtime. Captura Operaciones: entry Vite `resources/js/indicadores-capture.js`; `public/js/indicadores-capture.js` es stub deprecado.
+- **Graficos (estandar):** **ApexCharts** via npm/Vite. Defaults compartidos en `resources/js/charts/apex-defaults.js`. Entries incluyen dashboards Comercial/GH (p. ej. `formacion-dashboard-charts.js`, `cursos-dashboard-charts.js`, `cliente-interno-dashboard-charts.js`) y captura Operaciones. Sin Chart.js ni ECharts en runtime. Captura Operaciones: entry Vite `resources/js/indicadores-capture.js`; `public/js/indicadores-capture.js` es stub deprecado.
 - En pantallas <= 1024px la navegacion se compacta: selector nativo de procesos; **Tableros del area** (Dashboard, Requisiciones, Suministros…) y, debajo, subtabs del modulo activo (`module-subnav`, p. ej. Solicitar/Gestion) con scroll horizontal.
 - El `dashboard` funciona como pantalla neutra: no carga un modulo por defecto y muestra el area de trabajo vacia hasta que el usuario seleccione un modulo autorizado
 
@@ -94,6 +94,7 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 | gestion_humana / reportes_novedades | `routes/areas/gestion_humana.php` | `GestionHumana\ReportesNovedades*Controller` | `resources/views/areas/gestion_humana/reportes_novedades/` | `docs/modules/reportes-novedades.md` | `docs/user/reportes-novedades.md` |
 | gestion_humana / formacion | `routes/areas/gestion_humana.php` | `GestionHumana\FormacionController` | `resources/views/areas/gestion_humana/formacion/` | `docs/modules/formacion.md` | `docs/user/formacion.md` |
 | gestion_humana / seleccion | `routes/areas/gestion_humana.php` | `GestionHumana\SeleccionController` | `resources/views/areas/gestion_humana/seleccion/` | `docs/modules/seleccion.md` | `docs/user/seleccion.md` |
+| gestion_humana / cliente_interno | `routes/areas/gestion_humana.php` | `GestionHumana\ClienteInternoController` | `resources/views/areas/gestion_humana/cliente_interno/` | `docs/modules/cliente-interno.md` | `docs/user/cliente-interno.md` |
 | gestion_humana / acreditaciones | `routes/areas/gestion_humana.php` | `GestionHumana\AcreditacionesController` | `resources/views/areas/gestion_humana/acreditaciones/` | `docs/modules/acreditaciones.md` | `docs/user/acreditaciones.md` |
 | admin-users | `routes/web.php` (grupo admin) | `Admin\UserController` | `resources/views/admin/` | `docs/modules/admin-users.md` | `docs/user/admin-users.md` |
 | audit-log (transversal) | `routes/web.php` (admin auditoria) | `Admin\SystemAuditController`, `SystemAuditService` | `resources/views/admin/audit/` | `docs/modules/audit-log.md` | `docs/user/audit-log.md` |

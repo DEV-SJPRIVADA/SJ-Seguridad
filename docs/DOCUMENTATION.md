@@ -80,6 +80,7 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Cursos | [`modules/cursos.md`](modules/cursos.md) | [`user/cursos.md`](user/cursos.md) | Area gestion_humana |
 | Formación | [`modules/formacion.md`](modules/formacion.md) | [`user/formacion.md`](user/formacion.md) | Area gestion_humana |
 | Selección | [`modules/seleccion.md`](modules/seleccion.md) | [`user/seleccion.md`](user/seleccion.md) | Area gestion_humana |
+| Cliente interno | [`modules/cliente-interno.md`](modules/cliente-interno.md) | [`user/cliente-interno.md`](user/cliente-interno.md) | Area gestion_humana |
 | Acreditaciones | [`modules/acreditaciones.md`](modules/acreditaciones.md) | [`user/acreditaciones.md`](user/acreditaciones.md) | Area gestion_humana |
 | Plantillas Word | [`modules/plantillas-word.md`](modules/plantillas-word.md) | [`user/plantillas-word.md`](user/plantillas-word.md) | Area gestion_humana |
 | Branding / UI | [`modules/branding.md`](modules/branding.md) | — (solo tecnica) | Transversal |

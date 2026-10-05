@@ -11,7 +11,7 @@ Reemplazar el Excel de novedades de Gestion Humana (vacaciones, incapacidades, r
 
 Aplica al tablero **MT-GH-04 Novedades** en el area **Gestion Humana**, con cuatro pestanas:
 
-- **Vacaciones** — registrar disfrute o compensacion, dias y fecha de inicio; Nómina deja su observacion.
+- **Vacaciones** — registrar disfrute o compensacion, dias, fecha de inicio y **fecha fin**; Nómina deja su observacion.
 - **Incapacidades** — tipo, dias, fechas de control y devolucion; **días entrega** se calcula solo (hoy − inicio, o envío final − inicio); Nómina solo completa su observación.
 - **Retiros** — altas manuales o automaticas al desvincular; motivo y fechas; Nómina observa.
 - **Permisos** — licencias, sanciones, permisos remunerados y demas novedades de la hoja de permisos/licencia.
@@ -73,6 +73,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.5 | 2026-10-05 | Agent | Vacaciones: columna **Fecha fin** (tras Inicio) en formulario, listado y export. |
 | 1.4 | 2026-10-01 | Agent | Historial de hoja (toolbar): filtros por cédula/usuario, acción y fechas. |
 | 1.3 | 2026-09-30 | Agent | Filtros mes (YYYY-MM) + quincena; rango fechas opcional con precedencia; limpiar = periodo actual. Obs. Nómina en verde cuando ya tiene valor (listado + modal). |
 | 1.2 | 2026-09-30 | Agent | Modales +: secciones Empleado/Novedad; lookup cédula precarga Ficha (blur/Enter/botón buscar). |

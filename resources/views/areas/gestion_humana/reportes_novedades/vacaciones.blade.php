@@ -95,6 +95,7 @@
                                     <th>Novedad</th>
                                     <th>Días</th>
                                     <th>Inicio</th>
+                                    <th>Fin</th>
                                     <th>Observaciones</th>
                                     <th>Obs. Nómina</th>
                                     <th>Acciones</th>
@@ -154,6 +155,7 @@
                                         'novedad' => old('novedad', ''),
                                         'dias_novedad' => old('dias_novedad', ''),
                                         'fecha_inicio' => old('fecha_inicio', ''),
+                                        'fecha_fin' => old('fecha_fin', ''),
                                         'observaciones' => old('observaciones', ''),
                                         'observacion_nomina' => '',
                                     ],
@@ -234,6 +236,7 @@
                     novedad: '',
                     dias_novedad: '',
                     fecha_inicio: '',
+                    fecha_fin: '',
                     observaciones: '',
                     observacion_nomina: '',
                 });
@@ -255,6 +258,7 @@
                         novedad: @js(old('novedad', '')),
                         dias_novedad: @js(old('dias_novedad', '')),
                         fecha_inicio: @js(old('fecha_inicio', '')),
+                        fecha_fin: @js(old('fecha_fin', '')),
                         observaciones: @js(old('observaciones', '')),
                         observacion_nomina: '',
                     },
@@ -295,6 +299,7 @@
                             novedad: row.novedad || '',
                             dias_novedad: row.dias_novedad ?? '',
                             fecha_inicio: row.fecha_inicio || '',
+                            fecha_fin: row.fecha_fin || '',
                             observaciones: row.observaciones || '',
                             observacion_nomina: row.observacion_nomina || '',
                         };

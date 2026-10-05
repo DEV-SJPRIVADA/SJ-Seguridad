@@ -14,7 +14,7 @@
 | Brief | `docs/briefs/FEAT-042.md` |
 | Plan | `docs/briefs/FEAT-042-plan.md` |
 | Inicio | 2026-10-02 |
-| Cierre | |
+| Cierre | 2026-10-05 |
 
 ## Registro por paso
 
@@ -25,6 +25,16 @@
 | 3 | 2026-10-02 | Respuestas usuario 1–7 | AgentSj | Cierro respuestas en analyst; lanzo Arquitecto | `docs/briefs/FEAT-042-analyst.md` | OK |
 | 4 | 2026-10-02 | Task automatico | Arquitecto | Brief final T1–T5 + shared-files | `docs/briefs/FEAT-042.md` | OK |
 | 5 | 2026-10-02 | AgentSj post-brief | AgentSj | Plan orquestacion; pausa OK usuario (seed SOLICITUD) | `docs/briefs/FEAT-042-plan.md` | Pausa |
+| 6 | 2026-10-05 | `OK implementa` | AgentSj | Usuario aprueba brief; seed SOLICITUD vacío; lanzo Feature T1 | `docs/TASKS.md`, plan | OK |
+| 7 | 2026-10-05 | Task Feature T1 | Feature | Shell+permisos+migración+modelos+nav+tests acceso (15) | access/audit, ClienteInterno*, rutas GH, vistas placeholder | OK |
+| 8 | 2026-10-05 | Task Feature T2 | Feature | CRUD Catálogos ESTADO+SOLICITUD; bloqueo DELETE; 22 tests | CatalogService, CatalogosTest, vistas/rutas | OK |
+| 9 | 2026-10-05 | Task Feature T3 | Feature | Solicitudes CRUD+DT+export+días hábiles; 15 tests | DatatableService, Export, BusinessDays, SolicitudesTest | OK |
+| 10 | 2026-10-05 | Task Feature T4 | Feature | Masivo replace-por-periodo (B); 9 tests import | ImportService, TemplateExport, import-modal | OK |
+| 11 | 2026-10-05 | Task Feature T5 | Feature | Dashboard KPIs + ApexCharts; 6 tests | DashboardService, charts JS, DashboardTest | OK |
+| 12 | 2026-10-05 | Task Revisor | Revisor | Aprobado con observaciones; 52 tests OK | `docs/reviews/FEAT-042.md` | OK |
+| 13 | 2026-10-05 | Task Documentador | Documentador | Doc tecnica + usuario + ACCESS/INDEX | `docs/modules/cliente-interno.md`, `docs/user/cliente-interno.md` | OK |
+| 14 | 2026-10-05 | Checklist cierre | AgentSj | Checklist OK; suite revalidada; movido a Completadas | `docs/TASKS.md`, run-log | OK |
+| 10 | 2026-10-05 | Task Feature T4 | Feature | Masivo replace-por-periodo (B) + plantilla + modal + 9 tests | ImportService, TemplateExport, ImportRequest, modal UI | OK |
 
 ## Notas
 

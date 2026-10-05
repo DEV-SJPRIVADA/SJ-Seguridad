@@ -479,4 +479,4 @@ T2 antes de T3 (FK solicitud obligatoria y selects dependen de catálogo). T5 tr
 
 - [x] Analista — vacíos cerrados (respuestas 1–7 en `FEAT-042-analyst.md`)
 - [x] Arquitecto — brief final
-- [ ] Usuario — confirmacion (pendiente OK del chat; AgentSj puede pedir confirmación explícita + 1 línea seed SOLICITUD vacío)
+- [x] Usuario — `OK implementa` (2026-10-05; seed SOLICITUD vacío)

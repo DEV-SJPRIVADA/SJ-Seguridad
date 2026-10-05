@@ -1,4 +1,4 @@
-{{-- Variables: $entry, $catalogs, $canTerminate, $show --}}
+{{-- Variables: $entry, $catalogs, $canTerminate, $show, $canForceNovedadesConflict --}}
 @if ($canTerminate ?? false)
     <x-modal name="ficha-terminate" maxWidth="lg" :show="$show ?? false" focusable>
         <div class="modal-card ficha-empleados-terminate-modal">
@@ -47,12 +47,12 @@
                     </div>
 
                     <div class="form-field">
-                        <label class="form-label" for="last_work_day">Ultimo dia de trabajo <span class="text-danger">*</span></label>
+                        <label class="form-label" for="last_work_day">Último día de trabajo <span class="text-danger">*</span></label>
                         <input id="last_work_day" type="date" name="last_work_day" class="form-input" value="{{ old('last_work_day') }}" required>
                     </div>
 
                     <div class="form-field">
-                        <label class="form-label" for="termination_date">Fecha de desvinculacion <span class="text-danger">*</span></label>
+                        <label class="form-label" for="termination_date">Fecha de desvinculación <span class="text-danger">*</span></label>
                         <input id="termination_date" type="date" name="termination_date" class="form-input" value="{{ old('termination_date') }}" required>
                     </div>
 
@@ -62,7 +62,7 @@
                             id="is_rehireable"
                             name="is_rehireable"
                             :options="[
-                                ['value' => '1', 'label' => 'Si — puede reingresar por requisicion'],
+                                ['value' => '1', 'label' => 'Sí — puede reingresar por requisición'],
                                 ['value' => '0', 'label' => 'No'],
                             ]"
                             :value="old('is_rehireable', '1')"
@@ -76,11 +76,28 @@
                         <label class="form-label" for="termination_notes">Observaciones</label>
                         <textarea id="termination_notes" name="termination_notes" class="form-input supply-textarea" rows="3" maxlength="1000">{{ old('termination_notes') }}</textarea>
                     </div>
+
+                    @if ($canForceNovedadesConflict ?? false)
+                        {{-- Solo super-admin: continuar pese a cruce con MT-GH-04 --}}
+                        <div class="form-field form-grid__full">
+                            <label class="form-check">
+                                <input
+                                    type="checkbox"
+                                    name="force_novedades_conflict"
+                                    value="1"
+                                    class="form-check"
+                                    @checked(old('force_novedades_conflict'))
+                                >
+                                <span>Forzar desvinculación a pesar del cruce con vacaciones / incapacidad / permiso</span>
+                            </label>
+                            <p class="form-hint">Visible solo para super-admin. Use solo si confirmó el caso con GH/Nómina.</p>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="ficha-empleados-terminate-modal__actions">
                     <button type="button" class="btn btn--secondary" x-on:click="$dispatch('close-modal', 'ficha-terminate')">Cancelar</button>
-                    <button type="submit" class="btn btn--primary">Confirmar desvinculacion</button>
+                    <button type="submit" class="btn btn--primary">Confirmar desvinculación</button>
                 </div>
             </form>
         </div>

@@ -62,9 +62,10 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 5. La grilla inicia con **2 filas**; use **+ fila** para agregar mas lineas o elimine filas que no vaya a usar.
 6. No puede repetir la misma cedula dos veces en el mismo lote: el sistema lo rechaza antes de procesar (y el pegado masivo tambien omite duplicadas).
 7. Pulse **Desvincular** (no pide confirmacion previa ni tiene tope de filas). El sistema procesa todas las filas: si una falla, las demas siguen.
-8. Al terminar vera el **reporte** (exitos y fallos). Si al menos una carta se genero, se descarga un **ZIP** con esas cartas y la grilla se limpia.
-9. Si un empleado quedo desvinculado pero **sin carta**, aparecera en el reporte como fallo de carta; igual figura en Seguimientos con «tiene carta» en No. Para generar la carta despues, use **Ficha empleados** (permiso de desvincular) → Generar cartas.
-10. **Importante sobre el ZIP:** la descarga es de un solo uso. Si necesita el archivo de nuevo y ya consumio el enlace, no reintente el mismo boton; vuelva a generar cartas desde Ficha o archive el ZIP a tiempo.
+8. Si una fila tiene **vacaciones / incapacidad / permiso** en MT-GH-04 que se solapa con la fecha de retiro, esa fila falla en el reporte (el resto del lote continua). Un **super-admin** puede marcar «Forzar pese a cruce…» en la barra antes de desvincular.
+9. Al terminar vera el **reporte** (exitos y fallos). Si al menos una carta se genero, se descarga un **ZIP** con esas cartas y la grilla se limpia.
+10. Si un empleado quedo desvinculado pero **sin carta**, aparecera en el reporte como fallo de carta; igual figura en Seguimientos con «tiene carta» en No. Para generar la carta despues, use **Ficha empleados** (permiso de desvincular) → Generar cartas.
+11. **Importante sobre el ZIP:** la descarga es de un solo uso. Si necesita el archivo de nuevo y ya consumio el enlace, no reintente el mismo boton; vuelva a generar cartas desde Ficha o archive el ZIP a tiempo.
 
 ### Usar Seguimientos
 
@@ -87,6 +88,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-10-05 | Agent | Bloqueo por cruce con MT-GH-04 (Vacaciones/Incapacidades/Permisos); Masivos: fila fallida + forzar super-admin. |
 | 1.6 | 2026-09-30 | Agent | Seguimientos: default Incompletos; filtro OK TODO exige fecha entregado nomina; selector campo fecha (registro/desvinculacion/nomina) + botones icono filtrar/limpiar. |
 | 1.5 | 2026-09-30 | Agent | Label tablero novedades: MT-GH-04 Novedades |
 | 1.4 | 2026-09-30 | Documentador FEAT-040 | Nota: desvincular/revertir sincroniza Retiros en Reportes-Novedades |

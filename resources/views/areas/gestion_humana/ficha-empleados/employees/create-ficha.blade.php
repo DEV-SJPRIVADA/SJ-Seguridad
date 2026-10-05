@@ -3,7 +3,59 @@
         @include('areas.gestion_humana.partials.ficha-empleados-subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section ficha-empleados-page ficha-empleados-page--form">
+    {{-- Alta / Gestionar empleado: avisar y llevar al usuario al campo que falló (HTML5 o servidor). --}}
+    <div
+        class="page-section ficha-empleados-page ficha-empleados-page--form"
+        x-data="{
+            saveValidationMessage: '',
+            init() {
+                if ({{ $errors->any() ? 'true' : 'false' }}) {
+                    this.$nextTick(() => this.scrollToFirstServerError());
+                }
+            },
+            scrollToFirstServerError() {
+                const alertEl = document.querySelector('.ficha-empleados-page__alert.alert--danger');
+                if (alertEl) {
+                    alertEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                const fieldError = document.querySelector('.ficha-empleados-form .form-error-list, .ficha-empleados-form .text-danger, .ficha-empleados-form .form-error');
+                const wrap = fieldError
+                    ? (fieldError.closest('.form-field') || fieldError.closest('.searchable-select-wrap') || fieldError.closest('.ficha-empleados-form__section') || fieldError)
+                    : null;
+
+                if (wrap) {
+                    setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
+                }
+            },
+            handleFichaSubmit(event) {
+                this.saveValidationMessage = '';
+
+                const form = event.target;
+                if (! form.checkValidity()) {
+                    event.preventDefault();
+
+                    const invalid = form.querySelector(':invalid');
+                    if (invalid) {
+                        const wrap = invalid.closest('.form-field')
+                            || invalid.closest('.searchable-select-wrap')
+                            || invalid.closest('.searchable-select')
+                            || invalid.closest('.ficha-empleados-form__section')
+                            || invalid;
+                        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (typeof invalid.focus === 'function') {
+                            try { invalid.focus({ preventScroll: true }); } catch (e) { invalid.focus(); }
+                        }
+                        if (typeof invalid.reportValidity === 'function') {
+                            invalid.reportValidity();
+                        }
+                    }
+
+                    this.saveValidationMessage = 'Hay campos obligatorios incompletos o inválidos. Revise los marcados con * (suelen estar más arriba en el formulario) e intente de nuevo.';
+                }
+            },
+        }"
+    >
         <div class="app-container">
             <div class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
                 <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
@@ -50,8 +102,15 @@
                 </div>
             </div>
 
+            @if (session('status'))
+                <div class="alert alert--success ficha-empleados-page__alert">{{ session('status') }}</div>
+            @endif
+
             @if ($errors->any())
-                <div class="alert alert--danger ficha-empleados-page__alert">
+                <div class="alert alert--danger ficha-empleados-page__alert" role="alert" aria-live="assertive">
+                    <p class="font-semibold" style="margin-bottom: 0.5rem;">
+                        No se pudo guardar. Corrija los siguientes errores:
+                    </p>
                     <ul class="ficha-empleados-form__error-list">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -60,11 +119,21 @@
                 </div>
             @endif
 
+            <div
+                class="alert alert--danger ficha-empleados-page__alert"
+                x-show="saveValidationMessage"
+                x-cloak
+                role="alert"
+                aria-live="assertive"
+                x-text="saveValidationMessage"
+            ></div>
+
             <form
                 method="POST"
                 action="{{ route('gestion-humana.ficha-empleados.employees.store') }}"
                 class="panel ficha-empleados-form"
                 id="ficha-empleados-form"
+                @submit="handleFichaSubmit($event)"
             >
                 @csrf
 

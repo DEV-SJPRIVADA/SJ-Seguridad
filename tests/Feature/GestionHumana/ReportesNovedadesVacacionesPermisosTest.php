@@ -411,6 +411,7 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             'novedad' => 'VACACIONES DISF',
             'dias_novedad' => 5,
             'fecha_inicio' => '2026-09-01',
+            'fecha_fin' => '2026-09-05',
             'observaciones' => 'Obs GH',
         ], $overrides);
     }

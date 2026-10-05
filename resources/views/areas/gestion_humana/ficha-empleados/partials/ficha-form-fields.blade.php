@@ -103,6 +103,7 @@
                 autocomplete="off"
                 @readonly($isRehire ?? false)
             >
+            <x-input-error :messages="$errors->get('hired_document')" />
         </div>
     </div>
 </section>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GestionHumana\AcreditacionesController;
 use App\Http\Controllers\GestionHumana\ArchivoController;
+use App\Http\Controllers\GestionHumana\ClienteInternoController;
 use App\Http\Controllers\GestionHumana\ContratacionLetterController;
 use App\Http\Controllers\GestionHumana\CursosCatalogController;
 use App\Http\Controllers\GestionHumana\CursosController;
@@ -192,6 +193,30 @@ Route::middleware(['password.changed'])
         Route::post('/catalogos/{type}', [SeleccionController::class, 'storeCatalog'])->name('catalogos.store');
         Route::patch('/catalogos/{type}/{item}', [SeleccionController::class, 'updateCatalog'])->name('catalogos.update');
         Route::delete('/catalogos/{type}/{item}', [SeleccionController::class, 'destroyCatalog'])->name('catalogos.destroy');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/cliente-interno')
+    ->name('gestion-humana.cliente-interno.')
+    ->group(function (): void {
+        Route::get('/', [ClienteInternoController::class, 'index'])->name('index');
+        Route::get('/dashboard', [ClienteInternoController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [ClienteInternoController::class, 'dashboardMetrics'])->name('dashboard.metrics');
+
+        Route::get('/solicitudes', [ClienteInternoController::class, 'solicitudes'])->name('solicitudes');
+        Route::get('/solicitudes/datatable', [ClienteInternoController::class, 'solicitudesDatatable'])->name('solicitudes.datatable');
+        Route::get('/solicitudes/exportar', [ClienteInternoController::class, 'solicitudesExport'])->name('solicitudes.export');
+        Route::get('/solicitudes/plantilla-importacion', [ClienteInternoController::class, 'importTemplate'])->name('solicitudes.import-template');
+        Route::get('/solicitudes/periodo-conteo', [ClienteInternoController::class, 'periodCount'])->name('solicitudes.period-count');
+        Route::post('/solicitudes/importar', [ClienteInternoController::class, 'import'])->name('solicitudes.import');
+        Route::post('/solicitudes', [ClienteInternoController::class, 'storeSolicitud'])->name('solicitudes.store');
+        Route::patch('/solicitudes/{clienteInternoSolicitud}', [ClienteInternoController::class, 'updateSolicitud'])->name('solicitudes.update');
+        Route::delete('/solicitudes/{clienteInternoSolicitud}', [ClienteInternoController::class, 'destroySolicitud'])->name('solicitudes.destroy');
+
+        Route::get('/catalogos', [ClienteInternoController::class, 'catalogos'])->name('catalogos');
+        Route::post('/catalogos/{type}', [ClienteInternoController::class, 'storeCatalog'])->name('catalogos.store');
+        Route::patch('/catalogos/{type}/{item}', [ClienteInternoController::class, 'updateCatalog'])->name('catalogos.update');
+        Route::delete('/catalogos/{type}/{item}', [ClienteInternoController::class, 'destroyCatalog'])->name('catalogos.destroy');
     });
 
 Route::middleware(['password.changed'])

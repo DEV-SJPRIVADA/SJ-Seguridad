@@ -284,8 +284,29 @@ class EmployeeFichaFormFe028Test extends TestCase
         ]);
 
         $this->actingAs($manager)
+            ->from(route('gestion-humana.ficha-empleados.employees.create'))
             ->post(route('gestion-humana.ficha-empleados.employees.store'), $payload)
-            ->assertSessionHasErrors('birth_place');
+            ->assertSessionHasErrors('birth_place')
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.create'));
+
+        $this->actingAs($manager)
+            ->followingRedirects()
+            ->from(route('gestion-humana.ficha-empleados.employees.create'))
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), $payload)
+            ->assertOk()
+            ->assertSee('No se pudo guardar. Corrija los siguientes errores:', false)
+            ->assertSee('lugar de nacimiento', false);
+    }
+
+    public function test_create_desde_missing_pending_redirects_with_message(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => 999999]))
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']))
+            ->assertSessionHasErrors('form');
     }
 
     public function test_update_persists_birth_place(): void

@@ -26,7 +26,7 @@ class PayrollCatalogCode implements ValidationRule
             ->exists();
 
         if (! $exists) {
-            $fail('El valor seleccionado no es valido para el catalogo '.$this->catalogType.'.');
+            $fail('El valor seleccionado no es válido para el catálogo '.$this->catalogType.'.');
         }
     }
 }

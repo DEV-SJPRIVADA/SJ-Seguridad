@@ -188,6 +188,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `cursos` — **Cursos** (`view.board.gestion_humana.cursos` + `cursos.view` / `edit`)
   - `formacion` — **Formación** (`view.board.gestion_humana.formacion` + `formacion.view` / `edit`)
   - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
+  - `cliente_interno` — **Cliente interno** (`view.board.gestion_humana.cliente_interno` + `cliente_interno.solicitudes.view` / `edit` + `cliente_interno.parameters.edit`)
   - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
@@ -244,6 +245,25 @@ Tablero **Selección** (Dashboard, Ingreso, Examen ocupacional, Catálogos). Asi
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Selección*).
 - Dependencia operativa: select **Responsable** usa usuarios con `requisitions.selection_officer` (Parametros GH).
 - Doc: [`docs/modules/seleccion.md`](modules/seleccion.md), [`docs/user/seleccion.md`](user/seleccion.md).
+
+### Cliente interno (Gestion humana)
+
+Tablero **Cliente interno** (Dashboard, Solicitudes, Catálogos). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`). Modelo **Propuesta A**: view/edit por pestaña Solicitudes + `parameters.edit` para Catálogos; Dashboard sin permiso KPI aparte.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.cliente_interno` | Ver tablero **Cliente interno** en sidebar GH |
+| `cliente_interno.solicitudes.view` | Listado Solicitudes, filtros, export Excel; contribuye a Dashboard |
+| `cliente_interno.solicitudes.edit` | Alta, editar, eliminar e import masivo (implica view en `ClienteInternoAccessService`) |
+| `cliente_interno.parameters.edit` | Catálogos ESTADO y SOLICITUD; contribuye a Dashboard (sin listado Solicitudes si no hay view/edit) |
+
+- Pestanas: `dashboard`, `solicitudes`, `catalogos` (`config/access.php` → `cliente_interno_tabs`).
+- Dashboard: `solicitudes.view` **OR** `parameters.edit` (o implicación edit / bypass). Usuario solo con `parameters.edit` (+ board) ve Dashboard + Catálogos; pestaña Solicitudes oculta.
+- Bypass: `manage.users`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto. **Sin** migración automática de permisos legacy.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Cliente interno*). Labels: `Cliente interno: Ver solicitudes`, `… Editar solicitudes`, `… Catálogos`.
+- Mutación masiva: import replace-por-periodo (opción B: borra solo año+mes elegido; acepta filas fuera de periodo). Confirma UI + `confirm_replace`.
+- Doc: [`docs/modules/cliente-interno.md`](modules/cliente-interno.md), [`docs/user/cliente-interno.md`](user/cliente-interno.md).
 
 ### Desvinculaciones (Gestion humana)
 
