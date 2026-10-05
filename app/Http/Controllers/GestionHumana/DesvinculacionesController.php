@@ -85,6 +85,7 @@ class DesvinculacionesController extends Controller
                 'status' => array_key_exists('status', request()->query())
                     ? request()->string('status')->toString()
                     : 'incompletos',
+                'rehireable' => request()->string('rehireable')->toString(),
                 'fecha_campo' => array_key_exists(request()->string('fecha_campo')->toString(), EmployeeTerminationFollowup::DATE_FILTER_FIELDS)
                     ? request()->string('fecha_campo')->toString()
                     : EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
@@ -95,6 +96,11 @@ class DesvinculacionesController extends Controller
                 ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
                 ->values()
                 ->all(),
+            'rehireableOptions' => [
+                ['value' => '', 'label' => 'Todos'],
+                ['value' => '1', 'label' => 'Sí'],
+                ['value' => '0', 'label' => 'No'],
+            ],
         ]);
     }
 
@@ -112,6 +118,7 @@ class DesvinculacionesController extends Controller
         $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'in:,incompletos,ok_todo,sin_carta'],
+            'rehireable' => ['nullable', 'string', 'in:,0,1'],
             'fecha_campo' => ['nullable', 'string', 'in:registered_at,termination_date,payroll_delivered_at'],
             'fecha_desde' => ['nullable', 'date'],
             'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
@@ -133,6 +140,7 @@ class DesvinculacionesController extends Controller
                 'status' => array_key_exists('status', $request->query())
                     ? (string) $request->query('status', '')
                     : 'incompletos',
+                'rehireable' => trim($request->string('rehireable')->toString()),
                 'fecha_campo' => $fechaCampo,
                 'fecha_desde' => $request->date('fecha_desde')?->toDateString(),
                 'fecha_hasta' => $request->date('fecha_hasta')?->toDateString(),

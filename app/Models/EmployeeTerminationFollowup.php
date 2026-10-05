@@ -225,6 +225,23 @@ class EmployeeTerminationFollowup extends Model
     }
 
     /**
+     * Filtra por recontratable: `1`/`si` = Sí, `0`/`no` = No; vacío = sin filtro.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeRehireableFilter(Builder $query, string $value): Builder
+    {
+        $normalized = strtolower(trim($value));
+
+        return match ($normalized) {
+            '1', 'si', 'sí', 'true' => $query->where('is_rehireable', true),
+            '0', 'no', 'false' => $query->where('is_rehireable', false),
+            default => $query,
+        };
+    }
+
+    /**
      * Filtra por rango de fecha sobre la columna indicada (`registered_at`, `termination_date` o `payroll_delivered_at`).
      * Extremos opcionales; si ambos vienen invertidos se intercambian.
      *

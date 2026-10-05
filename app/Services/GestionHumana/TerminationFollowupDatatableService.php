@@ -56,8 +56,12 @@ final class TerminationFollowupDatatableService
      */
     public function filteredQuery(Request $request): Builder
     {
-        $q = trim($request->string('q')->toString());
+        $q = trim($request->string('search.value')->toString());
+        if ($q === '') {
+            $q = trim($request->string('q')->toString());
+        }
         $status = $this->resolveStatusFilter($request);
+        $rehireable = $this->resolveRehireableFilter($request);
         $fechaCampo = $this->resolveDateFieldFilter($request);
         $fechaDesde = $this->resolveDateFilter($request, 'fecha_desde');
         $fechaHasta = $this->resolveDateFilter($request, 'fecha_hasta');
@@ -65,6 +69,7 @@ final class TerminationFollowupDatatableService
         return EmployeeTerminationFollowup::query()
             ->search($q)
             ->statusFilter($status)
+            ->rehireableFilter($rehireable)
             ->dateFieldBetween($fechaCampo, $fechaDesde, $fechaHasta)
             ->orderByDesc('id');
     }
@@ -154,11 +159,11 @@ final class TerminationFollowupDatatableService
     {
         // status= (vacío) = sin filtro de estado (p. ej. solo rango de fechas).
         // Sin clave status = default incompletos.
-        if (! array_key_exists('status', $request->query())) {
+        if (! array_key_exists('status', $request->query()) && ! $request->exists('status')) {
             return 'incompletos';
         }
 
-        $status = strtolower(trim((string) $request->query('status', '')));
+        $status = strtolower(trim((string) $request->input('status', '')));
 
         if ($status === '') {
             return '';
@@ -167,6 +172,15 @@ final class TerminationFollowupDatatableService
         return in_array($status, ['incompletos', 'ok_todo', 'sin_carta'], true)
             ? $status
             : 'incompletos';
+    }
+
+    private function resolveRehireableFilter(Request $request): string
+    {
+        $raw = strtolower(trim($request->string('rehireable')->toString()));
+
+        return in_array($raw, ['1', '0', 'si', 'sí', 'no', 'true', 'false'], true)
+            ? $raw
+            : '';
     }
 
     private function resolveDateFieldFilter(Request $request): string

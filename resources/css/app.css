@@ -10736,20 +10736,22 @@ a.req-dashboard-kpi:focus-visible {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    gap: 0.65rem;
 }
 
 .desvinculaciones-seguimientos__readonly-notice {
     flex-shrink: 0;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
 }
 
 .desvinculaciones-seguimientos__filters {
     flex-shrink: 0;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0;
 }
 
 .desvinculaciones-seguimientos__table-toolbar {
-    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+    margin-bottom: 0;
     align-items: center;
 }
 
@@ -10800,6 +10802,13 @@ a.req-dashboard-kpi:focus-visible {
     flex: 0 1 16rem;
     min-width: 13rem;
     max-width: 18rem;
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__rehireable {
+    flex: 0 1 11rem;
+    min-width: 9.5rem;
+    max-width: 13rem;
     margin: 0;
 }
 
@@ -10870,13 +10879,52 @@ a.req-dashboard-kpi:focus-visible {
     padding: 0.2rem;
 }
 
+/* Contenedor tabla: llena el resto; scroll en .req-manage-table-scroll; buscador DT visible arriba */
 .desvinculaciones-seguimientos__table-wrap {
     flex: 1 1 auto;
-    min-height: 12rem;
-    overflow: auto;
+    min-height: 0;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--color-border, #e5e7eb);
     border-radius: 0.5rem;
     background: #fff;
+}
+
+.desvinculaciones-seguimientos-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.desvinculaciones-seguimientos__table-wrap .dataTables_wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0.45rem 0.55rem 0.55rem;
+}
+
+.desvinculaciones-seguimientos__table-wrap .req-manage-dt-top {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    background: #fff;
+    padding: 0.15rem 0 0.45rem;
+    margin-bottom: 0.15rem;
+}
+
+.desvinculaciones-seguimientos__table-wrap .req-manage-dt-top .dataTables_length,
+.desvinculaciones-seguimientos__table-wrap .req-manage-dt-top .dataTables_filter {
+    float: none;
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__table-wrap .req-manage-table-scroll {
+    border-radius: 0.35rem;
 }
 
 .desvinculaciones-seguimientos__table {
