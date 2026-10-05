@@ -54,10 +54,26 @@
                     this.saveValidationMessage = 'Hay campos obligatorios incompletos o inválidos. Revise los marcados con * (suelen estar más arriba en el formulario) e intente de nuevo.';
                 }
             },
+            scrollToTop() {
+                const main = document.querySelector('.app-main');
+                if (main) {
+                    main.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                const top = document.getElementById('ficha-empleados-create-top');
+                if (top) {
+                    top.focus({ preventScroll: true });
+                }
+            },
         }"
     >
         <div class="app-container">
-            <div class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
+            <div
+                id="ficha-empleados-create-top"
+                class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form"
+                tabindex="-1"
+            >
                 <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
                     <div class="ficha-empleados-page__title-copy">
                         <h2 class="panel-title panel-title--page">
@@ -161,6 +177,20 @@
                     ])
                 </div>
             </form>
+
+            {{-- Volver al inicio del scroll tras recorrer el formulario largo --}}
+            <div class="ficha-empleados-page__scroll-top">
+                <button
+                    type="button"
+                    class="ficha-empleados-page__scroll-top-btn"
+                    title="Ir al inicio"
+                    aria-label="Ir al inicio del formulario"
+                    x-on:click="scrollToTop()"
+                >
+                    <x-lucide-arrow-up-to-line width="18" height="18" aria-hidden="true" />
+                    <span>Ir al inicio</span>
+                </button>
+            </div>
         </div>
     </div>
 
