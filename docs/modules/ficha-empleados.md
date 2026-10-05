@@ -216,7 +216,7 @@ Permite generar cartas Word de tipo `contratacion` **antes** de mover el registr
 2. Formulario mínimo + plantillas + firmante.
 3. Al generar: guarda/actualiza `EmployeeFichaProfile` con esos campos (en reingreso pasa a `activo` y limpia `termination_date`), abre o sincroniza periodo `activo` vía `EmployeeFichaEmploymentPeriodService::openOrSyncPeriodForQuickLetter` (secuencia nueva si solo había vínculos cerrados), genera el pack Word y descarga.
 4. **`moved_to_ficha_at` permanece `null`** — el empleado sigue en Pendientes. Luego completa con **Gestionar Empleado** / **Gestionar reingreso**.
-5. Temp Word bajo `storage/app/tmp/phpword` (`WordTempDirectory` + `PhpWord\Settings::setTempDir`) para evitar fallos de `/tmp` en Hostinger; escape XML de valores activo. Si la generación falla, `generateQuick` redirige al formulario con mensaje (y log `contratacion_letter_quick`) en lugar de 500 opaco.
+5. Temp Word: prioriza `sys_get_temp_dir` (como el generador original); `WordTempDirectory` solo cae a `storage/framework/cache` si el temp del sistema no es usable. Escape XML activo. Si la generación falla, `generateQuick` redirige al formulario con mensaje (y log) en lugar de 500 opaco.
 6. Si el pendiente no tiene perfil pero la cédula ya existe en otra entrada (reingreso mal sincronizado), reasigna perfil + periodos al pendiente actual; bloquea si la cédula sigue activa en ficha.
 
 ### Campos del formulario (variables Word)

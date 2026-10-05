@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana\TerminationLetter;
 
 use App\Support\WordTempDirectory;
+use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\TemplateProcessor;
 use RuntimeException;
 use Throwable;
@@ -24,6 +25,9 @@ class TerminationLetterDocxRenderer
         if (! class_exists(ZipArchive::class)) {
             throw new RuntimeException('La extensión Zip de PHP no está disponible en el servidor.');
         }
+
+        // Asegurar temp escribible justo antes de PhpWord (por si el boot no pudo configurarlo).
+        Settings::setTempDir(WordTempDirectory::path());
 
         $mergedPath = $this->mergeSplitRuns($templateAbsolutePath);
         $processor = null;

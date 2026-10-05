@@ -45,8 +45,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::defaultView('vendor.pagination.sj');
 
-        // PhpWord: temp bajo storage (Hostinger) y escape XML en reemplazos de plantilla.
-        Settings::setTempDir(WordTempDirectory::path());
+        // PhpWord: temp escribible (framework/cache u otros fallbacks) y escape XML.
+        try {
+            Settings::setTempDir(WordTempDirectory::path());
+        } catch (\Throwable) {
+            // No tumbar el boot: el renderer volverá a resolver al generar.
+        }
         Settings::setOutputEscapingEnabled(true);
 
         Gate::before(function (User $user, string $ability): ?bool {
