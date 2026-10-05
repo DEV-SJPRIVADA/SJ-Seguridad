@@ -94,7 +94,6 @@ class ContratacionLetterController extends Controller
         $fichaEntry->load(['requisition.city', 'requisition.position', 'requisition.client', 'profile']);
 
         abort_unless($fichaEntry->moved_to_ficha_at === null, 404);
-        abort_if($fichaEntry->isRehirePending(), 404);
 
         $profile = $this->quickLetterService->profileForForm($fichaEntry);
         $templates = $this->contratacionTemplatesPayload();

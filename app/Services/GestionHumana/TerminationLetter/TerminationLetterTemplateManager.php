@@ -52,6 +52,21 @@ class TerminationLetterTemplateManager
         return $this->storeUploadedTemplate($template, $file);
     }
 
+    public function updateTemplateMetadata(
+        TerminationLetterDocumentTemplate $template,
+        string $label,
+        WordDocumentType $type,
+        int $sortOrder = 0,
+    ): TerminationLetterDocumentTemplate {
+        $template->update([
+            'label' => $label,
+            'word_document_type_id' => $type->id,
+            'sort_order' => $sortOrder,
+        ]);
+
+        return $template->fresh(['type']) ?? $template;
+    }
+
     public function storeUploadedTemplate(
         TerminationLetterDocumentTemplate $template,
         UploadedFile $file,

@@ -13,7 +13,17 @@
                             Carta de contratación — {{ $fichaEntry->hired_full_name }}
                         </h2>
                         <p class="panel-text">
-                            Complete solo los datos de la carta. El empleado permanece en Pendientes; después puede completar la ficha con Gestionar Empleado.
+                            Complete solo los datos de la carta. El empleado permanece en Pendientes
+                            @if ($fichaEntry->isRehirePending())
+                                (reingreso)
+                            @endif
+                            ; después puede completar la ficha con
+                            @if ($fichaEntry->isRehirePending())
+                                Gestionar reingreso
+                            @else
+                                Gestionar Empleado
+                            @endif
+                            .
                         </p>
                     </div>
 

@@ -148,6 +148,26 @@ class PlantillasWordCrudTest extends TestCase
         $this->assertSame('Aceptacion renuncia', $storeLog->metadata['label']);
 
         $this->actingAs($manager)
+            ->patch(route('gestion-humana.plantillas-word.templates.update', $template), [
+                'label' => 'Aceptacion renuncia editada',
+                'word_document_type_id' => $type->id,
+                'sort_order' => 7,
+            ])
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']));
+
+        $template->refresh();
+        $this->assertSame('Aceptacion renuncia editada', $template->label);
+        $this->assertSame(7, $template->sort_order);
+        $this->assertTrue(
+            AuditLog::query()
+                ->where('module', 'ficha_empleados')
+                ->where('event_type', 'termination_letter_template')
+                ->where('action', 'update')
+                ->where('auditable_id', $template->id)
+                ->exists()
+        );
+
+        $this->actingAs($manager)
             ->get(route('gestion-humana.plantillas-word.templates.download', $template))
             ->assertOk();
 
@@ -158,7 +178,7 @@ class PlantillasWordCrudTest extends TestCase
             ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']));
 
         $template->refresh();
-        $this->assertSame('Aceptacion renuncia', $template->label);
+        $this->assertSame('Aceptacion renuncia editada', $template->label);
         $this->assertSame($type->id, $template->word_document_type_id);
         $this->assertNotSame($originalPath, $template->template_path);
         Storage::disk('local')->assertExists((string) $template->template_path);

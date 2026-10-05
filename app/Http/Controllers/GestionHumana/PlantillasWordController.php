@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\PlantillasWord\ReplaceWordDocumentTemplateRequest;
 use App\Http\Requests\GestionHumana\PlantillasWord\StoreWordDocumentTemplateRequest;
 use App\Http\Requests\GestionHumana\PlantillasWord\StoreWordDocumentTypeRequest;
+use App\Http\Requests\GestionHumana\PlantillasWord\UpdateWordDocumentTemplateRequest;
 use App\Http\Requests\GestionHumana\PlantillasWord\UpdateWordDocumentTypeRequest;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Models\WordDocumentType;
@@ -171,6 +172,38 @@ class PlantillasWordController extends Controller
 
         return $this->redirectToTab(self::TAB_PLANTILLAS)
             ->with('status', 'Plantilla Word agregada correctamente.');
+    }
+
+    public function updateTemplate(
+        UpdateWordDocumentTemplateRequest $request,
+        TerminationLetterDocumentTemplate $template,
+    ): RedirectResponse {
+        $type = WordDocumentType::query()->findOrFail((int) $request->input('word_document_type_id'));
+        $before = $template->only(['label', 'word_document_type_id', 'sort_order']);
+
+        $template = $this->templateManager->updateTemplateMetadata(
+            $template,
+            $request->string('label')->toString(),
+            $type,
+            (int) ($request->input('sort_order') ?? 0),
+        );
+
+        $this->auditLogService->logModelChange(
+            eventType: 'termination_letter_template',
+            action: 'update',
+            model: $template,
+            before: $before,
+            after: $template->only(['label', 'word_document_type_id', 'sort_order']),
+            metadata: [
+                'template_id' => $template->id,
+                'type_id' => $template->word_document_type_id,
+                'type_code' => $type->code,
+            ],
+            userId: (int) auth()->id(),
+        );
+
+        return $this->redirectToTab(self::TAB_PLANTILLAS)
+            ->with('status', 'Plantilla Word actualizada.');
     }
 
     public function replaceTemplate(

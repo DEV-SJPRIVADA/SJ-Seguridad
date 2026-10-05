@@ -27,6 +27,7 @@ Archivo: `routes/areas/gestion_humana.php` (grupo `auth`/`active` global + `pass
 | PATCH | `/gestion-humana/plantillas-word/tipos/{type}` | `gestion-humana.plantillas-word.types.update` | `plantillas_word.manage` |
 | DELETE | `/gestion-humana/plantillas-word/tipos/{type}` | `gestion-humana.plantillas-word.types.destroy` | `plantillas_word.manage` |
 | POST | `/gestion-humana/plantillas-word/plantillas` | `gestion-humana.plantillas-word.templates.store` | `plantillas_word.manage` |
+| PATCH | `/gestion-humana/plantillas-word/plantillas/{template}` | `gestion-humana.plantillas-word.templates.update` | `plantillas_word.manage` (etiqueta / tipo / orden; modal `.plantillas-word-edit-modal`) |
 | POST | `/gestion-humana/plantillas-word/plantillas/{template}/reemplazar` | `gestion-humana.plantillas-word.templates.replace` | `plantillas_word.manage` |
 | DELETE | `/gestion-humana/plantillas-word/plantillas/{template}` | `gestion-humana.plantillas-word.templates.destroy` | `plantillas_word.manage` |
 | GET | `/gestion-humana/plantillas-word/plantillas/{template}/descargar` | `gestion-humana.plantillas-word.templates.download` | `plantillas_word.view` o `manage` |
@@ -98,7 +99,7 @@ Config estable: `config/employee_ficha.php` â†’ `word_document_type_codes.d
 - Generacion de cartas (Ficha): `TerminationLetterPackGeneratorService` â€” por IDs, 1â†’docx / Nâ†’zip, sin gate por causal; ver doc Ficha.
 - Audit: `EmployeeFichaAuditLogService` â€” `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete).
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — `TemplateProcessor` PhpWord con macros canónicas `${CLAVE}` (+ fallback temporal `[CLAVE]`); previo merge de split-runs en XML.
-- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder único (~90 variables) para desvinculación, contratación y tipos futuros. Catálogo UI: `config/employee_ficha.php` → `letter_placeholders`.
+- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder único (~90 variables) para desvinculación, contratación y tipos futuros. Catálogo UI: `config/employee_ficha.php` → `letter_placeholders`. Modal **Variables disponibles** en `plantillas-word/index` con filtro Alpine (clave / descripción / categoría).
 
 ### Cómo agregar una variable nueva (checklist)
 
