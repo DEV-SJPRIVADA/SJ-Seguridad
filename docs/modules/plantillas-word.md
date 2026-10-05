@@ -106,9 +106,11 @@ No hace falta tocar controladores de generación (`TerminationLetterController`,
 
 1. **Dato en sistema:** si el valor aún no existe, agregar campo (migración/modelo/formulario ficha) y asegurar que se guarda.
 2. **UI (copia usuario):** registrar la clave en `config/employee_ficha.php` → `letter_placeholders` (categoría + descripción). Aparece como `${CLAVE}` en Plantillas Word.
-3. **Valor al generar:** mapear la clave en `App\Services\GestionHumana\Letter\LetterVariableBuilder::build()` desde perfil, periodo, entrada ficha o requisición.
+3. **Valor al generar:** mapear la clave en `App\Services\GestionHumana\Letter\LetterVariableBuilder::build()` desde perfil, periodo, entrada ficha o requisición. Montos en letras: `App\Support\SpanishMoneyWords` (ej. `${SALARIO_EN_LETRAS}`).
 4. **Probar:** plantilla con `${CLAVE}` → generar carta → el `.docx` no debe dejar `${CLAVE}` literal (salvo que el dato esté vacío).
 5. **Docs:** actualizar esta sección / `docs/modules/ficha-empleados.md` si el campo es de negocio visible.
+
+**Variables de salario:** `${SALARIO}` (número formateado) y `${SALARIO_EN_LETRAS}` (texto, mayúsculas, p. ej. `UN MILLÓN QUINIENTOS MIL PESOS`). Equivalente de vínculo: `${SALARIO_VINCULO}` / `${SALARIO_VINCULO_EN_LETRAS}`.
 
 **No requerido:** cambios en `PlantillasWordController` (ya lee el config), ni en pack generators (ya usan `LetterVariableBuilder`).
 

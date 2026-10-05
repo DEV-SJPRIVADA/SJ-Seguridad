@@ -2852,6 +2852,27 @@ a {
     white-space: nowrap;
 }
 
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__zone {
+    border-style: solid;
+    border-color: var(--brand-blue);
+    background: #e8f4fc;
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__icon {
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
+    color: #fff;
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__title {
+    color: var(--brand-blue);
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__name {
+    color: var(--brand-navy);
+    font-weight: 600;
+}
+
 .plantillas-word-file-picker--compact .plantillas-word-file-picker__name {
     position: absolute;
     width: 1px;
