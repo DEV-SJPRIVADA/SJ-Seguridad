@@ -6,6 +6,7 @@ use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Support\SpanishMoneyWords;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
@@ -76,6 +77,7 @@ class LetterVariableBuilder
             $variables['TIPO_SANGRE'] = (string) $profile->blood_type;
             $variables['SEXO'] = (string) $profile->sex;
             $variables['SALARIO'] = $this->formatSalary($profile->salary);
+            $variables['SALARIO_EN_LETRAS'] = SpanishMoneyWords::pesos($profile->salary);
             $variables['NIVEL_EDUCATIVO'] = (string) $profile->education_level;
             $variables['ESTADO_CIVIL'] = (string) $profile->marital_status;
             $variables['NUMERO_HIJOS'] = $profile->children_count !== null ? (string) $profile->children_count : '';
@@ -107,6 +109,7 @@ class LetterVariableBuilder
         $variables['NUMERO_VINCULO'] = $period->sequence !== null ? (string) $period->sequence : '';
         $variables['FECHA_INGRESO'] = $this->formatLongDate($period->hire_date);
         $variables['SALARIO_VINCULO'] = $this->formatSalary($period->salary);
+        $variables['SALARIO_VINCULO_EN_LETRAS'] = SpanishMoneyWords::pesos($period->salary);
         $variables['CODIGO_CARGO_VINCULO'] = (string) $period->position_code;
         $variables['CARGO_VINCULO'] = (string) $period->position_name;
         $variables['CENTRO_COSTO_VINCULO'] = (string) $period->cost_center_code;
@@ -228,6 +231,12 @@ class LetterVariableBuilder
 
         if (($variables['SALARIO'] ?? '') === '' && $salario !== '') {
             $variables['SALARIO'] = $salario;
+        }
+
+        if (($variables['SALARIO_EN_LETRAS'] ?? '') === '') {
+            $variables['SALARIO_EN_LETRAS'] = SpanishMoneyWords::pesos(
+                $profile?->salary ?? $period->salary,
+            );
         }
 
         if (($variables['DOCUMENTO'] ?? '') === '') {

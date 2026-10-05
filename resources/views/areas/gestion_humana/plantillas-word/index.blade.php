@@ -474,7 +474,7 @@
                                                                 >
                                                                 <label
                                                                     for="template_file_replace_{{ $template->id }}"
-                                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost plantillas-word-file-picker__select-btn"
                                                                     title="Seleccionar archivo"
                                                                     aria-label="Seleccionar archivo"
                                                                 >
@@ -534,18 +534,30 @@
                 var label = picker ? picker.querySelector('label') : null;
                 var isCompact = picker && picker.classList.contains('plantillas-word-file-picker--compact');
 
-                input.addEventListener('change', function () {
+                // Marca visual cuando hay .docx elegido (icono compacto o zona de alta).
+                var syncFileState = function () {
                     var file = input.files && input.files[0];
                     var fileName = file ? file.name : '';
+                    var hasFile = !!file;
+
+                    if (picker) {
+                        picker.classList.toggle('plantillas-word-file-picker--has-file', hasFile);
+                    }
 
                     if (nameEl && ! isCompact) {
                         nameEl.textContent = fileName || 'Sin archivo seleccionado';
                     }
 
                     if (label && isCompact) {
-                        label.title = fileName || 'Seleccionar archivo';
+                        label.title = hasFile ? ('Archivo: ' + fileName) : 'Seleccionar archivo';
+                        label.setAttribute('aria-label', hasFile ? ('Archivo seleccionado: ' + fileName) : 'Seleccionar archivo');
+                        label.classList.toggle('req-manage-filters__icon-btn--primary', hasFile);
+                        label.classList.toggle('req-manage-filters__icon-btn--ghost', ! hasFile);
                     }
-                });
+                };
+
+                input.addEventListener('change', syncFileState);
+                syncFileState();
             });
         })();
     </script>

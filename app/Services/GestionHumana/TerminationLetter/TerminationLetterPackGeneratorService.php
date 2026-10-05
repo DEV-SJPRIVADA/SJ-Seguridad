@@ -44,7 +44,9 @@ class TerminationLetterPackGeneratorService
 
         // Mismo builder/catálogo que Plantillas Word y contratación (${CLAVE}).
         $entry->loadMissing('profile', 'requisition');
-        $variables = $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId);
+        $variables = $this->applyDesvinculacionDateCasing(
+            $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId),
+        );
 
         $workDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ficha-letters-'.Str::uuid()->toString();
         if (! mkdir($workDir) && ! is_dir($workDir)) {
@@ -90,6 +92,25 @@ class TerminationLetterPackGeneratorService
         } finally {
             $this->deleteDirectory($workDir);
         }
+    }
+
+    /**
+     * En cartas de desvinculación, fechas de contrato y terminación del vínculo van en mayúsculas.
+     *
+     * @param  array<string, string>  $variables
+     * @return array<string, string>
+     */
+    private function applyDesvinculacionDateCasing(array $variables): array
+    {
+        foreach (['FECHA_CONTRATO', 'FECHA_TERMINACION_VINCULO'] as $key) {
+            if (($variables[$key] ?? '') === '') {
+                continue;
+            }
+
+            $variables[$key] = mb_strtoupper($variables[$key], 'UTF-8');
+        }
+
+        return $variables;
     }
 
     public function assertCanGenerate(EmployeeFichaEmploymentPeriod $period): void

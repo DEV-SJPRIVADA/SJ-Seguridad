@@ -58,7 +58,7 @@ class TerminationLetterPackTest extends TestCase
         $path = 'ficha-empleados/letter-templates/'.$type->id.'/tpl-vars.docx';
         Storage::disk('local')->put(
             $path,
-            $this->makeDocxBinary('${NOMBRE_COMPLETO} ${DOCUMENTO} ${FECHA_TERMINACION_PERFIL} [SALARIO] [TIPO_CONTRATO]'),
+            $this->makeDocxBinary('${NOMBRE_COMPLETO} ${DOCUMENTO} ${FECHA_TERMINACION_PERFIL} ${FECHA_CONTRATO} ${FECHA_TERMINACION_VINCULO} [SALARIO] [TIPO_CONTRATO]'),
         );
 
         $template = TerminationLetterDocumentTemplate::query()->create([
@@ -85,8 +85,13 @@ class TerminationLetterPackTest extends TestCase
         $this->assertStringNotContainsString('${NOMBRE_COMPLETO}', $text);
         $this->assertStringNotContainsString('${DOCUMENTO}', $text);
         $this->assertStringNotContainsString('${FECHA_TERMINACION_PERFIL}', $text);
+        $this->assertStringNotContainsString('${FECHA_CONTRATO}', $text);
+        $this->assertStringNotContainsString('${FECHA_TERMINACION_VINCULO}', $text);
         $this->assertStringNotContainsString('[SALARIO]', $text);
         $this->assertStringNotContainsString('[TIPO_CONTRATO]', $text);
+
+        // Desvinculación: FECHA_CONTRATO y FECHA_TERMINACION_VINCULO en mayúsculas.
+        $this->assertMatchesRegularExpression('/\d{1,2} DE [A-ZÁÉÍÓÚÑ]+ DEL \d{4}/u', $text);
     }
 
     public function test_generate_one_template_persists_docx(): void

@@ -27,6 +27,7 @@ class LetterVariableBuilderTest extends TestCase
             'document_number' => '809999999',
             'full_name' => 'Carta Lugar Nacimiento',
             'birth_place' => 'Cali',
+            'salary' => 1500000,
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
         ]);
 
@@ -35,11 +36,19 @@ class LetterVariableBuilderTest extends TestCase
             'sequence' => 1,
             'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
             'hire_date' => now()->subYear()->toDateString(),
+            'salary' => 1500000,
         ]);
 
         $variables = app(LetterVariableBuilder::class)->build($period, $entry, $profile);
 
         $this->assertSame('Cali', $variables['LUGAR_NACIMIENTO']);
         $this->assertArrayHasKey('LUGAR_NACIMIENTO', config('employee_ficha.letter_placeholders')['Datos del empleado (Perfil)']);
+        $this->assertArrayHasKey('SALARIO_EN_LETRAS', config('employee_ficha.letter_placeholders')['Datos del empleado (Perfil)']);
+
+        if (class_exists(\NumberFormatter::class)) {
+            $this->assertNotSame('', $variables['SALARIO_EN_LETRAS']);
+            $this->assertStringContainsString('PESOS', $variables['SALARIO_EN_LETRAS']);
+            $this->assertSame($variables['SALARIO_EN_LETRAS'], $variables['SALARIO_VINCULO_EN_LETRAS']);
+        }
     }
 }
