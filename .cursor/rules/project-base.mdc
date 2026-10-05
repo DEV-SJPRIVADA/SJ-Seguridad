@@ -16,6 +16,10 @@ Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
 - Modulos desacoplados: rutas, controladores, vistas, permisos por modulo/area.
 - **Permisos por pestana:** modelo objetivo `view`/`edit` por pestana (referencia Comercial). Preguntar al usuario antes de definir permisos en pestanas o features nuevas. Ver [`.cursor/rules/permissions-per-tab.mdc`](permissions-per-tab.mdc).
 
+## Ortografía y comentarios
+
+Al codear: corregir ortografía en textos de UI y comentar bloques funcionales. Ver [`.cursor/rules/orthography-and-comments.mdc`](orthography-and-comments.mdc).
+
 ## Documentacion doble (features completas)
 
 - Guia maestra: [`docs/DOCUMENTATION.md`](../../docs/DOCUMENTATION.md)

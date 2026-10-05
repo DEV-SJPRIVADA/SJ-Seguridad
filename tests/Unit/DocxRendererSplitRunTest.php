@@ -8,6 +8,22 @@ use ZipArchive;
 
 class DocxRendererSplitRunTest extends TestCase
 {
+    public function test_replaces_bracket_legacy_placeholder(): void
+    {
+        $templatePath = $this->createDocxFromXml($this->singleRunXml('[NOMBRE_COMPLETO]'));
+        $outputPath = sys_get_temp_dir().'/docx-test-'.bin2hex(random_bytes(8)).'.docx';
+
+        $renderer = new TerminationLetterDocxRenderer;
+        $renderer->render($templatePath, ['NOMBRE_COMPLETO' => 'Ana Lopez'], $outputPath);
+
+        $text = $this->extractDocumentText($outputPath);
+        $this->assertStringContainsString('Ana Lopez', $text);
+        $this->assertStringNotContainsString('[NOMBRE_COMPLETO]', $text);
+
+        @unlink($templatePath);
+        @unlink($outputPath);
+    }
+
     public function test_replaces_placeholder_in_single_run(): void
     {
         $templatePath = $this->createDocxFromXml($this->singleRunXml('${NOMBRE}'));

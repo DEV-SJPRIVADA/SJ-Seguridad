@@ -96,14 +96,14 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 Disponible cuando el vinculo esta **cerrado** (empleado desvinculado), con **cualquier** causal, y usted tiene permiso de desvinculacion.
 
-1. Abra la ficha del empleado desvinculado (o el **Historial de vinculos**).
-2. Pulse **Generar cartas**. Se abre una ventana con las plantillas de tipo **Desvinculacion** que tengan archivo cargado.
+1. Abra la ficha del empleado desvinculado (o el **Historial de vínculos**).
+2. En la barra superior, junto al icono de **Historial de vínculos**, pulse el icono de **Generar cartas** (documento). También puede usar el mismo icono en cada vínculo cerrado del modal de historial. Se abre una ventana con las plantillas de tipo **Desvinculación** que tengan archivo cargado.
 3. Marque **una o varias** plantillas (al menos una) y confirme.
    - Si elige **una**, descarga un archivo Word (`.docx`).
    - Si elige **varias**, descarga un **ZIP** con esos Word.
 4. El archivo queda guardado en ese vinculo. Si vuelve a generar, **reemplaza** el archivo anterior. Ademas, el seguimiento en **Desvinculaciones** pasa a indicar que **tiene carta generada**.
-5. Use **Descargar cartas** para volver a bajar el ultimo archivo generado (no vuelve a armarlo desde cero). No existe un boton separado de “Regenerar”: para generar de nuevo, use otra vez **Generar cartas**.
-6. Si un lote de **Desvinculaciones → Masivos** dejo al empleado sin carta, use este mismo flujo de Ficha (hace falta el permiso de desvincular en Ficha) para generar la carta y actualizar el seguimiento.
+5. Use el icono **Descargar cartas** (flecha hacia abajo) para volver a bajar el último archivo generado (no vuelve a armarlo desde cero). No existe un botón separado de “Regenerar”: para generar de nuevo, use otra vez **Generar cartas**.
+6. Si un lote de **Desvinculaciones → Masivos** dejó al empleado sin carta, use este mismo flujo de Ficha (hace falta el permiso de desvincular en Ficha) para generar la carta y actualizar el seguimiento.
 
 Si el listado del modal esta vacio, un administrador debe subir plantillas en el tablero **Plantillas Word** (tipo Desvinculacion). Las plantillas antiguas de Renuncia **no** se migraron solas: hay que re-subirlas. Guia: [`plantillas-word.md`](plantillas-word.md).
 
@@ -151,6 +151,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.22 | 2026-10-05 | Agent | Generar/Descargar cartas pasan a iconos en la barra (junto a Historial de vínculos) y en el modal de historial. |
 | 1.21 | 2026-10-01 | Agent | Export Excel del listado Pendientes (icono en barra; respeta búsqueda `q`). |
 | 1.20 | 2026-10-01 | Agent | Campo obligatorio **Lugar de nacimiento** en create/editar ficha (también `?desde=`); variable Word `[LUGAR_NACIMIENTO]`. Sin cambio en import/Selección. |
 | 1.19 | 2026-10-01 | Agent | Pendientes: accion Gestionar Empleado / reingreso pasa a icono en fila. |

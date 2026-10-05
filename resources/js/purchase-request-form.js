@@ -192,51 +192,64 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function createFotoCell(index) {
+    function createFotoMarkup(index) {
         return `
-            <td class="purchase-item-foto-cell">
-                <div class="purchase-item-foto" data-purchase-item-foto role="button" tabindex="0" title="Subir foto del producto (opcional)">
-                    <input type="hidden" name="items[${index}][existing_foto_path]" value="" class="purchase-item-foto__existing-path">
-                    <input type="file" name="items[${index}][foto]" class="purchase-item-foto__input" accept="image/jpeg,image/png,image/webp,image/gif">
-                    <div class="purchase-item-foto__placeholder">
-                        <span class="purchase-item-foto__icon" aria-hidden="true">📷</span>
-                        <span class="purchase-item-foto__hint">Subir foto</span>
-                    </div>
-                    <div class="purchase-item-foto__preview" hidden>
-                        <img src="" alt="Vista previa" class="purchase-item-foto__img">
-                        <span class="purchase-item-foto__name"></span>
-                        <button type="button" class="purchase-item-foto__clear" aria-label="Quitar foto">&times;</button>
-                    </div>
+            <div class="purchase-item-foto" data-purchase-item-foto role="button" tabindex="0" title="Subir foto del producto (opcional)">
+                <input type="hidden" name="items[${index}][existing_foto_path]" value="" class="purchase-item-foto__existing-path">
+                <input type="file" name="items[${index}][foto]" class="purchase-item-foto__input" accept="image/jpeg,image/png,image/webp,image/gif">
+                <div class="purchase-item-foto__placeholder">
+                    <span class="purchase-item-foto__icon" aria-hidden="true">📷</span>
+                    <span class="purchase-item-foto__hint">Subir foto</span>
                 </div>
-            </td>
+                <div class="purchase-item-foto__preview" hidden>
+                    <img src="" alt="Vista previa" class="purchase-item-foto__img">
+                    <span class="purchase-item-foto__name"></span>
+                    <button type="button" class="purchase-item-foto__clear" aria-label="Quitar foto">&times;</button>
+                </div>
+            </div>
         `;
     }
 
+    // Crea una tarjeta de producto (foto + descripción, referencia, utilización/ubicación/cantidad).
     function createItemRow(index) {
-        const row = document.createElement('tr');
+        const row = document.createElement('article');
+        row.className = 'purchase-item-card';
         row.dataset.purchaseItemRow = 'true';
         row.innerHTML = `
-            <td>
-                <input type="number" name="items[${index}][cantidad]" class="supply-input" min="1" value="1" required>
-            </td>
-            ${createFotoCell(index)}
-            <td>
-                <input type="text" name="items[${index}][descripcion]" class="supply-input" placeholder="Descripcion del producto" required>
-            </td>
-            <td>
-                <input type="text" name="items[${index}][referencia]" class="supply-input" placeholder="Referencia / codigo" required>
-            </td>
-            <td>
-                <input type="text" name="items[${index}][utilizacion]" class="supply-input" placeholder="Uso previsto" required>
-            </td>
-            <td>
-                <input type="text" name="items[${index}][ubicacion]" class="supply-input" placeholder="Ubicacion / sede" required>
-            </td>
-            <td class="text-center">
+            <header class="purchase-item-card__head">
+                <span class="purchase-item-card__title">Producto</span>
                 <button type="button" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" data-remove-item title="Quitar producto" aria-label="Quitar producto">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                 </button>
-            </td>
+            </header>
+            <div class="purchase-item-card__top">
+                <div class="form-field purchase-item-card__foto">
+                    <span class="form-label">Foto <span class="text-muted">(opcional)</span></span>
+                    ${createFotoMarkup(index)}
+                </div>
+                <div class="form-field purchase-item-card__desc">
+                    <label class="form-label" for="item-descripcion-${index}">Descripción</label>
+                    <textarea id="item-descripcion-${index}" name="items[${index}][descripcion]" class="form-textarea purchase-item-card__desc-input" rows="4" placeholder="Descripción del producto" required></textarea>
+                </div>
+            </div>
+            <div class="form-field purchase-item-card__referencia">
+                <label class="form-label" for="item-referencia-${index}">Referencia</label>
+                <input type="text" id="item-referencia-${index}" name="items[${index}][referencia]" class="form-input" placeholder="Marca-Modelo / código" required>
+            </div>
+            <div class="purchase-item-card__bottom">
+                <div class="form-field">
+                    <label class="form-label" for="item-utilizacion-${index}">Utilización</label>
+                    <input type="text" id="item-utilizacion-${index}" name="items[${index}][utilizacion]" class="form-input" placeholder="Para quién / qué uso" required>
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="item-ubicacion-${index}">Ubicación</label>
+                    <input type="text" id="item-ubicacion-${index}" name="items[${index}][ubicacion]" class="form-input" placeholder="Ubicación / sede" required>
+                </div>
+                <div class="form-field purchase-item-card__cantidad">
+                    <label class="form-label" for="item-cantidad-${index}">Cantidad</label>
+                    <input type="number" id="item-cantidad-${index}" name="items[${index}][cantidad]" class="form-input" min="1" value="1" required>
+                </div>
+            </div>
         `;
 
         bindRemoveRow(row);
@@ -273,11 +286,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fillRowValues(row, item) {
-        const cantidad = row.querySelector('input[name*="[cantidad]"]');
-        const descripcion = row.querySelector('input[name*="[descripcion]"]');
-        const referencia = row.querySelector('input[name*="[referencia]"]');
-        const utilizacion = row.querySelector('input[name*="[utilizacion]"]');
-        const ubicacion = row.querySelector('input[name*="[ubicacion]"]');
+        const cantidad = row.querySelector('[name*="[cantidad]"]');
+        const descripcion = row.querySelector('[name*="[descripcion]"]');
+        const referencia = row.querySelector('[name*="[referencia]"]');
+        const utilizacion = row.querySelector('[name*="[utilizacion]"]');
+        const ubicacion = row.querySelector('[name*="[ubicacion]"]');
 
         if (cantidad) {
             cantidad.value = item.cantidad || 1;

@@ -145,6 +145,10 @@
                                     <span class="pur-req-form__meta-label">Asume el cliente</span>
                                     <span class="pur-req-form__meta-value">{{ $purchaseRequest->asume_cliente ? 'Si' : 'No' }}</span>
                                 </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Reinversión</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->reinversion ? 'Si' : 'No' }}</span>
+                                </div>
                             </div>
                         </section>
                     @endif

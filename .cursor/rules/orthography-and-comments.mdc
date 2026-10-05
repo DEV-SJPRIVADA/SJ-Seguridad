@@ -1,0 +1,27 @@
+---
+description: Ortografía en textos de UI y comentarios de funcionalidades al codear
+alwaysApply: true
+---
+
+# Ortografía y comentarios al codear
+
+Al escribir o modificar código (Blade, JS, PHP, CSS, docs de entrega):
+
+## Ortografía (obligatorio)
+
+- Corregir ortografía y tildes en **textos visibles al usuario**: labels, titles, aria-labels, placeholders, alertas, subtítulos, botones, mensajes de estado.
+- Español correcto: `Descripción`, `Utilización`, `Ubicación`, `Área`, `Razón`, `líneas`, `más`, `Sí` (afirmación), etc.
+- No dejar typos ni palabras sin tilde en cadenas nuevas o tocadas en el mismo cambio.
+- Claves técnicas (nombres de campos DB, `name=`, rutas, permisos Spatie) **no** se renombran por ortografía.
+
+## Comentarios de funcionalidad (en el código fuente)
+
+- Los comentarios van **dentro del código** (Blade, JS, PHP, CSS), no en el chat ni solo en docs.
+- Comentar **qué hace** cada bloque funcional nuevo o reestructurado (sección de formulario, helper JS, partial reutilizable), en español breve.
+- Preferir comentario encima del bloque (`{{-- --}}`, `//`, `/* */`), no ruido línea a línea.
+- No documentar lo obvio (`// incrementa i`); sí el propósito de negocio o el layout especial.
+- Mantener comentarios alineados con el código real; si cambia el comportamiento, actualizar o borrar el comentario.
+
+## Alcance
+
+Aplica a cualquier cambio funcional en la misma entrega. No exige reescribir archivos enteros no tocados solo por ortografía, salvo que el usuario lo pida.

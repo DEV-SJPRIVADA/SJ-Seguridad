@@ -261,8 +261,8 @@
             <tr>
                 <th>Razon social</th>
                 <td>{{ $purchaseRequest->razon_social ?? '—' }}</td>
-                <th>Proy. nuevo / Asume</th>
-                <td>{{ $purchaseRequest->proyecto_nuevo ? 'Si' : 'No' }} / {{ $purchaseRequest->asume_cliente ? 'Si' : 'No' }}</td>
+                <th>Proy. nuevo / Asume / Reinversión</th>
+                <td>{{ $purchaseRequest->proyecto_nuevo ? 'Si' : 'No' }} / {{ $purchaseRequest->asume_cliente ? 'Si' : 'No' }} / {{ $purchaseRequest->reinversion ? 'Si' : 'No' }}</td>
             </tr>
         @endif
     </table>

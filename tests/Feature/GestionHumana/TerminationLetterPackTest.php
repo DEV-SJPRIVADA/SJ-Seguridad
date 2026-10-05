@@ -43,6 +43,52 @@ class TerminationLetterPackTest extends TestCase
         Config::set('audit.queue', false);
     }
 
+    public function test_generate_replaces_catalog_placeholders_in_docx(): void
+    {
+        $terminator = $this->terminatorUser();
+        $entry = $this->createTerminatedEntry($terminator, 'RENUNCIA');
+        $period = $this->closedPeriodFor($entry);
+        $signatory = $this->seedSignatory();
+
+        $type = WordDocumentType::query()->firstOrCreate(
+            ['code' => config('employee_ficha.word_document_type_codes.desvinculacion')],
+            ['name' => 'Desvinculacion', 'is_active' => true, 'sort_order' => 1],
+        );
+
+        $path = 'ficha-empleados/letter-templates/'.$type->id.'/tpl-vars.docx';
+        Storage::disk('local')->put(
+            $path,
+            $this->makeDocxBinary('${NOMBRE_COMPLETO} ${DOCUMENTO} ${FECHA_TERMINACION_PERFIL} [SALARIO] [TIPO_CONTRATO]'),
+        );
+
+        $template = TerminationLetterDocumentTemplate::query()->create([
+            'word_document_type_id' => $type->id,
+            'label' => 'Plantilla variables',
+            'sort_order' => 1,
+            'template_path' => $path,
+        ]);
+
+        $response = $this->actingAs($terminator)
+            ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
+                'template_ids' => [$template->id],
+                'signatory_id' => $signatory->id,
+            ]);
+
+        $response->assertOk();
+
+        $period->refresh();
+        $absolute = Storage::disk('local')->path((string) $period->termination_letter_path);
+        $text = $this->extractDocxText($absolute);
+
+        $this->assertStringContainsString((string) $entry->hired_full_name, $text);
+        $this->assertStringContainsString((string) $entry->hired_document, $text);
+        $this->assertStringNotContainsString('${NOMBRE_COMPLETO}', $text);
+        $this->assertStringNotContainsString('${DOCUMENTO}', $text);
+        $this->assertStringNotContainsString('${FECHA_TERMINACION_PERFIL}', $text);
+        $this->assertStringNotContainsString('[SALARIO]', $text);
+        $this->assertStringNotContainsString('[TIPO_CONTRATO]', $text);
+    }
+
     public function test_generate_one_template_persists_docx(): void
     {
         $terminator = $this->terminatorUser();
@@ -270,9 +316,10 @@ class TerminationLetterPackTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('Generar cartas', $htmlBefore);
+        $this->assertStringContainsString('title="Generar cartas"', $htmlBefore);
+        $this->assertStringContainsString('aria-label="Generar cartas"', $htmlBefore);
         $this->assertStringNotContainsString('Regenerar', $htmlBefore);
-        $this->assertStringNotContainsString('Descargar cartas', $htmlBefore);
+        $this->assertStringNotContainsString('title="Descargar cartas"', $htmlBefore);
 
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.period.letters.generate', $period), [
@@ -286,8 +333,8 @@ class TerminationLetterPackTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('Generar cartas', $htmlAfter);
-        $this->assertStringContainsString('Descargar cartas', $htmlAfter);
+        $this->assertStringContainsString('title="Generar cartas"', $htmlAfter);
+        $this->assertStringContainsString('title="Descargar cartas"', $htmlAfter);
         $this->assertStringNotContainsString('Regenerar', $htmlAfter);
     }
 
@@ -425,7 +472,7 @@ class TerminationLetterPackTest extends TestCase
 
         for ($i = 1; $i <= $count; $i++) {
             $path = 'ficha-empleados/letter-templates/'.$type->id.'/tpl-'.$i.'.docx';
-            Storage::disk('local')->put($path, $this->makeDocxBinary('[NOMBRE] [CEDULA]'));
+            Storage::disk('local')->put($path, $this->makeDocxBinary('${NOMBRE_COMPLETO} ${DOCUMENTO}'));
 
             $templates[] = TerminationLetterDocumentTemplate::query()->create([
                 'word_document_type_id' => $type->id,
@@ -454,6 +501,18 @@ class TerminationLetterPackTest extends TestCase
         @unlink($path);
 
         return $binary;
+    }
+
+    private function extractDocxText(string $absolutePath): string
+    {
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($absolutePath));
+        $xml = (string) $zip->getFromName('word/document.xml');
+        $zip->close();
+
+        $text = html_entity_decode(strip_tags($xml), ENT_QUOTES | ENT_XML1, 'UTF-8');
+
+        return preg_replace('/\s+/u', ' ', $text) ?? $text;
     }
 
     private function createInFichaEntry(bool $withActivePeriod = false): PersonalRequisitionFichaEntry

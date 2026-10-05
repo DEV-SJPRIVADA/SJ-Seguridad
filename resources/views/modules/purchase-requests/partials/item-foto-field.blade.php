@@ -1,9 +1,13 @@
+@php
+    $existingFotoPath = $existingFotoPath ?? null;
+    $existingFotoUrl = $existingFotoPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($existingFotoPath) : null;
+    $hasExistingFoto = filled($existingFotoUrl);
+    $wrapInTd = $wrapInTd ?? true;
+@endphp
+
+@if ($wrapInTd)
 <td class="purchase-item-foto-cell">
-    @php
-        $existingFotoPath = $existingFotoPath ?? null;
-        $existingFotoUrl = $existingFotoPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($existingFotoPath) : null;
-        $hasExistingFoto = filled($existingFotoUrl);
-    @endphp
+@endif
     <div class="purchase-item-foto @if($hasExistingFoto) has-file @endif" data-purchase-item-foto role="button" tabindex="0" title="Subir foto del producto (opcional)">
         <input type="hidden" name="items[{{ $index }}][existing_foto_path]" value="{{ old('items.'.$index.'.existing_foto_path', $existingFotoPath) }}" class="purchase-item-foto__existing-path">
         <input
@@ -23,4 +27,6 @@
         </div>
     </div>
     <x-input-error :messages="$errors->get('items.'.$index.'.foto')" />
+@if ($wrapInTd)
 </td>
+@endif

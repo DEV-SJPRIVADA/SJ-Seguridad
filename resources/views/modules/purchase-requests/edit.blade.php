@@ -80,7 +80,7 @@
                                 </div>
                                 <div class="pur-req-form__meta-item">
                                     <span class="pur-req-form__meta-label">Estado</span>
-                                    <span class="pur-req-form__meta-value">Rechazada — reenvio</span>
+                                    <span class="pur-req-form__meta-value">Rechazada — reenvío</span>
                                 </div>
                             </div>
 
@@ -89,20 +89,20 @@
                                     <span class="pur-req-form__section-step">1</span>
                                     <div>
                                         <h3 class="pur-req-form__section-title">Datos generales</h3>
-                                        <p class="pur-req-form__section-desc">Area, fecha, destinatario y director que autoriza.</p>
+                                        <p class="pur-req-form__section-desc">Área, fecha, destinatario y director que autoriza.</p>
                                     </div>
                                 </header>
 
                                 <div class="form-grid form-grid--two">
                                     <div class="form-field">
-                                        <label class="form-label" for="area_key">Area</label>
+                                        <label class="form-label" for="area_key">Área</label>
                                         <x-searchable-select
                                             id="area_key"
                                             name="area_key"
                                             :options="config('access.areas', [])"
                                             :value="old('area_key', $purchaseRequest->area_key)"
-                                            placeholder="Seleccione area"
-                                            searchPlaceholder="Buscar area…"
+                                            placeholder="Seleccione área"
+                                            searchPlaceholder="Buscar área…"
                                             :required="true"
                                             :allowClear="false"
                                         />
@@ -153,6 +153,7 @@
                                 </label>
                             </section>
 
+                            {{-- Sección 2: solo visible si solicitud_para = Cliente --}}
                             <section
                                 id="purchase-cliente-fields"
                                 class="pur-req-form__section"
@@ -166,19 +167,19 @@
                                     </div>
                                 </header>
 
-                                <div class="form-grid form-grid--two">
-                                    <div class="form-field form-field--full">
-                                        <label class="form-label" for="razon_social">Razon social</label>
-                                        <input type="text" name="razon_social" id="razon_social" class="form-input" value="{{ old('razon_social', $purchaseRequest->razon_social) }}" data-cliente-required="true">
-                                        <x-input-error :messages="$errors->get('razon_social')" />
-                                    </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="razon_social">Razón social</label>
+                                    <input type="text" name="razon_social" id="razon_social" class="form-input" value="{{ old('razon_social', $purchaseRequest->razon_social) }}" data-cliente-required="true">
+                                    <x-input-error :messages="$errors->get('razon_social')" />
+                                </div>
 
+                                <div class="form-grid form-grid--three" style="margin-top: 1rem;">
                                     <div class="form-field">
                                         <label class="form-label">Proyecto nuevo</label>
                                         <div class="pur-req-form__radios">
                                             <label class="pur-req-form__radio">
                                                 <input type="radio" name="proyecto_nuevo" value="1" @checked(old('proyecto_nuevo', $purchaseRequest->proyecto_nuevo ? '1' : '0') === '1' || old('proyecto_nuevo', $purchaseRequest->proyecto_nuevo) === 1)>
-                                                Si
+                                                Sí
                                             </label>
                                             <label class="pur-req-form__radio">
                                                 <input type="radio" name="proyecto_nuevo" value="0" @checked(old('proyecto_nuevo', $purchaseRequest->proyecto_nuevo ? '1' : '0') === '0' || old('proyecto_nuevo', $purchaseRequest->proyecto_nuevo) === 0 || old('proyecto_nuevo', $purchaseRequest->proyecto_nuevo) === null)>
@@ -192,7 +193,7 @@
                                         <div class="pur-req-form__radios">
                                             <label class="pur-req-form__radio">
                                                 <input type="radio" name="asume_cliente" value="1" @checked(old('asume_cliente', $purchaseRequest->asume_cliente ? '1' : '0') === '1' || old('asume_cliente', $purchaseRequest->asume_cliente) === 1)>
-                                                Si
+                                                Sí
                                             </label>
                                             <label class="pur-req-form__radio">
                                                 <input type="radio" name="asume_cliente" value="0" @checked(old('asume_cliente', $purchaseRequest->asume_cliente ? '1' : '0') === '0' || old('asume_cliente', $purchaseRequest->asume_cliente) === 0 || old('asume_cliente', $purchaseRequest->asume_cliente) === null)>
@@ -200,15 +201,29 @@
                                             </label>
                                         </div>
                                     </div>
+
+                                    <div class="form-field">
+                                        <label class="form-label">Reinversión</label>
+                                        <div class="pur-req-form__radios">
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="reinversion" value="1" @checked(old('reinversion', $purchaseRequest->reinversion ? '1' : '0') === '1' || old('reinversion', $purchaseRequest->reinversion) === 1)>
+                                                Sí
+                                            </label>
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="reinversion" value="0" @checked(old('reinversion', $purchaseRequest->reinversion ? '1' : '0') === '0' || old('reinversion', $purchaseRequest->reinversion) === 0 || old('reinversion', $purchaseRequest->reinversion) === null)>
+                                                No
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
 
-                            <section class="pur-req-form__section">
+                            <section class="pur-req-form__section pur-req-form__section--products">
                                 <header class="pur-req-form__section-head">
                                     <span class="pur-req-form__section-step">3</span>
                                     <div>
                                         <h3 class="pur-req-form__section-title">Productos solicitados</h3>
-                                        <p class="pur-req-form__section-desc">Ajusta lineas o agrega productos antes de reenviar.</p>
+                                        <p class="pur-req-form__section-desc">Ajusta líneas o agrega productos antes de reenviar. Cada producto usa tarjeta con más espacio para textos.</p>
                                     </div>
                                 </header>
 
@@ -226,58 +241,15 @@
                                     </div>
                                 </div>
 
-                                <div class="data-table-wrap pur-req-form__table-wrap">
-                                    <table class="supply-table purchase-items-table">
-                                        <thead>
-                                            <tr>
-                                                <th class="pur-req-form__col-qty">Cantidad</th>
-                                                <th class="pur-req-form__col-foto">Foto</th>
-                                                <th>Descripcion</th>
-                                                <th>Referencia</th>
-                                                <th>Utilizacion</th>
-                                                <th>Ubicacion</th>
-                                                <th class="pur-req-form__col-action">Accion</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="purchase-items-container">
-                                            @foreach ($formItems as $index => $item)
-                                                <tr data-purchase-item-row>
-                                                    <td>
-                                                        <input type="number" name="items[{{ $index }}][cantidad]" class="supply-input" min="1" value="{{ old('items.'.$index.'.cantidad', $item['cantidad'] ?? 1) }}" required>
-                                                    </td>
-                                                    @include('modules.purchase-requests.partials.item-foto-field', [
-                                                        'index' => $index,
-                                                        'existingFotoPath' => $item['existing_foto_path'] ?? null,
-                                                    ])
-                                                    <td>
-                                                        <input type="text" name="items[{{ $index }}][descripcion]" class="supply-input" value="{{ old('items.'.$index.'.descripcion', $item['descripcion'] ?? '') }}" placeholder="Descripcion del producto" required>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="items[{{ $index }}][referencia]" class="supply-input" value="{{ old('items.'.$index.'.referencia', $item['referencia'] ?? '') }}" placeholder="Marca-Modelo / codigo" required>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="items[{{ $index }}][utilizacion]" class="supply-input" value="{{ old('items.'.$index.'.utilizacion', $item['utilizacion'] ?? '') }}" placeholder="para quién / qué uso" required>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="items[{{ $index }}][ubicacion]" class="supply-input" value="{{ old('items.'.$index.'.ubicacion', $item['ubicacion'] ?? '') }}" placeholder="Ubicacion / sede" required>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button
-                                                            type="button"
-                                                            class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
-                                                            data-remove-item
-                                                            title="Quitar producto"
-                                                            aria-label="Quitar producto"
-                                                        >
-                                                            <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                <div id="purchase-items-container" class="purchase-item-cards">
+                                    @foreach ($formItems as $index => $item)
+                                        @include('modules.purchase-requests.partials.item-card', [
+                                            'index' => $index,
+                                            'item' => $item,
+                                        ])
+                                    @endforeach
                                 </div>
-                                <p class="form-hint">La foto es opcional en cada linea. Formatos: JPG, PNG, WEBP o GIF (max. 5 MB).</p>
+                                <p class="form-hint">La foto es opcional en cada línea. Formatos: JPG, PNG, WEBP o GIF (máx. 5 MB).</p>
                                 <x-input-error :messages="$errors->get('items')" />
                             </section>
 
@@ -287,7 +259,7 @@
                                     <div>
                                         <h3 class="pur-req-form__section-title">Adjuntos</h3>
                                         <p class="pur-req-form__section-desc">
-                                            Documentos de soporte. Opcional. Maximo {{ $attachmentMaxFiles }} archivos, {{ $attachmentMaxMb }} MB cada uno.
+                                            Documentos de soporte. Opcional. Máximo {{ $attachmentMaxFiles }} archivos, {{ $attachmentMaxMb }} MB cada uno.
                                             Quitar un archivo de la lista lo elimina al reenviar.
                                         </p>
                                     </div>

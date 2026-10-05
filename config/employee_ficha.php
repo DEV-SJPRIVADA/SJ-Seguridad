@@ -376,8 +376,9 @@ return [
     ],
 
     /**
-     * Placeholders soportados en plantillas Word ([NOMBRE], [CEDULA], ...).
-     * Organizados por categoria para referencia en la UI Plantillas Word.
+     * Placeholders soportados en plantillas Word (${NOMBRE_COMPLETO}, ${DOCUMENTO}, ...).
+     * Misma lista en UI Plantillas Word; LetterVariableBuilder las rellena al generar
+     * (desvinculacion, contratacion y futuros tipos).
      *
      * @var array<string, array<string, string>>
      */

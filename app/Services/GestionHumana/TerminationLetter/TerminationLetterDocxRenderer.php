@@ -20,10 +20,19 @@ class TerminationLetterDocxRenderer
         }
 
         $mergedPath = $this->mergeSplitRuns($templateAbsolutePath);
+        $processor = null;
 
         try {
             $processor = new TemplateProcessor($mergedPath);
 
+            // Canónico: ${CLAVE} (PhpWord guarda los delimitadores como static).
+            $processor->setMacroChars('${', '}');
+            foreach ($variables as $key => $value) {
+                $processor->setValue($key, $value);
+            }
+
+            // Fallback temporal: plantillas legacy con [CLAVE].
+            $processor->setMacroChars('[', ']');
             foreach ($variables as $key => $value) {
                 $processor->setValue($key, $value);
             }
@@ -35,6 +44,10 @@ class TerminationLetterDocxRenderer
 
             $processor->saveAs($outputAbsolutePath);
         } finally {
+            // Restaurar delimitadores canónicos para no contaminar otras generaciones/tests.
+            if ($processor !== null) {
+                $processor->setMacroChars('${', '}');
+            }
             @unlink($mergedPath);
         }
     }
@@ -131,7 +144,7 @@ class TerminationLetterDocxRenderer
             $fullText .= html_entity_decode($tContent, ENT_XML1 | ENT_QUOTES, 'UTF-8');
         }
 
-        if (! preg_match('/\$\{/', $fullText)) {
+        if (! preg_match('/\$\{|\[[A-Z0-9_]+/', $fullText)) {
             return $paragraphXml;
         }
 
@@ -143,8 +156,14 @@ class TerminationLetterDocxRenderer
 
             if (preg_match('/\$\{([^}]*)$/', $decoded, $openMatch)) {
                 $currentPlaceholder = $openMatch[0];
-            } elseif ($currentPlaceholder !== '' && preg_match('/^[^$]*\}/', $decoded, $closeMatch)) {
+            } elseif (preg_match('/\[([A-Z0-9_]*)$/', $decoded, $openBracket)) {
+                $currentPlaceholder = $openBracket[0];
+            } elseif ($currentPlaceholder !== '' && str_starts_with($currentPlaceholder, '${') && preg_match('/^[^$]*\}/', $decoded, $closeMatch)) {
                 $currentPlaceholder .= $closeMatch[0];
+                $hasSplit = true;
+                $currentPlaceholder = '';
+            } elseif ($currentPlaceholder !== '' && str_starts_with($currentPlaceholder, '[') && preg_match('/^[^\[]*\]/', $decoded, $closeBracket)) {
+                $currentPlaceholder .= $closeBracket[0];
                 $hasSplit = true;
                 $currentPlaceholder = '';
             } elseif ($currentPlaceholder !== '') {

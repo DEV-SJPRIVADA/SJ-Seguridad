@@ -181,12 +181,12 @@ Servicio periodos: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodServ
 - **Descargar:** sirve el ultimo archivo persistido; 404 si no hay path o archivo ausente; **no** regenera. No hay boton **Regenerar** aparte (volver a Generar abre el modal y sobrescribe).
 - **Admin de plantillas:** tablero sidebar **Plantillas Word** (permisos `plantillas_word.*` + board). **Catalogos → Causal** ya **no** administra plantillas; rutas legacy de upload/download/delete → 404.
 - Plantillas: tabla `termination_letter_document_templates` con FK `word_document_type_id` (sin amarre a causal/packs). Contenido legacy RENUNCIA **no** migrado — hay que re-subir. Ver [`plantillas-word.md`](plantillas-word.md).
-- Placeholders en corchetes: `[NOMBRE]`, `[CEDULA]`, `[FECHA_TERMINACION]`, etc. — `termination_letter_placeholders`. Firmante: `termination_letter_signatory` (env `FICHA_LETTER_SIGNATORY_*`). Sin cambio de motor vs FEAT-027.
-- Dependencia: `phpoffice/phpword` (`TemplateProcessor` con `setMacroChars('[', ']')`).
-- Servicios: `App\Services\GestionHumana\TerminationLetter\*` (`TerminationLetterPackGeneratorService` por IDs, sin gate causal).
+- Placeholders canónicos: `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc. — catálogo `letter_placeholders` (UI Plantillas Word). Motor: `LetterVariableBuilder` + `TerminationLetterDocxRenderer` (también fallback temporal `[CLAVE]`). Firmante: `termination_letter_signatory` (env `FICHA_LETTER_SIGNATORY_*`).
+- Dependencia: `phpoffice/phpword` (`TemplateProcessor`, macros `${}`).
+- Servicios: `App\Services\GestionHumana\TerminationLetter\*` + `App\Services\GestionHumana\Letter\LetterVariableBuilder` (compartido con contratación y futuros tipos).
 - Controlador: `TerminationLetterController` — `templates` (JSON), `generate` (body `template_ids`), `download`.
 - Rutas: `GET .../periodos/{period}/cartas/plantillas`, `POST .../cartas/generar`, `GET .../cartas/descargar` — `ficha_empleados.terminate`.
-- UI: `termination-letter-actions.blade.php` + modal `termination-letter-generate-modal.blade.php` (ficha e historial de vinculos).
+- UI: `termination-letter-actions.blade.php` (`iconOnly` en toolbar de ficha junto a Historial; `compact` iconos en modal historial) + modal `termination-letter-generate-modal.blade.php`.
 - Audit: `termination_letter_pack` (generate/download, metadata `template_ids` / `output_type`). Mutaciones de plantillas/tipos: audit en modulo Plantillas Word.
 - Tests: `tests/Feature/GestionHumana/TerminationLetterPackTest.php`.
 
@@ -212,7 +212,7 @@ Siete secciones: Identificación, Contacto, Contrato y nómina, Centros, Segurid
 
 ### Campos obligatorios (store + update)
 
-Cédula, nombre (create), **lugar de nacimiento** (`birth_place`, máx. 255), sexo, fecha ingreso, cargo (`position_code`), salario, centro de costo (`cost_center_code`), EPS, AFP, caja compensación (`payroll_extra.ccf_code`), forma de pago, banco, tipo cuenta, número cuenta. Columna BD nullable (legados); el formulario UI (alta, `?desde=` y edición) lo exige. Fuera de alcance: import/export SJ, plantilla masivos y Selección. Variable Word `[LUGAR_NACIMIENTO]` vía `LetterVariableBuilder` + `config/employee_ficha.php` → `letter_placeholders`.
+Cédula, nombre (create), **lugar de nacimiento** (`birth_place`, máx. 255), sexo, fecha ingreso, cargo (`position_code`), salario, centro de costo (`cost_center_code`), EPS, AFP, caja compensación (`payroll_extra.ccf_code`), forma de pago, banco, tipo cuenta, número cuenta. Columna BD nullable (legados); el formulario UI (alta, `?desde=` y edición) lo exige. Fuera de alcance: import/export SJ, plantilla masivos y Selección. Variable Word `${LUGAR_NACIMIENTO}` vía `LetterVariableBuilder` + `config/employee_ficha.php` → `letter_placeholders`.
 
 Opcional en formulario: **fecha desvinculación** (`termination_date`) — visible junto a fecha ingreso; al guardar se sincroniza `employment_status` (misma regla que el import: fecha ≤ hoy → desvinculado). No cierra periodo ni crea seguimiento; la desvinculación formal sigue en el modal **Registrar desvinculación**.
 
