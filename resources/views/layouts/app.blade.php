@@ -971,6 +971,58 @@
                     track.addEventListener('scroll', sync, { passive: true });
                     window.addEventListener('resize', sync);
 
+                    // Arrastre horizontal (mouse/stylus); en touch se usa el pan nativo.
+                    var dragPointerId = null;
+                    var dragStartX = 0;
+                    var dragStartScroll = 0;
+                    var dragMoved = false;
+
+                    track.addEventListener('pointerdown', function(e) {
+                        if (e.pointerType === 'touch' || e.button !== 0) {
+                            return;
+                        }
+                        dragPointerId = e.pointerId;
+                        dragStartX = e.clientX;
+                        dragStartScroll = track.scrollLeft;
+                        dragMoved = false;
+                        track.classList.add('is-dragging');
+                        if (typeof track.setPointerCapture === 'function') {
+                            track.setPointerCapture(e.pointerId);
+                        }
+                    });
+
+                    track.addEventListener('pointermove', function(e) {
+                        if (dragPointerId !== e.pointerId) {
+                            return;
+                        }
+                        var dx = e.clientX - dragStartX;
+                        if (Math.abs(dx) > 4) {
+                            dragMoved = true;
+                        }
+                        track.scrollLeft = dragStartScroll - dx;
+                    });
+
+                    var endDrag = function(e) {
+                        if (dragPointerId !== e.pointerId) {
+                            return;
+                        }
+                        dragPointerId = null;
+                        track.classList.remove('is-dragging');
+                    };
+
+                    track.addEventListener('pointerup', endDrag);
+                    track.addEventListener('pointercancel', endDrag);
+
+                    // Evita navegar al soltar tras un arrastre.
+                    track.addEventListener('click', function(e) {
+                        if (! dragMoved) {
+                            return;
+                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dragMoved = false;
+                    }, true);
+
                     if (typeof ResizeObserver === 'function') {
                         new ResizeObserver(sync).observe(track);
                     }

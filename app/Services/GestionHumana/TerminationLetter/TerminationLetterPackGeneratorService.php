@@ -5,6 +5,7 @@ namespace App\Services\GestionHumana\TerminationLetter;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\TerminationLetterDocumentTemplate;
+use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -16,7 +17,7 @@ class TerminationLetterPackGeneratorService
 {
     public function __construct(
         private readonly TerminationLetterTemplateManager $templateManager,
-        private readonly TerminationLetterVariableBuilder $variableBuilder,
+        private readonly LetterVariableBuilder $variableBuilder,
         private readonly TerminationLetterDocxRenderer $docxRenderer,
     ) {}
 
@@ -41,7 +42,8 @@ class TerminationLetterPackGeneratorService
         $normalizedIds = $this->normalizeTemplateIds($templateIds);
         $templates = $this->resolveTemplates($normalizedIds);
 
-        $entry->loadMissing('profile');
+        // Mismo builder/catálogo que Plantillas Word y contratación (${CLAVE}).
+        $entry->loadMissing('profile', 'requisition');
         $variables = $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId);
 
         $workDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ficha-letters-'.Str::uuid()->toString();

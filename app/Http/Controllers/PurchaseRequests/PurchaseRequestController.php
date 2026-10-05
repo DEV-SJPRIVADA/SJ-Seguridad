@@ -134,6 +134,7 @@ class PurchaseRequestController extends Controller
                 'proyecto_nuevo' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['proyecto_nuevo'] ?? false) : null,
                 'razon_social' => $validated['solicitud_para'] === 'Cliente' ? ($validated['razon_social'] ?? null) : null,
                 'asume_cliente' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['asume_cliente'] ?? false) : null,
+                'reinversion' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['reinversion'] ?? false) : null,
                 'estado' => PurchaseRequest::ESTADO_PENDIENTE,
             ]);
 

@@ -23,7 +23,7 @@ Aplica al tablero **Plantillas Word** del area **Gestion Humana** (menu lateral)
 | Termino | Significado |
 | --- | --- |
 | Tipo de documento | Categoria del catalogo (por ejemplo **Desvinculacion**) que clasifica las plantillas. |
-| Plantilla Word | Archivo `.docx` con variables entre corchetes (ej. `[NOMBRE]`, `[CEDULA]`) que el sistema rellena al generar una carta. |
+| Plantilla Word | Archivo `.docx` con variables `${CLAVE}` (ej. `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`) que el sistema rellena al generar una carta. |
 | Reemplazar plantilla | Cambiar solo el archivo Word; la etiqueta y el tipo se mantienen. |
 | Plantilla maestra | El archivo original guardado en el tablero (no la carta ya generada para un empleado). |
 
@@ -56,7 +56,7 @@ El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas
 
 1. En el bloque **Plantillas**, indique la **etiqueta** (nombre visible), elija el **tipo** (activo) y seleccione un archivo **.docx**.
 2. Confirme. La plantilla aparece en la lista con su tipo.
-3. Para cartas de retiro, use el tipo **Desvinculacion** y variables en corchetes (`[NOMBRE]`, `[CEDULA]`, `[FECHA_TERMINACION]`, `[LUGAR_NACIMIENTO]`, etc.; la pantalla muestra la lista de apoyo).
+3. Para cartas de retiro, use el tipo **Desvinculacion** y variables `${…}` del listado de apoyo (copiar/pegar: `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc.).
 
 ### Filtrar plantillas
 

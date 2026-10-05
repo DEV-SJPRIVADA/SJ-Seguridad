@@ -104,7 +104,7 @@ Config: `board_canonical_areas.solicitudes_compra` en `config/access.php`. Servi
 
 ### `purchase_requests`
 
-Folio visible: `numero_solicitud` (4 digitos, unico). Campos clave: `area_key`, `solicitud_para`, `urgente`, `aprobador_id`, `estado`, `estado_compras`, `fecha_aprobacion`, `comentarios_director`, `comentarios_compras`, `procesado_compras_at`, `procesado_compras_por`. Sin descripcion/justificacion de cabecera (retirados; el detalle vive en lineas).
+Folio visible: `numero_solicitud` (4 digitos, unico). Campos clave: `area_key`, `solicitud_para`, `urgente`, `aprobador_id`, `estado`, `estado_compras`, `fecha_aprobacion`, `comentarios_director`, `comentarios_compras`, `procesado_compras_at`, `procesado_compras_por`. Si `solicitud_para=Cliente`: `razon_social`, `proyecto_nuevo`, `asume_cliente`, `reinversion` (Si/No). Sin descripcion/justificacion de cabecera (retirados; el detalle vive en lineas).
 
 ### `purchase_request_items`
 
@@ -153,7 +153,7 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 
 Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
 
-UI create/show/edit/procesar (compra y suministro): layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*` en `resources/css/app.css`. Detalle y procesamiento: volver contextual e iconos chrome (`.req-manage-filters__icon-btn`). Reabrir (edit) alineado a Nueva solicitud. `process-supply`: costeo por linea + completar.
+UI create/show/edit/procesar (compra y suministro): layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*` en `resources/css/app.css`. Detalle y procesamiento: volver contextual e iconos chrome (`.req-manage-filters__icon-btn`). Reabrir (edit) alineado a Nueva solicitud. `process-supply`: costeo por linea + completar. **Productos (create/edit):** tarjetas `.purchase-item-card` (Descripcion a ancho completo + grilla Referencia/Utilizacion/Ubicacion/Cantidad+Foto); JS `purchase-request-form.js`.
 Listados Mis solicitudes / Bandeja: `purchase-requests-page--list` con intro, resumen de conteo (bandeja) y panel de listado operativo; filtros bandeja conservan IDs y auto-submit.
 
 Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
@@ -291,12 +291,14 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-02 | UI productos: foto antes de descripción; descripción alta; referencia ancha; utilización/ubicación/cantidad en fila; cliente radios en 3 cols; ortografía |
 | 2026-10-02 | UI procesar suministro: layout pur-req e iconos chrome (alineado a procesar compra) |
 | 2026-10-02 | UI procesar/reabrir: layout pur-req (secciones + aside) e iconos chrome; mismo patrón que Nueva solicitud |
 | 2026-10-02 | Bandeja: acciones Ver detalle / Procesar y Limpiar filtros como icon-only |
 | 2026-07-31 | Modulo inicial: CRUD, bandeja, correos, FO-AD-44, import legacy |
 | 2026-07-31 | Autorizacion in-app (correo solo notifica); approval-form en show |
 | 2026-08-03 | Hogares canonicos sidebar (`SidebarVisibilityService`); permisos director en seeder/migracion |
+| 2026-10-02 | Campo cliente `reinversion` (Si/No) junto a `asume_cliente` en create/edit/show/PDF; migracion aditiva |
 | 2026-08-03 | Urgente opcional al crear; Mis solicitudes por usuario; registro de correos en detalle |
 | 2026-08-03 | PDF solicitud alineado al detalle (metadatos, estilo FO-AD-44); sin registro de correos |
 | 2026-08-03 | Dashboard Compras (`compras.dashboard`): KPIs bandeja, tendencias y graficos ApexCharts |

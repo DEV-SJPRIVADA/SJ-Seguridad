@@ -97,32 +97,24 @@ Config estable: `config/employee_ficha.php` â†’ `word_document_type_codes.d
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager` â€” paths bajo `ficha-empleados/letter-templates/{typeId}/`, CRUD archivo en disco `local`.
 - Generacion de cartas (Ficha): `TerminationLetterPackGeneratorService` â€” por IDs, 1â†’docx / Nâ†’zip, sin gate por causal; ver doc Ficha.
 - Audit: `EmployeeFichaAuditLogService` â€” `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete).
-- `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — procesamiento XML directo del `.docx` via `ZipArchive` + `DOMDocument`. **No usa TemplateProcessor de PhpWord.** Para cada parrafo `<w:p>` del XML (document, headers, footers, footnotes), concatena el texto de todos los `<w:r><w:t>`, busca/emplaza placeholders en el texto concatenado, y escribe el resultado en un unico `<w:t>` del primer run. Esto maneja correctamente los **placeholders fragmentados** por Word (split-runs).
-- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder generico (~90 variables) que extrae datos de `EmployeeFichaProfile`, `EmployeeFichaEmploymentPeriod`, `PersonalRequisitionFichaEntry` y `PersonalRequisition`. Incluye `[LUGAR_NACIMIENTO]` desde `employee_ficha_profiles.birth_place` (lista de apoyo en UI: `config/employee_ficha.php` → `letter_placeholders`).
+- `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — `TemplateProcessor` PhpWord con macros canónicas `${CLAVE}` (+ fallback temporal `[CLAVE]`); previo merge de split-runs en XML.
+- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder único (~90 variables) para desvinculación, contratación y tipos futuros. Catálogo UI: `config/employee_ficha.php` → `letter_placeholders`.
+
+### Cómo agregar una variable nueva (checklist)
+
+No hace falta tocar controladores de generación (`TerminationLetterController`, etc.). Pasos:
+
+1. **Dato en sistema:** si el valor aún no existe, agregar campo (migración/modelo/formulario ficha) y asegurar que se guarda.
+2. **UI (copia usuario):** registrar la clave en `config/employee_ficha.php` → `letter_placeholders` (categoría + descripción). Aparece como `${CLAVE}` en Plantillas Word.
+3. **Valor al generar:** mapear la clave en `App\Services\GestionHumana\Letter\LetterVariableBuilder::build()` desde perfil, periodo, entrada ficha o requisición.
+4. **Probar:** plantilla con `${CLAVE}` → generar carta → el `.docx` no debe dejar `${CLAVE}` literal (salvo que el dato esté vacío).
+5. **Docs:** actualizar esta sección / `docs/modules/ficha-empleados.md` si el campo es de negocio visible.
+
+**No requerido:** cambios en `PlantillasWordController` (ya lee el config), ni en pack generators (ya usan `LetterVariableBuilder`).
 
 ### DocxRenderer: manejo de placeholders fragmentados (split-runs)
 
-Microsoft Word puede dividir un placeholder como `[NOMBRE_COMPLETO]` en multiples nodos `<w:r><w:t>` al guardar el `.docx`:
-
-```xml
-<w:r><w:t>[NOM</w:t></w:r>
-<w:r><w:t>BR</w:t></w:r>
-<w:r><w:t>E_COMPLETO]</w:t></w:r>
-```
-
-`TemplateProcessor` de PhpWord busca el texto completo dentro de cada `<w:t>` individualmente, por lo que no encuentra el placeholder fragmentado. El `TerminationLetterDocxRenderer` resuelve esto:
-
-1. Abre el `.docx` directamente como `ZipArchive`.
-2. Para cada archivo XML (`word/document.xml`, headers, footers, footnotes), carga el `DOMDocument`.
-3. Para cada `<w:p>`, concatena el texto plano de **todos** sus `<w:r><w:t>`.
-4. Si el texto concatenado contiene placeholders, los reemplaza.
-5. Escribe el resultado en el `<w:t>` del primer run (preservando formato) y vacia los demas.
-6. Guarda el XML modificado de vuelta en el zip.
-
-**Implicaciones:**
-- Si un placeholder tiene formato variado (ej. parte en **negrita** y parte normal), el resultado hereda el formato del primer run.
-- Los headers/footers tambien se procesan (hasta 9 headers y 9 footers).
-- No depende del filesystem real del template; funciona con `Storage::fake()` en tests.
+Microsoft Word puede dividir un placeholder como `${NOMBRE_COMPLETO}` en múltiples nodos `<w:t>`. El renderer concatena runs por párrafo **antes** de `TemplateProcessor` para que el reemplazo encuentre la macro completa.
 
 ## Reglas de negocio
 
@@ -170,12 +162,12 @@ No aplica.
 
 Para evitar problemas con placeholders no reemplazados:
 
-1. **Escribir placeholders en un solo paso:** No copiar/pegar parcialmente. Seleccionar el placeholder completo, copiar y pegar de una sola vez en la posicion deseada.
-2. **Evitar formato mixto dentro del placeholder:** No aplicar negrita/color/subrayado a partes del placeholder. El formato se aplica al placeholder completo.
-3. **No usar estilos de parrafo que Word transforme:** Algunos estilos de lista o encabezado fuerzan saltos de run. Usar estilo "Normal" o un estilo personalizado simple.
-4. **Re-guardar como .docx despues de editar:** Despues de modificar la plantilla, ir a Archivo > Guardar como > y seleccionar formato `.docx` (no `.doc`).
-5. **Verificar con texto plano:** Abrir el `.docx` con Bloc de notas y buscar los `[PLACEHOLDER]`. Si aparecen completos, Word no los fragmentara.
-6. **Regla general:** Si al abrir el `.docx` generado con el Bloc de notas los placeholders aparecen completos (sin espacios raros), el render los reemplazara correctamente.
+1. **Usar el formato canónico del listado:** `${CLAVE}` (copiar desde la UI Plantillas Word). Ejemplo: `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`.
+2. **Escribir placeholders en un solo paso:** No copiar/pegar parcialmente. Seleccionar el placeholder completo, copiar y pegar de una sola vez.
+3. **Evitar formato mixto dentro del placeholder:** No aplicar negrita/color/subrayado a partes del placeholder.
+4. **No usar estilos de parrafo que Word transforme:** Algunos estilos de lista o encabezado fuerzan saltos de run. Usar estilo "Normal".
+5. **Re-guardar como .docx despues de editar:** Archivo > Guardar como > `.docx` (no `.doc`).
+6. **Mismo motor para todos los tipos:** desvinculacion, contratacion y tipos futuros usan el mismo catálogo; si el dato no existe en la ficha, la variable queda vacía.
 
 ## Tests
 

@@ -8,8 +8,8 @@
                         <x-lucide-history width="18" height="18" aria-hidden="true" />
                     </span>
                     <div>
-                        <h3 class="ficha-empleados-masivos-modal__title">Historial de vinculos</h3>
-                        <p class="ficha-empleados-masivos-modal__lead">Contratos anteriores y vinculo actual del empleado.</p>
+                        <h3 class="ficha-empleados-masivos-modal__title">Historial de vínculos</h3>
+                        <p class="ficha-empleados-masivos-modal__lead">Contratos anteriores y vínculo actual del empleado.</p>
                     </div>
                 </div>
                 <button
@@ -28,12 +28,12 @@
                         <tr>
                             <th>#</th>
                             <th>Estado</th>
-                            <th>Requisicion</th>
+                            <th>Requisición</th>
                             <th>Ingreso</th>
                             <th>Cargo</th>
                             <th>Cliente</th>
-                            <th>Ultimo dia</th>
-                            <th>Desvinculacion</th>
+                            <th>Último día</th>
+                            <th>Desvinculación</th>
                             <th>Causal</th>
                             <th>Recontratable</th>
                             @if ($canGenerateLetters ?? false)
@@ -61,7 +61,7 @@
                                     @if ($period->isActive())
                                         —
                                     @elseif ($period->is_rehireable)
-                                        Si
+                                        Sí
                                     @else
                                         No
                                     @endif

@@ -132,6 +132,19 @@
                             </button>
                         @endif
 
+                        {{-- Cartas de desvinculación: junto a Historial --}}
+                        @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
+                            'period' => $letterPeriod ?? null,
+                            'canGenerateLetters' => $canGenerateLetters ?? false,
+                            'iconOnly' => true,
+                        ])
+
+                        @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-actions', [
+                            'period' => $activePeriod,
+                            'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
+                            'iconOnly' => true,
+                        ])
+
                         @if ($canTerminate ?? false)
                             <button
                                 type="button"
@@ -143,12 +156,6 @@
                                 <x-lucide-user-x width="18" height="18" aria-hidden="true" />
                             </button>
                         @endif
-
-                        @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-actions', [
-                            'period' => $activePeriod,
-                            'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
-                            'iconOnly' => true,
-                        ])
 
                         <a
                             href="{{ route('gestion-humana.ficha-empleados.employees.index') }}"
@@ -260,15 +267,6 @@
                     </div>
                 </div>
             </form>
-
-            @if ($canGenerateLetters ?? false)
-                <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters">
-                    @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
-                        'period' => $letterPeriod,
-                        'canGenerateLetters' => $canGenerateLetters,
-                    ])
-                </div>
-            @endif
 
             @include('areas.gestion_humana.ficha-empleados.partials.terminate-modal', [
                 'entry' => $entry,

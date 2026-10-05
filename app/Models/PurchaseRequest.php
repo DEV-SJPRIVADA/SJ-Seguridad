@@ -34,6 +34,7 @@ class PurchaseRequest extends Model
         'proyecto_nuevo',
         'razon_social',
         'asume_cliente',
+        'reinversion',
         'estado',
         'estado_compras',
         'fecha_aprobacion',
@@ -52,6 +53,7 @@ class PurchaseRequest extends Model
             'urgente' => 'boolean',
             'proyecto_nuevo' => 'boolean',
             'asume_cliente' => 'boolean',
+            'reinversion' => 'boolean',
         ];
     }
 

@@ -60,7 +60,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 1. Entre a **Solicitudes de compra** en su area → pestaña **Nueva solicitud**. El formulario esta en secciones (datos generales, cliente si aplica, productos y adjuntos); use la guia lateral como checklist.
 2. Complete **Area**, **Fecha**, **Solicitud para** (Interno o Cliente) y seleccione el **Director aprobador**.
 3. Marque **Urgente** si aplica.
-4. Si eligio **Cliente**, complete razon social, proyecto nuevo y si asume el cliente.
+4. Si eligio **Cliente**, complete razon social, proyecto nuevo, si asume el cliente y **Reinversión** (Si/No).
 5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional de esa linea.
    - Opcional **carga masiva**: **Descargar plantilla** (Excel en blanco), llenela desde la fila 3 y use **Cargar Excel** para precargar la tabla. Luego puede editar filas, agregar fotos y enviar. La foto no va en el Excel.
 6. En **Adjuntos** (despues de los productos) puede, si lo desea, seleccionar **varios archivos a la vez** para toda la solicitud: cotizacion, orden de compra, evidencia u otro soporte. Es opcional: puede enviar la solicitud sin ningun archivo. Hasta 5 archivos, 10 MB cada uno. Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
@@ -131,6 +131,9 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.16 | 2026-10-02 | Compras | Datos del cliente: campo **Reinversión** (Si/No) al lado de Asume el cliente. |
+| 1.17 | 2026-10-02 | UI | Productos: foto antes de descripción; layout de campos; radios de cliente en una fila; ortografía. |
+| 1.16 | 2026-10-02 | UI | Nueva/Reabrir solicitud: productos en tarjetas con más espacio para Descripción, Referencia, Utilización y Ubicación. |
 | 1.15 | 2026-10-02 | UI | Procesar suministro (bandeja): diseño alineado a procesar compra; acciones con iconos. |
 | 1.14 | 2026-10-02 | UI | Procesar (bandeja) y Reabrir (mis solicitudes): diseño alineado a Nueva solicitud; acciones con iconos. |
 | 1.13 | 2026-10-02 | UI | Bandeja compras: Ver detalle, Procesar y Limpiar filtros pasan a iconos. |

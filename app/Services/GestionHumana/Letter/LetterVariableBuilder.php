@@ -9,6 +9,12 @@ use App\Models\PersonalRequisitionFichaEntry;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
+/**
+ * Builder único de variables Word (${CLAVE}) para desvinculación, contratación y tipos futuros.
+ *
+ * Para agregar una variable nueva: (1) dato en ficha/BD si falta, (2) `letter_placeholders` en
+ * config/employee_ficha.php, (3) mapear aquí en build(). No tocar controladores de generación.
+ */
 class LetterVariableBuilder
 {
     private const MONTHS = [
@@ -156,6 +162,80 @@ class LetterVariableBuilder
             $variables['RECLUTADOR'] = (string) $requisition->displayRecruiterName();
             $variables['FECHA_CONTRATACION_REQUISICION'] = $this->formatLongDate($requisition->hiring_date);
             $variables['ESTADO_REQUISICION'] = (string) $requisition->status;
+        }
+
+        // Garantizar claves del catálogo UI aunque falte perfil/requisición (valor vacío).
+        foreach ($this->catalogKeys() as $key) {
+            if (! array_key_exists($key, $variables)) {
+                $variables[$key] = '';
+            }
+        }
+
+        return $this->withLegacyAliases($variables, $entry, $period, $profile);
+    }
+
+    /**
+     * Claves publicadas en Plantillas Word (`config/employee_ficha.letter_placeholders`).
+     *
+     * @return list<string>
+     */
+    private function catalogKeys(): array
+    {
+        $keys = [];
+        foreach (config('employee_ficha.letter_placeholders', []) as $group) {
+            if (! is_array($group)) {
+                continue;
+            }
+            foreach (array_keys($group) as $key) {
+                $keys[] = (string) $key;
+            }
+        }
+
+        return array_values(array_unique($keys));
+    }
+
+    /**
+     * Aliases cortos de plantillas legacy de desvinculación.
+     *
+     * @param  array<string, string>  $variables
+     * @return array<string, string>
+     */
+    private function withLegacyAliases(
+        array $variables,
+        PersonalRequisitionFichaEntry $entry,
+        EmployeeFichaEmploymentPeriod $period,
+        ?EmployeeFichaProfile $profile,
+    ): array {
+        $nombre = $variables['NOMBRE_COMPLETO']
+            ?: $variables['NOMBRE_COMPLETO_ENTRADA']
+            ?: (string) $entry->hired_full_name;
+
+        $ciudad = $variables['CIUDAD_RESIDENCIA']
+            ?: (string) ($period->work_center_name ?? '')
+            ?: (string) ($profile?->residence_city_name ?? '');
+
+        $tipoContrato = $variables['TIPO_CONTRATO_NOMBRE_VINCULO']
+            ?: $variables['TIPO_CONTRATO_PERFIL']
+            ?: (string) ($period->contract_type_name ?? '');
+
+        $salario = $variables['SALARIO'] !== ''
+            ? $variables['SALARIO']
+            : ($variables['SALARIO_VINCULO'] ?? '');
+
+        $variables['NOMBRE'] = $nombre;
+        $variables['CIUDAD'] = $ciudad;
+        $variables['TIPO_CONTRATO'] = $tipoContrato;
+
+        if (($variables['SALARIO'] ?? '') === '' && $salario !== '') {
+            $variables['SALARIO'] = $salario;
+        }
+
+        if (($variables['DOCUMENTO'] ?? '') === '') {
+            $variables['DOCUMENTO'] = $variables['CEDULA'] ?: (string) $entry->hired_document;
+        }
+
+        if (($variables['CEDULA'] ?? '') === '') {
+            $variables['CEDULA'] = $variables['DOCUMENTO'] ?: (string) $entry->hired_document;
         }
 
         return $variables;
