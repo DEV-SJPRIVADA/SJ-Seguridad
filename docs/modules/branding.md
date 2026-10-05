@@ -64,6 +64,7 @@ Los tres niveles de navegacion autenticada usan **el mismo look de pill**:
 
 - Estilos compartidos en `resources/css/app.css` (selectores `.sidebar-link, .module-tab`).
 - Padding entre botones y contenedor de franja: **`0.2rem`**.
+- **Sidebar Procesos (desktop):** scroll de áreas oculto (sin barra visible); botón pill con chevrones (`chevrons-left` / `chevrons-right`) para **colapsar/mostrar** la barra (preferencia en `localStorage` `sj.sidebarCollapsed`). En ≤1024px sigue el select móvil (sin colapso).
 - **Tableros del area:** una sola fila (`.module-tabs--scroll`) con scroll horizontal oculto (sin barra visible); flechas laterales (`.module-tabs-scroller`) en desktop y móvil cuando hay overflow; swipe nativo en el track (sin capturar pointer, para no romper clics). Sin wrap a segunda fila.
 - No crear otra familia visual para tableros/subnavs; reutilizar estas clases.
 - Regla Cursor: [`.cursor/rules/nav-chrome-ui.mdc`](../../.cursor/rules/nav-chrome-ui.mdc).

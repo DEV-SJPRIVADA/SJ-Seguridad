@@ -484,7 +484,101 @@ class EmployeeArchiveTest extends TestCase
             ->get(route('gestion-humana.archivo.consultation-history.index'))
             ->assertOk()
             ->assertSee('Area Juridica')
-            ->assertSee('CONSULTA MATCH');
+            ->assertSee('CONSULTA MATCH')
+            ->assertSee((string) now()->month, false);
+    }
+
+    public function test_archivo_consultation_history_defaults_to_current_month(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $consultation = EmployeeArchiveConsultation::query()->create([
+            'user_id' => $viewer->id,
+            'document_numbers' => ['2020202020'],
+            'consultation_types' => ['juridico'],
+            'documents_requested' => 1,
+            'documents_matched' => 1,
+            'delivered_to' => 'Gerencia',
+        ]);
+
+        $otherMonth = now()->month === 1 ? 2 : 1;
+
+        EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '2020202020',
+            'full_name' => 'MES ACTUAL ITEM',
+            'concept' => 'Juridico',
+            'delivered_to' => 'Gerencia',
+            'received' => false,
+            'week_of_month' => 1,
+            'month_number' => now()->month,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel(now()->month),
+        ]);
+
+        EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '3030303030',
+            'full_name' => 'OTRO MES ITEM',
+            'concept' => 'Juridico',
+            'delivered_to' => 'Gerencia',
+            'received' => false,
+            'week_of_month' => 1,
+            'month_number' => $otherMonth,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel($otherMonth),
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.index'))
+            ->assertOk()
+            ->assertSee('MES ACTUAL ITEM')
+            ->assertDontSee('OTRO MES ITEM')
+            ->assertViewHas('filters', fn (array $filters): bool => (int) $filters['month'] === (int) now()->month);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.index', ['month' => '']))
+            ->assertOk()
+            ->assertSee('MES ACTUAL ITEM')
+            ->assertSee('OTRO MES ITEM');
+    }
+
+    public function test_archivo_consultation_history_export_excel(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $consultation = EmployeeArchiveConsultation::query()->create([
+            'user_id' => $viewer->id,
+            'document_numbers' => ['4040404040'],
+            'consultation_types' => ['juridico'],
+            'documents_requested' => 1,
+            'documents_matched' => 1,
+            'delivered_to' => 'Archivo',
+        ]);
+
+        EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '4040404040',
+            'full_name' => 'EXPORT ROW',
+            'concept' => 'Juridico',
+            'delivered_to' => 'Archivo',
+            'received' => true,
+            'observation' => 'Listo',
+            'week_of_month' => 2,
+            'month_number' => now()->month,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel(now()->month),
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.export', [
+                'month' => now()->month,
+            ]));
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            (string) $response->headers->get('content-type'),
+        );
     }
 
     public function test_archivo_consultation_history_item_can_be_updated(): void
@@ -518,8 +612,11 @@ class EmployeeArchiveTest extends TestCase
             ->patch(route('gestion-humana.archivo.consultation-history.update', $item), [
                 'received' => '1',
                 'observation' => 'Entregado en sobre manila',
+                'month' => '8',
             ])
-            ->assertRedirect(route('gestion-humana.archivo.consultation-history.index'));
+            ->assertRedirect(route('gestion-humana.archivo.consultation-history.index', [
+                'month' => 8,
+            ]));
 
         $this->assertDatabaseHas('employee_archive_consultation_items', [
             'id' => $item->id,

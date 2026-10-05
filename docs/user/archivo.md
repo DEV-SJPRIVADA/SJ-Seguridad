@@ -37,10 +37,11 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 
 ### Seguimiento en Historial de consultas
 
-1. Abra la pestaña **Historial de consultas**.
-2. Revise columnas Fecha, Concepto, Cedula, Nombre, Estante, Caja, Entregada a, Semana y Mes.
+1. Abra la pestaña **Historial de consultas**. Por defecto se muestra el **mes actual**; puede cambiar el mes o elegir **Todos los meses**.
+2. Revise columnas Fecha, Concepto, Cédula, Nombre, Estante, Caja, Entregada a, Semana y Mes.
 3. Marque **Recibida** cuando se entregue la historia laboral.
-4. Edite **Observacion** si aplica y pulse **Actualizar** en la fila.
+4. Edite **Observación** si aplica y pulse el icono de **guardar** en la fila.
+5. Use el icono de **Excel** en los filtros para exportar los registros visibles (respeta búsqueda, mes y semana).
 
 ### Registrar o corregir ubicacion
 
@@ -75,6 +76,7 @@ La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-10-05 | Archivo | Historial de consultas: export Excel, botón Actualizar como icono, filtro mes actual por defecto. |
 | 1.7 | 2026-09-18 | Archivo | Import: basta con estante o caja (uno de los dos) para actualizar la fila. |
 | 1.6 | 2026-09-18 | Archivo | Export plantilla: elegir activos, retirados o todos (datos de ficha). |
 | 1.0 | 2026-08-06 | Modulo Archivo | Campos estantes/cajas, tablero Archivo, export dedicado |

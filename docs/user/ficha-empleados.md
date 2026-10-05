@@ -165,6 +165,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 | 1.25 | 2026-10-05 | Agent | Alta/Gestionar empleado: errores de validación en español, alerta visible, scroll al campo y mensaje si el pendiente ya no existe (sin 404). |
 | 1.24 | 2026-10-05 | Agent | Desvinculación bloqueada si hay cruce con Vacaciones/Incapacidad/Permiso (MT-GH-04); forzar solo super-admin. |
 | 1.23 | 2026-10-05 | Agent | **Carta de contratación** desde Pendientes (formulario corto; no mueve a En ficha). |
+| 1.23 | 2026-10-05 | Agent | Listado Empleados: la tabla ocupa el alto disponible hasta el borde inferior (sin hueco vacío). |
 | 1.22 | 2026-10-05 | Agent | Generar/Descargar cartas pasan a iconos en la barra (junto a Historial de vínculos) y en el modal de historial. |
 | 1.21 | 2026-10-01 | Agent | Export Excel del listado Pendientes (icono en barra; respeta búsqueda `q`). |
 | 1.20 | 2026-10-01 | Agent | Campo obligatorio **Lugar de nacimiento** en create/editar ficha (también `?desde=`); variable Word `[LUGAR_NACIMIENTO]`. Sin cambio en import/Selección. |

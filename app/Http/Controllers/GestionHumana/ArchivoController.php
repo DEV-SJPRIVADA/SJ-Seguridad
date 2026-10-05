@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\GestionHumana;
 
+use App\Exports\BaseExport;
 use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ImportEmployeeArchiveRequest;
@@ -97,11 +98,127 @@ class ArchivoController extends Controller
     {
         $this->authorizeView();
 
+        $filters = $this->consultationHistoryFilters($request);
+        $items = $this->consultationHistoryQuery($filters)->get();
+
+        return view('areas.gestion_humana.archivo.consultation-history', [
+            'items' => $items,
+            'filters' => $filters,
+            'exportUrl' => route(
+                'gestion-humana.archivo.consultation-history.export',
+                $this->consultationHistoryQueryParams($filters),
+            ),
+            'subTabs' => $this->getArchivoSubTabs('historial-consultas'),
+            'canManage' => $this->canManage(),
+            'consultationTypes' => config('employee_ficha.archive_consultation_types', []),
+        ]);
+    }
+
+    public function exportConsultationHistory(Request $request): StreamedResponse
+    {
+        $this->authorizeView();
+
+        $filters = $this->consultationHistoryFilters($request);
+        $items = $this->consultationHistoryQuery($filters)->get();
+
+        $rows = $items->map(static function (EmployeeArchiveConsultationItem $item): array {
+            return [
+                'fecha' => $item->created_at?->format('d/m/Y H:i') ?? '',
+                'concepto' => $item->concept ?? '',
+                'cedula' => $item->document_number,
+                'nombre' => $item->full_name ?? '',
+                'estante' => $item->archive_shelf ?? '',
+                'caja' => $item->archive_box ?? '',
+                'entregada_a' => $item->delivered_to ?? '',
+                'recibida' => $item->received ? 'Sí' : 'No',
+                'observacion' => $item->observation ?? '',
+                'semana' => $item->week_of_month,
+                'mes' => $item->month_label,
+            ];
+        });
+
+        $monthTitle = $filters['month'] !== null
+            ? EmployeeArchiveConsultationItem::monthLabel((int) $filters['month'])
+            : 'Todos los meses';
+
+        return (new BaseExport(
+            $rows,
+            [
+                ['key' => 'fecha', 'label' => 'Fecha'],
+                ['key' => 'concepto', 'label' => 'Concepto'],
+                ['key' => 'cedula', 'label' => 'Cédula'],
+                ['key' => 'nombre', 'label' => 'Nombre'],
+                ['key' => 'estante', 'label' => 'Estante'],
+                ['key' => 'caja', 'label' => 'Caja'],
+                ['key' => 'entregada_a', 'label' => 'Entregada a'],
+                ['key' => 'recibida', 'label' => 'Recibida'],
+                ['key' => 'observacion', 'label' => 'Observación'],
+                ['key' => 'semana', 'label' => 'Semana'],
+                ['key' => 'mes', 'label' => 'Mes'],
+            ],
+            'historial_consultas_archivo_'.now()->format('Y-m-d').'.xlsx',
+            'Historial de consultas archivo — '.$monthTitle.' — '.config('app.name'),
+        ))->download();
+    }
+
+    /**
+     * Query string para export / redirecciones. `month` vacío = todos los meses (no reaplicar default).
+     *
+     * @param  array{q: string, month: int|null, week: int|null}  $filters
+     * @return array<string, int|string>
+     */
+    private function consultationHistoryQueryParams(array $filters): array
+    {
+        $params = [
+            'month' => $filters['month'] ?? '',
+        ];
+
+        if ($filters['q'] !== '') {
+            $params['q'] = $filters['q'];
+        }
+
+        if ($filters['week'] !== null) {
+            $params['week'] = $filters['week'];
+        }
+
+        return $params;
+    }
+
+    /**
+     * Filtros del historial. Sin `month` en la URL → mes calendario actual.
+     * Con `month` vacío (Todos los meses) → sin filtro de mes.
+     *
+     * @return array{q: string, month: int|null, week: int|null}
+     */
+    private function consultationHistoryFilters(Request $request): array
+    {
         $q = trim($request->string('q')->toString());
-        $month = $request->integer('month') ?: null;
         $week = $request->integer('week') ?: null;
 
-        $items = EmployeeArchiveConsultationItem::query()
+        if ($request->exists('month')) {
+            $month = $request->integer('month') ?: null;
+        } else {
+            $month = (int) now()->month;
+        }
+
+        return [
+            'q' => $q,
+            'month' => $month,
+            'week' => $week,
+        ];
+    }
+
+    /**
+     * @param  array{q: string, month: int|null, week: int|null}  $filters
+     * @return Builder<EmployeeArchiveConsultationItem>
+     */
+    private function consultationHistoryQuery(array $filters): Builder
+    {
+        $q = $filters['q'];
+        $month = $filters['month'];
+        $week = $filters['week'];
+
+        return EmployeeArchiveConsultationItem::query()
             ->with(['consultation.user'])
             ->when($q !== '', function (Builder $query) use ($q): void {
                 $query->where(function (Builder $inner) use ($q): void {
@@ -113,20 +230,7 @@ class ArchivoController extends Controller
             })
             ->when($month !== null, fn (Builder $query) => $query->where('month_number', $month))
             ->when($week !== null, fn (Builder $query) => $query->where('week_of_month', $week))
-            ->latest('created_at')
-            ->get();
-
-        return view('areas.gestion_humana.archivo.consultation-history', [
-            'items' => $items,
-            'filters' => [
-                'q' => $q,
-                'month' => $month,
-                'week' => $week,
-            ],
-            'subTabs' => $this->getArchivoSubTabs('historial-consultas'),
-            'canManage' => $this->canManage(),
-            'consultationTypes' => config('employee_ficha.archive_consultation_types', []),
-        ]);
+            ->latest('created_at');
     }
 
     public function consult(StoreEmployeeArchiveConsultationRequest $request): RedirectResponse
@@ -224,12 +328,25 @@ class ArchivoController extends Controller
         ]);
         $consultationItem->save();
 
+        $redirectQuery = array_filter([
+            'q' => $request->string('q')->toString() ?: null,
+            'week' => $request->integer('week') ?: null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        // Conserva mes explícito (incl. vacío = todos); si no vino, vuelve al mes actual.
+        if ($request->exists('month')) {
+            $month = $request->integer('month') ?: null;
+            if ($month !== null) {
+                $redirectQuery['month'] = $month;
+            } else {
+                $redirectQuery['month'] = '';
+            }
+        } else {
+            $redirectQuery['month'] = (int) now()->month;
+        }
+
         return redirect()
-            ->route('gestion-humana.archivo.consultation-history.index', array_filter([
-                'q' => $request->string('q')->toString() ?: null,
-                'month' => $request->integer('month') ?: null,
-                'week' => $request->integer('week') ?: null,
-            ]))
+            ->route('gestion-humana.archivo.consultation-history.index', $redirectQuery)
             ->with('status', 'Registro de consulta actualizado.');
     }
 

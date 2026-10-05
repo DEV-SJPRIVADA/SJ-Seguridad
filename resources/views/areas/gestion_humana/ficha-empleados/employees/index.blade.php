@@ -369,9 +369,13 @@
                         var updateScrollArea = function () {
                             var bottomHeight = $bottom.outerHeight(true) || 0;
                             var rect = $scroll[0].getBoundingClientRect();
-                            var maxHeight = window.innerHeight - rect.top - bottomHeight - 16;
+                            // Altura fija al viewport: la zona de tabla llega al final (sin hueco vacío abajo).
+                            var available = Math.max(220, Math.floor(window.innerHeight - rect.top - bottomHeight - 8));
 
-                            $scroll.css('max-height', Math.max(220, maxHeight) + 'px');
+                            $scroll.css({
+                                height: available + 'px',
+                                maxHeight: available + 'px',
+                            });
                         };
 
                         var debounce = function (fn, wait) {
