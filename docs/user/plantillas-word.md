@@ -56,18 +56,27 @@ El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas
 
 1. En el bloque **Plantillas**, indique la **etiqueta** (nombre visible), elija el **tipo** (activo) y seleccione un archivo **.docx**.
 2. Confirme. La plantilla aparece en la lista con su tipo.
-3. Para cartas de retiro, use el tipo **Desvinculacion** y variables `${…}` del listado de apoyo (copiar/pegar: `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc.).
+3. Para cartas de retiro, use el tipo **Desvinculacion** y variables `${…}` del listado de apoyo (icono **Ver variables** / llaves): puede filtrar por clave o descripción; copie/pegue `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc.
+
+### Consultar variables de plantilla
+
+1. En la pestaña **Plantillas**, pulse el icono de **Ver variables** (llaves) en la cabecera.
+2. Use el campo **Filtrar** para buscar por categoría, clave (`DOCUMENTO`) o descripción.
+3. El contador muestra cuántas variables coinciden; el icono X limpia el filtro.
 
 ### Filtrar plantillas
 
 1. En la pestana **Plantillas**, use la barra de filtros: busqueda por etiqueta, tipo de documento y estado del archivo (cargada / pendiente).
 2. Pulse el icono de buscar para aplicar; el icono X limpia los filtros activos.
 
-### Reemplazar o eliminar una plantilla
+### Reemplazar, editar o eliminar una plantilla
 
-1. **Reemplazar:** elija solo el nuevo archivo `.docx` de esa fila. La etiqueta y el tipo no cambian.
-2. **Eliminar:** confirme cuando el sistema lo pida. Se quita la plantilla del listado (ya no aparecera al generar cartas).
-3. **Descargar:** obtiene la plantilla maestra guardada (sin datos de un empleado).
+1. **Editar:** use el icono de lápiz en la fila para cambiar **etiqueta**, **tipo** u **orden** (sin tocar el archivo).
+2. **Reemplazar:** elija solo el nuevo archivo `.docx` de esa fila. La etiqueta y el tipo no cambian.
+3. **Eliminar:** confirme cuando el sistema lo pida. Se quita la plantilla del listado (ya no aparecerá al generar cartas).
+4. **Descargar:** obtiene la plantilla maestra guardada (sin datos de un empleado).
+
+Al **agregar** plantilla puede **arrastrar y soltar** el `.docx` sobre la zona de carga, o seleccionarlo con clic.
 
 ### Relacion con Ficha empleados
 
@@ -78,6 +87,9 @@ El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-10-05 | Agent | Modal **Editar plantilla**: cabecera con icono, campos en rejilla y pie Cancelar / Guardar cambios. |
+| 1.6 | 2026-10-05 | Agent | Plantillas: editar etiqueta/tipo/orden; carga .docx con arrastrar y soltar. |
+| 1.5 | 2026-10-05 | Agent | Modal **Variables disponibles**: filtro por clave/descripción y contador de resultados. |
 | 1.4 | 2026-10-01 | Agent | Variable de apoyo `[LUGAR_NACIMIENTO]` (lugar de nacimiento del perfil de ficha). |
 | 1.3 | 2026-09-23 | UI | Filtros en pestana Plantillas (etiqueta, tipo, estado de archivo). |
 | 1.2 | 2026-09-23 | UI | Redisenio visual: subnav en header, formularios por seccion, zona de carga `.docx` y acciones de fila compactas. |

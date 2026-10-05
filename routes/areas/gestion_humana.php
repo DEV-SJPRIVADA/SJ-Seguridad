@@ -88,6 +88,7 @@ Route::middleware(['password.changed'])
         Route::delete('/tipos/{type}', [PlantillasWordController::class, 'destroyType'])->name('types.destroy');
 
         Route::post('/plantillas', [PlantillasWordController::class, 'storeTemplate'])->name('templates.store');
+        Route::patch('/plantillas/{template}', [PlantillasWordController::class, 'updateTemplate'])->name('templates.update');
         Route::post('/plantillas/{template}/reemplazar', [PlantillasWordController::class, 'replaceTemplate'])->name('templates.replace');
         Route::delete('/plantillas/{template}', [PlantillasWordController::class, 'destroyTemplate'])->name('templates.destroy');
         Route::get('/plantillas/{template}/descargar', [PlantillasWordController::class, 'downloadTemplate'])->name('templates.download');

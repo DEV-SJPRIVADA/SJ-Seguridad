@@ -4,6 +4,7 @@ namespace Tests\Feature\GestionHumana;
 
 use App\Models\AuditLog;
 use App\Models\EmployeeFichaEmploymentPeriod;
+use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
@@ -158,6 +159,111 @@ class ContratacionQuickLetterTest extends TestCase
         $this->assertSame([$template->id], $audit->metadata['template_ids']);
     }
 
+    public function test_rehire_pending_can_open_form_and_generate_quick_letter(): void
+    {
+        $manager = $this->managerUser();
+        $entry = $this->createPendingEntry();
+        $mover = User::factory()->create(['must_change_password' => false]);
+
+        $entry->update([
+            'moved_to_ficha_at' => now()->subMonths(2),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'hire_date' => now()->subYear()->toDateString(),
+            'position_name' => 'Vigilante',
+            'salary' => 1200000,
+        ]);
+
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'personal_requisition_id' => $entry->personal_requisition_id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'hire_date' => now()->subYear()->toDateString(),
+            'termination_date' => now()->subMonth()->toDateString(),
+            'is_rehireable' => true,
+            'opened_by' => $mover->id,
+            'closed_by' => $mover->id,
+        ]);
+
+        $profile->update([
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subMonth()->toDateString(),
+        ]);
+
+        $entry->update([
+            'moved_to_ficha_at' => null,
+            'moved_to_ficha_by' => null,
+        ]);
+        $entry->refresh()->load('profile');
+        $this->assertTrue($entry->isRehirePending());
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.contratacion.quick', $entry))
+            ->assertOk()
+            ->assertSee('reingreso', false)
+            ->assertSee('Gestionar reingreso', false);
+
+        $datatable = $this->actingAs($manager)
+            ->getJson(route('gestion-humana.ficha-empleados.employees.datatable', [
+                'estado' => 'pendientes',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]));
+        $datatable->assertOk();
+        $actionsHtml = collect($datatable->json('data'))
+            ->map(fn (array $row): string => (string) ($row[8] ?? ''))
+            ->implode(' ');
+        $this->assertStringContainsString(
+            route('gestion-humana.ficha-empleados.employees.contratacion.quick', $entry),
+            $actionsHtml,
+        );
+
+        $city = $this->seedCity();
+        $signatory = $this->seedSignatory();
+        $template = $this->seedContratacionTemplate('${NOMBRE_COMPLETO} ${DOCUMENTO} ${CARGO}');
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.contratacion.quick.generate', $entry), [
+                'full_name' => $entry->hired_full_name,
+                'document_number' => $entry->hired_document,
+                'birth_place' => 'Cali',
+                'address' => 'Calle 1 #2-3',
+                'residence_city_code' => $city->code,
+                'phone' => '3009998877',
+                'email' => 'reingreso@example.com',
+                'birth_date' => '1990-01-10',
+                'salary' => '1.800.000',
+                'hire_date' => now()->toDateString(),
+                'position_name' => 'Vigilante',
+                'template_ids' => [$template->id],
+                'signatory_id' => $signatory->id,
+            ])
+            ->assertOk()
+            ->assertDownload();
+
+        $entry->refresh()->load('profile');
+        $this->assertNull($entry->moved_to_ficha_at);
+        $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $entry->profile?->employment_status);
+        $this->assertNull($entry->profile?->termination_date);
+
+        $activePeriod = EmployeeFichaEmploymentPeriod::query()
+            ->where('personal_requisition_ficha_entry_id', $entry->id)
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
+            ->first();
+
+        $this->assertNotNull($activePeriod);
+        $this->assertSame(2, $activePeriod->sequence);
+        $this->assertNotNull($activePeriod->termination_letter_path);
+    }
+
     public function test_pending_datatable_shows_quick_letter_action(): void
     {
         $manager = $this->managerUser();
@@ -181,6 +287,39 @@ class ContratacionQuickLetterTest extends TestCase
             $html,
         );
         $this->assertStringContainsString('Carta de contratación', $html);
+        $this->assertStringNotContainsString('cursos-catalogo-page__icon-btn--success', $html);
+    }
+
+    public function test_pending_datatable_marks_letter_icon_when_already_generated(): void
+    {
+        $manager = $this->managerUser();
+        $entry = $this->createPendingEntry();
+
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+            'opened_by' => $manager->id,
+            'hire_date' => now()->toDateString(),
+            'termination_letter_path' => 'ficha-empleados/contratacion-letters/1/carta.docx',
+            'termination_letter_type' => 'docx',
+        ]);
+
+        $response = $this->actingAs($manager)
+            ->getJson(route('gestion-humana.ficha-empleados.employees.datatable', [
+                'estado' => 'pendientes',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $response->assertOk();
+        $html = collect($response->json('data'))
+            ->map(fn (array $row): string => (string) ($row[8] ?? ''))
+            ->implode(' ');
+
+        $this->assertStringContainsString('cursos-catalogo-page__icon-btn--success', $html);
+        $this->assertStringContainsString('Carta generada (volver a generar)', $html);
     }
 
     private function managerUser(): User

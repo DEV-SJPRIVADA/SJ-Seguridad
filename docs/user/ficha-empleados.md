@@ -23,7 +23,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 | Ficha empleados | Registro informativo de personas ya revisadas/movidas por Gestion Humana (pill **En ficha**). |
 | Cedula / Nombre del contratado | Datos capturados en la requisicion al marcar el estado **Contratado**; distintos de "Cedula/Nombre a quien reemplaza" del motivo Reemplazo. |
 | Gestionar Empleado | Boton de la fila (en **Pendientes**) que abre el formulario de ficha precargado con los datos de la requisicion; el registro solo pasa a **En ficha** cuando se guarda con **Crear empleado**. Reemplaza la accion anterior "Agregar a ficha empleados" (movimiento inmediato de un clic, sin revisar datos, ya retirada). |
-| Carta de contratación (rápida) | Icono de documento en la fila de **Pendientes** (contrataciones nuevas, no reingresos). Abre un formulario corto con los datos que usa la carta Word; al generar descarga el archivo y **no** mueve el registro a En ficha. Luego la misma persona completa la ficha con **Gestionar Empleado**. |
+| Carta de contratación (rápida) | Icono de documento en la fila de **Pendientes** (contrataciones nuevas y **reingresos**). Abre un formulario corto con los datos que usa la carta Word; al generar descarga el archivo y **no** mueve el registro a En ficha. Si ya se generó, el icono se ve en verde («Carta generada»). Luego complete la ficha con **Gestionar Empleado** / **Gestionar reingreso**. |
 | Cedula duplicada | Situacion en la que la misma cedula ya esta registrada en otra requisicion; requiere confirmacion antes de reasignar el registro. Si ocurre al guardar el formulario de **Gestionar Empleado**, en cambio, bloquea el guardado con un error de validacion (no se permite duplicado ahi). |
 
 ## Responsabilidades
@@ -71,11 +71,13 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 ### Carta de contratación desde Pendientes (antes de En ficha)
 
-1. En la pill **Pendientes**, pulse el icono de **Carta de contratación** (documento) de la fila. No aparece en reingresos (use **Gestionar reingreso**).
+1. En la pill **Pendientes**, pulse el icono de **Carta de contratación** (documento) de la fila. También aparece en filas con badge **Reingreso**.
 2. Complete solo los datos de la carta: nombre, documento, lugar y fecha de nacimiento, dirección, ciudad de residencia, teléfono, correo, salario, fecha de ingreso y cargo. La ciudad de la requisición se muestra solo lectura.
 3. Elija plantilla(s) de contratación y firmante; pulse el icono de generar (documento) en la barra superior.
-4. Se descarga el Word/ZIP. El empleado **sigue en Pendientes**. Los datos mínimos quedan guardados para cuando complete la ficha con **Gestionar Empleado**.
+4. Se descarga el Word/ZIP. El empleado **sigue en Pendientes**. Los datos mínimos quedan guardados para cuando complete la ficha con **Gestionar Empleado** / **Gestionar reingreso**. En el listado, el icono de carta pasa a color verde para indicar que ya se generó (puede volver a abrirla para regenerar).
 5. Si ya está **En ficha**, genere la carta desde la barra de acciones de la ficha (flujo anterior).
+
+**Nota sobre reintegro:** un empleado solo **desvinculado** en En ficha no tiene botón de reintegro ahí. El reingreso nace cuando una nueva requisición queda en estado **Contratado** con esa cédula (recontratable): el registro vuelve a **Pendientes** con badge Reingreso; ahí sí puede generar la carta rápida y luego Gestionar reingreso.
 
 ### Consultar registros ya movidos (En ficha)
 
@@ -162,8 +164,10 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.30 | 2026-10-05 | Agent | Carta rápida habilitada también para **reingresos** en Pendientes. |
 | 1.29 | 2026-10-05 | Agent | Unificación: activo y desvinculado usan el mismo modal **Generar Cartas** (tipo preseleccionado según el icono). |
 | 1.28 | 2026-10-05 | Agent | Icono **Generar Cartas**: modal con selector de tipo (catálogo Plantillas Word), plantillas en cards y generación según tipo; icono de desvinculación se mantiene. |
+| 1.31 | 2026-10-05 | Agent | Pendientes: icono de carta de contratación en verde cuando ya se generó. |
 | 1.30 | 2026-10-05 | Agent | Modal Generar cartas: pasos numerados, tarjetas más claras y pie con Cancelar / Generar y descargar. |
 | 1.29 | 2026-10-05 | Agent | Ficha: botón «Ir al inicio» al final del formulario para subir el scroll. |
 | 1.28 | 2026-10-05 | Agent | Cabecera de ficha: nombre destacado, chips de cédula/requisición/vínculo y pill de modo edición. |

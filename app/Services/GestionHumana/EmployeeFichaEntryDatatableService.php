@@ -48,6 +48,13 @@ final class EmployeeFichaEntryDatatableService
                     ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
                     ->orderByDesc('sequence'),
             ]);
+        } elseif ($estado === 'pendientes') {
+            // Periodo activo: saber si ya hay carta de contratación generada (icono en acciones).
+            $query->with([
+                'employmentPeriods' => fn ($periods) => $periods
+                    ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
+                    ->orderByDesc('sequence'),
+            ]);
         }
 
         /** @var Collection<int, PersonalRequisitionFichaEntry> $entries */
@@ -244,23 +251,45 @@ final class EmployeeFichaEntryDatatableService
             $this->userPenSvg(),
         );
 
-        // Carta rápida solo para contrataciones nuevas (no reingreso).
-        if (! $entry->isRehirePending()) {
-            $letterHref = route('gestion-humana.ficha-empleados.employees.contratacion.quick', $entry);
-            $actions .= sprintf(
-                '<a href="%s" class="cursos-catalogo-page__icon-btn" title="%s" aria-label="%s">%s</a>',
-                e($letterHref),
-                e('Carta de contratación'),
-                e('Carta de contratación'),
-                $this->fileTextSvg(),
-            );
-        }
+        // Carta rápida: contrataciones nuevas y reingresos en Pendientes.
+        $letterHref = route('gestion-humana.ficha-empleados.employees.contratacion.quick', $entry);
+        $hasLetter = $this->pendingHasGeneratedContratacionLetter($entry);
+        $letterClass = $hasLetter
+            ? 'cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--success'
+            : 'cursos-catalogo-page__icon-btn';
+        $letterTitle = $hasLetter
+            ? 'Carta generada (volver a generar)'
+            : 'Carta de contratación';
+
+        $actions .= sprintf(
+            '<a href="%s" class="%s" title="%s" aria-label="%s">%s</a>',
+            e($letterHref),
+            e($letterClass),
+            e($letterTitle),
+            e($letterTitle),
+            $this->fileTextSvg(),
+        );
 
         return sprintf(
             '<div class="table-actions ficha-empleados-row__actions">%s%s</div>',
             $badge,
             $actions,
         );
+    }
+
+    /**
+     * La carta rápida persiste en termination_letter_path del vínculo activo.
+     */
+    private function pendingHasGeneratedContratacionLetter(PersonalRequisitionFichaEntry $entry): bool
+    {
+        $period = $entry->relationLoaded('employmentPeriods')
+            ? $entry->employmentPeriods->first()
+            : $entry->employmentPeriods()
+                ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
+                ->orderByDesc('sequence')
+                ->first();
+
+        return $period !== null && filled($period->termination_letter_path);
     }
 
     private function userPenSvg(): string

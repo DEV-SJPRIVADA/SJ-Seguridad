@@ -225,7 +225,7 @@
                                     <span class="plantillas-word-form__section-step">1</span>
                                     <div>
                                         <h4 class="plantillas-word-form__section-title">Agregar plantilla</h4>
-                                        <p class="plantillas-word-form__section-desc">Etiqueta, tipo activo y archivo master .docx.</p>
+                                        <p class="plantillas-word-form__section-desc">Etiqueta, tipo activo y archivo master .docx (puede arrastrar y soltar).</p>
                                     </div>
                                 </header>
 
@@ -295,8 +295,8 @@
                                                         <x-lucide-file-up width="18" height="18" />
                                                     </span>
                                                     <span class="plantillas-word-file-picker__copy">
-                                                        <span class="plantillas-word-file-picker__title">Seleccionar archivo</span>
-                                                        <span class="plantillas-word-file-picker__hint">Solo .docx</span>
+                                                        <span class="plantillas-word-file-picker__title">Arrastre o seleccione archivo</span>
+                                                        <span class="plantillas-word-file-picker__hint">Solo .docx · máximo 5 MB</span>
                                                     </span>
                                                 </label>
                                                 <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name>Sin archivo seleccionado</span>
@@ -455,6 +455,18 @@
                                                         </a>
                                                     @endif
                                                     @if ($canManage)
+                                                        <button
+                                                            type="button"
+                                                            class="cursos-catalogo-page__icon-btn btn-plantillas-word-template-edit"
+                                                            title="Editar"
+                                                            aria-label="Editar"
+                                                            data-label="{{ $template->label }}"
+                                                            data-type-id="{{ $template->word_document_type_id }}"
+                                                            data-sort="{{ $template->sort_order }}"
+                                                            data-update-url="{{ route('gestion-humana.plantillas-word.templates.update', $template) }}"
+                                                        >
+                                                            <x-lucide-pencil width="16" height="16" aria-hidden="true" />
+                                                        </button>
                                                         <form
                                                             method="POST"
                                                             action="{{ route('gestion-humana.plantillas-word.templates.replace', $template) }}"
@@ -528,11 +540,24 @@
 
     <script>
         (function () {
+            var isDocxFile = function (file) {
+                if (! file) {
+                    return false;
+                }
+
+                var name = String(file.name || '').toLowerCase();
+                var type = String(file.type || '').toLowerCase();
+
+                return name.endsWith('.docx')
+                    || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            };
+
             document.querySelectorAll('[data-plantillas-word-file]').forEach(function (input) {
                 var picker = input.closest('.plantillas-word-file-picker');
                 var nameEl = picker ? picker.querySelector('[data-plantillas-word-file-name]') : null;
                 var label = picker ? picker.querySelector('label') : null;
                 var isCompact = picker && picker.classList.contains('plantillas-word-file-picker--compact');
+                var dragDepth = 0;
 
                 // Marca visual cuando hay .docx elegido (icono compacto o zona de alta).
                 var syncFileState = function () {
@@ -556,8 +581,57 @@
                     }
                 };
 
+                var assignFile = function (file) {
+                    if (! isDocxFile(file)) {
+                        window.alert('Solo se permiten archivos .docx.');
+                        return;
+                    }
+
+                    var transfer = new DataTransfer();
+                    transfer.items.add(file);
+                    input.files = transfer.files;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                };
+
                 input.addEventListener('change', syncFileState);
                 syncFileState();
+
+                if (! picker || isCompact) {
+                    return;
+                }
+
+                // Arrastrar y soltar sobre la zona de carga (alta de plantilla).
+                ['dragenter', 'dragover'].forEach(function (eventName) {
+                    picker.addEventListener(eventName, function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (eventName === 'dragenter') {
+                            dragDepth += 1;
+                        }
+                        picker.classList.add('plantillas-word-file-picker--dragover');
+                    });
+                });
+
+                picker.addEventListener('dragleave', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dragDepth = Math.max(0, dragDepth - 1);
+                    if (dragDepth === 0) {
+                        picker.classList.remove('plantillas-word-file-picker--dragover');
+                    }
+                });
+
+                picker.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dragDepth = 0;
+                    picker.classList.remove('plantillas-word-file-picker--dragover');
+
+                    var file = event.dataTransfer && event.dataTransfer.files
+                        ? event.dataTransfer.files[0]
+                        : null;
+                    assignFile(file);
+                });
             });
         })();
     </script>
@@ -630,21 +704,204 @@
                 });
             })();
         </script>
-    @endif
 
-    @if (! empty($placeholders))
-        <x-modal name="plantillas-word-variables" maxWidth="lg" focusable>
-            <div class="modal-card">
-                <div class="ficha-empleados-masivos-modal__header">
-                    <div class="ficha-empleados-masivos-modal__heading">
-                        <div>
-                            <h3 class="ficha-empleados-masivos-modal__title">Variables disponibles</h3>
-                            <p class="ficha-empleados-masivos-modal__lead">Placeholders para usar en plantillas Word. Copie el formato ${}.</p>
+        {{-- Modal Editar plantilla: etiqueta, tipo y orden --}}
+        <div id="plantillas-word-template-modal" class="ficha-empleados-catalogs-page__modal plantillas-word-edit-modal-shell" hidden>
+            <div class="ficha-empleados-catalogs-page__modal-backdrop" data-template-modal-close></div>
+            <div class="panel plantillas-word-edit-modal" role="dialog" aria-modal="true" aria-labelledby="plantillas-word-template-modal-title">
+                <div class="plantillas-word-edit-modal__header">
+                    <div class="plantillas-word-edit-modal__heading">
+                        <span class="plantillas-word-edit-modal__heading-icon" aria-hidden="true">
+                            <x-lucide-file-pen-line width="18" height="18" />
+                        </span>
+                        <div class="plantillas-word-edit-modal__heading-copy">
+                            <h3 id="plantillas-word-template-modal-title" class="plantillas-word-edit-modal__title">Editar plantilla</h3>
+                            <p class="plantillas-word-edit-modal__lead">
+                                Actualice la etiqueta, el tipo de documento y el orden de visualización. El archivo .docx se reemplaza desde la fila.
+                            </p>
                         </div>
                     </div>
                     <button
                         type="button"
-                        class="ficha-empleados-masivos-modal__close"
+                        class="plantillas-word-edit-modal__close"
+                        data-template-modal-close
+                        title="Cerrar"
+                        aria-label="Cerrar"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </button>
+                </div>
+
+                <form method="POST" id="plantillas-word-template-edit-form" class="plantillas-word-edit-modal__form">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="plantillas-word-edit-modal__body">
+                        <div class="plantillas-word-edit-modal__field plantillas-word-edit-modal__field--full">
+                            <label class="form-label" for="plantillas-word-edit-template-label">Etiqueta</label>
+                            <input
+                                id="plantillas-word-edit-template-label"
+                                name="label"
+                                type="text"
+                                class="form-input"
+                                maxlength="255"
+                                required
+                                autocomplete="off"
+                            >
+                            <p class="form-hint">Nombre visible al generar cartas.</p>
+                        </div>
+
+                        <div class="plantillas-word-edit-modal__field plantillas-word-edit-modal__field--type">
+                            <label class="form-label" for="plantillas-word-edit-template-type">Tipo</label>
+                            <x-searchable-select
+                                id="plantillas-word-edit-template-type"
+                                name="word_document_type_id"
+                                :options="$types->map(fn ($type) => [
+                                    'value' => (string) $type->id,
+                                    'label' => $type->code.' — '.$type->name.($type->is_active ? '' : ' (inactivo)'),
+                                ])->values()->all()"
+                                value=""
+                                placeholder="Seleccione tipo…"
+                                searchPlaceholder="Buscar tipo…"
+                                :required="true"
+                                :allowClear="false"
+                            />
+                        </div>
+
+                        <div class="plantillas-word-edit-modal__field plantillas-word-edit-modal__field--sort">
+                            <label class="form-label" for="plantillas-word-edit-template-sort">Orden</label>
+                            <input
+                                id="plantillas-word-edit-template-sort"
+                                name="sort_order"
+                                type="number"
+                                min="0"
+                                max="9999"
+                                class="form-input"
+                            >
+                            <p class="form-hint">Menor número aparece primero.</p>
+                        </div>
+                    </div>
+
+                    <div class="plantillas-word-edit-modal__actions">
+                        <button type="button" class="btn btn--secondary btn--sm" data-template-modal-close>Cancelar</button>
+                        <button type="submit" class="btn btn--primary btn--sm plantillas-word-edit-modal__submit">
+                            <x-lucide-save width="16" height="16" aria-hidden="true" />
+                            <span>Guardar cambios</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                var modal = document.getElementById('plantillas-word-template-modal');
+                var editForm = document.getElementById('plantillas-word-template-edit-form');
+                var editLabel = document.getElementById('plantillas-word-edit-template-label');
+                var editSort = document.getElementById('plantillas-word-edit-template-sort');
+                var typeInput = document.getElementById('plantillas-word-edit-template-type');
+
+                function closeModal() {
+                    if (modal) {
+                        modal.hidden = true;
+                    }
+                }
+
+                function setSearchableSelectValue(hiddenInput, value) {
+                    if (! hiddenInput) {
+                        return;
+                    }
+
+                    var wrap = hiddenInput.closest('[x-data]');
+                    if (! wrap || ! window.Alpine || typeof Alpine.$data !== 'function') {
+                        hiddenInput.value = value;
+                        return;
+                    }
+
+                    var data = Alpine.$data(wrap);
+                    var nextValue = value !== null && value !== undefined ? String(value) : '';
+                    data.value = nextValue;
+
+                    var found = Array.isArray(data.options)
+                        ? data.options.find(function (opt) {
+                            return String(opt.value) === nextValue;
+                        })
+                        : null;
+                    data.selectedLabel = found && String(found.value) !== '' ? found.label : '';
+
+                    if (data.$refs && data.$refs.hiddenInput) {
+                        data.$refs.hiddenInput.value = nextValue;
+                    } else {
+                        hiddenInput.value = nextValue;
+                    }
+                }
+
+                document.querySelectorAll('[data-template-modal-close]').forEach(function (button) {
+                    button.addEventListener('click', closeModal);
+                });
+
+                document.querySelectorAll('.btn-plantillas-word-template-edit').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        editForm.action = button.getAttribute('data-update-url');
+                        editLabel.value = button.getAttribute('data-label') || '';
+                        editSort.value = button.getAttribute('data-sort') || '0';
+                        setSearchableSelectValue(typeInput, button.getAttribute('data-type-id') || '');
+                        modal.hidden = false;
+                    });
+                });
+            })();
+        </script>
+    @endif
+
+    @if (! empty($placeholders))
+        @php
+            $placeholderCatalog = collect($placeholders)
+                ->map(static function (array $items, string $category): array {
+                    return [
+                        'category' => $category,
+                        'items' => collect($items)
+                            ->map(static fn (string $description, string $key): array => [
+                                'key' => $key,
+                                'token' => '${'.$key.'}',
+                                'description' => $description,
+                            ])
+                            ->values()
+                            ->all(),
+                    ];
+                })
+                ->values()
+                ->all();
+        @endphp
+
+        <x-modal name="plantillas-word-variables" maxWidth="lg" focusable>
+            <div
+                class="modal-card ficha-empleados-consult-modal plantillas-word-variables-modal"
+                x-data="plantillasWordVariablesModal(@js($placeholderCatalog))"
+                x-on:open-modal.window="if ($event.detail === 'plantillas-word-variables') { focusFilter(); }"
+            >
+                <div class="ficha-empleados-consult-modal__header">
+                    <div class="ficha-empleados-consult-modal__heading">
+                        <span class="ficha-empleados-consult-modal__heading-icon" aria-hidden="true">
+                            <x-lucide-braces width="18" height="18" />
+                        </span>
+                        <div class="ficha-empleados-consult-modal__heading-copy">
+                            <div class="ficha-empleados-consult-modal__title-row">
+                                <h3 class="ficha-empleados-consult-modal__title">Variables disponibles</h3>
+                                <span
+                                    class="ficha-empleados-consult-modal__count"
+                                    x-text="visibleCount"
+                                    title="Variables visibles"
+                                ></span>
+                            </div>
+                            <p class="ficha-empleados-consult-modal__lead">
+                                Placeholders para plantillas Word. Copie el formato <code>${CLAVE}</code>.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="ficha-empleados-consult-modal__close"
+                        title="Cerrar"
                         aria-label="Cerrar"
                         x-on:click="$dispatch('close-modal', 'plantillas-word-variables')"
                     >
@@ -652,21 +909,106 @@
                     </button>
                 </div>
 
-                <div class="panel__body">
-                    <div class="ficha-empleados-letter-templates__placeholder-groups">
-                        @foreach ($placeholders as $category => $items)
+                {{-- Filtro por clave, token o descripción --}}
+                <div class="plantillas-word-variables-modal__filter">
+                    <label class="sr-only" for="plantillas-word-variables-filter">Filtrar variables</label>
+                    <div class="plantillas-word-variables-modal__filter-row">
+                        <span class="plantillas-word-variables-modal__filter-icon" aria-hidden="true">
+                            <x-lucide-search width="16" height="16" />
+                        </span>
+                        <input
+                            id="plantillas-word-variables-filter"
+                            type="search"
+                            class="form-input plantillas-word-variables-modal__filter-input"
+                            placeholder="Filtrar por clave o descripción…"
+                            autocomplete="off"
+                            x-ref="filterInput"
+                            x-model="query"
+                        >
+                        <button
+                            type="button"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Limpiar filtro"
+                            aria-label="Limpiar filtro"
+                            x-show="query.trim() !== ''"
+                            x-cloak
+                            x-on:click="query = ''; focusFilter();"
+                        >
+                            <x-lucide-x width="16" height="16" aria-hidden="true" />
+                        </button>
+                    </div>
+                </div>
+
+                <div class="plantillas-word-variables-modal__scroll" role="region" aria-label="Listado de variables">
+                    <p class="plantillas-word-variables-modal__empty" x-show="filteredGroups.length === 0" x-cloak>
+                        No hay variables que coincidan con el filtro.
+                    </p>
+
+                    <div class="ficha-empleados-letter-templates__placeholder-groups" x-show="filteredGroups.length > 0">
+                        <template x-for="group in filteredGroups" :key="group.category">
                             <div class="ficha-empleados-letter-templates__placeholder-group">
-                                <h4 class="ficha-empleados-letter-templates__category-title">{{ $category }}</h4>
+                                <h4 class="ficha-empleados-letter-templates__category-title" x-text="group.category"></h4>
                                 <ul class="ficha-empleados-letter-templates__placeholder-list">
-                                    @foreach ($items as $key => $description)
-                                        <li><code>{{ '${' . $key . '}' }}</code> — {{ $description }}</li>
-                                    @endforeach
+                                    <template x-for="item in group.items" :key="item.key">
+                                        <li>
+                                            <code x-text="item.token"></code>
+                                            <span> — </span>
+                                            <span x-text="item.description"></span>
+                                        </li>
+                                    </template>
                                 </ul>
                             </div>
-                        @endforeach
+                        </template>
                     </div>
                 </div>
             </div>
         </x-modal>
+
+        @once
+            @push('scripts')
+                <script>
+                    function plantillasWordVariablesModal(groups) {
+                        return {
+                            groups: Array.isArray(groups) ? groups : [],
+                            query: '',
+
+                            get filteredGroups() {
+                                const needle = this.query.trim().toLowerCase();
+                                if (! needle) {
+                                    return this.groups;
+                                }
+
+                                return this.groups
+                                    .map((group) => {
+                                        const items = (group.items || []).filter((item) => {
+                                            const haystack = [
+                                                group.category || '',
+                                                item.key || '',
+                                                item.token || '',
+                                                item.description || '',
+                                            ].join(' ').toLowerCase();
+
+                                            return haystack.includes(needle);
+                                        });
+
+                                        return { category: group.category, items };
+                                    })
+                                    .filter((group) => group.items.length > 0);
+                            },
+
+                            get visibleCount() {
+                                return this.filteredGroups.reduce((total, group) => total + group.items.length, 0);
+                            },
+
+                            focusFilter() {
+                                this.$nextTick(() => {
+                                    this.$refs.filterInput?.focus();
+                                });
+                            },
+                        };
+                    }
+                </script>
+            @endpush
+        @endonce
     @endif
 </x-app-layout>

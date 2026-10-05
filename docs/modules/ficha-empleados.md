@@ -118,7 +118,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
 - `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`.
-- `datatable` — server-side via `EmployeeFichaEntryDatatableService`. Con `estado=en_ficha` y `employment_status=desvinculado` incluye columna **Recontratable** (`Si`/`No`/`—`) desde el ultimo periodo cerrado (`is_rehireable`).
+- `datatable` — server-side via `EmployeeFichaEntryDatatableService`. Con `estado=en_ficha` y `employment_status=desvinculado` incluye columna **Recontratable** (`Si`/`No`/`—`) desde el ultimo periodo cerrado (`is_rehireable`). En `estado=pendientes`, el icono de carta rápida usa `.cursos-catalogo-page__icon-btn--success` si el vínculo activo tiene `termination_letter_path`.
 - `create(Request $request): View` — **dos modos** segun query `desde` (ver "Flujo Gestionar Empleado" abajo):
   - Sin `desde`: alta manual sin requisición — `$fichaEntry = null`, perfil vacio con `document_type='C'`, `employment_status=activo` y flags `requires_courses`/`requires_acreditacion` en `true` (editables en el formulario).
   - Con `desde={fichaEntryId}`: resuelve `$fichaEntry` con `PersonalRequisitionFichaEntry::pending()->findOrFail($desde)` (**404** si no existe o ya esta en ficha) y arma el perfil precargado con `EmployeeFichaProfilePrefill::buildForEntry()` (no persiste nada en el `GET`).
@@ -212,10 +212,10 @@ Permite generar cartas Word de tipo `contratacion` **antes** de mover el registr
 
 ### Flujo
 
-1. En **Pendientes**, icono **Carta de contratación** (solo contrataciones nuevas; no reingresos).
+1. En **Pendientes**, icono **Carta de contratación** (contrataciones nuevas y reingresos).
 2. Formulario mínimo + plantillas + firmante.
-3. Al generar: guarda/actualiza `EmployeeFichaProfile` con esos campos, abre o sincroniza periodo `activo` vía `EmployeeFichaEmploymentPeriodService::openOrSyncPeriodForQuickLetter`, genera el pack Word y descarga.
-4. **`moved_to_ficha_at` permanece `null`** — el empleado sigue en Pendientes. La misma persona completa luego con **Gestionar Empleado** (reutiliza el perfil ya guardado).
+3. Al generar: guarda/actualiza `EmployeeFichaProfile` con esos campos (en reingreso pasa a `activo` y limpia `termination_date`), abre o sincroniza periodo `activo` vía `EmployeeFichaEmploymentPeriodService::openOrSyncPeriodForQuickLetter` (secuencia nueva si solo había vínculos cerrados), genera el pack Word y descarga.
+4. **`moved_to_ficha_at` permanece `null`** — el empleado sigue en Pendientes. Luego completa con **Gestionar Empleado** / **Gestionar reingreso**.
 
 ### Campos del formulario (variables Word)
 

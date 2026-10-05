@@ -114,6 +114,8 @@ class ContratacionQuickLetterService
                 'position_name' => $data['position_name'],
                 'position_code' => $data['position_code'] ?? $profile->position_code,
                 'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+                // Reingreso: limpia retiro del vínculo anterior al preparar la carta.
+                'termination_date' => null,
             ]);
 
             $this->profileCatalogSync->sync($profile);
@@ -149,12 +151,6 @@ class ContratacionQuickLetterService
         if ($entry->moved_to_ficha_at !== null) {
             throw ValidationException::withMessages([
                 'ficha_entry' => 'Este empleado ya está en ficha. Genere la carta desde la ficha del empleado.',
-            ]);
-        }
-
-        if ($entry->isRehirePending()) {
-            throw ValidationException::withMessages([
-                'ficha_entry' => 'Los reingresos usan Gestionar reingreso. La carta rápida aplica a contrataciones nuevas en Pendientes.',
             ]);
         }
     }

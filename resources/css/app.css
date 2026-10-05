@@ -2854,6 +2854,80 @@ a {
     word-break: break-all;
 }
 
+/* Modal Variables (Plantillas Word): filtro + scroll */
+.plantillas-word-variables-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    max-height: min(88vh, 42rem);
+    overflow: hidden;
+}
+
+.plantillas-word-variables-modal .ficha-empleados-consult-modal__header {
+    padding: 1rem 1.15rem 0.85rem;
+    flex-shrink: 0;
+}
+
+.plantillas-word-variables-modal__filter {
+    flex-shrink: 0;
+    padding: 0 1.15rem 0.75rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.plantillas-word-variables-modal__filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.45rem 0.35rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 90%, transparent);
+    border-radius: 0.7rem;
+    background: #fff;
+}
+
+.plantillas-word-variables-modal__filter-icon {
+    display: inline-flex;
+    color: var(--color-text-muted, #64748b);
+    flex-shrink: 0;
+}
+
+.plantillas-word-variables-modal__filter-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.88rem;
+}
+
+.plantillas-word-variables-modal__filter-input:focus {
+    outline: none;
+}
+
+.plantillas-word-variables-modal__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.85rem 1.15rem 1.1rem;
+}
+
+.plantillas-word-variables-modal__scroll .ficha-empleados-letter-templates__placeholder-groups {
+    margin-top: 0;
+}
+
+.plantillas-word-variables-modal__empty {
+    margin: 0;
+    padding: 1.25rem 0.85rem;
+    text-align: center;
+    color: var(--color-text-soft, #475569);
+    font-size: 0.88rem;
+    border: 1px dashed color-mix(in srgb, var(--color-border, #dbe3ef) 90%, transparent);
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--color-surface-muted, #f5f7fb) 70%, #fff);
+}
+
 .ficha-empleados-letter-templates__actions {
     display: flex;
     flex-wrap: wrap;
@@ -2912,6 +2986,13 @@ a {
     border-color: var(--brand-blue);
     background: #e8f4fc;
     box-shadow: 0 0 0 3px rgba(14, 74, 110, 0.08);
+}
+
+.plantillas-word-file-picker--dragover .plantillas-word-file-picker__zone {
+    border-color: var(--brand-blue);
+    border-style: solid;
+    background: #dff0fb;
+    box-shadow: 0 0 0 3px rgba(14, 74, 110, 0.14);
 }
 
 .plantillas-word-file-picker__icon {
@@ -3260,6 +3341,168 @@ a {
     .plantillas-word-form__field--sort {
         max-width: none;
         flex: 1 1 6rem;
+    }
+}
+
+/* Modal Editar plantilla (Plantillas Word) */
+.plantillas-word-edit-modal-shell .plantillas-word-edit-modal {
+    position: relative;
+    z-index: 1;
+    width: min(34rem, calc(100vw - 2rem));
+    max-height: min(88vh, 36rem);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+}
+
+.plantillas-word-edit-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    padding: 1.1rem 1.2rem 0.95rem;
+    border-bottom: 1px solid var(--color-border, #dbe3ef);
+    background: linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--brand-blue-pale, #e8f0fa) 35%, #fff) 100%);
+}
+
+.plantillas-word-edit-modal__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+.plantillas-word-edit-modal__heading-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 12px;
+    background: rgba(0, 51, 102, 0.1);
+    color: var(--brand-blue, #003366);
+}
+
+.plantillas-word-edit-modal__heading-copy {
+    min-width: 0;
+}
+
+.plantillas-word-edit-modal__title {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    line-height: 1.3;
+}
+
+.plantillas-word-edit-modal__lead {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-soft, #475569);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.plantillas-word-edit-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-text-soft, #64748b);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.plantillas-word-edit-modal__close:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong, #cbd5e1);
+    background: #f8fafc;
+}
+
+.plantillas-word-edit-modal__form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.plantillas-word-edit-modal__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    gap: 0.85rem 0.75rem;
+    padding: 1.05rem 1.2rem 1.1rem;
+    overflow: auto;
+}
+
+.plantillas-word-edit-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.plantillas-word-edit-modal__field--full {
+    grid-column: 1 / -1;
+}
+
+.plantillas-word-edit-modal__field--type {
+    grid-column: 1;
+}
+
+.plantillas-word-edit-modal__field--sort {
+    grid-column: 2;
+}
+
+.plantillas-word-edit-modal__field .form-hint {
+    margin: 0;
+}
+
+.plantillas-word-edit-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.85rem 1.2rem 1.05rem;
+    border-top: 1px solid var(--color-border, #dbe3ef);
+    background: color-mix(in srgb, var(--color-surface-muted, #f8fafc) 70%, #fff);
+}
+
+.plantillas-word-edit-modal__submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+@media (max-width: 640px) {
+    .plantillas-word-edit-modal__body {
+        grid-template-columns: 1fr;
+        padding: 0.95rem;
+    }
+
+    .plantillas-word-edit-modal__field--type,
+    .plantillas-word-edit-modal__field--sort {
+        grid-column: 1;
+    }
+
+    .plantillas-word-edit-modal__actions {
+        flex-wrap: wrap;
+    }
+
+    .plantillas-word-edit-modal__actions .btn {
+        flex: 1 1 auto;
+        justify-content: center;
     }
 }
 
@@ -11830,6 +12073,18 @@ a.req-dashboard-kpi:focus-visible {
 
 .cursos-catalogo-page__icon-btn--danger:hover {
     background: rgba(185, 28, 28, 0.08);
+}
+
+/* Carta ya generada (Pendientes → icono contratación) */
+.cursos-catalogo-page__icon-btn--success {
+    color: #15803d;
+    border-color: rgba(22, 163, 74, 0.35);
+    background: rgba(22, 163, 74, 0.08);
+}
+
+.cursos-catalogo-page__icon-btn--success:hover {
+    background: rgba(22, 163, 74, 0.14);
+    border-color: rgba(22, 163, 74, 0.45);
 }
 
 .cursos-catalogo-page__delete-form {
