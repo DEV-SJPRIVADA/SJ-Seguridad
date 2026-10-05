@@ -10,6 +10,7 @@ Llevar la lista de espera de personas contratadas por Gestion Humana (capturadas
 - Tablero `ficha_empleados` (etiqueta **Ficha empleados**) con una unica pestaña **Empleados** (`ficha_empleados_tabs.empleados`).
 - Pestaña Empleados: pills **Pendientes | En ficha** (default Pendientes), busqueda `q` (cedula, nombre, codigo de requisicion), export Excel.
 - Accion **Gestionar Empleado** (solo `ficha_empleados.manage`, desde FEAT-022): abre el formulario de ficha precargado con los datos de la requisicion; el registro solo se mueve de Pendientes a En ficha cuando el usuario confirma el formulario con **Crear empleado** (ver seccion "Flujo Gestionar Empleado").
+- Accion **Carta de contratación** desde Pendientes (`ficha_empleados.manage`): formulario corto + generación Word **sin** mover a En ficha (ver seccion "Carta rápida de contratación").
 - **Fuera de V1:** modulo real de alta/ingreso de empleados (usuario, nomina, expediente); notificaciones por correo; edicion/eliminacion de registros desde la UI de Ficha empleados (las correcciones se hacen reabriendo la requisicion en Gestion).
 
 ## Modelo de datos
@@ -100,6 +101,8 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/desvincular` | `gestion-humana.ficha-empleados.employees.ficha.terminate` | `ficha_empleados.terminate` |
+| GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/carta-contratacion` | `gestion-humana.ficha-empleados.employees.contratacion.quick` | `ficha_empleados.manage` — carta rápida desde Pendientes |
+| POST | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/carta-contratacion` | `gestion-humana.ficha-empleados.employees.contratacion.quick.generate` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/plantillas` | `gestion-humana.ficha-empleados.employees.period.letters.templates` | `ficha_empleados.terminate` |
 | POST | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/generar` | `gestion-humana.ficha-empleados.employees.period.letters.generate` | `ficha_empleados.terminate` |
 | GET | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/descargar` | `gestion-humana.ficha-empleados.employees.period.letters.download` | `ficha_empleados.terminate` |
@@ -190,8 +193,6 @@ Servicio periodos: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodServ
 - Audit: `termination_letter_pack` (generate/download, metadata `template_ids` / `output_type`). Mutaciones de plantillas/tipos: audit en modulo Plantillas Word.
 - Tests: `tests/Feature/GestionHumana/TerminationLetterPackTest.php`.
 
-Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
-
 ### Hooks FEAT-031 (tablero Desvinculaciones)
 
 Tras un `terminate` exitoso, `FichaEmpleadosController` llama a `EmployeeTerminationFollowupService::ensureForClosedPeriod` para crear (si no existe) el registro en `employee_termination_followups` con `letter_generated=false`. Tras un `TerminationLetterController::generate` exitoso, se llama `markLetterGenerated` (`letter_generated=true`; crea el followup si faltaba por datos legacy). Detalle del tablero: [`desvinculaciones.md`](desvinculaciones.md). Regenerar carta sigue en Ficha con `ficha_empleados.terminate` (Seguimientos solo muestra el flag).
@@ -201,6 +202,35 @@ Reingreso: requisicion Contratado con cedula desvinculada **recontratable** devu
 Catálogo **Causal desvinculacion** (`termination_cause`) en pestaña Catalogos.
 
 Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catalogos** en Ficha empleados; tras CRUD se permanece en el catalogo activo (`?catalog=`); **Volver al tablero** regresa al grid. Seed alternativo: `php artisan employee-ficha:seed-catalogs`.
+
+Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
+
+## Carta rápida de contratación (desde Pendientes)
+
+Permite generar cartas Word de tipo `contratacion` **antes** de mover el registro a En ficha, con un formulario corto (sin exigir el formulario completo FEAT-028).
+
+### Flujo
+
+1. En **Pendientes**, icono **Carta de contratación** (solo contrataciones nuevas; no reingresos).
+2. Formulario mínimo + plantillas + firmante.
+3. Al generar: guarda/actualiza `EmployeeFichaProfile` con esos campos, abre o sincroniza periodo `activo` vía `EmployeeFichaEmploymentPeriodService::openOrSyncPeriodForQuickLetter`, genera el pack Word y descarga.
+4. **`moved_to_ficha_at` permanece `null`** — el empleado sigue en Pendientes. La misma persona completa luego con **Gestionar Empleado** (reutiliza el perfil ya guardado).
+
+### Campos del formulario (variables Word)
+
+`${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${LUGAR_NACIMIENTO}`, `${DIRECCION}`, `${CIUDAD_RESIDENCIA}`, `${TELEFONO}`, `${EMAIL}`, `${FECHA_NACIMIENTO}`, `${SALARIO}`, `${FECHA_INGRESO}`, `${CIUDAD_REQUISICION}` (solo lectura desde RQ), `${CARGO}`.
+
+### Componentes
+
+| Pieza | Ubicación |
+| --- | --- |
+| Servicio | `App\Services\GestionHumana\ContratacionLetter\ContratacionQuickLetterService` |
+| FormRequest | `GenerateQuickContratacionLetterRequest` |
+| Controller | `ContratacionLetterController::quickForm` / `generateQuick` |
+| Vista | `employees/carta-contratacion.blade.php` |
+| Permiso | Reutiliza `ficha_empleados.manage` (sin claves Spatie nuevas) |
+| Audit | `contratacion_letter_pack` / `generate_quick` (`still_pending: true`) |
+| Tests | `tests/Feature/GestionHumana/ContratacionQuickLetterTest.php` |
 
 ## Formulario ficha alineado a Plantilla masivos (FEAT-028)
 
@@ -274,7 +304,8 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 
 ## Vistas
 
-- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha; columnas: cédula, nombre, cargo, cliente, ciudad, fecha ingreso, fecha retiro, estado (+ agregado por / acciones); en pill **Pendientes**, icono **Gestionar Empleado** por fila (enlace `GET` a `create` con `?desde={id}`, sin formulario ni SweetAlert).
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/index.blade.php` — filtros, **Nuevo empleado**, export/import masivos, filas clicables a ficha; columnas: cédula, nombre, cargo, cliente, ciudad, fecha ingreso, fecha retiro, estado (+ agregado por / acciones); en pill **Pendientes**, iconos **Gestionar Empleado** y **Carta de contratación** por fila.
+- `resources/views/areas/gestion_humana/ficha-empleados/employees/carta-contratacion.blade.php` — formulario corto carta rápida (Pendientes).
 - `resources/views/areas/gestion_humana/ficha-empleados/employees/create-ficha.blade.php` — formulario unico (alta manual / Gestionar empleado / reingreso); toolbar icon-only; seccion requisitos en alta.
 - `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-form-fields.blade.php` — formulario completo FEAT-028 (requisitos + 7 secciones; opcional bloque Documento en create).
 - `resources/views/areas/gestion_humana/ficha-empleados/partials/ficha-catalog-select.blade.php` — selector catalogo reutilizable.
@@ -285,7 +316,7 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 
 ## Tests
 
-`tests/Feature/FichaEmpleadosTest.php` + `tests/Feature/EmployeeFichaPlantillasTest.php` + suite FEAT-028:
+`tests/Feature/FichaEmpleadosTest.php` + `tests/Feature/EmployeeFichaPlantillasTest.php` + suite FEAT-028 + `tests/Feature/GestionHumana/ContratacionQuickLetterTest.php`:
 
 - `tests/Feature/GestionHumana/EmployeeFichaCatalogFe028Test.php`
 - `tests/Feature/GestionHumana/EmployeeFichaCatalogSyncFe028Test.php`
