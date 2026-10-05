@@ -170,6 +170,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 | 1.30 | 2026-10-05 | Agent | Carta rápida habilitada también para **reingresos** en Pendientes. |
 | 1.29 | 2026-10-05 | Agent | Unificación: activo y desvinculado usan el mismo modal **Generar Cartas** (tipo preseleccionado según el icono). |
 | 1.28 | 2026-10-05 | Agent | Icono **Generar Cartas**: modal con selector de tipo (catálogo Plantillas Word), plantillas en cards y generación según tipo; icono de desvinculación se mantiene. |
+| 1.33 | 2026-10-05 | Agent | Alta / Gestionar empleado: botón «Ir al inicio» al final del formulario. |
 | 1.32 | 2026-10-05 | Agent | Carta de contratación (Pendientes): botón «Ir al inicio» al final del formulario. |
 | 1.31 | 2026-10-05 | Agent | Pendientes: icono de carta de contratación en verde cuando ya se generó. |
 | 1.30 | 2026-10-05 | Agent | Modal Generar cartas: pasos numerados, tarjetas más claras y pie con Cancelar / Generar y descargar. |
