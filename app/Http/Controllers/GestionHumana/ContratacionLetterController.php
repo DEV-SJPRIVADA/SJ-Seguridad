@@ -20,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use RuntimeException;
@@ -195,16 +196,47 @@ class ContratacionLetterController extends Controller
         Log::error('Fallo al generar carta Word ('.$channel.')', array_merge($context, [
             'exception' => $e::class,
             'message' => $e->getMessage(),
+            'file' => $e->getFile().':'.$e->getLine(),
         ]));
-
-        $userMessage = $e instanceof RuntimeException && filled($e->getMessage())
-            ? $e->getMessage()
-            : 'No se pudo generar la carta de contratación. Verifique plantillas, firmante y almacenamiento del servidor.';
 
         return redirect()
             ->back()
             ->withInput()
-            ->withErrors(['carta' => $userMessage]);
+            ->withErrors(['carta' => $this->userFacingLetterError($e)]);
+    }
+
+    private function userFacingLetterError(Throwable $e): string
+    {
+        $raw = trim($e->getMessage());
+
+        if ($raw !== '' && (
+            str_contains($raw, 'emp_ficha_profiles_doc_uq')
+            || (str_contains($raw, 'Duplicate entry') && str_contains($raw, 'emp_ficha_profiles'))
+        )) {
+            return 'Esta cédula ya tiene un perfil de ficha en otro registro. Si es un reingreso, la entrada pendiente debe reutilizar ese perfil; revise que el empleado no siga activo en En ficha.';
+        }
+
+        if ($raw !== '' && str_contains($raw, 'Duplicate entry')) {
+            return 'Conflicto de datos al guardar la ficha (registro duplicado). Detalle: '.Str::limit($raw, 240);
+        }
+
+        if ($raw !== '' && (
+            str_contains($raw, 'Failed to open stream')
+            || str_contains($raw, 'temp')
+            || str_contains($raw, 'Permission denied')
+        )) {
+            return 'No se pudo escribir archivos temporales de Word en el servidor (storage/app/tmp). Revise permisos de storage. Detalle: '.Str::limit($raw, 200);
+        }
+
+        if ($e instanceof RuntimeException && $raw !== '') {
+            return $raw;
+        }
+
+        if ($raw !== '') {
+            return 'No se pudo generar la carta: '.Str::limit($raw, 300);
+        }
+
+        return 'No se pudo generar la carta de contratación. Verifique plantillas, firmante y almacenamiento del servidor.';
     }
 
     /**
