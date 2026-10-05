@@ -88,6 +88,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-10-05 | Agent | Seguimientos: listado con DataTables server-side (paginación/tamaño de página); filtros, export, autosave y revertir se mantienen. |
 | 1.7 | 2026-10-05 | Agent | Bloqueo por cruce con MT-GH-04 (Vacaciones/Incapacidades/Permisos); Masivos: fila fallida + forzar super-admin. |
 | 1.6 | 2026-09-30 | Agent | Seguimientos: default Incompletos; filtro OK TODO exige fecha entregado nomina; selector campo fecha (registro/desvinculacion/nomina) + botones icono filtrar/limpiar. |
 | 1.5 | 2026-09-30 | Agent | Label tablero novedades: MT-GH-04 Novedades |

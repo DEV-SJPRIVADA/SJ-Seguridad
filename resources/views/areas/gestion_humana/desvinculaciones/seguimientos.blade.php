@@ -3,6 +3,7 @@
         @include('areas.gestion_humana.desvinculaciones.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
+    {{-- Seguimientos: DataTables server-side + filtros Alpine; checks/fecha/revert con eventos delegados --}}
     <div class="page-section desvinculaciones-seguimientos-page">
         <div class="app-container">
             <div
@@ -21,7 +22,6 @@
                     'initialFechaHasta' => $filters['fecha_hasta'] ?? '',
                     'defaultFechaCampo' => \App\Models\EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
                 ]))"
-                x-init="init()"
             >
                 <div class="panel__body panel__body--compact">
                     @php
@@ -33,7 +33,7 @@
 
                     @unless ($canEditSeguimientos)
                         <p class="panel-text desvinculaciones-seguimientos__readonly-notice">
-                            Vista de solo lectura. Para editar checks o fecha de nomina necesita el permiso de edicion de Seguimientos.
+                            Vista de solo lectura. Para editar checks o fecha de nómina necesita el permiso de edición de Seguimientos.
                         </p>
                     @endunless
 
@@ -52,7 +52,7 @@
                                                 id="seguimientos-search-q"
                                                 type="search"
                                                 class="form-input"
-                                                placeholder="Cedula o nombre"
+                                                placeholder="Cédula o nombre"
                                                 x-model="q"
                                                 x-on:keydown.enter.prevent="applyFilters()"
                                                 autocomplete="off"
@@ -138,7 +138,7 @@
 
                     <div class="cursos-registros-page__table-toolbar desvinculaciones-seguimientos__table-toolbar">
                         <p class="req-manage-filters__meta">
-                            <strong x-text="totalFormatted"></strong>
+                            <strong id="desvinculaciones-seguimientos-count" x-text="totalFormatted">…</strong>
                             <span x-text="total === 1 ? 'seguimiento' : 'seguimientos'"></span>
                             <span x-show="savingCount > 0" x-cloak> · Guardando…</span>
                             <span x-show="saveError" class="text-danger" x-cloak x-text="saveError"></span>
@@ -155,12 +155,14 @@
                         </div>
                     </div>
 
-                    <div class="data-table-wrap desvinculaciones-seguimientos__table-wrap" x-bind:class="{ 'data-table-wrap--booting': loading }">
-                        <template x-if="loading && rows.length === 0">
-                            <p class="panel-text">Cargando seguimientos…</p>
-                        </template>
-
-                        <table class="data-table desvinculaciones-seguimientos__table">
+                    <div class="data-table-wrap desvinculaciones-seguimientos__table-wrap data-table-wrap--booting">
+                        @include('partials.data-table-loader')
+                        <table
+                            id="desvinculaciones-seguimientos-datatable"
+                            class="data-table desvinculaciones-seguimientos__table js-desvinculaciones-seguimientos-datatable"
+                            data-dt-url="{{ $datatableUrl }}"
+                            style="width:100%"
+                        >
                             <thead>
                                 <tr>
                                     <th class="desvinculaciones-seguimientos__col-id">No</th>
@@ -184,92 +186,8 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody>
-                                <template x-if="! loading && rows.length === 0">
-                                    <tr>
-                                        <td colspan="{{ 11 + count($checkFields) + ($canEditSeguimientos ? 1 : 0) }}" class="desvinculaciones-seguimientos__empty">
-                                            No hay seguimientos con los filtros seleccionados.
-                                        </td>
-                                    </tr>
-                                </template>
-                                <template x-for="row in rows" :key="row.id">
-                                    <tr>
-                                        <td x-text="row.id"></td>
-                                        <td x-text="row.document_number"></td>
-                                        <td x-text="row.full_name"></td>
-                                        <td x-text="row.position_name || '—'"></td>
-                                        <td x-text="row.termination_cause_name || '—'"></td>
-                                        <td x-text="row.registered_at_display"></td>
-                                        <td x-text="row.termination_date_display"></td>
-                                        <template x-for="field in checkFields" :key="row.id + '-' + field">
-                                            <td class="desvinculaciones-seguimientos__check-td">
-                                                <input
-                                                    type="checkbox"
-                                                    class="desvinculaciones-seguimientos__check"
-                                                    x-bind:checked="row.checks[field]"
-                                                    x-bind:disabled="! canEdit || isSaving(row.id, field)"
-                                                    x-on:change="onCheckChange(row, field, $event.target.checked)"
-                                                    x-bind:aria-label="checkLabels[field]"
-                                                >
-                                            </td>
-                                        </template>
-                                        <td>
-                                            <span
-                                                class="desvinculaciones-seguimientos__ok-todo"
-                                                x-text="row.ok_todo ? 'Si' : 'No'"
-                                            ></span>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="date"
-                                                class="form-input desvinculaciones-seguimientos__date"
-                                                x-model="row.payroll_delivered_at"
-                                                x-bind:disabled="! canEdit || isSaving(row.id, 'payroll_delivered_at')"
-                                                x-on:change="onPayrollChange(row)"
-                                            >
-                                        </td>
-                                        <td x-text="row.letter_generated_label"></td>
-                                        <td x-text="row.termination_cause_name || '—'"></td>
-                                        <td x-text="row.is_rehireable_label"></td>
-                                        <td class="desvinculaciones-seguimientos__notes" x-text="row.termination_notes || '—'"></td>
-                                        @if ($canEditSeguimientos)
-                                            <td class="desvinculaciones-seguimientos__actions-td">
-                                                <button
-                                                    type="button"
-                                                    class="btn btn--secondary btn--sm desvinculaciones-seguimientos__revert-btn"
-                                                    title="Revertir desvinculacion"
-                                                    aria-label="Revertir desvinculacion"
-                                                    x-bind:disabled="reverting"
-                                                    x-on:click="openRevertModal(row)"
-                                                >
-                                                    <x-ri-issues-reopen-fill width="18" height="18" aria-hidden="true" />
-                                                </button>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                </template>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
-                    </div>
-
-                    <div class="desvinculaciones-seguimientos__pager" x-show="pages > 1" x-cloak>
-                        <button
-                            type="button"
-                            class="btn btn--secondary btn--sm"
-                            x-bind:disabled="page <= 1 || loading"
-                            x-on:click="goPage(page - 1)"
-                        >
-                            Anterior
-                        </button>
-                        <span class="panel-text" x-text="'Pagina ' + page + ' de ' + pages"></span>
-                        <button
-                            type="button"
-                            class="btn btn--secondary btn--sm"
-                            x-bind:disabled="page >= pages || loading"
-                            x-on:click="goPage(page + 1)"
-                        >
-                            Siguiente
-                        </button>
                     </div>
                 </div>
 
@@ -284,41 +202,27 @@
                             class="modal-card desvinculaciones-seguimientos__revert-modal"
                             role="dialog"
                             aria-modal="true"
-                            aria-labelledby="revert-desvinculacion-title"
-                            @click.stop
+                            aria-labelledby="seguimientos-revert-title"
                         >
-                            <div class="ficha-empleados-masivos-modal__header">
-                                <div>
-                                    <h3 id="revert-desvinculacion-title" class="ficha-empleados-masivos-modal__title">Revertir desvinculacion</h3>
-                                    <p class="ficha-empleados-masivos-modal__lead">
-                                        <span x-text="revertModal.full_name"></span>
-                                        — <span x-text="revertModal.document_number"></span>
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="ficha-empleados-masivos-modal__close"
-                                    aria-label="Cerrar"
-                                    x-on:click="closeRevertModal()"
-                                >
-                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                </button>
+                            <div class="ficha-empleados-terminate-modal__header" style="padding: 1rem 1rem 0;">
+                                <h3 id="seguimientos-revert-title" class="panel-title">Revertir desvinculación</h3>
+                                <p class="panel-text">
+                                    <span x-text="revertModal.full_name"></span>
+                                    ·
+                                    <span x-text="revertModal.document_number"></span>
+                                </p>
                             </div>
 
-                            <div class="panel__body form-stack">
-                                <p class="panel-text">
-                                    Se reactivara al empleado, se eliminara el seguimiento y se borraran las cartas generadas de este retiro.
-                                </p>
+                            <div class="ficha-empleados-terminate-modal__body" style="padding: 1rem;">
                                 <div class="form-field">
-                                    <label class="form-label" for="revert-reason">Motivo <span class="text-danger">*</span></label>
+                                    <label class="form-label" for="seguimientos-revert-reason">Motivo <span class="text-danger">*</span></label>
                                     <textarea
-                                        id="revert-reason"
-                                        class="form-input supply-textarea"
+                                        id="seguimientos-revert-reason"
+                                        class="form-input"
                                         rows="3"
-                                        maxlength="1000"
                                         x-model="revertModal.reason"
                                         x-bind:disabled="reverting"
-                                        placeholder="Indique el motivo de la reversion…"
+                                        placeholder="Indique el motivo de la reversión…"
                                     ></textarea>
                                     <p class="form-hint text-danger" x-show="revertModal.error" x-text="revertModal.error" x-cloak></p>
                                 </div>
@@ -334,7 +238,7 @@
                                     x-on:click="confirmRevert()"
                                     x-bind:disabled="reverting || ! String(revertModal.reason || '').trim()"
                                 >
-                                    <span x-show="! reverting">Confirmar reversion</span>
+                                    <span x-show="! reverting">Confirmar reversión</span>
                                     <span x-show="reverting" x-cloak>Revirtiendo…</span>
                                 </button>
                             </div>
@@ -347,6 +251,43 @@
 
     @push('scripts')
         <script>
+            // DataTables fuera del estado Alpine: el Proxy reactivo rompe la API y deja el loader colgado.
+            let seguimientosDtApi = null;
+
+            function getSeguimientosAlpine() {
+                const root = document.querySelector('.desvinculaciones-seguimientos');
+                if (!root || !window.Alpine) {
+                    return null;
+                }
+                return window.Alpine.$data(root);
+            }
+
+            function escapeSeguimientosHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function revealSeguimientosTable() {
+                const wrap = document.querySelector('.desvinculaciones-seguimientos__table-wrap');
+                if (wrap) {
+                    wrap.classList.remove('data-table-wrap--booting');
+                    const loader = wrap.querySelector('.data-table-wrap__loader');
+                    if (loader) {
+                        loader.setAttribute('aria-busy', 'false');
+                    }
+                }
+            }
+
+            function reloadSeguimientosTable() {
+                if (seguimientosDtApi) {
+                    seguimientosDtApi.ajax.reload(null, false);
+                }
+            }
+
             document.addEventListener('alpine:init', () => {
                 Alpine.data('desvinculacionesSeguimientos', (config) => ({
                     canEdit: !!config.canEdit,
@@ -366,11 +307,7 @@
                         { value: 'ok_todo', label: 'OK TODO' },
                         { value: 'sin_carta', label: 'Sin carta' },
                     ],
-                    rows: [],
                     total: 0,
-                    page: 1,
-                    perPage: 25,
-                    loading: false,
                     saving: {},
                     saveTimers: {},
                     savingCount: 0,
@@ -384,10 +321,6 @@
                         revert_url: '',
                         reason: '',
                         error: '',
-                    },
-
-                    get pages() {
-                        return Math.max(1, Math.ceil(this.total / this.perPage));
                     },
 
                     get totalFormatted() {
@@ -428,13 +361,8 @@
                         };
                     },
 
-                    init() {
-                        this.load();
-                    },
-
                     applyFilters() {
-                        this.page = 1;
-                        this.load();
+                        reloadSeguimientosTable();
                     },
 
                     clearFilters() {
@@ -444,8 +372,7 @@
                         this.fechaHasta = '';
                         this.fechaCampo = this.defaultFechaCampo;
                         this.setFechaCampoSelect(this.fechaCampo);
-                        this.page = 1;
-                        this.load();
+                        reloadSeguimientosTable();
                     },
 
                     setFechaCampoSelect(value) {
@@ -482,7 +409,6 @@
                             || (this.fechaHasta || '').trim() !== '';
 
                         if (hasDateRange) {
-                            // Rango activo: desactiva chips de estado hasta que el usuario elija uno.
                             this.status = '';
                         } else if (this.status === '') {
                             this.status = 'incompletos';
@@ -496,25 +422,15 @@
                             return;
                         }
                         this.status = value;
-                        this.page = 1;
-                        this.load();
-                    },
-
-                    goPage(next) {
-                        this.page = Math.min(this.pages, Math.max(1, next));
-                        this.load();
+                        reloadSeguimientosTable();
                     },
 
                     saveKey(id, field) {
                         return id + ':' + field;
                     },
 
-                    isSaving(id, field) {
-                        return !!this.saving[this.saveKey(id, field)];
-                    },
-
                     openRevertModal(row) {
-                        if (!this.canEdit || this.reverting) {
+                        if (! this.canEdit || this.reverting) {
                             return;
                         }
 
@@ -541,8 +457,8 @@
 
                     async confirmRevert() {
                         const reason = String(this.revertModal.reason || '').trim();
-                        if (!reason || !this.revertModal.revert_url) {
-                            this.revertModal.error = 'Indique el motivo (minimo 5 caracteres).';
+                        if (! reason || ! this.revertModal.revert_url) {
+                            this.revertModal.error = 'Indique el motivo (mínimo 5 caracteres).';
                             return;
                         }
 
@@ -575,13 +491,13 @@
                                 throw new Error(msg);
                             }
 
-                            if (!res.ok) {
-                                throw new Error(body.message || 'No se pudo revertir la desvinculacion.');
+                            if (! res.ok) {
+                                throw new Error(body.message || 'No se pudo revertir la desvinculación.');
                             }
 
                             this.reverting = false;
                             this.closeRevertModal();
-                            await this.load();
+                            reloadSeguimientosTable();
                         } catch (e) {
                             this.revertModal.error = e.message || 'Error al revertir.';
                         } finally {
@@ -589,63 +505,33 @@
                         }
                     },
 
-                    async load() {
-                        this.loading = true;
-                        this.saveError = '';
-
-                        const params = new URLSearchParams({
-                            ...this.filterParams(),
-                            draw: '1',
-                            start: String((this.page - 1) * this.perPage),
-                            length: String(this.perPage),
-                        });
-
-                        try {
-                            const res = await fetch(this.datatableUrl + '?' + params.toString(), {
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                },
-                                credentials: 'same-origin',
-                            });
-
-                            if (!res.ok) {
-                                throw new Error('No se pudo cargar el listado.');
-                            }
-
-                            const json = await res.json();
-                            this.rows = Array.isArray(json.data) ? json.data : [];
-                            this.total = Number(json.recordsFiltered || 0);
-                        } catch (e) {
-                            this.rows = [];
-                            this.total = 0;
-                            this.saveError = e.message || 'Error al cargar.';
-                        } finally {
-                            this.loading = false;
-                        }
-                    },
-
-                    onCheckChange(row, field, checked) {
-                        if (!this.canEdit) {
+                    onCheckChange(input) {
+                        const id = Number(input.getAttribute('data-id') || 0);
+                        const field = input.getAttribute('data-field') || '';
+                        const updateUrl = input.getAttribute('data-update-url') || '';
+                        if (! id || ! field || ! updateUrl) {
                             return;
                         }
 
-                        row.checks[field] = !!checked;
-                        row.ok_todo = this.computeOkTodo(row);
-                        this.queuePatch(row, { [field]: !!checked }, field);
+                        this.queuePatch(
+                            { id, update_url: updateUrl, $row: input.closest('tr') },
+                            { [field]: !! input.checked },
+                            field,
+                        );
                     },
 
-                    onPayrollChange(row) {
-                        if (!this.canEdit) {
+                    onPayrollChange(input) {
+                        const id = Number(input.getAttribute('data-id') || 0);
+                        const updateUrl = input.getAttribute('data-update-url') || '';
+                        if (! id || ! updateUrl) {
                             return;
                         }
 
-                        const value = row.payroll_delivered_at || null;
-                        this.queuePatch(row, { payroll_delivered_at: value }, 'payroll_delivered_at');
-                    },
-
-                    computeOkTodo(row) {
-                        return this.checkFields.every((field) => !!row.checks[field]);
+                        this.queuePatch(
+                            { id, update_url: updateUrl, $row: input.closest('tr') },
+                            { payroll_delivered_at: input.value || null },
+                            'payroll_delivered_at',
+                        );
                     },
 
                     queuePatch(row, payload, field) {
@@ -666,6 +552,15 @@
                         this.savingCount = Object.keys(this.saving).filter((k) => this.saving[k]).length;
                         this.saveError = '';
 
+                        const $row = row.$row;
+                        if ($row) {
+                            $row.querySelectorAll('input').forEach((el) => {
+                                if (el.getAttribute('data-field') === field || (field === 'payroll_delivered_at' && el.classList.contains('js-seguimiento-payroll'))) {
+                                    el.disabled = true;
+                                }
+                            });
+                        }
+
                         try {
                             const res = await fetch(row.update_url, {
                                 method: 'PATCH',
@@ -683,7 +578,7 @@
                                 throw new Error('Sin permiso para editar seguimientos.');
                             }
 
-                            if (!res.ok) {
+                            if (! res.ok) {
                                 const body = await res.json().catch(() => ({}));
                                 const msg = body.message
                                     || (body.errors ? Object.values(body.errors).flat().join(' ') : null)
@@ -692,18 +587,249 @@
                             }
 
                             const json = await res.json();
-                            if (json.followup) {
-                                Object.assign(row, json.followup);
+                            if (json.followup && $row) {
+                                const okTodo = $row.querySelector('.js-seguimiento-ok-todo');
+                                if (okTodo) {
+                                    okTodo.textContent = json.followup.ok_todo ? 'Si' : 'No';
+                                }
                             }
                         } catch (e) {
                             this.saveError = e.message || 'Error al guardar.';
-                            await this.load();
+                            reloadSeguimientosTable();
                         } finally {
                             delete this.saving[key];
                             this.savingCount = Object.keys(this.saving).length;
+                            if ($row && this.canEdit) {
+                                $row.querySelectorAll('input').forEach((el) => {
+                                    el.disabled = false;
+                                });
+                            }
                         }
                     },
                 }));
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const $ = window.jQuery;
+                if (! $ || ! $.fn.DataTable) {
+                    revealSeguimientosTable();
+                    return;
+                }
+
+                const $table = $('.js-desvinculaciones-seguimientos-datatable');
+                if (! $table.length) {
+                    return;
+                }
+
+                const alpine = getSeguimientosAlpine();
+                const canEdit = !!(alpine && alpine.canEdit);
+                const checkFields = (alpine && alpine.checkFields) ? alpine.checkFields : @json(array_values($checkFields));
+                const checkLabels = (alpine && alpine.checkLabels) ? alpine.checkLabels : @json($checkLabels);
+
+                if ($.fn.DataTable.isDataTable($table[0])) {
+                    $table.DataTable().destroy();
+                }
+
+                const columns = [
+                    { data: 'id' },
+                    { data: 'document_number' },
+                    {
+                        data: 'full_name',
+                        render: (data) => escapeSeguimientosHtml(data),
+                    },
+                    {
+                        data: 'position_name',
+                        defaultContent: '—',
+                        render: (data) => escapeSeguimientosHtml(data || '—'),
+                    },
+                    {
+                        data: 'termination_cause_name',
+                        defaultContent: '—',
+                        render: (data) => escapeSeguimientosHtml(data || '—'),
+                    },
+                    { data: 'registered_at_display', orderable: false },
+                    { data: 'termination_date_display', orderable: false },
+                ];
+
+                checkFields.forEach((field) => {
+                    columns.push({
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        className: 'desvinculaciones-seguimientos__check-td',
+                        render: (_data, _type, row) => {
+                            const checked = row.checks && row.checks[field] ? ' checked' : '';
+                            const disabled = canEdit ? '' : ' disabled';
+                            const label = escapeSeguimientosHtml(checkLabels[field] || field);
+                            return (
+                                '<input type="checkbox"'
+                                + ' class="desvinculaciones-seguimientos__check js-seguimiento-check"'
+                                + ' data-id="' + row.id + '"'
+                                + ' data-field="' + escapeSeguimientosHtml(field) + '"'
+                                + ' data-update-url="' + escapeSeguimientosHtml(row.update_url || '') + '"'
+                                + ' aria-label="' + label + '"'
+                                + checked
+                                + disabled
+                                + '>'
+                            );
+                        },
+                    });
+                });
+
+                columns.push(
+                    {
+                        data: 'ok_todo',
+                        orderable: false,
+                        searchable: false,
+                        render: (data) => (
+                            '<span class="desvinculaciones-seguimientos__ok-todo js-seguimiento-ok-todo">'
+                            + (data ? 'Si' : 'No')
+                            + '</span>'
+                        ),
+                    },
+                    {
+                        data: 'payroll_delivered_at',
+                        orderable: false,
+                        searchable: false,
+                        render: (data, _type, row) => {
+                            const disabled = canEdit ? '' : ' disabled';
+                            const value = data ? escapeSeguimientosHtml(data) : '';
+                            return (
+                                '<input type="date"'
+                                + ' class="form-input desvinculaciones-seguimientos__date js-seguimiento-payroll"'
+                                + ' data-id="' + row.id + '"'
+                                + ' data-update-url="' + escapeSeguimientosHtml(row.update_url || '') + '"'
+                                + ' value="' + value + '"'
+                                + disabled
+                                + '>'
+                            );
+                        },
+                    },
+                    { data: 'letter_generated_label', orderable: false, searchable: false },
+                    {
+                        data: 'termination_cause_name',
+                        orderable: false,
+                        defaultContent: '—',
+                        render: (data) => escapeSeguimientosHtml(data || '—'),
+                    },
+                    { data: 'is_rehireable_label', orderable: false, searchable: false },
+                    {
+                        data: 'termination_notes',
+                        orderable: false,
+                        className: 'desvinculaciones-seguimientos__notes',
+                        render: (data) => escapeSeguimientosHtml(data || '—'),
+                    },
+                );
+
+                if (canEdit) {
+                    columns.push({
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        className: 'desvinculaciones-seguimientos__actions-td',
+                        render: (_data, _type, row) => (
+                            '<button type="button"'
+                            + ' class="btn btn--secondary btn--sm desvinculaciones-seguimientos__revert-btn js-seguimiento-revert"'
+                            + ' title="Revertir desvinculación"'
+                            + ' aria-label="Revertir desvinculación"'
+                            + ' data-id="' + row.id + '"'
+                            + ' data-document-number="' + escapeSeguimientosHtml(row.document_number || '') + '"'
+                            + ' data-full-name="' + escapeSeguimientosHtml(row.full_name || '') + '"'
+                            + ' data-revert-url="' + escapeSeguimientosHtml(row.revert_url || '') + '"'
+                            + '>'
+                            + '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+                            + '<path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>'
+                            + '</svg>'
+                            + '</button>'
+                        ),
+                    });
+                }
+
+                const nonOrderable = [];
+                columns.forEach((col, index) => {
+                    if (col.orderable === false) {
+                        nonOrderable.push(index);
+                    }
+                });
+
+                seguimientosDtApi = $table.DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: $table.data('dt-url'),
+                        data: function (d) {
+                            const live = getSeguimientosAlpine();
+                            if (live && typeof live.filterParams === 'function') {
+                                Object.assign(d, live.filterParams());
+                            }
+                        },
+                        error: function () {
+                            revealSeguimientosTable();
+                            const live = getSeguimientosAlpine();
+                            if (live) {
+                                live.saveError = 'No se pudo cargar el listado de seguimientos.';
+                            }
+                        },
+                    },
+                    columns,
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                        emptyTable: 'No hay seguimientos con los filtros seleccionados.',
+                    },
+                    dom: '<"req-manage-dt-top"l><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
+                    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                    pageLength: 25,
+                    responsive: false,
+                    order: [[0, 'desc']],
+                    columnDefs: [{ targets: nonOrderable, orderable: false, searchable: false }],
+                });
+
+                seguimientosDtApi.on('xhr.dt', function (_event, _settings, json) {
+                    revealSeguimientosTable();
+                    const live = getSeguimientosAlpine();
+                    if (live) {
+                        live.total = Number(json?.recordsFiltered || 0);
+                    }
+                    const el = document.getElementById('desvinculaciones-seguimientos-count');
+                    if (el) {
+                        el.textContent = Number(json?.recordsFiltered || 0).toLocaleString('es-CO');
+                    }
+                });
+
+                seguimientosDtApi.on('error.dt', function () {
+                    revealSeguimientosTable();
+                });
+
+                window.setTimeout(revealSeguimientosTable, 8000);
+
+                $table.on('change', '.js-seguimiento-check', function () {
+                    const live = getSeguimientosAlpine();
+                    if (! live || ! live.canEdit) {
+                        return;
+                    }
+                    live.onCheckChange(this);
+                });
+
+                $table.on('change', '.js-seguimiento-payroll', function () {
+                    const live = getSeguimientosAlpine();
+                    if (! live || ! live.canEdit) {
+                        return;
+                    }
+                    live.onPayrollChange(this);
+                });
+
+                $table.on('click', '.js-seguimiento-revert', function () {
+                    const live = getSeguimientosAlpine();
+                    if (! live) {
+                        return;
+                    }
+                    live.openRevertModal({
+                        id: Number(this.getAttribute('data-id') || 0),
+                        document_number: this.getAttribute('data-document-number') || '',
+                        full_name: this.getAttribute('data-full-name') || '',
+                        revert_url: this.getAttribute('data-revert-url') || '',
+                    });
+                });
             });
         </script>
     @endpush

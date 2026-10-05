@@ -23,11 +23,15 @@ final class TerminationFollowupDatatableService
         $start = max(0, (int) $request->input('start', 0));
         $length = (int) $request->input('length', 25);
 
+        // Tope duro: nunca devolver “todos” sin límite (DataTables length -1).
+        if ($length === -1 || $length > 100) {
+            $length = 100;
+        }
+        $length = max(1, $length);
+
         $recordsFiltered = (clone $query)->count();
 
-        if ($length !== -1) {
-            $query->skip($start)->take(max(1, $length));
-        }
+        $query->skip($start)->take($length);
 
         /** @var Collection<int, EmployeeTerminationFollowup> $rows */
         $rows = $query->get();
