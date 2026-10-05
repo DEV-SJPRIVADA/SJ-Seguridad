@@ -64,10 +64,10 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 ### Preparar Catálogos (primera vez)
 
-1. Vaya a **Catálogos**.
-2. Confirme que existen los estados (Pendiente, En proceso, Respondida, Cerrada).
-3. En **Solicitud**, cree al menos un tipo (código, nombre, activo). Sin tipos no podrá guardar ni importar solicitudes.
-4. Para dejar de usar un ítem sin borrarlo, desactívelo. Solo elimine si el sistema indica que no hay registros que lo usen.
+1. Vaya a **Catálogos**. Verá dos tarjetas: **Estados** (precargados) y **Tipos de solicitud** (vacía al inicio; muestra aviso «Sin tipos — créelos aquí»).
+2. Pulse **Tipos de solicitud**. En la parte superior use código + nombre (ej. `CERTIFICADO` / `Certificado laboral`) y el botón **+**. Deje **Activo** marcado.
+3. Puede cambiar entre Estados y Tipos con las pestañas del panel, o volver a las tarjetas con **Volver a catálogos**.
+4. Confirme los estados (Pendiente, En proceso, Respondida, Cerrada). Para dejar de usar un ítem sin borrarlo, desactívelo. Solo elimine si el sistema indica que no hay registros que lo usen.
 
 ### Usar el Dashboard
 
@@ -117,4 +117,5 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.1 | 2026-10-05 | Agent | Catálogos: al abrir se muestran las tarjetas (Estados / Tipos); aviso y enlace directo desde Solicitudes si no hay tipos. |
 | 1.0 | 2026-10-05 | Documentador | Version inicial FEAT-042 (Dashboard, Solicitudes, Catálogos, masivo B, días hábiles) |

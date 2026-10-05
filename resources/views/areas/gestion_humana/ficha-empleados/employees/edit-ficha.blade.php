@@ -122,6 +122,18 @@
                             </button>
                         @endif
 
+                        @if ($canViewEmployeeAcreditaciones ?? false)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Consultar acreditación"
+                                aria-label="Consultar acreditación del empleado"
+                                x-on:click="$dispatch('open-modal', 'ficha-employee-acreditaciones')"
+                            >
+                                <x-lucide-badge-check width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+
                         @if ($employmentHistory->isNotEmpty())
                             <button
                                 type="button"
@@ -295,6 +307,12 @@
                 'entry' => $entry,
                 'employeeCursos' => $employeeCursos ?? collect(),
                 'canViewEmployeeCursos' => $canViewEmployeeCursos ?? false,
+            ])
+
+            @include('areas.gestion_humana.ficha-empleados.partials.employee-acreditaciones-modal', [
+                'entry' => $entry,
+                'employeeAcreditaciones' => $employeeAcreditaciones ?? collect(),
+                'canViewEmployeeAcreditaciones' => $canViewEmployeeAcreditaciones ?? false,
             ])
         </div>
     </div>

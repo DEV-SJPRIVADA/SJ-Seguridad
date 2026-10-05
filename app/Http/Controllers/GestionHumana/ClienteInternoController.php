@@ -426,11 +426,11 @@ class ClienteInternoController extends Controller
     {
         abort_unless($this->clienteInternoAccess->canEditParameters(auth()->user()), 403);
 
-        // Default del switch: estados si no viene ?catalog=
-        $activeCatalog = (string) $request->query('catalog', ClienteInternoCatalogService::TYPE_ESTADOS);
-        if (! $this->catalogService->isManagedType($activeCatalog)) {
-            $activeCatalog = ClienteInternoCatalogService::TYPE_ESTADOS;
-        }
+        // Sin ?catalog= muestra el tablero de tarjetas (Estados + Tipos de solicitud).
+        $catalogQuery = $request->query('catalog');
+        $activeCatalog = is_string($catalogQuery) && $this->catalogService->isManagedType($catalogQuery)
+            ? $catalogQuery
+            : null;
 
         return view('areas.gestion_humana.cliente_interno.catalogos', [
             'subTabs' => $this->getClienteInternoSubTabs('catalogos'),

@@ -3,7 +3,7 @@
         @include('areas.gestion_humana.cliente_interno.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    {{-- Catálogos Cliente interno: switch ?catalog=estados|tipos-solicitud --}}
+    {{-- Catálogos Cliente interno: selector de tarjetas + gestión por ?catalog= --}}
     <div class="page-section ficha-empleados-catalogs-page">
         <div class="app-container">
             @if (session('status'))
@@ -16,34 +16,63 @@
             <div id="ci-catalog-selector-screen">
                 <div class="page-header-inner ficha-empleados-catalogs-page__head">
                     <h2 class="page-title">Catálogos de Cliente interno</h2>
-                    <p class="page-subtitle">Administre estados y tipos de solicitud usados en el tablero.</p>
+                    <p class="page-subtitle">Elija un catálogo para crear o editar registros. Los <strong>tipos de solicitud</strong> son obligatorios antes de registrar solicitudes.</p>
                 </div>
 
                 <div class="ficha-empleados-catalogs-page__grid">
                     @foreach ($catalogs as $catalog)
                         <button type="button" class="ficha-empleados-catalogs-page__card" data-catalog-key="{{ $catalog['key'] }}">
                             <span class="ficha-empleados-catalogs-page__card-icon" aria-hidden="true">
-                                <x-lucide-list width="22" height="22" aria-hidden="true" />
+                                @if ($catalog['key'] === 'tipos-solicitud')
+                                    <x-lucide-tags width="22" height="22" aria-hidden="true" />
+                                @else
+                                    <x-lucide-list width="22" height="22" aria-hidden="true" />
+                                @endif
                             </span>
                             <span class="ficha-empleados-catalogs-page__card-title">{{ $catalog['label'] }}</span>
                             <span class="ficha-empleados-catalogs-page__card-count">{{ count($catalog['items']) }} registrados</span>
+                            @if ($catalog['key'] === 'tipos-solicitud' && $catalog['items']->isEmpty())
+                                <span class="status-pill status-pill--warning">Sin tipos — créelos aquí</span>
+                            @endif
                         </button>
                     @endforeach
                 </div>
             </div>
 
             <div id="ci-catalog-management-screen" class="ficha-empleados-catalogs-page__manage" hidden>
-                <button type="button" class="ficha-empleados-catalogs-page__back" data-catalog-back>
-                    <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
-                    Volver al tablero
-                </button>
+                <div class="ficha-empleados-catalogs-page__manage-toolbar">
+                    <button type="button" class="ficha-empleados-catalogs-page__back" data-catalog-back>
+                        <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
+                        Volver a catálogos
+                    </button>
+
+                    {{-- Cambio rápido entre Estados y Tipos sin volver al tablero --}}
+                    <nav class="module-tabs ficha-empleados-catalogs-page__switch" aria-label="Catálogo activo">
+                        @foreach ($catalogs as $catalog)
+                            <button
+                                type="button"
+                                class="module-tab"
+                                data-catalog-switch="{{ $catalog['key'] }}"
+                            >
+                                {{ $catalog['label'] }}
+                                <span class="ficha-empleados-catalogs-page__switch-count">{{ count($catalog['items']) }}</span>
+                            </button>
+                        @endforeach
+                    </nav>
+                </div>
 
                 @foreach ($catalogs as $catalog)
                     <section id="section-{{ $catalog['key'] }}" class="ficha-empleados-catalogs-page__section" hidden>
                         <div class="panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">Gestionar: {{ $catalog['label'] }}</h3>
-                                <p class="panel-text">{{ $catalog['columnLabels']['code'] }} y {{ $catalog['columnLabels']['name'] }} usados en solicitudes de Cliente interno.</p>
+                                <p class="panel-text">
+                                    @if ($catalog['key'] === 'tipos-solicitud')
+                                        Cree aquí los tipos (por ejemplo Certificado laboral, Carta laboral). Luego aparecerán en el formulario de Solicitudes.
+                                    @else
+                                        {{ $catalog['columnLabels']['code'] }} y {{ $catalog['columnLabels']['name'] }} usados en solicitudes de Cliente interno.
+                                    @endif
+                                </p>
                             </div>
 
                             <div class="panel__body section-stack">
@@ -64,7 +93,7 @@
                                                 class="form-input"
                                                 maxlength="50"
                                                 required
-                                                placeholder="{{ $catalog['columnLabels']['code'] }}"
+                                                placeholder="{{ $catalog['key'] === 'tipos-solicitud' ? 'Ej. CERTIFICADO' : $catalog['columnLabels']['code'] }}"
                                             >
                                         </div>
                                         <div class="form-field ficha-empleados-catalogs-page__name-field">
@@ -76,7 +105,7 @@
                                                 class="form-input"
                                                 maxlength="{{ $catalog['key'] === 'estados' ? 100 : 150 }}"
                                                 required
-                                                placeholder="{{ $catalog['columnLabels']['name'] }}"
+                                                placeholder="{{ $catalog['key'] === 'tipos-solicitud' ? 'Ej. Certificado laboral' : $catalog['columnLabels']['name'] }}"
                                             >
                                         </div>
                                         <div class="form-field ficha-empleados-catalogs-page__sort-field">
@@ -100,7 +129,7 @@
                                                 type="submit"
                                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                                 title="Agregar"
-                                                aria-label="Agregar"
+                                                aria-label="Agregar {{ $catalog['label'] }}"
                                             >
                                                 <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                             </button>
@@ -177,7 +206,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="5" class="text-muted">Sin registros en este catálogo.</td>
+                                                    <td colspan="5" class="text-muted">Sin registros en este catálogo. Use el formulario de arriba para agregar el primero.</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
@@ -263,12 +292,21 @@
                 window.history.replaceState({}, '', url.toString());
             }
 
+            function syncSwitchTabs(key) {
+                document.querySelectorAll('[data-catalog-switch]').forEach(function (tab) {
+                    var active = tab.getAttribute('data-catalog-switch') === key;
+                    tab.classList.toggle('module-tab--active', active);
+                    tab.setAttribute('aria-current', active ? 'page' : 'false');
+                });
+            }
+
             function showSection(key) {
                 selectorScreen.hidden = true;
                 manageScreen.hidden = false;
                 document.querySelectorAll('.ficha-empleados-catalogs-page__section').forEach(function (section) {
                     section.hidden = section.id !== 'section-' + key;
                 });
+                syncSwitchTabs(key);
                 setCatalogQuery(key);
                 window.scrollTo(0, 0);
             }
@@ -290,6 +328,12 @@
             document.querySelectorAll('[data-catalog-key]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     showSection(button.getAttribute('data-catalog-key'));
+                });
+            });
+
+            document.querySelectorAll('[data-catalog-switch]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    showSection(button.getAttribute('data-catalog-switch'));
                 });
             });
 
@@ -324,7 +368,7 @@
                 }
             });
 
-            // Abre el catálogo por query o default (estados)
+            // Solo abre un catálogo si viene ?catalog= en la URL
             var openCatalog = catalogQueryKey();
             if (openCatalog && document.getElementById('section-' + openCatalog)) {
                 showSection(openCatalog);

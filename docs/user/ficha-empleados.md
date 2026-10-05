@@ -81,7 +81,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. En la pestaña **Empleados**, cambie a la pill **En ficha**.
 2. Haga clic en una fila para abrir el detalle de la ficha.
-3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. La **carta de contratación** se genera desde el icono de documento en la barra superior de acciones.
+3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. La **carta de contratación** se genera desde el icono de documento en la barra superior de acciones. Con permiso de ver ficha también puede abrir **Consultar cursos** (gorro) y **Consultar acreditación** (insignia) para ver el historial por cédula sin salir de la ficha.
 4. En el filtro **Desvinculado** aparece la columna **Recontratable** (Si/No) según lo registrado al desvincular.
 
 ### Completar ficha de empleado
@@ -162,6 +162,8 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.27 | 2026-10-05 | Agent | Modales Consultar cursos / acreditación: más anchos, scroll horizontal/vertical y cabecera con contador. |
+| 1.26 | 2026-10-05 | Agent | Ficha: icono Consultar acreditación (modal por cédula) junto a Consultar cursos; mismo permiso view de ficha. |
 | 1.25 | 2026-10-05 | Agent | Alta/Gestionar empleado: errores de validación en español, alerta visible, scroll al campo y mensaje si el pendiente ya no existe (sin 404). |
 | 1.24 | 2026-10-05 | Agent | Desvinculación bloqueada si hay cruce con Vacaciones/Incapacidad/Permiso (MT-GH-04); forzar solo super-admin. |
 | 1.23 | 2026-10-05 | Agent | **Carta de contratación** desde Pendientes (formulario corto; no mueve a En ficha). |

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\GestionHumana;
 
+use App\Models\AcreditacionAcreditado;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
@@ -110,6 +111,33 @@ class CursosFichaBridgeTest extends TestCase
             ->assertOk()
             ->assertSee('Consultar cursos', false)
             ->assertSee('ficha-employee-cursos', false);
+    }
+
+    public function test_edit_ficha_shows_acreditaciones_modal_with_rows(): void
+    {
+        $manager = $this->fichaManager();
+        $entry = $this->createEntryWithProfile('5555001122', 'Acr Bridge');
+
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5555001122',
+            'full_name' => 'Acr Bridge',
+            'cargo_apo' => 'VIGILANTE',
+            'cargo' => 'Vigilante',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            'vigencia_acr' => '2027-01-15',
+            'fecha_solicitud' => '2026-01-10',
+            'renovacion' => AcreditacionAcreditado::RENOVACION_RENOVADO,
+            'observaciones' => 'OK ficha',
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertSee('Consultar acreditación', false)
+            ->assertSee('ficha-employee-acreditaciones', false)
+            ->assertSee('Acreditaciones del empleado', false)
+            ->assertSee('VIGILANTE', false)
+            ->assertSee('OK ficha', false);
     }
 
     private function fichaViewer(): User
