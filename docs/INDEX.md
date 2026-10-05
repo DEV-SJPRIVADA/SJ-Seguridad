@@ -41,6 +41,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Cursos | [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md) | [`user/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cursos.md) |
 | Formación | [`modules/formacion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/formacion.md) | [`user/formacion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/formacion.md) |
 | Selección | [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md) | [`user/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/seleccion.md) |
+| Cliente interno | [`modules/cliente-interno.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cliente-interno.md) | [`user/cliente-interno.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cliente-interno.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md) | [`user/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md) | [`user/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/user/plantillas-word.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
@@ -64,6 +65,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md)
 - [`modules/formacion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/formacion.md)
 - [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md)
+- [`modules/cliente-interno.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cliente-interno.md)
 - [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md)
 - [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md)
 - [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md)

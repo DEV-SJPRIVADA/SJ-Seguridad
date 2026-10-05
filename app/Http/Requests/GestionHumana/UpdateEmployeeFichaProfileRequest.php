@@ -30,24 +30,14 @@ class UpdateEmployeeFichaProfileRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return [
-            'first_surname' => 'primer apellido',
-            'second_surname' => 'segundo apellido',
-            'first_name' => 'primer nombre',
-            'second_name' => 'segundo nombre',
-            'birth_place' => 'lugar de nacimiento',
-            'sex' => 'género',
-            'hire_date' => 'fecha ingreso',
-            'termination_date' => 'fecha desvinculación',
-            'position_code' => 'cargo',
-            'cost_center_code' => 'centro de costo',
-            'eps_code' => 'EPS',
-            'afp_code' => 'AFP',
-            'bank_code' => 'banco',
-            'account_type' => 'tipo de cuenta',
-            'account_number' => 'número de cuenta',
-            'payment_method_code' => 'forma de pago',
-            'payroll_extra.ccf_code' => 'caja de compensación',
-        ];
+        return $this->employeeFichaProfileFieldAttributes();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->employeeFichaProfileFieldMessages();
     }
 }

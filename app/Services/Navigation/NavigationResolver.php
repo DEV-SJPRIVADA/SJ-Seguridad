@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\ClienteInternoAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
@@ -35,6 +36,7 @@ class NavigationResolver
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
         private readonly SeleccionAccessService $seleccionAccess,
+        private readonly ClienteInternoAccessService $clienteInternoAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly PurchaseAccessService $purchaseAccess,
@@ -296,6 +298,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'cliente_interno') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->clienteInternoAccess->canViewBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.cliente-interno.dashboard',
+                                'url' => $user->defaultClienteInternoBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.'),
+                            ];
+                        }
+
                         if ($boardKey === 'acreditaciones') {
                             if ($key !== 'gestion_humana') {
                                 return null;
@@ -444,6 +463,7 @@ class NavigationResolver
                             $boardKey === 'cursos' => str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana',
                             $boardKey === 'formacion' => str_starts_with((string) $routeName, 'gestion-humana.formacion.') && $key === 'gestion_humana',
                             $boardKey === 'seleccion' => str_starts_with((string) $routeName, 'gestion-humana.seleccion.') && $key === 'gestion_humana',
+                            $boardKey === 'cliente_interno' => str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.') && $key === 'gestion_humana',
                             $boardKey === 'acreditaciones' => str_starts_with((string) $routeName, 'gestion-humana.acreditaciones.') && $key === 'gestion_humana',
                             $boardKey === 'reportes_novedades' => str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
@@ -540,6 +560,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.formacion.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.seleccion.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.acreditaciones.') && $key === 'gestion_humana'
                 ) || (

@@ -26,7 +26,7 @@
 - **Documentos de Calidad:** biblioteca por area, mis documentos, administracion centralizada
 - **Indicadores (Operaciones):** captura FT-OP, dashboard, ajustes (periodos, metas, auditoria), consolidado, export PDF/Excel
 - **Comercial:** dashboard KPI, matriz clientes (NIT), servicios por portafolio; importacion MT-CO-01
-- **Gestion humana (area):** Ficha empleados, Desvinculaciones, **MT-GH-04 Novedades** (Vacaciones / Incapacidades / Retiros / Permisos; review Nómina), Cursos, **Formación** (Dashboard + Formaciones; import replace-all dataset Excel), **Selección** (Ingreso / Examen ocupacional / Dashboard / Catalogos), Acreditaciones, Archivo, Plantillas Word
+- **Gestion humana (area):** Ficha empleados, Desvinculaciones, **MT-GH-04 Novedades** (Vacaciones / Incapacidades / Retiros / Permisos; review Nómina), Cursos, **Formación** (Dashboard + Formaciones; import replace-all dataset Excel), **Selección** (Ingreso / Examen ocupacional / Dashboard / Catalogos), **Cliente interno** (Dashboard + Solicitudes + Catalogos ESTADO/SOLICITUD; import replace-por-periodo), Acreditaciones, Archivo, Plantillas Word
 - Modulos base configurados en navegacion: gestion humana, operaciones, programacion, juridico, comercial, calidad, admin y financiero, compras
 - Correo local: Laragon Mailpit (`MAIL_MAILER=smtp`, puerto `1025`; ver `docs/LOCAL_SETUP.md`)
 
@@ -57,6 +57,7 @@ El workflow multi-agente actualiza estas capas al cerrar features ([`docs/AGENT_
 - **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `improvements`
 - **Comercial:** `commercial_clients`, `commercial_services`, catalogos `commercial_*`
 - **Selección (GH):** `seleccion_ingresos`, `seleccion_examenes_ocupacionales`; catalogos RH/estado civil/SOLICITUD en `payroll_catalog_items`
+- **Cliente interno (GH):** `cliente_interno_solicitudes`; catálogos propios `cliente_interno_estados`, `cliente_interno_tipos_solicitud` (no payroll)
 - **Formación (GH):** `formacion_registros` (dataset Excel autónomo; sin FK a Ficha)
 - **Acreditaciones (GH):** `acreditacion_acreditados`, `acreditacion_cargos`; estados calculados; enlace lógico a Ficha por cédula
 - `requisition_clients` (puente interno con matriz comercial)

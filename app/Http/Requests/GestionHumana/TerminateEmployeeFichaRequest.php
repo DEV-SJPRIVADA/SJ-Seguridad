@@ -28,6 +28,7 @@ class TerminateEmployeeFichaRequest extends FormRequest
             'last_work_day' => ['required', 'date'],
             'termination_date' => ['required', 'date', 'after_or_equal:last_work_day'],
             'termination_notes' => ['nullable', 'string', 'max:1000'],
+            'force_novedades_conflict' => ['sometimes', 'boolean'],
         ];
     }
 

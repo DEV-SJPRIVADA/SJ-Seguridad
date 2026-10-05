@@ -9,6 +9,7 @@
                 class="panel desvinculaciones-masivos"
                 x-data="desvinculacionesMasivos(@js([
                     'canMasivos' => (bool) $canMasivos,
+                    'canForceNovedadesConflict' => (bool) ($canForceNovedadesConflict ?? false),
                     'lookupUrl' => route('gestion-humana.desvinculaciones.masivos.lookup'),
                     'processUrl' => route('gestion-humana.desvinculaciones.masivos.process'),
                     'csrf' => csrf_token(),
@@ -191,6 +192,14 @@
                         </div>
 
                         <div class="desvinculaciones-masivos__toolbar">
+                            <div class="desvinculaciones-masivos__toolbar-start">
+                                <template x-if="canForceNovedadesConflict">
+                                    <label class="form-check">
+                                        <input type="checkbox" class="form-check" x-model="forceNovedadesConflict">
+                                        <span>Forzar pese a cruce con novedades (solo super-admin)</span>
+                                    </label>
+                                </template>
+                            </div>
                             <div class="desvinculaciones-masivos__toolbar-end">
                                 <button
                                     type="button"
@@ -449,6 +458,8 @@
 
                     return {
                         canMasivos: Boolean(config.canMasivos),
+                        canForceNovedadesConflict: Boolean(config.canForceNovedadesConflict),
+                        forceNovedadesConflict: false,
                         lookupUrl: config.lookupUrl,
                         processUrl: config.processUrl,
                         csrf: config.csrf,
@@ -724,7 +735,10 @@
                                         'X-CSRF-TOKEN': this.csrf,
                                         'X-Requested-With': 'XMLHttpRequest',
                                     },
-                                    body: JSON.stringify({ rows }),
+                                    body: JSON.stringify({
+                                        rows,
+                                        force_novedades_conflict: this.canForceNovedadesConflict && this.forceNovedadesConflict ? 1 : 0,
+                                    }),
                                 });
 
                                 const data = await response.json();

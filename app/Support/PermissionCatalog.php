@@ -70,6 +70,10 @@ class PermissionCatalog
                                 return true;
                             }
 
+                            if ($boardKey === 'cliente_interno' && $areaKey !== 'gestion_humana') {
+                                return true;
+                            }
+
                             if ($boardKey === 'acreditaciones' && $areaKey !== 'gestion_humana') {
                                 return true;
                             }

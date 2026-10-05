@@ -56,6 +56,7 @@ class DesvinculacionesController extends Controller
         return view('areas.gestion_humana.desvinculaciones.masivos', [
             'subTabs' => $this->subTabs('masivos'),
             'canMasivos' => $canMasivos,
+            'canForceNovedadesConflict' => auth()->user()?->hasRole('super-admin') ?? false,
             'templateOptions' => $canMasivos ? $this->templateOptions() : [],
             'signatoryOptions' => $canMasivos ? $this->signatoryOptions() : [],
             'causeOptions' => $canMasivos ? $this->causeOptions() : [],
@@ -227,9 +228,13 @@ class DesvinculacionesController extends Controller
      */
     public function process(ProcessBulkTerminationRequest $request): JsonResponse
     {
+        $force = $request->boolean('force_novedades_conflict')
+            && $request->user()?->hasRole('super-admin');
+
         $result = $this->bulkTerminationService->process(
             $request->rows(),
             $request->user(),
+            $force,
         );
 
         $downloadToken = null;

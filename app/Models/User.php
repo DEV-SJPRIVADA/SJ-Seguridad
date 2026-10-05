@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\ClienteInternoAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
@@ -460,6 +461,27 @@ class User extends Authenticatable
             'ingresos' => route('gestion-humana.seleccion.ingresos'),
             'examenes' => route('gestion-humana.seleccion.examenes'),
             'catalogos' => route('gestion-humana.seleccion.catalogos'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function clienteInternoBoardTabsFor(): Collection
+    {
+        return collect(app(ClienteInternoAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultClienteInternoBoardUrl(): string
+    {
+        $tabs = $this->clienteInternoBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('gestion-humana.cliente-interno.dashboard'),
+            'solicitudes' => route('gestion-humana.cliente-interno.solicitudes'),
+            'catalogos' => route('gestion-humana.cliente-interno.catalogos'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }

@@ -22,6 +22,8 @@ Tablero de area **Gestion Humana** para (1) desvincular varios empleados activos
 
 **Integracion FEAT-040 (MT-GH-04 Novedades):** al crear un followup (`ensureForClosedPeriod`, desde Ficha terminate o Masivos) se llama `ReportesNovedadesRetiroSyncService::ensureFromFollowup` (alta idempotente en hoja Retiros; `observacion_nomina` vacia). Al **revertir**, `annulFromFollowup` soft-deletea la fila Retiros vinculada **antes** de eliminar el followup. No exige permisos `reportes_novedades.*` al actor. Detalle: [`docs/modules/reportes-novedades.md`](reportes-novedades.md).
 
+**Bloqueo por cruce con novedades:** antes de cerrar el vínculo (Ficha `terminate` o Masivos `processRow`), `TerminationNovedadesConflictService` busca solape del intervalo `[último día, fecha desvinculación]` (en Masivos ambas = fecha del lote) con filas de **Vacaciones / Incapacidades / Permisos** de la misma cédula. Si hay solape → ValidationException (no desvincula). Sin `fecha_fin` en incapacidad/permiso (o vacación legacy) se trata como vigente abierta y bloquea si el retiro cae en o después del inicio. **Super-admin** puede forzar con `force_novedades_conflict=1` (checkbox en modal Ficha y toolbar Masivos). En Masivos la fila conflictiva va a `failed` y el resto del lote continúa.
+
 ## Rutas
 
 Archivo: `routes/areas/gestion_humana.php`  

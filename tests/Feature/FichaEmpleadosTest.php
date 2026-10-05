@@ -897,7 +897,7 @@ class FichaEmpleadosTest extends TestCase
         $this->assertDatabaseCount('employee_ficha_profiles', 1);
     }
 
-    public function test_create_form_returns_404_when_desde_entry_already_in_ficha(): void
+    public function test_create_form_redirects_when_desde_entry_already_in_ficha(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);
         $manager->assignRole('usuario');
@@ -914,10 +914,11 @@ class FichaEmpleadosTest extends TestCase
 
         $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]))
-            ->assertNotFound();
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']))
+            ->assertSessionHasErrors('form');
     }
 
-    public function test_create_form_returns_404_when_desde_entry_does_not_exist(): void
+    public function test_create_form_redirects_when_desde_entry_does_not_exist(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);
         $manager->assignRole('usuario');
@@ -925,7 +926,8 @@ class FichaEmpleadosTest extends TestCase
 
         $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => 999999]))
-            ->assertNotFound();
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']))
+            ->assertSessionHasErrors('form');
     }
 
     public function test_store_with_ficha_entry_id_updates_existing_entry_and_moves_to_ficha(): void

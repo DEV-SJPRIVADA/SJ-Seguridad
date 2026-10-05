@@ -67,6 +67,8 @@ class ProcessBulkTerminationRequest extends FormRequest
             ],
             'rows.*.is_rehireable' => ['nullable', 'boolean'],
             'rows.*.termination_notes' => ['nullable', 'string', 'max:1000'],
+            'rows.*.force_novedades_conflict' => ['sometimes', 'boolean'],
+            'force_novedades_conflict' => ['sometimes', 'boolean'],
         ];
     }
 

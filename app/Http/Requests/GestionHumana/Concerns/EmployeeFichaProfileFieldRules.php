@@ -31,6 +31,88 @@ trait EmployeeFichaProfileFieldRules
     }
 
     /**
+     * Etiquetas legibles para mensajes de validación (locale en inglés por defecto).
+     *
+     * @return array<string, string>
+     */
+    protected function employeeFichaProfileFieldAttributes(): array
+    {
+        return [
+            'first_surname' => 'primer apellido',
+            'second_surname' => 'segundo apellido',
+            'first_name' => 'primer nombre',
+            'second_name' => 'segundo nombre',
+            'document_type' => 'tipo de documento',
+            'birth_date' => 'fecha de nacimiento',
+            'birth_place' => 'lugar de nacimiento',
+            'expedition_city_code' => 'ciudad de expedición',
+            'expedition_date' => 'fecha de expedición',
+            'residence_city_code' => 'ciudad de residencia',
+            'work_city_code' => 'ciudad de trabajo',
+            'address' => 'dirección',
+            'phone' => 'teléfono',
+            'phone_secondary' => 'teléfono secundario',
+            'email' => 'correo electrónico',
+            'sex' => 'género',
+            'salary' => 'salario',
+            'hire_date' => 'fecha de ingreso',
+            'termination_date' => 'fecha de desvinculación',
+            'contract_end_date' => 'fecha fin de contrato',
+            'cost_center_code' => 'centro de costo',
+            'position_code' => 'cargo',
+            'salary_type_code' => 'tipo de salario',
+            'contract_type_code' => 'tipo de contrato',
+            'eps_code' => 'EPS',
+            'afp_code' => 'AFP',
+            'risk_level' => 'nivel de riesgo',
+            'bank_code' => 'banco',
+            'account_type' => 'tipo de cuenta',
+            'account_number' => 'número de cuenta',
+            'payment_method_code' => 'forma de pago',
+            'economic_activity_code' => 'actividad económica',
+            'linkage_type' => 'tipo de vinculación',
+            'payroll_extra.ccf_code' => 'caja de compensación',
+            'payroll_extra.work_center_code' => 'centro de trabajo',
+            'payroll_extra.branch_code' => 'sucursal',
+            'payroll_extra.destination_code' => 'destino',
+            'payroll_extra.zone_code' => 'zona',
+            'payroll_extra.severance_admin_code' => 'fondo de cesantías',
+            'payroll_extra.workday' => 'jornada',
+            'payroll_extra.withholding_type' => 'tipo de retención',
+            'payroll_extra.expense_type' => 'tipo de gasto',
+            'payroll_extra.eps_start_date' => 'fecha inicio EPS',
+            'payroll_extra.afp_start_date' => 'fecha inicio AFP',
+            'payroll_extra.vacation_base_date' => 'fecha base vacaciones',
+            'payroll_extra.age' => 'edad',
+            'payroll_extra.contributor_type' => 'tipo de cotizante',
+            'payroll_extra.military_book' => 'libreta militar',
+            'payroll_extra.exclude_transport_allowance' => 'excluir auxilio de transporte',
+        ];
+    }
+
+    /**
+     * Mensajes en español (APP_LOCALE puede ser en).
+     *
+     * @return array<string, string>
+     */
+    protected function employeeFichaProfileFieldMessages(): array
+    {
+        return [
+            'required' => 'El campo :attribute es obligatorio.',
+            'unique' => 'Ya existe un registro con este :attribute. Use otra cédula o gestione el empleado existente.',
+            'email' => 'El campo :attribute debe ser un correo válido.',
+            'date' => 'El campo :attribute debe ser una fecha válida.',
+            'numeric' => 'El campo :attribute debe ser numérico.',
+            'integer' => 'El campo :attribute debe ser un número entero.',
+            'in' => 'El valor seleccionado para :attribute no es válido.',
+            'exists' => 'El :attribute seleccionado no es válido o ya fue movido a ficha.',
+            'max.string' => 'El campo :attribute no puede superar :max caracteres.',
+            'max.numeric' => 'El campo :attribute no puede ser mayor que :max.',
+            'min.numeric' => 'El campo :attribute debe ser al menos :min.',
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function employeeFichaProfileScalarRules(string $required): array

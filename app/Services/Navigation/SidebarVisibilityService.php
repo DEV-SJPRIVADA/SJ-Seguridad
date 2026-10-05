@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\ClienteInternoAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
 use App\Services\Access\DesvinculacionesAccessService;
@@ -33,6 +34,7 @@ class SidebarVisibilityService
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
         private readonly SeleccionAccessService $seleccionAccess,
+        private readonly ClienteInternoAccessService $clienteInternoAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly PurchaseAccessService $purchaseAccess,
@@ -66,6 +68,7 @@ class SidebarVisibilityService
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'formacion' => $this->shouldShowFormacionBoard($user, $areaKey),
             'seleccion' => $this->shouldShowSeleccionBoard($user, $areaKey),
+            'cliente_interno' => $this->shouldShowClienteInternoBoard($user, $areaKey),
             'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
             'reportes_novedades' => $this->shouldShowReportesNovedadesBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
@@ -228,6 +231,15 @@ class SidebarVisibilityService
         }
 
         return $this->seleccionAccess->canViewSeleccionBoard($user);
+    }
+
+    private function shouldShowClienteInternoBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->clienteInternoAccess->canViewBoard($user);
     }
 
     private function shouldShowAcreditacionesBoard(User $user, string $areaKey): bool

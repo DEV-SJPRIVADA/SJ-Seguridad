@@ -59,6 +59,10 @@ return [
             'label' => 'Selección',
             'area' => 'gestion_humana',
         ],
+        'cliente_interno' => [
+            'label' => 'Cliente interno',
+            'area' => 'gestion_humana',
+        ],
         'acreditaciones' => [
             'label' => 'Acreditaciones',
             'area' => 'gestion_humana',

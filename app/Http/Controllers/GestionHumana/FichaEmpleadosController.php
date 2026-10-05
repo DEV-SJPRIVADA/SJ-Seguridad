@@ -31,9 +31,11 @@ use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
+use App\Services\GestionHumana\TerminationNovedadesConflictService;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,6 +45,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class FichaEmpleadosController extends Controller
 {
@@ -63,6 +66,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaProfileCatalogSync $profileCatalogSync,
         private readonly EmployeeFichaEntryDatatableService $entryDatatableService,
         private readonly EmployeeTerminationFollowupService $terminationFollowupService,
+        private readonly TerminationNovedadesConflictService $novedadesConflictService,
         private readonly EmployeeCursoDocumentService $cursoDocumentService,
         private readonly EmployeeCursoPendingService $cursoPendingService,
         private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
@@ -270,7 +274,7 @@ class FichaEmpleadosController extends Controller
 
         try {
             $stats = $this->importService->import($path, false, $request->user()->id);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return back()->withErrors(['import_file' => $e->getMessage()]);
         }
 
@@ -341,7 +345,7 @@ class FichaEmpleadosController extends Controller
         return $this->downloadImportFailureReport($request->user(), $token, 'employee_ficha');
     }
 
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         abort_unless($this->canManage(), 403);
 
@@ -364,7 +368,16 @@ class FichaEmpleadosController extends Controller
             $fichaEntry = PersonalRequisitionFichaEntry::query()
                 ->pending()
                 ->with(['requisition.position', 'requisition.city', 'requisition.contractType', 'requisition.client', 'profile'])
-                ->findOrFail($desde);
+                ->find($desde);
+
+            // Evita 404 opaco si el pendiente ya se movió o el id no existe.
+            if ($fichaEntry === null) {
+                return redirect()
+                    ->route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes'])
+                    ->withErrors([
+                        'form' => 'El registro pendiente no está disponible (puede haber sido movido a ficha o eliminado). Seleccione otro en el listado.',
+                    ]);
+            }
 
             $profile = $this->profilePrefill->buildForEntry($fichaEntry);
         }
@@ -390,20 +403,109 @@ class FichaEmpleadosController extends Controller
         $userId = $request->user()->id;
         $fichaEntryId = $validated['ficha_entry_id'] ?? null;
 
-        if ($fichaEntryId !== null) {
-            $entry = DB::transaction(function () use ($request, $validated, $userId, $fichaEntryId): PersonalRequisitionFichaEntry {
-                $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
+        try {
+            if ($fichaEntryId !== null) {
+                $entry = DB::transaction(function () use ($request, $validated, $userId, $fichaEntryId): PersonalRequisitionFichaEntry {
+                    $entry = PersonalRequisitionFichaEntry::query()->pending()->findOrFail($fichaEntryId);
 
+                    $hiredDocument = trim($validated['hired_document']);
+                    $firstSurname = trim((string) ($validated['first_surname'] ?? $entry->first_surname));
+                    $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : $entry->second_surname;
+                    $firstName = trim((string) ($validated['first_name'] ?? $entry->first_name));
+                    $secondName = isset($validated['second_name']) ? trim((string) $validated['second_name']) : $entry->second_name;
+
+                    $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
+                    $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : trim((string) ($validated['hired_full_name'] ?? $entry->hired_full_name));
+
+                    $entry->update([
+                        'hired_document' => $hiredDocument,
+                        'first_surname' => $firstSurname ?: null,
+                        'second_surname' => $secondSurname ?: null,
+                        'first_name' => $firstName ?: null,
+                        'second_name' => $secondName ?: null,
+                        'hired_full_name' => $computedFullName,
+                        'moved_to_ficha_at' => now(),
+                        'moved_to_ficha_by' => $userId,
+                    ]);
+
+                    $profile = $entry->profile ?? new EmployeeFichaProfile(['personal_requisition_ficha_entry_id' => $entry->id]);
+
+                    $profileAttributes = $this->mergeProfilePayrollExtra(
+                        $profile,
+                        collect($validated)
+                            ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
+                            ->merge([
+                                'personal_requisition_ficha_entry_id' => $entry->id,
+                                'document_number' => $hiredDocument,
+                                'full_name' => $computedFullName,
+                                'first_surname' => $firstSurname ?: null,
+                                'second_surname' => $secondSurname ?: null,
+                                'first_name' => $firstName ?: null,
+                                'second_name' => $secondName ?: null,
+                            ])
+                            ->all(),
+                    );
+
+                    $profileAttributes = $this->mergeWorkCityFromRequisitionIfMissing($entry, $profileAttributes);
+                    $profileAttributes = $this->applyRequirementFlagsForCreate($request, $profileAttributes);
+
+                    $profile->fill($profileAttributes);
+                    $profile->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
+                    $profile->termination_date = null;
+                    $profile->save();
+
+                    $this->profileCatalogSync->syncAndSave($profile);
+
+                    $this->employmentPeriodService->openPeriod(
+                        $entry,
+                        $profile->fresh()->getAttributes(),
+                        $userId,
+                        $entry->personal_requisition_id,
+                    );
+                    $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
+
+                    return $entry->fresh(['requisition', 'profile']);
+                });
+
+                $this->enqueueCursoPendingIfEligible($entry, $userId);
+
+                $isRehire = ($entry->employmentPeriods()->count() ?? 0) > 1;
+
+                $metadata = [
+                    'hired_document' => $entry->hired_document,
+                    'source' => $isRehire ? 'rehire' : 'waiting_list',
+                ];
+
+                if ($entry->personal_requisition_id !== null) {
+                    $metadata['requisition_id'] = $entry->personal_requisition_id;
+                }
+
+                $this->auditLogService->logEvent(
+                    eventType: 'ficha_entry',
+                    action: $isRehire ? 'rehire' : 'promote',
+                    metadata: $metadata,
+                    model: $entry,
+                );
+
+                return redirect()
+                    ->route('gestion-humana.ficha-empleados.employees.index')
+                    ->with('status', $isRehire
+                        ? 'Reingreso registrado correctamente.'
+                        : 'Empleado movido a Ficha empleados correctamente.');
+            }
+
+            $entry = DB::transaction(function () use ($request, $validated, $userId): PersonalRequisitionFichaEntry {
                 $hiredDocument = trim($validated['hired_document']);
-                $firstSurname = trim((string) ($validated['first_surname'] ?? $entry->first_surname));
-                $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : $entry->second_surname;
-                $firstName = trim((string) ($validated['first_name'] ?? $entry->first_name));
-                $secondName = isset($validated['second_name']) ? trim((string) $validated['second_name']) : $entry->second_name;
+                $firstSurname = trim((string) ($validated['first_surname'] ?? ''));
+                $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : null;
+                $firstName = trim((string) ($validated['first_name'] ?? ''));
+                $secondName = isset($validated['second_name']) ? trim((string) $validated['second_name']) : null;
 
                 $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
-                $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : trim((string) ($validated['hired_full_name'] ?? $entry->hired_full_name));
+                $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : trim((string) ($validated['hired_full_name'] ?? ''));
 
-                $entry->update([
+                $entry = PersonalRequisitionFichaEntry::query()->create([
+                    'personal_requisition_id' => null,
                     'hired_document' => $hiredDocument,
                     'first_surname' => $firstSurname ?: null,
                     'second_surname' => $secondSurname ?: null,
@@ -412,142 +514,71 @@ class FichaEmpleadosController extends Controller
                     'hired_full_name' => $computedFullName,
                     'moved_to_ficha_at' => now(),
                     'moved_to_ficha_by' => $userId,
+                    'created_by' => $userId,
                 ]);
 
-                $profile = $entry->profile ?? new EmployeeFichaProfile(['personal_requisition_ficha_entry_id' => $entry->id]);
+                $profileAttributes = collect($validated)
+                    ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
+                    ->merge([
+                        'personal_requisition_ficha_entry_id' => $entry->id,
+                        'document_number' => $hiredDocument,
+                        'full_name' => $computedFullName,
+                        'first_surname' => $firstSurname ?: null,
+                        'second_surname' => $secondSurname ?: null,
+                        'first_name' => $firstName ?: null,
+                        'second_name' => $secondName ?: null,
+                        'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+                    ])
+                    ->all();
 
-                $profileAttributes = $this->mergeProfilePayrollExtra(
-                    $profile,
-                    collect($validated)
-                        ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
-                        ->merge([
-                            'personal_requisition_ficha_entry_id' => $entry->id,
-                            'document_number' => $hiredDocument,
-                            'full_name' => $computedFullName,
-                            'first_surname' => $firstSurname ?: null,
-                            'second_surname' => $secondSurname ?: null,
-                            'first_name' => $firstName ?: null,
-                            'second_name' => $secondName ?: null,
-                        ])
-                        ->all(),
-                );
-
-                $profileAttributes = $this->mergeWorkCityFromRequisitionIfMissing($entry, $profileAttributes);
                 $profileAttributes = $this->applyRequirementFlagsForCreate($request, $profileAttributes);
 
-                $profile->fill($profileAttributes);
-                $profile->employment_status = EmployeeFichaProfile::STATUS_ACTIVO;
-                $profile->termination_date = null;
-                $profile->save();
-
+                $profile = EmployeeFichaProfile::query()->create($profileAttributes);
                 $this->profileCatalogSync->syncAndSave($profile);
 
                 $this->employmentPeriodService->openPeriod(
                     $entry,
                     $profile->fresh()->getAttributes(),
                     $userId,
-                    $entry->personal_requisition_id,
+                    null,
                 );
                 $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
 
-                return $entry->fresh(['requisition', 'profile']);
+                return $entry->fresh(['profile']);
             });
 
             $this->enqueueCursoPendingIfEligible($entry, $userId);
 
-            $isRehire = ($entry->employmentPeriods()->count() ?? 0) > 1;
-
-            $metadata = [
-                'hired_document' => $entry->hired_document,
-                'source' => $isRehire ? 'rehire' : 'waiting_list',
-            ];
-
-            if ($entry->personal_requisition_id !== null) {
-                $metadata['requisition_id'] = $entry->personal_requisition_id;
-            }
-
             $this->auditLogService->logEvent(
                 eventType: 'ficha_entry',
-                action: $isRehire ? 'rehire' : 'promote',
-                metadata: $metadata,
+                action: 'create',
+                metadata: [
+                    'hired_document' => $entry->hired_document,
+                    'source' => 'manual',
+                ],
                 model: $entry,
             );
 
             return redirect()
-                ->route('gestion-humana.ficha-empleados.employees.index')
-                ->with('status', $isRehire
-                    ? 'Reingreso registrado correctamente.'
-                    : 'Empleado movido a Ficha empleados correctamente.');
+                ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
+                ->with('status', 'Empleado creado en ficha correctamente.');
+        } catch (ModelNotFoundException $e) {
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'ficha_entry_id' => 'El registro pendiente ya no está disponible (puede haber sido movido a ficha). Vuelva al listado de pendientes e intente de nuevo.',
+                ]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'form' => 'No se pudo guardar el empleado. Revise los datos e intente de nuevo. Si el problema continúa, contacte a soporte con la hora del intento.',
+                ]);
         }
-
-        $entry = DB::transaction(function () use ($request, $validated, $userId): PersonalRequisitionFichaEntry {
-            $hiredDocument = trim($validated['hired_document']);
-            $firstSurname = trim((string) ($validated['first_surname'] ?? ''));
-            $secondSurname = isset($validated['second_surname']) ? trim((string) $validated['second_surname']) : null;
-            $firstName = trim((string) ($validated['first_name'] ?? ''));
-            $secondName = isset($validated['second_name']) ? trim((string) $validated['second_name']) : null;
-
-            $nameParts = array_filter([$firstSurname, $secondSurname, $firstName, $secondName], fn ($v) => $v !== null && $v !== '');
-            $computedFullName = $nameParts !== [] ? implode(' ', $nameParts) : trim((string) ($validated['hired_full_name'] ?? ''));
-
-            $entry = PersonalRequisitionFichaEntry::query()->create([
-                'personal_requisition_id' => null,
-                'hired_document' => $hiredDocument,
-                'first_surname' => $firstSurname ?: null,
-                'second_surname' => $secondSurname ?: null,
-                'first_name' => $firstName ?: null,
-                'second_name' => $secondName ?: null,
-                'hired_full_name' => $computedFullName,
-                'moved_to_ficha_at' => now(),
-                'moved_to_ficha_by' => $userId,
-                'created_by' => $userId,
-            ]);
-
-            $profileAttributes = collect($validated)
-                ->except(['hired_document', 'hired_full_name', 'ficha_entry_id'])
-                ->merge([
-                    'personal_requisition_ficha_entry_id' => $entry->id,
-                    'document_number' => $hiredDocument,
-                    'full_name' => $computedFullName,
-                    'first_surname' => $firstSurname ?: null,
-                    'second_surname' => $secondSurname ?: null,
-                    'first_name' => $firstName ?: null,
-                    'second_name' => $secondName ?: null,
-                    'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
-                ])
-                ->all();
-
-            $profileAttributes = $this->applyRequirementFlagsForCreate($request, $profileAttributes);
-
-            $profile = EmployeeFichaProfile::query()->create($profileAttributes);
-            $this->profileCatalogSync->syncAndSave($profile);
-
-            $this->employmentPeriodService->openPeriod(
-                $entry,
-                $profile->fresh()->getAttributes(),
-                $userId,
-                null,
-            );
-            $this->employmentPeriodService->syncProfileFromActivePeriod($entry, $profile)->save();
-
-            return $entry->fresh(['profile']);
-        });
-
-        $this->enqueueCursoPendingIfEligible($entry, $userId);
-
-        $this->auditLogService->logEvent(
-            eventType: 'ficha_entry',
-            action: 'create',
-            metadata: [
-                'hired_document' => $entry->hired_document,
-                'source' => 'manual',
-            ],
-            model: $entry,
-        );
-
-        return redirect()
-            ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
-            ->with('status', 'Empleado creado en ficha correctamente.');
     }
 
     public function editFicha(PersonalRequisitionFichaEntry $fichaEntry): View
@@ -590,6 +621,7 @@ class FichaEmpleadosController extends Controller
             'canGenerateLetters' => $this->canGenerateLetters($letterPeriod),
             'canGenerateContratacionLetters' => $this->canGenerateContratacionLetters($activePeriod),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
+            'canForceNovedadesConflict' => auth()->user()?->hasRole('super-admin') ?? false,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
             'employeeCursos' => $employeeCursos,
@@ -753,11 +785,21 @@ class FichaEmpleadosController extends Controller
 
         $fichaEntry->load('profile');
         $beforeStatus = $fichaEntry->profile?->employment_status;
+        $validated = $request->validated();
+        $documentNumber = (string) ($fichaEntry->hired_document ?: $fichaEntry->profile?->document_number);
 
-        DB::transaction(function () use ($request, $fichaEntry): void {
+        $this->novedadesConflictService->assertNoConflictsOrForced(
+            $documentNumber,
+            (string) $validated['last_work_day'],
+            (string) $validated['termination_date'],
+            $request->user(),
+            $request->boolean('force_novedades_conflict'),
+        );
+
+        DB::transaction(function () use ($request, $fichaEntry, $validated): void {
             $closedPeriod = $this->employmentPeriodService->closeActivePeriod(
                 $fichaEntry,
-                $request->validated(),
+                $validated,
                 (int) $request->user()->id,
             );
             $this->employmentPeriodService->syncProfileAfterTermination($fichaEntry);
@@ -786,8 +828,9 @@ class FichaEmpleadosController extends Controller
             action: 'close',
             metadata: [
                 'document_number' => $fichaEntry->hired_document,
-                'termination_cause_code' => $request->validated('termination_cause_code'),
-                'is_rehireable' => (bool) $request->validated('is_rehireable'),
+                'termination_cause_code' => $validated['termination_cause_code'],
+                'is_rehireable' => (bool) $validated['is_rehireable'],
+                'force_novedades_conflict' => $request->boolean('force_novedades_conflict'),
             ],
             model: $fichaEntry,
         );

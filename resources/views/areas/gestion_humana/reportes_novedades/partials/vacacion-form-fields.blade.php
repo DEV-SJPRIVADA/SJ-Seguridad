@@ -26,7 +26,7 @@
             </span>
             <div>
                 <h4 class="rn-novedad-form__section-title">Novedad</h4>
-                <p class="rn-novedad-form__section-desc">Tipo de vacación, días y fecha de inicio.</p>
+                <p class="rn-novedad-form__section-desc">Tipo de vacación, días y fechas de inicio y fin.</p>
             </div>
         </div>
 
@@ -78,6 +78,19 @@
                     @if ($canEditGh) required @endif
                     @disabled(! $canEditGh)
                     @if ($alpine) x-model="form.fecha_inicio" @else value="{{ $v['fecha_inicio'] ?? '' }}" @endif
+                >
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="{{ $prefix }}_fecha_fin">Fecha fin</label>
+                <input
+                    id="{{ $prefix }}_fecha_fin"
+                    @if ($canEditGh) name="fecha_fin" @endif
+                    type="date"
+                    class="form-input"
+                    @if ($canEditGh) required @endif
+                    @disabled(! $canEditGh)
+                    @if ($alpine) x-model="form.fecha_fin" @else value="{{ $v['fecha_fin'] ?? '' }}" @endif
                 >
             </div>
 

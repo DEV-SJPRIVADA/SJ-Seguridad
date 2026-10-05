@@ -53,6 +53,10 @@
                 <div class="alert alert--danger ficha-empleados-page__alert">{{ $errors->first('import_file') }}</div>
             @endif
 
+            @if ($errors->has('form'))
+                <div class="alert alert--danger ficha-empleados-page__alert" role="alert">{{ $errors->first('form') }}</div>
+            @endif
+
             <div class="panel ficha-empleados-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-filters ficha-empleados-filters">

@@ -22,6 +22,7 @@ class BulkTerminationService
         private readonly EmployeeTerminationFollowupService $followupService,
         private readonly TerminationLetterPackGeneratorService $letterPackGenerator,
         private readonly DesvinculacionesAuditLogService $auditLogService,
+        private readonly TerminationNovedadesConflictService $novedadesConflictService,
     ) {}
 
     /**
@@ -98,7 +99,7 @@ class BulkTerminationService
      *     zip_download_name: ?string
      * }
      */
-    public function process(array $rows, User $actor): array
+    public function process(array $rows, User $actor, bool $forceNovedadesConflict = false): array
     {
         $ok = [];
         $failed = [];
@@ -107,6 +108,10 @@ class BulkTerminationService
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 1;
             $documentNumber = trim((string) ($row['document_number'] ?? ''));
+
+            if ($forceNovedadesConflict) {
+                $row['force_novedades_conflict'] = true;
+            }
 
             try {
                 $result = $this->processRow($row, $actor);
@@ -215,6 +220,15 @@ class BulkTerminationService
         $terminationDate = (string) $row['termination_date'];
         $causeCode = trim((string) ($row['termination_cause_code'] ?? ''));
         $notes = trim((string) ($row['termination_notes'] ?? ''));
+        $forceConflict = filter_var($row['force_novedades_conflict'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        $this->novedadesConflictService->assertNoConflictsOrForced(
+            $documentNumber,
+            $terminationDate,
+            $terminationDate,
+            $actor,
+            $forceConflict,
+        );
 
         $rehireable = null;
         if (array_key_exists('is_rehireable', $row) && $row['is_rehireable'] !== null && $row['is_rehireable'] !== '') {
