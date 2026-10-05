@@ -5,6 +5,7 @@ namespace App\Services\GestionHumana\TerminationLetter;
 use App\Support\WordTempDirectory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use RuntimeException;
+use Throwable;
 use ZipArchive;
 
 class TerminationLetterDocxRenderer
@@ -28,18 +29,26 @@ class TerminationLetterDocxRenderer
         $processor = null;
 
         try {
-            $processor = new TemplateProcessor($mergedPath);
+            try {
+                $processor = new TemplateProcessor($mergedPath);
+            } catch (Throwable $e) {
+                throw new RuntimeException(
+                    'No se pudo abrir la plantilla Word (archivo temporal o plantilla inválida): '.$e->getMessage(),
+                    0,
+                    $e,
+                );
+            }
 
             // Canónico: ${CLAVE} (PhpWord guarda los delimitadores como static).
             $processor->setMacroChars('${', '}');
             foreach ($variables as $key => $value) {
-                $processor->setValue($key, $value);
+                $processor->setValue($key, (string) $value);
             }
 
             // Fallback temporal: plantillas legacy con [CLAVE].
             $processor->setMacroChars('[', ']');
             foreach ($variables as $key => $value) {
-                $processor->setValue($key, $value);
+                $processor->setValue($key, (string) $value);
             }
 
             $dir = dirname($outputAbsolutePath);
@@ -47,7 +56,15 @@ class TerminationLetterDocxRenderer
                 throw new RuntimeException('No se pudo crear el directorio de salida.');
             }
 
-            $processor->saveAs($outputAbsolutePath);
+            try {
+                $processor->saveAs($outputAbsolutePath);
+            } catch (Throwable $e) {
+                throw new RuntimeException(
+                    'No se pudo guardar el Word generado: '.$e->getMessage(),
+                    0,
+                    $e,
+                );
+            }
         } finally {
             // Restaurar delimitadores canónicos para no contaminar otras generaciones/tests.
             if ($processor !== null) {

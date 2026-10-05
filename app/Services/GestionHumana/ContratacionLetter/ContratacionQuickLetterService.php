@@ -11,6 +11,7 @@ use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Carta de contratación desde Pendientes: guarda solo datos mínimos en perfil/periodo
@@ -161,47 +162,56 @@ class ContratacionQuickLetterService
         PersonalRequisitionFichaEntry $entry,
         string $document,
     ): EmployeeFichaProfile {
-        if ($entry->profile !== null) {
-            return $entry->profile;
-        }
-
-        $existing = EmployeeFichaProfile::query()
+        $existingByDocument = EmployeeFichaProfile::query()
             ->where('document_number', $document)
             ->lockForUpdate()
             ->first();
 
-        if ($existing === null) {
-            return new EmployeeFichaProfile([
-                'personal_requisition_ficha_entry_id' => $entry->id,
-            ]);
+        // Preferir siempre el perfil canónico de la cédula (evita unique emp_ficha_profiles_doc_uq).
+        if ($existingByDocument !== null) {
+            $ownerEntryId = (int) ($existingByDocument->personal_requisition_ficha_entry_id ?? 0);
+
+            if ($ownerEntryId === (int) $entry->id) {
+                return $existingByDocument;
+            }
+
+            $ownerEntry = $ownerEntryId > 0
+                ? PersonalRequisitionFichaEntry::query()->lockForUpdate()->find($ownerEntryId)
+                : null;
+
+            if (
+                $ownerEntry !== null
+                && $ownerEntry->moved_to_ficha_at !== null
+                && $existingByDocument->employment_status === EmployeeFichaProfile::STATUS_ACTIVO
+            ) {
+                throw ValidationException::withMessages([
+                    'document_number' => 'Esta cédula ya pertenece a un empleado activo en ficha. Complete el retiro o use Gestionar Empleado en ese registro.',
+                ]);
+            }
+
+            // Si este pendiente tiene otro perfil vacío/distinto, liberarlo antes de reasignar.
+            if (
+                $entry->profile !== null
+                && (int) $entry->profile->id !== (int) $existingByDocument->id
+            ) {
+                $orphanProfile = $entry->profile;
+                $orphanProfile->personal_requisition_ficha_entry_id = null;
+                $orphanProfile->save();
+            }
+
+            $this->reattachProfileAndPeriodsToEntry($existingByDocument, $entry, $ownerEntry);
+            $entry->setRelation('profile', $existingByDocument);
+
+            return $existingByDocument;
         }
 
-        $ownerEntryId = (int) ($existing->personal_requisition_ficha_entry_id ?? 0);
-
-        if ($ownerEntryId === (int) $entry->id) {
-            return $existing;
+        if ($entry->profile !== null) {
+            return $entry->profile;
         }
 
-        $ownerEntry = $ownerEntryId > 0
-            ? PersonalRequisitionFichaEntry::query()->lockForUpdate()->find($ownerEntryId)
-            : null;
-
-        // No quitar el perfil de un empleado que sigue activo en ficha.
-        if (
-            $ownerEntry !== null
-            && $ownerEntry->moved_to_ficha_at !== null
-            && $existing->employment_status === EmployeeFichaProfile::STATUS_ACTIVO
-        ) {
-            throw ValidationException::withMessages([
-                'document_number' => 'Esta cédula ya pertenece a un empleado activo en ficha. Complete el retiro o use Gestionar Empleado en ese registro.',
-            ]);
-        }
-
-        $this->reattachProfileAndPeriodsToEntry($existing, $entry, $ownerEntry);
-
-        $entry->setRelation('profile', $existing);
-
-        return $existing;
+        return new EmployeeFichaProfile([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+        ]);
     }
 
     private function reattachProfileAndPeriodsToEntry(
@@ -223,7 +233,7 @@ class ContratacionQuickLetterService
         $profile->personal_requisition_ficha_entry_id = $targetEntry->id;
         $profile->save();
 
-        // Entrada anterior vacía (sin perfil ni periodos): evitar cédula duplicada en listados.
+        // Entrada anterior vacía: intentar limpiarla; si hay FK inesperada, no bloquear la carta.
         if ($ownerEntry === null || $ownerEntry->id === $targetEntry->id) {
             return;
         }
@@ -236,8 +246,14 @@ class ContratacionQuickLetterService
             ->where('personal_requisition_ficha_entry_id', $ownerEntry->id)
             ->exists();
 
-        if (! $hasProfile && ! $hasPeriods) {
+        if ($hasProfile || $hasPeriods) {
+            return;
+        }
+
+        try {
             $ownerEntry->delete();
+        } catch (Throwable) {
+            // Huérfana sin perfil: el listado puede mostrar residual; la carta no debe fallar.
         }
     }
 }
