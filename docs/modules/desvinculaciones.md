@@ -92,7 +92,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Vista | Descripcion |
 | --- | --- |
 | `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: iconos superior derecha (multi-cedula / +fila), filas con trash, Desvincular/limpiar/ZIP icon-only; lookup blur/Enter; modal pegar hasta 500; reporte |
-| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | DataTables **server-side** (`.js-desvinculaciones-seguimientos-datatable`) + filtros Alpine (q, status, campo fecha + rango), export Excel, checks/fecha nómina con autosave (eventos delegados), OK TODO RO, icono revertir + modal motivo |
+| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | DataTables **server-side** (`.js-desvinculaciones-seguimientos-datatable`) + filtros Alpine (q, status, campo fecha + rango) + buscador nativo DT (`lf`); altura de `.req-manage-table-scroll` al viewport; export Excel, checks/fecha nómina con autosave (eventos delegados), OK TODO RO, icono revertir + modal motivo |
 | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestanas `module-tab` Masivos / Seguimientos |
 | `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
 
@@ -190,7 +190,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 15. Causal, rehire, notas, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo).
 16. 8 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms.
 17. OK TODO solo lectura, calculado.
-18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` (sin chip Todos; default incompletos) + selector `fecha_campo` + rango Desde/Hasta. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda vacíos.
+18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` (sin chip Todos; default incompletos) + `rehireable` (`1`/`0`, vacío = todos) + selector `fecha_campo` + rango Desde/Hasta. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda/recontratable vacíos.
 19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 8 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
 20. **Revertir** por fila (permiso edit): modal con motivo; anula fila Retiros en MT-GH-04 Novedades (si existe), reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
 
@@ -198,6 +198,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 
 - Alpine embebido en vistas Masivos / Seguimientos (sin entry Vite dedicado obligatorio).
 - Estilos: utilidades en `resources/css/app.css` (prefijo desvinculaciones si aplica).
+- Seguimientos UI: panel de filtros Alpine + toolbar (conteo/export); DataTables con `length` + buscador nativo (`search.value`, fallback `q`); tabla con `req-manage-page` / `req-manage-shell` y scroll viewport (mismo patrón que Cursos registros / Ficha).
 - Selectores Masivos: partial Alpine searchable (ver vistas).
 
 ## Export Excel

@@ -70,7 +70,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 ### Usar Seguimientos
 
 1. Abra la pestana **Seguimientos**.
-2. Filtre por texto (cedula o nombre), por estado (incompletos, OK TODO, sin carta) y/o por rango de fechas. Elija el **campo fecha** (registro, desvinculacion o entregado nomina; por defecto entregado nomina) y complete Desde/Hasta. Al usar fechas, los chips de estado se desactivan hasta que elija uno de nuevo. Al abrir la pestana, por defecto se muestran los **incompletos**. El filtro **OK TODO** solo incluye filas con los ocho checks en Si **y** con fecha entregado nomina. Use el icono de limpiar para volver a incompletos y vaciar busqueda/fechas.
+2. Filtre por texto (cedula o nombre), por estado (incompletos, OK TODO, sin carta), por **Recontratable** (Todos / Sí / No) y/o por rango de fechas. Elija el **campo fecha** (registro, desvinculacion o entregado nomina; por defecto entregado nomina) y complete Desde/Hasta. Al usar fechas, los chips de estado se desactivan hasta que elija uno de nuevo. Al abrir la pestana, por defecto se muestran los **incompletos**. El filtro **OK TODO** solo incluye filas con los ocho checks en Si **y** con fecha entregado nomina. Use el icono de limpiar para volver a incompletos y vaciar busqueda/fechas/recontratable. Encima de la tabla tambien esta el buscador de DataTables (filtrado en vivo sobre el listado).
 3. Revise columnas de solo lectura: tipo de desvinculacion (causal), fechas, cargo, cedula, nombre, recontratable, observaciones y si **tiene carta generada**.
 4. Marque los ocho checks operativos (orden examenes, enviado, control roll, retiro ARL, retiro cesantias, recibido, paz y salvo, reporte noved) y, si aplica, la **fecha entregado nomina**. Los cambios se guardan solos al soltar el control (unos instantes despues).
 5. **OK TODO** se calcula solo: pasa a Si cuando los ocho checks estan en verdadero; no se puede forzar a mano.
@@ -88,6 +88,8 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-10-05 | Agent | Seguimientos: filtro Recontratable (Todos / Sí / No) en panel de filtros y export. |
+| 1.9 | 2026-10-05 | Agent | Seguimientos: tabla hasta el borde inferior; buscador nativo de DataTables visible (sin solaparse). |
 | 1.8 | 2026-10-05 | Agent | Seguimientos: listado con DataTables server-side (paginación/tamaño de página); filtros, export, autosave y revertir se mantienen. |
 | 1.7 | 2026-10-05 | Agent | Bloqueo por cruce con MT-GH-04 (Vacaciones/Incapacidades/Permisos); Masivos: fila fallida + forzar super-admin. |
 | 1.6 | 2026-09-30 | Agent | Seguimientos: default Incompletos; filtro OK TODO exige fecha entregado nomina; selector campo fecha (registro/desvinculacion/nomina) + botones icono filtrar/limpiar. |

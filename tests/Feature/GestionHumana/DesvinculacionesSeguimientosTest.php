@@ -155,6 +155,40 @@ class DesvinculacionesSeguimientosTest extends TestCase
             ->assertJsonPath('data.0.id', $incomplete->id);
     }
 
+    public function test_seguimientos_datatable_filters_by_rehireable(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $yes = $this->createFollowup([
+            'document_number' => '6161616161',
+            'full_name' => 'Recontratable Si',
+            'is_rehireable' => true,
+        ]);
+        $no = $this->createFollowup([
+            'document_number' => '6262626262',
+            'full_name' => 'Recontratable No',
+            'is_rehireable' => false,
+        ]);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => '',
+                'rehireable' => '1',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $yes->id);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => '',
+                'rehireable' => '0',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $no->id);
+    }
+
     public function test_seguimientos_datatable_filters_by_payroll_delivered_date_range(): void
     {
         $viewer = $this->viewerUser();

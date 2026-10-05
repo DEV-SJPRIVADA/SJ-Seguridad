@@ -4,7 +4,7 @@
     </x-slot>
 
     {{-- Seguimientos: DataTables server-side + filtros Alpine; checks/fecha/revert con eventos delegados --}}
-    <div class="page-section desvinculaciones-seguimientos-page">
+    <div class="page-section desvinculaciones-seguimientos-page req-manage-page">
         <div class="app-container">
             <div
                 class="panel desvinculaciones-seguimientos"
@@ -17,18 +17,20 @@
                     'checkLabels' => $checkLabels,
                     'initialQ' => $filters['q'] ?? '',
                     'initialStatus' => $filters['status'] ?? 'incompletos',
+                    'initialRehireable' => $filters['rehireable'] ?? '',
                     'initialFechaCampo' => $filters['fecha_campo'] ?? \App\Models\EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
                     'initialFechaDesde' => $filters['fecha_desde'] ?? '',
                     'initialFechaHasta' => $filters['fecha_hasta'] ?? '',
                     'defaultFechaCampo' => \App\Models\EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD,
                 ]))"
             >
-                <div class="panel__body panel__body--compact">
+                <div class="panel__body panel__body--compact req-manage-shell">
                     @php
                         $hasActiveFilters = ($filters['q'] ?? '') !== ''
                             || ($filters['fecha_desde'] ?? '') !== ''
                             || ($filters['fecha_hasta'] ?? '') !== ''
-                            || (($filters['status'] ?? 'incompletos') !== 'incompletos');
+                            || (($filters['status'] ?? 'incompletos') !== 'incompletos')
+                            || (($filters['rehireable'] ?? '') !== '');
                     @endphp
 
                     @unless ($canEditSeguimientos)
@@ -80,6 +82,20 @@
                                             :allow-clear="false"
                                             :required="false"
                                             x-on:change="onFechaCampoChange($event)"
+                                        />
+                                    </div>
+
+                                    <div class="form-field desvinculaciones-seguimientos__rehireable">
+                                        <label class="req-manage-filters__label" for="seguimientos-rehireable">Recontratable</label>
+                                        <x-searchable-select
+                                            id="seguimientos-rehireable"
+                                            name="rehireable"
+                                            :options="$rehireableOptions"
+                                            :value="$filters['rehireable'] ?? ''"
+                                            placeholder="Todos"
+                                            :allow-clear="true"
+                                            :required="false"
+                                            x-on:change="onRehireableChange($event)"
                                         />
                                     </div>
 
@@ -149,13 +165,14 @@
                                 x-bind:href="exportHref"
                                 class="btn btn--secondary btn--sm desvinculaciones-seguimientos__export-btn"
                                 title="Exportar a Excel"
+                                aria-label="Exportar a Excel"
                             >
                                 <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
                             </a>
                         </div>
                     </div>
 
-                    <div class="data-table-wrap desvinculaciones-seguimientos__table-wrap data-table-wrap--booting">
+                    <div class="data-table-wrap req-manage-shell__table desvinculaciones-seguimientos__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')
                         <table
                             id="desvinculaciones-seguimientos-datatable"
@@ -298,6 +315,7 @@
                     checkLabels: config.checkLabels || {},
                     q: config.initialQ || '',
                     status: config.initialStatus || 'incompletos',
+                    rehireable: config.initialRehireable || '',
                     fechaCampo: config.initialFechaCampo || config.defaultFechaCampo || 'payroll_delivered_at',
                     defaultFechaCampo: config.defaultFechaCampo || 'payroll_delivered_at',
                     fechaDesde: config.initialFechaDesde || '',
@@ -331,7 +349,8 @@
                         return (this.q || '').trim() !== ''
                             || (this.fechaDesde || '') !== ''
                             || (this.fechaHasta || '') !== ''
-                            || this.status !== 'incompletos';
+                            || this.status !== 'incompletos'
+                            || (this.rehireable || '') !== '';
                     },
 
                     get exportHref() {
@@ -340,6 +359,9 @@
                             params.set('q', this.q);
                         }
                         params.set('status', this.status == null ? 'incompletos' : String(this.status));
+                        if (this.rehireable) {
+                            params.set('rehireable', this.rehireable);
+                        }
                         params.set('fecha_campo', this.fechaCampo || this.defaultFechaCampo);
                         if (this.fechaDesde) {
                             params.set('fecha_desde', this.fechaDesde);
@@ -355,6 +377,7 @@
                         return {
                             q: this.q || '',
                             status: this.status == null ? 'incompletos' : String(this.status),
+                            rehireable: this.rehireable || '',
                             fecha_campo: this.fechaCampo || this.defaultFechaCampo,
                             fecha_desde: this.fechaDesde || '',
                             fecha_hasta: this.fechaHasta || '',
@@ -368,15 +391,31 @@
                     clearFilters() {
                         this.q = '';
                         this.status = 'incompletos';
+                        this.rehireable = '';
                         this.fechaDesde = '';
                         this.fechaHasta = '';
                         this.fechaCampo = this.defaultFechaCampo;
                         this.setFechaCampoSelect(this.fechaCampo);
+                        this.setRehireableSelect('');
                         reloadSeguimientosTable();
                     },
 
                     setFechaCampoSelect(value) {
                         const sel = document.getElementById('seguimientos-fecha-campo');
+                        if (! sel || ! window.Alpine) {
+                            return;
+                        }
+                        const wrap = sel.closest('[x-data]');
+                        if (wrap) {
+                            const data = window.Alpine.$data(wrap);
+                            data.value = value;
+                            const opt = (data.options || []).find((item) => String(item.value) === String(value));
+                            data.selectedLabel = opt ? opt.label : '';
+                        }
+                    },
+
+                    setRehireableSelect(value) {
+                        const sel = document.getElementById('seguimientos-rehireable');
                         if (! sel || ! window.Alpine) {
                             return;
                         }
@@ -402,6 +441,22 @@
                         if ((this.fechaDesde || '') !== '' || (this.fechaHasta || '') !== '') {
                             this.applyFilters();
                         }
+                    },
+
+                    onRehireableChange(event) {
+                        let value = event?.detail?.value;
+                        if (value === undefined || value === null) {
+                            value = event?.target?.value ?? '';
+                        }
+                        value = String(value || '').trim();
+                        if (! ['', '0', '1'].includes(value)) {
+                            value = '';
+                        }
+                        if (this.rehireable === value) {
+                            return;
+                        }
+                        this.rehireable = value;
+                        this.applyFilters();
                     },
 
                     onDateRangeChange() {
@@ -776,13 +831,67 @@
                         url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
                         emptyTable: 'No hay seguimientos con los filtros seleccionados.',
                     },
-                    dom: '<"req-manage-dt-top"l><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
+                    dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     pageLength: 25,
                     responsive: false,
                     order: [[0, 'desc']],
                     columnDefs: [{ targets: nonOrderable, orderable: false, searchable: false }],
                 });
+
+                // Tabla hasta el borde inferior: altura del área de scroll al viewport.
+                (function setupSeguimientosTableScroll() {
+                    const $shell = $table.closest('.panel__body, .desvinculaciones-seguimientos');
+                    const $wrapper = $table.closest('.dataTables_wrapper');
+                    const $scroll = $wrapper.find('.req-manage-table-scroll').first();
+                    const $bottom = $wrapper.find('.req-manage-dt-bottom').first();
+
+                    if (!$scroll.length) {
+                        return;
+                    }
+
+                    const updateScrollArea = function () {
+                        const bottomHeight = $bottom.outerHeight(true) || 0;
+                        const rect = $scroll[0].getBoundingClientRect();
+                        const available = Math.max(220, Math.floor(window.innerHeight - rect.top - bottomHeight - 8));
+
+                        $scroll.css({
+                            height: available + 'px',
+                            maxHeight: available + 'px',
+                        });
+                    };
+
+                    const debounce = function (fn, wait) {
+                        let timer = null;
+                        return function () {
+                            if (timer) {
+                                clearTimeout(timer);
+                            }
+                            timer = setTimeout(fn, wait);
+                        };
+                    };
+
+                    updateScrollArea();
+                    setTimeout(updateScrollArea, 0);
+                    setTimeout(updateScrollArea, 200);
+                    $(window).on('resize orientationchange', debounce(updateScrollArea, 100));
+                    seguimientosDtApi.on('draw.dt', debounce(updateScrollArea, 50));
+
+                    if (typeof ResizeObserver !== 'undefined') {
+                        const observer = new ResizeObserver(debounce(updateScrollArea, 50));
+                        const filtersEl = document.querySelector('.desvinculaciones-seguimientos__filters');
+                        const toolbarEl = document.querySelector('.desvinculaciones-seguimientos__table-toolbar');
+                        if (filtersEl) {
+                            observer.observe(filtersEl);
+                        }
+                        if (toolbarEl) {
+                            observer.observe(toolbarEl);
+                        }
+                        if ($shell.length) {
+                            observer.observe($shell[0]);
+                        }
+                    }
+                })();
 
                 seguimientosDtApi.on('xhr.dt', function (_event, _settings, json) {
                     revealSeguimientosTable();
