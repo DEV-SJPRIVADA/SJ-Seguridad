@@ -11,6 +11,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 - Ver la lista de espera (**Pendientes**) y los registros ya movidos (**En ficha**), con busqueda por cedula, nombre o codigo de requisicion.
 - Exportar a Excel el listado con el filtro activo.
 - Ejecutar **Gestionar Empleado** (solo con permiso de edicion): abre el formulario de ficha precargado con los datos de la requisicion, permite revisar/corregir antes de guardar, y solo al presionar **Crear empleado** el registro se mueve de Pendientes a En ficha.
+- Generar **Carta de contratación** desde Pendientes (mismo permiso de edición): formulario corto solo con los datos de la carta; el empleado **sigue en Pendientes** hasta que complete la ficha.
 
 **Fuera de alcance en esta version:** no existe modulo de alta de usuarios/nomina/expediente; "En ficha" es solo un marcador informativo, no crea cuentas ni registros en otros modulos. No hay edicion ni eliminacion de registros desde esta pantalla — las correcciones de cedula/nombre se hacen reabriendo la requisicion en **Requisiciones → Gestion**.
 
@@ -22,6 +23,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 | Ficha empleados | Registro informativo de personas ya revisadas/movidas por Gestion Humana (pill **En ficha**). |
 | Cedula / Nombre del contratado | Datos capturados en la requisicion al marcar el estado **Contratado**; distintos de "Cedula/Nombre a quien reemplaza" del motivo Reemplazo. |
 | Gestionar Empleado | Boton de la fila (en **Pendientes**) que abre el formulario de ficha precargado con los datos de la requisicion; el registro solo pasa a **En ficha** cuando se guarda con **Crear empleado**. Reemplaza la accion anterior "Agregar a ficha empleados" (movimiento inmediato de un clic, sin revisar datos, ya retirada). |
+| Carta de contratación (rápida) | Icono de documento en la fila de **Pendientes** (contrataciones nuevas, no reingresos). Abre un formulario corto con los datos que usa la carta Word; al generar descarga el archivo y **no** mueve el registro a En ficha. Luego la misma persona completa la ficha con **Gestionar Empleado**. |
 | Cedula duplicada | Situacion en la que la misma cedula ya esta registrada en otra requisicion; requiere confirmacion antes de reasignar el registro. Si ocurre al guardar el formulario de **Gestionar Empleado**, en cambio, bloquea el guardado con un error de validacion (no se permite duplicado ahi). |
 
 ## Responsabilidades
@@ -30,7 +32,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 | --- | --- |
 | Gestion Humana (gestiona requisiciones) | Marcar **Contratado** en la requisicion con cedula y nombre completo del contratado; resolver alertas de cedula duplicada. |
 | Gestion Humana (Ficha empleados, lectura) | Consultar la lista de espera y la ficha (abrir detalle en solo lectura), exportar a Excel. |
-| Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** / **Gestionar reingreso**, alta manual y **editar/guardar** la ficha. |
+| Gestion Humana (Ficha empleados, edicion) | Todo lo anterior, mas ejecutar **Gestionar Empleado** / **Gestionar reingreso**, **Carta de contratación** desde Pendientes, alta manual y **editar/guardar** la ficha. |
 | Gestion Humana (desvinculacion) | Usuarios con permiso **Desvincular** registran cierre formal de vinculo (causal, fechas, recontratable) y pueden **Generar** / **Descargar** cartas. Al desvincular se crea el seguimiento en **Desvinculaciones**; al generar carta se marca «tiene carta». |
 | Gestion Humana (tablero Desvinculaciones) | Operadores con el paquete de permisos del tablero ejecutan Masivos y completan Seguimientos (ver [`desvinculaciones.md`](desvinculaciones.md)). |
 | Administrador de Plantillas Word | Sube y mantiene plantillas en el tablero **Plantillas Word** (permiso distinto al de desvinculacion). |
@@ -66,6 +68,14 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 7. Al guardar con exito, el registro desaparece de **Pendientes**, queda con fecha y usuario que lo movio (**moved_to_ficha_at**/**moved_to_ficha_by**), y usted es redirigido al **listado principal** (pill **En ficha**), donde ya aparece el nuevo registro.
 
 **Nota:** intentar abrir "Gestionar Empleado" de un registro que ya fue movido a ficha (por ejemplo, si otra persona lo gestiono primero) muestra un error de pagina no encontrada; recargue el listado de Pendientes para ver el estado actualizado.
+
+### Carta de contratación desde Pendientes (antes de En ficha)
+
+1. En la pill **Pendientes**, pulse el icono de **Carta de contratación** (documento) de la fila. No aparece en reingresos (use **Gestionar reingreso**).
+2. Complete solo los datos de la carta: nombre, documento, lugar y fecha de nacimiento, dirección, ciudad de residencia, teléfono, correo, salario, fecha de ingreso y cargo. La ciudad de la requisición se muestra solo lectura.
+3. Elija plantilla(s) de contratación y firmante; pulse el icono de generar (documento) en la barra superior.
+4. Se descarga el Word/ZIP. El empleado **sigue en Pendientes**. Los datos mínimos quedan guardados para cuando complete la ficha con **Gestionar Empleado**.
+5. Si ya está **En ficha**, genere la carta desde la barra de acciones de la ficha (flujo anterior).
 
 ### Consultar registros ya movidos (En ficha)
 
@@ -151,6 +161,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.23 | 2026-10-05 | Agent | **Carta de contratación** desde Pendientes (formulario corto; no mueve a En ficha). |
 | 1.22 | 2026-10-05 | Agent | Generar/Descargar cartas pasan a iconos en la barra (junto a Historial de vínculos) y en el modal de historial. |
 | 1.21 | 2026-10-01 | Agent | Export Excel del listado Pendientes (icono en barra; respeta búsqueda `q`). |
 | 1.20 | 2026-10-01 | Agent | Campo obligatorio **Lugar de nacimiento** en create/editar ficha (también `?desde=`); variable Word `[LUGAR_NACIMIENTO]`. Sin cambio en import/Selección. |

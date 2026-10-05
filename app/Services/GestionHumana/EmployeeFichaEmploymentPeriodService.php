@@ -127,6 +127,35 @@ class EmployeeFichaEmploymentPeriodService
         return $period->fresh();
     }
 
+    /**
+     * Abre o actualiza el vínculo activo aunque el pendiente aún no esté en ficha
+     * (carta rápida de contratación). No toca moved_to_ficha_at.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function openOrSyncPeriodForQuickLetter(
+        PersonalRequisitionFichaEntry $entry,
+        array $attributes,
+        int $userId,
+    ): EmployeeFichaEmploymentPeriod {
+        $period = $this->activePeriod($entry);
+
+        if ($period === null) {
+            return $this->openPeriod(
+                $entry,
+                $attributes,
+                $userId,
+                $entry->personal_requisition_id,
+            );
+        }
+
+        $period->fill($this->periodAttributesFromProfileData($attributes));
+        $period->save();
+        $this->syncCatalogNamesOnPeriod($period);
+
+        return $period->fresh() ?? $period;
+    }
+
     public function syncProfileFromActivePeriod(PersonalRequisitionFichaEntry $entry, ?EmployeeFichaProfile $profile = null): EmployeeFichaProfile
     {
         $profile ??= $entry->profile ?? new EmployeeFichaProfile([
