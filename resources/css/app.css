@@ -290,23 +290,15 @@ a {
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
-    /* Sin barra visible: flechas + arrastre / swipe */
+    /* Sin barra visible: flechas + swipe nativo (no capturar pointer: rompe los clics) */
     scrollbar-width: none;
     -ms-overflow-style: none;
-    touch-action: pan-x;
-    cursor: grab;
 }
 
 .module-tabs--scroll::-webkit-scrollbar {
     display: none;
     width: 0;
     height: 0;
-}
-
-.module-tabs--scroll.is-dragging {
-    cursor: grabbing;
-    scroll-snap-type: none;
-    user-select: none;
 }
 
 .module-tabs--scroll .module-tab {
@@ -8303,7 +8295,7 @@ a.req-dashboard-kpi:focus-visible {
         display: block;
     }
 
-    /* Misma UX que desktop: fila + flechas; scroll oculto, arrastre/swipe permitido */
+    /* Misma UX que desktop: fila + flechas; scroll oculto; swipe nativo */
     .module-tabs {
         width: 100%;
         flex-wrap: nowrap;
@@ -8313,7 +8305,6 @@ a.req-dashboard-kpi:focus-visible {
         scroll-snap-type: x proximity;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        touch-action: pan-x;
     }
 
     .module-tabs::-webkit-scrollbar {
