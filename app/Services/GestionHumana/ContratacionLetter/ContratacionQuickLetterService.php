@@ -91,9 +91,7 @@ class ContratacionQuickLetterService
                 'second_name' => $parsedName['second_name'],
             ]);
 
-            $profile = $entry->profile ?? new EmployeeFichaProfile([
-                'personal_requisition_ficha_entry_id' => $entry->id,
-            ]);
+            $profile = $this->resolveProfileForDocument($entry, $document);
 
             $profile->fill([
                 'document_number' => $document,
@@ -152,6 +150,94 @@ class ContratacionQuickLetterService
             throw ValidationException::withMessages([
                 'ficha_entry' => 'Este empleado ya está en ficha. Genere la carta desde la ficha del empleado.',
             ]);
+        }
+    }
+
+    /**
+     * Evita el unique de cédula cuando el pendiente nuevo no tiene perfil pero la cédula
+     * ya existe en otra entrada (reingreso mal sincronizado / entrada duplicada).
+     */
+    private function resolveProfileForDocument(
+        PersonalRequisitionFichaEntry $entry,
+        string $document,
+    ): EmployeeFichaProfile {
+        if ($entry->profile !== null) {
+            return $entry->profile;
+        }
+
+        $existing = EmployeeFichaProfile::query()
+            ->where('document_number', $document)
+            ->lockForUpdate()
+            ->first();
+
+        if ($existing === null) {
+            return new EmployeeFichaProfile([
+                'personal_requisition_ficha_entry_id' => $entry->id,
+            ]);
+        }
+
+        $ownerEntryId = (int) ($existing->personal_requisition_ficha_entry_id ?? 0);
+
+        if ($ownerEntryId === (int) $entry->id) {
+            return $existing;
+        }
+
+        $ownerEntry = $ownerEntryId > 0
+            ? PersonalRequisitionFichaEntry::query()->lockForUpdate()->find($ownerEntryId)
+            : null;
+
+        // No quitar el perfil de un empleado que sigue activo en ficha.
+        if (
+            $ownerEntry !== null
+            && $ownerEntry->moved_to_ficha_at !== null
+            && $existing->employment_status === EmployeeFichaProfile::STATUS_ACTIVO
+        ) {
+            throw ValidationException::withMessages([
+                'document_number' => 'Esta cédula ya pertenece a un empleado activo en ficha. Complete el retiro o use Gestionar Empleado en ese registro.',
+            ]);
+        }
+
+        $this->reattachProfileAndPeriodsToEntry($existing, $entry, $ownerEntry);
+
+        $entry->setRelation('profile', $existing);
+
+        return $existing;
+    }
+
+    private function reattachProfileAndPeriodsToEntry(
+        EmployeeFichaProfile $profile,
+        PersonalRequisitionFichaEntry $targetEntry,
+        ?PersonalRequisitionFichaEntry $ownerEntry,
+    ): void {
+        $fromEntryId = (int) ($profile->personal_requisition_ficha_entry_id ?? 0);
+
+        if ($fromEntryId > 0 && $fromEntryId !== (int) $targetEntry->id) {
+            EmployeeFichaEmploymentPeriod::query()
+                ->where('personal_requisition_ficha_entry_id', $fromEntryId)
+                ->update([
+                    'personal_requisition_ficha_entry_id' => $targetEntry->id,
+                    'personal_requisition_id' => $targetEntry->personal_requisition_id,
+                ]);
+        }
+
+        $profile->personal_requisition_ficha_entry_id = $targetEntry->id;
+        $profile->save();
+
+        // Entrada anterior vacía (sin perfil ni periodos): evitar cédula duplicada en listados.
+        if ($ownerEntry === null || $ownerEntry->id === $targetEntry->id) {
+            return;
+        }
+
+        $ownerEntry->unsetRelation('profile');
+        $hasProfile = EmployeeFichaProfile::query()
+            ->where('personal_requisition_ficha_entry_id', $ownerEntry->id)
+            ->exists();
+        $hasPeriods = EmployeeFichaEmploymentPeriod::query()
+            ->where('personal_requisition_ficha_entry_id', $ownerEntry->id)
+            ->exists();
+
+        if (! $hasProfile && ! $hasPeriods) {
+            $ownerEntry->delete();
         }
     }
 }

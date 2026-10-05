@@ -264,6 +264,129 @@ class ContratacionQuickLetterTest extends TestCase
         $this->assertNotNull($activePeriod->termination_letter_path);
     }
 
+    public function test_quick_letter_reattaches_existing_profile_when_pending_entry_has_no_profile(): void
+    {
+        $manager = $this->managerUser();
+        $mover = User::factory()->create(['must_change_password' => false]);
+        $oldEntry = $this->createPendingEntry('900111001', 'Pérez Gómez Ana');
+
+        $oldEntry->update([
+            'moved_to_ficha_at' => now()->subMonths(2),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $oldEntry->id,
+            'document_number' => $oldEntry->hired_document,
+            'full_name' => $oldEntry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subMonth()->toDateString(),
+            'hire_date' => now()->subYear()->toDateString(),
+            'position_name' => 'Vigilante',
+            'salary' => 1200000,
+        ]);
+
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $oldEntry->id,
+            'personal_requisition_id' => $oldEntry->personal_requisition_id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'hire_date' => now()->subYear()->toDateString(),
+            'termination_date' => now()->subMonth()->toDateString(),
+            'is_rehireable' => true,
+            'opened_by' => $mover->id,
+            'closed_by' => $mover->id,
+        ]);
+
+        // Pendiente nuevo sin perfil (reingreso que creó otra entrada en lugar de reasignar).
+        $newEntry = $this->createPendingEntry('900111001', 'Pérez Gómez Ana');
+
+        $city = $this->seedCity();
+        $signatory = $this->seedSignatory();
+        $template = $this->seedContratacionTemplate('${NOMBRE_COMPLETO} ${DOCUMENTO}');
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.contratacion.quick.generate', $newEntry), [
+                'full_name' => $newEntry->hired_full_name,
+                'document_number' => $newEntry->hired_document,
+                'birth_place' => 'Cali',
+                'address' => 'Calle 1 #2-3',
+                'residence_city_code' => $city->code,
+                'phone' => '3009998877',
+                'email' => 'reingreso-dup@example.com',
+                'birth_date' => '1990-01-10',
+                'salary' => '1.800.000',
+                'hire_date' => now()->toDateString(),
+                'position_name' => 'Vigilante',
+                'template_ids' => [$template->id],
+                'signatory_id' => $signatory->id,
+            ])
+            ->assertOk()
+            ->assertDownload();
+
+        $profile->refresh();
+        $this->assertSame($newEntry->id, $profile->personal_requisition_ficha_entry_id);
+        $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $profile->employment_status);
+        $this->assertNull($profile->termination_date);
+
+        $this->assertSame(0, PersonalRequisitionFichaEntry::query()->whereKey($oldEntry->id)->count());
+
+        $activePeriod = EmployeeFichaEmploymentPeriod::query()
+            ->where('personal_requisition_ficha_entry_id', $newEntry->id)
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
+            ->first();
+
+        $this->assertNotNull($activePeriod);
+        $this->assertSame(2, $activePeriod->sequence);
+    }
+
+    public function test_quick_letter_rejects_document_owned_by_active_in_ficha_employee(): void
+    {
+        $manager = $this->managerUser();
+        $mover = User::factory()->create(['must_change_password' => false]);
+        $owner = $this->createPendingEntry('900222003', 'Activo En Ficha');
+
+        $owner->update([
+            'moved_to_ficha_at' => now()->subMonth(),
+            'moved_to_ficha_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $owner->id,
+            'document_number' => $owner->hired_document,
+            'full_name' => $owner->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'hire_date' => now()->subYear()->toDateString(),
+            'position_name' => 'Vigilante',
+            'salary' => 1200000,
+        ]);
+
+        $orphanPending = $this->createPendingEntry('900222003', 'Activo En Ficha');
+        $city = $this->seedCity();
+        $signatory = $this->seedSignatory();
+        $template = $this->seedContratacionTemplate('${DOCUMENTO}');
+
+        $this->actingAs($manager)
+            ->from(route('gestion-humana.ficha-empleados.employees.contratacion.quick', $orphanPending))
+            ->post(route('gestion-humana.ficha-empleados.employees.contratacion.quick.generate', $orphanPending), [
+                'full_name' => $orphanPending->hired_full_name,
+                'document_number' => $orphanPending->hired_document,
+                'birth_place' => 'Cali',
+                'address' => 'Calle 1 #2-3',
+                'residence_city_code' => $city->code,
+                'phone' => '3009998877',
+                'email' => 'activo@example.com',
+                'birth_date' => '1990-01-10',
+                'salary' => '1.800.000',
+                'hire_date' => now()->toDateString(),
+                'position_name' => 'Vigilante',
+                'template_ids' => [$template->id],
+                'signatory_id' => $signatory->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasErrors('document_number');
+    }
+
     public function test_pending_datatable_shows_quick_letter_action(): void
     {
         $manager = $this->managerUser();
@@ -330,15 +453,15 @@ class ContratacionQuickLetterTest extends TestCase
         return $user;
     }
 
-    private function createPendingEntry(): PersonalRequisitionFichaEntry
+    private function createPendingEntry(?string $document = null, ?string $fullName = null): PersonalRequisitionFichaEntry
     {
         $requisition = $this->createRequisition('REQ-QUICK-'.uniqid());
         $creator = User::factory()->create(['must_change_password' => false]);
 
         return PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $requisition->id,
-            'hired_document' => '20'.random_int(10000000, 99999999),
-            'hired_full_name' => 'Pendiente Carta Test',
+            'hired_document' => $document ?: '20'.random_int(10000000, 99999999),
+            'hired_full_name' => $fullName ?: 'Pendiente Carta Test',
             'moved_to_ficha_at' => null,
             'created_by' => $creator->id,
         ]);
