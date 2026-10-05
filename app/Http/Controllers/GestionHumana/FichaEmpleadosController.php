@@ -32,6 +32,7 @@ use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
+use App\Services\GestionHumana\FichaLetterGenerateTypesBuilder;
 use App\Services\GestionHumana\TerminationNovedadesConflictService;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
@@ -71,6 +72,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeCursoDocumentService $cursoDocumentService,
         private readonly EmployeeCursoPendingService $cursoPendingService,
         private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
+        private readonly FichaLetterGenerateTypesBuilder $letterGenerateTypesBuilder,
     ) {}
 
     public function index(Request $request): View
@@ -610,6 +612,8 @@ class FichaEmpleadosController extends Controller
         $employeeCursos = $this->employeeCursosForDocumentNumber($documentNumber);
         $employeeAcreditaciones = $this->employeeAcreditacionesForDocumentNumber($documentNumber);
         $canViewEmployeeLookups = $this->fichaEmpleadosAccess->canView(auth()->user());
+        $canGenerateLetters = $this->canGenerateLetters($letterPeriod);
+        $canGenerateContratacionLetters = $this->canGenerateContratacionLetters($activePeriod);
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
@@ -621,8 +625,14 @@ class FichaEmpleadosController extends Controller
             'employmentHistory' => $employmentHistory,
             'letterPeriod' => $letterPeriod,
             'canManage' => $canManage,
-            'canGenerateLetters' => $this->canGenerateLetters($letterPeriod),
-            'canGenerateContratacionLetters' => $this->canGenerateContratacionLetters($activePeriod),
+            'canGenerateLetters' => $canGenerateLetters,
+            'canGenerateContratacionLetters' => $canGenerateContratacionLetters,
+            'letterGenerateTypes' => $this->letterGenerateTypesBuilder->build(
+                $activePeriod,
+                $letterPeriod,
+                $canGenerateContratacionLetters,
+                $canGenerateLetters,
+            ),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'canForceNovedadesConflict' => auth()->user()?->hasRole('super-admin') ?? false,
             'catalogs' => $this->catalogService->optionsForForms(),

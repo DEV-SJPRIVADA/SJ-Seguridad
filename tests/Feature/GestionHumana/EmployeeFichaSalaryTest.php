@@ -54,7 +54,7 @@ class EmployeeFichaSalaryTest extends TestCase
 
         $mainFormChunk = substr($html, $mainFormStart, $mainFormEnd - $mainFormStart);
         $this->assertStringNotContainsString('<form', $mainFormChunk);
-        $this->assertStringContainsString('title="Generar cartas"', $html);
+        $this->assertStringContainsString('title="Generar Cartas"', $html);
     }
 
     public function test_update_ficha_normalizes_formatted_salary_without_corrupting_value(): void

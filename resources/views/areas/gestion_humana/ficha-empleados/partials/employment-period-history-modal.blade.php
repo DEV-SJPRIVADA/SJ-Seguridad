@@ -1,4 +1,4 @@
-{{-- Variables: $employmentHistory, $canGenerateLetters --}}
+{{-- Variables: $employmentHistory, $canGenerateLetters, $activePeriod, $canGenerateContratacionLetters --}}
 @if ($employmentHistory->isNotEmpty())
     <x-modal name="ficha-employment-history" maxWidth="2xl">
         <div class="modal-card ficha-empleados-history-modal">
@@ -72,6 +72,8 @@
                                             @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
                                                 'period' => $period,
                                                 'canGenerateLetters' => true,
+                                                'activePeriod' => $activePeriod ?? null,
+                                                'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
                                                 'compact' => true,
                                             ])
                                         @else

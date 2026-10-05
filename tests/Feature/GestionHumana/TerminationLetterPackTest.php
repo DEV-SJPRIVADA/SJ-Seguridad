@@ -321,8 +321,8 @@ class TerminationLetterPackTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('title="Generar cartas"', $htmlBefore);
-        $this->assertStringContainsString('aria-label="Generar cartas"', $htmlBefore);
+        $this->assertStringContainsString('title="Generar Cartas"', $htmlBefore);
+        $this->assertStringContainsString('aria-label="Generar Cartas"', $htmlBefore);
         $this->assertStringNotContainsString('Regenerar', $htmlBefore);
         $this->assertStringNotContainsString('title="Descargar cartas"', $htmlBefore);
 
@@ -338,7 +338,7 @@ class TerminationLetterPackTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('title="Generar cartas"', $htmlAfter);
+        $this->assertStringContainsString('title="Generar Cartas"', $htmlAfter);
         $this->assertStringContainsString('title="Descargar cartas"', $htmlAfter);
         $this->assertStringNotContainsString('Regenerar', $htmlAfter);
     }

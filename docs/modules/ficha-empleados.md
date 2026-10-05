@@ -233,6 +233,27 @@ Permite generar cartas Word de tipo `contratacion` **antes** de mover el registr
 | Audit | `contratacion_letter_pack` / `generate_quick` (`still_pending: true`) |
 | Tests | `tests/Feature/GestionHumana/ContratacionQuickLetterTest.php` |
 
+## Modal Generar Cartas (desde ficha En ficha)
+
+Icono de barra **Generar Cartas** (visible con vínculo **activo** + `ficha_empleados.manage` **o** con vínculo **cerrado** + `ficha_empleados.terminate`). Ambos iconos abren el **mismo modal** (`ficha-generate-cartas`); el de desvinculación preselecciona tipo `desvinculacion` y el de activo preselecciona `contratacion`. El download del último pack de desvinculación se mantiene aparte.
+
+### Comportamiento
+
+1. Lista **todos los tipos activos** de `word_document_types` (Plantillas Word).
+2. Tipos con motor: `contratacion` (período activo + manage) y `desvinculacion` (período cerrado + terminate).
+3. Tipos no aplicables o sin motor aparecen **deshabilitados** con mensaje (p. ej. «Requiere un vínculo laboral cerrado», «La generación para este tipo aún no está disponible.»).
+4. Al elegir un tipo habilitado se cargan plantillas/firmas y el POST usa la URL del tipo (`contratacion.generate` o `period.letters.generate`).
+5. UI: cards de tipo, cards compactas de plantilla, pie con iconos Cancelar / Generar y descargar.
+
+### Piezas
+
+| Pieza | Ubicación |
+| --- | --- |
+| Payload tipos | `FichaEmpleadosController::letterGenerateTypesForFicha` |
+| Icono | `partials/contratacion-letter-actions.blade.php` |
+| Modal | `partials/contratacion-letter-generate-modal.blade.php` |
+| Test | `tests/Feature/GestionHumana/ContratacionLetterGenerateModalTest.php` |
+
 ## Formulario ficha alineado a Plantilla masivos (FEAT-028)
 
 **Principio:** captura = exportación. El mismo formulario completo se usa en alta manual, **Gestionar empleado** y editar ficha.

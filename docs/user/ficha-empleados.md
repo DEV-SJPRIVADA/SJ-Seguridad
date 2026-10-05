@@ -81,7 +81,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. En la pestaña **Empleados**, cambie a la pill **En ficha**.
 2. Haga clic en una fila para abrir el detalle de la ficha.
-3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. La **carta de contratación** se genera desde el icono de documento en la barra superior de acciones. Con permiso de ver ficha también puede abrir **Consultar cursos** (gorro) y **Consultar acreditación** (insignia) para ver el historial por cédula sin salir de la ficha.
+3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. Use el icono **Generar Cartas** (documento) en la barra superior: se abre el mismo modal con **tipo de documento** (todos los tipos activos de Plantillas Word), lista compacta de plantillas según el tipo y firmante. En ficha de desvinculado el icono abre el mismo modal preseleccionando desvinculación; en activo, contratación. Tipos no aplicables aparecen deshabilitados con mensaje. Al generar se llama al endpoint del tipo elegido. Con permiso de ver ficha también puede abrir **Consultar cursos** (gorro) y **Consultar acreditación** (insignia) para ver el historial por cédula sin salir de la ficha.
 4. En el filtro **Desvinculado** aparece la columna **Recontratable** (Si/No) según lo registrado al desvincular.
 
 ### Completar ficha de empleado
@@ -108,7 +108,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 Disponible cuando el vinculo esta **cerrado** (empleado desvinculado), con **cualquier** causal, y usted tiene permiso de desvinculacion.
 
 1. Abra la ficha del empleado desvinculado (o el **Historial de vínculos**).
-2. En la barra superior, junto al icono de **Historial de vínculos**, pulse el icono de **Generar cartas** (documento). También puede usar el mismo icono en cada vínculo cerrado del modal de historial. Se abre una ventana con las plantillas de tipo **Desvinculación** que tengan archivo cargado.
+2. En la barra superior, junto al icono de **Historial de vínculos**, pulse el icono de **Generar Cartas** (documento). También puede usarlo en cada vínculo cerrado del modal de historial. Se abre el mismo modal que en activos, con tipo **Desvinculación** preseleccionado y las plantillas de ese tipo.
 3. Marque **una o varias** plantillas (al menos una) y confirme.
    - Si elige **una**, descarga un archivo Word (`.docx`).
    - Si elige **varias**, descarga un **ZIP** con esos Word.
@@ -162,6 +162,11 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.29 | 2026-10-05 | Agent | Unificación: activo y desvinculado usan el mismo modal **Generar Cartas** (tipo preseleccionado según el icono). |
+| 1.28 | 2026-10-05 | Agent | Icono **Generar Cartas**: modal con selector de tipo (catálogo Plantillas Word), plantillas en cards y generación según tipo; icono de desvinculación se mantiene. |
+| 1.30 | 2026-10-05 | Agent | Modal Generar cartas: pasos numerados, tarjetas más claras y pie con Cancelar / Generar y descargar. |
+| 1.29 | 2026-10-05 | Agent | Ficha: botón «Ir al inicio» al final del formulario para subir el scroll. |
+| 1.28 | 2026-10-05 | Agent | Cabecera de ficha: nombre destacado, chips de cédula/requisición/vínculo y pill de modo edición. |
 | 1.27 | 2026-10-05 | Agent | Modales Consultar cursos / acreditación: más anchos, scroll horizontal/vertical y cabecera con contador. |
 | 1.26 | 2026-10-05 | Agent | Ficha: icono Consultar acreditación (modal por cédula) junto a Consultar cursos; mismo permiso view de ficha. |
 | 1.25 | 2026-10-05 | Agent | Alta/Gestionar empleado: errores de validación en español, alerta visible, scroll al campo y mensaje si el pendiente ya no existe (sin 404). |
