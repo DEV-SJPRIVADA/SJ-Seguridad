@@ -164,6 +164,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.32 | 2026-10-05 | Agent | Carta Word: temp en `storage/app/tmp/phpword` (Hostinger) + escape XML; carta rápida muestra error en formulario si falla la generación. |
 | 1.30 | 2026-10-05 | Agent | Carta rápida habilitada también para **reingresos** en Pendientes. |
 | 1.29 | 2026-10-05 | Agent | Unificación: activo y desvinculado usan el mismo modal **Generar Cartas** (tipo preseleccionado según el icono). |
 | 1.28 | 2026-10-05 | Agent | Icono **Generar Cartas**: modal con selector de tipo (catálogo Plantillas Word), plantillas en cards y generación según tipo; icono de desvinculación se mantiene. |

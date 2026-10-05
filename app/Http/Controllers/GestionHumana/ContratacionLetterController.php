@@ -17,9 +17,14 @@ use App\Services\GestionHumana\EmployeeFichaCatalogService;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Throwable;
 
 class ContratacionLetterController extends Controller
 {
@@ -57,12 +62,27 @@ class ContratacionLetterController extends Controller
     public function generate(
         GenerateContratacionLettersRequest $request,
         EmployeeFichaEmploymentPeriod $period,
-    ): BinaryFileResponse {
+    ): BinaryFileResponse|RedirectResponse {
         $period->load('fichaEntry.profile', 'fichaEntry.requisition');
         $entry = $period->fichaEntry;
         abort_unless($entry !== null, 404);
 
-        $result = $this->packGenerator->generate($period, $entry, $request->templateIds(), $request->signatoryId());
+        try {
+            $result = $this->packGenerator->generate($period, $entry, $request->templateIds(), $request->signatoryId());
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            return $this->letterGenerationFailed(
+                $e,
+                'contratacion_letter_pack',
+                [
+                    'period_id' => $period->id,
+                    'ficha_entry_id' => $entry->id,
+                    'template_ids' => $request->templateIds(),
+                    'signatory_id' => $request->signatoryId(),
+                ],
+            );
+        }
 
         $this->auditLogService->logEvent(
             eventType: 'contratacion_letter_pack',
@@ -120,12 +140,28 @@ class ContratacionLetterController extends Controller
     public function generateQuick(
         GenerateQuickContratacionLetterRequest $request,
         PersonalRequisitionFichaEntry $fichaEntry,
-    ): BinaryFileResponse {
-        $result = $this->quickLetterService->saveAndGenerate(
-            $fichaEntry,
-            $request->payload(),
-            (int) $request->user()->id,
-        );
+    ): BinaryFileResponse|RedirectResponse {
+        try {
+            $result = $this->quickLetterService->saveAndGenerate(
+                $fichaEntry,
+                $request->payload(),
+                (int) $request->user()->id,
+            );
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            return $this->letterGenerationFailed(
+                $e,
+                'contratacion_letter_quick',
+                [
+                    'ficha_entry_id' => $fichaEntry->id,
+                    'document_number' => $fichaEntry->hired_document,
+                    'is_rehire_pending' => $fichaEntry->fresh('profile')?->isRehirePending(),
+                    'template_ids' => $request->input('template_ids'),
+                    'signatory_id' => $request->input('signatory_id'),
+                ],
+            );
+        }
 
         $this->auditLogService->logEvent(
             eventType: 'contratacion_letter_pack',
@@ -147,6 +183,28 @@ class ContratacionLetterController extends Controller
         $absolutePath = Storage::disk('local')->path($result['storage_path']);
 
         return response()->download($absolutePath, $result['download_name']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function letterGenerationFailed(Throwable $e, string $channel, array $context): RedirectResponse
+    {
+        report($e);
+
+        Log::error('Fallo al generar carta Word ('.$channel.')', array_merge($context, [
+            'exception' => $e::class,
+            'message' => $e->getMessage(),
+        ]));
+
+        $userMessage = $e instanceof RuntimeException && filled($e->getMessage())
+            ? $e->getMessage()
+            : 'No se pudo generar la carta de contratación. Verifique plantillas, firmante y almacenamiento del servidor.';
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->withErrors(['carta' => $userMessage]);
     }
 
     /**

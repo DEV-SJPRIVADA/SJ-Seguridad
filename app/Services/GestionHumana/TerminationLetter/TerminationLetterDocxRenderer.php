@@ -2,6 +2,7 @@
 
 namespace App\Services\GestionHumana\TerminationLetter;
 
+use App\Support\WordTempDirectory;
 use PhpOffice\PhpWord\TemplateProcessor;
 use RuntimeException;
 use ZipArchive;
@@ -16,7 +17,11 @@ class TerminationLetterDocxRenderer
     public function render(string $templateAbsolutePath, array $variables, string $outputAbsolutePath): void
     {
         if (! is_file($templateAbsolutePath)) {
-            throw new RuntimeException('No se encontro la plantilla Word.');
+            throw new RuntimeException('No se encontró la plantilla Word.');
+        }
+
+        if (! class_exists(ZipArchive::class)) {
+            throw new RuntimeException('La extensión Zip de PHP no está disponible en el servidor.');
         }
 
         $mergedPath = $this->mergeSplitRuns($templateAbsolutePath);
@@ -38,7 +43,7 @@ class TerminationLetterDocxRenderer
             }
 
             $dir = dirname($outputAbsolutePath);
-            if (! is_dir($dir) && ! mkdir($dir, 0777, true) && ! is_dir($dir)) {
+            if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
                 throw new RuntimeException('No se pudo crear el directorio de salida.');
             }
 
@@ -54,7 +59,8 @@ class TerminationLetterDocxRenderer
 
     private function mergeSplitRuns(string $templatePath): string
     {
-        $tmpFile = tempnam(sys_get_temp_dir(), 'docx-merge-');
+        // Usar storage/app/tmp (no /tmp del sistema) para Hostinger y open_basedir.
+        $tmpFile = tempnam(WordTempDirectory::path(), 'docx-merge-');
 
         if ($tmpFile === false) {
             throw new RuntimeException('No se pudo crear archivo temporal.');

@@ -186,7 +186,7 @@ Servicio periodos: `App\Services\GestionHumana\EmployeeFichaEmploymentPeriodServ
 - **Admin de plantillas:** tablero sidebar **Plantillas Word** (permisos `plantillas_word.*` + board). **Catalogos → Causal** ya **no** administra plantillas; rutas legacy de upload/download/delete → 404.
 - Plantillas: tabla `termination_letter_document_templates` con FK `word_document_type_id` (sin amarre a causal/packs). Contenido legacy RENUNCIA **no** migrado — hay que re-subir. Ver [`plantillas-word.md`](plantillas-word.md).
 - Placeholders canónicos: `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc. — catálogo `letter_placeholders` (UI Plantillas Word). Motor: `LetterVariableBuilder` + `TerminationLetterDocxRenderer` (también fallback temporal `[CLAVE]`). Firmante: `termination_letter_signatory` (env `FICHA_LETTER_SIGNATORY_*`).
-- Dependencia: `phpoffice/phpword` (`TemplateProcessor`, macros `${}`).
+- Dependencia: `phpoffice/phpword` (`TemplateProcessor`, macros `${}`). Temp en `storage/app/tmp/phpword` (`WordTempDirectory`); escape XML habilitado en `AppServiceProvider`.
 - Servicios: `App\Services\GestionHumana\TerminationLetter\*` + `App\Services\GestionHumana\Letter\LetterVariableBuilder` (compartido con contratación y futuros tipos).
 - Controlador: `TerminationLetterController` — `templates` (JSON), `generate` (body `template_ids`), `download`.
 - Rutas: `GET .../periodos/{period}/cartas/plantillas`, `POST .../cartas/generar`, `GET .../cartas/descargar` — `ficha_empleados.terminate`.
@@ -216,6 +216,7 @@ Permite generar cartas Word de tipo `contratacion` **antes** de mover el registr
 2. Formulario mínimo + plantillas + firmante.
 3. Al generar: guarda/actualiza `EmployeeFichaProfile` con esos campos (en reingreso pasa a `activo` y limpia `termination_date`), abre o sincroniza periodo `activo` vía `EmployeeFichaEmploymentPeriodService::openOrSyncPeriodForQuickLetter` (secuencia nueva si solo había vínculos cerrados), genera el pack Word y descarga.
 4. **`moved_to_ficha_at` permanece `null`** — el empleado sigue en Pendientes. Luego completa con **Gestionar Empleado** / **Gestionar reingreso**.
+5. Temp Word bajo `storage/app/tmp/phpword` (`WordTempDirectory` + `PhpWord\Settings::setTempDir`) para evitar fallos de `/tmp` en Hostinger; escape XML de valores activo. Si la generación falla, `generateQuick` redirige al formulario con mensaje (y log `contratacion_letter_quick`) en lugar de 500 opaco.
 
 ### Campos del formulario (variables Word)
 
