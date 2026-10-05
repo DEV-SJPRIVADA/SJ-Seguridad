@@ -4,9 +4,29 @@
     </x-slot>
 
     {{-- Carta rápida: solo campos de plantilla de contratación; no mueve a En ficha --}}
-    <div class="page-section ficha-empleados-page ficha-empleados-page--form">
+    <div
+        class="page-section ficha-empleados-page ficha-empleados-page--form"
+        x-data="{
+            scrollToTop() {
+                const main = document.querySelector('.app-main');
+                if (main) {
+                    main.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                const top = document.getElementById('ficha-carta-contratacion-top');
+                if (top) {
+                    top.focus({ preventScroll: true });
+                }
+            },
+        }"
+    >
         <div class="app-container">
-            <div class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form">
+            <div
+                id="ficha-carta-contratacion-top"
+                class="ficha-empleados-page__workspace-header ficha-empleados-page__workspace-header--form"
+                tabindex="-1"
+            >
                 <div class="panel-heading-row ficha-empleados-page__title-row block-spaced-sm">
                     <div class="ficha-empleados-page__title-copy">
                         <h2 class="panel-title panel-title--page">
@@ -280,6 +300,20 @@
                     </section>
                 </div>
             </form>
+
+            {{-- Volver al inicio del scroll tras recorrer el formulario --}}
+            <div class="ficha-empleados-page__scroll-top">
+                <button
+                    type="button"
+                    class="ficha-empleados-page__scroll-top-btn"
+                    title="Ir al inicio"
+                    aria-label="Ir al inicio de la carta de contratación"
+                    x-on:click="scrollToTop()"
+                >
+                    <x-lucide-arrow-up-to-line width="18" height="18" aria-hidden="true" />
+                    <span>Ir al inicio</span>
+                </button>
+            </div>
         </div>
     </div>
 

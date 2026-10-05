@@ -92,7 +92,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Vista | Descripcion |
 | --- | --- |
 | `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: iconos superior derecha (multi-cedula / +fila), filas con trash, Desvincular/limpiar/ZIP icon-only; lookup blur/Enter; modal pegar hasta 500; reporte |
-| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | Tabla checks + fecha nomina (autosave), filtros (q, status, selector campo fecha + rango Desde/Hasta, limpiar → incompletos), export Excel, OK TODO RO, icono revertir + modal motivo |
+| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | DataTables **server-side** (`.js-desvinculaciones-seguimientos-datatable`) + filtros Alpine (q, status, campo fecha + rango), export Excel, checks/fecha nómina con autosave (eventos delegados), OK TODO RO, icono revertir + modal motivo |
 | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestanas `module-tab` Masivos / Seguimientos |
 | `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
 
