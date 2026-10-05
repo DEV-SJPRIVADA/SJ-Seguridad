@@ -14,12 +14,14 @@ use App\Policies\PurchaseRequestPolicy;
 use App\Policies\QualityDocumentPolicy;
 use App\Policies\SupplyRequestPolicy;
 use App\Services\Navigation\NavigationResolver;
+use App\Support\WordTempDirectory;
 use BladeUI\Icons\Factory;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use PhpOffice\PhpWord\Settings;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::defaultView('vendor.pagination.sj');
+
+        // PhpWord: temp bajo storage (Hostinger) y escape XML en reemplazos de plantilla.
+        Settings::setTempDir(WordTempDirectory::path());
+        Settings::setOutputEscapingEnabled(true);
 
         Gate::before(function (User $user, string $ability): ?bool {
             // Dejar que la policy evalúe reglas de negocio (ej. hilo cerrado si Compras completó).

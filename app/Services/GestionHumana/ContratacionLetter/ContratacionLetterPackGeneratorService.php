@@ -8,6 +8,7 @@ use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager;
+use App\Support\WordTempDirectory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -47,10 +48,7 @@ class ContratacionLetterPackGeneratorService
         $entry->loadMissing('profile', 'requisition');
         $variables = $this->variableBuilder->build($period, $entry, $entry->profile, null, $signatoryId);
 
-        $workDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ficha-contratacion-'.Str::uuid()->toString();
-        if (! mkdir($workDir) && ! is_dir($workDir)) {
-            throw new RuntimeException('No se pudo crear el directorio temporal.');
-        }
+        $workDir = WordTempDirectory::uniqueDir('ficha-contratacion-');
 
         $generatedFiles = [];
 
