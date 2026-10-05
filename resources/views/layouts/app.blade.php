@@ -295,7 +295,7 @@
                 border-right: 1px solid var(--color-border, #dbe3ef);
                 padding: 1.5rem 1rem;
                 height: 100%;
-                overflow-y: auto;
+                overflow: hidden;
             }
 
             .app-workspace {
@@ -337,10 +337,15 @@
                 .app-sidebar {
                     display: block !important;
                     width: 100% !important;
+                    min-width: 0 !important;
                     height: auto !important;
                     border-right: none !important;
                     border-bottom: 1px solid var(--color-border) !important;
                     padding: 1rem !important;
+                    overflow: visible !important;
+                }
+                .app-sidebar__collapse-btn {
+                    display: none !important;
                 }
                 .app-sidebar-footer {
                     display: none !important;
@@ -986,9 +991,29 @@
             @include('layouts.navigation')
 
             <div class="app-frame">
-                <aside class="app-sidebar">
+                <aside
+                    class="app-sidebar"
+                    x-data="appSidebar"
+                    :class="{ 'app-sidebar--collapsed': collapsed }"
+                    :aria-expanded="collapsed ? 'false' : 'true'"
+                >
                     <div class="app-sidebar__header">
-                        <p class="text-caption app-sidebar__label">Procesos</p>
+                        <p class="text-caption app-sidebar__label" x-show="!collapsed">Procesos</p>
+                        <button
+                            type="button"
+                            class="app-sidebar__collapse-btn"
+                            x-on:click="toggle()"
+                            :title="collapsed ? 'Mostrar procesos' : 'Ocultar procesos'"
+                            :aria-label="collapsed ? 'Mostrar barra de procesos' : 'Ocultar barra de procesos'"
+                            :aria-expanded="collapsed ? 'false' : 'true'"
+                        >
+                            <span x-show="!collapsed">
+                                <x-lucide-chevrons-left width="18" height="18" aria-hidden="true" />
+                            </span>
+                            <span x-show="collapsed" x-cloak>
+                                <x-lucide-chevrons-right width="18" height="18" aria-hidden="true" />
+                            </span>
+                        </button>
                     </div>
 
                     @if ($appNavigation->isNotEmpty())

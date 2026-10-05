@@ -119,17 +119,90 @@ a {
     border-right: 1px solid var(--color-border);
     padding: 1.5rem 1rem;
     height: 100%;
-    overflow-y: auto;
+    overflow: hidden;
+    transition: width 0.2s ease, padding 0.2s ease, min-width 0.2s ease;
 }
 
 .app-sidebar__header {
-    padding: 0 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0 0.25rem 1rem;
+    flex-shrink: 0;
+}
+
+.app-sidebar__label {
+    margin: 0;
+    min-width: 0;
+}
+
+/* Colapsar Procesos: pill alineada a flechas de tableros */
+.app-sidebar__collapse-btn {
+    flex-shrink: 0;
+    width: 1.85rem;
+    height: 1.85rem;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    color: var(--color-text-soft);
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar__collapse-btn:hover {
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary, #003366) 35%, var(--color-border));
+    background: #fff;
+}
+
+.app-sidebar__collapse-btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary, #003366) 45%, transparent);
+    outline-offset: 2px;
+}
+
+.app-sidebar--collapsed .app-sidebar__collapse-btn {
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary, #003366) 25%, var(--color-border));
 }
 
 .app-sidebar__nav {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Scroll oculto en portátil / desktop; el listado sigue siendo desplazable */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.app-sidebar__nav::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Colapso desktop: rail estrecho con botón para volver a mostrar */
+.app-sidebar--collapsed {
+    width: 3rem;
+    min-width: 3rem;
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
+}
+
+.app-sidebar--collapsed .app-sidebar__header {
+    padding: 0 0 0.35rem;
+    justify-content: center;
+}
+
+.app-sidebar--collapsed .app-sidebar__label,
+.app-sidebar--collapsed .app-sidebar__nav,
+.app-sidebar--collapsed .app-sidebar-footer,
+.app-sidebar--collapsed .app-sidebar__mobile-select {
+    display: none !important;
 }
 
 .sidebar-link,
@@ -2147,6 +2220,43 @@ a {
 
 .ficha-empleados-page__table-wrap {
     margin-top: 0.5rem;
+}
+
+/* Listado Empleados: panel/tabla hasta el borde inferior (sin hueco vacío) */
+.app-main:has(.ficha-empleados-page:not(.ficha-empleados-page--form)) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.35rem;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) .ficha-empleados-page__alert {
+    flex-shrink: 0;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) .ficha-empleados-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
 }
 
 .ficha-empleados-page.req-manage-page .req-manage-shell__table.data-table-wrap {
@@ -8260,10 +8370,29 @@ a.req-dashboard-kpi:focus-visible {
 @media (max-width: 1024px) {
     .app-sidebar {
         padding: 0.75rem 1rem;
+        overflow: visible;
+        width: auto;
+        min-width: 0;
     }
 
     .app-sidebar__header {
         padding: 0 0 0.5rem;
+    }
+
+    /* En móvil el select cubre el cambio de área; sin colapso */
+    .app-sidebar__collapse-btn {
+        display: none !important;
+    }
+
+    .app-sidebar.app-sidebar--collapsed {
+        width: 100%;
+        min-width: 0;
+        padding: 0.75rem 1rem;
+    }
+
+    .app-sidebar.app-sidebar--collapsed .app-sidebar__label,
+    .app-sidebar.app-sidebar--collapsed .app-sidebar__mobile-select {
+        display: block !important;
     }
 
     .app-sidebar__mobile-select {

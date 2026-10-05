@@ -34,7 +34,7 @@
                                         name="q"
                                         class="form-input"
                                         value="{{ $filters['q'] }}"
-                                        placeholder="Cedula, nombre, concepto o entregada a"
+                                        placeholder="Cédula, nombre, concepto o entregada a"
                                     >
                                 </div>
                                 <div class="archivo-consult-history-filters__field archivo-consult-history-filters__field--sm">
@@ -81,9 +81,16 @@
                                     <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
                                     </button>
-                                    <a href="{{ route('gestion-humana.archivo.consultation-history.index') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros" aria-label="Limpiar filtros">
+                                    <a href="{{ route('gestion-humana.archivo.consultation-history.index') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros (mes actual)" aria-label="Limpiar filtros">
                                         <x-lucide-x width="18" height="18" aria-hidden="true" />
                                     </a>
+                                    <x-export-excel
+                                        route="{{ $exportUrl }}"
+                                        label=""
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Exportar Excel"
+                                        aria-label="Exportar Excel"
+                                    />
                                 </div>
                             </div>
                         </form>
@@ -93,6 +100,9 @@
                         <p class="req-manage-filters__meta">
                             <strong>{{ number_format($items->count()) }}</strong>
                             {{ $items->count() === 1 ? 'registro' : 'registros' }}
+                            @if ($filters['month'] ?? null)
+                                · {{ \App\Models\EmployeeArchiveConsultationItem::monthLabel((int) $filters['month']) }}
+                            @endif
                         </p>
 
                     <div class="data-table-wrap">
@@ -101,13 +111,13 @@
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Concepto</th>
-                                    <th>Cedula</th>
+                                    <th>Cédula</th>
                                     <th>Nombre</th>
                                     <th>Estante</th>
                                     <th>Caja</th>
                                     <th>Entregada a</th>
                                     <th>Recibida</th>
-                                    <th>Observacion</th>
+                                    <th>Observación</th>
                                     <th>Semana</th>
                                     <th>Mes</th>
                                     <th>Acciones</th>
@@ -139,7 +149,7 @@
                                             </label>
                                         </td>
                                         <td class="archivo-page__field-cell">
-                                            <label class="sr-only" for="{{ $rowFormId }}-observation">Observacion</label>
+                                            <label class="sr-only" for="{{ $rowFormId }}-observation">Observación</label>
                                             <input
                                                 id="{{ $rowFormId }}-observation"
                                                 form="{{ $rowFormId }}"
@@ -148,20 +158,27 @@
                                                 class="form-input archivo-page__inline-input archivo-consult-history__observation-input"
                                                 maxlength="1000"
                                                 value="{{ old('observation', $item->observation) }}"
-                                                placeholder="Observacion"
+                                                placeholder="Observación"
                                             >
                                         </td>
                                         <td>{{ $item->week_of_month }}</td>
                                         <td>{{ $item->month_label }}</td>
                                         <td class="table-actions archivo-page__actions-cell">
-                                            <button type="submit" form="{{ $rowFormId }}" class="btn btn--primary btn--sm">
-                                                Actualizar
+                                            {{-- Guardar recibida/observación de la fila --}}
+                                            <button
+                                                type="submit"
+                                                form="{{ $rowFormId }}"
+                                                class="cursos-catalogo-page__icon-btn"
+                                                title="Actualizar"
+                                                aria-label="Actualizar registro"
+                                            >
+                                                <x-lucide-save width="16" height="16" aria-hidden="true" />
                                             </button>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="12">No hay consultas registradas.</td>
+                                        <td colspan="12">No hay consultas registradas{{ ($filters['month'] ?? null) ? ' para el mes seleccionado' : '' }}.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -178,15 +195,9 @@
                         >
                             @csrf
                             @method('PATCH')
-                            @if ($filters['q'] ?? '')
-                                <input type="hidden" name="q" value="{{ $filters['q'] }}">
-                            @endif
-                            @if ($filters['month'] ?? null)
-                                <input type="hidden" name="month" value="{{ $filters['month'] }}">
-                            @endif
-                            @if ($filters['week'] ?? null)
-                                <input type="hidden" name="week" value="{{ $filters['week'] }}">
-                            @endif
+                            <input type="hidden" name="q" value="{{ $filters['q'] ?? '' }}">
+                            <input type="hidden" name="month" value="{{ $filters['month'] ?? '' }}">
+                            <input type="hidden" name="week" value="{{ $filters['week'] ?? '' }}">
                         </form>
                     @endforeach
                 </div>

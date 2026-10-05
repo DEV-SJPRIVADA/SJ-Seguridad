@@ -88,7 +88,7 @@ Columnas por fila (item):
 | Semana | Numero de semana del mes (`week_of_month`) |
 | Mes | Nombre del mes (`month_label`) |
 
-Filtros: busqueda, mes, semana. PATCH por fila para `received` y `observation`.
+Filtros: busqueda, mes (por defecto el mes calendario actual al abrir la pagina; «Todos los meses» con valor vacío), semana. PATCH por fila para `received` y `observation` (botón icono guardar). Export Excel: `GET .../historial-consultas/exportar` respeta los mismos filtros (`archivo.view`).
 
 ## Rutas
 
@@ -100,6 +100,7 @@ Filtros: busqueda, mes, semana. PATCH por fila para `received` y `observation`.
 | GET | `/gestion-humana/archivo/historias-laborales` | `gestion-humana.archivo.labor-histories.index` | `archivo.view` |
 | GET | `/gestion-humana/archivo/historias-laborales/datatable` | `gestion-humana.archivo.labor-histories.datatable` | `archivo.view` |
 | GET | `/gestion-humana/archivo/historial-consultas` | `gestion-humana.archivo.consultation-history.index` | `archivo.view` |
+| GET | `/gestion-humana/archivo/historial-consultas/exportar` | `gestion-humana.archivo.consultation-history.export` | `archivo.view` |
 | POST | `/gestion-humana/archivo/consultar` | `gestion-humana.archivo.consult` | `archivo.view` |
 | PATCH | `/gestion-humana/archivo/historial-consultas/{item}` | `gestion-humana.archivo.consultation-history.update` | `archivo.view` |
 | PATCH | `/gestion-humana/archivo/{fichaEntry}` | `gestion-humana.archivo.update` | `archivo.manage` |

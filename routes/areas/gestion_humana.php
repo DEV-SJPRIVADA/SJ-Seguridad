@@ -69,6 +69,7 @@ Route::middleware(['password.changed'])
         Route::get('/historias-laborales', [ArchivoController::class, 'laborHistories'])->name('labor-histories.index');
         Route::get('/historias-laborales/datatable', [ArchivoController::class, 'laborHistoriesDatatable'])->name('labor-histories.datatable');
         Route::get('/historial-consultas', [ArchivoController::class, 'consultationHistory'])->name('consultation-history.index');
+        Route::get('/historial-consultas/exportar', [ArchivoController::class, 'exportConsultationHistory'])->name('consultation-history.export');
         Route::post('/consultar', [ArchivoController::class, 'consult'])->name('consult');
         Route::patch('/historial-consultas/{consultationItem}', [ArchivoController::class, 'updateConsultationItem'])->name('consultation-history.update');
         Route::post('/importar', [ArchivoController::class, 'import'])->name('import');
