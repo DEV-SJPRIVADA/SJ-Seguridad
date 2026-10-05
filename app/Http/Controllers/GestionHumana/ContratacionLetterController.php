@@ -222,10 +222,10 @@ class ContratacionLetterController extends Controller
 
         if ($raw !== '' && (
             str_contains($raw, 'Failed to open stream')
-            || str_contains($raw, 'temp')
             || str_contains($raw, 'Permission denied')
+            || str_contains($raw, 'mkdir():')
         )) {
-            return 'No se pudo escribir archivos temporales de Word en el servidor (storage/app/tmp). Revise permisos de storage. Detalle: '.Str::limit($raw, 200);
+            return 'No se pudo escribir archivos temporales de Word. Se intentará storage/framework/cache; en el servidor Linux revise dueño/permisos de storage (www-data). Detalle: '.Str::limit($raw, 200);
         }
 
         if ($e instanceof RuntimeException && $raw !== '') {
