@@ -457,6 +457,8 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.8         | 2026-10-06                 | Solicitar: Cancelar y Generar como iconos |
+| 1.7         | 2026-10-06                 | Gestión/editar: Volver y Guardar como iconos |
 | 1.6         | 2026-10-01                 | Tendencia de Solicitudes sin filtro mes; KPIs y demás gráficos sí lo usan |
 | 1.5         | 2026-10-01                 | Dashboard: clic en KPI abre Gestión filtrada; Gestión agrega Cliente/Cargo/Ciudad |
 | 1.4         | 2026-09-30                 | Mis requisiciones: Ver solicitud + Ver Rq (solo lectura) |

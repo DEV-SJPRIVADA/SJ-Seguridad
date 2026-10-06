@@ -25,10 +25,24 @@
                         ])
 
                         <div class="req-form-actions">
-                            <p class="req-form-actions__note">Revisa cliente, motivo y centro de costo antes de enviar. No podras editar la solicitud una vez creada.</p>
+                            <p class="req-form-actions__note">Revisa cliente, motivo y centro de costo antes de enviar. No podrás editar la solicitud una vez creada.</p>
                             <div class="req-form-actions__group">
-                                <a href="{{ route('requisitions.dashboard', ['module' => $moduleKey]) }}" class="btn btn--secondary">Cancelar</a>
-                                <x-primary-button>Generar solicitud</x-primary-button>
+                                <a
+                                    href="{{ route('requisitions.dashboard', ['module' => $moduleKey]) }}"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    title="Cancelar"
+                                    aria-label="Cancelar"
+                                >
+                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                </a>
+                                <button
+                                    type="submit"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Generar solicitud"
+                                    aria-label="Generar solicitud"
+                                >
+                                    <x-lucide-send width="18" height="18" aria-hidden="true" />
+                                </button>
                             </div>
                         </div>
                     </form>

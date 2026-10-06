@@ -31,8 +31,22 @@
                         <div class="req-form-actions">
                             <p class="req-form-actions__note">Los cambios de estado y de datos quedan registrados en el historial operativo con fecha, usuario y detalle.</p>
                             <div class="req-form-actions__group">
-                                <a href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}" class="btn btn--secondary">Volver</a>
-                                <x-primary-button>Guardar cambios</x-primary-button>
+                                <a
+                                    href="{{ route('requisitions.manage', ['module' => $moduleKey]) }}"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    title="Volver"
+                                    aria-label="Volver a Gestión"
+                                >
+                                    <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
+                                </a>
+                                <button
+                                    type="submit"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Guardar cambios"
+                                    aria-label="Guardar cambios"
+                                >
+                                    <x-lucide-save width="18" height="18" aria-hidden="true" />
+                                </button>
                             </div>
                         </div>
                     </form>
