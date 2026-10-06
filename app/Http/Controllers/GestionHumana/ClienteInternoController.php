@@ -417,6 +417,14 @@ class ClienteInternoController extends Controller
             $stats['skipped_empty'],
         );
 
+        if (($stats['tipos_created'] ?? 0) > 0 || ($stats['estados_created'] ?? 0) > 0) {
+            $message .= sprintf(
+                ' Catálogo: %d tipo(s) y %d estado(s) nuevos creados desde el archivo.',
+                (int) ($stats['tipos_created'] ?? 0),
+                (int) ($stats['estados_created'] ?? 0),
+            );
+        }
+
         return redirect()
             ->route('gestion-humana.cliente-interno.solicitudes')
             ->with('status', $message);

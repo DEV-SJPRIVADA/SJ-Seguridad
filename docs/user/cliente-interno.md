@@ -16,7 +16,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 **En esta versión:**
 
-- Debe existir al menos un **tipo de solicitud** en Catálogos antes de registrar o importar filas (el catálogo de tipos arranca vacío).
+- Debe existir al menos un **tipo de solicitud** en Catálogos antes de **alta manual**. En el **import masivo**, si el Excel trae tipos o estados nuevos, el sistema los crea automáticamente en Catálogos.
 - Los **estados** iniciales son: Pendiente, En proceso, Respondida y Cerrada (se pueden desactivar o editar; eliminar solo si nadie los usa).
 - Varios registros con la **misma cédula** están permitidos.
 - Los **días de respuesta** se calculan en días hábiles (lunes a viernes), sin descontar festivos. Puede corregir el número a mano; esa corrección se conserva al guardar otros campos.
@@ -26,7 +26,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 **Buenas prácticas (uso diario):**
 
-- Antes de un import grande, revise que los nombres de **Solicitud** y **Estado** del Excel coincidan con Catálogos.
+- Antes de un import grande, puede revisar Catálogos; si faltan tipos/estados del Excel, se crearán al importar (código generado a partir del nombre).
 - En exportaciones muy amplias (sin filtrar año/mes), el archivo puede tardar o fallar por tamaño; filtre el periodo cuando pueda.
 - En el masivo, use siempre la plantilla oficial y confirme el conteo de filas que se van a reemplazar del periodo.
 
@@ -35,7 +35,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 | Término | Significado |
 | --- | --- |
 | Solicitud | Registro de un pedido o consulta de una persona (fecha, nombre, cédula, tipo, estado, etc.). |
-| Tipo de solicitud (catálogo SOLICITUD) | Clasificación del trámite (la crea el operador en Catálogos; no viene precargada). |
+| Tipo de solicitud (catálogo SOLICITUD) | Clasificación del trámite (se crea en Catálogos o automáticamente al importar Excel). |
 | Estado | Situación del trámite (Pendiente, En proceso, Respondida, Cerrada, u otros que se agreguen). |
 | Novedad | Texto libre de observación; no es una lista desplegable. |
 | Días de respuesta | Cantidad de días hábiles (lun–vie) entre la fecha de solicitud y la de respuesta. Puede fijarse manualmente. |
@@ -93,11 +93,11 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 ### Importar masivo (reemplazo por periodo)
 
 1. En **Solicitudes**, descargue la **plantilla** de importación.
-2. Llene las columnas con los encabezados exactos de la plantilla. La columna **Solicitud** debe coincidir con un tipo existente en Catálogos (nombre o código).
+2. Llene las columnas con los encabezados exactos de la plantilla. La columna **Solicitud** puede ser un tipo ya existente (nombre o código) o uno nuevo: si no existe, se crea en Catálogos. Lo mismo aplica a **Estado** cuando viene informado.
 3. Elija el **año** y el **mes** del periodo que va a reemplazar y suba el archivo.
 4. Revise el **conteo** de solicitudes actuales de ese periodo que se borrarán y confirme el reemplazo.
 5. Si el archivo tiene errores en filas obligatorias, **no se borra nada** del periodo: corrija y vuelva a intentar.
-6. Tras un import correcto: se eliminan solo las del periodo elegido y se cargan todas las filas válidas del archivo (también las de otras fechas). El mensaje de resultado indica cuántas quedaron fuera del periodo.
+6. Tras un import correcto: se eliminan solo las del periodo elegido y se cargan todas las filas válidas del archivo (también las de otras fechas). El mensaje indica cuántas quedaron fuera del periodo y, si aplica, cuántos tipos/estados nuevos se crearon.
 
 ### Campos de la plantilla Excel
 
@@ -107,9 +107,9 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 | Nombre y apellidos | Sí | |
 | Cédula | Sí | Pueden repetirse |
 | Correo electrónico | No | |
-| Solicitud | Sí | Debe existir en Catálogos |
+| Solicitud | Sí | Si no existe en Catálogos, se crea al importar |
 | Fecha de respuesta | No | |
-| Estado | No | Si se llena, debe existir en Catálogos |
+| Estado | No | Si se llena y no existe, se crea al importar |
 | Novedad | No | Texto libre |
 | Días de respuesta | No | Vacío = cálculo automático; con número = valor manual |
 
@@ -117,5 +117,6 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.2 | 2026-10-06 | Agent | Import masivo: crea automáticamente tipos de solicitud y estados del Excel si no existen en Catálogos. |
 | 1.1 | 2026-10-05 | Agent | Catálogos: al abrir se muestran las tarjetas (Estados / Tipos); aviso y enlace directo desde Solicitudes si no hay tipos. |
 | 1.0 | 2026-10-05 | Documentador | Version inicial FEAT-042 (Dashboard, Solicitudes, Catálogos, masivo B, días hábiles) |

@@ -16,7 +16,7 @@ Tablero de area **Gestion Humana** para registrar, consultar y analizar **solici
 - Tablas propias de catálogo (`cliente_interno_estados`, `cliente_interno_tipos_solicitud`) — no `payroll_catalog_items`.
 - Solicitudes: DataTables `serverSide: true`, filtros, alta/edición/borrado duro, export `BaseExport` + `<x-export-excel>`, import replace solo del año+mes elegido (filas fuera de periodo se aceptan).
 - Dias de respuesta: hábiles lun–vie (sin festivos V1) + override `dias_respuesta_manual`.
-- Seed ESTADO: Pendiente, En proceso, Respondida, Cerrada. Seed SOLICITUD: **vacío** (crear tipos en Catálogos antes de operar).
+- Seed ESTADO: Pendiente, En proceso, Respondida, Cerrada. Seed SOLICITUD: **vacío** (también se pueden crear al importar Excel).
 - Audit: `ClienteInternoAuditLogService` → `SystemAuditService` (`module=cliente_interno`, `area=gestion_humana`).
 - Selectores: `<x-searchable-select>`. Charts: ApexCharts + entry Vite `cliente-interno-dashboard-charts.js`.
 - Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` vía `app:sync-permissions`.
@@ -178,7 +178,7 @@ Sin jobs ni mail en V1.
 ### Catálogos
 
 11. ESTADO seed: `PENDIENTE`/`Pendiente`, `EN_PROCESO`/`En proceso`, `RESPONDIDA`/`Respondida`, `CERRADA`/`Cerrada` (sort 1–4).
-12. SOLICITUD seed vacío; operador debe crear ≥1 tipo antes de alta/masivo.
+12. SOLICITUD seed vacío; el import masivo **crea** tipos/estados del Excel si no existen (código slug del nombre).
 13. CRUD: code + name + is_active + sort_order; unique `code`.
 14. DELETE bloqueado si hay referencias en solicitudes; desactivar (`is_active=false`) permitido.
 
@@ -188,7 +188,7 @@ Sin jobs ni mail en V1.
 16. Validar headers y **todas** las filas antes de cualquier DELETE. Errores → rechazo completo, dataset intacto.
 17. Match Solicitud/Estado por name o code (case-insensitive). Solicitud inexistente → error de fila (rechazo completo). Estado vacío OK.
 18. Transacción: `DELETE WHERE anio=? AND mes=?` → INSERT **todas** las filas válidas (también fuera de periodo → spillover).
-19. Audit `import_replace_period`: `{anio, mes, deleted_in_period, imported, accepted_outside_period, skipped_empty}`.
+19. Audit `import_replace_period`: `{anio, mes, deleted_in_period, imported, accepted_outside_period, skipped_empty, tipos_created, estados_created}`.
 20. Nunca TRUNCATE / `migrate:fresh` / wipe.
 
 ### Dashboard
@@ -226,11 +226,13 @@ Botón UI: `<x-export-excel>`. Prohibido `excelHtml5`.
 | Nombre y apellidos | `nombre_apellidos` |
 | Cédula | `cedula` |
 | Correo electrónico | `correo_electronico` |
-| Solicitud | name/code → `tipo_solicitud_id` |
+| Solicitud | name/code → `tipo_solicitud_id` (crea tipo si no existe) |
 | Fecha de respuesta | `fecha_respuesta` |
-| Estado | name/code → `estado_id` (opcional) |
+| Estado | name/code → `estado_id` (opcional; crea estado si no existe) |
 | Novedad | `novedad` |
 | Días de respuesta | `dias_respuesta` (+ manual si presente en import) |
+
+Fechas texto `d/m/Y` (Colombia). Años mal tipados tipo `22026` se normalizan a `2026`.
 
 ## Validacion local
 
@@ -248,7 +250,7 @@ Botón UI: `<x-export-excel>`. Prohibido `excelHtml5`.
 
 | Riesgo / observación review | Nota operativa |
 | --- | --- |
-| Seed SOLICITUD vacío | Alta/masivo fallan hasta crear tipos en Catálogos. |
+| Seed SOLICITUD vacío | Alta manual requiere tipo; el **import** crea tipos (y estados) faltantes desde la columna Solicitud/Estado. |
 | Import no valida formato email (obs. review #1) | CRUD sí valida email; en masivo un correo mal formado puede persistir. Hotfix recomendado. |
 | Import hace match de catálogos **incl. inactivos** (obs. #2) | Alta manual exige activos; import puede resolver code/name de ítems desactivados. |
 | Export materializa colección completa (obs. #3) | Filtro muy amplio puede tensionar memoria/timeout en Hostinger; preferir filtros año/mes acotados. |

@@ -3,7 +3,7 @@
 ## Objetivo base
 - Este repositorio es la base de una plataforma web modular para `SJ Seguridad` (`APP_NAME`: `SJ StatFlow`), desarrollada bajo un enfoque SCRUM e incremental.
 - Stack base: `Laragon 8.6+`, `Laravel 13`, `PHP 8.3`, `MySQL 8` (dev local) y `Blade` + `Alpine.js` + `Tailwind 3` + `Vite 6`.
-- Despliegue real: **hosting compartido Hostinger** (checklist en `docs/LOCAL_SETUP.md`, procedimiento en `docs/PROCEDURES.md`). No asumir Laravel Cloud ni Sail.
+- Despliegue real **actual:** servidor propio Linux (VPS/dedicado). Checklist y procedimientos en `docs/LOCAL_SETUP.md` y `docs/PROCEDURES.md`. Hostinger compartido queda como escenario legado/alternativo documentado; no asumir Laravel Cloud ni Sail.
 
 ## Comandos exactos
 - Dev local: `.\dev.bat` (fija PHP 8.3 y Node de Laragon y levanta `artisan serve` + Vite). Alternativas: `composer run dev`, `npm run dev`.

@@ -214,6 +214,63 @@ class ClienteInternoImportTest extends TestCase
         $this->assertDatabaseHas('cliente_interno_solicitudes', ['cedula' => 'KEEP-OK']);
     }
 
+    public function test_import_accepts_typo_year_like_22026(): void
+    {
+        $path = $this->makeImportFile([
+            ['10/06/22026', 'Juan Lasso', '1113520091', '', 'CARTA LABORAL', '2026-06-10', 'CERRADO', '', ''],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.cliente-interno.solicitudes.import'), [
+                'import_file' => new UploadedFile($path, 'typo-year.xlsx', null, null, true),
+                'anio' => 2026,
+                'mes' => 6,
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.cliente-interno.solicitudes'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('cliente_interno_solicitudes', [
+            'cedula' => '1113520091',
+            'fecha_solicitud' => '2026-06-10',
+            'anio' => 2026,
+            'mes' => 6,
+        ]);
+    }
+
+    public function test_import_creates_missing_tipos_and_estados_from_file(): void
+    {
+        $path = $this->makeImportFile([
+            ['2025-12-01', 'Yeison Palacios', '1193462836', '', 'CARTA LABORAL', '2025-12-02', 'CERRADO', '', ''],
+            ['2025-12-01', 'Hamed Root', '1028025664', '', 'DESPRENDIBLES DE PAGO', '2025-12-01', 'CERRADO', '', ''],
+            ['2025-12-01', 'Maria Meneses', '38670375', '', 'CARTA LABORAL', '2025-12-01', 'CERRADO', '', ''],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.cliente-interno.solicitudes'))
+            ->post(route('gestion-humana.cliente-interno.solicitudes.import'), [
+                'import_file' => new UploadedFile($path, 'primera-carga.xlsx', null, null, true),
+                'anio' => 2025,
+                'mes' => 12,
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.cliente-interno.solicitudes'))
+            ->assertSessionHas('status');
+
+        $this->assertSame(3, ClienteInternoSolicitud::query()->where('anio', 2025)->where('mes', 12)->count());
+        $this->assertDatabaseHas('cliente_interno_tipos_solicitud', ['name' => 'CARTA LABORAL']);
+        $this->assertDatabaseHas('cliente_interno_tipos_solicitud', ['name' => 'DESPRENDIBLES DE PAGO']);
+        $this->assertDatabaseHas('cliente_interno_estados', ['name' => 'CERRADO']);
+        $this->assertSame(2, ClienteInternoTipoSolicitud::query()->whereIn('name', [
+            'CARTA LABORAL',
+            'DESPRENDIBLES DE PAGO',
+        ])->count());
+    }
+
     public function test_import_does_not_wipe_on_unknown_tipo(): void
     {
         ClienteInternoSolicitud::factory()->create([
@@ -224,6 +281,7 @@ class ClienteInternoImportTest extends TestCase
             'fecha_solicitud' => '2026-06-01',
         ]);
 
+        // Tipos desconocidos ya no rechazan: se crean en catálogo y el import continúa.
         $path = $this->makeImportFile([
             ['2026-06-10', 'Persona', 'X-1', '', 'Tipo Inexistente', '', '', '', ''],
         ]);
@@ -233,15 +291,17 @@ class ClienteInternoImportTest extends TestCase
         $this->actingAs($editor)
             ->from(route('gestion-humana.cliente-interno.solicitudes'))
             ->post(route('gestion-humana.cliente-interno.solicitudes.import'), [
-                'import_file' => new UploadedFile($path, 'bad-tipo.xlsx', null, null, true),
+                'import_file' => new UploadedFile($path, 'nuevo-tipo.xlsx', null, null, true),
                 'anio' => 2026,
                 'mes' => 6,
                 'confirm_replace' => '1',
             ])
-            ->assertRedirect()
-            ->assertSessionHasErrors('import_file');
+            ->assertRedirect(route('gestion-humana.cliente-interno.solicitudes'))
+            ->assertSessionHas('status');
 
-        $this->assertDatabaseHas('cliente_interno_solicitudes', ['cedula' => 'KEEP-TIPO']);
+        $this->assertDatabaseMissing('cliente_interno_solicitudes', ['cedula' => 'KEEP-TIPO']);
+        $this->assertDatabaseHas('cliente_interno_solicitudes', ['cedula' => 'X-1']);
+        $this->assertDatabaseHas('cliente_interno_tipos_solicitud', ['name' => 'Tipo Inexistente']);
     }
 
     public function test_import_rejects_empty_file_without_wipe(): void

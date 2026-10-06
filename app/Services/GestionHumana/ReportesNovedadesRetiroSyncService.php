@@ -128,6 +128,9 @@ class ReportesNovedadesRetiroSyncService
             'RENUNCIA' => 'RENUNCIA',
             'PERIODO_PRUEBA' => 'PERIODO DE PRUEBA',
             'FIN_CONTRATO' => 'TERMINACION DE CONTRATO',
+            'SIN_JUSTA_CAUSA' => 'SIN JUSTA CAUSA',
+            'CON_JUSTA_CAUSA' => 'CON JUSTA CAUSA',
+            'FALLECIMIENTO' => 'FALLECIMIENTO',
         ];
 
         if ($code !== null && isset($aliases[$code]) && in_array($aliases[$code], $catalog, true)) {

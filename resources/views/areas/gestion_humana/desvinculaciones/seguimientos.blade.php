@@ -12,6 +12,7 @@
                     'canEdit' => (bool) $canEditSeguimientos,
                     'datatableUrl' => $datatableUrl,
                     'exportUrl' => $exportUrl,
+                    'importHistoricoUrl' => $importHistoricoUrl ?? '',
                     'csrf' => csrf_token(),
                     'checkFields' => $checkFields,
                     'checkLabels' => $checkLabels,
@@ -161,6 +162,17 @@
                         </p>
 
                         <div class="cursos-registros-page__table-actions desvinculaciones-seguimientos__export">
+                            @if ($canEditSeguimientos)
+                                <button
+                                    type="button"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Importar histórico (Excel NOVEDADES)"
+                                    aria-label="Importar histórico"
+                                    x-on:click="openImportModal()"
+                                >
+                                    <x-lucide-upload width="18" height="18" aria-hidden="true" />
+                                </button>
+                            @endif
                             <a
                                 x-bind:href="exportHref"
                                 class="btn btn--secondary btn--sm desvinculaciones-seguimientos__export-btn"
@@ -209,6 +221,107 @@
                 </div>
 
                 @if ($canEditSeguimientos)
+                    {{-- Modal import histórico Excel NOVEDADES --}}
+                    <div
+                        class="desvinculaciones-seguimientos__revert-overlay"
+                        x-show="importModal.open"
+                        x-cloak
+                        x-on:keydown.escape.window="closeImportModal()"
+                    >
+                        <div
+                            class="modal-card desvinculaciones-seguimientos__import-modal"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="seguimientos-import-title"
+                        >
+                            <div class="ficha-empleados-terminate-modal__header" style="padding: 1rem 1rem 0;">
+                                <h3 id="seguimientos-import-title" class="panel-title">Importar histórico</h3>
+                                <p class="panel-text">
+                                    Hoja <strong>NOVEDADES</strong> (desde mayo 2025). No genera cartas.
+                                    Si el ingreso actual es posterior al retiro del Excel, el empleado sigue activo.
+                                </p>
+                            </div>
+
+                            <div class="ficha-empleados-terminate-modal__body" style="padding: 1rem; display:grid; gap:0.75rem;">
+                                <div class="form-field">
+                                    <label class="form-label" for="seguimientos-import-file">Archivo Excel</label>
+                                    <input
+                                        id="seguimientos-import-file"
+                                        type="file"
+                                        class="form-input"
+                                        accept=".xlsx,.xls,.xlsm"
+                                        x-ref="importFileInput"
+                                        x-on:change="onImportFileChange($event)"
+                                        x-bind:disabled="importModal.busy"
+                                    >
+                                    <p class="form-hint" x-text="importModal.fileName || 'Seleccione .xlsx, .xls o .xlsm (máx. 50 MB)'"></p>
+                                </div>
+
+                                <label class="form-field" style="display:flex; gap:0.5rem; align-items:flex-start;">
+                                    <input
+                                        type="checkbox"
+                                        x-model="importModal.confirm"
+                                        x-bind:disabled="importModal.busy"
+                                        style="margin-top:0.2rem;"
+                                    >
+                                    <span class="form-hint" style="margin:0;">
+                                        Confirmo la <strong>carga real</strong> (escribe en Seguimientos y Retiros). Use primero «Simular».
+                                    </span>
+                                </label>
+
+                                <p class="form-hint text-danger" x-show="importModal.error" x-text="importModal.error" x-cloak></p>
+
+                                <div
+                                    class="desvinculaciones-seguimientos__import-stats"
+                                    x-show="importModal.stats"
+                                    x-cloak
+                                    style="border:1px solid var(--border-color, #d1d5db); border-radius:0.5rem; padding:0.75rem;"
+                                >
+                                    <p class="panel-text" style="margin:0 0 0.5rem;" x-text="importModal.resultMessage"></p>
+                                    <ul class="panel-text" style="margin:0; padding-left:1.1rem;">
+                                        <li>Escaneadas: <span x-text="importModal.stats?.scanned ?? 0"></span></li>
+                                        <li>Creadas (desvincula): <span x-text="importModal.stats?.created ?? 0"></span></li>
+                                        <li>Creadas (mantiene activo): <span x-text="importModal.stats?.created_keep_activo ?? 0"></span></li>
+                                        <li>Actualizadas: <span x-text="importModal.stats?.updated ?? 0"></span></li>
+                                        <li>Sin ficha: <span x-text="importModal.stats?.skipped_no_ficha ?? 0"></span></li>
+                                        <li>Errores: <span x-text="importModal.stats?.errors_count ?? 0"></span></li>
+                                    </ul>
+                                    <template x-if="(importModal.stats?.errors || []).length">
+                                        <ul class="form-hint text-danger" style="margin:0.5rem 0 0; padding-left:1.1rem; max-height:8rem; overflow:auto;">
+                                            <template x-for="(err, idx) in importModal.stats.errors" :key="idx">
+                                                <li x-text="err"></li>
+                                            </template>
+                                        </ul>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="ficha-empleados-terminate-modal__actions" style="display:flex; gap:0.5rem; justify-content:flex-end; flex-wrap:wrap; padding: 0 1rem 1rem;">
+                                <button type="button" class="btn btn--secondary" x-on:click="closeImportModal()" x-bind:disabled="importModal.busy">
+                                    Cerrar
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn--secondary"
+                                    x-on:click="runImportHistorico(true)"
+                                    x-bind:disabled="importModal.busy || ! importModal.hasFile"
+                                >
+                                    <span x-show="! (importModal.busy && importModal.mode === 'dry')">Simular</span>
+                                    <span x-show="importModal.busy && importModal.mode === 'dry'" x-cloak>Simulando…</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn--primary"
+                                    x-on:click="runImportHistorico(false)"
+                                    x-bind:disabled="importModal.busy || ! importModal.hasFile || ! importModal.confirm"
+                                >
+                                    <span x-show="! (importModal.busy && importModal.mode === 'import')">Cargar</span>
+                                    <span x-show="importModal.busy && importModal.mode === 'import'" x-cloak>Cargando…</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div
                         class="desvinculaciones-seguimientos__revert-overlay"
                         x-show="revertModal.open"
@@ -310,14 +423,15 @@
                     canEdit: !!config.canEdit,
                     datatableUrl: config.datatableUrl,
                     exportUrlBase: config.exportUrl || '',
+                    importHistoricoUrl: config.importHistoricoUrl || '',
                     csrf: config.csrf,
                     checkFields: config.checkFields || [],
                     checkLabels: config.checkLabels || {},
                     q: config.initialQ || '',
                     status: config.initialStatus || 'incompletos',
                     rehireable: config.initialRehireable || '',
-                    fechaCampo: config.initialFechaCampo || config.defaultFechaCampo || 'payroll_delivered_at',
-                    defaultFechaCampo: config.defaultFechaCampo || 'payroll_delivered_at',
+                    fechaCampo: config.initialFechaCampo || config.defaultFechaCampo || 'termination_date',
+                    defaultFechaCampo: config.defaultFechaCampo || 'termination_date',
                     fechaDesde: config.initialFechaDesde || '',
                     fechaHasta: config.initialFechaHasta || '',
                     statusOptions: [
@@ -339,6 +453,17 @@
                         revert_url: '',
                         reason: '',
                         error: '',
+                    },
+                    importModal: {
+                        open: false,
+                        busy: false,
+                        mode: '',
+                        hasFile: false,
+                        fileName: '',
+                        confirm: false,
+                        error: '',
+                        resultMessage: '',
+                        stats: null,
                     },
 
                     get totalFormatted() {
@@ -482,6 +607,112 @@
 
                     saveKey(id, field) {
                         return id + ':' + field;
+                    },
+
+                    openImportModal() {
+                        if (! this.canEdit || ! this.importHistoricoUrl) {
+                            return;
+                        }
+
+                        this.importModal = {
+                            open: true,
+                            busy: false,
+                            mode: '',
+                            hasFile: false,
+                            fileName: '',
+                            confirm: false,
+                            error: '',
+                            resultMessage: '',
+                            stats: null,
+                        };
+
+                        this.$nextTick(() => {
+                            if (this.$refs.importFileInput) {
+                                this.$refs.importFileInput.value = '';
+                            }
+                        });
+                    },
+
+                    closeImportModal() {
+                        if (this.importModal.busy) {
+                            return;
+                        }
+
+                        this.importModal.open = false;
+                        this.importModal.error = '';
+                    },
+
+                    onImportFileChange(event) {
+                        const file = event?.target?.files?.[0] || null;
+                        this.importModal.hasFile = !! file;
+                        this.importModal.fileName = file ? file.name : '';
+                        this.importModal.error = '';
+                        this.importModal.stats = null;
+                        this.importModal.resultMessage = '';
+                    },
+
+                    async runImportHistorico(dryRun) {
+                        if (! this.canEdit || ! this.importHistoricoUrl || this.importModal.busy) {
+                            return;
+                        }
+
+                        const input = this.$refs.importFileInput;
+                        const file = input?.files?.[0] || null;
+                        if (! file) {
+                            this.importModal.error = 'Seleccione un archivo Excel.';
+                            return;
+                        }
+
+                        if (! dryRun && ! this.importModal.confirm) {
+                            this.importModal.error = 'Marque la confirmación para la carga real.';
+                            return;
+                        }
+
+                        this.importModal.busy = true;
+                        this.importModal.mode = dryRun ? 'dry' : 'import';
+                        this.importModal.error = '';
+                        this.importModal.stats = null;
+                        this.importModal.resultMessage = '';
+
+                        const body = new FormData();
+                        body.append('import_file', file);
+                        body.append('dry_run', dryRun ? '1' : '0');
+                        if (! dryRun) {
+                            body.append('confirm_import', '1');
+                        }
+
+                        try {
+                            const res = await fetch(this.importHistoricoUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': this.csrf,
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                body,
+                                credentials: 'same-origin',
+                            });
+
+                            const data = await res.json().catch(() => ({}));
+                            if (! res.ok || ! data.ok) {
+                                const firstError = data.errors
+                                    ? Object.values(data.errors).flat()[0]
+                                    : null;
+                                throw new Error(firstError || data.message || 'No se pudo importar el archivo.');
+                            }
+
+                            this.importModal.stats = data.stats || null;
+                            this.importModal.resultMessage = data.message || (dryRun ? 'Simulación lista.' : 'Carga completada.');
+
+                            if (! dryRun) {
+                                reloadSeguimientosTable();
+                            }
+                        } catch (e) {
+                            this.importModal.error = e.message || 'Error al importar.';
+                        } finally {
+                            this.importModal.busy = false;
+                            this.importModal.mode = '';
+                        }
                     },
 
                     openRevertModal(row) {

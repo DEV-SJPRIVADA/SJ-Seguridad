@@ -425,7 +425,11 @@ class DesvinculacionesSeguimientosTest extends TestCase
             ->assertSee('Exportar a Excel', false)
             ->assertSee('FECHA ENTREGADO NOMINA', false)
             ->assertSee('Campo fecha', false)
-            ->assertSee('Limpiar filtros', false);
+            ->assertSee('Limpiar filtros', false)
+            ->assertViewHas('filters', function (array $filters): bool {
+                return ($filters['fecha_campo'] ?? null) === EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD
+                    && EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD === 'termination_date';
+            });
     }
 
     public function test_revert_reactivates_employee_deletes_followup_and_letter(): void

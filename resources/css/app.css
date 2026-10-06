@@ -11230,13 +11230,19 @@ a.req-dashboard-kpi:focus-visible {
     background: rgba(15, 23, 42, 0.45);
 }
 
-.desvinculaciones-seguimientos__revert-modal {
+.desvinculaciones-seguimientos__revert-modal,
+.desvinculaciones-seguimientos__import-modal {
     width: min(32rem, 100%);
     max-height: 90vh;
     overflow: auto;
     background: #fff;
+    color: var(--color-text, #0f172a);
     border-radius: 12px;
     box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+}
+
+.desvinculaciones-seguimientos__import-modal {
+    width: min(36rem, 100%);
 }
 
 /* FEAT-032 Cursos registros */

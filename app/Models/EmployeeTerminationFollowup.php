@@ -55,7 +55,7 @@ class EmployeeTerminationFollowup extends Model
         'payroll_delivered_at' => 'FECHA ENTREGADO NOMINA',
     ];
 
-    public const DEFAULT_DATE_FILTER_FIELD = 'payroll_delivered_at';
+    public const DEFAULT_DATE_FILTER_FIELD = 'termination_date';
 
     protected $fillable = [
         'personal_requisition_ficha_entry_id',

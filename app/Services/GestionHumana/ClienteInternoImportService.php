@@ -9,6 +9,7 @@ use App\Support\SpreadsheetCellReader;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\IReader;
@@ -62,7 +63,9 @@ class ClienteInternoImportService
      *     imported: int,
      *     accepted_outside_period: int,
      *     skipped_empty: int,
-     *     errors_count: int
+     *     errors_count: int,
+     *     tipos_created: int,
+     *     estados_created: int
      * }
      */
     public function import(string $path, int $anio, int $mes, ?int $userId = null): array
@@ -101,6 +104,8 @@ class ClienteInternoImportService
 
         $tipoLookup = $this->buildCatalogLookup(ClienteInternoTipoSolicitud::query()->get(['id', 'code', 'name']));
         $estadoLookup = $this->buildCatalogLookup(ClienteInternoEstado::query()->get(['id', 'code', 'name']));
+        $tiposCreated = 0;
+        $estadosCreated = 0;
 
         $rows = [];
         $skippedEmpty = 0;
@@ -117,7 +122,13 @@ class ClienteInternoImportService
             }
 
             try {
-                $mapped = $this->mapValidatedRow($data, $tipoLookup, $estadoLookup);
+                $mapped = $this->mapValidatedRow(
+                    $data,
+                    $tipoLookup,
+                    $estadoLookup,
+                    $tiposCreated,
+                    $estadosCreated,
+                );
                 if ((int) $mapped['anio'] !== $anio || (int) $mapped['mes'] !== $mes) {
                     $acceptedOutsidePeriod++;
                 }
@@ -179,6 +190,8 @@ class ClienteInternoImportService
             'accepted_outside_period' => $acceptedOutsidePeriod,
             'skipped_empty' => $skippedEmpty,
             'errors_count' => 0,
+            'tipos_created' => $tiposCreated,
+            'estados_created' => $estadosCreated,
         ];
 
         $this->auditLogService->logEvent(
@@ -220,6 +233,27 @@ class ClienteInternoImportService
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) === 1) {
             try {
                 return Carbon::createFromFormat('Y-m-d', $raw)->startOfDay();
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        // Excel regional: 12/1/2025 o 10/06/22026 (año con typo de 5 dígitos).
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4,5})$/', $raw, $matches) === 1) {
+            $a = (int) $matches[1];
+            $b = (int) $matches[2];
+            $year = $this->normalizeImportYear((int) $matches[3]);
+
+            try {
+                if ($a > 12 && $b <= 12) {
+                    return Carbon::createFromDate($year, $b, $a)->startOfDay();
+                }
+                if ($b > 12 && $a <= 12) {
+                    return Carbon::createFromDate($year, $a, $b)->startOfDay();
+                }
+
+                // Ambiguo (ambos ≤12): día/mes (formato Colombia / digitación manual en Excel).
+                return Carbon::createFromDate($year, $b, $a)->startOfDay();
             } catch (\Throwable) {
                 return null;
             }
@@ -351,8 +385,13 @@ class ClienteInternoImportService
      *     dias_respuesta_manual: int
      * }
      */
-    private function mapValidatedRow(array $data, array $tipoLookup, array $estadoLookup): array
-    {
+    private function mapValidatedRow(
+        array $data,
+        array &$tipoLookup,
+        array &$estadoLookup,
+        int &$tiposCreated,
+        int &$estadosCreated,
+    ): array {
         $nombre = trim((string) ($data['nombre_apellidos'] ?? ''));
         $cedula = trim((string) ($data['cedula'] ?? ''));
         $correo = trim((string) ($data['correo_electronico'] ?? ''));
@@ -378,12 +417,8 @@ class ClienteInternoImportService
             throw new \InvalidArgumentException('La fecha de solicitud es obligatoria o inválida.');
         }
 
-        $tipoId = $this->resolveCatalogId($solicitudRaw, $tipoLookup);
-        if ($tipoId === null) {
-            throw new \InvalidArgumentException(
-                "Tipo de solicitud \"{$solicitudRaw}\" no existe en el catálogo (nombre o código)."
-            );
-        }
+        // Primera carga: crea en catálogo los tipos que vengan en el Excel y no existan.
+        $tipoId = $this->resolveOrCreateTipoId($solicitudRaw, $tipoLookup, $tiposCreated);
 
         $fechaRespuesta = null;
         $fechaRespuestaRaw = $data['fecha_respuesta'] ?? null;
@@ -396,12 +431,8 @@ class ClienteInternoImportService
 
         $estadoId = null;
         if ($estadoRaw !== '') {
-            $estadoId = $this->resolveCatalogId($estadoRaw, $estadoLookup);
-            if ($estadoId === null) {
-                throw new \InvalidArgumentException(
-                    "Estado \"{$estadoRaw}\" no existe en el catálogo (nombre o código)."
-                );
-            }
+            // Igual que tipos: alta automática si el estado del Excel no está en catálogo.
+            $estadoId = $this->resolveOrCreateEstadoId($estadoRaw, $estadoLookup, $estadosCreated);
         }
 
         // Días: vacío → auto; número → persistir como manual.
@@ -431,6 +462,96 @@ class ClienteInternoImportService
             // insert() raw: bool → int para sqlite/mysql.
             'dias_respuesta_manual' => $diasManual ? 1 : 0,
         ];
+    }
+
+    /**
+     * @param  array<string, int>  $tipoLookup
+     */
+    private function resolveOrCreateTipoId(string $raw, array &$tipoLookup, int &$tiposCreated): int
+    {
+        $existing = $this->resolveCatalogId($raw, $tipoLookup);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $name = mb_substr(trim($raw), 0, 150);
+        $code = $this->makeUniqueCatalogCode($name, ClienteInternoTipoSolicitud::class);
+        $sortOrder = ((int) ClienteInternoTipoSolicitud::query()->max('sort_order')) + 1;
+
+        $tipo = ClienteInternoTipoSolicitud::query()->create([
+            'code' => $code,
+            'name' => $name,
+            'is_active' => true,
+            'sort_order' => $sortOrder,
+        ]);
+
+        $this->registerCatalogInLookup($tipoLookup, (int) $tipo->id, $code, $name);
+        $tiposCreated++;
+
+        return (int) $tipo->id;
+    }
+
+    /**
+     * @param  array<string, int>  $estadoLookup
+     */
+    private function resolveOrCreateEstadoId(string $raw, array &$estadoLookup, int &$estadosCreated): int
+    {
+        $existing = $this->resolveCatalogId($raw, $estadoLookup);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $name = mb_substr(trim($raw), 0, 100);
+        $code = $this->makeUniqueCatalogCode($name, ClienteInternoEstado::class);
+        $sortOrder = ((int) ClienteInternoEstado::query()->max('sort_order')) + 1;
+
+        $estado = ClienteInternoEstado::query()->create([
+            'code' => $code,
+            'name' => $name,
+            'is_active' => true,
+            'sort_order' => $sortOrder,
+        ]);
+
+        $this->registerCatalogInLookup($estadoLookup, (int) $estado->id, $code, $name);
+        $estadosCreated++;
+
+        return (int) $estado->id;
+    }
+
+    /**
+     * @param  class-string<ClienteInternoEstado|ClienteInternoTipoSolicitud>  $modelClass
+     */
+    private function makeUniqueCatalogCode(string $name, string $modelClass): string
+    {
+        $slug = Str::upper((string) Str::slug($name, '_'));
+        $slug = (string) preg_replace('/[^A-Z0-9_]/', '', $slug);
+        $base = $slug !== '' ? mb_substr($slug, 0, 45) : 'ITEM';
+        $code = $base;
+        $i = 2;
+
+        while ($modelClass::query()->where('code', $code)->exists()) {
+            $suffix = '_'.$i;
+            $code = mb_substr($base, 0, 50 - strlen($suffix)).$suffix;
+            $i++;
+        }
+
+        return $code;
+    }
+
+    /**
+     * @param  array<string, int>  $lookup
+     */
+    private function registerCatalogInLookup(array &$lookup, int $id, string $code, string $name): void
+    {
+        $codeKey = $this->normalizeLookupKey($code);
+        $nameKey = $this->normalizeLookupKey($name);
+
+        if ($codeKey !== '') {
+            $lookup[$codeKey] = $id;
+        }
+        if ($nameKey !== '') {
+            $lookup[$nameKey] = $id;
+        }
     }
 
     /**
@@ -470,6 +591,26 @@ class ClienteInternoImportService
     private function normalizeLookupKey(string $value): string
     {
         return mb_strtolower(trim($value), 'UTF-8');
+    }
+
+    /**
+     * Corrige años mal digitados en Excel (p. ej. 22026 → 2026).
+     */
+    private function normalizeImportYear(int $year): int
+    {
+        if ($year >= 22000 && $year <= 22999) {
+            return $year - 20000;
+        }
+
+        $digits = (string) $year;
+        if (strlen($digits) === 5 && str_starts_with($digits, '2')) {
+            $candidate = (int) substr($digits, 1);
+            if ($candidate >= 2000 && $candidate <= 2100) {
+                return $candidate;
+            }
+        }
+
+        return $year;
     }
 
     private function parseSpanishDate(string $raw): ?Carbon

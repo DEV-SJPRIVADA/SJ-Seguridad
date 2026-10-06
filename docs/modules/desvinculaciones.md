@@ -16,9 +16,9 @@ Tablero de area **Gestion Humana** para (1) desvincular varios empleados activos
 - Tabla `employee_termination_followups` (1:1 con periodo cerrado); creacion tambien desde Ficha `terminate` y marca de carta desde `TerminationLetterController::generate`.
 - Auditoria: lote (`bulk_termination`) + updates de seguimiento (`termination_followup` / `update`) + export Seguimientos (`export` / `seguimientos_excel`). Sin correo. Sin colores legacy.
 
-**Fuera de V1 (original):** correo, colores/semaforos, split de perfiles Masivos-only vs Seguimientos-only, multi-plantilla por fila en Masivos, tope de filas, confirmacion previa del lote, backfill historico, regenerar carta embebida en Seguimientos, historial campo-a-campo de checks.
+**Fuera de V1 (original):** correo, colores/semaforos, split de perfiles Masivos-only vs Seguimientos-only, multi-plantilla por fila en Masivos, tope de filas, confirmacion previa del lote, regenerar carta embebida en Seguimientos, historial campo-a-campo de checks.
 
-**Post-V1 (activo):** filtro rango **FECHA ENTREGADO NOMINA** + export Excel de Seguimientos (`BaseExport`).
+**Post-V1 (activo):** filtro rango **FECHA ENTREGADO NOMINA** + export Excel de Seguimientos (`BaseExport`); import histórico Artisan desde plantilla Excel `NOVEDADES` (sin cartas).
 
 **Integracion FEAT-040 (MT-GH-04 Novedades):** al crear un followup (`ensureForClosedPeriod`, desde Ficha terminate o Masivos) se llama `ReportesNovedadesRetiroSyncService::ensureFromFollowup` (alta idempotente en hoja Retiros; `observacion_nomina` vacia). Al **revertir**, `annulFromFollowup` soft-deletea la fila Retiros vinculada **antes** de eliminar el followup. No exige permisos `reportes_novedades.*` al actor. Detalle: [`docs/modules/reportes-novedades.md`](reportes-novedades.md).
 
@@ -42,6 +42,7 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | GET | `/seguimientos` | `seguimientos` | Vista Seguimientos. `desvinculaciones.view` |
 | GET | `/seguimientos/datatable` | `seguimientos.datatable` | JSON filtrado (q, status, fecha_desde/hasta nomina). `desvinculaciones.view` |
 | GET | `/seguimientos/exportar` | `seguimientos.export` | Excel filtrado (`BaseExport`). `desvinculaciones.view` |
+| POST | `/seguimientos/importar-historico` | `seguimientos.import-historico` | Import histórico NOVEDADES (JSON; `dry_run` / carga). `desvinculaciones.seguimientos.edit` |
 | PATCH | `/seguimientos/{followup}` | `seguimientos.update` | Autosave parcial. `desvinculaciones.seguimientos.edit` |
 | POST | `/seguimientos/{followup}/revertir` | `seguimientos.revert` | Revertir desvinculacion (reactiva empleado). `desvinculaciones.seguimientos.edit` |
 
@@ -124,7 +125,7 @@ Modelo: `App\Models\EmployeeTerminationFollowup`
 - Scopes: `search`, `okTodo`, `incompletos`, `sinCarta`, `statusFilter` (`todos` \| `incompletos` \| `ok_todo` \| `sin_carta`), `dateFieldBetween` / `payrollDeliveredBetween`.
   - **`ok_todo` (filtro):** 8 checks true **y** `payroll_delivered_at` no nulo.
   - **`incompletos` (filtro):** algún check en false **o** sin `payroll_delivered_at` (default al cargar la vista / datatable sin `status`).
-  - **Rango fechas:** columna elegida con `fecha_campo` (`DATE_FILTER_FIELDS`; default `payroll_delivered_at`).
+  - **Rango fechas:** columna elegida con `fecha_campo` (`DATE_FILTER_FIELDS`; default `termination_date` / FECHA DESVINCULACION).
 - Relaciones: `fichaEntry`, `employmentPeriod`, `creator`.
 - Relaciones inversas: `EmployeeFichaEmploymentPeriod::terminationFollowup()`, `PersonalRequisitionFichaEntry::terminationFollowups()`.
 - Factory: `EmployeeTerminationFollowupFactory`.
@@ -161,6 +162,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 | `termination_followup` / `update` | PATCH autosave (before/after checks o fecha nomina) |
 | `termination_followup` / `revert` | Reversion con motivo obligatorio; metadata de cedula/periodo; carta eliminada del disco |
 | Alta followup desde Ficha / Masivos | **No** emite `termination_followup`/`create` en modulo desvinculaciones (obs. review #1). Alta cubierta por audit de Ficha (`terminate`) + evento de lote |
+| `import_historico` / `dry_run` \| `import` | Modal Seguimientos o comando Artisan; metadata de conteos |
 
 ## Reglas de negocio
 
@@ -226,7 +228,32 @@ Seguimientos: `App\Exports\BaseExport` via `GET .../seguimientos/exportar`. Resp
 | Test IDOR ZIP / process solo `manage.users` (obs. #2, #6) | Codigo protege user_id; tests opcionales post-V1 |
 | Usuario Masivos sin `ficha_empleados.terminate` | No puede regenerar carta en Ficha; flag puede quedar No |
 | Sin plantillas tipo desvinculacion con archivo | No se pueden completar filas Masivos |
-| Periodos cerrados pre-FEAT-031 | Sin followup (backfill fuera V1) |
+| Periodos cerrados pre-FEAT-031 | Cubiertos por `desvinculaciones:import-historico` (ver sección Import histórico) |
+
+## Import histórico (Artisan)
+
+Comando: `php artisan desvinculaciones:import-historico {path} [--dry-run] [--limit=] [--user=]`
+
+| Pieza | Detalle |
+| --- | --- |
+| Servicio | `App\Services\GestionHumana\HistoricalTerminationImportService` |
+| Fuente | Hoja **NOVEDADES** del `.xlsx`/`.xlsm` (plantilla operativa desvinculaciones) |
+| Corte | Solo filas con `FECHA DE RET` (o `FECHA DE CREACION`) ≥ **2025-05-01** |
+| Match ficha | `EmployeeFichaProfile.document_number` o `PersonalRequisitionFichaEntry.hired_document` |
+| Escritura | Periodo **cerrado** + followup (`letter_generated=false`) + `ReportesNovedadesRetiroSyncService::ensureFromFollowup` |
+| Idempotencia | Si ya hay followup misma entry + `termination_date` → **actualiza** checks / causal / notas / nómina |
+| Reingresos | Si `hire_date` (perfil o periodo activo) es **posterior** a la fecha de retiro Excel → crea histórico **sin** cerrar el vínculo vigente ni poner perfil `desvinculado` (`created_keep_activo`) |
+| Causales | Alias Excel → código catálogo Ficha (`RENUNCIA`, `FIN_CONTRATO`, `PERIODO_PRUEBA`, `SIN_JUSTA_CAUSA`, `CON_JUSTA_CAUSA`, `FALLECIMIENTO`, `LEGALIZACION_INASISTENCIAS`) + `PayrollCatalogItem::upsertPair` |
+| Checks H–O | Mapeo a los 8 booleanos del followup (`TRUE`/`SI`/`1`/`X`) |
+| Dry-run | Cuenta métricas sin escribir BD |
+
+**No** genera cartas Word. Carga real solo tras OK explícito del operador (usar `--dry-run` primero).
+
+**UI (recomendado):** en Seguimientos, icono Importar histórico (permiso `desvinculaciones.seguimientos.edit`) → modal Simular / Cargar. Endpoint JSON `seguimientos.import-historico`; audit `import_historico` / `dry_run|import`.
+
+**CLI (alternativa):** `desvinculaciones:import-historico`. Procedimiento: [`docs/PROCEDURES.md`](../PROCEDURES.md). Produccion actual: **servidor Linux propio**.
+
+Tests: `tests/Feature/GestionHumana/HistoricalTerminationImportTest.php`.
 
 ## Referencias
 

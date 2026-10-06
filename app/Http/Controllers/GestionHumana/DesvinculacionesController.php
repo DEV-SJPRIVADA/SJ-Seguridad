@@ -4,6 +4,7 @@ namespace App\Http\Controllers\GestionHumana;
 
 use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\ImportHistoricalTerminationsRequest;
 use App\Http\Requests\GestionHumana\LookupBulkTerminationRequest;
 use App\Http\Requests\GestionHumana\ProcessBulkTerminationRequest;
 use App\Http\Requests\GestionHumana\RevertTerminationFollowupRequest;
@@ -15,6 +16,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\GestionHumana\BulkTerminationService;
 use App\Services\GestionHumana\DesvinculacionesAuditLogService;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
+use App\Services\GestionHumana\HistoricalTerminationImportService;
 use App\Services\GestionHumana\TerminationFollowupDatatableService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +40,7 @@ class DesvinculacionesController extends Controller
         private readonly EmployeeTerminationFollowupService $followupService,
         private readonly TerminationFollowupDatatableService $followupDatatableService,
         private readonly DesvinculacionesAuditLogService $auditLogService,
+        private readonly HistoricalTerminationImportService $historicalImportService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -80,6 +83,7 @@ class DesvinculacionesController extends Controller
             'checkLabels' => EmployeeTerminationFollowup::CHECK_LABELS,
             'datatableUrl' => route('gestion-humana.desvinculaciones.seguimientos.datatable'),
             'exportUrl' => route('gestion-humana.desvinculaciones.seguimientos.export'),
+            'importHistoricoUrl' => route('gestion-humana.desvinculaciones.seguimientos.import-historico'),
             'filters' => [
                 'q' => request()->string('q')->toString(),
                 'status' => array_key_exists('status', request()->query())
@@ -185,6 +189,72 @@ class DesvinculacionesController extends Controller
             'ok' => true,
             'message' => 'Desvinculacion revertida. El empleado quedo activo nuevamente.',
         ]);
+    }
+
+    /**
+     * Import histórico hoja NOVEDADES → Seguimientos + Retiros (sin cartas).
+     * dry_run=1 simula; carga real exige confirm_import.
+     */
+    public function importHistorico(ImportHistoricalTerminationsRequest $request): JsonResponse
+    {
+        set_time_limit(300);
+
+        $dryRun = $request->isDryRun();
+        $uploaded = $request->file('import_file');
+        $extension = strtolower((string) $uploaded->getClientOriginalExtension());
+        $storedPath = $uploaded->storeAs(
+            'tmp',
+            'desvinculaciones-historico-'.Str::uuid()->toString().'.'.$extension,
+        );
+
+        $absolutePath = Storage::path($storedPath);
+
+        try {
+            $stats = $this->historicalImportService->import(
+                $absolutePath,
+                $dryRun,
+                null,
+                (int) $request->user()->id,
+            );
+
+            $this->auditLogService->logEvent(
+                eventType: 'import_historico',
+                action: $dryRun ? 'dry_run' : 'import',
+                metadata: [
+                    'original_name' => $uploaded->getClientOriginalName(),
+                    'scanned' => $stats['scanned'],
+                    'created' => $stats['created'],
+                    'created_keep_activo' => $stats['created_keep_activo'],
+                    'updated' => $stats['updated'],
+                    'skipped_no_ficha' => $stats['skipped_no_ficha'],
+                    'errors_count' => count($stats['errors']),
+                ],
+            );
+
+            return response()->json([
+                'ok' => true,
+                'dry_run' => $dryRun,
+                'message' => $dryRun
+                    ? 'Simulación lista. Revise las métricas antes de cargar.'
+                    : 'Importación histórica completada.',
+                'stats' => [
+                    'scanned' => $stats['scanned'],
+                    'created' => $stats['created'],
+                    'created_keep_activo' => $stats['created_keep_activo'],
+                    'updated' => $stats['updated'],
+                    'skipped_no_ficha' => $stats['skipped_no_ficha'],
+                    'errors_count' => count($stats['errors']),
+                    'errors' => array_slice($stats['errors'], 0, 30),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } finally {
+            Storage::delete($storedPath);
+        }
     }
 
     public function templates(): JsonResponse

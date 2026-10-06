@@ -91,7 +91,7 @@ class ClienteInternoCatalogService
                 'items' => $items,
                 'columnLabels' => $this->columnLabelsFor($type),
                 'emptyMessage' => $type === self::TYPE_TIPOS_SOLICITUD
-                    ? 'Aún no hay tipos de solicitud. Cree el primero con el formulario superior antes de registrar solicitudes o importar.'
+                    ? 'Aún no hay tipos de solicitud. Cree uno aquí o impórtelos desde el Excel de Solicitudes (se crean solos si no existen).'
                     : null,
             ];
         }

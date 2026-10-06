@@ -38,13 +38,19 @@ Todo cambio funcional debe cerrar con codigo, validacion y documentacion sincron
 php artisan test
 ```
 
-## Procedimiento para despliegue en Hostinger
+## Entorno de produccion (aclaracion)
 
-1. Confirmar PHP 8.3+ y extensiones (`pdo_mysql`, `mbstring`, `fileinfo`, `openssl`, `zip`).
-2. Configurar `.env` de produccion con `CACHE_PREFIX`, `REDIS_PREFIX` y `SESSION_COOKIE` (mismos valores que local si se desea continuidad de sesiones).
-3. Ejecutar en el servidor:
+La pagina en produccion corre hoy en un **servidor propio Linux** (VPS/dedicado con SSH). Hostinger compartido es un escenario documentado como legado/alternativo; no es el hosting actual.
+
+## Procedimiento para despliegue en el Linux Server (produccion actual)
+
+1. Confirmar PHP 8.3+ CLI y extensiones (`pdo_mysql`, `mbstring`, `fileinfo`, `openssl`, `zip`).
+2. Configurar `.env` de produccion (`APP_ENV=production`, `APP_DEBUG=false`, BD, `CACHE_PREFIX`, `REDIS_PREFIX`, `SESSION_COOKIE`).
+3. Desplegar codigo (git pull / rsync / pipeline) a la raiz Laravel del servidor.
+4. Ejecutar en el servidor (ajustar ruta):
 
 ```bash
+cd /ruta/al/proyecto
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache
@@ -53,8 +59,33 @@ php artisan view:cache
 npm ci && npm run build
 ```
 
-4. Validar login, permisos y modulos criticos antes de cerrar el deploy.
-5. Mantener plan de rollback (rama/tag anterior) hasta validar produccion.
+5. Validar login, permisos y modulos criticos antes de cerrar el deploy.
+6. Mantener plan de rollback (rama/tag anterior) hasta validar produccion.
+7. **Prohibido** sin autorizacion explicita: `migrate:fresh`, `db:wipe`, TRUNCATE, restaurar backup sobre la BD activa.
+
+## Procedimiento para despliegue en Hostinger (legado / alternativo)
+
+Mismos pasos de `composer` / `migrate --force` / caches / `npm` que en el Linux Server, adaptados al panel File Manager o SSH de Hostinger si aplica. Ver tambien checklist en [`LOCAL_SETUP.md`](LOCAL_SETUP.md).
+
+## Procedimiento: import historico de desvinculaciones
+
+Carga de la hoja **NOVEDADES** (≥ 2025-05-01) a Seguimientos + Retiros **sin generar cartas**. Detalle tecnico: [`modules/desvinculaciones.md`](modules/desvinculaciones.md).
+
+### Via UI (recomendado en produccion)
+
+1. Desplegar el codigo con el endpoint `POST .../seguimientos/importar-historico`.
+2. Entrar a **Gestion humana → Desvinculaciones → Seguimientos** con permiso `desvinculaciones.seguimientos.edit`.
+3. Pulsar el icono de **Importar histórico** (toolbar junto a Exportar).
+4. Elegir el Excel (`.xlsx` / `.xls` / `.xlsm`), pulsar **Simular** y revisar metricas.
+5. Marcar la confirmacion y pulsar **Cargar**.
+6. Validar filas en Seguimientos y en **MT-GH-04 Novedades → Retiros**.
+
+### Via SSH / Artisan (alternativa tecnica)
+
+1. Subir el Excel a `storage/app/tmp/` en el Linux Server.
+2. Simular: `php artisan desvinculaciones:import-historico storage/app/tmp/ARCHIVO.xlsm --dry-run`
+3. Carga real: mismo comando sin `--dry-run` y con `--user=ID_USUARIO`.
+4. Borrar el Excel del servidor al terminar.
 
 ## Procedimiento para nuevas areas del negocio
 

@@ -119,6 +119,7 @@ Route::middleware(['password.changed'])
         Route::get('/seguimientos', [DesvinculacionesController::class, 'seguimientos'])->name('seguimientos');
         Route::get('/seguimientos/datatable', [DesvinculacionesController::class, 'seguimientosDatatable'])->name('seguimientos.datatable');
         Route::get('/seguimientos/exportar', [DesvinculacionesController::class, 'exportSeguimientos'])->name('seguimientos.export');
+        Route::post('/seguimientos/importar-historico', [DesvinculacionesController::class, 'importHistorico'])->name('seguimientos.import-historico');
         Route::patch('/seguimientos/{followup}', [DesvinculacionesController::class, 'updateSeguimiento'])->name('seguimientos.update');
         Route::post('/seguimientos/{followup}/revertir', [DesvinculacionesController::class, 'revertSeguimiento'])->name('seguimientos.revert');
     });

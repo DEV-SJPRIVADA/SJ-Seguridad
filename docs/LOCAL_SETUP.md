@@ -151,24 +151,39 @@ php artisan app:stabilize-local
 - Si la tabla `users` queda vacia o el admin semilla no coincide con `.env`, el login devolvera `auth.failed`.
 - Varios `php artisan serve` en el puerto 8000 muestran otro proyecto; detener procesos duplicados o usar `http://sjseguridad.test`.
 
-## Despliegue en Hostinger (checklist)
+## Entorno de produccion (actual)
 
-Antes de subir Laravel 13 a produccion:
+**Aclaracion:** la aplicacion en produccion esta alojada en un **servidor propio Linux** (no en Hostinger compartido). El checklist Hostinger mas abajo se conserva como referencia si se vuelve a ese tipo de hosting.
 
-1. Confirmar **PHP 8.3+** en el panel de Hostinger (Laravel 13 no corre en 8.2).
-2. Extensiones: `pdo_mysql`, `mbstring`, `fileinfo`, `openssl`, `zip`.
-3. Limites de upload ≥ 10M para documentos de Calidad.
-4. Copiar al `.env` de produccion los mismos `CACHE_PREFIX`, `REDIS_PREFIX` y `SESSION_COOKIE` fijados en local.
-5. Pipeline de deploy:
+Requisitos en el Linux Server:
+
+1. PHP **8.3+** CLI y FPM/Apache con extensiones `pdo_mysql`, `mbstring`, `fileinfo`, `openssl`, `zip`.
+2. MySQL 8, acceso SSH al usuario de despliegue, permisos de escritura en `storage/` y `bootstrap/cache/`.
+3. Limites de upload ≥ 10M si se usan documentos de Calidad.
+4. `.env` de produccion con `APP_ENV=production`, `APP_DEBUG=false`, BD y `CACHE_PREFIX` / `REDIS_PREFIX` / `SESSION_COOKIE` coherentes.
+5. Pipeline tipico tras desplegar codigo:
 
 ```bash
+cd /ruta/al/proyecto   # raiz Laravel en el servidor
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-npm ci && npm run build
+npm ci && npm run build   # si el build no se hace en CI
 ```
 
+6. Mantener tag/rama anterior hasta validar (plan de rollback).
+7. Operaciones one-shot (ej. import historico desvinculaciones): ver [`PROCEDURES.md`](PROCEDURES.md) seccion correspondiente; siempre `--dry-run` antes de escribir.
+
+## Despliegue en Hostinger (checklist legado / alternativo)
+
+Si se desplegara en Hostinger compartido:
+
+1. Confirmar **PHP 8.3+** en el panel (Laravel 13 no corre en 8.2).
+2. Extensiones: `pdo_mysql`, `mbstring`, `fileinfo`, `openssl`, `zip`.
+3. Limites de upload ≥ 10M para documentos de Calidad.
+4. Copiar al `.env` de produccion los mismos `CACHE_PREFIX`, `REDIS_PREFIX` y `SESSION_COOKIE` fijados en local.
+5. Pipeline de deploy (mismos comandos `artisan` / `composer` / `npm` que en Linux Server).
 6. Mantener tag/rama anterior hasta validar produccion (plan de rollback).
 7. Si Hostinger aun no ofrece PHP 8.3, posponer deploy de L13 hasta que este disponible.
