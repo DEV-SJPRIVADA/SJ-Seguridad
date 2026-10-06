@@ -206,11 +206,12 @@ final class ClienteInternoDatatableService
 
         match ($columnIndex) {
             0 => $query->orderBy('fecha_solicitud', $direction)->orderBy('id', $direction),
-            1 => $query->orderBy('nombre_apellidos', $direction),
-            2 => $query->orderBy('cedula', $direction),
-            3 => $query->orderBy('correo_electronico', $direction),
-            5 => $query->orderBy('fecha_respuesta', $direction),
-            8 => $query->orderBy('dias_respuesta', $direction),
+            1 => $query->orderBy('mes', $direction)->orderBy('fecha_solicitud', $direction),
+            2 => $query->orderBy('nombre_apellidos', $direction),
+            3 => $query->orderBy('cedula', $direction),
+            4 => $query->orderBy('correo_electronico', $direction),
+            6 => $query->orderBy('fecha_respuesta', $direction),
+            9 => $query->orderBy('dias_respuesta', $direction),
             default => $query->orderByDesc('fecha_solicitud')->orderByDesc('id'),
         };
     }
@@ -222,9 +223,14 @@ final class ClienteInternoDatatableService
     {
         $novedad = (string) ($solicitud->novedad ?? '');
         $novedadShort = mb_strlen($novedad) > 80 ? mb_substr($novedad, 0, 77).'…' : $novedad;
+        $mesNumero = $solicitud->fecha_solicitud !== null
+            ? (int) $solicitud->fecha_solicitud->month
+            : (int) $solicitud->mes;
+        $mesTexto = mb_strtoupper((string) (self::MESES[$mesNumero] ?? ''), 'UTF-8');
 
         $cells = [
             e(optional($solicitud->fecha_solicitud)?->format('Y-m-d') ?: '—'),
+            e($mesTexto !== '' ? $mesTexto : '—'),
             e((string) $solicitud->nombre_apellidos),
             e((string) $solicitud->cedula),
             e((string) ($solicitud->correo_electronico ?: '—')),

@@ -30,6 +30,10 @@ Al codear: corregir ortografía en textos de UI y comentar bloques funcionales. 
 
 Usar `App\Exports\BaseExport` y `<x-export-excel>`. No reintroducir `excelHtml5`.
 
+## Pruebas UI (Chrome DevTools MCP)
+
+Tras implementar + tests PHPUnit de un cambio con UI: smoke en browser con MCP `chrome-devtools`. Regla: [`.cursor/rules/devtools-mcp-ui-testing.mdc`](devtools-mcp-ui-testing.mdc).
+
 ## Componentes de Seleccion (Searchable Select)
 
 Todos los selectores en formularios, modales y filtros deben usar `<x-searchable-select>` con Alpine.js (`resources/views/components/searchable-select.blade.php`). Prohibido reintroducir `Select2`.
@@ -49,3 +53,7 @@ Chrome/filtros/toolbar: `.req-manage-filters__icon-btn` (`--primary` / `--ghost`
 ## Workflow multi-agente
 
 Ver [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md). Inicio de feature: **`@agent-sj`** o **`AgentSj`** + descripcion (skill `.cursor/skills/agent-sj/`). Carril rapido para consultas y fixes pequenos.
+
+## Pruebas UI
+
+Tras tests de cambios con UI: smoke con Chrome DevTools MCP. Ver [devtools-mcp-ui-testing.mdc](devtools-mcp-ui-testing.mdc).

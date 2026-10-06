@@ -66,12 +66,69 @@ final class TerminationFollowupDatatableService
         $fechaDesde = $this->resolveDateFilter($request, 'fecha_desde');
         $fechaHasta = $this->resolveDateFilter($request, 'fecha_hasta');
 
-        return EmployeeTerminationFollowup::query()
+        $query = EmployeeTerminationFollowup::query()
             ->search($q)
             ->statusFilter($status)
             ->rehireableFilter($rehireable)
-            ->dateFieldBetween($fechaCampo, $fechaDesde, $fechaHasta)
-            ->orderByDesc('id');
+            ->dateFieldBetween($fechaCampo, $fechaDesde, $fechaHasta);
+
+        $this->applyOrdering($query, $request);
+
+        return $query;
+    }
+
+    /**
+     * Orden DataTables server-side (índices alineados con columnas de la vista).
+     *
+     * @param  Builder<EmployeeTerminationFollowup>  $query
+     */
+    private function applyOrdering(Builder $query, Request $request): void
+    {
+        if (! $request->has('order.0.column')) {
+            $query->orderByDesc('id');
+
+            return;
+        }
+
+        $columnIndex = (int) $request->input('order.0.column', 0);
+        $direction = $request->input('order.0.dir', 'desc') === 'asc' ? 'asc' : 'desc';
+        $checkFields = array_values(EmployeeTerminationFollowup::CHECK_FIELDS);
+
+        // Columnas 7–14: checks booleanos.
+        if ($columnIndex >= 7 && $columnIndex <= 14) {
+            $field = $checkFields[$columnIndex - 7] ?? null;
+            if ($field !== null) {
+                $query->orderBy($field, $direction)->orderByDesc('id');
+
+                return;
+            }
+        }
+
+        // OK TODO (índice 15): AND de los 8 checks (misma lógica que isOkTodo).
+        if ($columnIndex === 15) {
+            $expr = implode(' AND ', array_map(
+                static fn (string $field): string => $field.' = 1',
+                $checkFields,
+            ));
+            $query->orderByRaw('('.$expr.') '.$direction)->orderByDesc('id');
+
+            return;
+        }
+
+        match ($columnIndex) {
+            0 => $query->orderBy('id', $direction),
+            1 => $query->orderBy('document_number', $direction)->orderByDesc('id'),
+            2 => $query->orderBy('full_name', $direction)->orderByDesc('id'),
+            3 => $query->orderBy('position_name', $direction)->orderByDesc('id'),
+            4, 18 => $query->orderBy('termination_cause_name', $direction)->orderByDesc('id'),
+            5 => $query->orderBy('registered_at', $direction)->orderByDesc('id'),
+            6 => $query->orderBy('termination_date', $direction)->orderByDesc('id'),
+            16 => $query->orderBy('payroll_delivered_at', $direction)->orderByDesc('id'),
+            17 => $query->orderBy('letter_generated', $direction)->orderByDesc('id'),
+            19 => $query->orderBy('is_rehireable', $direction)->orderByDesc('id'),
+            20 => $query->orderBy('termination_notes', $direction)->orderByDesc('id'),
+            default => $query->orderByDesc('id'),
+        };
     }
 
     /**

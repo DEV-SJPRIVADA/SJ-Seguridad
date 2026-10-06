@@ -96,6 +96,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.15 | 2026-10-06 | Agent | Seguimientos: encabezados legibles y ordenamiento en casi todas las columnas. |
 | 1.14 | 2026-10-06 | Agent | Seguimientos: import histórico por UI (Simular / Cargar) con permiso de edición. |
 | 1.13 | 2026-10-06 | Agent | Aclaración: producción en servidor Linux propio; carga histórica vía SSH. |
 | 1.12 | 2026-10-06 | Agent | Import histórico Excel (NOVEDADES ≥ mayo 2025) a Seguimientos + Retiros sin cartas; reingresos no se desvinculan. |

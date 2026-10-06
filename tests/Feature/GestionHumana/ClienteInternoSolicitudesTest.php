@@ -47,6 +47,7 @@ class ClienteInternoSolicitudesTest extends TestCase
             ->assertViewHas('exportUrl')
             ->assertSee('js-cliente-interno-solicitudes-datatable', false)
             ->assertSee('serverSide: true', false)
+            ->assertSee('>Mes</th>', false)
             ->assertSee('filter_anio', false)
             ->assertSee('filter_estado_id', false)
             ->assertSee(route('gestion-humana.cliente-interno.solicitudes.export'), false)
@@ -313,6 +314,7 @@ class ClienteInternoSolicitudesTest extends TestCase
         $rowText = $this->datatableRowText($response->json('data'));
         $this->assertStringContainsString('900100', $rowText);
         $this->assertStringContainsString('Incluida Filtro', $rowText);
+        $this->assertStringContainsString('FEBRERO', $rowText);
         $this->assertStringNotContainsString('900200', $rowText);
     }
 

@@ -14,7 +14,7 @@ Tablero de area **Gestion Humana** para registrar, consultar y analizar **solici
 - Pestañas exactas: **Dashboard**, **Solicitudes**, **Catálogos**.
 - Permisos Propuesta A: board + `solicitudes.view` / `solicitudes.edit` (`edit` ⇒ `view`) + `parameters.edit` (Catálogos). Dashboard = `solicitudes.view` **OR** `parameters.edit` (sin permiso KPI aparte). Bypass `manage.users`.
 - Tablas propias de catálogo (`cliente_interno_estados`, `cliente_interno_tipos_solicitud`) — no `payroll_catalog_items`.
-- Solicitudes: DataTables `serverSide: true`, filtros, alta/edición/borrado duro, export `BaseExport` + `<x-export-excel>`, import replace solo del año+mes elegido (filas fuera de periodo se aceptan).
+- Solicitudes: DataTables `serverSide: true`, filtros, alta/edición/borrado duro, export `BaseExport` + `<x-export-excel>`, import replace solo del año+mes elegido (filas fuera de periodo se aceptan). Columna **Mes** en mayúsculas derivada de `fecha_solicitud` (p. ej. `DICIEMBRE`).
 - Dias de respuesta: hábiles lun–vie (sin festivos V1) + override `dias_respuesta_manual`.
 - Seed ESTADO: Pendiente, En proceso, Respondida, Cerrada. Seed SOLICITUD: **vacío** (también se pueden crear al importar Excel).
 - Audit: `ClienteInternoAuditLogService` → `SystemAuditService` (`module=cliente_interno`, `area=gestion_humana`).

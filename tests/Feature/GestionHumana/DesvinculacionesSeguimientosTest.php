@@ -77,6 +77,24 @@ class DesvinculacionesSeguimientosTest extends TestCase
         $this->assertSame([$newer->id, $older->id], array_slice($ids, 0, 2));
     }
 
+    public function test_seguimientos_datatable_orders_by_document_number(): void
+    {
+        $viewer = $this->viewerUser();
+        $this->createFollowup(['document_number' => '9999999999', 'full_name' => 'Zeta']);
+        $this->createFollowup(['document_number' => '1111111111', 'full_name' => 'Alfa']);
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => '',
+                'order' => [['column' => 1, 'dir' => 'asc']],
+            ]));
+
+        $response->assertOk();
+        $docs = collect($response->json('data'))->pluck('document_number')->all();
+
+        $this->assertSame(['1111111111', '9999999999'], array_slice($docs, 0, 2));
+    }
+
     public function test_seguimientos_datatable_filters_ok_todo_and_search(): void
     {
         $viewer = $this->viewerUser();

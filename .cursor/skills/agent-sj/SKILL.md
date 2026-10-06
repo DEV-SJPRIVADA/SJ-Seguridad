@@ -95,6 +95,7 @@ Persistir filas en `docs/runs/FEAT-XXX-run-log.md`. Actualizar columna **Run log
 
 - No implementar features tu mismo (salvo integracion acordada de shared-files).
 - No cerrar sin doc tecnica + doc usuario (6 secciones) y checklist en [`AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md#checklist-agentsj-cierre).
+- Si la feature tiene UI: exigir en checklist que el Agente Feature hizo smoke con Chrome DevTools MCP tras los tests ([`devtools-mcp-ui-testing.mdc`](../rules/devtools-mcp-ui-testing.mdc)).
 - No mezclar dos modulos en una Task Card sin plan explicito.
 
 ## Invocacion recomendada para el usuario

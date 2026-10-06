@@ -11099,56 +11099,60 @@ a.req-dashboard-kpi:focus-visible {
 
 .desvinculaciones-seguimientos__table {
     width: 100%;
-    min-width: 1900px;
+    min-width: 2100px;
     border-collapse: separate;
     border-spacing: 0;
     margin: 0;
 }
 
-.desvinculaciones-seguimientos__table th {
-    white-space: nowrap !important;
-    font-size: 0.68rem;
-    line-height: 1.15;
-    text-align: center !important;
-    vertical-align: middle;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    padding-top: 0.35rem !important;
-    padding-bottom: 0.35rem !important;
-}
-
-.desvinculaciones-seguimientos__table th:not(.desvinculaciones-seguimientos__check-th) {
-    padding-left: 0.55rem !important;
-    padding-right: 0.55rem !important;
-}
-
-/* Encabezados de checks verticales: altura según el texto (sin min-height fijo) */
-.desvinculaciones-seguimientos__check-th {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    white-space: nowrap !important;
-    max-width: none;
-    min-width: 2.35rem;
-    width: 2.35rem;
-    height: auto;
-    min-height: 0;
-    padding: 0.35rem 0.15rem !important;
-    text-align: center !important;
-    vertical-align: middle;
+/* Encabezados: fondo opaco sticky + espacio para icono de orden DataTables */
+.desvinculaciones-seguimientos__table thead th {
+    background-color: #003366 !important;
+    color: #ffffff !important;
+    white-space: normal !important;
+    font-size: 0.7rem !important;
+    font-weight: 700;
+    line-height: 1.2;
     letter-spacing: 0.02em;
-    line-height: 1.1;
+    text-align: center !important;
+    vertical-align: middle !important;
     overflow: visible;
     text-overflow: clip;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    padding: 0.5rem 1.35rem 0.5rem 0.45rem !important;
+    hyphens: auto;
+}
+
+.desvinculaciones-seguimientos__table thead th.sorting,
+.desvinculaciones-seguimientos__table thead th.sorting_asc,
+.desvinculaciones-seguimientos__table thead th.sorting_desc {
+    cursor: pointer;
+    background-color: #003366 !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.35rem center !important;
+}
+
+/* Checks: títulos horizontales cortos (legibles + ordenables); tooltip con label completo */
+.desvinculaciones-seguimientos__check-th {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    min-width: 4.25rem;
+    max-width: 5.25rem;
+    width: 4.75rem;
+    white-space: normal !important;
+    word-break: break-word;
+    font-size: 0.62rem !important;
+    line-height: 1.15;
+    padding: 0.4rem 1.15rem 0.4rem 0.3rem !important;
 }
 
 .desvinculaciones-seguimientos__check-td {
     text-align: center;
     vertical-align: middle;
-    min-width: 2.35rem;
-    width: 2.35rem;
+    min-width: 4.25rem;
+    width: 4.75rem;
 }
 
 .desvinculaciones-seguimientos__check {

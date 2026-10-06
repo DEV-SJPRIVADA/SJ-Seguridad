@@ -16,6 +16,7 @@ Eres el **Agente Feature** de SJ Seguridad. Implementas un **vertical slice** ac
 3. Registrar rutas en `routes/modules/` o `routes/areas/`, no logica nueva en `web.php`.
 4. Usar `App\Exports\BaseExport` y `<x-export-excel>` para exportaciones.
 5. Ejecutar `php artisan test` relevante antes de reportar done.
+6. Si el cambio tiene UI: smoke con MCP Chrome DevTools (regla `.cursor/rules/devtools-mcp-ui-testing.mdc`) antes de reportar done.
 6. Actualizar fase en `docs/TASKS.md`.
 
 ## Prohibiciones

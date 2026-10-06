@@ -9,9 +9,10 @@
 - Dev local: `.\dev.bat` (fija PHP 8.3 y Node de Laragon y levanta `artisan serve` + Vite). Alternativas: `composer run dev`, `npm run dev`.
 - Si la UI no refleja cambios de frontend: `npm run build` (manifest de Vite).
 - Tests (PHPUnit 12, nunca Pest): `php artisan test --compact` (todos) · `php artisan test --compact tests/Feature/Ruta.php` (archivo) · `--filter=nombre` (uno).
+- Tras tests de un cambio **con UI**: smoke en browser con MCP **Chrome DevTools** (regla [`.cursor/rules/devtools-mcp-ui-testing.mdc`](.cursor/rules/devtools-mcp-ui-testing.mdc)). App local debe estar corriendo.
 - Tras modificar PHP: `vendor/bin/pint --dirty --format agent` antes de cerrar el cambio.
 - Diagnóstico local: `php artisan app:doctor` y `php artisan app:stabilize-local` (closures definidos en `routes/console.php`, no en `app/Console/Commands`; sirven si el login falla tras cambios de entorno). Otros: `app:sync-permissions`, `app:restore-admin`.
-- MCP Laravel Boost activo (`opencode.json`): usar `search-docs` antes de tocar código y `database-schema` antes de escribir migraciones o modelos.
+- MCP Laravel Boost activo (`opencode.json` / `.cursor/mcp.json`): usar `search-docs` antes de tocar código y `database-schema` antes de escribir migraciones o modelos. MCP `chrome-devtools` para pruebas UI en Chrome.
 
 ## Precedencia de instrucciones
 - Este repo **exige** actualizar documentación en la misma entrega (ver "Reglas para cualquier cambio"). Si una guía genérica de la herramienta dice "no crear documentación sin pedirla", prevalece la regla del repo.
@@ -99,6 +100,7 @@
 - Verificar que no se rompan rutas protegidas ni estados de sesion.
 - Verificar migraciones nuevas y compatibilidad con despliegue en hosting compartido.
 - Verificar pruebas de seguridad y acceso al tocar autenticacion, usuarios o permisos.
+- Si el cambio tiene UI: tras PHPUnit, smoke con Chrome DevTools MCP (consola/red/accion principal).
 - Si un cambio afecta varias capas, documentarlo en el cierre del trabajo.
 - Verificar en cada cierre que `README.md`, `docs/INDEX.md` y el documento del modulo afectado sigan alineados con el codigo real.
 

@@ -161,6 +161,7 @@
                             <thead>
                                 <tr>
                                     <th>Fecha solicitud</th>
+                                    <th>Mes</th>
                                     <th>Nombre</th>
                                     <th>Cédula</th>
                                     <th>Correo</th>
@@ -344,7 +345,7 @@
                 }
 
                 const canEdit = $table.data('dt-can-edit') === 1 || $table.data('dt-can-edit') === '1';
-                const actionsIndex = canEdit ? 9 : -1;
+                const actionsIndex = canEdit ? 10 : -1;
 
                 const api = $table.DataTable({
                     processing: true,

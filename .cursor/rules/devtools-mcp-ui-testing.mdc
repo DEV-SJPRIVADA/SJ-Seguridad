@@ -1,0 +1,46 @@
+---
+description: Tras implementar y pasar tests, validar UI con Chrome DevTools MCP
+alwaysApply: true
+---
+
+# Pruebas UI con Chrome DevTools MCP
+
+Tras un cambio funcional con UI (Blade, Alpine, DataTables, modales, imports, formularios), los agentes deben cerrar con **dos capas**:
+
+1. **Tests automaticos** — `php artisan test --compact` (archivo o `--filter` afectados).
+2. **Prueba manual en browser** — MCP **chrome-devtools** (`user-chrome-devtools` / `chrome-devtools`).
+
+## Cuando aplicar DevTools MCP
+
+- Feature o fix que toque vistas, JS, modales, listados, filtros, import/export visible.
+- Flujos criticos de UX (login no; si hay cambio de UI en ficha, cartas, seguimientos, cliente interno, etc.).
+- No obligatorio en cambios solo PHP/docs/tests sin superficie visible, salvo que el usuario lo pida.
+
+## Requisitos antes de probar
+
+- App local arriba (`.\dev.bat` o `artisan serve` + Vite / `npm run build` si hace falta).
+- MCP `chrome-devtools` en estado ready; si `needsAuth`, autenticar.
+- URL local tipica: `http://127.0.0.1:8000` (o la del entorno del usuario).
+- Si hace falta login y no hay sesion: pedir credenciales de **local** al usuario; no inventar passwords de produccion.
+
+## Que verificar (minimo)
+
+- La pantalla/ruta afectada carga sin error visible.
+- Accion principal del cambio (click, modal, filtro, submit) funciona.
+- Consola JS sin errores nuevos bloqueantes (`list_console_messages`).
+- Si hay AJAX/DataTables/import: requests relevantes OK o error esperado (`list_network_requests`).
+- Reportar al usuario: OK / fallo + evidencia breve (URL, paso, mensaje).
+
+## Orden de cierre (Feature / fix con UI)
+
+1. Implementar + docs del modulo si aplica.
+2. Pint si se toco PHP.
+3. Tests PHPUnit del alcance.
+4. Smoke UI con DevTools MCP.
+5. Recien entonces dar por cerrado.
+
+## Referencias
+
+- Config MCP: [`.cursor/mcp.json`](../mcp.json) y MCP de usuario (`chrome-devtools`).
+- Workflow: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md).
+- Comandos base: [`AGENTS.md`](../../AGENTS.md).

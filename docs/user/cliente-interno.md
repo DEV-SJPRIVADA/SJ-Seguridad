@@ -86,7 +86,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 ### Filtrar, exportar y eliminar
 
-1. Use los filtros del listado (año, mes, estado, tipo, búsqueda, etc.).
+1. Use los filtros del listado (año, mes, estado, tipo, búsqueda, etc.). En la tabla verá la columna **Mes** en mayúsculas según la fecha de solicitud.
 2. Para Excel, pulse exportar: saldrá lo filtrado en pantalla.
 3. Para eliminar, confirme en el aviso: el registro desaparece de forma definitiva.
 
@@ -117,6 +117,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.3 | 2026-10-06 | Agent | Solicitudes: columna Mes en mayúsculas según fecha de solicitud. |
 | 1.2 | 2026-10-06 | Agent | Import masivo: crea automáticamente tipos de solicitud y estados del Excel si no existen en Catálogos. |
 | 1.1 | 2026-10-05 | Agent | Catálogos: al abrir se muestran las tarjetas (Estados / Tipos); aviso y enlace directo desde Solicitudes si no hay tipos. |
 | 1.0 | 2026-10-05 | Documentador | Version inicial FEAT-042 (Dashboard, Solicitudes, Catálogos, masivo B, días hábiles) |

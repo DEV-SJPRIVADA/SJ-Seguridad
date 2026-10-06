@@ -193,6 +193,7 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 - [ ] Revisor sin hallazgos bloqueantes
 - [ ] Run log `docs/runs/FEAT-XXX-run-log.md` completo con fila de cierre
 - [ ] `php artisan test` relevante pasa
+- [ ] Si el cambio tiene UI: smoke con MCP Chrome DevTools (consola/red/accion principal) — ver [`.cursor/rules/devtools-mcp-ui-testing.mdc`](../.cursor/rules/devtools-mcp-ui-testing.mdc)
 - [ ] Sin solapamiento con otra tarea En progreso en mismos archivos
 
 ## Uso rapido

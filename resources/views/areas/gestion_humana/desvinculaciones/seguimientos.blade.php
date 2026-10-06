@@ -916,31 +916,35 @@
                     $table.DataTable().destroy();
                 }
 
+                // Índices alineados con TerminationFollowupDatatableService::applyOrdering.
                 const columns = [
-                    { data: 'id' },
-                    { data: 'document_number' },
+                    { data: 'id', name: 'id' },
+                    { data: 'document_number', name: 'document_number' },
                     {
                         data: 'full_name',
+                        name: 'full_name',
                         render: (data) => escapeSeguimientosHtml(data),
                     },
                     {
                         data: 'position_name',
+                        name: 'position_name',
                         defaultContent: '—',
                         render: (data) => escapeSeguimientosHtml(data || '—'),
                     },
                     {
                         data: 'termination_cause_name',
+                        name: 'termination_cause_name',
                         defaultContent: '—',
                         render: (data) => escapeSeguimientosHtml(data || '—'),
                     },
-                    { data: 'registered_at_display', orderable: false },
-                    { data: 'termination_date_display', orderable: false },
+                    { data: 'registered_at_display', name: 'registered_at' },
+                    { data: 'termination_date_display', name: 'termination_date' },
                 ];
 
                 checkFields.forEach((field) => {
                     columns.push({
                         data: null,
-                        orderable: false,
+                        name: field,
                         searchable: false,
                         className: 'desvinculaciones-seguimientos__check-td',
                         render: (_data, _type, row) => {
@@ -965,7 +969,7 @@
                 columns.push(
                     {
                         data: 'ok_todo',
-                        orderable: false,
+                        name: 'ok_todo',
                         searchable: false,
                         render: (data) => (
                             '<span class="desvinculaciones-seguimientos__ok-todo js-seguimiento-ok-todo">'
@@ -975,7 +979,7 @@
                     },
                     {
                         data: 'payroll_delivered_at',
-                        orderable: false,
+                        name: 'payroll_delivered_at',
                         searchable: false,
                         render: (data, _type, row) => {
                             const disabled = canEdit ? '' : ' disabled';
@@ -991,17 +995,17 @@
                             );
                         },
                     },
-                    { data: 'letter_generated_label', orderable: false, searchable: false },
+                    { data: 'letter_generated_label', name: 'letter_generated', searchable: false },
                     {
                         data: 'termination_cause_name',
-                        orderable: false,
+                        name: 'termination_cause_name_causal',
                         defaultContent: '—',
                         render: (data) => escapeSeguimientosHtml(data || '—'),
                     },
-                    { data: 'is_rehireable_label', orderable: false, searchable: false },
+                    { data: 'is_rehireable_label', name: 'is_rehireable', searchable: false },
                     {
                         data: 'termination_notes',
-                        orderable: false,
+                        name: 'termination_notes',
                         className: 'desvinculaciones-seguimientos__notes',
                         render: (data) => escapeSeguimientosHtml(data || '—'),
                     },
@@ -1067,7 +1071,10 @@
                     pageLength: 25,
                     responsive: false,
                     order: [[0, 'desc']],
-                    columnDefs: [{ targets: nonOrderable, orderable: false, searchable: false }],
+                    orderMulti: false,
+                    columnDefs: nonOrderable.length
+                        ? [{ targets: nonOrderable, orderable: false }]
+                        : [],
                 });
 
                 // Tabla hasta el borde inferior: altura del área de scroll al viewport.

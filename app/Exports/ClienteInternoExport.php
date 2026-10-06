@@ -64,7 +64,7 @@ class ClienteInternoExport extends BaseExport
         return [
             'fecha_solicitud' => optional($solicitud->fecha_solicitud)?->format('Y-m-d'),
             'anio' => $solicitud->anio,
-            'mes' => ClienteInternoDatatableService::MESES[$mes] ?? $mes,
+            'mes' => mb_strtoupper((string) (ClienteInternoDatatableService::MESES[$mes] ?? $mes), 'UTF-8'),
             'nombre_apellidos' => $solicitud->nombre_apellidos,
             'cedula' => $solicitud->cedula,
             'correo_electronico' => $solicitud->correo_electronico,
