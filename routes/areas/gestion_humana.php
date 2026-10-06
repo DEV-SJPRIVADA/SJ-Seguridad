@@ -9,6 +9,7 @@ use App\Http\Controllers\GestionHumana\CursosController;
 use App\Http\Controllers\GestionHumana\DesvinculacionesController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
+use App\Http\Controllers\GestionHumana\FichaTypeLetterController;
 use App\Http\Controllers\GestionHumana\FormacionController;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesController;
@@ -59,6 +60,16 @@ Route::middleware(['password.changed'])
         Route::get('/periodos/{period}/contratacion/plantillas', [ContratacionLetterController::class, 'templates'])->name('contratacion.templates');
         Route::post('/periodos/{period}/contratacion/generar', [ContratacionLetterController::class, 'generate'])->name('contratacion.generate');
         Route::get('/periodos/{period}/contratacion/firmas', [ContratacionLetterController::class, 'firmas'])->name('contratacion.firmas');
+        // Tipos genéricos del catálogo (no contratación/desvinculación): activo o cerrado.
+        Route::get('/periodos/{period}/tipos/{typeCode}/plantillas', [FichaTypeLetterController::class, 'templates'])
+            ->where('typeCode', '[A-Za-z0-9_-]+')
+            ->name('type-letters.templates');
+        Route::post('/periodos/{period}/tipos/{typeCode}/generar', [FichaTypeLetterController::class, 'generate'])
+            ->where('typeCode', '[A-Za-z0-9_-]+')
+            ->name('type-letters.generate');
+        Route::get('/periodos/{period}/tipos/{typeCode}/firmas', [FichaTypeLetterController::class, 'firmas'])
+            ->where('typeCode', '[A-Za-z0-9_-]+')
+            ->name('type-letters.firmas');
     });
 
 Route::middleware(['password.changed'])

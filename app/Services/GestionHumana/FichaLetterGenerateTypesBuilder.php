@@ -29,6 +29,14 @@ class FichaLetterGenerateTypesBuilder
         $contratacionCode = (string) config('employee_ficha.word_document_type_codes.contratacion');
         $desvinculacionCode = (string) config('employee_ficha.word_document_type_codes.desvinculacion');
 
+        // Tipos genéricos: activo+manage o cerrado+terminate (prioriza activo).
+        $genericPeriod = null;
+        if ($canGenerateContratacionLetters && $activePeriod !== null) {
+            $genericPeriod = $activePeriod;
+        } elseif ($canGenerateLetters && $letterPeriod !== null) {
+            $genericPeriod = $letterPeriod;
+        }
+
         return WordDocumentType::query()
             ->active()
             ->ordered()
@@ -40,6 +48,7 @@ class FichaLetterGenerateTypesBuilder
                 $canGenerateLetters,
                 $contratacionCode,
                 $desvinculacionCode,
+                $genericPeriod,
             ): array {
                 $code = (string) $type->code;
                 $name = (string) $type->name;
@@ -100,11 +109,32 @@ class FichaLetterGenerateTypesBuilder
                     ];
                 }
 
+                if ($genericPeriod !== null) {
+                    return [
+                        'code' => $code,
+                        'name' => $name,
+                        'enabled' => true,
+                        'disabled_reason' => null,
+                        'templates_url' => route('gestion-humana.ficha-empleados.employees.type-letters.templates', [
+                            'period' => $genericPeriod,
+                            'typeCode' => $code,
+                        ]),
+                        'generate_url' => route('gestion-humana.ficha-empleados.employees.type-letters.generate', [
+                            'period' => $genericPeriod,
+                            'typeCode' => $code,
+                        ]),
+                        'firmas_url' => route('gestion-humana.ficha-empleados.employees.type-letters.firmas', [
+                            'period' => $genericPeriod,
+                            'typeCode' => $code,
+                        ]),
+                    ];
+                }
+
                 return [
                     'code' => $code,
                     'name' => $name,
                     'enabled' => false,
-                    'disabled_reason' => 'La generación para este tipo aún no está disponible.',
+                    'disabled_reason' => 'Requiere un vínculo laboral activo o cerrado y el permiso correspondiente.',
                     'templates_url' => null,
                     'generate_url' => null,
                     'firmas_url' => null,

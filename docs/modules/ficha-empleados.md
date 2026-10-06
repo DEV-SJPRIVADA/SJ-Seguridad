@@ -242,19 +242,24 @@ Icono de barra **Generar Cartas** (visible con vínculo **activo** + `ficha_empl
 ### Comportamiento
 
 1. Lista **todos los tipos activos** de `word_document_types` (Plantillas Word).
-2. Tipos con motor: `contratacion` (período activo + manage) y `desvinculacion` (período cerrado + terminate).
-3. Tipos no aplicables o sin motor aparecen **deshabilitados** con mensaje (p. ej. «Requiere un vínculo laboral cerrado», «La generación para este tipo aún no está disponible.»).
-4. Al elegir un tipo habilitado se cargan plantillas/firmas y el POST usa la URL del tipo (`contratacion.generate` o `period.letters.generate`).
-5. UI: cards de tipo, cards compactas de plantilla, pie con iconos Cancelar / Generar y descargar.
+2. Tipos con reglas especiales:
+   - `contratacion` → período **activo** + `ficha_empleados.manage` (rutas `contratacion.*`).
+   - `desvinculacion` → período **cerrado** + `ficha_empleados.terminate` (rutas `period.letters.*`; masivos/pendientes no cambian).
+3. **Resto de tipos** del catálogo (p. ej. Cliente interno, certificado): habilitados con vínculo **activo** (manage) o **cerrado** (terminate). Prioriza período activo si ambos aplican. Rutas `type-letters.*` (`/periodos/{period}/tipos/{typeCode}/…`).
+4. El generador genérico (`FichaTypeLetterPackGeneratorService`) **no** sobrescribe `termination_letter_path` (preserva packs de contratación/desvinculación).
+5. Al elegir un tipo habilitado se cargan plantillas/firmas y el POST usa la URL del tipo.
+6. UI: cards de tipo, cards compactas de plantilla, pie con iconos Cancelar / Generar y descargar.
 
 ### Piezas
 
 | Pieza | Ubicación |
 | --- | --- |
-| Payload tipos | `FichaEmpleadosController::letterGenerateTypesForFicha` |
+| Payload tipos | `FichaLetterGenerateTypesBuilder` |
+| Generador genérico | `App\Services\GestionHumana\Letter\FichaTypeLetterPackGeneratorService` |
+| Controller genérico | `FichaTypeLetterController` |
 | Icono | `partials/contratacion-letter-actions.blade.php` |
 | Modal | `partials/contratacion-letter-generate-modal.blade.php` |
-| Test | `tests/Feature/GestionHumana/ContratacionLetterGenerateModalTest.php` |
+| Tests | `ContratacionLetterGenerateModalTest`, `FichaTypeLetterPackTest` |
 
 ## Formulario ficha alineado a Plantilla masivos (FEAT-028)
 

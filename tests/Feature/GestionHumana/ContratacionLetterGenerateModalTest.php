@@ -75,11 +75,9 @@ class ContratacionLetterGenerateModalTest extends TestCase
             'vínculo laboral cerrado',
             (string) data_get($byCode, config('employee_ficha.word_document_type_codes.desvinculacion').'.disabled_reason'),
         );
-        $this->assertFalse((bool) data_get($byCode, 'certificado.enabled'));
-        $this->assertStringContainsString(
-            'aún no está disponible',
-            (string) data_get($byCode, 'certificado.disabled_reason'),
-        );
+        $this->assertTrue((bool) data_get($byCode, 'certificado.enabled'));
+        $this->assertNotEmpty((string) data_get($byCode, 'certificado.templates_url'));
+        $this->assertStringContainsString('/tipos/certificado/', (string) data_get($byCode, 'certificado.generate_url'));
     }
 
     private function managerUser(): User
