@@ -144,7 +144,11 @@ class FichaTypeLetterController extends Controller
         }
 
         if ($period->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO) {
-            abort_unless($this->fichaEmpleadosAccess->canTerminate($user), 403);
+            abort_unless(
+                $this->fichaEmpleadosAccess->canTerminate($user)
+                    || $this->fichaEmpleadosAccess->canManage($user),
+                403,
+            );
 
             return;
         }

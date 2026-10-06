@@ -1,5 +1,5 @@
 {{-- Modal Generar cartas (contratación / desvinculación / tipos del catálogo). --}}
-@if (($canGenerateContratacionLetters ?? false) || ($canGenerateLetters ?? false))
+@if (($canGenerateContratacionLetters ?? false) || ($canGenerateLetters ?? false) || ($canShowClosedLetterActions ?? false))
     <x-modal name="ficha-generate-cartas" maxWidth="2xl" focusable>
         <div
             class="modal-card ficha-empleados-generate-letters-modal"

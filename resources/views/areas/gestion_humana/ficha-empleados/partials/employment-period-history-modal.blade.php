@@ -1,4 +1,4 @@
-{{-- Variables: $employmentHistory, $canGenerateLetters, $activePeriod, $canGenerateContratacionLetters --}}
+{{-- Variables: $employmentHistory, $canGenerateLetters, $canShowClosedLetterActions, $canManage, $activePeriod, $canGenerateContratacionLetters --}}
 @if ($employmentHistory->isNotEmpty())
     <x-modal name="ficha-employment-history" maxWidth="2xl">
         <div class="modal-card ficha-empleados-history-modal">
@@ -36,7 +36,7 @@
                             <th>Desvinculación</th>
                             <th>Causal</th>
                             <th>Recontratable</th>
-                            @if ($canGenerateLetters ?? false)
+                            @if (($canGenerateLetters ?? false) || ($canShowClosedLetterActions ?? false))
                                 <th>Cartas</th>
                             @endif
                         </tr>
@@ -45,20 +45,16 @@
                         @foreach ($employmentHistory as $period)
                             <tr>
                                 <td>{{ $period->sequence }}</td>
-                                <td>
-                                    <span class="status-pill {{ $period->isActive() ? 'status-pill--req-contratado' : 'status-pill--req-cancelada' }}">
-                                        {{ $period->isActive() ? 'Activo' : 'Cerrado' }}
-                                    </span>
-                                </td>
+                                <td>{{ $period->isActive() ? 'Activo' : 'Cerrado' }}</td>
                                 <td>{{ $period->requisition?->code ?? '—' }}</td>
-                                <td><x-date-table :value="$period->hire_date" /></td>
-                                <td>{{ $period->position_name ?: '—' }}</td>
-                                <td>{{ $period->work_center_name ?: '—' }}</td>
-                                <td><x-date-table :value="$period->last_work_day" /></td>
-                                <td><x-date-table :value="$period->termination_date" /></td>
-                                <td>{{ $period->termination_cause_name ?: '—' }}</td>
+                                <td>{{ optional($period->hire_date)->format('Y-m-d') ?? '—' }}</td>
+                                <td>{{ $period->position_name ?? '—' }}</td>
+                                <td>{{ $period->client_name ?? '—' }}</td>
+                                <td>{{ optional($period->last_work_day)->format('Y-m-d') ?? '—' }}</td>
+                                <td>{{ optional($period->termination_date)->format('Y-m-d') ?? '—' }}</td>
+                                <td>{{ $period->termination_cause_name ?? $period->termination_cause_code ?? '—' }}</td>
                                 <td>
-                                    @if ($period->isActive())
+                                    @if ($period->is_rehireable === null)
                                         —
                                     @elseif ($period->is_rehireable)
                                         Sí
@@ -66,12 +62,14 @@
                                         No
                                     @endif
                                 </td>
-                                @if ($canGenerateLetters ?? false)
+                                @if (($canGenerateLetters ?? false) || ($canShowClosedLetterActions ?? false))
                                     <td>
                                         @if (! $period->isActive())
                                             @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
                                                 'period' => $period,
-                                                'canGenerateLetters' => true,
+                                                'canGenerateLetters' => $canGenerateLetters ?? false,
+                                                'canShowClosedLetterActions' => true,
+                                                'canManage' => $canManage ?? false,
                                                 'activePeriod' => $activePeriod ?? null,
                                                 'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
                                                 'compact' => true,

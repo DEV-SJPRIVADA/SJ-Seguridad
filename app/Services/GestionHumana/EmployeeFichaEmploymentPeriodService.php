@@ -301,6 +301,76 @@ class EmployeeFichaEmploymentPeriodService
     }
 
     /**
+     * Invariante: perfil `desvinculado` debe tener al menos un periodo cerrado
+     * para poder generar cartas (legado/import sin pasar por modal desvinculación).
+     */
+    public function ensureClosedPeriodIfProfileDesvinculado(
+        PersonalRequisitionFichaEntry $entry,
+        int $userId,
+    ): ?EmployeeFichaEmploymentPeriod {
+        $entry->loadMissing('profile');
+        $profile = $entry->profile;
+
+        $existingClosed = $this->latestClosedPeriod($entry);
+
+        if ($profile === null || $profile->employment_status !== EmployeeFichaProfile::STATUS_DESVINCULADO) {
+            return $existingClosed;
+        }
+
+        if ($existingClosed !== null) {
+            return $existingClosed;
+        }
+
+        $closedBy = $userId > 0
+            ? $userId
+            : (int) ($entry->moved_to_ficha_by ?? $entry->created_by ?? 0);
+
+        if ($closedBy <= 0) {
+            $closedBy = 1;
+        }
+
+        // Perfil desvinculado con vínculo aún activo: cerrarlo para alinear historial y cartas.
+        if ($this->activePeriod($entry) !== null) {
+            $terminationDate = $profile->termination_date?->toDateString()
+                ?? now()->toDateString();
+
+            return $this->closeActivePeriod($entry, [
+                'termination_cause_code' => '',
+                'termination_date' => $terminationDate,
+                'last_work_day' => $terminationDate,
+                'is_rehireable' => null,
+            ], $closedBy);
+        }
+
+        if ($entry->moved_to_ficha_at === null && $profile->hire_date === null) {
+            return null;
+        }
+
+        $sequence = (int) EmployeeFichaEmploymentPeriod::query()
+            ->where('personal_requisition_ficha_entry_id', $entry->id)
+            ->max('sequence') + 1;
+
+        $terminationDate = $profile->termination_date?->toDateString();
+
+        $period = EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'personal_requisition_id' => $entry->personal_requisition_id,
+            'sequence' => max(1, $sequence),
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'opened_by' => $closedBy,
+            'closed_by' => $closedBy,
+            'termination_date' => $terminationDate,
+            'last_work_day' => $terminationDate,
+            'is_rehireable' => null,
+            ...$this->periodAttributesFromProfileData($profile->getAttributes()),
+        ]);
+
+        $this->syncCatalogNamesOnPeriod($period);
+
+        return $period->fresh();
+    }
+
+    /**
      * Abre periodo activo para perfiles `activo` sin vinculo abierto.
      *
      * @return array{scanned: int, opened: int, skipped: int, failed: int}

@@ -245,7 +245,7 @@ Icono de barra **Generar Cartas** (visible con vínculo **activo** + `ficha_empl
 2. Tipos con reglas especiales:
    - `contratacion` → período **activo** + `ficha_empleados.manage` (rutas `contratacion.*`).
    - `desvinculacion` → período **cerrado** + `ficha_empleados.terminate` (rutas `period.letters.*`; masivos/pendientes no cambian).
-3. **Resto de tipos** del catálogo (p. ej. Cliente interno, certificado): habilitados con vínculo **activo** (manage) o **cerrado** (terminate). Prioriza período activo si ambos aplican. Rutas `type-letters.*` (`/periodos/{period}/tipos/{typeCode}/…`).
+3. **Resto de tipos** del catálogo (p. ej. Cliente interno, certificado): habilitados con vínculo **activo** (`manage`) o **cerrado** (`manage` o `terminate`). Prioriza período activo si ambos aplican. Rutas `type-letters.*` (`/periodos/{period}/tipos/{typeCode}/…`). El icono **Generar Cartas** en fichas desvinculadas aparece con `manage` o `terminate` (antes solo con `terminate`). Si el desvinculado no tiene período cerrado (import/legado), `ensureClosedPeriodIfProfileDesvinculado` lo crea o cierra el activo al abrir la ficha.
 4. El generador genérico (`FichaTypeLetterPackGeneratorService`) **no** sobrescribe `termination_letter_path` (preserva packs de contratación/desvinculación).
 5. Al elegir un tipo habilitado se cargan plantillas/firmas y el POST usa la URL del tipo.
 6. UI: cards de tipo, cards compactas de plantilla, pie con iconos Cancelar / Generar y descargar.

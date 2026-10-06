@@ -115,6 +115,38 @@ class FichaTypeLetterPackTest extends TestCase
         $this->assertTrue(Storage::disk('local')->exists($existingPath));
     }
 
+    public function test_desvinculado_ficha_shows_generate_cartas_icon_with_manage_only(): void
+    {
+        WordDocumentType::query()->firstOrCreate(
+            ['code' => 'cliente_interno'],
+            ['name' => 'Cliente interno', 'is_active' => true, 'sort_order' => 5],
+        );
+
+        $terminator = $this->terminatorUser();
+        $entry = $this->createTerminatedEntry($terminator);
+        $manager = $this->managerUser();
+
+        $response = $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $response->assertOk();
+        $response->assertSee('title="Generar Cartas"', false);
+        $response->assertSee('aria-label="Generar Cartas"', false);
+        $response->assertSee('ficha-generate-cartas', false);
+
+        $html = $response->getContent();
+        preg_match('/data-letter-types=\'([^\']+)\'/', $html, $matches);
+        $this->assertNotEmpty($matches[1] ?? null);
+        $types = json_decode(html_entity_decode($matches[1], ENT_QUOTES), true);
+        $byCode = collect($types)->keyBy('code');
+
+        $this->assertTrue((bool) data_get($byCode, 'cliente_interno.enabled'));
+        $this->assertFalse((bool) data_get(
+            $byCode,
+            config('employee_ficha.word_document_type_codes.desvinculacion').'.enabled',
+        ));
+    }
+
     public function test_reserved_type_codes_return_not_found(): void
     {
         $manager = $this->managerUser();
@@ -166,6 +198,83 @@ class FichaTypeLetterPackTest extends TestCase
         $labels = collect($response->json('templates'))->pluck('label')->all();
         $this->assertContains('CI A', $labels);
         $this->assertNotContains('Cert A', $labels);
+    }
+
+    public function test_desvinculado_without_periods_gets_closed_period_and_shows_icon(): void
+    {
+        WordDocumentType::query()->firstOrCreate(
+            ['code' => 'cliente_interno'],
+            ['name' => 'Cliente interno', 'is_active' => true, 'sort_order' => 5],
+        );
+
+        $manager = $this->managerUser();
+        $entry = $this->createDesvinculadoEntryWithoutPeriods();
+
+        $this->assertSame(0, $entry->employmentPeriods()->count());
+
+        $response = $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $response->assertOk();
+        $response->assertSee('title="Generar Cartas"', false);
+
+        $entry->refresh();
+        $this->assertSame(1, $entry->employmentPeriods()->count());
+        $this->assertSame(
+            EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            $entry->employmentPeriods()->first()?->status,
+        );
+    }
+
+    private function createDesvinculadoEntryWithoutPeriods(): PersonalRequisitionFichaEntry
+    {
+        $requester = User::factory()->create(['must_change_password' => false]);
+        $mover = User::factory()->create(['must_change_password' => false]);
+
+        $requisition = PersonalRequisition::query()->create([
+            'code' => 'REQ-DESV-NOP-'.uniqid(),
+            'requested_by' => $requester->id,
+            'request_date' => now()->toDateString(),
+            'leader_name' => $requester->name,
+            'requesting_area_key' => 'gestion_humana',
+            'position_id' => RequisitionPosition::query()->firstOrFail()->id,
+            'sex' => 'masculino',
+            'quantity' => 1,
+            'operating_area_key' => 'gestion_humana',
+            'request_reason_id' => RequisitionRequestReason::query()->firstOrFail()->id,
+            'client_id' => RequisitionClient::query()->firstOrFail()->id,
+            'city_id' => RequisitionCity::query()->firstOrFail()->id,
+            'client_type_id' => RequisitionClientType::query()->firstOrFail()->id,
+            'programming_type_id' => RequisitionProgrammingType::query()->firstOrFail()->id,
+            'uniform_id' => RequisitionUniform::query()->firstOrFail()->id,
+            'required_profile' => 'Perfil de prueba.',
+            'service_structure' => 'Turno de prueba.',
+            'cost_center' => 'CC-DESV',
+            'status' => PersonalRequisition::STATUS_CONTRATADO,
+            'status_changed_at' => now(),
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '1876543210',
+            'hired_full_name' => 'Empleado Sin Periodo',
+            'moved_to_ficha_at' => now()->subMonths(2),
+            'moved_to_ficha_by' => $mover->id,
+            'created_by' => $mover->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'hire_date' => now()->subMonths(6)->toDateString(),
+            'termination_date' => now()->subMonth()->toDateString(),
+            'position_name' => 'Vigilante',
+            'salary' => 1500000,
+        ]);
+
+        return $entry->fresh(['profile']);
     }
 
     private function managerUser(): User

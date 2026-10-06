@@ -2,6 +2,8 @@
 @props([
     'period',
     'canGenerateLetters' => false,
+    'canShowClosedLetterActions' => false,
+    'canManage' => false,
     'letterGenerateTypes' => [],
     'activePeriod' => null,
     'canGenerateContratacionLetters' => false,
@@ -9,25 +11,37 @@
     'iconOnly' => false,
 ])
 
-@if ($canGenerateLetters && $period && $period->status === \App\Models\EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+@php
+    $showActions = (bool) $canShowClosedLetterActions
+        || (
+            (bool) $canGenerateLetters
+            && $period
+            && $period->status === \App\Models\EmployeeFichaEmploymentPeriod::STATUS_CERRADO
+        );
+@endphp
+
+@if ($showActions && $period && $period->status === \App\Models\EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
     @php
         $hasGenerated = filled($period->termination_letter_path);
-        $preferredTypeCode = (string) config('employee_ficha.word_document_type_codes.desvinculacion');
+        // Con terminate: preselecciona desvinculación; solo manage: primer tipo genérico habilitado.
+        $preferredTypeCode = (bool) $canGenerateLetters
+            ? (string) config('employee_ficha.word_document_type_codes.desvinculacion')
+            : '';
 
-        // Si no llega el payload (p. ej. historial por fila), construir tipos para este período cerrado.
         $typesPayload = is_array($letterGenerateTypes) && $letterGenerateTypes !== []
             ? $letterGenerateTypes
             : app(\App\Services\GestionHumana\FichaLetterGenerateTypesBuilder::class)->build(
                 $activePeriod,
                 $period,
                 (bool) $canGenerateContratacionLetters,
-                true,
+                (bool) $canGenerateLetters,
+                (bool) $canManage,
             );
     @endphp
 
     @if ($iconOnly)
         <span class="ficha-empleados-page__title-actions-group" role="group" aria-label="Cartas">
-            @if ($hasGenerated)
+            @if ($hasGenerated && $canGenerateLetters)
                 <a
                     href="{{ route('gestion-humana.ficha-empleados.employees.period.letters.download', $period) }}"
                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
@@ -59,7 +73,7 @@
         </span>
     @else
         <div class="{{ $compact ? 'ficha-empleados-letter-actions ficha-empleados-letter-actions--compact' : 'ficha-empleados-letter-actions' }}">
-            @if ($hasGenerated)
+            @if ($hasGenerated && $canGenerateLetters)
                 <a
                     href="{{ route('gestion-humana.ficha-empleados.employees.period.letters.download', $period) }}"
                     class="{{ $compact ? 'cursos-catalogo-page__icon-btn' : 'btn btn--secondary btn--sm' }}"

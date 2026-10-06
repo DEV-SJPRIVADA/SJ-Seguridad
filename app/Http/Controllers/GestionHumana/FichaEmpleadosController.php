@@ -605,15 +605,27 @@ class FichaEmpleadosController extends Controller
             );
         }
 
+        // Desvinculados sin periodo cerrado (import/legado): crear/cerrar periodo para poder generar cartas.
+        if ($canManage || $this->canTerminate()) {
+            $this->employmentPeriodService->ensureClosedPeriodIfProfileDesvinculado(
+                $fichaEntry,
+                (int) (auth()->id() ?? $fichaEntry->moved_to_ficha_by ?? 1),
+            );
+        }
+
         $activePeriod = $this->employmentPeriodService->activePeriod($fichaEntry);
         $employmentHistory = $this->employmentPeriodService->historyForEntry($fichaEntry);
-        $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile);
+        $letterPeriod = $this->resolveLetterPeriod($employmentHistory, $profile, $activePeriod);
         $documentNumber = $this->resolveEntryDocumentNumber($fichaEntry, $profile);
         $employeeCursos = $this->employeeCursosForDocumentNumber($documentNumber);
         $employeeAcreditaciones = $this->employeeAcreditacionesForDocumentNumber($documentNumber);
         $canViewEmployeeLookups = $this->fichaEmpleadosAccess->canView(auth()->user());
         $canGenerateLetters = $this->canGenerateLetters($letterPeriod);
         $canGenerateContratacionLetters = $this->canGenerateContratacionLetters($activePeriod);
+        // Icono/modal en desvinculado: manage o terminate (tipos genéricos); desvinculación sigue exigiendo terminate.
+        $canShowClosedLetterActions = $letterPeriod !== null
+            && $letterPeriod->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO
+            && ($canGenerateLetters || $canManage);
 
         return view('areas.gestion_humana.ficha-empleados.employees.edit-ficha', [
             'entry' => $fichaEntry,
@@ -627,11 +639,13 @@ class FichaEmpleadosController extends Controller
             'canManage' => $canManage,
             'canGenerateLetters' => $canGenerateLetters,
             'canGenerateContratacionLetters' => $canGenerateContratacionLetters,
+            'canShowClosedLetterActions' => $canShowClosedLetterActions,
             'letterGenerateTypes' => $this->letterGenerateTypesBuilder->build(
                 $activePeriod,
                 $letterPeriod,
                 $canGenerateContratacionLetters,
                 $canGenerateLetters,
+                $canManage,
             ),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
             'canForceNovedadesConflict' => auth()->user()?->hasRole('super-admin') ?? false,
@@ -1059,16 +1073,25 @@ class FichaEmpleadosController extends Controller
     /**
      * @param  Collection<int, EmployeeFichaEmploymentPeriod>  $employmentHistory
      */
-    private function resolveLetterPeriod(Collection $employmentHistory, EmployeeFichaProfile $profile): ?EmployeeFichaEmploymentPeriod
-    {
-        if ($profile->employment_status !== EmployeeFichaProfile::STATUS_DESVINCULADO) {
-            return null;
-        }
-
-        return $employmentHistory
+    private function resolveLetterPeriod(
+        Collection $employmentHistory,
+        EmployeeFichaProfile $profile,
+        ?EmployeeFichaEmploymentPeriod $activePeriod = null,
+    ): ?EmployeeFichaEmploymentPeriod {
+        $closedPeriod = $employmentHistory
             ->first(function (EmployeeFichaEmploymentPeriod $period): bool {
                 return $period->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO;
             });
+
+        // Desvinculado, o sin vínculo activo: usar el último período cerrado para cartas.
+        if (
+            $profile->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
+            || $activePeriod === null
+        ) {
+            return $closedPeriod;
+        }
+
+        return null;
     }
 
     private function canGenerateLetters(?EmployeeFichaEmploymentPeriod $letterPeriod): bool

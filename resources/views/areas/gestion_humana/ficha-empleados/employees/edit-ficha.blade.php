@@ -183,6 +183,8 @@
                         @include('areas.gestion_humana.ficha-empleados.partials.termination-letter-actions', [
                             'period' => $letterPeriod ?? null,
                             'canGenerateLetters' => $canGenerateLetters ?? false,
+                            'canShowClosedLetterActions' => $canShowClosedLetterActions ?? false,
+                            'canManage' => $canManage ?? false,
                             'letterGenerateTypes' => $letterGenerateTypes ?? [],
                             'activePeriod' => $activePeriod ?? null,
                             'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
@@ -344,11 +346,14 @@
             @include('areas.gestion_humana.ficha-empleados.partials.contratacion-letter-generate-modal', [
                 'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
                 'canGenerateLetters' => $canGenerateLetters ?? false,
+                'canShowClosedLetterActions' => $canShowClosedLetterActions ?? false,
             ])
 
             @include('areas.gestion_humana.ficha-empleados.partials.employment-period-history-modal', [
                 'employmentHistory' => $employmentHistory,
                 'canGenerateLetters' => $canGenerateLetters ?? false,
+                'canShowClosedLetterActions' => $canShowClosedLetterActions ?? false,
+                'canManage' => $canManage ?? false,
                 'activePeriod' => $activePeriod ?? null,
                 'canGenerateContratacionLetters' => $canGenerateContratacionLetters ?? false,
             ])

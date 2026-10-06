@@ -25,15 +25,20 @@ class FichaLetterGenerateTypesBuilder
         ?EmployeeFichaEmploymentPeriod $letterPeriod,
         bool $canGenerateContratacionLetters,
         bool $canGenerateLetters,
+        bool $canManage = false,
     ): array {
         $contratacionCode = (string) config('employee_ficha.word_document_type_codes.contratacion');
         $desvinculacionCode = (string) config('employee_ficha.word_document_type_codes.desvinculacion');
 
-        // Tipos genéricos: activo+manage o cerrado+terminate (prioriza activo).
+        // Tipos genéricos: activo+manage, o cerrado+(manage|terminate). Prioriza activo.
         $genericPeriod = null;
         if ($canGenerateContratacionLetters && $activePeriod !== null) {
             $genericPeriod = $activePeriod;
-        } elseif ($canGenerateLetters && $letterPeriod !== null) {
+        } elseif (
+            $letterPeriod !== null
+            && $letterPeriod->status === EmployeeFichaEmploymentPeriod::STATUS_CERRADO
+            && ($canGenerateLetters || $canManage)
+        ) {
             $genericPeriod = $letterPeriod;
         }
 
