@@ -639,35 +639,78 @@
     @if ($canManage)
         <div id="plantillas-word-type-modal" class="ficha-empleados-catalogs-page__modal" hidden>
             <div class="ficha-empleados-catalogs-page__modal-backdrop" data-type-modal-close></div>
-            <div class="panel ficha-empleados-catalogs-page__modal-card">
-                <div class="panel__header panel-heading-row">
-                    <h3 class="panel-title" id="plantillas-word-type-modal-title">Editar tipo</h3>
-                    <button type="button" class="btn btn--secondary btn--sm" data-type-modal-close aria-label="Cerrar">
-                        <x-lucide-x width="16" height="16" aria-hidden="true" />
+            <div
+                class="panel ficha-empleados-catalogs-page__modal-card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="plantillas-word-type-modal-title"
+            >
+                <div class="ficha-empleados-catalogs-page__modal-header">
+                    <div class="ficha-empleados-catalogs-page__modal-heading">
+                        <span class="ficha-empleados-catalogs-page__modal-heading-icon" aria-hidden="true">
+                            <x-lucide-pencil width="20" height="20" />
+                        </span>
+                        <div>
+                            <h3 class="ficha-empleados-catalogs-page__modal-title" id="plantillas-word-type-modal-title">Editar tipo</h3>
+                            <p class="ficha-empleados-catalogs-page__modal-lead">
+                                Actualice código, nombre, orden y si el tipo permanece activo.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        class="ficha-empleados-catalogs-page__modal-close"
+                        data-type-modal-close
+                        title="Cerrar"
+                        aria-label="Cerrar"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
                     </button>
                 </div>
-                <form method="POST" id="plantillas-word-type-edit-form" class="panel__body form-stack">
+                <form method="POST" id="plantillas-word-type-edit-form" class="ficha-empleados-catalogs-page__modal-body">
                     @csrf
                     @method('PATCH')
-                    <div class="form-field">
-                        <label class="form-label" for="plantillas-word-edit-code">Codigo</label>
-                        <input id="plantillas-word-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                    <div class="ficha-empleados-catalogs-page__modal-fields">
+                        <div class="form-field">
+                            <label class="form-label" for="plantillas-word-edit-code">Código</label>
+                            <input id="plantillas-word-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="plantillas-word-edit-name">Nombre</label>
+                            <input id="plantillas-word-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
+                        </div>
+                        <div class="ficha-empleados-catalogs-page__modal-meta">
+                            <div class="form-field">
+                                <label class="form-label" for="plantillas-word-edit-sort">Orden</label>
+                                <input id="plantillas-word-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
+                            </div>
+                            <label class="ficha-empleados-catalogs-page__modal-active" for="plantillas-word-edit-active">
+                                <input type="checkbox" id="plantillas-word-edit-active" name="is_active" value="1" class="form-check">
+                                <span>
+                                    <span class="ficha-empleados-catalogs-page__modal-active-title">Activo</span>
+                                    <span class="ficha-empleados-catalogs-page__modal-active-text">Si está inactivo no se ofrece al elegir plantilla.</span>
+                                </span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <label class="form-label" for="plantillas-word-edit-name">Nombre</label>
-                        <input id="plantillas-word-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label" for="plantillas-word-edit-sort">Orden</label>
-                        <input id="plantillas-word-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
-                    </div>
-                    <label class="plantillas-word-form__check">
-                        <input type="checkbox" id="plantillas-word-edit-active" name="is_active" value="1" class="form-check">
-                        <span>Activo</span>
-                    </label>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn--secondary" data-type-modal-close>Cancelar</button>
-                        <button type="submit" class="btn btn--primary">Guardar</button>
+                    <div class="ficha-empleados-catalogs-page__modal-actions">
+                        <button
+                            type="button"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            data-type-modal-close
+                            title="Cancelar"
+                            aria-label="Cancelar"
+                        >
+                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                        </button>
+                        <button
+                            type="submit"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                            title="Guardar"
+                            aria-label="Guardar"
+                        >
+                            <x-lucide-save width="18" height="18" aria-hidden="true" />
+                        </button>
                     </div>
                 </form>
             </div>

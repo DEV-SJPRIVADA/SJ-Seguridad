@@ -164,6 +164,8 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.36 | 2026-10-06 | Agent | Selectores searchable: al pasar el mouse sobre un valor truncado se muestra el texto completo (`title`). |
+| 1.35 | 2026-10-06 | Agent | Catálogos: modal de edición rediseñado (cabecera con icono, orden/activo en fila, pie con iconos cancelar/guardar). |
 | 1.34 | 2026-10-05 | Agent | Temp Word: mantiene `sys_get_temp_dir` como primera opción (como antes); storage solo si el temp del sistema no es usable. |
 | 1.33 | 2026-10-05 | Agent | Carta rápida: si la cédula ya tiene perfil en otra entrada (reingreso duplicado), reasigna ese perfil en lugar de insertar uno nuevo. |
 | 1.32 | 2026-10-05 | Agent | Carta Word: temp en `storage/app/tmp/phpword` (Hostinger) + escape XML; carta rápida muestra error en formulario si falla la generación. |

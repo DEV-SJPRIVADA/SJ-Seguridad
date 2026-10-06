@@ -185,37 +185,78 @@
 
     <div id="seleccion-catalog-modal" class="ficha-empleados-catalogs-page__modal" hidden>
         <div class="ficha-empleados-catalogs-page__modal-backdrop" data-catalog-modal-close></div>
-        <div class="panel ficha-empleados-catalogs-page__modal-card">
-            <div class="panel__header">
-                <h3 class="panel-title" id="seleccion-catalog-modal-title">Editar catalogo</h3>
-                <button type="button" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" data-catalog-modal-close title="Cerrar" aria-label="Cerrar">
+        <div
+            class="panel ficha-empleados-catalogs-page__modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="seleccion-catalog-modal-title"
+        >
+            <div class="ficha-empleados-catalogs-page__modal-header">
+                <div class="ficha-empleados-catalogs-page__modal-heading">
+                    <span class="ficha-empleados-catalogs-page__modal-heading-icon" aria-hidden="true">
+                        <x-lucide-pencil width="20" height="20" />
+                    </span>
+                    <div>
+                        <h3 class="ficha-empleados-catalogs-page__modal-title" id="seleccion-catalog-modal-title">Editar catálogo</h3>
+                        <p class="ficha-empleados-catalogs-page__modal-lead">
+                            Actualice código, nombre, orden y si el valor permanece activo en los formularios.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    class="ficha-empleados-catalogs-page__modal-close"
+                    data-catalog-modal-close
+                    title="Cerrar"
+                    aria-label="Cerrar"
+                >
                     <x-lucide-x width="18" height="18" aria-hidden="true" />
                 </button>
             </div>
-            <form method="POST" id="seleccion-catalog-edit-form" class="panel__body form-stack">
+            <form method="POST" id="seleccion-catalog-edit-form" class="ficha-empleados-catalogs-page__modal-body">
                 @csrf
                 @method('PATCH')
-                <div class="form-field">
-                    <label class="form-label" for="seleccion-catalog-edit-code"><span id="seleccion-modal-code-label">Codigo</span></label>
-                    <input id="seleccion-catalog-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                <div class="ficha-empleados-catalogs-page__modal-fields">
+                    <div class="form-field">
+                        <label class="form-label" for="seleccion-catalog-edit-code"><span id="seleccion-modal-code-label">Código</span></label>
+                        <input id="seleccion-catalog-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="seleccion-catalog-edit-name"><span id="seleccion-modal-name-label">Nombre</span></label>
+                        <input id="seleccion-catalog-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
+                    </div>
+                    <div class="ficha-empleados-catalogs-page__modal-meta">
+                        <div class="form-field">
+                            <label class="form-label" for="seleccion-catalog-edit-sort">Orden</label>
+                            <input id="seleccion-catalog-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
+                        </div>
+                        <label class="ficha-empleados-catalogs-page__modal-active" for="seleccion-catalog-edit-active">
+                            <input type="checkbox" id="seleccion-catalog-edit-active" name="is_active" value="1" class="form-check">
+                            <span>
+                                <span class="ficha-empleados-catalogs-page__modal-active-title">Activo en formularios</span>
+                                <span class="ficha-empleados-catalogs-page__modal-active-text">Si está inactivo no aparece en los selectores.</span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="seleccion-catalog-edit-name"><span id="seleccion-modal-name-label">Nombre</span></label>
-                    <input id="seleccion-catalog-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="seleccion-catalog-edit-sort">Orden</label>
-                    <input id="seleccion-catalog-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
-                </div>
-                <label class="checkbox-card">
-                    <input type="checkbox" id="seleccion-catalog-edit-active" name="is_active" value="1" class="form-check">
-                    <span>
-                        <span class="checkbox-card__title">Activo en formularios</span>
-                    </span>
-                </label>
-                <div class="form-actions">
-                    <button type="button" class="btn btn--secondary" data-catalog-modal-close>Cancelar</button>
-                    <button type="submit" class="btn btn--primary">Guardar cambios</button>
+                <div class="ficha-empleados-catalogs-page__modal-actions">
+                    <button
+                        type="button"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        data-catalog-modal-close
+                        title="Cancelar"
+                        aria-label="Cancelar"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </button>
+                    <button
+                        type="submit"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                        title="Guardar cambios"
+                        aria-label="Guardar cambios"
+                    >
+                        <x-lucide-save width="18" height="18" aria-hidden="true" />
+                    </button>
                 </div>
             </form>
         </div>

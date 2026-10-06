@@ -40,6 +40,7 @@
         <span
             class="searchable-select__label"
             :class="{ 'searchable-select__label--placeholder': !hasSelection }"
+            :title="hasSelection ? selectedLabel : ''"
             x-text="hasSelection ? selectedLabel : placeholder"
         ></span>
         <div class="searchable-select__actions" @click.stop>
@@ -91,6 +92,7 @@
                     @mouseenter="highlightedIndex = index"
                     role="option"
                     :aria-selected="(String(value) === String(opt.value)).toString()"
+                    :title="opt.label"
                 >
                     <span class="searchable-select__option-text" x-text="opt.label"></span>
                 </li>

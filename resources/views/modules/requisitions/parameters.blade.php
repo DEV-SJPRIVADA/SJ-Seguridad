@@ -191,12 +191,27 @@
 
     <div id="param-modal" class="ficha-empleados-catalogs-page__modal" hidden>
         <div class="ficha-empleados-catalogs-page__modal-backdrop" onclick="closeParamModal()"></div>
-        <div class="panel ficha-empleados-catalogs-page__modal-card">
-            <div class="panel__header panel-heading-row">
-                <h3 class="panel-title" id="param-modal-title">Editar parámetro</h3>
+        <div
+            class="panel ficha-empleados-catalogs-page__modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="param-modal-title"
+        >
+            <div class="ficha-empleados-catalogs-page__modal-header">
+                <div class="ficha-empleados-catalogs-page__modal-heading">
+                    <span class="ficha-empleados-catalogs-page__modal-heading-icon" aria-hidden="true">
+                        <x-lucide-pencil width="20" height="20" />
+                    </span>
+                    <div>
+                        <h3 class="ficha-empleados-catalogs-page__modal-title" id="param-modal-title">Editar parámetro</h3>
+                        <p class="ficha-empleados-catalogs-page__modal-lead">
+                            Actualice el nombre y si el valor permanece activo en los formularios.
+                        </p>
+                    </div>
+                </div>
                 <button
                     type="button"
-                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                    class="ficha-empleados-catalogs-page__modal-close"
                     onclick="closeParamModal()"
                     title="Cerrar"
                     aria-label="Cerrar"
@@ -204,22 +219,40 @@
                     <x-lucide-x width="18" height="18" aria-hidden="true" />
                 </button>
             </div>
-            <form method="POST" id="param-edit-form" class="panel__body form-stack">
+            <form method="POST" id="param-edit-form" class="ficha-empleados-catalogs-page__modal-body">
                 @csrf
                 @method('PATCH')
-                <div class="form-field">
-                    <label class="form-label" for="edit-param-name" id="edit-param-name-label">Nombre</label>
-                    <input id="edit-param-name" name="name" type="text" class="form-input" required autocomplete="off">
+                <div class="ficha-empleados-catalogs-page__modal-fields">
+                    <div class="form-field">
+                        <label class="form-label" for="edit-param-name" id="edit-param-name-label">Nombre</label>
+                        <input id="edit-param-name" name="name" type="text" class="form-input" required autocomplete="off">
+                    </div>
+                    <label class="ficha-empleados-catalogs-page__modal-active" for="edit-param-active">
+                        <input type="checkbox" id="edit-param-active" name="is_active" value="1" class="form-check">
+                        <span>
+                            <span class="ficha-empleados-catalogs-page__modal-active-title">Activo para formularios</span>
+                            <span class="ficha-empleados-catalogs-page__modal-active-text">Si está inactivo no aparece en los selectores.</span>
+                        </span>
+                    </label>
                 </div>
-                <label class="checkbox-card">
-                    <input type="checkbox" id="edit-param-active" name="is_active" value="1" class="form-check">
-                    <span>
-                        <span class="checkbox-card__title">Activo para formularios</span>
-                    </span>
-                </label>
-                <div class="form-actions">
-                    <button type="button" class="btn btn--secondary" onclick="closeParamModal()">Cancelar</button>
-                    <button type="submit" class="btn btn--primary">Guardar cambios</button>
+                <div class="ficha-empleados-catalogs-page__modal-actions">
+                    <button
+                        type="button"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        onclick="closeParamModal()"
+                        title="Cancelar"
+                        aria-label="Cancelar"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </button>
+                    <button
+                        type="submit"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                        title="Guardar cambios"
+                        aria-label="Guardar cambios"
+                    >
+                        <x-lucide-save width="18" height="18" aria-hidden="true" />
+                    </button>
                 </div>
             </form>
         </div>

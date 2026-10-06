@@ -11,8 +11,8 @@
 
             <div id="ficha-catalog-selector-screen">
                 <div class="page-header-inner ficha-empleados-catalogs-page__head">
-                    <h2 class="page-title">Catalogos de empleados</h2>
-                    <p class="page-subtitle">Valores de los selectores en crear/editar ficha e importacion masiva.</p>
+                    <h2 class="page-title">Catálogos de empleados</h2>
+                    <p class="page-subtitle">Valores de los selectores en crear/editar ficha e importación masiva.</p>
                 </div>
 
                 <div class="ficha-empleados-catalogs-page__grid">
@@ -182,37 +182,78 @@
 
     <div id="ficha-catalog-modal" class="ficha-empleados-catalogs-page__modal" hidden>
         <div class="ficha-empleados-catalogs-page__modal-backdrop" data-catalog-modal-close></div>
-        <div class="panel ficha-empleados-catalogs-page__modal-card">
-            <div class="panel__header">
-                <h3 class="panel-title" id="ficha-catalog-modal-title">Editar catalogo</h3>
-                                <button type="button" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" data-catalog-modal-close title="Cerrar" aria-label="Cerrar">
-                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                </button>
+        <div
+            class="panel ficha-empleados-catalogs-page__modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ficha-catalog-modal-title"
+        >
+            <div class="ficha-empleados-catalogs-page__modal-header">
+                <div class="ficha-empleados-catalogs-page__modal-heading">
+                    <span class="ficha-empleados-catalogs-page__modal-heading-icon" aria-hidden="true">
+                        <x-lucide-pencil width="20" height="20" />
+                    </span>
+                    <div>
+                        <h3 class="ficha-empleados-catalogs-page__modal-title" id="ficha-catalog-modal-title">Editar catálogo</h3>
+                        <p class="ficha-empleados-catalogs-page__modal-lead">
+                            Actualice código, nombre, orden y si el valor permanece activo en los formularios.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    class="ficha-empleados-catalogs-page__modal-close"
+                    data-catalog-modal-close
+                    title="Cerrar"
+                    aria-label="Cerrar"
+                >
+                    <x-lucide-x width="18" height="18" aria-hidden="true" />
+                </button>
             </div>
-            <form method="POST" id="ficha-catalog-edit-form" class="panel__body form-stack">
+            <form method="POST" id="ficha-catalog-edit-form" class="ficha-empleados-catalogs-page__modal-body">
                 @csrf
                 @method('PATCH')
-                <div class="form-field">
-                    <label class="form-label" for="ficha-catalog-edit-code"><span id="ficha-modal-code-label">Codigo</span></label>
-                    <input id="ficha-catalog-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                <div class="ficha-empleados-catalogs-page__modal-fields">
+                    <div class="form-field">
+                        <label class="form-label" for="ficha-catalog-edit-code"><span id="ficha-modal-code-label">Código</span></label>
+                        <input id="ficha-catalog-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="ficha-catalog-edit-name"><span id="ficha-modal-name-label">Nombre</span></label>
+                        <input id="ficha-catalog-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
+                    </div>
+                    <div class="ficha-empleados-catalogs-page__modal-meta">
+                        <div class="form-field">
+                            <label class="form-label" for="ficha-catalog-edit-sort">Orden</label>
+                            <input id="ficha-catalog-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
+                        </div>
+                        <label class="ficha-empleados-catalogs-page__modal-active" for="ficha-catalog-edit-active">
+                            <input type="checkbox" id="ficha-catalog-edit-active" name="is_active" value="1" class="form-check">
+                            <span>
+                                <span class="ficha-empleados-catalogs-page__modal-active-title">Activo en formularios</span>
+                                <span class="ficha-empleados-catalogs-page__modal-active-text">Si está inactivo no aparece en los selectores.</span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="ficha-catalog-edit-name"><span id="ficha-modal-name-label">Nombre</span></label>
-                    <input id="ficha-catalog-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="ficha-catalog-edit-sort">Orden</label>
-                    <input id="ficha-catalog-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
-                </div>
-                <label class="checkbox-card">
-                    <input type="checkbox" id="ficha-catalog-edit-active" name="is_active" value="1" class="form-check">
-                    <span>
-                        <span class="checkbox-card__title">Activo en formularios</span>
-                    </span>
-                </label>
-                <div class="form-actions">
-                    <button type="button" class="btn btn--secondary" data-catalog-modal-close>Cancelar</button>
-                    <button type="submit" class="btn btn--primary">Guardar cambios</button>
+                <div class="ficha-empleados-catalogs-page__modal-actions">
+                    <button
+                        type="button"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        data-catalog-modal-close
+                        title="Cancelar"
+                        aria-label="Cancelar"
+                    >
+                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </button>
+                    <button
+                        type="submit"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                        title="Guardar cambios"
+                        aria-label="Guardar cambios"
+                    >
+                        <x-lucide-save width="18" height="18" aria-hidden="true" />
+                    </button>
                 </div>
             </form>
         </div>
@@ -303,7 +344,7 @@
                     editForm.action = button.getAttribute('data-update-url') || '';
                     var codeLabel = document.getElementById('ficha-modal-code-label');
                     var nameLabel = document.getElementById('ficha-modal-name-label');
-                    if (codeLabel) { codeLabel.textContent = button.getAttribute('data-code-label') || 'Codigo'; }
+                    if (codeLabel) { codeLabel.textContent = button.getAttribute('data-code-label') || 'Código'; }
                     if (nameLabel) { nameLabel.textContent = button.getAttribute('data-name-label') || 'Nombre'; }
                     openModal();
                     editName.focus();

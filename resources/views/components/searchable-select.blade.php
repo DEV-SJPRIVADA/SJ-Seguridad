@@ -118,9 +118,11 @@
         :aria-expanded="open.toString()"
         :aria-disabled="isDisabled.toString()"
     >
+        {{-- title: si el texto truncado supera el ancho, al pasar el mouse se ve la línea completa --}}
         <span
             class="searchable-select__label"
             :class="{ 'searchable-select__label--placeholder': !hasSelection }"
+            :title="hasSelection ? selectedLabel : ''"
             x-text="hasSelection ? selectedLabel : placeholder"
         ></span>
 
@@ -193,6 +195,7 @@
                     @mouseenter="highlightedIndex = index"
                     role="option"
                     :aria-selected="(String(value) === String(opt.value)).toString()"
+                    :title="opt.label"
                 >
                     <span class="searchable-select__option-text" x-text="opt.label"></span>
                     <svg

@@ -202,7 +202,7 @@ Reingreso: requisicion Contratado con cedula desvinculada **recontratable** devu
 
 Catálogo **Causal desvinculacion** (`termination_cause`) en pestaña Catalogos.
 
-Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catalogos** en Ficha empleados; tras CRUD se permanece en el catalogo activo (`?catalog=`); **Volver al tablero** regresa al grid. Seed alternativo: `php artisan employee-ficha:seed-catalogs`.
+Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catálogos** en Ficha empleados; modal edición `.ficha-empleados-catalogs-page__modal-card` (cabecera con icono, orden/activo en fila, pie de acciones); tras CRUD se permanece en el catálogo activo (`?catalog=`); **Volver al tablero** regresa al grid. Seed alternativo: `php artisan employee-ficha:seed-catalogs`.
 
 Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
 

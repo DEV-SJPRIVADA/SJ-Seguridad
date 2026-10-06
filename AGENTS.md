@@ -81,7 +81,7 @@
 ## Estandar de Componentes de Seleccion (Searchable Select)
 - **Todos los selectores (selects)** en formularios, modales y filtros deben construirse utilizando el componente Blade `<x-searchable-select>` con soporte de Alpine.js (`resources/views/components/searchable-select.blade.php` y `resources/js/components/searchable-select.js`).
 - **Prohibido reintroducir la libreria Select2** (ni por CDN ni por paquete npm/scripts jQuery).
-- `<x-searchable-select>` incluye buscador integrado en tiempo real, soporte de navegacion por teclado, compatibilidad con validacion nativa HTML5 (`required`), emision de eventos `change`/`input` y enlace con `<input type="hidden">` para envio estandar de formularios.
+- `<x-searchable-select>` incluye buscador integrado en tiempo real, soporte de navegacion por teclado, compatibilidad con validacion nativa HTML5 (`required`), emision de eventos `change`/`input` y enlace con `<input type="hidden">` para envio estandar de formularios. Si el label truncado supera el ancho del control, `title` muestra la linea completa al pasar el mouse (trigger y opciones).
 - Parametros principales: `:options`, `:value`, `placeholder`, `searchPlaceholder`, `:required`, `:disabled`, `:allowClear`.
 
 ## Listados DataTables server-side
