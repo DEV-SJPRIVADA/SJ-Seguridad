@@ -224,8 +224,8 @@ Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplat
 
 ### Cartas Vacaciones (FEAT-043)
 
-25. Obligatorios por fila: cédula, nombre completo, fecha inicio, fecha fin, fecha reintegro, periodos, días disfrutados, `signatory_id` (catálogo `firmas` activo).
-26. `fecha_fin >= fecha_inicio`; `fecha_reintegro >= fecha_fin`. Unicidad de cédula en el lote (422 si repetida); al pegar, duplicados omitidos con resumen (UI).
+25. Obligatorios por fila: cédula, nombre completo, días disfrutados, fecha inicio, fecha fin, fecha reintegro, periodos, `signatory_id` (catálogo `firmas` activo). En UI: orden días → inicio; fin/reintegro readonly.
+26. `fecha_fin` = inicio + N días disfrutados **sin contar domingos** (inicio cuenta si no es domingo); `fecha_reintegro` = día siguiente a fin. Se recalcula en UI y en `ClienteInternoCartasVacacionesGeneratorService` al generar. Unicidad de cédula en el lote (422 si repetida); al pegar, duplicados omitidos con resumen (UI).
 27. Lookup por `EmployeeFichaProfile.document_number` (preferir activo, luego más reciente). Activo → precargar nombre; inactivo/no encontrado → aviso en fila; nombre editable; generación OK si validaciones pasan.
 28. Tipo Word fijo `cartas_vacaciones` (seed `WordDocumentTypeSeeder` + config). Generación exige **exactamente una** plantilla del tipo con archivo en disco y tipo activo:
     - 0: «No hay plantilla activa de Cartas Vacaciones. Cargue una en Plantillas Word.»

@@ -8,6 +8,7 @@ use App\Models\PayrollCatalogItem;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Models\User;
 use App\Models\WordDocumentType;
+use App\Services\GestionHumana\ClienteInternoCartasVacacionesGeneratorService;
 use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
@@ -254,6 +255,21 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         $this->assertSame('Directora de GH', $variables['FIRMA']);
         $this->assertSame('DIR_GH', $variables['CARGO_FIRMA']);
         $this->assertSame('1 de Enero del 2026', $variables['FECHA_INICIO']);
+    }
+
+    public function test_compute_vacation_dates_skips_sundays_and_sets_reintegro_next_day(): void
+    {
+        $service = app(ClienteInternoCartasVacacionesGeneratorService::class);
+
+        // Lunes 1 jun 2026 + 5 días (sin domingo) → viernes 5; reintegro sábado 6.
+        $five = $service->computeVacationDates('2026-06-01', 5);
+        $this->assertSame('2026-06-05', $five['fecha_fin']);
+        $this->assertSame('2026-06-06', $five['fecha_reintegro']);
+
+        // Sábado 6 jun + 2 días → sáb(1), salta dom, lun 8(2); reintegro mar 9.
+        $fromSaturday = $service->computeVacationDates('2026-06-06', 2);
+        $this->assertSame('2026-06-08', $fromSaturday['fecha_fin']);
+        $this->assertSame('2026-06-09', $fromSaturday['fecha_reintegro']);
     }
 
     public function test_build_for_cartas_vacaciones_fills_ficha_cargo_ciudad_and_cedula(): void

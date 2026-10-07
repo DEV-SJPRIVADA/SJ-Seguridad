@@ -9,6 +9,7 @@ use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager;
 use App\Support\WordTempDirectory;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -127,6 +128,8 @@ class ClienteInternoCartasVacacionesGeneratorService
 
         try {
             foreach ($rows as $index => $row) {
+                // Recalcular fin/reintegro en servidor (misma regla que la grilla: sin domingos).
+                $row = $this->applyComputedVacationDates($row);
                 $variables = $this->variableBuilder->buildForCartasVacaciones($row);
                 $cedulaSlug = preg_replace('/\D+/', '', (string) ($row['cedula'] ?? '')) ?: 'fila'.($index + 1);
                 $outputName = sprintf(
@@ -181,6 +184,63 @@ class ClienteInternoCartasVacacionesGeneratorService
     public function normalizeDocument(string $documentNumber): string
     {
         return trim($documentNumber);
+    }
+
+    /**
+     * Fecha fin = inicio + N días disfrutados (sin contar domingos; el inicio cuenta si no es domingo).
+     * Fecha reintegro = día calendario siguiente a la fecha fin.
+     *
+     * @return array{fecha_fin: string, fecha_reintegro: string}|null
+     */
+    public function computeVacationDates(string $fechaInicio, int $diasDisfrutados): ?array
+    {
+        if ($diasDisfrutados < 1) {
+            return null;
+        }
+
+        try {
+            $cursor = Carbon::parse($fechaInicio)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $counted = 0;
+        while ($counted < $diasDisfrutados) {
+            if (! $cursor->isSunday()) {
+                $counted++;
+            }
+            if ($counted < $diasDisfrutados) {
+                $cursor->addDay();
+            }
+        }
+
+        $fechaFin = $cursor->toDateString();
+        $fechaReintegro = $cursor->copy()->addDay()->toDateString();
+
+        return [
+            'fecha_fin' => $fechaFin,
+            'fecha_reintegro' => $fechaReintegro,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    public function applyComputedVacationDates(array $row): array
+    {
+        $diasRaw = $row['dias_disfrutados'] ?? null;
+        $dias = is_numeric($diasRaw) ? (int) $diasRaw : 0;
+
+        $computed = $this->computeVacationDates((string) ($row['fecha_inicio'] ?? ''), $dias);
+        if ($computed === null) {
+            return $row;
+        }
+
+        $row['fecha_fin'] = $computed['fecha_fin'];
+        $row['fecha_reintegro'] = $computed['fecha_reintegro'];
+
+        return $row;
     }
 
     /**

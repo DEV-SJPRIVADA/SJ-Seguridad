@@ -80,11 +80,11 @@
                                     <tr>
                                         <th class="desvinculaciones-masivos__col-cedula">Cédula</th>
                                         <th>Nombre completo</th>
+                                        <th>Días disfrutados</th>
                                         <th>Fecha inicio</th>
                                         <th>Fecha fin</th>
                                         <th>Fecha reintegro</th>
                                         <th>Periodos</th>
-                                        <th>Días disfrutados</th>
                                         <th>Firma</th>
                                         <th class="desvinculaciones-masivos__col-actions"></th>
                                     </tr>
@@ -117,9 +117,22 @@
                                             </td>
                                             <td>
                                                 <input
+                                                    type="number"
+                                                    class="form-input"
+                                                    x-model="row.dias_disfrutados"
+                                                    x-on:input="syncVacationDates(row)"
+                                                    placeholder="Días"
+                                                    min="1"
+                                                    step="1"
+                                                    x-bind:disabled="processing"
+                                                >
+                                            </td>
+                                            <td>
+                                                <input
                                                     type="date"
                                                     class="form-input"
                                                     x-model="row.fecha_inicio"
+                                                    x-on:change="syncVacationDates(row)"
                                                     x-bind:disabled="processing"
                                                     required
                                                 >
@@ -129,8 +142,10 @@
                                                     type="date"
                                                     class="form-input"
                                                     x-model="row.fecha_fin"
-                                                    x-bind:disabled="processing"
-                                                    required
+                                                    readonly
+                                                    tabindex="-1"
+                                                    title="Se calcula: inicio + días (sin domingos)"
+                                                    aria-label="Fecha fin (automática)"
                                                 >
                                             </td>
                                             <td>
@@ -138,8 +153,10 @@
                                                     type="date"
                                                     class="form-input"
                                                     x-model="row.fecha_reintegro"
-                                                    x-bind:disabled="processing"
-                                                    required
+                                                    readonly
+                                                    tabindex="-1"
+                                                    title="Día siguiente a la fecha fin"
+                                                    aria-label="Fecha reintegro (automática)"
                                                 >
                                             </td>
                                             <td>
@@ -149,16 +166,6 @@
                                                     x-model="row.periodos"
                                                     placeholder="Ej. 2024-2025"
                                                     maxlength="500"
-                                                    x-bind:disabled="processing"
-                                                >
-                                            </td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    class="form-input"
-                                                    x-model="row.dias_disfrutados"
-                                                    placeholder="Días"
-                                                    maxlength="50"
                                                     x-bind:disabled="processing"
                                                 >
                                             </td>
@@ -418,6 +425,54 @@
 
                         hasProcessableRows() {
                             return this.rows.some((row) => String(row.cedula || '').trim() !== '');
+                        },
+
+                        /**
+                         * Fecha fin = inicio + N días disfrutados (sin contar domingos; el inicio cuenta si no es domingo).
+                         * Fecha reintegro = día siguiente a la fecha fin.
+                         */
+                        syncVacationDates(row) {
+                            const start = String(row.fecha_inicio || '').trim();
+                            const daysRaw = String(row.dias_disfrutados || '').trim();
+                            const days = Number.parseInt(daysRaw, 10);
+
+                            if (! start || ! Number.isFinite(days) || days < 1) {
+                                row.fecha_fin = '';
+                                row.fecha_reintegro = '';
+                                return;
+                            }
+
+                            const parts = start.split('-').map((p) => Number.parseInt(p, 10));
+                            if (parts.length !== 3 || parts.some((n) => ! Number.isFinite(n))) {
+                                row.fecha_fin = '';
+                                row.fecha_reintegro = '';
+                                return;
+                            }
+
+                            const cursor = new Date(parts[0], parts[1] - 1, parts[2]);
+                            if (Number.isNaN(cursor.getTime())) {
+                                row.fecha_fin = '';
+                                row.fecha_reintegro = '';
+                                return;
+                            }
+
+                            let counted = 0;
+                            // Avanza día a día hasta completar N días no-domingo (inicio inclusive si aplica).
+                            while (counted < days) {
+                                if (cursor.getDay() !== 0) {
+                                    counted += 1;
+                                }
+                                if (counted < days) {
+                                    cursor.setDate(cursor.getDate() + 1);
+                                }
+                            }
+
+                            const pad = (n) => String(n).padStart(2, '0');
+                            const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+                            row.fecha_fin = toIso(cursor);
+                            const reintegro = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
+                            row.fecha_reintegro = toIso(reintegro);
                         },
 
                         openBulkCedulasModal() {
