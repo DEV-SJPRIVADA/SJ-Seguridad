@@ -10619,6 +10619,37 @@ a.req-dashboard-kpi:focus-visible {
     margin-bottom: 0.55rem;
 }
 
+/* Cartas Vacaciones: franja compacta título + hint (evita page-header alto) */
+.cartas-vacaciones-page .cartas-vacaciones__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.55rem;
+}
+
+.cartas-vacaciones-page .cartas-vacaciones__toolbar-meta {
+    min-width: 0;
+    flex: 1 1 14rem;
+}
+
+.cartas-vacaciones-page .cartas-vacaciones__toolbar-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+    line-height: 1.25;
+    color: var(--color-text);
+}
+
+.cartas-vacaciones-page .cartas-vacaciones__toolbar-hint {
+    margin: 0.15rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+    max-width: 40rem;
+}
+
 .desvinculaciones-masivos__bulk-summary {
     margin-top: 0.85rem;
     padding: 0.85rem 1rem;

@@ -4,17 +4,8 @@
     </x-slot>
 
     {{-- Cartas Vacaciones: grilla por cédula + generación Word (docx/zip) sin persistencia --}}
-    <div class="page-section desvinculaciones-masivos-page">
-        <div class="app-container section-stack">
-            <div class="page-header-inner">
-                <h2 class="page-title">Cartas Vacaciones</h2>
-                <p class="page-subtitle">
-                    Genere cartas de vacaciones en lote desde cédulas. Una fila → .docx; varias → .zip.
-                    Máximo {{ (int) $maxRows }} filas. Debe haber exactamente una plantilla activa del tipo
-                    <strong>Cartas Vacaciones</strong> en Plantillas Word.
-                </p>
-            </div>
-
+    <div class="page-section desvinculaciones-masivos-page cartas-vacaciones-page">
+        <div class="app-container">
             <div
                 class="panel desvinculaciones-masivos"
                 @if ($canEditCartasVacaciones)
@@ -30,13 +21,25 @@
             >
                 <div class="panel__body">
                     @unless ($canEditCartasVacaciones)
-                        <p class="panel-text">
-                            Tiene permiso de consulta en esta pestaña. No puede generar ni descargar cartas.
-                            Si necesita generar, solicite el permiso
-                            <strong>Cliente interno: Generar Cartas Vacaciones</strong>.
-                        </p>
+                        <div class="cartas-vacaciones__toolbar">
+                            <div class="cartas-vacaciones__toolbar-meta">
+                                <h2 class="cartas-vacaciones__toolbar-title">Cartas Vacaciones</h2>
+                                <p class="cartas-vacaciones__toolbar-hint">
+                                    Solo consulta. Para generar solicite
+                                    <strong>Cliente interno: Generar Cartas Vacaciones</strong>.
+                                </p>
+                            </div>
+                        </div>
                     @else
-                        <div class="desvinculaciones-masivos__table-top">
+                        {{-- Título + ayuda en una sola franja con las acciones (más espacio para la grilla) --}}
+                        <div class="desvinculaciones-masivos__table-top cartas-vacaciones__toolbar">
+                            <div class="cartas-vacaciones__toolbar-meta">
+                                <h2 class="cartas-vacaciones__toolbar-title">Cartas Vacaciones</h2>
+                                <p class="cartas-vacaciones__toolbar-hint">
+                                    Lote por cédulas · 1 fila → .docx · varias → .zip · máx. {{ (int) $maxRows }}
+                                    · una plantilla activa en Plantillas Word
+                                </p>
+                            </div>
                             <div class="cursos-registros-page__table-actions">
                                 <button
                                     type="button"
