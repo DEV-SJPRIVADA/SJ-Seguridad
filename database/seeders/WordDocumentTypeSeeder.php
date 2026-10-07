@@ -17,5 +17,14 @@ class WordDocumentTypeSeeder extends Seeder
                 'sort_order' => 1,
             ]
         );
+
+        WordDocumentType::query()->firstOrCreate(
+            ['code' => 'cartas_vacaciones'],
+            [
+                'name' => 'Cartas Vacaciones',
+                'is_active' => true,
+                'sort_order' => 3,
+            ]
+        );
     }
 }

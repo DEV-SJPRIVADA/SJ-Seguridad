@@ -368,6 +368,7 @@ return [
     'word_document_type_codes' => [
         'desvinculacion' => 'desvinculacion',
         'contratacion' => 'contratacion',
+        'cartas_vacaciones' => 'cartas_vacaciones',
     ],
 
     'termination_letter_signatory' => [
@@ -499,6 +500,13 @@ return [
             'RECLUTADOR' => 'Reclutador',
             'FECHA_CONTRATACION_REQUISICION' => 'Fecha de contratacion (requisicion)',
             'ESTADO_REQUISICION' => 'Estado de la requisicion',
+        ],
+        'Cartas vacaciones' => [
+            'FECHA_INICIO' => 'Fecha de inicio de vacaciones',
+            'FECHA_FIN' => 'Fecha de fin de vacaciones',
+            'FECHA_REINTEGRO' => 'Fecha de reintegro laboral',
+            'PERIODOS' => 'Periodos de vacaciones a disfrutar',
+            'DIAS_DISFRUTADOS' => 'Días disfrutados de vacaciones',
         ],
     ],
 ];

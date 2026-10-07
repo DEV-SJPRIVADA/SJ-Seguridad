@@ -45,6 +45,8 @@ return [
         'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
         'cliente_interno.solicitudes.view' => 'Cliente interno: Ver solicitudes',
         'cliente_interno.solicitudes.edit' => 'Cliente interno: Editar solicitudes',
+        'cliente_interno.cartas_vacaciones.view' => 'Cliente interno: Ver Cartas Vacaciones',
+        'cliente_interno.cartas_vacaciones.edit' => 'Cliente interno: Generar Cartas Vacaciones',
         'cliente_interno.parameters.edit' => 'Cliente interno: Catálogos',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
@@ -268,6 +270,7 @@ return [
     'cliente_interno_tabs' => [
         'dashboard' => 'Dashboard',
         'solicitudes' => 'Solicitudes',
+        'cartas_vacaciones' => 'Cartas Vacaciones',
         'catalogos' => 'Catálogos',
     ],
 
@@ -508,6 +511,8 @@ return [
                         'permissions' => [
                             'cliente_interno.solicitudes.view',
                             'cliente_interno.solicitudes.edit',
+                            'cliente_interno.cartas_vacaciones.view',
+                            'cliente_interno.cartas_vacaciones.edit',
                             'cliente_interno.parameters.edit',
                         ],
                     ],

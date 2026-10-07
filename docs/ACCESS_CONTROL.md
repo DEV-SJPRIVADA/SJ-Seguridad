@@ -188,7 +188,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `cursos` — **Cursos** (`view.board.gestion_humana.cursos` + `cursos.view` / `edit`)
   - `formacion` — **Formación** (`view.board.gestion_humana.formacion` + `formacion.view` / `edit`)
   - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
-  - `cliente_interno` — **Cliente interno** (`view.board.gestion_humana.cliente_interno` + `cliente_interno.solicitudes.view` / `edit` + `cliente_interno.parameters.edit`)
+  - `cliente_interno` — **Cliente interno** (`view.board.gestion_humana.cliente_interno` + `cliente_interno.solicitudes.view` / `edit` + `cliente_interno.cartas_vacaciones.view` / `edit` + `cliente_interno.parameters.edit`)
   - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
@@ -248,21 +248,26 @@ Tablero **Selección** (Dashboard, Ingreso, Examen ocupacional, Catálogos). Asi
 
 ### Cliente interno (Gestion humana)
 
-Tablero **Cliente interno** (Dashboard, Solicitudes, Catálogos). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`). Modelo **Propuesta A**: view/edit por pestaña Solicitudes + `parameters.edit` para Catálogos; Dashboard sin permiso KPI aparte.
+Tablero **Cliente interno** (Dashboard, Solicitudes, **Cartas Vacaciones**, Catálogos). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`). Modelo view/edit por pestaña (Solicitudes + Cartas Vacaciones) + `parameters.edit` para Catálogos; Dashboard sin permiso KPI aparte.
 
 | Permiso | Uso |
 | --- | --- |
 | `view.board.gestion_humana.cliente_interno` | Ver tablero **Cliente interno** en sidebar GH |
 | `cliente_interno.solicitudes.view` | Listado Solicitudes, filtros, export Excel; contribuye a Dashboard |
 | `cliente_interno.solicitudes.edit` | Alta, editar, eliminar e import masivo (implica view en `ClienteInternoAccessService`) |
+| `cliente_interno.cartas_vacaciones.view` | Ver pestaña Cartas Vacaciones (sin generar). **No** contribuye a Dashboard |
+| `cliente_interno.cartas_vacaciones.edit` | Lookup + generar/descargar Word/ZIP (implica view en AccessService). **No** contribuye a Dashboard |
 | `cliente_interno.parameters.edit` | Catálogos ESTADO y SOLICITUD; contribuye a Dashboard (sin listado Solicitudes si no hay view/edit) |
 
-- Pestanas: `dashboard`, `solicitudes`, `catalogos` (`config/access.php` → `cliente_interno_tabs`).
-- Dashboard: `solicitudes.view` **OR** `parameters.edit` (o implicación edit / bypass). Usuario solo con `parameters.edit` (+ board) ve Dashboard + Catálogos; pestaña Solicitudes oculta.
+- Pestanas: `dashboard`, `solicitudes`, `cartas_vacaciones`, `catalogos` (`config/access.php` → `cliente_interno_tabs`).
+- Dashboard: `solicitudes.view`∨`edit` **OR** `parameters.edit` (o bypass). **Usuario solo con permisos de Cartas Vacaciones (+ board) no ve Dashboard**; el shell redirige a la primera pestaña visible (Cartas Vacaciones).
+- Usuario solo `parameters.edit` (+ board): Dashboard + Catálogos; Solicitudes y Cartas ocultas si no tiene esos permisos.
 - Bypass: `manage.users`.
-- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto. **Sin** migración automática de permisos legacy.
-- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Cliente interno*). Labels: `Cliente interno: Ver solicitudes`, `… Editar solicitudes`, `… Catálogos`.
-- Mutación masiva: import replace-por-periodo (opción B: borra solo año+mes elegido; acepta filas fuera de periodo). Confirma UI + `confirm_replace`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto de Cliente interno.
+- **Migración Spatie FEAT-043** (`2026_10_07_131244_migrate_cliente_interno_solicitudes_edit_to_cartas_vacaciones_permissions`): idempotente; usuarios y roles con `cliente_interno.solicitudes.edit` reciben `cartas_vacaciones.view` **y** `.edit`. Tras deploy: `migrate` + `app:sync-permissions` + re-login.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Cliente interno*). Labels: `Cliente interno: Ver solicitudes`, `… Editar solicitudes`, `… Ver Cartas Vacaciones`, `… Generar Cartas Vacaciones`, `… Catálogos`.
+- Mutación masiva solicitudes: import replace-por-periodo (opción B). Confirma UI + `confirm_replace`.
+- Mutación Cartas Vacaciones: POST generate (stream descarga; sin persistencia). Lookup también exige `.edit`.
 - Doc: [`docs/modules/cliente-interno.md`](modules/cliente-interno.md), [`docs/user/cliente-interno.md`](user/cliente-interno.md).
 
 ### Desvinculaciones (Gestion humana)
@@ -332,8 +337,9 @@ Permisos funcionales (independientes de Ficha empleados):
 | `plantillas_word.manage` | Crear/editar/eliminar tipos; agregar/reemplazar/eliminar plantillas (implica view en servicio de acceso) |
 
 - Generar y descargar **cartas** desde la ficha del empleado usa **solo** `ficha_empleados.terminate` (no requiere `plantillas_word.*`).
+- Generar **Cartas Vacaciones** desde Cliente interno usa `cliente_interno.cartas_vacaciones.edit` (no requiere `plantillas_word.*`); el tipo seed `cartas_vacaciones` vive en este tablero (regla operativa: exactamente una plantilla con archivo).
 - Bypass: `manage.users`.
-- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word.
+- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word. Tipos seed: `desvinculacion`, `cartas_vacaciones`.
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Plantillas Word*).
 - Doc: [`docs/modules/plantillas-word.md`](modules/plantillas-word.md), [`docs/user/plantillas-word.md`](user/plantillas-word.md).
 

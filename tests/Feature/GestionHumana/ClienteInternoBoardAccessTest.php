@@ -29,6 +29,8 @@ class ClienteInternoBoardAccessTest extends TestCase
 
         $this->assertTrue($names->contains('cliente_interno.solicitudes.view'));
         $this->assertTrue($names->contains('cliente_interno.solicitudes.edit'));
+        $this->assertTrue($names->contains('cliente_interno.cartas_vacaciones.view'));
+        $this->assertTrue($names->contains('cliente_interno.cartas_vacaciones.edit'));
         $this->assertTrue($names->contains('cliente_interno.parameters.edit'));
         $this->assertTrue($names->contains('view.board.gestion_humana.cliente_interno'));
         $this->assertFalse($names->contains('view.board.operaciones.cliente_interno'));
@@ -40,6 +42,7 @@ class ClienteInternoBoardAccessTest extends TestCase
 
         $this->assertSame('Dashboard', $tabs['dashboard']);
         $this->assertSame('Solicitudes', $tabs['solicitudes']);
+        $this->assertSame('Cartas Vacaciones', $tabs['cartas_vacaciones']);
         $this->assertSame('Catálogos', $tabs['catalogos']);
         $this->assertSame('Cliente interno', config('access.boards.cliente_interno'));
         $this->assertSame('gestion_humana', config('access.board_canonical_areas.cliente_interno.home'));
@@ -192,12 +195,21 @@ class ClienteInternoBoardAccessTest extends TestCase
         $this->assertTrue($service->canViewBoard($admin));
         $this->assertTrue($service->canViewSolicitudes($admin));
         $this->assertTrue($service->canEditSolicitudes($admin));
+        $this->assertTrue($service->canViewCartasVacaciones($admin));
+        $this->assertTrue($service->canEditCartasVacaciones($admin));
         $this->assertTrue($service->canEditParameters($admin));
         $this->assertTrue($service->canViewDashboard($admin));
-        $this->assertSame(['dashboard', 'solicitudes', 'catalogos'], $service->visibleTabsFor($admin));
+        $this->assertSame(
+            ['dashboard', 'solicitudes', 'cartas_vacaciones', 'catalogos'],
+            $service->visibleTabsFor($admin)
+        );
 
         $this->actingAs($admin)
             ->get(route('gestion-humana.cliente-interno.solicitudes'))
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->get(route('gestion-humana.cliente-interno.cartas-vacaciones'))
             ->assertOk();
 
         $this->actingAs($admin)

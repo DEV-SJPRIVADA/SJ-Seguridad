@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-Apoyar a Gestión Humana en el registro y seguimiento de **solicitudes de cliente interno** (consultas o trámites de personas hacia GH): ver indicadores del periodo, cargar y actualizar solicitudes una a una o por Excel, y mantener las listas de **estados** y **tipos de solicitud**.
+Apoyar a Gestión Humana en el registro y seguimiento de **solicitudes de cliente interno** (consultas o trámites de personas hacia GH): ver indicadores del periodo, cargar y actualizar solicitudes una a una o por Excel, mantener las listas de **estados** y **tipos de solicitud**, y generar en lote **cartas de vacaciones** en Word para descargar.
 
 ## Alcance
 
@@ -12,23 +12,26 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 - **Dashboard** — total de solicitudes, conteo por estado, promedio y distribución de días de respuesta, y tendencia mensual; filtros por año y (opcional) mes.
 - **Solicitudes** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel e importar masivo por periodo.
+- **Cartas Vacaciones** — grilla por cédula para armar un lote, completar fechas/periodos/días/firma por fila y descargar un archivo Word (una persona) o un ZIP (varias).
 - **Catálogos** — solo con permiso de catálogos: administrar **Estado** y **Solicitud** (tipos).
 
 **En esta versión:**
 
 - Debe existir al menos un **tipo de solicitud** en Catálogos antes de **alta manual**. En el **import masivo**, si el Excel trae tipos o estados nuevos, el sistema los crea automáticamente en Catálogos.
 - Los **estados** iniciales son: Pendiente, En proceso, Respondida y Cerrada (se pueden desactivar o editar; eliminar solo si nadie los usa).
-- Varios registros con la **misma cédula** están permitidos.
+- Varios registros con la **misma cédula** están permitidos en Solicitudes.
 - Los **días de respuesta** se calculan en días hábiles (lunes a viernes), sin descontar festivos. Puede corregir el número a mano; esa corrección se conserva al guardar otros campos.
 - El import masivo **reemplaza solo el año y mes que usted elige**: borra las solicitudes de ese periodo e inserta las del archivo. Filas del archivo con fecha de otro mes/año también se cargan (quedan en su mes real).
-- Al eliminar un registro, se borra de forma definitiva.
-- No hay enlace automático con la Ficha de empleados ni avisos por correo.
+- Al eliminar un registro de Solicitudes, se borra de forma definitiva.
+- **Cartas Vacaciones** no guarda el lote ni las cartas en el sistema: solo genera y descarga en el momento. Hace falta **exactamente una** plantilla activa del tipo **Cartas Vacaciones** en el tablero **Plantillas Word**.
+- No hay enlace automático con Reportes de novedades ni avisos por correo de las cartas.
 
 **Buenas prácticas (uso diario):**
 
 - Antes de un import grande, puede revisar Catálogos; si faltan tipos/estados del Excel, se crearán al importar (código generado a partir del nombre).
 - En exportaciones muy amplias (sin filtrar año/mes), el archivo puede tardar o fallar por tamaño; filtre el periodo cuando pueda.
 - En el masivo, use siempre la plantilla oficial y confirme el conteo de filas que se van a reemplazar del periodo.
+- Para cartas: deje **solo una** plantilla activa de Cartas Vacaciones; no repita la misma cédula en el lote; el máximo es 500 filas por generación.
 
 ## Definiciones
 
@@ -43,6 +46,9 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 | Import replace por periodo | Carga Excel que borra las solicitudes del año+mes elegido e inserta las del archivo. |
 | Spillover | Filas del Excel cuya fecha cae fuera del año+mes elegido: se aceptan y quedan en su periodo real. |
 | Sin estado | Solicitudes sin estado asignado; aparecen agrupadas así en el Dashboard. |
+| Carta de vacaciones | Documento Word generado a partir de una plantilla, con datos de la fila (cédula, nombre, fechas, periodos, días y firma). |
+| Firma (carta) | Persona firmante elegida de la lista de firmas activas; define el nombre y el cargo que salen en la carta. |
+| Pegar cédulas | Opción para agregar varias cédulas de una vez a la grilla (las repetidas se omiten). |
 
 ## Responsabilidades
 
@@ -50,17 +56,21 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 | --- | --- |
 | Consulta (ver tablero + ver solicitudes) | Ver Dashboard y Solicitudes; filtrar; exportar a Excel. No crea, edita, elimina ni importa; no ve Catálogos. |
 | Operativo (editar solicitudes) | Todo lo de consulta + crear/editar/eliminar solicitudes, descargar plantilla e importar masivo. |
+| Solo ver Cartas Vacaciones | Ver la pestaña Cartas Vacaciones; **no** ve el Dashboard solo por ese permiso; no genera ni descarga cartas. |
+| Generar Cartas Vacaciones | Completar la grilla, buscar nombres por cédula y generar/descargar el Word o ZIP. |
 | Solo catálogos | Ver Dashboard y administrar Catálogos (Estado y tipos de Solicitud). No ve ni modifica el listado de Solicitudes. |
-| Completo | Consulta + operativo + catálogos. |
-| Administración de usuarios | Asignar el tablero y los permisos de Cliente interno (no vienen por defecto al rol usuario/administrador). |
+| Completo | Consulta + operativo + cartas + catálogos. |
+| Administración de usuarios | Asignar el tablero y los permisos de Cliente interno (no vienen por defecto al rol usuario/administrador). Quien ya podía editar solicitudes recibió también ver y generar Cartas Vacaciones tras la actualización del sistema. |
+| Administrador de Plantillas Word | Mantener **exactamente una** plantilla activa del tipo Cartas Vacaciones para que la generación funcione. |
 
 ## Desarrollo
 
 ### Entrar al tablero
 
 1. En el menú de **Gestión Humana**, abra **Cliente interno**.
-2. Use las pestañas superiores: Dashboard, Solicitudes y (si aplica) Catálogos.
+2. Use las pestañas superiores: Dashboard, Solicitudes, Cartas Vacaciones y (si aplica) Catálogos.
 3. Si solo tiene permiso de catálogos, verá Dashboard y Catálogos; la pestaña Solicitudes no aparece.
+4. Si solo tiene permiso de Cartas Vacaciones, entrará a esa pestaña y **no** verá el Dashboard.
 
 ### Preparar Catálogos (primera vez)
 
@@ -113,10 +123,22 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 | Novedad | No | Texto libre |
 | Días de respuesta | No | Vacío = cálculo automático; con número = valor manual |
 
+### Generar Cartas Vacaciones
+
+1. Antes de generar, en **Plantillas Word** confirme que hay **una sola** plantilla activa del tipo **Cartas Vacaciones** (con archivo cargado). Si no hay ninguna o hay varias, el sistema bloqueará la generación con un mensaje claro.
+2. En **Cliente interno**, abra la pestaña **Cartas Vacaciones**.
+3. Agregue filas a mano o use **pegar cédulas** para cargar varias de una vez (las duplicadas se omiten y verá un resumen).
+4. Por cada fila complete: cédula, nombre, fecha de inicio, fecha de fin, fecha de reintegro, periodos, días disfrutados y firma. La fecha de fin no puede ser anterior al inicio; la de reintegro no puede ser anterior a la de fin.
+5. Al salir de la cédula (o tras pegar), si la persona está activa en ficha se rellena el nombre. Si no hay ficha o está inactiva, verá un aviso y podrá escribir el nombre a mano; igual puede generar si el resto de campos está bien.
+6. Pulse **Generar**. Una fila descarga un Word; dos o más, un ZIP con un documento por persona.
+7. El lote **no se guarda** en el sistema: si necesita el archivo otra vez, vuelva a generar.
+8. Si solo tiene permiso de ver (sin generar), verá la pestaña pero no podrá armar ni descargar el lote.
+
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.4 | 2026-10-07 | Documentador | FEAT-043: pestaña Cartas Vacaciones (lote Word/ZIP, plantilla única, permisos ver/generar). |
 | 1.3 | 2026-10-06 | Agent | Solicitudes: columna Mes en mayúsculas según fecha de solicitud. |
 | 1.2 | 2026-10-06 | Agent | Import masivo: crea automáticamente tipos de solicitud y estados del Excel si no existen en Catálogos. |
 | 1.1 | 2026-10-05 | Agent | Catálogos: al abrir se muestran las tarjetas (Estados / Tipos); aviso y enlace directo desde Solicitudes si no hay tipos. |

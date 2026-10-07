@@ -39,6 +39,25 @@ class ClienteInternoAccessService
         return $user->can('cliente_interno.solicitudes.edit');
     }
 
+    public function canViewCartasVacaciones(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('cliente_interno.cartas_vacaciones.view')
+            || $user->can('cliente_interno.cartas_vacaciones.edit');
+    }
+
+    public function canEditCartasVacaciones(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('cliente_interno.cartas_vacaciones.edit');
+    }
+
     public function canEditParameters(User $user): bool
     {
         if ($this->isAdminBypass($user)) {
@@ -48,6 +67,9 @@ class ClienteInternoAccessService
         return $user->can('cliente_interno.parameters.edit');
     }
 
+    /**
+     * Dashboard: solicitudes o catálogos. No incluye permisos de Cartas Vacaciones.
+     */
     public function canViewDashboard(User $user): bool
     {
         if ($this->isAdminBypass($user)) {
@@ -68,6 +90,7 @@ class ClienteInternoAccessService
             $allowed = match ($tab) {
                 'dashboard' => $this->canViewDashboard($user),
                 'solicitudes' => $this->canViewSolicitudes($user),
+                'cartas_vacaciones' => $this->canViewCartasVacaciones($user),
                 'catalogos' => $this->canEditParameters($user),
                 default => false,
             };

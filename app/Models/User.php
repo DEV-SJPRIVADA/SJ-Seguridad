@@ -481,6 +481,7 @@ class User extends Authenticatable
         return match ($firstTab) {
             'dashboard' => route('gestion-humana.cliente-interno.dashboard'),
             'solicitudes' => route('gestion-humana.cliente-interno.solicitudes'),
+            'cartas_vacaciones' => route('gestion-humana.cliente-interno.cartas-vacaciones'),
             'catalogos' => route('gestion-humana.cliente-interno.catalogos'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };

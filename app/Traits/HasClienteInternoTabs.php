@@ -19,6 +19,7 @@ trait HasClienteInternoTabs
             $targetRoute = match ($tab) {
                 'dashboard' => 'gestion-humana.cliente-interno.dashboard',
                 'solicitudes' => 'gestion-humana.cliente-interno.solicitudes',
+                'cartas_vacaciones' => 'gestion-humana.cliente-interno.cartas-vacaciones',
                 'catalogos' => 'gestion-humana.cliente-interno.catalogos',
                 default => 'gestion-humana.cliente-interno.dashboard',
             };
@@ -28,6 +29,8 @@ trait HasClienteInternoTabs
                     || str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.dashboard'),
                 'solicitudes' => $activeTab === 'solicitudes'
                     || str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.solicitudes'),
+                'cartas_vacaciones' => $activeTab === 'cartas_vacaciones'
+                    || str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.cartas-vacaciones'),
                 'catalogos' => $activeTab === 'catalogos'
                     || str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.catalogos'),
                 default => $tab === $activeTab,

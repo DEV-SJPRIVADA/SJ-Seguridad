@@ -227,6 +227,10 @@ Route::middleware(['password.changed'])
         Route::patch('/solicitudes/{clienteInternoSolicitud}', [ClienteInternoController::class, 'updateSolicitud'])->name('solicitudes.update');
         Route::delete('/solicitudes/{clienteInternoSolicitud}', [ClienteInternoController::class, 'destroySolicitud'])->name('solicitudes.destroy');
 
+        Route::get('/cartas-vacaciones', [ClienteInternoController::class, 'cartasVacaciones'])->name('cartas-vacaciones');
+        Route::post('/cartas-vacaciones/lookup', [ClienteInternoController::class, 'cartasVacacionesLookup'])->name('cartas-vacaciones.lookup');
+        Route::post('/cartas-vacaciones/generar', [ClienteInternoController::class, 'cartasVacacionesGenerate'])->name('cartas-vacaciones.generate');
+
         Route::get('/catalogos', [ClienteInternoController::class, 'catalogos'])->name('catalogos');
         Route::post('/catalogos/{type}', [ClienteInternoController::class, 'storeCatalog'])->name('catalogos.store');
         Route::patch('/catalogos/{type}/{item}', [ClienteInternoController::class, 'updateCatalog'])->name('catalogos.update');

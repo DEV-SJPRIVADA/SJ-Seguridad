@@ -5,7 +5,9 @@ namespace App\Http\Controllers\GestionHumana;
 use App\Exports\ClienteInternoExport;
 use App\Exports\ClienteInternoImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\ClienteInterno\GenerateCartasVacacionesRequest;
 use App\Http\Requests\GestionHumana\ClienteInterno\ImportClienteInternoSolicitudesRequest;
+use App\Http\Requests\GestionHumana\ClienteInterno\LookupCartasVacacionesRequest;
 use App\Http\Requests\GestionHumana\ClienteInterno\StoreClienteInternoCatalogItemRequest;
 use App\Http\Requests\GestionHumana\ClienteInterno\StoreClienteInternoSolicitudRequest;
 use App\Http\Requests\GestionHumana\ClienteInterno\UpdateClienteInternoCatalogItemRequest;
@@ -13,9 +15,11 @@ use App\Http\Requests\GestionHumana\ClienteInterno\UpdateClienteInternoSolicitud
 use App\Models\ClienteInternoEstado;
 use App\Models\ClienteInternoSolicitud;
 use App\Models\ClienteInternoTipoSolicitud;
+use App\Models\PayrollCatalogItem;
 use App\Services\Access\ClienteInternoAccessService;
 use App\Services\GestionHumana\ClienteInternoAuditLogService;
 use App\Services\GestionHumana\ClienteInternoBusinessDaysService;
+use App\Services\GestionHumana\ClienteInternoCartasVacacionesGeneratorService;
 use App\Services\GestionHumana\ClienteInternoCatalogService;
 use App\Services\GestionHumana\ClienteInternoDashboardService;
 use App\Services\GestionHumana\ClienteInternoDatatableService;
@@ -26,6 +30,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClienteInternoController extends Controller
@@ -41,22 +46,92 @@ class ClienteInternoController extends Controller
         private readonly ClienteInternoBusinessDaysService $businessDaysService,
         private readonly ClienteInternoImportService $importService,
         private readonly ClienteInternoImportTemplateExport $importTemplateExport,
+        private readonly ClienteInternoCartasVacacionesGeneratorService $cartasVacacionesGenerator,
     ) {}
 
     public function index(Request $request): RedirectResponse
     {
-        abort_unless($this->clienteInternoAccess->canViewDashboard(auth()->user()), 403);
+        $user = auth()->user();
+        abort_unless($this->clienteInternoAccess->canViewBoard($user), 403);
 
-        $tabs = $this->clienteInternoAccess->visibleTabsFor(auth()->user());
-        $firstTab = $tabs[0] ?? 'dashboard';
+        $tabs = $this->clienteInternoAccess->visibleTabsFor($user);
+        $firstTab = $tabs[0] ?? null;
+        abort_unless($firstTab !== null, 403);
 
         $route = match ($firstTab) {
             'solicitudes' => 'gestion-humana.cliente-interno.solicitudes',
+            'cartas_vacaciones' => 'gestion-humana.cliente-interno.cartas-vacaciones',
             'catalogos' => 'gestion-humana.cliente-interno.catalogos',
             default => 'gestion-humana.cliente-interno.dashboard',
         };
 
         return redirect()->route($route, $request->query());
+    }
+
+    public function cartasVacaciones(): View
+    {
+        $user = auth()->user();
+        abort_unless($this->clienteInternoAccess->canViewCartasVacaciones($user), 403);
+
+        $canEdit = $this->clienteInternoAccess->canEditCartasVacaciones($user);
+
+        return view('areas.gestion_humana.cliente_interno.cartas-vacaciones', [
+            'subTabs' => $this->getClienteInternoSubTabs('cartas_vacaciones'),
+            'canEditCartasVacaciones' => $canEdit,
+            'signatoryOptions' => $canEdit ? $this->cartasVacacionesSignatoryOptions() : [],
+            'maxRows' => (int) config('cliente_interno.cartas_vacaciones.max_rows', 500),
+            'lookupUrl' => route('gestion-humana.cliente-interno.cartas-vacaciones.lookup'),
+            'generateUrl' => route('gestion-humana.cliente-interno.cartas-vacaciones.generate'),
+        ]);
+    }
+
+    public function cartasVacacionesLookup(LookupCartasVacacionesRequest $request): JsonResponse
+    {
+        $results = $this->cartasVacacionesGenerator->lookup($request->documentNumbers());
+
+        return response()->json([
+            'ok' => true,
+            'results' => $results,
+        ]);
+    }
+
+    public function cartasVacacionesGenerate(GenerateCartasVacacionesRequest $request): BinaryFileResponse
+    {
+        $result = $this->cartasVacacionesGenerator->generate($request->rows());
+
+        $this->auditLogService->logEvent(
+            eventType: 'cartas_vacaciones_generate',
+            action: 'generate',
+            metadata: [
+                'row_count' => $result['row_count'],
+                'output_type' => $result['output_type'],
+                'template_id' => $result['template_id'],
+            ],
+            userId: (int) auth()->id(),
+        );
+
+        return response()
+            ->download($result['absolute_path'], $result['download_name'])
+            ->deleteFileAfterSend(true);
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function cartasVacacionesSignatoryOptions(): array
+    {
+        return PayrollCatalogItem::query()
+            ->ofType('firmas')
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'code', 'name'])
+            ->map(static fn (PayrollCatalogItem $item): array => [
+                'value' => (string) $item->id,
+                'label' => $item->name.' — '.$item->code,
+            ])
+            ->values()
+            ->all();
     }
 
     public function dashboard(Request $request): View

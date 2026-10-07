@@ -178,6 +178,154 @@ class LetterVariableBuilder
     }
 
     /**
+     * Variables para Cartas Vacaciones (Cliente interno): fila de grilla + ficha por cédula.
+     *
+     * @param  array{
+     *     cedula: string,
+     *     nombre_completo: string,
+     *     fecha_inicio: string|CarbonInterface,
+     *     fecha_fin: string|CarbonInterface,
+     *     fecha_reintegro: string|CarbonInterface,
+     *     periodos: string,
+     *     dias_disfrutados: string|int|float,
+     *     signatory_id: int
+     * }  $row
+     * @return array<string, string>
+     */
+    public function buildForCartasVacaciones(array $row): array
+    {
+        $firma = $this->resolveSignatory(isset($row['signatory_id']) ? (int) $row['signatory_id'] : null);
+        $cedula = trim((string) ($row['cedula'] ?? ''));
+        $nombreFila = trim((string) ($row['nombre_completo'] ?? ''));
+        $profile = $this->resolveProfileByDocument($cedula);
+
+        // Catálogo en vacío; ficha rellena CARGO/CIUDAD/etc.; la fila manda en cédula/nombre/vacaciones.
+        $variables = [];
+        foreach ($this->catalogKeys() as $key) {
+            $variables[$key] = '';
+        }
+
+        if ($profile !== null) {
+            $this->fillProfileVariables($variables, $profile);
+        }
+
+        $variables['CEDULA'] = $cedula !== '' ? $cedula : (string) ($variables['CEDULA'] ?? '');
+        $variables['DOCUMENTO'] = $variables['CEDULA'] !== ''
+            ? $variables['CEDULA']
+            : (string) ($variables['DOCUMENTO'] ?? '');
+        $variables['NOMBRE_COMPLETO'] = $nombreFila !== ''
+            ? $nombreFila
+            : (string) ($variables['NOMBRE_COMPLETO'] ?? '');
+        $variables['FECHA_INICIO'] = $this->formatLongDate(
+            isset($row['fecha_inicio']) ? Carbon::parse($row['fecha_inicio']) : null
+        );
+        $variables['FECHA_FIN'] = $this->formatLongDate(
+            isset($row['fecha_fin']) ? Carbon::parse($row['fecha_fin']) : null
+        );
+        $variables['FECHA_REINTEGRO'] = $this->formatLongDate(
+            isset($row['fecha_reintegro']) ? Carbon::parse($row['fecha_reintegro']) : null
+        );
+        $variables['PERIODOS'] = (string) ($row['periodos'] ?? '');
+        $variables['DIAS_DISFRUTADOS'] = (string) ($row['dias_disfrutados'] ?? '');
+        $variables['FIRMA'] = $firma['name'];
+        $variables['CARGO_FIRMA'] = $firma['code'];
+        $variables['FECHA'] = $this->formatLongDate(now());
+
+        // Aliases cortos usados en plantillas (igual que desvinculación).
+        $variables['NOMBRE'] = $variables['NOMBRE_COMPLETO'];
+        $variables['CIUDAD'] = (string) ($variables['CIUDAD_RESIDENCIA'] ?? '');
+
+        return $variables;
+    }
+
+    /**
+     * Variables de ficha reutilizables en cartas sin periodo/entrada.
+     *
+     * @param  array<string, string>  $variables
+     */
+    private function fillProfileVariables(array &$variables, EmployeeFichaProfile $profile): void
+    {
+        $variables['DOCUMENTO'] = (string) ($profile->document_number ?? '');
+        $variables['CEDULA'] = (string) ($profile->document_number ?? '');
+        $variables['NOMBRE_COMPLETO'] = (string) ($profile->full_name ?? '');
+        $variables['PRIMER_APELLIDO'] = (string) ($profile->first_surname ?? '');
+        $variables['SEGUNDO_APELLIDO'] = (string) ($profile->second_surname ?? '');
+        $variables['PRIMER_NOMBRE'] = (string) ($profile->first_name ?? '');
+        $variables['SEGUNDO_NOMBRE'] = (string) ($profile->second_name ?? '');
+        $variables['TIPO_DOCUMENTO'] = (string) ($profile->document_type ?? '');
+        $variables['FECHA_NACIMIENTO'] = $this->formatLongDate($profile->birth_date);
+        $variables['LUGAR_NACIMIENTO'] = (string) ($profile->birth_place ?? '');
+        $variables['EDAD'] = $profile->age !== null ? (string) $profile->age : '';
+        $variables['CIUDAD_EXPEDICION'] = (string) ($profile->expedition_city_name ?? '');
+        $variables['FECHA_EXPEDICION'] = $this->formatLongDate($profile->expedition_date);
+        $variables['CIUDAD_RESIDENCIA'] = (string) ($profile->residence_city_name ?? '');
+        $variables['DIRECCION'] = (string) ($profile->address ?? '');
+        $variables['TELEFONO'] = (string) ($profile->phone ?? '');
+        $variables['TELEFONO_SECUNDARIO'] = (string) ($profile->phone_secondary ?? '');
+        $variables['TIPO_SANGRE'] = (string) ($profile->blood_type ?? '');
+        $variables['SEXO'] = (string) ($profile->sex ?? '');
+        $variables['SALARIO'] = $this->formatSalary($profile->salary);
+        $variables['SALARIO_EN_LETRAS'] = SpanishMoneyWords::pesos($profile->salary);
+        $variables['NIVEL_EDUCATIVO'] = (string) ($profile->education_level ?? '');
+        $variables['ESTADO_CIVIL'] = (string) ($profile->marital_status ?? '');
+        $variables['NUMERO_HIJOS'] = $profile->children_count !== null ? (string) $profile->children_count : '';
+        $variables['EMAIL'] = (string) ($profile->email ?? '');
+        $variables['TIPO_VINCULACION'] = (string) ($profile->linkage_type ?? '');
+        $variables['FECHA_CONTRATO'] = $this->formatLongDate($profile->hire_date);
+        $variables['FECHA_TERMINACION_PERFIL'] = $this->formatLongDate($profile->termination_date);
+        $variables['ESTADO_LABORAL'] = (string) ($profile->employment_status ?? '');
+        $variables['CENTRO_TRABAJO'] = (string) ($profile->work_center_name ?? '');
+        $variables['CENTRO_COSTO'] = (string) ($profile->cost_center_code ?? '');
+        $variables['CENTRO_COSTO_NOMBRE'] = (string) ($profile->cost_center_name ?? '');
+        $variables['CARGO'] = (string) ($profile->position_name ?? '');
+        $variables['CODIGO_CARGO'] = (string) ($profile->position_code ?? '');
+        $variables['TIPO_SALARIO'] = (string) ($profile->salary_type_name ?? '');
+        $variables['TIPO_CONTRATO_PERFIL'] = (string) ($profile->contract_type_name ?? '');
+        $variables['EPS'] = (string) ($profile->eps_name ?? '');
+        $variables['AFP'] = (string) ($profile->afp_name ?? '');
+        $variables['ARP'] = (string) ($profile->arp_name ?? '');
+        $variables['NIVEL_RIESGO'] = (string) ($profile->risk_level ?? '');
+        $variables['FONDO_COMPENSACION'] = (string) ($profile->compensation_fund_name ?? '');
+        $variables['BANCO'] = (string) ($profile->bank_name ?? '');
+        $variables['TIPO_CUENTA'] = (string) ($profile->account_type ?? '');
+        $variables['NUMERO_CUENTA'] = (string) ($profile->account_number ?? '');
+        $variables['METODO_PAGO'] = (string) ($profile->payment_method_code ?? '');
+        $variables['ACTIVIDAD_ECONOMICA'] = (string) ($profile->economic_activity_name ?? '');
+    }
+
+    private function resolveProfileByDocument(string $cedula): ?EmployeeFichaProfile
+    {
+        $cedula = trim($cedula);
+        if ($cedula === '') {
+            return null;
+        }
+
+        $find = static function (string $document): ?EmployeeFichaProfile {
+            return EmployeeFichaProfile::query()
+                ->where('document_number', $document)
+                ->orderByRaw(
+                    'CASE WHEN employment_status = ? THEN 0 ELSE 1 END',
+                    [EmployeeFichaProfile::STATUS_ACTIVO]
+                )
+                ->orderByDesc('id')
+                ->first();
+        };
+
+        $profile = $find($cedula);
+        if ($profile !== null) {
+            return $profile;
+        }
+
+        // Fallback si el lote trae puntos/espacios y la ficha solo dígitos.
+        $digits = preg_replace('/\D+/', '', $cedula) ?? '';
+        if ($digits !== '' && $digits !== $cedula) {
+            return $find($digits);
+        }
+
+        return null;
+    }
+
+    /**
      * Claves publicadas en Plantillas Word (`config/employee_ficha.letter_placeholders`).
      *
      * @return list<string>

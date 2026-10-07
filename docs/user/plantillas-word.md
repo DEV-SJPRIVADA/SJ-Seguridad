@@ -5,35 +5,39 @@
 
 ## Objetivo
 
-Permitir a Gestion Humana administrar en un solo lugar los **tipos de documento** y las **plantillas Word** (.docx) que luego se usan al generar cartas de desvinculacion desde la ficha del empleado.
+Permitir a Gestión Humana administrar en un solo lugar los **tipos de documento** y las **plantillas Word** (.docx) que luego se usan al generar cartas (desvinculación desde la ficha del empleado, cartas de vacaciones desde Cliente interno, y otros tipos según el flujo).
 
 ## Alcance
 
-Aplica al tablero **Plantillas Word** del area **Gestion Humana** (menu lateral). Segun su perfil, el usuario puede:
+Aplica al tablero **Plantillas Word** del área **Gestión Humana** (menú lateral). Según su perfil, el usuario puede:
 
 - Ver tipos de documento y la lista de plantillas.
 - Crear, editar o desactivar tipos; agregar, reemplazar o eliminar plantillas; descargar la plantilla maestra.
 
-**No incluye:** generar o descargar cartas de un empleado (eso se hace en **Ficha empleados**, con permiso de desvinculacion). Tampoco hay editor de Word dentro de la aplicacion: se sube un archivo ya preparado.
+**No incluye:** generar o descargar cartas ya rellenadas (eso se hace en **Ficha empleados** para desvinculación, o en **Cliente interno → Cartas Vacaciones** para vacaciones). Tampoco hay editor de Word dentro de la aplicación: se sube un archivo ya preparado.
 
-**Importante tras la actualizacion:** las plantillas antiguas del paquete de Renuncia **no** se migraron automaticamente. Hay que **volver a subirlas** en este tablero, asociadas al tipo **Desvinculacion**.
+**Importante tras la actualización:** las plantillas antiguas del paquete de Renuncia **no** se migraron automáticamente. Hay que **volver a subirlas** en este tablero, asociadas al tipo **Desvinculacion**.
+
+El sistema trae de fábrica, entre otros, los tipos **Desvinculacion** y **Cartas Vacaciones**.
 
 ## Definiciones
 
 | Termino | Significado |
 | --- | --- |
-| Tipo de documento | Categoria del catalogo (por ejemplo **Desvinculacion**) que clasifica las plantillas. |
+| Tipo de documento | Categoria del catalogo (por ejemplo **Desvinculacion** o **Cartas Vacaciones**) que clasifica las plantillas. |
 | Plantilla Word | Archivo `.docx` con variables `${CLAVE}` (ej. `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`) que el sistema rellena al generar una carta. |
 | Reemplazar plantilla | Cambiar solo el archivo Word; la etiqueta y el tipo se mantienen. |
 | Plantilla maestra | El archivo original guardado en el tablero (no la carta ya generada para un empleado). |
+| Cartas Vacaciones | Tipo de plantilla usado desde Cliente interno para generar cartas de vacaciones en lote. Debe haber **exactamente una** plantilla activa con archivo. |
 
 ## Responsabilidades
 
 | Rol / perfil | Responsabilidad en este modulo |
 | --- | --- |
-| Administrador de plantillas (permiso de administrar Plantillas Word) | Mantener tipos y subir/reemplazar/eliminar plantillas; re-subir las de desvinculacion tras el cambio de sistema. |
+| Administrador de plantillas (permiso de administrar Plantillas Word) | Mantener tipos y subir/reemplazar/eliminar plantillas; re-subir las de desvinculacion tras el cambio de sistema; dejar **una sola** plantilla activa de Cartas Vacaciones. |
 | Consulta de plantillas (solo ver) | Revisar el listado y descargar plantillas maestras si lo necesita. |
 | Operador de desvinculacion (Ficha empleados) | No administra este tablero; genera y descarga cartas desde la ficha del empleado. |
+| Operador de Cartas Vacaciones (Cliente interno) | No administra este tablero; genera desde Cliente interno usando la plantilla del tipo Cartas Vacaciones. |
 | Administrador de usuarios | Asignar el tablero y los permisos de ver/administrar Plantillas Word a quien corresponda. |
 
 ## Desarrollo
@@ -50,13 +54,14 @@ Aplica al tablero **Plantillas Word** del area **Gestion Humana** (menu lateral)
 2. Para **editar**: cambie nombre, orden o activo segun necesite. Evite cambiar el codigo del tipo **Desvinculacion**: si se altera, las cartas en ficha pueden dejar de encontrar plantillas.
 3. Para **eliminar**: solo si el tipo no tiene plantillas asociadas. Si ya tiene plantillas, **desactívelo** en lugar de borrarlo.
 
-El sistema trae de fabrica el tipo **Desvinculacion**, necesario para las cartas al desvincular.
+El sistema trae de fábrica tipos como **Desvinculacion** (cartas al desvincular) y **Cartas Vacaciones** (lote desde Cliente interno).
 
 ### Agregar una plantilla
 
 1. En el bloque **Plantillas**, indique la **etiqueta** (nombre visible), elija el **tipo** (activo) y seleccione un archivo **.docx**.
 2. Confirme. La plantilla aparece en la lista con su tipo.
 3. Para cartas de retiro, use el tipo **Desvinculacion** y variables `${…}` del listado de apoyo (icono **Ver variables** / llaves): puede filtrar por clave o descripción; copie/pegue `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc.
+4. Para cartas de vacaciones, use el tipo **Cartas Vacaciones** y las variables de la categoría **Cartas vacaciones** (por ejemplo `${FECHA_INICIO}`, `${FECHA_FIN}`, `${FECHA_REINTEGRO}`, `${PERIODOS}`, `${DIAS_DISFRUTADOS}`, además de `${CEDULA}`, `${NOMBRE_COMPLETO}`, `${FIRMA}`). Deje **solo una** plantilla activa de ese tipo.
 
 ### Consultar variables de plantilla
 
@@ -83,10 +88,17 @@ Al **agregar** plantilla puede **arrastrar y soltar** el `.docx` sobre la zona d
 1. Tras subir al menos una plantilla de tipo **Desvinculacion**, un usuario con permiso de desvinculacion puede, en la ficha de un empleado ya desvinculado, pulsar **Generar cartas**, elegir una o varias plantillas y descargar el resultado.
 2. El detalle de ese flujo esta en la guia de usuario de **Ficha empleados**.
 
+### Relación con Cliente interno (Cartas Vacaciones)
+
+1. Suba **una** plantilla del tipo **Cartas Vacaciones** (si hay cero o más de una activa con archivo, la generación en Cliente interno se bloquea).
+2. Un usuario con permiso para generar Cartas Vacaciones arma el lote en **Cliente interno → Cartas Vacaciones** y descarga el Word o el ZIP.
+3. El detalle operativo está en la guía de usuario de **Cliente interno**.
+
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-10-07 | Documentador | FEAT-043: tipo seed **Cartas Vacaciones**; regla de una plantilla activa; vínculo con Cliente interno. |
 | 1.7 | 2026-10-05 | Agent | Modal **Editar plantilla**: cabecera con icono, campos en rejilla y pie Cancelar / Guardar cambios. |
 | 1.6 | 2026-10-05 | Agent | Plantillas: editar etiqueta/tipo/orden; carga .docx con arrastrar y soltar. |
 | 1.5 | 2026-10-05 | Agent | Modal **Variables disponibles**: filtro por clave/descripción y contador de resultados. |
