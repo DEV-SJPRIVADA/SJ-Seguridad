@@ -182,8 +182,14 @@
                                     placeholder="Sin sede asignada"
                                     searchPlaceholder="Buscar sede…"
                                 />
-                                <button type="button" class="btn btn--secondary btn--sm" id="open-sites-modal" title="Gestionar sedes">
-                                    Gestionar
+                                <button
+                                    type="button"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    id="open-sites-modal"
+                                    title="Gestionar sedes"
+                                    aria-label="Gestionar sedes"
+                                >
+                                    <x-lucide-building-2 width="18" height="18" aria-hidden="true" />
                                 </button>
                             </div>
                             <x-input-error :messages="$errors->get('sede_id')" />
@@ -225,8 +231,14 @@
                     @endunless
                 </div>
                 @if (! $compactCreate && $user && $copyCandidates->isNotEmpty())
-                    <button type="button" class="btn btn--secondary btn--sm" id="open-apply-access-modal">
-                        Aplicar acceso de otro usuario
+                    <button
+                        type="button"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        id="open-apply-access-modal"
+                        title="Aplicar acceso de otro usuario"
+                        aria-label="Aplicar acceso de otro usuario"
+                    >
+                        <x-lucide-copy width="18" height="18" aria-hidden="true" />
                     </button>
                 @endif
             </div>
@@ -303,8 +315,22 @@
                 </p>
             @endunless
             <div class="form-actions__group">
-                <a href="{{ route('admin.users.index') }}" class="btn btn--secondary btn--sm">Cancelar</a>
-                <button type="submit" class="btn btn--primary btn--sm">{{ $buttonLabel }}</button>
+                <a
+                    href="{{ route('admin.users.index', ($user ?? null) ? ['selected' => $user->id] : []) }}"
+                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                    title="Cancelar"
+                    aria-label="Cancelar"
+                >
+                    <x-lucide-x width="18" height="18" aria-hidden="true" />
+                </a>
+                <button
+                    type="submit"
+                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                    title="{{ $buttonLabel }}"
+                    aria-label="{{ $buttonLabel }}"
+                >
+                    <x-lucide-save width="18" height="18" aria-hidden="true" />
+                </button>
             </div>
         </div>
     </div>

@@ -6,7 +6,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 ## Alcance actual
 
-- Panel lateral con listado paginado y busqueda de usuarios; al seleccionar, se restaura el scroll del listado (misma posicion visual)
+- Panel lateral con listado paginado y busqueda de usuarios; al seleccionar, se restaura el scroll del listado (misma posicion visual). Toolbar: iconos **Editar** (lápiz) y **Nuevo** (+) junto al filtro de inactivos
 - Por defecto el listado muestra solo usuarios activos; checkbox **Mostrar usuarios inactivos** amplia la lista
 - Resumen del usuario seleccionado: ficha operativa, notas de acceso efectivo por rol y lista plana de permisos directos asignados
 - Formulario en pestanas: **Identidad**, **Acceso y permisos**, **Seguridad** (edicion)

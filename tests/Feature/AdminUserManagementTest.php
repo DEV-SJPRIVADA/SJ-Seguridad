@@ -79,6 +79,23 @@ class AdminUserManagementTest extends TestCase
         $response->assertSee('Usuarios');
         $response->assertSee('aria-label="Nuevo usuario"', false);
         $response->assertDontSee('>Nuevo usuario<', false);
+        // El listado auto-selecciona el primer usuario: el lápiz queda activo.
+        $response->assertSee('aria-label="Editar usuario"', false);
+    }
+
+    public function test_users_index_shows_edit_icon_when_user_selected(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@sjseguridad.local'))->firstOrFail();
+        $admin->update(['must_change_password' => false]);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index', [
+            'selected' => $admin->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('aria-label="Editar usuario"', false);
+        $response->assertSee(route('admin.users.edit', $admin), false);
+        $response->assertSee('aria-label="Nuevo usuario"', false);
     }
 
     public function test_admin_user_form_uses_area_master_detail_permissions_layout(): void

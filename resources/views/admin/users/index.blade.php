@@ -2,17 +2,13 @@
     <div class="page-section admin-users-page">
         <div class="app-container page-stack admin-users-page__stack">
             <div class="panel users-panel">
-                <div class="panel__body panel__body--soft">
-                    <div class="action-row">
-                        <div>
-                            <p class="eyebrow">Administracion de usuarios</p>
-                            <p class="panel-text">Selecciona un usuario para revisar areas y permisos. Desde el panel derecho puedes entrar a editar.</p>
-                        </div>
-
-                        <div class="form-actions__group">
-                            <div class="users-kpi-stack">
+                <div class="users-grid">
+                    <aside class="users-sidebar">
+                        <div class="panel__header">
+                            {{-- KPIs compactos encima del listado --}}
+                            <div class="users-kpi-stack users-kpi-stack--sidebar" aria-label="Resumen de usuarios">
                                 <div class="card kpi-card">
-                                    <p class="kpi-card__label text-muted">Total usuarios</p>
+                                    <p class="kpi-card__label text-muted">Total</p>
                                     <p class="kpi-card__value">{{ $stats['total'] }}</p>
                                 </div>
                                 <div class="card card--success kpi-card">
@@ -24,29 +20,36 @@
                                     <p class="kpi-card__value kpi-card__value--danger">{{ $stats['inactive'] }}</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="users-grid">
-                    <aside class="users-sidebar">
-                        <div class="panel__header">
                             <div class="users-list-header">
                                 <p class="text-caption">Lista de usuarios</p>
                                 <p class="panel-text">{{ $users->total() }} registros encontrados</p>
                             </div>
                             <form method="GET" action="{{ route('admin.users.index') }}" class="users-list-toolbar block-spaced-sm">
-                                <div class="search-bar">
+                                <div class="search-bar users-list-toolbar__search">
                                     <input
                                         type="text"
                                         name="q"
                                         value="{{ $filters['q'] ?? '' }}"
-                                        placeholder="Buscar por nombre, cedula o correo"
+                                        placeholder="Buscar por nombre, cédula o correo"
                                         class="form-input"
+                                        aria-label="Buscar usuarios"
                                     >
-                                    <button type="submit" class="btn btn--secondary">
-                                        Buscar
+                                    <button
+                                        type="submit"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        title="Filtrar"
+                                        aria-label="Filtrar"
+                                    >
+                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
                                     </button>
+                                    <a
+                                        href="{{ route('admin.users.index') }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Limpiar filtros"
+                                        aria-label="Limpiar filtros"
+                                    >
+                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                    </a>
                                 </div>
                                 <div class="users-filter-actions">
                                     <label class="users-filter-toggle">
@@ -59,12 +62,36 @@
                                         >
                                         <span>Mostrar usuarios inactivos</span>
                                     </label>
-                                    <a
-                                        href="{{ route('admin.users.create') }}"
-                                        class="users-add-btn"
-                                        aria-label="Nuevo usuario"
-                                        title="Nuevo usuario"
-                                    ><span class="users-add-btn__glyph" aria-hidden="true">+</span></a>
+                                    {{-- Acciones chrome: Editar (si hay selección) + Nuevo --}}
+                                    <div class="users-filter-actions__icons" role="group" aria-label="Acciones de usuario">
+                                        @if ($selectedUser)
+                                            <a
+                                                href="{{ route('admin.users.edit', $selectedUser) }}"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                aria-label="Editar usuario"
+                                                title="Editar usuario"
+                                            >
+                                                <x-lucide-pencil width="18" height="18" aria-hidden="true" />
+                                            </a>
+                                        @else
+                                            <span
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost users-filter-actions__icon--disabled"
+                                                aria-disabled="true"
+                                                title="Seleccione un usuario para editar"
+                                                aria-label="Editar usuario (seleccione uno en la lista)"
+                                            >
+                                                <x-lucide-pencil width="18" height="18" aria-hidden="true" />
+                                            </span>
+                                        @endif
+                                        <a
+                                            href="{{ route('admin.users.create') }}"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                            aria-label="Nuevo usuario"
+                                            title="Nuevo usuario"
+                                        >
+                                            <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                        </a>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -142,9 +169,6 @@
                                             <span class="status-pill status-pill--muted">
                                                 {{ $selectedUser->roles->pluck('name')->implode(', ') ?: 'Sin rol' }}
                                             </span>
-                                            <a href="{{ route('admin.users.edit', $selectedUser) }}" class="btn btn--info">
-                                                Editar usuario
-                                            </a>
                                         </div>
                                     </div>
                                 </div>

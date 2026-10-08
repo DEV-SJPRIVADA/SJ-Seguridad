@@ -23,11 +23,22 @@
                     <span class="status-pill status-pill--muted">
                         {{ $selectedRole ?: 'Sin rol' }}
                     </span>
-                    <a href="{{ route('admin.users.index', ['selected' => $user->id]) }}" class="btn btn--secondary btn--sm">
-                        Volver al listado
+                    <a
+                        href="{{ route('admin.users.index', ['selected' => $user->id]) }}"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        title="Volver al listado"
+                        aria-label="Volver al listado"
+                    >
+                        <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
-                    <button type="submit" form="user-permissions-form" class="btn btn--primary btn--sm">
-                        Actualizar usuario
+                    <button
+                        type="submit"
+                        form="user-permissions-form"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                        title="Actualizar usuario"
+                        aria-label="Actualizar usuario"
+                    >
+                        <x-lucide-save width="18" height="18" aria-hidden="true" />
                     </button>
                 </div>
             </div>

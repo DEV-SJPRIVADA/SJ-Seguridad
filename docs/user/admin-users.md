@@ -50,14 +50,14 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 
 ### Consultar usuarios
 
-1. En el listado, use el campo de busqueda para filtrar por nombre o correo.
+1. En el listado, use el campo de búsqueda y el icono de lupa para filtrar por nombre, cédula o correo; el icono **X** limpia los filtros.
 2. Por defecto solo se muestran usuarios **activos**.
 3. Marque **Mostrar usuarios inactivos** si necesita ver cuentas deshabilitadas.
 4. Seleccione un usuario del listado para ver su resumen y permisos efectivos.
 
 ### Crear un usuario
 
-1. Pulse **Crear usuario** o equivalente.
+1. En la barra del listado, pulse el icono **+** (Nuevo usuario).
 2. En la pestana **Usuario**, complete: nombre, correo, area asignada, rol y contrasena temporal si aplica.
 3. Indique si el usuario debe **cambiar la contrasena** en el primer ingreso.
 4. En la pestana **Que puede hacer**, asigne permisos en tres bloques:
@@ -69,10 +69,11 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 
 ### Editar un usuario
 
-1. Localice al usuario en el listado y abra **Editar**.
-2. Modifique datos personales, area, rol o estado activo segun necesite.
-3. Ajuste permisos en la pestana **Que puede hacer**.
-4. Guarde los cambios.
+1. Seleccione al usuario en el listado.
+2. Pulse el icono de lápiz (**Editar usuario**) junto a Nuevo.
+3. Modifique datos personales, área, rol o estado activo según necesite.
+4. Ajuste permisos en la pestaña **Qué puede hacer**.
+5. Guarde los cambios.
 
 ### Desactivar un usuario
 
@@ -92,6 +93,10 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-10-08 | Agent | Editar usuario: acciones Volver/Guardar/Cancelar/Sedes/Copiar acceso como iconos. |
+| 1.6 | 2026-10-08 | Agent | KPIs (total/activos/bloqueados) encima de Lista de usuarios; sin cabecera soft. |
+| 1.5 | 2026-10-08 | Agent | Listado: Buscar y Limpiar filtros como iconos (lupa / X). |
+| 1.4 | 2026-10-08 | Agent | Listado: icono Editar usuario junto a Nuevo (requiere selección). |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial — guia de usuario Admin Users |
 | 1.1 | 2026-07-22 | Alineacion documental | Sincronizada con matriz DOCUMENTATION.md |
 | 1.3 | 2026-08-19 | Alineacion documental | Bloque **Solicitar en su area**; crear/mis compras no se marcan en transversal |
