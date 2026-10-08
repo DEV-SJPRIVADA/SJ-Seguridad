@@ -34,6 +34,7 @@ return [
         'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
         'plantillas_word.view' => 'Plantillas Word: Ver tipos y plantillas',
         'plantillas_word.manage' => 'Plantillas Word: Administrar tipos y plantillas',
+        'cartas_notificacion.edit' => 'Cartas Notificación: Generar',
         'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Masivos y Seguimientos)',
         'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
@@ -140,6 +141,7 @@ return [
         'reportes_novedades' => 'MT-GH-04 Novedades',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
+        'cartas_notificacion' => 'Cartas Notificación',
         'documentos' => 'Biblioteca Calidad',
     ],
 
@@ -184,6 +186,10 @@ return [
             'base_area_tab' => false,
         ],
         'plantillas_word' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'cartas_notificacion' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
@@ -446,6 +452,7 @@ return [
                             'view.board.gestion_humana.ficha_empleados',
                             'view.board.gestion_humana.archivo',
                             'view.board.gestion_humana.plantillas_word',
+                            'view.board.gestion_humana.cartas_notificacion',
                             'view.board.gestion_humana.desvinculaciones',
                             'view.board.gestion_humana.cursos',
                             'view.board.gestion_humana.formacion',
@@ -475,6 +482,12 @@ return [
                         'permissions' => [
                             'plantillas_word.view',
                             'plantillas_word.manage',
+                        ],
+                    ],
+                    'cartas_notificacion' => [
+                        'label' => 'Cartas Notificación',
+                        'permissions' => [
+                            'cartas_notificacion.edit',
                         ],
                     ],
                     'desvinculaciones' => [

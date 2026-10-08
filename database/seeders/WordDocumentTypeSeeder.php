@@ -26,5 +26,14 @@ class WordDocumentTypeSeeder extends Seeder
                 'sort_order' => 3,
             ]
         );
+
+        WordDocumentType::query()->firstOrCreate(
+            ['code' => 'cartas_notificacion'],
+            [
+                'name' => 'Cartas Notificación',
+                'is_active' => true,
+                'sort_order' => 4,
+            ]
+        );
     }
 }

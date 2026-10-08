@@ -192,6 +192,24 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
+  - `cartas_notificacion` — **Cartas Notificación** (`view.board.gestion_humana.cartas_notificacion` + **solo** `cartas_notificacion.edit`; **sin** `.view`)
+
+### Cartas Notificación (Gestion humana)
+
+Tablero **Cartas Notificación**: grilla directa (sin Dashboard / sin pestañas) para armar lote en memoria y generar Word/ZIP. Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`). Independiente de Cliente interno y de Ficha empleados.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.cartas_notificacion` | Ver tablero **Cartas Notificación** en sidebar GH |
+| `cartas_notificacion.edit` | Entrar a la pantalla + lookup + Excel a grilla + generar/descargar (**no** existe `cartas_notificacion.view`) |
+
+- Servicio: `CartasNotificacionAccessService` — `canViewBoard` = board **∨** edit **∨** bypass; `canEdit` = edit **∨** bypass.
+- Solo board (sin edit): ve el enlace en sidebar; **403** al entrar a index y en POST (mensaje: necesita permiso de generar).
+- Bypass: `manage.users`.
+- Seed / sync: `super-admin` todos; **sin** migración Spatie de assign a roles/usuarios existentes.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Cartas Notificación*). Labels: `Cartas Notificación`, `Cartas Notificación: Generar`.
+- Plantilla Word: tipo seed `cartas_notificacion`; generación exige exactamente una plantilla con archivo (ver Plantillas Word).
+- Doc: [`docs/modules/cartas-notificacion.md`](modules/cartas-notificacion.md), [`docs/user/cartas-notificacion.md`](user/cartas-notificacion.md).
 
 ### Formación (Gestion humana)
 
@@ -338,8 +356,9 @@ Permisos funcionales (independientes de Ficha empleados):
 
 - Generar y descargar **cartas** desde la ficha del empleado usa **solo** `ficha_empleados.terminate` (no requiere `plantillas_word.*`).
 - Generar **Cartas Vacaciones** desde Cliente interno usa `cliente_interno.cartas_vacaciones.edit` (no requiere `plantillas_word.*`); el tipo seed `cartas_vacaciones` vive en este tablero (regla operativa: exactamente una plantilla con archivo).
+- Generar **Cartas Notificación** desde su tablero GH usa `cartas_notificacion.edit` (no requiere `plantillas_word.*`); el tipo seed `cartas_notificacion` vive en este tablero (regla operativa: exactamente una plantilla con archivo).
 - Bypass: `manage.users`.
-- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word. Tipos seed: `desvinculacion`, `cartas_vacaciones`.
+- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word. Tipos seed: `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`.
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Plantillas Word*).
 - Doc: [`docs/modules/plantillas-word.md`](modules/plantillas-word.md), [`docs/user/plantillas-word.md`](user/plantillas-word.md).
 

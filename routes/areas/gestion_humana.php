@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GestionHumana\AcreditacionesController;
 use App\Http\Controllers\GestionHumana\ArchivoController;
+use App\Http\Controllers\GestionHumana\CartasNotificacionController;
 use App\Http\Controllers\GestionHumana\ClienteInternoController;
 use App\Http\Controllers\GestionHumana\ContratacionLetterController;
 use App\Http\Controllers\GestionHumana\CursosCatalogController;
@@ -103,6 +104,17 @@ Route::middleware(['password.changed'])
         Route::post('/plantillas/{template}/reemplazar', [PlantillasWordController::class, 'replaceTemplate'])->name('templates.replace');
         Route::delete('/plantillas/{template}', [PlantillasWordController::class, 'destroyTemplate'])->name('templates.destroy');
         Route::get('/plantillas/{template}/descargar', [PlantillasWordController::class, 'downloadTemplate'])->name('templates.download');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/cartas-notificacion')
+    ->name('gestion-humana.cartas-notificacion.')
+    ->group(function (): void {
+        Route::get('/', [CartasNotificacionController::class, 'index'])->name('index');
+        Route::post('/lookup', [CartasNotificacionController::class, 'lookup'])->name('lookup');
+        Route::get('/import-template', [CartasNotificacionController::class, 'importTemplate'])->name('import-template');
+        Route::post('/import-preview', [CartasNotificacionController::class, 'importPreview'])->name('import-preview');
+        Route::post('/generar', [CartasNotificacionController::class, 'generate'])->name('generate');
     });
 
 Route::middleware(['password.changed'])

@@ -383,6 +383,11 @@ class User extends Authenticatable
         return route('gestion-humana.plantillas-word.index');
     }
 
+    public function defaultCartasNotificacionBoardUrl(): string
+    {
+        return route('gestion-humana.cartas-notificacion.index');
+    }
+
     /**
      * @return Collection<int, string>
      */

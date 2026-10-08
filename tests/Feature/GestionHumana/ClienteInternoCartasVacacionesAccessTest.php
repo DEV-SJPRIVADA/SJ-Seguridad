@@ -31,9 +31,9 @@ class ClienteInternoCartasVacacionesAccessTest extends TestCase
     {
         $placeholders = config('employee_ficha.letter_placeholders.Cartas vacaciones');
 
-        $this->assertSame('Fecha de inicio de vacaciones', $placeholders['FECHA_INICIO']);
-        $this->assertSame('Fecha de fin de vacaciones', $placeholders['FECHA_FIN']);
-        $this->assertSame('Fecha de reintegro laboral', $placeholders['FECHA_REINTEGRO']);
+        $this->assertSame('Fecha de inicio de vacaciones (formato largo en MAYÚSCULAS)', $placeholders['FECHA_INICIO']);
+        $this->assertSame('Fecha de fin de vacaciones (formato largo en MAYÚSCULAS)', $placeholders['FECHA_FIN']);
+        $this->assertSame('Fecha de reintegro laboral (formato largo en MAYÚSCULAS)', $placeholders['FECHA_REINTEGRO']);
         $this->assertSame('Periodos de vacaciones a disfrutar', $placeholders['PERIODOS']);
         $this->assertSame('Días disfrutados de vacaciones', $placeholders['DIAS_DISFRUTADOS']);
         $this->assertSame(

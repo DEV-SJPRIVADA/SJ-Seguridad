@@ -63,6 +63,10 @@ return [
             'label' => 'Cliente interno',
             'area' => 'gestion_humana',
         ],
+        'cartas_notificacion' => [
+            'label' => 'Cartas Notificación',
+            'area' => 'gestion_humana',
+        ],
         'acreditaciones' => [
             'label' => 'Acreditaciones',
             'area' => 'gestion_humana',

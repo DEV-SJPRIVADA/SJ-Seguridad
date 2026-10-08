@@ -170,7 +170,7 @@ Factories: `ClienteInternoEstadoFactory`, `ClienteInternoTipoSolicitudFactory`, 
 | `ClienteInternoDashboardService` | KPIs + charts payload; default año; bins distribución |
 | `ClienteInternoCatalogService` | CRUD catálogos; bloqueo DELETE con refs; desactivar OK |
 | `ClienteInternoCartasVacacionesGeneratorService` | Lookup ficha; exactamente 1 plantilla `cartas_vacaciones`; 1→docx / N→zip; temp cleanup |
-| `LetterVariableBuilder::buildForCartasVacaciones` | Variables fila vacaciones (fechas largo ES; FIRMA name / CARGO_FIRMA code) |
+| `LetterVariableBuilder::buildForCartasVacaciones` | Variables fila vacaciones (fechas largo ES en MAYÚSCULAS; FIRMA name / CARGO_FIRMA code) |
 | `ClienteInternoAuditLogService` | Wrapper audit (`cliente_interno` / `gestion_humana`) |
 
 Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplateManager`, `WordTempDirectory`, `ZipArchive`. Sin jobs ni mail.
@@ -232,7 +232,7 @@ Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplat
     - >1: «Hay más de una plantilla activa de Cartas Vacaciones. Deje solo una activa.»
 29. 1 fila → `.docx`; 2+ → `.zip` (nombre incluye cédula/slug). Sin path en BD ni storage permanente; `deleteFileAfterSend` + cleanup `workDir`.
 30. Límite máximo 500 filas (`config/cliente_interno.cartas_vacaciones.max_rows`).
-31. Placeholders fila: `${CEDULA}` `${NOMBRE_COMPLETO}` `${FECHA_INICIO}` `${FECHA_FIN}` `${FECHA_REINTEGRO}` `${PERIODOS}` `${DIAS_DISFRUTADOS}` `${FIRMA}` `${CARGO_FIRMA}` (+ `${FECHA}` emisión). Si hay ficha por cédula, también `${CARGO}`, `${CIUDAD_RESIDENCIA}`, `${DOCUMENTO}` y resto de perfil del catálogo. Detalle en [`plantillas-word.md`](plantillas-word.md).
+31. Placeholders fila: `${CEDULA}` `${NOMBRE_COMPLETO}` `${FECHA_INICIO}` `${FECHA_FIN}` `${FECHA_REINTEGRO}` `${PERIODOS}` `${DIAS_DISFRUTADOS}` `${FIRMA}` `${CARGO_FIRMA}` (+ `${FECHA}` emisión). Fechas de vacaciones (`FECHA_INICIO`/`FIN`/`REINTEGRO`) en formato largo **MAYÚSCULAS**. Si hay ficha por cédula, también `${CARGO}`, `${CIUDAD_RESIDENCIA}`, `${DOCUMENTO}` y resto de perfil del catálogo. Detalle en [`plantillas-word.md`](plantillas-word.md).
 32. Usuario solo `cartas_vacaciones.view`: ve pestaña en solo lectura / empty-state informativo; sin botón generar ni lookup operativo.
 
 ### Auditoría

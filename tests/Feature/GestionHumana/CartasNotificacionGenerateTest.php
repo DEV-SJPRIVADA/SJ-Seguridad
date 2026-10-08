@@ -8,19 +8,21 @@ use App\Models\PayrollCatalogItem;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Models\User;
 use App\Models\WordDocumentType;
-use App\Services\GestionHumana\ClienteInternoCartasVacacionesGeneratorService;
 use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use Tests\TestCase;
 use ZipArchive;
 
-class ClienteInternoCartasVacacionesGenerateTest extends TestCase
+class CartasNotificacionGenerateTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -35,37 +37,48 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         Config::set('audit.queue', false);
     }
 
-    public function test_view_only_user_gets_403_on_lookup_and_generate(): void
+    public function test_board_only_user_gets_403_on_lookup_generate_and_import(): void
     {
-        $user = $this->cartasViewerUser();
+        $user = $this->boardOnlyUser();
 
         $this->actingAs($user)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.lookup'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.lookup'), [
                 'document_number' => '123',
             ])
             ->assertForbidden();
 
         $this->actingAs($user)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [$this->validRow()],
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('gestion-humana.cartas-notificacion.import-template'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->postJson(route('gestion-humana.cartas-notificacion.import-preview'), [
+                'file' => UploadedFile::fake()->create('x.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
             ])
             ->assertForbidden();
     }
 
-    public function test_edit_user_sees_grid_and_lookup_active_inactive_not_found(): void
+    public function test_edit_user_lookup_active_inactive_not_found(): void
     {
-        $editor = $this->cartasEditorUser();
+        $editor = $this->editorUser();
         $this->createProfile('1098765432', 'Ana Activa', EmployeeFichaProfile::STATUS_ACTIVO);
         $this->createProfile('1098765433', 'Bruno Inactivo', EmployeeFichaProfile::STATUS_DESVINCULADO);
 
         $this->actingAs($editor)
-            ->get(route('gestion-humana.cliente-interno.cartas-vacaciones'))
+            ->get(route('gestion-humana.cartas-notificacion.index'))
             ->assertOk()
             ->assertSee('Agregar varias cédulas', false)
-            ->assertSee('Generar cartas', false);
+            ->assertSee('Generar cartas', false)
+            ->assertSee('Descargar plantilla Excel', false);
 
         $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.lookup'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.lookup'), [
                 'document_numbers' => ['1098765432', '1098765433', '9999999999'],
             ])
             ->assertOk()
@@ -79,51 +92,32 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
             ->assertJsonPath('results.2.nombre_completo', '');
     }
 
-    public function test_generate_validates_required_dates_and_duplicate_cedula(): void
+    public function test_generate_validates_required_fields_and_duplicate_cedula(): void
     {
-        $editor = $this->cartasEditorUser();
+        $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
         $this->seedExactlyOneTemplate();
 
         $base = $this->validRow($signatory->id);
 
         $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [[
                     ...$base,
                     'nombre_completo' => '',
-                    'fecha_inicio' => null,
+                    'duracion_contrato' => 9,
+                    'fecha_terminacion' => null,
                 ]],
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['rows.0.nombre_completo', 'rows.0.fecha_inicio']);
+            ->assertJsonValidationErrors([
+                'rows.0.nombre_completo',
+                'rows.0.duracion_contrato',
+                'rows.0.fecha_terminacion',
+            ]);
 
         $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
-                'rows' => [[
-                    ...$base,
-                    'fecha_inicio' => '2026-06-10',
-                    'fecha_fin' => '2026-06-05',
-                    'fecha_reintegro' => '2026-06-12',
-                ]],
-            ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['rows.0.fecha_fin']);
-
-        $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
-                'rows' => [[
-                    ...$base,
-                    'fecha_inicio' => '2026-06-01',
-                    'fecha_fin' => '2026-06-10',
-                    'fecha_reintegro' => '2026-06-08',
-                ]],
-            ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['rows.0.fecha_reintegro']);
-
-        $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [
                     $base,
                     [...$base, 'nombre_completo' => 'Otra persona'],
@@ -135,43 +129,43 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
 
     public function test_generate_blocks_zero_or_multiple_templates(): void
     {
-        $editor = $this->cartasEditorUser();
+        $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
         $row = $this->validRow($signatory->id);
 
         $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [$row],
             ])
             ->assertStatus(422)
             ->assertJsonFragment([
-                'No hay plantilla activa de Cartas Vacaciones. Cargue una en Plantillas Word.',
+                'No hay plantilla activa de Cartas Notificación. Cargue una en Plantillas Word.',
             ]);
 
         $this->seedTemplates(2);
 
         $this->actingAs($editor)
-            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [$row],
             ])
             ->assertStatus(422)
             ->assertJsonFragment([
-                'Hay más de una plantilla activa de Cartas Vacaciones. Deje solo una activa.',
+                'Hay más de una plantilla activa de Cartas Notificación. Deje solo una activa.',
             ]);
     }
 
     public function test_generate_one_row_returns_docx_and_audits_without_massive_pii(): void
     {
-        $editor = $this->cartasEditorUser();
+        $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
         $template = $this->seedExactlyOneTemplate(
-            '${CEDULA} ${NOMBRE_COMPLETO} ${FECHA_INICIO} ${FECHA_FIN} ${FECHA_REINTEGRO} ${PERIODOS} ${DIAS_DISFRUTADOS} ${FIRMA} ${CARGO_FIRMA}'
+            '${CEDULA} ${NOMBRE_COMPLETO} ${FECHA_TERMINACION} ${FIRMA} ${CARGO_FIRMA}'
         );
 
-        $row = $this->validRow($signatory->id, '1099000111', 'Carla Vacaciones');
+        $row = $this->validRow($signatory->id, '1099000111', 'Carla Notificación');
 
         $response = $this->actingAs($editor)
-            ->post(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->post(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [$row],
             ]);
 
@@ -180,13 +174,13 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         $this->assertStringContainsString('.docx', (string) $response->headers->get('content-disposition'));
 
         $this->assertDatabaseHas('audit_logs', [
-            'module' => 'cliente_interno',
-            'event_type' => 'cartas_vacaciones_generate',
+            'module' => 'cartas_notificacion',
+            'event_type' => 'cartas_notificacion_generate',
             'action' => 'generate',
         ]);
 
         $audit = AuditLog::query()
-            ->where('event_type', 'cartas_vacaciones_generate')
+            ->where('event_type', 'cartas_notificacion_generate')
             ->latest('id')
             ->first();
 
@@ -201,7 +195,7 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
 
     public function test_generate_multiple_rows_returns_zip(): void
     {
-        $editor = $this->cartasEditorUser();
+        $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
         $this->seedExactlyOneTemplate('${CEDULA} ${NOMBRE_COMPLETO}');
 
@@ -211,7 +205,7 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         ];
 
         $response = $this->actingAs($editor)
-            ->post(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+            ->post(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => $rows,
             ]);
 
@@ -219,7 +213,7 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         $response->assertDownload();
         $this->assertStringContainsString('.zip', (string) $response->headers->get('content-disposition'));
 
-        $temp = tempnam(sys_get_temp_dir(), 'cv-zip-');
+        $temp = tempnam(sys_get_temp_dir(), 'cn-zip-');
         $this->assertNotFalse($temp);
         file_put_contents($temp, $response->streamedContent());
 
@@ -230,51 +224,13 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         @unlink($temp);
 
         $this->assertDatabaseHas('audit_logs', [
-            'module' => 'cliente_interno',
-            'event_type' => 'cartas_vacaciones_generate',
+            'module' => 'cartas_notificacion',
+            'event_type' => 'cartas_notificacion_generate',
             'action' => 'generate',
         ]);
     }
 
-    public function test_firma_and_cargo_firma_come_from_catalog(): void
-    {
-        $builder = app(LetterVariableBuilder::class);
-        $signatory = $this->seedSignatory();
-
-        $variables = $builder->buildForCartasVacaciones([
-            'cedula' => '1',
-            'nombre_completo' => 'Test',
-            'fecha_inicio' => '2026-01-01',
-            'fecha_fin' => '2026-01-05',
-            'fecha_reintegro' => '2026-01-06',
-            'periodos' => '2025',
-            'dias_disfrutados' => '5',
-            'signatory_id' => $signatory->id,
-        ]);
-
-        $this->assertSame('Directora de GH', $variables['FIRMA']);
-        $this->assertSame('DIR_GH', $variables['CARGO_FIRMA']);
-        $this->assertSame('1 DE ENERO DEL 2026', $variables['FECHA_INICIO']);
-        $this->assertSame('5 DE ENERO DEL 2026', $variables['FECHA_FIN']);
-        $this->assertSame('6 DE ENERO DEL 2026', $variables['FECHA_REINTEGRO']);
-    }
-
-    public function test_compute_vacation_dates_skips_sundays_and_sets_reintegro_next_day(): void
-    {
-        $service = app(ClienteInternoCartasVacacionesGeneratorService::class);
-
-        // Lunes 1 jun 2026 + 5 días (sin domingo) → viernes 5; reintegro sábado 6.
-        $five = $service->computeVacationDates('2026-06-01', 5);
-        $this->assertSame('2026-06-05', $five['fecha_fin']);
-        $this->assertSame('2026-06-06', $five['fecha_reintegro']);
-
-        // Sábado 6 jun + 2 días → sáb(1), salta dom, lun 8(2); reintegro mar 9.
-        $fromSaturday = $service->computeVacationDates('2026-06-06', 2);
-        $this->assertSame('2026-06-08', $fromSaturday['fecha_fin']);
-        $this->assertSame('2026-06-09', $fromSaturday['fecha_reintegro']);
-    }
-
-    public function test_build_for_cartas_vacaciones_fills_ficha_cargo_ciudad_and_cedula(): void
+    public function test_build_for_cartas_notificacion_fecha_terminacion_long_es_and_firma(): void
     {
         $this->createProfile('1099007788', 'Laura Pérez', EmployeeFichaProfile::STATUS_ACTIVO, [
             'position_name' => 'Supervisora de seguridad',
@@ -284,59 +240,102 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
         $builder = app(LetterVariableBuilder::class);
         $signatory = $this->seedSignatory();
 
-        $variables = $builder->buildForCartasVacaciones([
+        $variables = $builder->buildForCartasNotificacion([
             'cedula' => '1099007788',
             'nombre_completo' => 'Laura Pérez (manual)',
-            'fecha_inicio' => '2026-01-01',
-            'fecha_fin' => '2026-01-05',
-            'fecha_reintegro' => '2026-01-06',
-            'periodos' => '2025',
-            'dias_disfrutados' => '5',
+            'duracion_contrato' => 12,
+            'fecha_terminacion' => '2026-06-15',
             'signatory_id' => $signatory->id,
         ]);
 
         $this->assertSame('1099007788', $variables['CEDULA']);
         $this->assertSame('1099007788', $variables['DOCUMENTO']);
         $this->assertSame('Laura Pérez (manual)', $variables['NOMBRE_COMPLETO']);
+        $this->assertSame('12', $variables['DURACION_CONTRATO']);
+        $this->assertSame('15 DE JUNIO DEL 2026', $variables['FECHA_TERMINACION']);
+        $this->assertSame('Directora de GH', $variables['FIRMA']);
+        $this->assertSame('DIR_GH', $variables['CARGO_FIRMA']);
         $this->assertSame('Supervisora de seguridad', $variables['CARGO']);
-        $this->assertSame('Bucaramanga', $variables['CIUDAD_RESIDENCIA']);
         $this->assertSame('Bucaramanga', $variables['CIUDAD']);
+    }
+
+    public function test_import_template_downloads_xlsx(): void
+    {
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.cartas-notificacion.import-template'))
+            ->assertOk()
+            ->assertHeader(
+                'content-type',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            );
+    }
+
+    public function test_import_preview_hydrates_rows_without_persisting(): void
+    {
+        $editor = $this->editorUser();
+        $signatory = $this->seedSignatory();
+        $this->createProfile('3011111111', 'Excel Activo', EmployeeFichaProfile::STATUS_ACTIVO);
+
+        $path = $this->makeImportXlsx([
+            ['3011111111', '', '6', '2026-07-01', $signatory->name],
+            ['3022222222', 'Manual Nombre', '12', '2026-08-01', 'NO_EXISTE'],
+        ]);
+
+        $profilesBefore = EmployeeFichaProfile::query()->count();
+
+        $response = $this->actingAs($editor)
+            ->post(route('gestion-humana.cartas-notificacion.import-preview'), [
+                'file' => new UploadedFile($path, 'lote.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true),
+            ]);
+
+        $response->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('rows.0.cedula', '3011111111')
+            ->assertJsonPath('rows.0.nombre_completo', 'Excel Activo')
+            ->assertJsonPath('rows.0.duracion_contrato', 6)
+            ->assertJsonPath('rows.0.signatory_id', $signatory->id)
+            ->assertJsonPath('rows.0.fecha_terminacion', '2026-07-01')
+            ->assertJsonPath('rows.1.cedula', '3022222222')
+            ->assertJsonPath('rows.1.nombre_completo', 'Manual Nombre')
+            ->assertJsonPath('rows.1.duracion_contrato', 12)
+            ->assertJsonPath('rows.1.signatory_id', null);
+
+        $this->assertSame($profilesBefore, EmployeeFichaProfile::query()->count());
+        @unlink($path);
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function validRow(?int $signatoryId = null, string $cedula = '1099000001', string $nombre = 'Empleado Vacaciones'): array
+    private function validRow(?int $signatoryId = null, string $cedula = '1099000001', string $nombre = 'Empleado Notificación'): array
     {
         return [
             'cedula' => $cedula,
             'nombre_completo' => $nombre,
-            'fecha_inicio' => '2026-06-01',
-            'fecha_fin' => '2026-06-15',
-            'fecha_reintegro' => '2026-06-16',
-            'periodos' => '2024-2025',
-            'dias_disfrutados' => '15',
+            'duracion_contrato' => 6,
+            'fecha_terminacion' => '2026-06-15',
             'signatory_id' => $signatoryId ?? 1,
         ];
     }
 
-    private function cartasViewerUser(): User
+    private function boardOnlyUser(): User
     {
         $user = User::factory()->create(['must_change_password' => false]);
         $user->givePermissionTo([
-            'view.board.gestion_humana.cliente_interno',
-            'cliente_interno.cartas_vacaciones.view',
+            'view.board.gestion_humana.cartas_notificacion',
         ]);
 
         return $user;
     }
 
-    private function cartasEditorUser(): User
+    private function editorUser(): User
     {
         $user = User::factory()->create(['must_change_password' => false]);
         $user->givePermissionTo([
-            'view.board.gestion_humana.cliente_interno',
-            'cliente_interno.cartas_vacaciones.edit',
+            'view.board.gestion_humana.cartas_notificacion',
+            'cartas_notificacion.edit',
         ]);
 
         return $user;
@@ -365,22 +364,22 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
     private function seedTemplates(int $count, string $content = '${CEDULA} ${NOMBRE_COMPLETO}'): array
     {
         $type = WordDocumentType::query()->firstOrCreate(
-            ['code' => 'cartas_vacaciones'],
+            ['code' => 'cartas_notificacion'],
             [
-                'name' => 'Cartas Vacaciones',
+                'name' => 'Cartas Notificación',
                 'is_active' => true,
-                'sort_order' => 3,
+                'sort_order' => 4,
             ],
         );
 
         $templates = [];
         for ($i = 1; $i <= $count; $i++) {
-            $path = 'ficha-empleados/letter-templates/'.$type->id.'/tpl-cv-'.$i.'.docx';
+            $path = 'ficha-empleados/letter-templates/'.$type->id.'/tpl-cn-'.$i.'.docx';
             Storage::disk('local')->put($path, $this->makeDocxBinary($content));
 
             $templates[] = TerminationLetterDocumentTemplate::query()->create([
                 'word_document_type_id' => $type->id,
-                'label' => 'Plantilla CV '.$i,
+                'label' => 'Plantilla CN '.$i,
                 'sort_order' => $i,
                 'template_path' => $path,
             ]);
@@ -401,6 +400,28 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
             'hire_date' => now()->subYear()->toDateString(),
             'position_name' => 'Vigilante',
         ], $extra));
+    }
+
+    /**
+     * @param  list<list<string>>  $dataRows
+     */
+    private function makeImportXlsx(array $dataRows): string
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray(['CEDULA', 'NOMBRE_COMPLETO', 'DURACION_CONTRATO', 'FECHA_TERMINACION', 'FIRMA'], null, 'A1');
+        $rowNum = 2;
+        foreach ($dataRows as $row) {
+            $sheet->fromArray($row, null, 'A'.$rowNum);
+            $rowNum++;
+        }
+
+        $temp = tempnam(sys_get_temp_dir(), 'cn-xlsx-');
+        $path = $temp.'.xlsx';
+        @unlink($temp);
+        (new Xlsx($spreadsheet))->save($path);
+
+        return $path;
     }
 
     private function makeDocxBinary(string $content): string

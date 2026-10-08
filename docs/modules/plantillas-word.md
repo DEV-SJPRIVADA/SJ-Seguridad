@@ -1,11 +1,11 @@
 ﻿# Modulo Plantillas Word
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/plantillas-word.md`.
-> Area: Gestion humana. Features: FEAT-029 (evoluciona FEAT-027); FEAT-043 (tipo `cartas_vacaciones` + flujo desde Cliente interno).
+> Area: Gestion humana. Features: FEAT-029 (evoluciona FEAT-027); FEAT-043 (tipo `cartas_vacaciones` + flujo desde Cliente interno); FEAT-044 (tipo `cartas_notificacion` + tablero Cartas Notificación).
 
 ## Objetivo
 
-Administrar **tipos de documento** y **plantillas Word (.docx)** en un tablero propio del sidebar de Gestion Humana, independientes de la causal de desvinculacion. Las plantillas alimentan flujos de generación externos: tipo `desvinculacion` → modal **Generar cartas** en Ficha empleados; tipo `cartas_vacaciones` → pestaña **Cartas Vacaciones** en Cliente interno (1→`.docx` / N→`.zip`).
+Administrar **tipos de documento** y **plantillas Word (.docx)** en un tablero propio del sidebar de Gestion Humana, independientes de la causal de desvinculacion. Las plantillas alimentan flujos de generación externos: tipo `desvinculacion` → modal **Generar cartas** en Ficha empleados; tipo `cartas_vacaciones` → pestaña **Cartas Vacaciones** en Cliente interno (1→`.docx` / N→`.zip`); tipo `cartas_notificacion` → tablero **Cartas Notificación** (1→`.docx` / N→`.zip`).
 
 ## Alcance actual
 
@@ -15,8 +15,9 @@ Administrar **tipos de documento** y **plantillas Word (.docx)** en un tablero p
 - Generacion/descarga:
   - **Ficha empleados** — tipo `desvinculacion` (permiso `ficha_empleados.terminate`); ver [`ficha-empleados.md`](ficha-empleados.md).
   - **Cliente interno → Cartas Vacaciones** — tipo `cartas_vacaciones`; exige **exactamente una** plantilla del tipo con archivo en disco; permisos `cliente_interno.cartas_vacaciones.*`; ver [`cliente-interno.md`](cliente-interno.md).
-- Seed tipos (`WordDocumentTypeSeeder`, idempotente): `desvinculacion`, `cartas_vacaciones`. Config también declara `word_document_type_codes.contratacion` (tipo puede existir vía UI/migraciones previas). **No** migran plantillas legacy pack RENUNCIA (hay que re-subir).
-- **Fuera de alcance:** editor Word en app, envio por correo, historial de cartas generadas, seleccion de varias plantillas por lote en Cartas Vacaciones.
+  - **Cartas Notificación** (tablero GH) — tipo `cartas_notificacion`; exige **exactamente una** plantilla del tipo con archivo; permiso `cartas_notificacion.edit`; ver [`cartas-notificacion.md`](cartas-notificacion.md).
+- Seed tipos (`WordDocumentTypeSeeder`, idempotente): `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`. Config también declara `word_document_type_codes.contratacion` (tipo puede existir vía UI/migraciones previas). **No** migran plantillas legacy pack RENUNCIA (hay que re-subir).
+- **Fuera de alcance:** editor Word en app, envio por correo, historial de cartas generadas, seleccion de varias plantillas por lote en Cartas Vacaciones / Cartas Notificación.
 
 ## Rutas
 
@@ -91,7 +92,7 @@ Servicio: `App\Services\GestionHumana\PlantillasWordAccessService` â€” `can
 - `2026_08_21_121003_create_word_document_types_table.php` — create + insert seed `desvinculacion`.
 - `2026_08_21_121005_alter_termination_letter_document_templates_for_word_document_types.php` — FK tipo, cleanup filas/archivos legacy RENUNCIA, drop columnas causa/pack. `down()` no restaura RENUNCIA.
 
-Seeder: `database/seeders/WordDocumentTypeSeeder.php` (idempotente; `firstOrCreate` de `desvinculacion` y `cartas_vacaciones`); referenciado desde `DatabaseSeeder`.
+Seeder: `database/seeders/WordDocumentTypeSeeder.php` (idempotente; `firstOrCreate` de `desvinculacion`, `cartas_vacaciones` y `cartas_notificacion`); referenciado desde `DatabaseSeeder`.
 
 Config estable: `config/employee_ficha.php` → `word_document_type_codes`:
 
@@ -100,6 +101,7 @@ Config estable: `config/employee_ficha.php` → `word_document_type_codes`:
 | `desvinculacion` | `desvinculacion` | Ficha → Generar cartas (seed seeder) |
 | `contratacion` | `contratacion` | Migración `2026_08_21_164930_seed_contratacion_word_document_type` (+ config) |
 | `cartas_vacaciones` | `cartas_vacaciones` | Cliente interno → Cartas Vacaciones (seed seeder FEAT-043) |
+| `cartas_notificacion` | `cartas_notificacion` | Tablero Cartas Notificación (seed seeder FEAT-044) |
 
 Packs/causas soportadas de FEAT-027 **retirados**.
 
@@ -108,9 +110,10 @@ Packs/causas soportadas de FEAT-027 **retirados**.
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager` — paths bajo `ficha-empleados/letter-templates/{typeId}/`, CRUD archivo en disco `local`.
 - Generacion de cartas (Ficha): `TerminationLetterPackGeneratorService` — por IDs, 1→docx / N→zip, sin gate por causal; ver doc Ficha.
 - Generacion Cartas Vacaciones (Cliente interno): `ClienteInternoCartasVacacionesGeneratorService` — resuelve **exactamente 1** plantilla `cartas_vacaciones` con archivo; `LetterVariableBuilder::buildForCartasVacaciones`; DocxRenderer + Zip; sin persistencia; ver [`cliente-interno.md`](cliente-interno.md).
-- Audit plantillas (este tablero): `EmployeeFichaAuditLogService` — `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete). Audit generate cartas CI: `ClienteInternoAuditLogService` → `cartas_vacaciones_generate`.
+- Generacion Cartas Notificación (tablero GH): `CartasNotificacionGeneratorService` — resuelve **exactamente 1** plantilla `cartas_notificacion` con archivo; `LetterVariableBuilder::buildForCartasNotificacion`; DocxRenderer + Zip; sin persistencia; ver [`cartas-notificacion.md`](cartas-notificacion.md).
+- Audit plantillas (este tablero): `EmployeeFichaAuditLogService` — `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete). Audit generate cartas CI: `ClienteInternoAuditLogService` → `cartas_vacaciones_generate`. Audit generate Cartas Notificación: `CartasNotificacionAuditLogService` → `cartas_notificacion_generate`.
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — `TemplateProcessor` PhpWord con macros canónicas `${CLAVE}` (+ fallback temporal `[CLAVE]`); previo merge de split-runs en XML.
-- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder único: `build()` (ficha/periodo/entrada) y `buildForCartasVacaciones(row)` (lote CI, sin exigir periodo/entrada). Catálogo UI: `config/employee_ficha.php` → `letter_placeholders`. Modal **Variables disponibles** en `plantillas-word/index` con filtro Alpine (clave / descripción / categoría).
+- `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder único: `build()` (ficha/periodo/entrada), `buildForCartasVacaciones(row)` (lote CI) y `buildForCartasNotificacion(row)` (lote Cartas Notificación). Catálogo UI: `config/employee_ficha.php` → `letter_placeholders`. Modal **Variables disponibles** en `plantillas-word/index` con filtro Alpine (clave / descripción / categoría).
 
 ### Cómo agregar una variable nueva (checklist)
 
@@ -118,9 +121,9 @@ No hace falta tocar controladores de generación (`TerminationLetterController`,
 
 1. **Dato en sistema:** si el valor aún no existe, agregar campo (migración/modelo/formulario ficha o fila de lote) y asegurar que se guarda/recibe.
 2. **UI (copia usuario):** registrar la clave en `config/employee_ficha.php` → `letter_placeholders` (categoría + descripción). Aparece como `${CLAVE}` en Plantillas Word.
-3. **Valor al generar:** mapear la clave en `LetterVariableBuilder::build()` (ficha) y/o `buildForCartasVacaciones()` (cartas CI). Montos en letras: `App\Support\SpanishMoneyWords` (ej. `${SALARIO_EN_LETRAS}`).
+3. **Valor al generar:** mapear la clave en `LetterVariableBuilder::build()` (ficha), `buildForCartasVacaciones()` (cartas CI) y/o `buildForCartasNotificacion()` (Cartas Notificación). Montos en letras: `App\Support\SpanishMoneyWords` (ej. `${SALARIO_EN_LETRAS}`).
 4. **Probar:** plantilla con `${CLAVE}` → generar carta → el `.docx` no debe dejar `${CLAVE}` literal (salvo que el dato esté vacío).
-5. **Docs:** actualizar esta sección / `ficha-empleados.md` / `cliente-interno.md` según el flujo.
+5. **Docs:** actualizar esta sección / `ficha-empleados.md` / `cliente-interno.md` / `cartas-notificacion.md` según el flujo.
 
 **Variables de salario:** `${SALARIO}` (número formateado) y `${SALARIO_EN_LETRAS}` (texto, mayúsculas, p. ej. `UN MILLÓN QUINIENTOS MIL PESOS`). Equivalente de vínculo: `${SALARIO_VINCULO}` / `${SALARIO_VINCULO_EN_LETRAS}`.
 
@@ -134,7 +137,7 @@ Categoría UI **Cartas vacaciones** en `letter_placeholders`. Claves nuevas: `FE
 | `${NOMBRE_COMPLETO}` | Fila (manda sobre ficha si viene escrito) |
 | `${CARGO}` / `${CIUDAD_RESIDENCIA}` / demás perfil | Ficha por cédula (vacío si no hay ficha) |
 | `${CIUDAD}` / `${NOMBRE}` | Alias de `CIUDAD_RESIDENCIA` / `NOMBRE_COMPLETO` |
-| `${FECHA_INICIO}` / `${FECHA_FIN}` / `${FECHA_REINTEGRO}` | Fila; formato largo español (`j de Mes del Y`) |
+| `${FECHA_INICIO}` / `${FECHA_FIN}` / `${FECHA_REINTEGRO}` | Fila; formato largo español en **MAYÚSCULAS** (`1 DE ENERO DEL 2026`) |
 | `${PERIODOS}` | Fila (texto) |
 | `${DIAS_DISFRUTADOS}` | Fila (string) |
 | `${FIRMA}` | Catálogo `firmas` → `name` (`signatory_id`) |
@@ -144,6 +147,23 @@ Categoría UI **Cartas vacaciones** en `letter_placeholders`. Claves nuevas: `FE
 **Regla operativa CI:** debe existir **exactamente una** plantilla del tipo `cartas_vacaciones` con archivo presente (y tipo activo). 0 o >1 → ValidationException con mensaje claro (no se genera).
 
 **No requerido:** cambios en `PlantillasWordController` (ya lee el config); el generador CI reutiliza DocxRenderer / TemplateManager.
+
+### Placeholders — Cartas notificación (FEAT-044)
+
+Categoría UI **Cartas notificación** en `letter_placeholders` (orientación; reutiliza claves ya existentes). En este flujo `${FECHA_TERMINACION}` se rellena **desde la grilla** (formato largo ES), no desde vínculo/perfil.
+
+| Placeholder | Origen en `buildForCartasNotificacion` |
+| --- | --- |
+| `${CEDULA}` / `${DOCUMENTO}` | Fila (input); `DOCUMENTO` = misma cédula |
+| `${NOMBRE_COMPLETO}` / `${NOMBRE}` | Fila (manda sobre ficha si viene escrito) |
+| `${DURACION_CONTRATO}` | Fila / Excel: `6` o `12` (meses) |
+| `${FECHA_TERMINACION}` | Fila; formato largo español en **MAYÚSCULAS** (`15 DE JUNIO DEL 2026`) |
+| `${FIRMA}` / `${CARGO_FIRMA}` | Catálogo `firmas` → `name` / `code` (`signatory_id`) |
+| `${FECHA}` | Fecha de emisión (hoy) |
+| Resto de perfil (`${CARGO}`, `${CIUDAD_RESIDENCIA}`, etc.) | Ficha por cédula (vacío si no hay ficha) |
+| `${CIUDAD}` | Alias de `CIUDAD_RESIDENCIA` |
+
+**Regla operativa Cartas Notificación:** debe existir **exactamente una** plantilla del tipo `cartas_notificacion` con archivo presente (y tipo activo). 0 o >1 → ValidationException con mensaje claro (no se genera). Generador: `CartasNotificacionGeneratorService`; permiso `cartas_notificacion.edit`.
 
 ### DocxRenderer: manejo de placeholders fragmentados (split-runs)
 
@@ -156,9 +176,10 @@ Microsoft Word puede dividir un placeholder como `${NOMBRE_COMPLETO}` en múltip
 3. Agregar plantilla: etiqueta + tipo **activo** + `.docx` obligatorio.
 4. Reemplazar: solo archivo; etiqueta y tipo no cambian.
 5. Eliminar plantilla: confirmacion; borra fila + archivo en disco.
-6. Tras migrate/seed: existen tipos `desvinculacion` y `cartas_vacaciones`; **cero** plantillas legacy RENUNCIA — operadores deben **re-subir** las de desvinculación.
+6. Tras migrate/seed: existen tipos `desvinculacion`, `cartas_vacaciones` y `cartas_notificacion`; **cero** plantillas legacy RENUNCIA — operadores deben **re-subir** las de desvinculación.
 7. El modal Generar en ficha solo lista plantillas tipo `desvinculacion` con archivo presente (detalle en [`ficha-empleados.md`](ficha-empleados.md)).
 8. Cartas Vacaciones (Cliente interno): generación bloqueada si no hay exactamente una plantilla del tipo `cartas_vacaciones` con archivo en disco (detalle en [`cliente-interno.md`](cliente-interno.md)). No editar el `code` seed de ese tipo.
+9. Cartas Notificación (tablero GH): generación bloqueada si no hay exactamente una plantilla del tipo `cartas_notificacion` con archivo en disco (detalle en [`cartas-notificacion.md`](cartas-notificacion.md)). No editar el `code` seed de ese tipo.
 
 ## JavaScript / assets (si aplica)
 
@@ -201,8 +222,9 @@ Para evitar problemas con placeholders no reemplazados:
 3. **Evitar formato mixto dentro del placeholder:** No aplicar negrita/color/subrayado a partes del placeholder.
 4. **No usar estilos de parrafo que Word transforme:** Algunos estilos de lista o encabezado fuerzan saltos de run. Usar estilo "Normal".
 5. **Re-guardar como .docx despues de editar:** Archivo > Guardar como > `.docx` (no `.doc`).
-6. **Mismo motor para todos los tipos:** desvinculacion, contratacion, cartas_vacaciones y tipos futuros usan el mismo catálogo/renderer; si el dato no existe en el flujo, la variable queda vacía.
+6. **Mismo motor para todos los tipos:** desvinculacion, contratacion, cartas_vacaciones, cartas_notificacion y tipos futuros usan el mismo catálogo/renderer; si el dato no existe en el flujo, la variable queda vacía.
 7. **Cartas Vacaciones:** en la plantilla use las variables de la categoría **Cartas vacaciones** (`${FECHA_INICIO}`, `${FECHA_FIN}`, `${FECHA_REINTEGRO}`, `${PERIODOS}`, `${DIAS_DISFRUTADOS}`, más `${CEDULA}`, `${NOMBRE_COMPLETO}`, `${FIRMA}`, `${CARGO_FIRMA}`). Deje **solo una** plantilla activa de ese tipo.
+8. **Cartas Notificación:** use la categoría **Cartas notificación** (`${CEDULA}`, `${NOMBRE_COMPLETO}`, `${DURACION_CONTRATO}` 6|12, `${FECHA_TERMINACION}` desde la grilla, `${FIRMA}`, `${CARGO_FIRMA}`, `${FECHA}`). Deje **solo una** plantilla activa de ese tipo.
 
 ## Tests
 
@@ -211,12 +233,14 @@ Para evitar problemas con placeholders no reemplazados:
 - `tests/Feature/GestionHumana/WordDocumentTypeSchemaTest.php`
 - Generacion/cartas Ficha: `tests/Feature/GestionHumana/TerminationLetterPackTest.php`
 - Generacion Cartas Vacaciones CI: `tests/Feature/GestionHumana/ClienteInternoCartasVacacionesGenerateTest.php`
+- Generacion Cartas Notificación: `tests/Feature/GestionHumana/CartasNotificacionGenerateTest.php`
 
 ## Referencias
 
-- Feature Briefs: [`docs/briefs/FEAT-029.md`](../briefs/FEAT-029.md), [`docs/briefs/FEAT-043.md`](../briefs/FEAT-043.md)
-- Reviews: [`docs/reviews/FEAT-029.md`](../reviews/FEAT-029.md), [`docs/reviews/FEAT-043.md`](../reviews/FEAT-043.md)
+- Feature Briefs: [`docs/briefs/FEAT-029.md`](../briefs/FEAT-029.md), [`docs/briefs/FEAT-043.md`](../briefs/FEAT-043.md), [`docs/briefs/FEAT-044.md`](../briefs/FEAT-044.md)
+- Reviews: [`docs/reviews/FEAT-029.md`](../reviews/FEAT-029.md), [`docs/reviews/FEAT-043.md`](../reviews/FEAT-043.md), [`docs/reviews/FEAT-044.md`](../reviews/FEAT-044.md)
 - Doc usuario: [`docs/user/plantillas-word.md`](../user/plantillas-word.md)
 - Cartas en ficha: [`docs/modules/ficha-empleados.md`](ficha-empleados.md)
 - Cartas Vacaciones CI: [`docs/modules/cliente-interno.md`](cliente-interno.md)
+- Cartas Notificación: [`docs/modules/cartas-notificacion.md`](cartas-notificacion.md)
 - Control de acceso: [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md)

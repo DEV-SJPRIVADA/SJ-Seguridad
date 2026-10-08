@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\CartasNotificacionAccessService;
 use App\Services\Access\ClienteInternoAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
@@ -30,6 +31,7 @@ class SidebarVisibilityService
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillasWordAccessService $plantillasWordAccess,
+        private readonly CartasNotificacionAccessService $cartasNotificacionAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
@@ -64,6 +66,7 @@ class SidebarVisibilityService
             'ficha_empleados' => $this->shouldShowFichaEmpleadosBoard($user, $areaKey),
             'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
             'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
+            'cartas_notificacion' => $this->shouldShowCartasNotificacionBoard($user, $areaKey),
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'formacion' => $this->shouldShowFormacionBoard($user, $areaKey),
@@ -195,6 +198,15 @@ class SidebarVisibilityService
         }
 
         return $this->plantillasWordAccess->canViewPlantillasWordBoard($user);
+    }
+
+    private function shouldShowCartasNotificacionBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->cartasNotificacionAccess->canViewBoard($user);
     }
 
     private function shouldShowDesvinculacionesBoard(User $user, string $areaKey): bool

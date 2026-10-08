@@ -369,6 +369,7 @@ return [
         'desvinculacion' => 'desvinculacion',
         'contratacion' => 'contratacion',
         'cartas_vacaciones' => 'cartas_vacaciones',
+        'cartas_notificacion' => 'cartas_notificacion',
     ],
 
     'termination_letter_signatory' => [
@@ -502,11 +503,21 @@ return [
             'ESTADO_REQUISICION' => 'Estado de la requisicion',
         ],
         'Cartas vacaciones' => [
-            'FECHA_INICIO' => 'Fecha de inicio de vacaciones',
-            'FECHA_FIN' => 'Fecha de fin de vacaciones',
-            'FECHA_REINTEGRO' => 'Fecha de reintegro laboral',
+            'FECHA_INICIO' => 'Fecha de inicio de vacaciones (formato largo en MAYÚSCULAS)',
+            'FECHA_FIN' => 'Fecha de fin de vacaciones (formato largo en MAYÚSCULAS)',
+            'FECHA_REINTEGRO' => 'Fecha de reintegro laboral (formato largo en MAYÚSCULAS)',
             'PERIODOS' => 'Periodos de vacaciones a disfrutar',
             'DIAS_DISFRUTADOS' => 'Días disfrutados de vacaciones',
+        ],
+        // Orientación para plantillas del tipo cartas_notificacion (claves ya existentes en otras categorías).
+        'Cartas notificación' => [
+            'CEDULA' => 'Cédula de la fila (grilla Cartas Notificación)',
+            'NOMBRE_COMPLETO' => 'Nombre completo de la fila (autollenado o manual)',
+            'DURACION_CONTRATO' => 'Duración del contrato en meses (6 o 12; viene de la grilla/Excel)',
+            'FECHA_TERMINACION' => 'Fecha de terminación de la fila (formato largo español en MAYÚSCULAS)',
+            'FIRMA' => 'Nombre del firmante (catálogo firmas)',
+            'CARGO_FIRMA' => 'Cargo del firmante (código del catálogo)',
+            'FECHA' => 'Fecha de emisión de la carta (hoy)',
         ],
     ],
 ];

@@ -10740,6 +10740,39 @@ a.req-dashboard-kpi:focus-visible {
     max-width: 40rem;
 }
 
+/* Cartas Notificación: bloque derecho en una sola franja; limpiar/+ al extremo */
+.cartas-vacaciones-page .cartas-notificacion__toolbar-right {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-left: auto;
+    min-width: 0;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__toolbar-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__filter-input {
+    width: 11rem;
+    min-width: 8rem;
+    max-width: 14rem;
+    flex: 0 1 11rem;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__toolbar-end {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
 .desvinculaciones-masivos__bulk-summary {
     margin-top: 0.85rem;
     padding: 0.85rem 1rem;

@@ -216,14 +216,18 @@ class LetterVariableBuilder
         $variables['NOMBRE_COMPLETO'] = $nombreFila !== ''
             ? $nombreFila
             : (string) ($variables['NOMBRE_COMPLETO'] ?? '');
+        // Fechas de vacaciones en mayúsculas (p. ej. «1 DE ENERO DEL 2026»).
         $variables['FECHA_INICIO'] = $this->formatLongDate(
-            isset($row['fecha_inicio']) ? Carbon::parse($row['fecha_inicio']) : null
+            isset($row['fecha_inicio']) ? Carbon::parse($row['fecha_inicio']) : null,
+            uppercase: true,
         );
         $variables['FECHA_FIN'] = $this->formatLongDate(
-            isset($row['fecha_fin']) ? Carbon::parse($row['fecha_fin']) : null
+            isset($row['fecha_fin']) ? Carbon::parse($row['fecha_fin']) : null,
+            uppercase: true,
         );
         $variables['FECHA_REINTEGRO'] = $this->formatLongDate(
-            isset($row['fecha_reintegro']) ? Carbon::parse($row['fecha_reintegro']) : null
+            isset($row['fecha_reintegro']) ? Carbon::parse($row['fecha_reintegro']) : null,
+            uppercase: true,
         );
         $variables['PERIODOS'] = (string) ($row['periodos'] ?? '');
         $variables['DIAS_DISFRUTADOS'] = (string) ($row['dias_disfrutados'] ?? '');
@@ -236,6 +240,76 @@ class LetterVariableBuilder
         $variables['CIUDAD'] = (string) ($variables['CIUDAD_RESIDENCIA'] ?? '');
 
         return $variables;
+    }
+
+    /**
+     * Variables para Cartas Notificación (tablero GH): fila de grilla + ficha por cédula.
+     * FECHA_TERMINACION proviene de la grilla (no del vínculo/perfil).
+     *
+     * @param  array{
+     *     cedula: string,
+     *     nombre_completo: string,
+     *     duracion_contrato: int|string,
+     *     fecha_terminacion: string|CarbonInterface,
+     *     signatory_id: int
+     * }  $row
+     * @return array<string, string>
+     */
+    public function buildForCartasNotificacion(array $row): array
+    {
+        $firma = $this->resolveSignatory(isset($row['signatory_id']) ? (int) $row['signatory_id'] : null);
+        $cedula = trim((string) ($row['cedula'] ?? ''));
+        $nombreFila = trim((string) ($row['nombre_completo'] ?? ''));
+        $profile = $this->resolveProfileByDocument($cedula);
+
+        // Catálogo vacío → ficha rellena CARGO/CIUDAD/etc. → override de fila.
+        $variables = [];
+        foreach ($this->catalogKeys() as $key) {
+            $variables[$key] = '';
+        }
+
+        if ($profile !== null) {
+            $this->fillProfileVariables($variables, $profile);
+        }
+
+        $variables['CEDULA'] = $cedula !== '' ? $cedula : (string) ($variables['CEDULA'] ?? '');
+        $variables['DOCUMENTO'] = $variables['CEDULA'] !== ''
+            ? $variables['CEDULA']
+            : (string) ($variables['DOCUMENTO'] ?? '');
+        $variables['NOMBRE_COMPLETO'] = $nombreFila !== ''
+            ? $nombreFila
+            : (string) ($variables['NOMBRE_COMPLETO'] ?? '');
+        $variables['DURACION_CONTRATO'] = $this->normalizeDuracionContrato($row['duracion_contrato'] ?? null);
+        // FECHA_TERMINACION de la grilla en mayúsculas (p. ej. «15 DE JUNIO DEL 2026»).
+        $variables['FECHA_TERMINACION'] = $this->formatLongDate(
+            isset($row['fecha_terminacion']) && $row['fecha_terminacion'] !== ''
+                ? Carbon::parse($row['fecha_terminacion'])
+                : null,
+            uppercase: true,
+        );
+        $variables['FIRMA'] = $firma['name'];
+        $variables['CARGO_FIRMA'] = $firma['code'];
+        $variables['FECHA'] = $this->formatLongDate(now());
+
+        $variables['NOMBRE'] = $variables['NOMBRE_COMPLETO'];
+        $variables['CIUDAD'] = (string) ($variables['CIUDAD_RESIDENCIA'] ?? '');
+
+        return $variables;
+    }
+
+    /**
+     * Normaliza duración contrato a "6" | "12" (o vacío si no es opción válida).
+     */
+    private function normalizeDuracionContrato(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        $allowed = array_map('intval', config('cartas_notificacion.duracion_contrato_options', [6, 12]));
+        $int = (int) $value;
+
+        return in_array($int, $allowed, true) ? (string) $int : '';
     }
 
     /**
@@ -419,7 +493,7 @@ class LetterVariableBuilder
         return ['name' => (string) ($fallback['name'] ?? ''), 'code' => (string) ($fallback['title'] ?? '')];
     }
 
-    private function formatLongDate(?CarbonInterface $date): string
+    private function formatLongDate(?CarbonInterface $date, bool $uppercase = false): string
     {
         if ($date === null) {
             return '';
@@ -428,7 +502,9 @@ class LetterVariableBuilder
         $carbon = Carbon::parse($date);
         $month = self::MONTHS[(int) $carbon->format('n')] ?? ucfirst(mb_strtolower($carbon->format('F')));
 
-        return sprintf('%d de %s del %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
+        $formatted = sprintf('%d de %s del %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
+
+        return $uppercase ? mb_strtoupper($formatted, 'UTF-8') : $formatted;
     }
 
     private function formatSalary(mixed $salary): string

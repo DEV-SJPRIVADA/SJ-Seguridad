@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
 use App\Services\Access\BoardAccessService;
+use App\Services\Access\CartasNotificacionAccessService;
 use App\Services\Access\ClienteInternoAccessService;
 use App\Services\Access\CommercialAccessService;
 use App\Services\Access\CursosAccessService;
@@ -32,6 +33,7 @@ class NavigationResolver
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillasWordAccessService $plantillasWordAccess,
+        private readonly CartasNotificacionAccessService $cartasNotificacionAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
@@ -227,6 +229,23 @@ class NavigationResolver
                                 'route' => 'gestion-humana.plantillas-word.index',
                                 'url' => $user->defaultPlantillasWordBoardUrl(),
                                 'active' => str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.'),
+                            ];
+                        }
+
+                        if ($boardKey === 'cartas_notificacion') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->cartasNotificacionAccess->canViewBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.cartas-notificacion.index',
+                                'url' => $user->defaultCartasNotificacionBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.cartas-notificacion.'),
                             ];
                         }
 
@@ -459,6 +478,7 @@ class NavigationResolver
                             $boardKey === 'ficha_empleados' => str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana',
                             $boardKey === 'archivo' => str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana',
                             $boardKey === 'plantillas_word' => str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana',
+                            $boardKey === 'cartas_notificacion' => str_starts_with((string) $routeName, 'gestion-humana.cartas-notificacion.') && $key === 'gestion_humana',
                             $boardKey === 'desvinculaciones' => str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana',
                             $boardKey === 'cursos' => str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana',
                             $boardKey === 'formacion' => str_starts_with((string) $routeName, 'gestion-humana.formacion.') && $key === 'gestion_humana',
@@ -552,6 +572,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.archivo.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.plantillas-word.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.cartas-notificacion.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana'
                 ) || (

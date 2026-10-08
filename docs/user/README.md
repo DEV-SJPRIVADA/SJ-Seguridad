@@ -26,6 +26,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Cliente interno | [`modules/cliente-interno.md`](../modules/cliente-interno.md) | [`cliente-interno.md`](cliente-interno.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](../modules/acreditaciones.md) | [`acreditaciones.md`](acreditaciones.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](../modules/plantillas-word.md) | [`plantillas-word.md`](plantillas-word.md) |
+| Cartas Notificación | [`modules/cartas-notificacion.md`](../modules/cartas-notificacion.md) | [`cartas-notificacion.md`](cartas-notificacion.md) |
 | Suministros | [`modules/suministros.md`](../modules/suministros.md) | [`suministros.md`](suministros.md) |
 | Documentos calidad | [`modules/quality-documents.md`](../modules/quality-documents.md) | [`quality-documents.md`](quality-documents.md) |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](../modules/indicadores.md) | [`indicadores.md`](indicadores.md) |
