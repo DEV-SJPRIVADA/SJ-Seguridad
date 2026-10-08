@@ -24,6 +24,7 @@ use App\Services\GestionHumana\ClienteInternoCatalogService;
 use App\Services\GestionHumana\ClienteInternoDashboardService;
 use App\Services\GestionHumana\ClienteInternoDatatableService;
 use App\Services\GestionHumana\ClienteInternoImportService;
+use App\Support\ColombiaHolidays;
 use App\Traits\HasClienteInternoTabs;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -47,6 +48,7 @@ class ClienteInternoController extends Controller
         private readonly ClienteInternoImportService $importService,
         private readonly ClienteInternoImportTemplateExport $importTemplateExport,
         private readonly ClienteInternoCartasVacacionesGeneratorService $cartasVacacionesGenerator,
+        private readonly ColombiaHolidays $colombiaHolidays,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -75,11 +77,15 @@ class ClienteInternoController extends Controller
 
         $canEdit = $this->clienteInternoAccess->canEditCartasVacaciones($user);
 
+        $year = (int) now()->year;
+
         return view('areas.gestion_humana.cliente_interno.cartas-vacaciones', [
             'subTabs' => $this->getClienteInternoSubTabs('cartas_vacaciones'),
             'canEditCartasVacaciones' => $canEdit,
             'signatoryOptions' => $canEdit ? $this->cartasVacacionesSignatoryOptions() : [],
             'maxRows' => (int) config('cliente_interno.cartas_vacaciones.max_rows', 500),
+            // Festivos CO para sugerir fecha fin en la grilla (rango amplio; cruza años).
+            'holidayDates' => $this->colombiaHolidays->isoDatesForYears($year - 2, $year + 4),
             'lookupUrl' => route('gestion-humana.cliente-interno.cartas-vacaciones.lookup'),
             'generateUrl' => route('gestion-humana.cliente-interno.cartas-vacaciones.generate'),
         ]);

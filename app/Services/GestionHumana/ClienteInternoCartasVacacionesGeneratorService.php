@@ -8,6 +8,7 @@ use App\Models\WordDocumentType;
 use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager;
+use App\Support\ColombiaHolidays;
 use App\Support\WordTempDirectory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +26,7 @@ class ClienteInternoCartasVacacionesGeneratorService
         private readonly TerminationLetterTemplateManager $templateManager,
         private readonly LetterVariableBuilder $variableBuilder,
         private readonly TerminationLetterDocxRenderer $docxRenderer,
+        private readonly ColombiaHolidays $colombiaHolidays,
     ) {}
 
     /**
@@ -128,8 +130,7 @@ class ClienteInternoCartasVacacionesGeneratorService
 
         try {
             foreach ($rows as $index => $row) {
-                // Recalcular fin/reintegro en servidor (misma regla que la grilla: sin domingos).
-                $row = $this->applyComputedVacationDates($row);
+                // Respeta fecha_fin / fecha_reintegro enviadas por la grilla (sugeridas o editadas a mano).
                 $variables = $this->variableBuilder->buildForCartasVacaciones($row);
                 $cedulaSlug = preg_replace('/\D+/', '', (string) ($row['cedula'] ?? '')) ?: 'fila'.($index + 1);
                 $outputName = sprintf(
@@ -187,8 +188,9 @@ class ClienteInternoCartasVacacionesGeneratorService
     }
 
     /**
-     * Fecha fin = inicio + N días disfrutados (sin contar domingos; el inicio cuenta si no es domingo).
+     * Fecha fin = inicio + N días disfrutados (sin contar domingos ni festivos CO; el inicio cuenta si aplica).
      * Fecha reintegro = día calendario siguiente a la fecha fin.
+     * El cursor avanza con Carbon día a día (incluye cambio de año).
      *
      * @return array{fecha_fin: string, fecha_reintegro: string}|null
      */
@@ -204,11 +206,21 @@ class ClienteInternoCartasVacacionesGeneratorService
             return null;
         }
 
+        // Tope de seguridad: evita bucles infinitos si N es enorme (festivos + domingos).
+        $maxSteps = max(366, $diasDisfrutados * 3);
+        $steps = 0;
         $counted = 0;
+
         while ($counted < $diasDisfrutados) {
-            if (! $cursor->isSunday()) {
+            if ($steps >= $maxSteps) {
+                return null;
+            }
+            $steps++;
+
+            if ($this->countsAsVacationDay($cursor)) {
                 $counted++;
             }
+
             if ($counted < $diasDisfrutados) {
                 $cursor->addDay();
             }
@@ -224,6 +236,8 @@ class ClienteInternoCartasVacacionesGeneratorService
     }
 
     /**
+     * Sugerencia de fin/reintegro (no sobreescribe en generate si el usuario ya envió fechas).
+     *
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
@@ -241,6 +255,15 @@ class ClienteInternoCartasVacacionesGeneratorService
         $row['fecha_reintegro'] = $computed['fecha_reintegro'];
 
         return $row;
+    }
+
+    private function countsAsVacationDay(Carbon $date): bool
+    {
+        if ($date->isSunday()) {
+            return false;
+        }
+
+        return ! $this->colombiaHolidays->isHoliday($date);
     }
 
     /**

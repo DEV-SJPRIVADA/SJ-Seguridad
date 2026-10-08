@@ -128,7 +128,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 1. Antes de generar, en **Plantillas Word** confirme que hay **una sola** plantilla activa del tipo **Cartas Vacaciones** (con archivo cargado). Si no hay ninguna o hay varias, el sistema bloqueará la generación con un mensaje claro.
 2. En **Cliente interno**, abra la pestaña **Cartas Vacaciones**.
 3. Agregue filas a mano o use **pegar cédulas** para cargar varias de una vez (las duplicadas se omiten y verá un resumen).
-4. Por cada fila complete: cédula, nombre, **días disfrutados**, fecha de inicio, periodos y firma. La **fecha fin** se calcula sola (inicio + días, sin contar domingos) y la **fecha de reintegro** es el día siguiente a la fecha fin.
+4. Por cada fila complete: cédula, nombre, **días disfrutados**, fecha de inicio, periodos y firma. El sistema **sugiere** la **fecha fin** (inicio + días, sin contar domingos ni festivos nacionales) y la **fecha de reintegro** (día siguiente a la fin); usted puede **modificarlas** si hace falta.
 5. Al salir de la cédula (o tras pegar), si la persona está activa en ficha se rellena el nombre. Si no hay ficha o está inactiva, verá un aviso y podrá escribir el nombre a mano; igual puede generar si el resto de campos está bien.
 6. Pulse **Generar**. Una fila descarga un Word; dos o más, un ZIP con un documento por persona.
 7. El lote **no se guarda** en el sistema: si necesita el archivo otra vez, vuelva a generar.
@@ -138,6 +138,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.6 | 2026-10-08 | Agent | Cartas Vacaciones: fin sin festivos CO (cruza año); fin/reintegro editables. |
 | 1.5 | 2026-10-07 | Agent | Cartas Vacaciones: días antes de inicio; fin/reintegro automáticos (sin domingos). |
 | 1.4 | 2026-10-07 | Documentador | FEAT-043: pestaña Cartas Vacaciones (lote Word/ZIP, plantilla única, permisos ver/generar). |
 | 1.3 | 2026-10-06 | Agent | Solicitudes: columna Mes en mayúsculas según fecha de solicitud. |

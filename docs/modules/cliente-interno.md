@@ -25,7 +25,7 @@ Tablero de area **Gestion Humana** para registrar, consultar y analizar **solici
 - Selectores: `<x-searchable-select>` / Alpine `searchableSelect` (firma por fila). Charts: ApexCharts + entry Vite `cliente-interno-dashboard-charts.js`.
 - Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` vía `app:sync-permissions`. Migración Spatie FEAT-043: quien tenía `solicitudes.edit` recibe `cartas_vacaciones.view` + `.edit`.
 
-**Fuera de alcance:** historial/re-descarga de cartas, envío por correo, bridge Reportes-Novedades→Vacaciones, varias plantillas seleccionables por generación, permiso KPI de dashboard propio, soft-delete solicitudes, jobs async, calendario de festivos, Select2 / `excelHtml5` / Repository / `migrate:fresh`.
+**Fuera de alcance:** historial/re-descarga de cartas, envío por correo, bridge Reportes-Novedades→Vacaciones, varias plantillas seleccionables por generación, permiso KPI de dashboard propio, soft-delete solicitudes, jobs async, Select2 / `excelHtml5` / Repository / `migrate:fresh`. (Festivos CO sí aplican al cálculo de fecha fin de Cartas Vacaciones vía `App\Support\ColombiaHolidays`.)
 
 ## Rutas
 
@@ -224,8 +224,8 @@ Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplat
 
 ### Cartas Vacaciones (FEAT-043)
 
-25. Obligatorios por fila: cédula, nombre completo, días disfrutados, fecha inicio, fecha fin, fecha reintegro, periodos, `signatory_id` (catálogo `firmas` activo). En UI: orden días → inicio; fin/reintegro readonly.
-26. `fecha_fin` = inicio + N días disfrutados **sin contar domingos** (inicio cuenta si no es domingo); `fecha_reintegro` = día siguiente a fin. Se recalcula en UI y en `ClienteInternoCartasVacacionesGeneratorService` al generar. Unicidad de cédula en el lote (422 si repetida); al pegar, duplicados omitidos con resumen (UI).
+25. Obligatorios por fila: cédula, nombre completo, días disfrutados, fecha inicio, fecha fin, fecha reintegro, periodos, `signatory_id` (catálogo `firmas` activo). En UI: al cambiar días/inicio el sistema **sugiere** fin/reintegro; el usuario puede editarlos.
+26. Sugerencia `fecha_fin` = inicio + N días disfrutados **sin contar domingos ni festivos nacionales CO** (inicio cuenta si aplica); `fecha_reintegro` = día siguiente a fin. Cálculo día a día con Carbon/JS local (soporta cambio de año). En **generate** se usan las fechas enviadas (no se recalculan). Festivos: `App\Support\ColombiaHolidays`. Unicidad de cédula en el lote (422 si repetida); al pegar, duplicados omitidos con resumen (UI).
 27. Lookup por `EmployeeFichaProfile.document_number` (preferir activo, luego más reciente). Activo → precargar nombre; inactivo/no encontrado → aviso en fila; nombre editable; generación OK si validaciones pasan.
 28. Tipo Word fijo `cartas_vacaciones` (seed `WordDocumentTypeSeeder` + config). Generación exige **exactamente una** plantilla del tipo con archivo en disco y tipo activo:
     - 0: «No hay plantilla activa de Cartas Vacaciones. Cargue una en Plantillas Word.»

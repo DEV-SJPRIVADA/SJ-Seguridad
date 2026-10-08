@@ -15,6 +15,7 @@
                         'generateUrl' => $generateUrl,
                         'csrf' => csrf_token(),
                         'signatoryOptions' => $signatoryOptions,
+                        'holidayDates' => $holidayDates ?? [],
                         'maxRows' => (int) $maxRows,
                     ]))"
                 @endif
@@ -138,25 +139,27 @@
                                                 >
                                             </td>
                                             <td>
+                                                {{-- Sugerida por el sistema (sin domingos/festivos); editable a mano --}}
                                                 <input
                                                     type="date"
                                                     class="form-input"
                                                     x-model="row.fecha_fin"
-                                                    readonly
-                                                    tabindex="-1"
-                                                    title="Se calcula: inicio + días (sin domingos)"
-                                                    aria-label="Fecha fin (automática)"
+                                                    x-bind:disabled="processing"
+                                                    title="Sugerida: inicio + días (sin domingos ni festivos). Puede modificarla."
+                                                    aria-label="Fecha fin"
+                                                    required
                                                 >
                                             </td>
                                             <td>
+                                                {{-- Sugerida (día siguiente a fin); editable a mano --}}
                                                 <input
                                                     type="date"
                                                     class="form-input"
                                                     x-model="row.fecha_reintegro"
-                                                    readonly
-                                                    tabindex="-1"
-                                                    title="Día siguiente a la fecha fin"
-                                                    aria-label="Fecha reintegro (automática)"
+                                                    x-bind:disabled="processing"
+                                                    title="Sugerida: día siguiente a la fecha fin. Puede modificarla."
+                                                    aria-label="Fecha reintegro"
+                                                    required
                                                 >
                                             </td>
                                             <td>
@@ -384,6 +387,11 @@
                     });
 
                     const maxRows = Number(config.maxRows) || 500;
+                    const holidaySet = new Set(
+                        Array.isArray(config.holidayDates)
+                            ? config.holidayDates.map((d) => String(d))
+                            : []
+                    );
 
                     return {
                         canEdit: Boolean(config.canEdit),
@@ -391,6 +399,7 @@
                         generateUrl: config.generateUrl,
                         csrf: config.csrf,
                         signatoryOptions: config.signatoryOptions || [],
+                        holidaySet,
                         maxRows,
                         rows: Array.from({ length: 2 }, () => emptyRow()),
                         processing: false,
@@ -428,8 +437,8 @@
                         },
 
                         /**
-                         * Fecha fin = inicio + N días disfrutados (sin contar domingos; el inicio cuenta si no es domingo).
-                         * Fecha reintegro = día siguiente a la fecha fin.
+                         * Sugiere fecha fin = inicio + N días (sin domingos ni festivos CO; cruza año).
+                         * Fecha reintegro = día siguiente a fin. El usuario puede editar ambas después.
                          */
                         syncVacationDates(row) {
                             const start = String(row.fecha_inicio || '').trim();
@@ -449,6 +458,7 @@
                                 return;
                             }
 
+                            // Local midnight evita desfase UTC al cruzar 31-dic → 1-ene.
                             const cursor = new Date(parts[0], parts[1] - 1, parts[2]);
                             if (Number.isNaN(cursor.getTime())) {
                                 row.fecha_fin = '';
@@ -456,10 +466,21 @@
                                 return;
                             }
 
+                            const pad = (n) => String(n).padStart(2, '0');
+                            const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                            const isCountable = (d) => {
+                                if (d.getDay() === 0) {
+                                    return false;
+                                }
+                                return ! this.holidaySet.has(toIso(d));
+                            };
+
                             let counted = 0;
-                            // Avanza día a día hasta completar N días no-domingo (inicio inclusive si aplica).
-                            while (counted < days) {
-                                if (cursor.getDay() !== 0) {
+                            let steps = 0;
+                            const maxSteps = Math.max(366, days * 3);
+                            while (counted < days && steps < maxSteps) {
+                                steps += 1;
+                                if (isCountable(cursor)) {
                                     counted += 1;
                                 }
                                 if (counted < days) {
@@ -467,8 +488,11 @@
                                 }
                             }
 
-                            const pad = (n) => String(n).padStart(2, '0');
-                            const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                            if (counted < days) {
+                                row.fecha_fin = '';
+                                row.fecha_reintegro = '';
+                                return;
+                            }
 
                             row.fecha_fin = toIso(cursor);
                             const reintegro = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);

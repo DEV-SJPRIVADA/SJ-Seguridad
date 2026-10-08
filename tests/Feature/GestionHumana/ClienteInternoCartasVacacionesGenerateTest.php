@@ -263,15 +263,72 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
     {
         $service = app(ClienteInternoCartasVacacionesGeneratorService::class);
 
-        // Lunes 1 jun 2026 + 5 días (sin domingo) → viernes 5; reintegro sábado 6.
+        // Lunes 1 jun 2026 + 5 días (sin domingo/festivos) → viernes 5; reintegro sábado 6.
         $five = $service->computeVacationDates('2026-06-01', 5);
         $this->assertSame('2026-06-05', $five['fecha_fin']);
         $this->assertSame('2026-06-06', $five['fecha_reintegro']);
 
-        // Sábado 6 jun + 2 días → sáb(1), salta dom, lun 8(2); reintegro mar 9.
+        // Sábado 6 jun + 2 días → sáb(1), salta dom 7 y festivo Corpus (lun 8), mar 9(2); reintegro 10.
         $fromSaturday = $service->computeVacationDates('2026-06-06', 2);
-        $this->assertSame('2026-06-08', $fromSaturday['fecha_fin']);
-        $this->assertSame('2026-06-09', $fromSaturday['fecha_reintegro']);
+        $this->assertSame('2026-06-09', $fromSaturday['fecha_fin']);
+        $this->assertSame('2026-06-10', $fromSaturday['fecha_reintegro']);
+    }
+
+    public function test_compute_vacation_dates_skips_colombia_holidays_including_holy_week(): void
+    {
+        $service = app(ClienteInternoCartasVacacionesGeneratorService::class);
+
+        // Mié 1 abr 2026 + 5 días: 1,4,6,7,8 (salta 2–3 santo y dom 5) → fin 8 abr.
+        $holyWeek = $service->computeVacationDates('2026-04-01', 5);
+        $this->assertSame('2026-04-08', $holyWeek['fecha_fin']);
+        $this->assertSame('2026-04-09', $holyWeek['fecha_reintegro']);
+    }
+
+    public function test_compute_vacation_dates_crosses_year_boundary_skipping_new_year(): void
+    {
+        $service = app(ClienteInternoCartasVacacionesGeneratorService::class);
+
+        // Lun 29 dic 2025 + 5 días: 29,30,31, (salta 1 ene festivo), 2,3 → fin 3 ene 2026.
+        $crossYear = $service->computeVacationDates('2025-12-29', 5);
+        $this->assertSame('2026-01-03', $crossYear['fecha_fin']);
+        $this->assertSame('2026-01-04', $crossYear['fecha_reintegro']);
+    }
+
+    public function test_generate_respects_user_edited_fecha_fin_and_reintegro(): void
+    {
+        $editor = $this->cartasEditorUser();
+        $signatory = $this->seedSignatory();
+        $this->seedExactlyOneTemplate('FIN=${FECHA_FIN} REIN=${FECHA_REINTEGRO}');
+
+        $row = $this->validRow($signatory->id, '1099000999', 'Manual Fechas');
+        // Auto sugeriría otra cosa; el usuario fuerza estas fechas.
+        $row['dias_disfrutados'] = '5';
+        $row['fecha_inicio'] = '2026-06-01';
+        $row['fecha_fin'] = '2026-06-20';
+        $row['fecha_reintegro'] = '2026-06-22';
+
+        $response = $this->actingAs($editor)
+            ->post(route('gestion-humana.cliente-interno.cartas-vacaciones.generate'), [
+                'rows' => [$row],
+            ]);
+
+        $response->assertOk();
+
+        $temp = tempnam(sys_get_temp_dir(), 'cv-docx-');
+        $this->assertNotFalse($temp);
+        $docxPath = $temp.'.docx';
+        @unlink($temp);
+        file_put_contents($docxPath, $response->streamedContent());
+
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($docxPath) === true);
+        $xml = (string) $zip->getFromName('word/document.xml');
+        $zip->close();
+        @unlink($docxPath);
+
+        $this->assertStringContainsString('20 DE JUNIO DEL 2026', mb_strtoupper($xml, 'UTF-8'));
+        $this->assertStringContainsString('22 DE JUNIO DEL 2026', mb_strtoupper($xml, 'UTF-8'));
+        $this->assertStringNotContainsString('5 DE JUNIO DEL 2026', mb_strtoupper($xml, 'UTF-8'));
     }
 
     public function test_build_for_cartas_vacaciones_fills_ficha_cargo_ciudad_and_cedula(): void
