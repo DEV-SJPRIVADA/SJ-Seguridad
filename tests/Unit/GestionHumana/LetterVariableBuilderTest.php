@@ -51,4 +51,78 @@ class LetterVariableBuilderTest extends TestCase
             $this->assertSame($variables['SALARIO_EN_LETRAS'], $variables['SALARIO_VINCULO_EN_LETRAS']);
         }
     }
+
+    public function test_build_fecha_terminacion_vinculo_minusculas_and_entrega_dotacion(): void
+    {
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809888777',
+            'hired_full_name' => 'Dotacion Test',
+            'moved_to_ficha_at' => now(),
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809888777',
+            'full_name' => 'Dotacion Test',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => '2026-06-01',
+        ]);
+
+        $period = EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'hire_date' => '2025-01-01',
+            'termination_date' => '2026-06-01',
+            'last_work_day' => '2026-06-01',
+        ]);
+
+        $variables = app(LetterVariableBuilder::class)->build($period, $entry, $profile);
+
+        $this->assertSame('1 de Junio del 2026', $variables['FECHA_TERMINACION_VINCULO']);
+        $this->assertSame('1 de junio del 2026', $variables['FECHA_TERMINACION_VINCULO_MINUSCULAS']);
+        // Lun 1 jun + 3 días contables → mar 2, mié 3, jue 4.
+        $this->assertSame('4 de Junio del 2026', $variables['FECHA_ENTREGA_DOTACION']);
+        $this->assertArrayHasKey(
+            'FECHA_TERMINACION_VINCULO_MINUSCULAS',
+            config('employee_ficha.letter_placeholders')['Datos del vinculo (periodo)']
+        );
+        $this->assertArrayHasKey(
+            'FECHA_ENTREGA_DOTACION',
+            config('employee_ficha.letter_placeholders')['Datos del vinculo (periodo)']
+        );
+    }
+
+    public function test_fecha_entrega_dotacion_skips_sundays_and_holidays(): void
+    {
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809888778',
+            'hired_full_name' => 'Dotacion Semana Santa',
+            'moved_to_ficha_at' => now(),
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809888778',
+            'full_name' => 'Dotacion Semana Santa',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => '2026-04-01',
+        ]);
+
+        $period = EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'hire_date' => '2025-01-01',
+            'termination_date' => '2026-04-01',
+            'last_work_day' => '2026-04-01',
+        ]);
+
+        $variables = app(LetterVariableBuilder::class)->build($period, $entry, $profile);
+
+        // Mié 1 abr: +1 sáb 4, +2 lun 6, +3 mar 7 (salta 2–3 santo y dom 5).
+        $this->assertSame('7 de Abril del 2026', $variables['FECHA_ENTREGA_DOTACION']);
+    }
 }

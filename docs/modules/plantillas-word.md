@@ -127,6 +127,8 @@ No hace falta tocar controladores de generación (`TerminationLetterController`,
 
 **Variables de salario:** `${SALARIO}` (número formateado) y `${SALARIO_EN_LETRAS}` (texto, mayúsculas, p. ej. `UN MILLÓN QUINIENTOS MIL PESOS`). Equivalente de vínculo: `${SALARIO_VINCULO}` / `${SALARIO_VINCULO_EN_LETRAS}`.
 
+**Desvinculación — fechas de vínculo:** `${FECHA_TERMINACION_VINCULO}` (el pack la deja en MAYÚSCULAS), `${FECHA_TERMINACION_VINCULO_MINUSCULAS}` (misma fecha en minúsculas) y `${FECHA_ENTREGA_DOTACION}` (= `termination_date` del periodo + 3 días contables sin domingos ni festivos CO, vía `ColombiaHolidays`).
+
 ### Placeholders — Cartas vacaciones (FEAT-043)
 
 Categoría UI **Cartas vacaciones** en `letter_placeholders`. Claves nuevas: `FECHA_INICIO`, `FECHA_FIN`, `FECHA_REINTEGRO`, `PERIODOS`, `DIAS_DISFRUTADOS`. Reutilizadas: `CEDULA`, `NOMBRE_COMPLETO`, `FIRMA`, `CARGO_FIRMA` (y `FECHA` de emisión). Si la cédula existe en Ficha, también se rellenan variables de perfil (`${CARGO}`, `${CIUDAD_RESIDENCIA}`, `${DOCUMENTO}`, etc.).

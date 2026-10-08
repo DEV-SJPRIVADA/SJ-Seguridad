@@ -6,6 +6,7 @@ use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Support\ColombiaHolidays;
 use App\Support\SpanishMoneyWords;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -23,6 +24,10 @@ class LetterVariableBuilder
         5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
         9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
     ];
+
+    public function __construct(
+        private readonly ColombiaHolidays $colombiaHolidays,
+    ) {}
 
     /**
      * Build all available variables from employee data.
@@ -126,6 +131,14 @@ class LetterVariableBuilder
         $variables['RECONTRATABLE'] = $period->is_rehireable !== null ? ($period->is_rehireable ? 'Si' : 'No') : '';
         $variables['ULTIMO_DIA_LABORES'] = $this->formatLongDate($period->last_work_day);
         $variables['FECHA_TERMINACION_VINCULO'] = $this->formatLongDate($period->termination_date);
+        // Misma fecha en minúsculas (el pack de desvinculación solo pone en mayúsculas FECHA_TERMINACION_VINCULO).
+        $variables['FECHA_TERMINACION_VINCULO_MINUSCULAS'] = $variables['FECHA_TERMINACION_VINCULO'] !== ''
+            ? mb_strtolower($variables['FECHA_TERMINACION_VINCULO'], 'UTF-8')
+            : '';
+        // Terminación del vínculo + 3 días contables (sin domingos ni festivos CO).
+        $variables['FECHA_ENTREGA_DOTACION'] = $this->formatLongDate(
+            $this->addCountableDaysAfter($period->termination_date, 3)
+        );
         $variables['OBSERVACIONES_TERMINACION'] = (string) $period->termination_notes;
         $variables['FECHA_TERMINACION'] = $this->formatLongDate($period->last_work_day ?? $period->termination_date);
 
@@ -505,6 +518,39 @@ class LetterVariableBuilder
         $formatted = sprintf('%d de %s del %d', (int) $carbon->format('j'), $month, (int) $carbon->format('Y'));
 
         return $uppercase ? mb_strtoupper($formatted, 'UTF-8') : $formatted;
+    }
+
+    /**
+     * Suma N días contables después de $start (no cuenta el día de inicio; salta domingos y festivos CO).
+     */
+    private function addCountableDaysAfter(mixed $start, int $days): ?Carbon
+    {
+        if ($start === null || $start === '' || $days < 1) {
+            return null;
+        }
+
+        try {
+            $cursor = Carbon::parse($start)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $counted = 0;
+        $steps = 0;
+        $maxSteps = max(366, $days * 3);
+
+        while ($counted < $days && $steps < $maxSteps) {
+            $steps++;
+            $cursor->addDay();
+
+            if ($cursor->isSunday() || $this->colombiaHolidays->isHoliday($cursor)) {
+                continue;
+            }
+
+            $counted++;
+        }
+
+        return $counted === $days ? $cursor : null;
     }
 
     private function formatSalary(mixed $salary): string

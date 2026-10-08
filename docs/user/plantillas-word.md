@@ -62,7 +62,7 @@ El sistema trae de fábrica tipos como **Desvinculacion** (cartas al desvincular
 
 1. En el bloque **Plantillas**, indique la **etiqueta** (nombre visible), elija el **tipo** (activo) y seleccione un archivo **.docx**.
 2. Confirme. La plantilla aparece en la lista con su tipo.
-3. Para cartas de retiro, use el tipo **Desvinculacion** y variables `${…}` del listado de apoyo (icono **Ver variables** / llaves): puede filtrar por clave o descripción; copie/pegue `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_PERFIL}`, etc.
+3. Para cartas de retiro, use el tipo **Desvinculacion** y variables `${…}` del listado de apoyo (icono **Ver variables** / llaves): puede filtrar por clave o descripción; copie/pegue `${NOMBRE_COMPLETO}`, `${DOCUMENTO}`, `${FECHA_TERMINACION_VINCULO}` (mayúsculas en la carta), `${FECHA_TERMINACION_VINCULO_MINUSCULAS}`, `${FECHA_ENTREGA_DOTACION}` (terminación + 3 días sin domingos ni festivos), etc.
 4. Para cartas de vacaciones, use el tipo **Cartas Vacaciones** y las variables de la categoría **Cartas vacaciones** (por ejemplo `${FECHA_INICIO}`, `${FECHA_FIN}`, `${FECHA_REINTEGRO}`, `${PERIODOS}`, `${DIAS_DISFRUTADOS}`, además de `${CEDULA}`, `${NOMBRE_COMPLETO}`, `${FIRMA}`). Deje **solo una** plantilla activa de ese tipo.
 5. Para cartas de notificación, use el tipo **Cartas Notificación** y las variables de la categoría **Cartas notificación** (`${CEDULA}`, `${NOMBRE_COMPLETO}`, `${DURACION_CONTRATO}`, `${FECHA_TERMINACION}`, `${FIRMA}`, `${CARGO_FIRMA}`, `${FECHA}`). La duración (6 o 12) y la fecha de terminación salen de la grilla del tablero Cartas Notificación. Deje **solo una** plantilla activa de ese tipo.
 
@@ -107,6 +107,7 @@ Al **agregar** plantilla puede **arrastrar y soltar** el `.docx` sobre la zona d
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-10-08 | Agent | Variables `${FECHA_TERMINACION_VINCULO_MINUSCULAS}` y `${FECHA_ENTREGA_DOTACION}` (+3 días sin domingos/festivos). |
 | 1.9 | 2026-10-08 | Documentador | FEAT-044: tipo seed **Cartas Notificación**; regla de una plantilla activa; vínculo con el tablero Cartas Notificación. |
 | 1.8 | 2026-10-07 | Documentador | FEAT-043: tipo seed **Cartas Vacaciones**; regla de una plantilla activa; vínculo con Cliente interno. |
 | 1.7 | 2026-10-05 | Agent | Modal **Editar plantilla**: cabecera con icono, campos en rejilla y pie Cancelar / Guardar cambios. |
