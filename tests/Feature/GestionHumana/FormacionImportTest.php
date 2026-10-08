@@ -113,6 +113,7 @@ class FormacionImportTest extends TestCase
         $this->actingAs($editor)
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'formacion.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -166,6 +167,7 @@ class FormacionImportTest extends TestCase
             ->from(route('gestion-humana.formacion.formaciones'))
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'bad.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -195,6 +197,7 @@ class FormacionImportTest extends TestCase
             ->from(route('gestion-humana.formacion.formaciones'))
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'bad-rows.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -220,6 +223,7 @@ class FormacionImportTest extends TestCase
         $this->actingAs($editor)
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'skip-empty.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -245,6 +249,7 @@ class FormacionImportTest extends TestCase
             ->from(route('gestion-humana.formacion.formaciones'))
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'empty-only.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -277,6 +282,7 @@ class FormacionImportTest extends TestCase
             ->from(route('gestion-humana.formacion.formaciones'))
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'too-many.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -308,6 +314,7 @@ class FormacionImportTest extends TestCase
         $this->actingAs($editor)
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => $upload,
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertRedirect(route('gestion-humana.formacion.formaciones'))
@@ -330,6 +337,7 @@ class FormacionImportTest extends TestCase
         $this->actingAs($viewer)
             ->post(route('gestion-humana.formacion.formaciones.import'), [
                 'import_file' => new UploadedFile($path, 'blocked.xlsx', null, null, true),
+                'mode' => 'all',
                 'confirm_replace' => '1',
             ])
             ->assertForbidden();
@@ -359,7 +367,97 @@ class FormacionImportTest extends TestCase
             ->assertSee("\$dispatch('open-modal', 'formacion-import')", false)
             ->assertSee('x-data=""', false)
             ->assertSee(route('gestion-humana.formacion.formaciones.import-template'), false)
-            ->assertSee('se borrarán todos los registros', false);
+            ->assertSee('Solo un mes', false)
+            ->assertSee('Reemplazar todo el dataset', false);
+    }
+
+    public function test_import_period_keeps_other_months(): void
+    {
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'SEP-1',
+            'nombre_completo' => 'Septiembre Keep',
+            'fecha_inicio' => '2026-09-15',
+            'mes' => 9,
+            'anio' => 2026,
+        ]);
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'OCT-OLD',
+            'nombre_completo' => 'Octubre Viejo',
+            'fecha_inicio' => '2026-10-05',
+            'mes' => 10,
+            'anio' => 2026,
+        ]);
+
+        $path = $this->makeImportFile([
+            ['4001', 'Octubre Nuevo', '2026-10-12', 'Curso Oct', '8', 'Obligatoria'],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.formacion.formaciones.import'), [
+                'import_file' => new UploadedFile($path, 'octubre.xlsx', null, null, true),
+                'mode' => 'period',
+                'anio' => 2026,
+                'mes' => 10,
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.formacion.formaciones'))
+            ->assertSessionHas('status');
+
+        $this->assertSame(2, FormacionRegistro::query()->count());
+        $this->assertDatabaseHas('formacion_registros', [
+            'numero_id' => 'SEP-1',
+            'nombre_completo' => 'Septiembre Keep',
+        ]);
+        $this->assertDatabaseMissing('formacion_registros', ['numero_id' => 'OCT-OLD']);
+        $this->assertDatabaseHas('formacion_registros', [
+            'numero_id' => '4001',
+            'mes' => 10,
+            'anio' => 2026,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'module' => 'formacion',
+            'event_type' => 'import',
+            'action' => 'import_replace_period',
+        ]);
+    }
+
+    public function test_import_period_rejects_rows_outside_selected_month(): void
+    {
+        FormacionRegistro::factory()->create([
+            'numero_id' => 'KEEP-MIX',
+            'nombre_completo' => 'Debe Quedar',
+            'fecha_inicio' => '2026-09-01',
+            'mes' => 9,
+            'anio' => 2026,
+        ]);
+
+        $path = $this->makeImportFile([
+            ['5001', 'Octubre Ok', '2026-10-01', 'Curso Oct', '', 'Obligatoria'],
+            ['5002', 'Noviembre Mal', '2026-11-01', 'Curso Nov', '', 'Obligatoria'],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.formacion.formaciones'))
+            ->post(route('gestion-humana.formacion.formaciones.import'), [
+                'import_file' => new UploadedFile($path, 'mixto.xlsx', null, null, true),
+                'mode' => 'period',
+                'anio' => 2026,
+                'mes' => 10,
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.formacion.formaciones'))
+            ->assertSessionHasErrors('import_file');
+
+        $this->assertSame(1, FormacionRegistro::query()->count());
+        $this->assertDatabaseHas('formacion_registros', [
+            'numero_id' => 'KEEP-MIX',
+            'nombre_completo' => 'Debe Quedar',
+        ]);
+        $this->assertDatabaseMissing('formacion_registros', ['numero_id' => '5001']);
     }
 
     /**

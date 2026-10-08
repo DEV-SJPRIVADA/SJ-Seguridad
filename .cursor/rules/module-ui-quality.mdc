@@ -1,0 +1,84 @@
+---
+description: Calidad UI al crear tableros/vistas nuevas — mismo nivel que un rediseño, reutilizar chrome del proyecto
+globs: resources/views/**/*.blade.php,resources/css/app.css,resources/js/**/*.{js,ts},docs/modules/branding.md,docs/agents/prompts/feature-developer.md
+alwaysApply: true
+---
+
+# Calidad UI de módulos (tableros y pantallas nuevas)
+
+**Regla de oro:** la **primera** entrega de una vista nueva debe verse y comportarse como cuando se **mejora** una pantalla existente — no un prototipo genérico “funciona pero feo”.
+
+Si el front suena a dashboard genérico (cards sueltas, botones Bootstrap crudos, títulos H1 enormes, filtros sin chrome, Select2, tablas sin estilo corporativo), **está mal**: copiar un módulo pulido y adaptar.
+
+## Antes de codear Blade
+
+1. Abrir y **copiar estructura** de una referencia viva del mismo tipo de pantalla (no inventar layout):
+   - Listado operativo + filtros: **Desvinculaciones Seguimientos**, **Cursos registros**, **Formación formaciones**, **Ficha empleados**.
+   - Tablero con pestañas: partial `subnav` + `<x-slot name="header">` + `.module-tab`.
+   - Modal import/export: Formación / Cliente interno / Archivo.
+   - Dashboard KPI: Formación dashboard o Comercial (mismo lenguaje de cards/KPI del proyecto).
+2. Leer [`docs/modules/branding.md`](../../docs/modules/branding.md) (tokens, chrome, iconos, alturas).
+3. Reglas hermanas: `nav-chrome-ui.mdc`, `icon-buttons-ui.mdc`, `datatables-server-side.mdc`, `orthography-and-comments.mdc`.
+
+## Shell obligatorio (listados / tableros)
+
+Usar el chrome existente; **no** armar páginas “desde cero” con divs sueltos:
+
+| Pieza | Clases / patrón |
+| --- | --- |
+| Página | `page-section` + `{modulo}-page` + `req-manage-page` (listados) |
+| Contenedor | `app-container` |
+| Panel | `panel` / `panel__body` / `panel__body--compact` + `req-manage-shell` |
+| Filtros | `<details class="req-manage-filters …">` + toolbar icon-only |
+| Toolbar tabla | conteo + acciones icon-only (export/import) |
+| Tabla | `data-table-wrap` + DataTables `serverSide` si crece; thead azul corporativo |
+| Subnav | `.module-tab` en header; padding franja `0.2rem` |
+
+## Controles y componentes
+
+- Selects: **solo** `<x-searchable-select>` (nunca Select2 ni `<select>` nativo en formularios/filtros).
+- Botones texto: `btn btn--primary` / `btn--secondary` / `btn--sm` donde aplique.
+- Acciones chrome: `.req-manage-filters__icon-btn` + Lucide/`selfhst` (mapa en `icon-buttons-ui.mdc`).
+- Acciones de fila: `.cursos-catalogo-page__icon-btn` — **prohibido** inventar `{modulo}__icon-btn`.
+- Alturas: tokens `--control-height-chrome`, etc. (branding); no `min-height: 38/42px` ad hoc.
+- Colores: tokens `--brand-*` / `--color-*`; no hex sueltos si ya hay token.
+- Fechas en tablas: `DisplayDate` / `<x-date-table />` (`dd/mm/yy`).
+- Iconos: Blade Icons Lucide; `title` + `aria-label` en icon-only.
+- Modales: mismo patrón de card/overlay de módulos GH (fondo **opaco** `#fff`, overlay oscuro); no modal “transparente”.
+
+## Tipografía y densidad
+
+- Sin títulos hero enormes que compitan con el chrome del layout.
+- Subnav en el **header** del layout; evitar H1 duplicando el nombre del tablero.
+- Textos de UI en español con tildes correctas.
+- Densidad compacta (filtros en una franja, no formularios de media página para 2 campos).
+
+## CSS
+
+- Preferir clases globales ya usadas (`req-manage-*`, `panel`, `data-table`, `module-tab`).
+- Prefijo BEM del módulo **solo** para lo específico; no redefinir botones/navegación.
+- Tras tocar `resources/css/app.css`: `npm run build` (o `npm run dev`) antes de dar por cerrado.
+
+## Checklist de cierre UI (obligatorio)
+
+Antes de marcar la feature/vista como lista:
+
+- [ ] Misma familia visual que un listado/tablero GH de referencia (no “plantilla vacía”).
+- [ ] Filtros + toolbar con icon-only canónicos; selects searchable.
+- [ ] Tabla: encabezados legibles (fondo `#003366`, texto blanco); columnas de datos ordenables si es server-side.
+- [ ] Vacío / error / loading coherentes con el módulo de referencia.
+- [ ] Ortografía UI + comentarios de bloques funcionales.
+- [ ] `npm run build` si hubo CSS/JS Vite.
+- [ ] Smoke Chrome DevTools MCP (regla `devtools-mcp-ui-testing.mdc`).
+
+## Prohibido en entregas nuevas
+
+- Entregar “API + Blade mínimo” y dejar el look “para después”.
+- Cards/KPI genéricos con gradientes púrpura, Inter/Roboto, o estilos ajenos a branding.
+- Reintroducir Select2, `excelHtml5`, SVG Lucide embebidos a mano, o familias `*__icon-btn` por módulo.
+- Estilos inline que rompan pills, tablas o modales del sistema.
+
+## Referencia rápida
+
+- Branding: [`docs/modules/branding.md`](../../docs/modules/branding.md)
+- Vistas modelo: `resources/views/areas/gestion_humana/desvinculaciones/seguimientos.blade.php`, `…/formacion/formaciones.blade.php`, `…/cursos/registros.blade.php`

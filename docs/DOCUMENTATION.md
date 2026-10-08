@@ -83,7 +83,7 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Cliente interno | [`modules/cliente-interno.md`](modules/cliente-interno.md) | [`user/cliente-interno.md`](user/cliente-interno.md) | Area gestion_humana |
 | Acreditaciones | [`modules/acreditaciones.md`](modules/acreditaciones.md) | [`user/acreditaciones.md`](user/acreditaciones.md) | Area gestion_humana |
 | Plantillas Word | [`modules/plantillas-word.md`](modules/plantillas-word.md) | [`user/plantillas-word.md`](user/plantillas-word.md) | Area gestion_humana |
-| Branding / UI | [`modules/branding.md`](modules/branding.md) | — (solo tecnica) | Transversal |
+| Branding / UI | [`modules/branding.md`](modules/branding.md) | — (solo tecnica) | Transversal; calidad al crear pantallas: `.cursor/rules/module-ui-quality.mdc` |
 
 ---
 

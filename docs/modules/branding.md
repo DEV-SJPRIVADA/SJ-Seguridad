@@ -125,6 +125,28 @@ Un solo look. Regla Cursor: [`.cursor/rules/icon-buttons-ui.mdc`](../../.cursor/
 
 Obligatorio: `title` + `aria-label`. Prohibido crear `*{modulo}*__icon-btn` o usar `ficha-empleados-filters__bulk-icon` en codigo nuevo.
 
+## Calidad al crear tableros / pantallas nuevas
+
+**Objetivo:** el front de una feature nueva debe salir al mismo nivel que cuando se **mejora** una vista existente. Prohibido entregar Blade “mínimo viable feo” y posponer el look.
+
+Regla Cursor (obligatoria para agentes): [`.cursor/rules/module-ui-quality.mdc`](../../.cursor/rules/module-ui-quality.mdc).
+
+### Método
+
+1. Elegir una **pantalla referencia** del mismo tipo (listado, dashboard, modal import, subnav) y clonar su shell (`req-manage-page`, filtros `details`, toolbar icon-only, DataTables, modales opacos).
+2. Reutilizar tokens `--brand-*`, alturas `--control-*`, pills `.module-tab`, `<x-searchable-select>`, icon-btn canónicos.
+3. No inventar tipografías, gradientes ajenos, Select2, ni `{modulo}__icon-btn`.
+4. Cerrar con checklist de `module-ui-quality.mdc` + `npm run build` si hubo CSS/JS + smoke DevTools si hay UI.
+
+### Referencias Blade
+
+| Tipo | Vista modelo |
+| --- | --- |
+| Listado + filtros + DT | `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` |
+| Listado cursos | `areas/gestion_humana/cursos/registros.blade.php` |
+| Import modal | `areas/gestion_humana/formacion/formaciones.blade.php` (+ partial import) |
+| Subnav tablero | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` |
+
 ## Regla de mantenimiento
 
 Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero en el componente `application-logo` para evitar inconsistencias entre pantallas.
@@ -134,3 +156,4 @@ Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero e
 - Cambios directos en vistas individuales pueden duplicar branding y desalinear la identidad visual.
 - Si en el futuro se agrega un archivo raster o vector oficial, este documento debe actualizarse para indicar su ubicacion y formato fuente.
 - Inventar clases de icon-btn por modulo rompe el estandar; migrar a las clases canónicas.
+- Entregar UI genérica en el primer slice obliga a rediseños posteriores; la regla `module-ui-quality` evita ese ciclo.

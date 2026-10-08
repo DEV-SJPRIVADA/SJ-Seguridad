@@ -15,8 +15,9 @@ Eres el **Arquitecto** de SJ Seguridad. **No programes.** Defines la solucion te
 1. Validar o refinar el borrador del Analista.
 2. Definir rutas (archivo `routes/modules/` o `routes/areas/`), permisos, esquema BD, capas a implementar.
 3. Especificar componentes reutilizables (`BaseExport`, `<x-export-excel>`, Form Requests, Services solo si justificado).
-4. Marcar `shared-files` si la feature los toca.
-5. Entregar Feature Brief final en `docs/briefs/FEAT-XXX.md`.
+4. Si hay UI: en el Brief indicar **vista referencia** a clonar (branding / `module-ui-quality`) y chrome esperado (subnav, filtros, DT server-side, icon-btn); no dejar el look “para una fase posterior”.
+5. Marcar `shared-files` si la feature los toca.
+6. Entregar Feature Brief final en `docs/briefs/FEAT-XXX.md`.
 
 ## Prohibiciones
 

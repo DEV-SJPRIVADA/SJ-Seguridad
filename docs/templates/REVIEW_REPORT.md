@@ -35,6 +35,8 @@
 - [ ] Migraciones compatibles con hosting compartido
 - [ ] Export Excel usa `BaseExport` si aplica
 - [ ] Tests relevantes presentes o justificados
+- [ ] UI nueva (si aplica): `module-ui-quality` — shell `req-manage-*` / branding, searchable-select, icon-btn canónicos; no front genérico feo
+- [ ] UI: DataTables server-side si el listado puede crecer; sin Select2
 
 ## Seguridad
 

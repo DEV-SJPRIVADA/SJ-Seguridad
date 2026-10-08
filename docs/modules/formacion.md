@@ -15,7 +15,7 @@ Tablero de area **Gestion Humana** para consultar y recargar el dataset operativ
 - Pestanas exactas: **Dashboard**, **Formaciones** (`config/access.php` → `formacion_tabs`).
 - Permisos: `view.board.gestion_humana.formacion`, `formacion.view`, `formacion.edit`. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - **Sin** pestana parametros / `parameters.edit` / tablas de catalogo.
-- **Sin** CRUD fila a fila; unica mutacion = import replace-all.
+- **Sin** CRUD fila a fila; unica mutacion = import (`all` replace-all o `period` replace por año/mes).
 - Dashboard v1: modos **Por curso** (registros) y **Por persona (ciclo)**; KPIs individuales por estado; KPIs ciclo (mejor nota por persona/curso; set = distinct del mes o del año); filtros ano, mes, estado, curso (curso scoped a ano/mes).
 - Formaciones: DataTables `serverSide: true`; filtros ano, mes, categoria, curso, numero ID, nombre, estado; opciones de **curso** filtradas por ano/mes (igual que Dashboard, via `formaciones.options?anio=&mes=`); export Excel; plantilla + import.
 - Audit: `FormacionAuditLogService` → `SystemAuditService` (`module=formacion`, `area=gestion_humana`). Eventos: `import_replace`, `export`.
@@ -37,7 +37,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/formaciones/datatable` | `formaciones.datatable` | JSON DataTables. `formacion.view` |
 | GET | `/formaciones/exportar` | `formaciones.export` | Excel filtrado. `formacion.view` |
 | GET | `/formaciones/plantilla-importacion` | `formaciones.import-template` | Plantilla vacia. `formacion.edit` |
-| POST | `/formaciones/importar` | `formaciones.import` | Replace-all. `formacion.edit` + `confirm_replace` |
+| POST | `/formaciones/importar` | `formaciones.import` | Import `mode=all\|period`. `formacion.edit` + `confirm_replace` (+ `anio`/`mes` si period) |
 | GET | `/formaciones/opciones` | `formaciones.options` | Distincts para filtros; query opcional `anio`/`mes` limita `cursos`. `formacion.view` |
 
 ## Permisos
@@ -64,7 +64,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Clase | Responsabilidad |
 | --- | --- |
 | `App\Http\Controllers\GestionHumana\FormacionController` | Shell, dashboard, formaciones, DT, export, plantilla, import, opciones |
-| `App\Http\Requests\GestionHumana\ImportFormacionRequest` | `import_file` (`extensions:xlsx,xls,csv`, max 50 MB; no `mimes` estricto) + `confirm_replace` accepted; authorize via `canEdit` |
+| `App\Http\Requests\GestionHumana\ImportFormacionRequest` | `import_file` + `mode` (`all`\|`period`) + `confirm_replace`; si period: `anio`/`mes`; authorize via `canEdit` |
 
 ## Vistas
 
@@ -118,25 +118,33 @@ Indices adicionales: `anio`, `mes`, compuesto `(anio, mes)`.
 | `HasFormacionTabs` | Trait vistas (tab activa / subnav) |
 | `FormacionAuditLogService` | Wrapper audit (`module=formacion`, `area=gestion_humana`) |
 | `FormacionDatatableService` | DT server-side + filtros + opciones distinct (`courseOptions` por ano/mes) |
-| `FormacionImportService` | Parse fechas + replace-all (validate → delete → chunk insert 500) |
+| `FormacionImportService` | Parse fechas + import `all` (delete all) o `period` (delete año/mes; rechaza filas fuera del mes) + chunk insert 500 |
 | `FormacionDashboardService` | Metrics KPIs/charts + ciclo persona + filtros mes/estado/curso |
 
 Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultFormacionBoardUrl()` / tabs (patron Cursos).
 
 Sin jobs/colas en V1; import sincrono.
 
-## Import replace-all
+## Import (todo o por mes)
 
 Servicio: `App\Services\GestionHumana\FormacionImportService`  
 Columnas: `config/formacion.php` → `import.columns`.
+
+### Modos (`mode`)
+
+| Modo | Efecto | Audit |
+| --- | --- | --- |
+| `all` | Borra **todos** los registros e inserta el Excel. | `import_replace` |
+| `period` | Borra solo `anio`+`mes`; inserta el Excel. Si alguna fila no es de ese mes → **rechazo total** (dataset intacto) con mensaje. | `import_replace_period` |
 
 ### Flujo obligatorio
 
 1. Validar archivo + headers (fallar **antes** de borrar si faltan columnas).
 2. Parsear filas; filas vacias → skip; errores en obligatorias → **rechazar import completo** (dataset intacto). Archivo sin filas validas → rechazar (no vaciar tabla).
-3. `DB::transaction`: `FormacionRegistro::query()->delete()` + `insert` por chunks (`config formacion.import.chunk_size`, default 500). **No** `TRUNCATE` / `migrate:fresh`.
-4. Audit `import_replace` con metadata `{deleted_before, imported, skipped_empty, errors_count}` (sin volcar PII masiva).
-5. Request síncrono endurecido para ~81k filas: `memory_limit` / `time_limit` / `max_rows` en `config/formacion.php`; reader `setReadDataOnly` + `getHighestDataRow()` (evita filas fantasma); lectura con `rawValue` (sin `getCalculatedValue`); liberar spreadsheet antes del insert.
+3. Si `period`: assert todas las filas tienen `anio`/`mes` del periodo elegido.
+4. `DB::transaction`: delete según modo + `insert` por chunks (`config formacion.import.chunk_size`, default 500). **No** `TRUNCATE` / `migrate:fresh`.
+5. Audit con metadata `{deleted_before, imported, skipped_empty, mode, anio, mes}` (sin volcar PII masiva).
+6. Request síncrono endurecido para ~81k filas: `memory_limit` / `time_limit` / `max_rows` en `config/formacion.php`; reader `setReadDataOnly` + `getHighestDataRow()` (evita filas fantasma); lectura con `rawValue` (sin `getCalculatedValue`); liberar spreadsheet antes del insert.
 
 ### Columnas obligatorias (fila no vacia)
 
@@ -148,7 +156,7 @@ Orden: (1) serial Excel `Date::excelToDateTimeObject`; (2) `Y-m-d`; (3) texto ES
 
 ### Confirmacion UI
 
-Checkbox `confirm_replace` (accepted) + mensaje claro: se eliminaran todos los registros actuales.
+Radio `mode` (`period` por defecto | `all`) + año/mes si period + checkbox `confirm_replace` (texto según modo).
 
 ## Reglas de negocio
 
@@ -156,7 +164,7 @@ Checkbox `confirm_replace` (accepted) + mensaje claro: se eliminaran todos los r
 2. Sidebar: `view.board.gestion_humana.formacion` (o bypass). Pestanas: `formacion.view` o `formacion.edit`.
 3. Plantilla + import: solo `formacion.edit`. Export: `formacion.view` (o edit via implicacion).
 4. Fuente de verdad operativa = tabla tras el ultimo import exitoso.
-5. Import exitoso **borra todos** los registros previos y carga el archivo.
+5. Import `all` borra todos; import `period` borra solo ese año/mes; Excel fuera del mes → rechazo con notificación.
 6. Headers invalidos o errores en filas obligatorias → **no** borrar dataset.
 7. Filtros listado: `anio`, `mes` (1–12), `categoria`, `nombre_curso`, `numero_id`, `nombre`/`nombre_completo` (like), `estado` (`aprobado`/`reprobado`/`no_realizada`). Opciones de curso = distinct del ano (+ mes si aplica), mismo criterio que Dashboard.
 8. DataTables `serverSide: true`; `lengthMenu` sin `-1`; tope length en servidor (max 100).
@@ -231,6 +239,7 @@ Boton `<x-export-excel>`. Auth: `formacion.view`.
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.9 | 2026-10-08 | Import: modo `period` (borra solo año/mes; rechaza Excel con filas de otro mes) + modo `all`. |
 | 1.8 | 2026-10-02 | Dashboard: clic en KPI navega a Formaciones con filtros (estado o ciclo + ano/mes/curso). |
 | 1.7 | 2026-10-02 | Dashboard modo **Por persona (ciclo)** (mejor nota, set mes/año); Formaciones: filtro curso dinámico por ano/mes (`formaciones.options`). |
 | 1.6 | 2026-10-02 | Dashboard: opciones de curso filtradas por ano+mes (`options.cursos` en metrics); si el curso elegido no aplica al mes, se limpia. |

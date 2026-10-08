@@ -165,7 +165,7 @@
                                             <button
                                                 type="button"
                                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                                title="Plantilla e importar (reemplaza todos)"
+                                                title="Plantilla e importar (todo o un mes)"
                                                 aria-label="Plantilla e importar"
                                                 x-data=""
                                                 x-on:click.prevent="$dispatch('open-modal', 'formacion-import')"
@@ -219,6 +219,8 @@
         @include('areas.gestion_humana.formacion.partials.import-modal', [
             'importTemplateUrl' => $importTemplateUrl,
             'importUrl' => $importUrl,
+            'importAnioOptions' => $importAnioOptions ?? [],
+            'importMesOptions' => $importMesOptions ?? [],
             'show' => $showImportModal ?? false,
         ])
     @endif

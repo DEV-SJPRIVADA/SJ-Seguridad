@@ -35,14 +35,107 @@ class FormacionImportService
     ];
 
     /**
+     * @param  'all'|'period'  $mode
      * @return array{
      *     deleted_before: int,
      *     imported: int,
      *     skipped_empty: int,
-     *     errors_count: int
+     *     errors_count: int,
+     *     mode: string,
+     *     anio: int|null,
+     *     mes: int|null
      * }
      */
-    public function import(string $path, ?int $userId = null): array
+    public function import(
+        string $path,
+        ?int $userId = null,
+        string $mode = 'all',
+        ?int $anio = null,
+        ?int $mes = null,
+    ): array {
+        if (! in_array($mode, ['all', 'period'], true)) {
+            throw new \InvalidArgumentException('Modo de importación no válido.');
+        }
+
+        if ($mode === 'period') {
+            if ($anio === null || $mes === null || $mes < 1 || $mes > 12) {
+                throw new \InvalidArgumentException('Para importar un mes debe indicar año y mes válidos.');
+            }
+        }
+
+        $parsed = $this->parseImportFile($path);
+        $rows = $parsed['rows'];
+        $skippedEmpty = $parsed['skipped_empty'];
+
+        if ($mode === 'period') {
+            $this->assertRowsMatchPeriod($rows, (int) $anio, (int) $mes);
+        }
+
+        $chunkSize = max(1, (int) config('formacion.import.chunk_size', 500));
+        $now = now();
+
+        if ($mode === 'all') {
+            $deletedBefore = FormacionRegistro::query()->count();
+
+            DB::transaction(function () use ($rows, $now, $chunkSize): void {
+                FormacionRegistro::query()->delete();
+                $this->insertChunks($rows, $now, $chunkSize);
+            });
+
+            $action = 'import_replace';
+        } else {
+            $deletedBefore = FormacionRegistro::query()
+                ->where('anio', $anio)
+                ->where('mes', $mes)
+                ->count();
+
+            DB::transaction(function () use ($rows, $now, $chunkSize, $anio, $mes): void {
+                FormacionRegistro::query()
+                    ->where('anio', $anio)
+                    ->where('mes', $mes)
+                    ->delete();
+                $this->insertChunks($rows, $now, $chunkSize);
+            });
+
+            $action = 'import_replace_period';
+        }
+
+        $stats = [
+            'deleted_before' => $deletedBefore,
+            'imported' => count($rows),
+            'skipped_empty' => $skippedEmpty,
+            'errors_count' => 0,
+            'mode' => $mode,
+            'anio' => $mode === 'period' ? (int) $anio : null,
+            'mes' => $mode === 'period' ? (int) $mes : null,
+        ];
+
+        app(FormacionAuditLogService::class)->logEvent(
+            eventType: 'import',
+            action: $action,
+            metadata: $stats,
+            userId: $userId,
+        );
+
+        return $stats;
+    }
+
+    /**
+     * @return array{
+     *     rows: list<array{
+     *         numero_id: string,
+     *         nombre_completo: string,
+     *         fecha_inicio: string,
+     *         mes: int,
+     *         anio: int,
+     *         nombre_curso: string,
+     *         calificacion: string|null,
+     *         categoria: string
+     *     }>,
+     *     skipped_empty: int
+     * }
+     */
+    private function parseImportFile(string $path): array
     {
         if (! is_readable($path)) {
             throw new \InvalidArgumentException('No se puede leer el archivo: '.$path);
@@ -50,7 +143,6 @@ class FormacionImportService
 
         $memoryLimit = (string) config('formacion.import.memory_limit', '1024M');
         $timeLimit = (int) config('formacion.import.time_limit', 600);
-        $chunkSize = max(1, (int) config('formacion.import.chunk_size', 500));
         $maxRows = max(1, (int) config('formacion.import.max_rows', 150000));
 
         @ini_set('memory_limit', $memoryLimit);
@@ -110,43 +202,78 @@ class FormacionImportService
             );
         }
 
-        $deletedBefore = FormacionRegistro::query()->count();
-        $now = now();
-
-        DB::transaction(function () use ($rows, $now, $chunkSize): void {
-            FormacionRegistro::query()->delete();
-
-            foreach (array_chunk($rows, $chunkSize) as $chunk) {
-                $payload = array_map(
-                    static function (array $row) use ($now): array {
-                        return [
-                            ...$row,
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ];
-                    },
-                    $chunk,
-                );
-
-                FormacionRegistro::query()->insert($payload);
-            }
-        });
-
-        $stats = [
-            'deleted_before' => $deletedBefore,
-            'imported' => count($rows),
+        return [
+            'rows' => $rows,
             'skipped_empty' => $skippedEmpty,
-            'errors_count' => 0,
+        ];
+    }
+
+    /**
+     * @param  list<array{mes: int, anio: int, fecha_inicio: string}>  $rows
+     */
+    private function assertRowsMatchPeriod(array $rows, int $anio, int $mes): void
+    {
+        $mismatched = [];
+
+        foreach ($rows as $index => $row) {
+            if ((int) $row['anio'] !== $anio || (int) $row['mes'] !== $mes) {
+                $mismatched[] = sprintf(
+                    'fila %d (%s → %02d/%d)',
+                    $index + 2,
+                    $row['fecha_inicio'],
+                    (int) $row['mes'],
+                    (int) $row['anio'],
+                );
+            }
+        }
+
+        if ($mismatched === []) {
+            return;
+        }
+
+        $preview = implode('; ', array_slice($mismatched, 0, 5));
+        $suffix = count($mismatched) > 5 ? ' …' : '';
+        $mesLabel = $this->monthLabel($mes);
+
+        $count = count($mismatched);
+
+        throw new \RuntimeException(
+            "Import rechazado: {$count} fila(s) no pertenecen a {$mesLabel} {$anio}. "
+            .'Todas las fechas del Excel deben ser de ese mes. Dataset sin cambios. '
+            ."Ejemplos: {$preview}{$suffix}"
+        );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function insertChunks(array $rows, mixed $now, int $chunkSize): void
+    {
+        foreach (array_chunk($rows, $chunkSize) as $chunk) {
+            $payload = array_map(
+                static function (array $row) use ($now): array {
+                    return [
+                        ...$row,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                },
+                $chunk,
+            );
+
+            FormacionRegistro::query()->insert($payload);
+        }
+    }
+
+    private function monthLabel(int $mes): string
+    {
+        $labels = [
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
         ];
 
-        app(FormacionAuditLogService::class)->logEvent(
-            eventType: 'import',
-            action: 'import_replace',
-            metadata: $stats,
-            userId: $userId,
-        );
-
-        return $stats;
+        return $labels[$mes] ?? (string) $mes;
     }
 
     /**

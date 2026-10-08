@@ -94,7 +94,11 @@ class FormacionController extends Controller
         $errorBag = $request->session()->get('errors');
         $showImportModal = $canEdit
             && $errorBag !== null
-            && ($errorBag->has('import_file') || $errorBag->has('confirm_replace'));
+            && ($errorBag->has('import_file')
+                || $errorBag->has('confirm_replace')
+                || $errorBag->has('mode')
+                || $errorBag->has('anio')
+                || $errorBag->has('mes'));
 
         return view('areas.gestion_humana.formacion.formaciones', [
             'subTabs' => $this->getFormacionSubTabs('formaciones'),
@@ -111,6 +115,8 @@ class FormacionController extends Controller
             'exportUrl' => route('gestion-humana.formacion.formaciones.export', $activeQuery),
             'importTemplateUrl' => route('gestion-humana.formacion.formaciones.import-template'),
             'importUrl' => route('gestion-humana.formacion.formaciones.import'),
+            'importAnioOptions' => $this->importAnioOptions($options['anios']),
+            'importMesOptions' => $this->importMesOptions(),
         ]);
     }
 
@@ -172,22 +178,90 @@ class FormacionController extends Controller
             return back()->withErrors(['import_file' => 'No se pudo leer el archivo subido.']);
         }
 
+        $mode = (string) $request->validated('mode');
+        $anio = $mode === 'period' ? (int) $request->validated('anio') : null;
+        $mes = $mode === 'period' ? (int) $request->validated('mes') : null;
+
         try {
-            $stats = $this->importService->import($path, $request->user()?->id);
+            $stats = $this->importService->import(
+                $path,
+                $request->user()?->id,
+                $mode,
+                $anio,
+                $mes,
+            );
         } catch (\Throwable $e) {
-            return back()->withErrors(['import_file' => $e->getMessage()]);
+            return back()->withErrors(['import_file' => $e->getMessage()])->withInput();
         }
 
-        $message = sprintf(
-            'Importación completada: %d registro(s) cargado(s). Se eliminaron %d registro(s) previos. Filas vacías omitidas: %d.',
-            $stats['imported'],
-            $stats['deleted_before'],
-            $stats['skipped_empty'],
-        );
+        if ($mode === 'period') {
+            $message = sprintf(
+                'Importación del periodo %02d/%d completada: %d registro(s) cargado(s). Se eliminaron %d registro(s) de ese mes. Filas vacías omitidas: %d. El resto de meses no se modificó.',
+                (int) $mes,
+                (int) $anio,
+                $stats['imported'],
+                $stats['deleted_before'],
+                $stats['skipped_empty'],
+            );
+        } else {
+            $message = sprintf(
+                'Importación completada: %d registro(s) cargado(s). Se eliminaron %d registro(s) previos. Filas vacías omitidas: %d.',
+                $stats['imported'],
+                $stats['deleted_before'],
+                $stats['skipped_empty'],
+            );
+        }
 
         return redirect()
             ->route('gestion-humana.formacion.formaciones')
             ->with('status', $message);
+    }
+
+    /**
+     * @param  list<array{value: string, label: string}>  $fromFilters
+     * @return list<array{value: string, label: string}>
+     */
+    private function importAnioOptions(array $fromFilters): array
+    {
+        $years = [];
+        foreach ($fromFilters as $opt) {
+            $y = (string) ($opt['value'] ?? '');
+            if ($y !== '') {
+                $years[$y] = $y;
+            }
+        }
+
+        $current = (string) now()->year;
+        $years[$current] = $current;
+        // Ofrecer el año siguiente para cargar el mes nuevo antes de que exista en BD.
+        $next = (string) (now()->year + 1);
+        $years[$next] = $next;
+
+        krsort($years, SORT_NUMERIC);
+
+        return array_map(
+            static fn (string $y): array => ['value' => $y, 'label' => $y],
+            array_values($years),
+        );
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function importMesOptions(): array
+    {
+        $labels = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+        ];
+
+        $options = [];
+        foreach ($labels as $value => $label) {
+            $options[] = ['value' => (string) $value, 'label' => $label];
+        }
+
+        return $options;
     }
 
     /**

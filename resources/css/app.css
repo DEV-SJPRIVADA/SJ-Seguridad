@@ -1807,6 +1807,96 @@ a {
     color: #78350f;
 }
 
+.formacion-import-modal .formacion-import-modal__mode {
+    display: block;
+    margin: 0 0 0.9rem;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-legend {
+    display: block;
+    width: 100%;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-text-soft, #64748b);
+}
+
+.formacion-import-modal .formacion-import-modal__mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card {
+    position: relative;
+    display: flex !important;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.65rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card:hover {
+    border-color: #93c5fd;
+    background: #f8fafc;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card.is-active {
+    border-color: var(--color-primary, #1d4ed8);
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14);
+}
+
+.formacion-import-modal .formacion-import-modal__mode-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0.15rem 0 0;
+    flex: 0 0 auto;
+    accent-color: var(--color-primary, #1d4ed8);
+    cursor: pointer;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card-title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text, #0f172a);
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card-desc {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-text-soft, #64748b);
+}
+
 .acreditaciones-reporte-diario-file-actions {
     margin-top: 0.45rem;
 }

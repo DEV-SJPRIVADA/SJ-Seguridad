@@ -39,6 +39,10 @@ Antes de implementar o lanzar al Agente Feature, **validar con el usuario** cual
 
 Tras la respuesta del usuario, actualizar brief/run log y recien entonces implementar.
 
+## UI en features con pantallas nuevas
+
+Al orquestar tableros/pestanas nuevas, el Brief/Task Card debe exigir calidad visual desde el primer slice ([`.cursor/rules/module-ui-quality.mdc`](../rules/module-ui-quality.mdc), [`docs/modules/branding.md`](../../docs/modules/branding.md)): vista referencia a clonar, chrome del proyecto, no “backend primero / front feo después”. El Revisor trata UI cruda como bloqueante.
+
 ## Gates obligatorios (no saltar)
 
 Antes de editar `app/`, `resources/`, `routes/`, `database/`, `config/access.php` o docs de modulo:

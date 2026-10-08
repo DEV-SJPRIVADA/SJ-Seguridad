@@ -11,11 +11,11 @@ Consultar y mantener en la plataforma el registro de formaciones que antes se ma
 Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 
 - **Dashboard** — dos modos: **Por curso** (indicadores por registro: total, aprobados, reprobados, no realizadas) y **Por persona (ciclo)** (quién completó el set de cursos del mes o del año). Filtros de año, mes, estado y curso.
-- **Formaciones** — listado paginado (carga por páginas), filtros (año, mes, categoría, curso, número de ID, nombre, estado), exportar a Excel. Con permiso de edición: descargar plantilla e importar un archivo que **reemplaza todos** los registros actuales.
+- **Formaciones** — listado paginado (carga por páginas), filtros (año, mes, categoría, curso, número de ID, nombre, estado), exportar a Excel. Con permiso de edición: descargar plantilla e importar un archivo (**todo** el dataset o **solo un mes**).
 
 **En esta versión:**
 
-- No hay alta, edición ni borrado de filas una a una: la única forma de cambiar los datos es el import completo.
+- No hay alta, edición ni borrado de filas una a una: la única forma de cambiar los datos es el import (completo o por mes).
 - Categoría y nombre de curso se toman tal cual del Excel (no hay catálogos internos).
 - Este tablero es **independiente** del tablero **Cursos** (vigencias, Ficha empleados, etc.): son procesos distintos.
 - El volumen puede ser muy alto (decenas de miles de filas); el listado se carga por páginas.
@@ -29,7 +29,8 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 | Formaciones | Pestaña del listado operativo con filtros y exportación. |
 | Ciclo | Conjunto de cursos distintos del mes (o del año si no hay mes). Por persona se toma la mejor nota de cada curso. |
 | Plantilla | Archivo Excel vacío con las columnas exactas que debe tener la carga. |
-| Importar (reemplazo total) | Cargar un archivo que **borra todos** los registros actuales y deja solo los del archivo nuevo. |
+| Importar (todo) | Cargar un archivo que **borra todos** los registros actuales y deja solo los del archivo nuevo. |
+| Importar (solo un mes) | Elige año y mes: **borra solo ese mes** e inserta el Excel. Todas las fechas del archivo deben ser de ese mes; si hay otra, se rechaza y se avisa. Ideal para cargar octubre sin tocar septiembre. |
 | Número de ID | Identificador de la persona en el Excel de formaciones. |
 | Fecha de inicio del curso | Fecha a partir de la cual el sistema calcula el mes y el año del registro. |
 
@@ -38,7 +39,7 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 | Perfil | Puede |
 | --- | --- |
 | Consulta (ver tablero + permiso de consulta) | Ver Dashboard y Formaciones; filtrar; exportar a Excel. No descarga plantilla ni importa. |
-| Operativo (permiso de edición) | Todo lo anterior + descargar plantilla e importar con reemplazo total (previa confirmación). |
+| Operativo (permiso de edición) | Todo lo anterior + descargar plantilla e importar (todo o un mes, previa confirmación). |
 | Administración de usuarios | Asignar el tablero y los permisos de Formación a quienes correspondan (no vienen por defecto al rol usuario/administrador). |
 
 ## Desarrollo
@@ -69,10 +70,12 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 ### Descargar plantilla e importar (solo edición)
 
 1. En **Formaciones**, abra la opción de carga / plantilla.
-2. Descargue la **plantilla** y complete las columnas con los mismos encabezados (número de ID, nombre completo, fecha de inicio del curso, nombre completo del curso, calificación, nombre de la categoría).
-3. La fecha puede ir en formato de texto en español (por ejemplo *jueves, 4 de junio de 2026, 00:00*), como fecha Excel o como año-mes-día.
-4. Antes de enviar, marque la casilla de **confirmación**: el sistema **eliminará todos los registros actuales** y cargará solo los del archivo.
-5. Importe el archivo. Si las columnas no coinciden o hay filas con datos obligatorios inválidos, **no** se borran los datos previos y verá el mensaje de error.
+2. Elija el **tipo de carga**:
+   - **Solo un mes** — indique año y mes (ej. octubre). Se borran solo esos registros y se carga el Excel. Todas las fechas del archivo deben ser de ese mes; si hay otra, se **rechaza** y se muestra el aviso (no se cambia nada).
+   - **Reemplazar todo** — borra **todos** los registros y deja solo los del archivo.
+3. Descargue la **plantilla** y complete las columnas con los mismos encabezados (número de ID, nombre completo, fecha de inicio del curso, nombre completo del curso, calificación, nombre de la categoría).
+4. La fecha puede ir en formato de texto en español (por ejemplo *jueves, 4 de junio de 2026, 00:00*), como fecha Excel o como año-mes-día.
+5. Marque la casilla de **confirmación** e importe. Si las columnas no coinciden o hay filas inválidas, **no** se borran datos previos.
 6. Si el archivo es muy grande, la operación puede tardar varios minutos; evite usar el listado al mismo tiempo hasta que termine.
 7. Tras un import exitoso, el listado y el Dashboard reflejan el nuevo conjunto de datos.
 
@@ -82,6 +85,7 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-10-08 | Agent | Import: opción **solo un mes** (borra ese año/mes; rechaza Excel con filas de otro mes). |
 | 1.8 | 2026-10-02 | Agent | Clic en un KPI del Dashboard abre Formaciones ya filtrado (estado o ciclo). |
 | 1.7 | 2026-10-02 | Agent | Dashboard: modo Por persona (ciclo). Formaciones: el filtro Curso se limita al año/mes como en el Dashboard. |
 | 1.6 | 2026-10-02 | Agent | Dashboard: el filtro Curso lista solo cursos del mes seleccionado (o todos si el mes está vacío). |

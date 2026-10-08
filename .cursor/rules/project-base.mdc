@@ -42,6 +42,10 @@ Todos los selectores en formularios, modales y filtros deben usar `<x-searchable
 
 Tablas operativas grandes: `serverSide: true` + endpoint JSON (no `@foreach` masivo). Regla y riesgos a consultar antes de codear: [`.cursor/rules/datatables-server-side.mdc`](datatables-server-side.mdc).
 
+## Calidad UI (tableros y vistas nuevas)
+
+La **primera** entrega visual debe verse como un rediseño pulido, no un prototipo feo. Copiar shell de un modulo referencia (Seguimientos / Cursos / Formacion), chrome `req-manage-*`, searchable-select, icon-btn canonicos, tokens branding. Regla: [`.cursor/rules/module-ui-quality.mdc`](module-ui-quality.mdc) + [`docs/modules/branding.md`](../../docs/modules/branding.md).
+
 ## Navegacion chrome
 
 Mismo estilo pill para sidebar (`.sidebar-link`), tableros y pestanas (`.module-tab`). Padding contenedor ↔ botones: `0.2rem`. Detalle: [`.cursor/rules/nav-chrome-ui.mdc`](nav-chrome-ui.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).
