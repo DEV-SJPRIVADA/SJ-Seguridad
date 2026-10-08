@@ -127,7 +127,7 @@ No hace falta tocar controladores de generación (`TerminationLetterController`,
 
 **Variables de salario:** `${SALARIO}` (número formateado) y `${SALARIO_EN_LETRAS}` (texto, mayúsculas, p. ej. `UN MILLÓN QUINIENTOS MIL PESOS`). Equivalente de vínculo: `${SALARIO_VINCULO}` / `${SALARIO_VINCULO_EN_LETRAS}`.
 
-**Desvinculación — fechas de vínculo:** `${FECHA_TERMINACION_VINCULO}` (el pack la deja en MAYÚSCULAS), `${FECHA_TERMINACION_VINCULO_MINUSCULAS}` (misma fecha en minúsculas) y `${FECHA_ENTREGA_DOTACION}` (= `termination_date` del periodo + 3 días contables sin domingos ni festivos CO, vía `ColombiaHolidays`).
+**Desvinculación — fechas de vínculo:** `${FECHA_TERMINACION_VINCULO}` (el pack la deja en MAYÚSCULAS), `${FECHA_TERMINACION_VINCULO_MINUSCULAS}` (misma fecha en minúsculas) y `${FECHA_ENTREGA_DOTACION}` (= `termination_date` del periodo + 3 días hábiles lun–vie, sin sábados/domingos ni festivos CO, vía `ColombiaHolidays`).
 
 ### Placeholders — Cartas vacaciones (FEAT-043)
 

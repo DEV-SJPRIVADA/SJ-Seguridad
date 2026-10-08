@@ -135,7 +135,7 @@ class LetterVariableBuilder
         $variables['FECHA_TERMINACION_VINCULO_MINUSCULAS'] = $variables['FECHA_TERMINACION_VINCULO'] !== ''
             ? mb_strtolower($variables['FECHA_TERMINACION_VINCULO'], 'UTF-8')
             : '';
-        // Terminación del vínculo + 3 días contables (sin domingos ni festivos CO).
+        // Terminación del vínculo + 3 días contables (lun–vie; sin sábados, domingos ni festivos CO).
         $variables['FECHA_ENTREGA_DOTACION'] = $this->formatLongDate(
             $this->addCountableDaysAfter($period->termination_date, 3)
         );
@@ -521,7 +521,7 @@ class LetterVariableBuilder
     }
 
     /**
-     * Suma N días contables después de $start (no cuenta el día de inicio; salta domingos y festivos CO).
+     * Suma N días hábiles después de $start (no cuenta el día de inicio; salta sábados, domingos y festivos CO).
      */
     private function addCountableDaysAfter(mixed $start, int $days): ?Carbon
     {
@@ -543,7 +543,8 @@ class LetterVariableBuilder
             $steps++;
             $cursor->addDay();
 
-            if ($cursor->isSunday() || $this->colombiaHolidays->isHoliday($cursor)) {
+            // Solo lun–vie y que no sea festivo nacional.
+            if (! $cursor->isWeekday() || $this->colombiaHolidays->isHoliday($cursor)) {
                 continue;
             }
 

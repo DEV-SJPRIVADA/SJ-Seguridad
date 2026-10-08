@@ -122,7 +122,39 @@ class LetterVariableBuilderTest extends TestCase
 
         $variables = app(LetterVariableBuilder::class)->build($period, $entry, $profile);
 
-        // Mié 1 abr: +1 sáb 4, +2 lun 6, +3 mar 7 (salta 2–3 santo y dom 5).
-        $this->assertSame('7 de Abril del 2026', $variables['FECHA_ENTREGA_DOTACION']);
+        // Mié 1 abr: salta 2–3 santo, sáb 4 y dom 5 → +1 lun 6, +2 mar 7, +3 mié 8.
+        $this->assertSame('8 de Abril del 2026', $variables['FECHA_ENTREGA_DOTACION']);
+    }
+
+    public function test_fecha_entrega_dotacion_skips_saturday(): void
+    {
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809888779',
+            'hired_full_name' => 'Dotacion Viernes',
+            'moved_to_ficha_at' => now(),
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809888779',
+            'full_name' => 'Dotacion Viernes',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => '2026-06-05',
+        ]);
+
+        $period = EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'hire_date' => '2025-01-01',
+            'termination_date' => '2026-06-05',
+            'last_work_day' => '2026-06-05',
+        ]);
+
+        $variables = app(LetterVariableBuilder::class)->build($period, $entry, $profile);
+
+        // Vie 5 jun: salta sáb 6, dom 7 y festivo Corpus (lun 8) → +1 mar 9, +2 mié 10, +3 jue 11.
+        $this->assertSame('11 de Junio del 2026', $variables['FECHA_ENTREGA_DOTACION']);
     }
 }

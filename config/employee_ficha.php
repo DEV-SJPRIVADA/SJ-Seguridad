@@ -464,7 +464,7 @@ return [
             'ULTIMO_DIA_LABORES' => 'Ultimo dia de labores',
             'FECHA_TERMINACION_VINCULO' => 'Fecha de terminacion (vinculo; en desvinculación va en MAYÚSCULAS)',
             'FECHA_TERMINACION_VINCULO_MINUSCULAS' => 'Fecha de terminacion del vinculo en minúsculas',
-            'FECHA_ENTREGA_DOTACION' => 'Fecha terminacion vinculo + 3 dias (sin domingos ni festivos CO)',
+            'FECHA_ENTREGA_DOTACION' => 'Fecha terminacion vinculo + 3 dias habiles (lun–vie; sin sabados, domingos ni festivos CO)',
             'FECHA_TERMINACION' => 'Fecha de terminacion (legacy)',
             'OBSERVACIONES_TERMINACION' => 'Observaciones de terminacion',
         ],
