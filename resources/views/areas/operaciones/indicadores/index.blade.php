@@ -15,7 +15,7 @@
                         <table class="supply-table js-datatable indicadores-table indicadores-table--capture">
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
+                                    <th>Código</th>
                                     <th>Indicador</th>
                                     <th>Meta</th>
                                     <th>Acciones</th>

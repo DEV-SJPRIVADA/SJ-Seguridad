@@ -31,7 +31,7 @@
     <div class="req-form__meta req-form__meta--edit">
         @if ($requisition)
             <div class="req-form__meta-item">
-                <span class="req-form__meta-label">Codigo</span>
+                <span class="req-form__meta-label">Código</span>
                 <span class="req-form__meta-value">{{ $requisition->code }}</span>
             </div>
             <div class="req-form__meta-item">
@@ -40,11 +40,11 @@
             </div>
         @endif
         <div class="req-form__meta-item">
-            <span class="req-form__meta-label">Lider / solicitante</span>
+            <span class="req-form__meta-label">Líder / solicitante</span>
             <span class="req-form__meta-value">{{ $leaderName }}</span>
         </div>
         <div class="req-form__meta-item">
-            <span class="req-form__meta-label">Area solicitante</span>
+            <span class="req-form__meta-label">Área solicitante</span>
             <span class="req-form__meta-value">{{ $moduleLabel }}</span>
         </div>
         @if ($requisition && $showHumanResourcesFields)
@@ -60,7 +60,7 @@
             <span class="req-form__section-step">1</span>
             <div>
                 <h4 class="req-form__section-title">Motivo de la solicitud</h4>
-                <p class="req-form__section-desc">Motivo registrado por el solicitante y datos de persona (cedula/nombre) si es reemplazo o movimiento interno.</p>
+                <p class="req-form__section-desc">Motivo registrado por el solicitante y datos de persona (cédula/nombre) si es reemplazo o movimiento interno.</p>
             </div>
         </header>
 
@@ -83,7 +83,7 @@
 
         <div id="js-replacement-group" class="req-form__replacement" @unless($showReplacementInitially) hidden @endunless>
             <div class="form-field">
-                <x-input-label for="replacement_document" value="Cedula a quien reemplaza" />
+                <x-input-label for="replacement_document" value="Cédula a quien reemplaza" />
                 <input id="replacement_document" name="replacement_document" type="text" class="form-input" value="{{ old('replacement_document', $requisition?->replacement_document) }}" placeholder="Documento de identidad">
                 <x-input-error :messages="$errors->get('replacement_document')" />
             </div>
@@ -121,14 +121,14 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="sex" value="Genero *" />
+                <x-input-label for="sex" value="Género *" />
                 <x-searchable-select
                     id="sex"
                     name="sex"
                     :options="$sexOptions"
                     :value="old('sex', $requisition?->sex)"
-                    placeholder="Selecciona una opcion"
-                    searchPlaceholder="Buscar genero…"
+                    placeholder="Selecciona una opción"
+                    searchPlaceholder="Buscar género…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('sex')" />
@@ -146,21 +146,21 @@
         <header class="req-form__section-head">
             <span class="req-form__section-step">3</span>
             <div>
-                <h4 class="req-form__section-title">Servicio y ubicacion</h4>
-                <p class="req-form__section-desc">Area operativa, cliente, ciudad y programacion del servicio.</p>
+                <h4 class="req-form__section-title">Servicio y ubicación</h4>
+                <p class="req-form__section-desc">Área operativa, cliente, ciudad y programación del servicio.</p>
             </div>
         </header>
 
         <div class="form-grid form-grid--two">
             <div class="form-field">
-                <x-input-label for="operating_area_key" value="Area operativa *" />
+                <x-input-label for="operating_area_key" value="Área operativa *" />
                 <x-searchable-select
                     id="operating_area_key"
                     name="operating_area_key"
                     :options="$areaOptions"
                     :value="old('operating_area_key', $requisition?->operating_area_key)"
-                    placeholder="Selecciona un area"
-                    searchPlaceholder="Buscar area…"
+                    placeholder="Selecciona un área"
+                    searchPlaceholder="Buscar área…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('operating_area_key')" />
@@ -209,14 +209,14 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="programming_type_id" value="Tipo de programacion *" />
+                <x-input-label for="programming_type_id" value="Tipo de programación *" />
                 <x-searchable-select
                     id="programming_type_id"
                     name="programming_type_id"
                     :options="$catalogs['programmingTypes']"
                     :value="old('programming_type_id', $requisition?->programming_type_id)"
-                    placeholder="Selecciona una programacion"
-                    searchPlaceholder="Buscar programacion…"
+                    placeholder="Selecciona una programación"
+                    searchPlaceholder="Buscar programación…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('programming_type_id')" />
@@ -228,7 +228,7 @@
         <header class="req-form__section-head">
             <span class="req-form__section-step">4</span>
             <div>
-                <h4 class="req-form__section-title">Perfil y dotacion</h4>
+                <h4 class="req-form__section-title">Perfil y dotación</h4>
                 <p class="req-form__section-desc">Funciones del puesto y uniforme requerido.</p>
             </div>
         </header>
@@ -241,14 +241,14 @@
             </div>
 
             <div class="form-field form-field--full">
-                <x-input-label for="uniform_id" value="Dotacion requerida *" />
+                <x-input-label for="uniform_id" value="Dotación requerida *" />
                 <x-searchable-select
                     id="uniform_id"
                     name="uniform_id"
                     :options="$catalogs['uniforms']"
                     :value="old('uniform_id', $requisition?->uniform_id)"
-                    placeholder="Selecciona una dotacion"
-                    searchPlaceholder="Buscar dotacion…"
+                    placeholder="Selecciona una dotación"
+                    searchPlaceholder="Buscar dotación…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('uniform_id')" />
@@ -280,8 +280,8 @@
             <header class="req-form__section-head">
                 <span class="req-form__section-step">5</span>
                 <div>
-                    <h4 class="req-form__section-title">Compensacion y contrato</h4>
-                    <p class="req-form__section-desc">Valores economicos y condiciones contractuales para la contratacion.</p>
+                    <h4 class="req-form__section-title">Compensación y contrato</h4>
+                    <p class="req-form__section-desc">Valores económicos y condiciones contractuales para la contratación.</p>
                 </div>
             </header>
 
@@ -300,7 +300,7 @@
                 </div>
 
                 <div class="form-field">
-                    <x-input-label for="contract_duration" value="Duracion del contrato *" />
+                    <x-input-label for="contract_duration" value="Duración del contrato *" />
                     <input id="contract_duration" name="contract_duration" type="text" class="form-input" value="{{ old('contract_duration', $requisition?->contract_duration) }}">
                     <x-input-error :messages="$errors->get('contract_duration')" />
                 </div>
@@ -318,19 +318,19 @@
                 </div>
 
                 <div class="form-field">
-                    <x-input-label for="mobility_allowance" value="Auxilio de movilizacion" />
+                    <x-input-label for="mobility_allowance" value="Auxilio de movilización" />
                     <input id="mobility_allowance" name="mobility_allowance" type="text" class="form-input js-currency" data-raw-name="mobility_allowance" value="{{ old('mobility_allowance', $requisition?->mobility_allowance ?? 0) }}">
                     <x-input-error :messages="$errors->get('mobility_allowance')" />
                 </div>
 
                 <div class="form-field">
-                    <x-input-label for="statutory_bonus" value="Bonificacion prestacional *" />
+                    <x-input-label for="statutory_bonus" value="Bonificación prestacional *" />
                     <input id="statutory_bonus" name="statutory_bonus" type="text" class="form-input js-currency" data-raw-name="statutory_bonus" value="{{ old('statutory_bonus', $requisition?->statutory_bonus ?? 0) }}">
                     <x-input-error :messages="$errors->get('statutory_bonus')" />
                 </div>
 
                 <div class="form-field">
-                    <x-input-label for="non_statutory_bonus" value="Bonificacion no prestacional" />
+                    <x-input-label for="non_statutory_bonus" value="Bonificación no prestacional" />
                     <input id="non_statutory_bonus" name="non_statutory_bonus" type="text" class="form-input js-currency" data-raw-name="non_statutory_bonus" value="{{ old('non_statutory_bonus', $requisition?->non_statutory_bonus ?? 0) }}">
                     <x-input-error :messages="$errors->get('non_statutory_bonus')" />
                 </div>
@@ -353,8 +353,8 @@
             <header class="req-form__section-head">
                 <span class="req-form__section-step">6</span>
                 <div>
-                    <h4 class="req-form__section-title">Gestion y seguimiento</h4>
-                    <p class="req-form__section-desc">Reclutador, estado y observaciones operativas de gestion humana.</p>
+                    <h4 class="req-form__section-title">Gestión y seguimiento</h4>
+                    <p class="req-form__section-desc">Reclutador, estado y observaciones operativas de Gestión Humana.</p>
                 </div>
             </header>
 
@@ -388,7 +388,7 @@
                 </div>
 
                 <div class="form-field form-field--full">
-                    <x-input-label for="human_resources_observation" value="Observaciones de gestion humana" />
+                    <x-input-label for="human_resources_observation" value="Observaciones de Gestión Humana" />
                     <textarea id="human_resources_observation" name="human_resources_observation" class="form-textarea" rows="3" placeholder="Notas internas visibles en el seguimiento operativo.">{{ old('human_resources_observation', $requisition?->human_resources_observation) }}</textarea>
                     <x-input-error :messages="$errors->get('human_resources_observation')" />
                 </div>
@@ -400,7 +400,7 @@
                 <span class="req-form__section-step">7</span>
                 <div>
                     <h4 class="req-form__section-title">Datos de la persona contratada</h4>
-                    <p class="req-form__section-desc">Informacion del colaborador contratado para el cierre de la vacante.</p>
+                    <p class="req-form__section-desc">Información del colaborador contratado para el cierre de la vacante.</p>
                 </div>
             </header>
 

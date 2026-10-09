@@ -63,7 +63,7 @@
                                         name="q"
                                         class="form-input archivo-page__search-input"
                                         value="{{ $filters['q'] }}"
-                                        placeholder="Cedula, nombre o codigo de requisicion"
+                                        placeholder="Cédula, nombre o código de requisición"
                                     >
                                     <button
                                         type="submit"
@@ -77,8 +77,8 @@
                                 <button
                                     type="button"
                                     class="btn btn--secondary btn--sm"
-                                    title="Consulta multiple por cedulas"
-                                    aria-label="Consulta multiple por cedulas"
+                                    title="Consulta múltiple por cédulas"
+                                    aria-label="Consulta múltiple por cédulas"
                                     x-data=""
                                     x-on:click.prevent="$dispatch('open-modal', 'archivo-consult')"
                                 >
@@ -95,7 +95,7 @@
                                 <strong id="archivo-entries-count">…</strong>
                                 <span id="archivo-entries-count-label">empleados</span>
                                 @if ($filters['q'] ?? '')
-                                    · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                    · Búsqueda: <strong>{{ $filters['q'] }}</strong>
                                 @endif
                                 @if ($activeConsultation ?? null)
                                     · Consulta #{{ $activeConsultation->id }}
@@ -137,7 +137,7 @@
                                 <p class="archivo-consult-banner__meta">
                                     {{ $activeConsultation->created_at?->format('d/m/Y H:i') }}
                                     · {{ $activeConsultation->user?->name ?: 'Usuario' }}
-                                    · {{ $activeConsultation->documents_matched }}/{{ $activeConsultation->documents_requested }} cedula(s) en ficha
+                                    · {{ $activeConsultation->documents_matched }}/{{ $activeConsultation->documents_requested }} cédula(s) en ficha
                                 </p>
                                 <p class="archivo-consult-banner__types">
                                     <strong>Motivos:</strong> {{ implode(' · ', $activeConsultation->typeLabels()) }}
@@ -148,7 +148,7 @@
                                     </p>
                                 @endif
                                 <p class="archivo-consult-banner__docs">
-                                    <strong>Cedulas:</strong> {{ implode(', ', $activeConsultation->document_numbers ?? []) }}
+                                    <strong>Cédulas:</strong> {{ implode(', ', $activeConsultation->document_numbers ?? []) }}
                                 </p>
                                 @if (! empty($activeConsultation->documents_not_found))
                                     <p class="archivo-consult-banner__missing">
@@ -180,7 +180,7 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>Cedula</th>
+                                    <th>Cédula</th>
                                     <th>Nombre</th>
                                     <th>Cargo</th>
                                     <th>Cliente</th>

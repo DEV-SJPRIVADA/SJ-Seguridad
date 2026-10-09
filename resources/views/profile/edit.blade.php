@@ -20,7 +20,7 @@
         <div class="app-container app-container--narrow page-stack">
             @if (session('status') === 'temporary-password')
                 <div class="notice notice--warning">
-                    Debes actualizar tu contrasena temporal antes de continuar usando el sistema.
+                    Debes actualizar tu contraseña temporal antes de continuar usando el sistema.
                 </div>
             @endif
 

@@ -12,8 +12,8 @@ return [
      * @var list<array{code: string, name: string, sort_order: int}>
      */
     'document_type_defaults' => [
-        ['code' => 'C', 'name' => 'Cedula de ciudadania', 'sort_order' => 1],
-        ['code' => 'CE', 'name' => 'Cedula de extranjeria', 'sort_order' => 2],
+        ['code' => 'C', 'name' => 'Cédula de ciudadanía', 'sort_order' => 1],
+        ['code' => 'CE', 'name' => 'Cédula de extranjería', 'sort_order' => 2],
         ['code' => 'N', 'name' => 'NIT', 'sort_order' => 3],
         ['code' => 'TI', 'name' => 'Tarjeta de identidad', 'sort_order' => 4],
         ['code' => 'PT', 'name' => 'Permiso temporal', 'sort_order' => 5],

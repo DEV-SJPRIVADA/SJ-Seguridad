@@ -13,7 +13,7 @@
                 <div class="pur-req-list__toolbar">
                     <div>
                         <h2 class="page-title">Mis solicitudes de insumos</h2>
-                        <p class="page-subtitle">Historial de pedidos de tu usuario en el area seleccionada.</p>
+                        <p class="page-subtitle">Historial de pedidos de tu usuario en el área seleccionada.</p>
                     </div>
                     <div class="pur-req-detail__toolbar-actions">
                         <x-export-excel

@@ -15,7 +15,7 @@
                         <table class="supply-table js-datatable indicadores-table indicadores-table--consolidado">
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
+                                    <th>Código</th>
                                     <th>Indicador</th>
                                     <th>Acciones</th>
                                 </tr>

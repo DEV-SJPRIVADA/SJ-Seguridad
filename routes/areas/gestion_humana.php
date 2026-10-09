@@ -212,6 +212,7 @@ Route::middleware(['password.changed'])
 
         Route::get('/validaciones', [MtSt04Controller::class, 'validaciones'])->name('validaciones');
         Route::get('/validaciones/datatable', [MtSt04Controller::class, 'validacionesDatatable'])->name('validaciones.datatable');
+        Route::get('/validaciones/exportar', [MtSt04Controller::class, 'exportValidaciones'])->name('validaciones.export');
         Route::post('/validaciones/omitir', [MtSt04Controller::class, 'omitRequiresPsicofisicos'])->name('validaciones.omit');
         Route::post('/validaciones/habilitar', [MtSt04Controller::class, 'enableRequiresPsicofisicos'])->name('validaciones.enable');
     });

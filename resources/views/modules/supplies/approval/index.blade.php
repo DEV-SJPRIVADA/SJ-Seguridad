@@ -12,8 +12,8 @@
             <div class="page-header-inner purchase-requests-page__intro">
                 <div class="pur-req-list__toolbar">
                     <div>
-                        <h2 class="page-title">Aprobacion de insumos</h2>
-                        <p class="page-subtitle">Solicitudes pendientes de revision y ajuste de cantidades.</p>
+                        <h2 class="page-title">Aprobación de insumos</h2>
+                        <p class="page-subtitle">Solicitudes pendientes de revisión y ajuste de cantidades.</p>
                     </div>
                     <div class="pur-req-detail__toolbar-actions">
                         <x-export-excel
@@ -53,7 +53,7 @@
                                     <th>Folio</th>
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
-                                    <th>Area</th>
+                                    <th>Área</th>
                                     <th>Sede</th>
                                     <th>Items</th>
                                     <th>Estado</th>
@@ -95,7 +95,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-muted">No hay solicitudes pendientes de aprobacion.</td>
+                                        <td colspan="8" class="text-muted">No hay solicitudes pendientes de aprobación.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

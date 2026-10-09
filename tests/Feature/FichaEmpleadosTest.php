@@ -725,7 +725,7 @@ class FichaEmpleadosTest extends TestCase
             ->get(route('gestion-humana.ficha-empleados.employees.create'))
             ->assertOk()
             ->assertSee('id="document_type"', false)
-            ->assertSee('C — Cedula de ciudadania', false)
+            ->assertSee('C — Cédula de ciudadanía', false)
             ->assertSee('TI — Tarjeta de identidad', false);
     }
 
@@ -1324,7 +1324,7 @@ class FichaEmpleadosTest extends TestCase
         $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.catalogs.index'))
             ->assertOk()
-            ->assertSee('Catalogos de empleados')
+            ->assertSee('Catálogos de empleados')
             ->assertSee('Tipo documento')
             ->assertSee('EPS');
 

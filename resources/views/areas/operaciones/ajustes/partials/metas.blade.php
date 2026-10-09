@@ -1,6 +1,6 @@
 <div class="indicadores-subpanel">
     <h4 class="indicadores-subpanel__title">Metas por indicador</h4>
-    <p class="indicadores-subpanel__text">Define el operador de comparacion, la meta y el umbral critico de cada FT-OP. Los valores se reflejan en el listado de captura, la ficha y el semaforo de cumplimiento. <strong>FT-OP-03 (Compuesto):</strong> meta = frecuencia maxima (A); critico = impacto economico maximo (B). No usa un solo operador.</p>
+    <p class="indicadores-subpanel__text">Define el operador de comparación, la meta y el umbral crítico de cada FT-OP. Los valores se reflejan en el listado de captura, la ficha y el semáforo de cumplimiento. <strong>FT-OP-03 (Compuesto):</strong> meta = frecuencia máxima (A); crítico = impacto económico máximo (B). No usa un solo operador.</p>
 
     <form method="POST" action="{{ route('indicadores.admin.metas.update') }}" class="indicadores-form-compact">
         @csrf
@@ -13,7 +13,7 @@
                         <th>Indicador</th>
                         <th>Operador</th>
                         <th>Meta (%)</th>
-                        <th>Critico (%)</th>
+                        <th>Crítico (%)</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -14,9 +14,9 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Auditoria del sistema</h3>
+                    <h3 class="panel-title">Auditoría del sistema</h3>
                     <p class="panel-text panel-text--compact">
-                        Registro central de acciones por modulo, area y usuario. Opciones de filtro basadas en los ultimos {{ $lookbackDays }} dias.
+                        Registro central de acciones por módulo, área y usuario. Opciones de filtro basadas en los últimos {{ $lookbackDays }} días.
                     </p>
                 </div>
 
@@ -41,25 +41,25 @@
                             <form method="GET" action="{{ route('admin.audit.index') }}" class="req-manage-filters__toolbar">
                                 <div class="req-manage-filters__query-row audit-filters__query-row">
                                     <div class="req-manage-filters__query-field audit-filters__field">
-                                        <label class="req-manage-filters__label" for="audit-module">Modulo</label>
+                                        <label class="req-manage-filters__label" for="audit-module">Módulo</label>
                                         <x-searchable-select
                                             id="audit-module"
                                             name="module"
                                             :options="collect($modules)->map(fn($m) => ['value' => $m, 'label' => $moduleLabels[$m] ?? $m])->all()"
                                             :value="request('module')"
-                                            placeholder="Todos los modulos"
-                                            searchPlaceholder="Buscar modulo…"
+                                            placeholder="Todos los módulos"
+                                            searchPlaceholder="Buscar módulo…"
                                         />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field">
-                                        <label class="req-manage-filters__label" for="audit-area">Area</label>
+                                        <label class="req-manage-filters__label" for="audit-area">Área</label>
                                         <x-searchable-select
                                             id="audit-area"
                                             name="area"
                                             :options="collect($areas)->map(fn($a) => ['value' => $a, 'label' => $areaLabels[$a] ?? $a])->all()"
                                             :value="request('area')"
                                             placeholder="Todas las areas"
-                                            searchPlaceholder="Buscar area…"
+                                            searchPlaceholder="Buscar área…"
                                         />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field">
@@ -74,7 +74,7 @@
                                         />
                                     </div>
                                     <div class="req-manage-filters__query-field audit-filters__field">
-                                        <label class="req-manage-filters__label" for="audit-action">Accion</label>
+                                        <label class="req-manage-filters__label" for="audit-action">Acción</label>
                                         <x-searchable-select
                                             id="audit-action"
                                             name="action"
@@ -130,16 +130,16 @@
                                 <strong>{{ number_format($logs->total()) }}</strong>
                                 {{ $logs->total() === 1 ? 'registro' : 'registros' }}
                                 @if (request('module'))
-                                    · Modulo: <strong>{{ $moduleLabels[request('module')] ?? request('module') }}</strong>
+                                    · Módulo: <strong>{{ $moduleLabels[request('module')] ?? request('module') }}</strong>
                                 @endif
                                 @if (request('area'))
-                                    · Area: <strong>{{ $areaLabels[request('area')] ?? request('area') }}</strong>
+                                    · Área: <strong>{{ $areaLabels[request('area')] ?? request('area') }}</strong>
                                 @endif
                                 @if (request('event_type'))
                                     · Evento: <strong>{{ request('event_type') }}</strong>
                                 @endif
                                 @if (request('action'))
-                                    · Accion: <strong>{{ request('action') }}</strong>
+                                    · Acción: <strong>{{ request('action') }}</strong>
                                 @endif
                                 @if (request('user_id'))
                                     · Usuario: <strong>{{ $users->firstWhere('id', (int) request('user_id'))?->name ?? request('user_id') }}</strong>
@@ -171,10 +171,10 @@
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Usuario</th>
-                                    <th>Modulo</th>
-                                    <th>Area</th>
+                                    <th>Módulo</th>
+                                    <th>Área</th>
                                     <th>Evento</th>
-                                    <th>Accion</th>
+                                    <th>Acción</th>
                                     <th>Entidad</th>
                                     <th>Motivo</th>
                                 </tr>

@@ -30,8 +30,8 @@
                                 <button
                                     type="button"
                                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Agregar varias cedulas"
-                                    aria-label="Agregar varias cedulas"
+                                    title="Agregar varias cédulas"
+                                    aria-label="Agregar varias cédulas"
                                     x-on:click.prevent="openBulkCedulasModal()"
                                     x-bind:disabled="processing || bulkApplying"
                                 >
@@ -64,9 +64,9 @@
                             <table class="data-table desvinculaciones-masivos__table">
                                 <thead>
                                     <tr>
-                                        <th class="desvinculaciones-masivos__col-cedula">CEDULA</th>
+                                        <th class="desvinculaciones-masivos__col-cedula">CÉDULA</th>
                                         <th>NOMBRE</th>
-                                        <th>FECHA DESVINCULACION</th>
+                                        <th>FECHA DESVINCULACIÓN</th>
                                         <th>TIPO CARTA</th>
                                         <th>FIRMA</th>
                                         <th>Causal</th>
@@ -583,7 +583,7 @@
                                 return {
                                     ok: false,
                                     document_number: documentNumber,
-                                    message: 'Error al consultar la cedula.',
+                                    message: 'Error al consultar la cédula.',
                                 };
                             }
                         },
@@ -721,7 +721,7 @@
 
                             const rows = this.buildPayloadRows();
                             if (rows.length === 0) {
-                                this.errorMessage = 'Agregue al menos una fila con cedula.';
+                                this.errorMessage = 'Agregue al menos una fila con cédula.';
                                 return;
                             }
 
@@ -745,7 +745,7 @@
 
                                 if (response.status === 422 && data.errors) {
                                     const first = Object.values(data.errors).flat()[0];
-                                    this.errorMessage = first || 'Revise la validacion del lote.';
+                                    this.errorMessage = first || 'Revise la validación del lote.';
                                     return;
                                 }
 

@@ -280,7 +280,7 @@
                                             </label>
                                         </th>
                                     @endif
-                                    <th>CEDULA</th>
+                                    <th>CÉDULA</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>CARGO</th>
                                     <th>CARGO APO</th>

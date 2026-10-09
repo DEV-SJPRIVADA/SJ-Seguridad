@@ -17,7 +17,7 @@
     <div class="panel indicadores-modal" data-modal-panel>
         <div class="panel__header">
             <div class="indicadores-modal__header">
-                <h4 class="panel-title">Clasificacion de siniestros</h4>
+                <h4 class="panel-title">Clasificación de siniestros</h4>
                 <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cerrar</button>
             </div>
         </div>
@@ -77,7 +77,7 @@
                 @if (! ($readOnly ?? false))
                     <button type="button" class="btn btn--secondary btn--sm js-add-classification-row">Agregar fila</button>
                     <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cancelar</button>
-                    <button type="button" class="btn btn--primary btn--sm js-close-classification-modal">Guardar clasificacion</button>
+                    <button type="button" class="btn btn--primary btn--sm js-close-classification-modal">Guardar clasificación</button>
                 @else
                     <button type="button" class="btn btn--secondary btn--sm js-close-classification-modal">Cerrar</button>
                 @endif

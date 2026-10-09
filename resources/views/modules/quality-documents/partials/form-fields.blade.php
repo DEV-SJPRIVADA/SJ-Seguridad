@@ -7,11 +7,11 @@
 
 <div class="doc-form">
     <div class="doc-form__section">
-        <h4 class="doc-form__section-title">Identificacion</h4>
+        <h4 class="doc-form__section-title">Identificación</h4>
 
         <div class="form-grid form-grid--two">
             <div class="form-field">
-                <label class="form-label" for="code">Codigo</label>
+                <label class="form-label" for="code">Código</label>
                 <input type="text" name="code" id="code" class="form-input" value="{{ old('code', $document->code ?? '') }}" placeholder="Ej. SG-FR-001" required>
                 @error('code')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
@@ -107,7 +107,7 @@
             </div>
 
             <div class="form-field">
-                <label class="form-label" for="current_version">Version actual</label>
+                <label class="form-label" for="current_version">Versión actual</label>
                 <input type="text" name="current_version" id="current_version" class="form-input" value="{{ old('current_version', $document->current_version ?? '') }}" placeholder="Ej. 01">
                 @error('current_version')<p class="text-small text-danger">{{ $message }}</p>@enderror
             </div>
@@ -200,8 +200,8 @@
         <div class="form-field doc-form__visibility-block">
             <div class="doc-form__visibility-header">
                 <div>
-                    <span class="form-label">Areas con acceso</span>
-                    <p class="text-small text-muted">Areas que podran consultar y descargar el documento.</p>
+                    <span class="form-label">Áreas con acceso</span>
+                    <p class="text-small text-muted">Áreas que podrán consultar y descargar el documento.</p>
                 </div>
                 <div class="doc-form__visibility-actions">
                     <span class="doc-form__selection-count" data-areas-count>0 seleccionadas</span>

@@ -9,7 +9,7 @@
                 <div class="panel__header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h3 class="panel-title">Administracion de Documentos</h3>
+                            <h3 class="panel-title">Administración de documentos</h3>
                             <p class="panel-text">Publica archivos o enlaces y define areas o usuarios que pueden consultarlos.</p>
                         </div>
                         <div style="display:flex;gap:0.5rem;align-items:center;">
@@ -26,7 +26,7 @@
                         <table class="supply-table js-datatable quality-documents-admin-table">
                             <thead>
                                 <tr>
-                                    <th class="quality-documents-admin-table__col-code">Codigo</th>
+                                    <th class="quality-documents-admin-table__col-code">Código</th>
                                     <th class="quality-documents-admin-table__col-title">Nombre</th>
                                     <th>Proceso</th>
                                     <th>Tipo</th>
@@ -34,7 +34,7 @@
                                     <th>Estado doc.</th>
                                     <th>Estado act.</th>
                                     <th>Almacenamiento</th>
-                                    <th>Version</th>
+                                    <th>Versión</th>
                                     <th>Ult. actualizacion</th>
                                     <th>Areas con acceso</th>
                                     <th>Activo</th>

@@ -10,7 +10,7 @@
             <span class="dev-req-form__meta-value">FO-TIC-23</span>
         </div>
         <div class="dev-req-form__meta-item">
-            <span class="dev-req-form__meta-label">Area de trabajo</span>
+            <span class="dev-req-form__meta-label">Área de trabajo</span>
             <span class="dev-req-form__meta-value">{{ strtoupper((string) $module) }}</span>
         </div>
         @if ($r)
@@ -20,7 +20,7 @@
             </div>
             @if ($r->code)
                 <div class="dev-req-form__meta-item">
-                    <span class="dev-req-form__meta-label">Codigo</span>
+                    <span class="dev-req-form__meta-label">Código</span>
                     <span class="dev-req-form__meta-value">{{ $r->code }}</span>
                 </div>
             @endif
@@ -36,20 +36,20 @@
         <header class="dev-req-form__section-head">
             <span class="dev-req-form__section-step">1</span>
             <div>
-                <h4 class="dev-req-form__section-title">Clasificacion</h4>
-                <p class="dev-req-form__section-desc">Define area, tipo, prioridad sugerida y el lider que debe aprobar.</p>
+                <h4 class="dev-req-form__section-title">Clasificación</h4>
+                <p class="dev-req-form__section-desc">Define área, tipo, prioridad sugerida y el líder que debe aprobar.</p>
             </div>
         </header>
 
         <div class="form-grid form-grid--two">
             <div class="form-field">
-                <label class="form-label" for="area_key">Area solicitante *</label>
+                <label class="form-label" for="area_key">Área solicitante *</label>
                 <x-searchable-select
                     id="area_key"
                     name="area_key"
                     :options="collect($areas)->map(fn ($label, $value) => ['value' => (string) $value, 'label' => $label])->values()->all()"
                     :value="old('area_key', $r?->area_key ?? $module)"
-                    placeholder="Seleccione area"
+                    placeholder="Seleccione área"
                     :required="true"
                     :allowClear="false"
                 />
@@ -82,14 +82,14 @@
                 <x-input-error :messages="$errors->get('suggested_priority')" />
             </div>
             <div class="form-field">
-                <label class="form-label" for="leader_id">Lider de area que aprueba *</label>
+                <label class="form-label" for="leader_id">Líder de área que aprueba *</label>
                 <x-searchable-select
                     id="leader_id"
                     name="leader_id"
                     :options="collect($leaders)->map(fn ($d) => ['value' => (string) $d->id, 'label' => $d->name])->all()"
                     :value="old('leader_id', $r?->leader_id)"
-                    placeholder="Seleccione lider"
-                    searchPlaceholder="Buscar lider…"
+                    placeholder="Seleccione líder"
+                    searchPlaceholder="Buscar líder…"
                     :required="true"
                     :allowClear="false"
                 />
@@ -102,7 +102,7 @@
         <header class="dev-req-form__section-head">
             <span class="dev-req-form__section-step">2</span>
             <div>
-                <h4 class="dev-req-form__section-title">Identificacion del requerimiento</h4>
+                <h4 class="dev-req-form__section-title">Identificación del requerimiento</h4>
                 <p class="dev-req-form__section-desc">Nombre claro del pedido y datos de quien lo solicita.</p>
             </div>
         </header>
@@ -141,7 +141,7 @@
                 <x-input-error :messages="$errors->get('requester_email')" />
             </div>
             <div class="form-field">
-                <label class="form-label" for="requester_phone">Telefono / ext</label>
+                <label class="form-label" for="requester_phone">Teléfono / ext</label>
                 <input type="text" name="requester_phone" id="requester_phone" class="form-input"
                        value="{{ old('requester_phone', $r?->requester_phone) }}">
             </div>
@@ -168,15 +168,15 @@
             <span class="dev-req-form__section-step">3</span>
             <div>
                 <h4 class="dev-req-form__section-title">Necesidad y contexto</h4>
-                <p class="dev-req-form__section-desc">Explica el problema actual, lo que debe hacer el sistema y quienes lo usaran.</p>
+                <p class="dev-req-form__section-desc">Explica el problema actual, lo que debe hacer el sistema y quiénes lo usarán.</p>
             </div>
         </header>
 
         @foreach ([
-            'description' => ['label' => 'Descripcion general *', 'hint' => 'Resumen del objetivo de negocio en pocas lineas.', 'rows' => 3],
-            'current_process_problem' => ['label' => 'Como se hace hoy y cual es el problema *', 'hint' => 'Describe el proceso actual y el dolor operativo.', 'rows' => 4],
-            'desired_steps' => ['label' => 'Que necesita que haga el sistema (paso a paso) *', 'hint' => 'Lista los pasos esperados del flujo.', 'rows' => 4],
-            'users_description' => ['label' => 'Quien usara esto *', 'hint' => 'Roles, areas o perfiles que interactuaran con la solucion.', 'rows' => 3],
+            'description' => ['label' => 'Descripción general *', 'hint' => 'Resumen del objetivo de negocio en pocas líneas.', 'rows' => 3],
+            'current_process_problem' => ['label' => 'Cómo se hace hoy y cuál es el problema *', 'hint' => 'Describe el proceso actual y el dolor operativo.', 'rows' => 4],
+            'desired_steps' => ['label' => 'Qué necesita que haga el sistema (paso a paso) *', 'hint' => 'Lista los pasos esperados del flujo.', 'rows' => 4],
+            'users_description' => ['label' => 'Quién usará esto *', 'hint' => 'Roles, áreas o perfiles que interactuarán con la solución.', 'rows' => 3],
         ] as $field => $meta)
             <div class="form-field">
                 <label class="form-label" for="{{ $field }}">{{ $meta['label'] }}</label>
@@ -198,13 +198,13 @@
             <span class="dev-req-form__section-step">4</span>
             <div>
                 <h4 class="dev-req-form__section-title">Alcance y reglas</h4>
-                <p class="dev-req-form__section-desc">Delimita que incluye, que queda fuera y que no se debe permitir.</p>
+                <p class="dev-req-form__section-desc">Delimita qué incluye, qué queda fuera y qué no se debe permitir.</p>
             </div>
         </header>
 
         @foreach ([
-            'restrictions' => ['label' => 'Que no se deberia permitir *', 'required' => true, 'rows' => 3],
-            'scope_in' => ['label' => 'Alcance: que SI incluye *', 'required' => true, 'rows' => 3],
+            'restrictions' => ['label' => 'Qué no se debería permitir *', 'required' => true, 'rows' => 3],
+            'scope_in' => ['label' => 'Alcance: qué SÍ incluye *', 'required' => true, 'rows' => 3],
             'scope_out' => ['label' => 'Fuera de alcance', 'required' => false, 'rows' => 3],
         ] as $field => $meta)
             <div class="form-field">
@@ -231,9 +231,9 @@
         </header>
 
         @foreach ([
-            'acceptance_criteria' => ['label' => 'Criterio de aceptacion *', 'required' => true, 'rows' => 3],
+            'acceptance_criteria' => ['label' => 'Criterio de aceptación *', 'required' => true, 'rows' => 3],
             'reports' => ['label' => 'Reportes o indicadores', 'required' => false, 'rows' => 3],
-            'desired_date_justification' => ['label' => 'Justificacion de urgencia / fecha', 'required' => false, 'rows' => 3],
+            'desired_date_justification' => ['label' => 'Justificación de urgencia / fecha', 'required' => false, 'rows' => 3],
             'notes' => ['label' => 'Notas adicionales', 'required' => false, 'rows' => 3],
         ] as $field => $meta)
             <div class="form-field">

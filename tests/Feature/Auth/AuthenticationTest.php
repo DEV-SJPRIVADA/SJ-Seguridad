@@ -16,10 +16,10 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200)
-            ->assertSee('Correo electronico')
-            ->assertSee('Contrasena')
+            ->assertSee('Correo electrónico')
+            ->assertSee('Contraseña')
             ->assertSee('Recordarme')
-            ->assertSee('Iniciar sesion')
+            ->assertSee('Iniciar sesión')
             ->assertSee('form-password-field__toggle')
             ->assertSee('guest-shell--login')
             ->assertSee(config('app.name').' Logo');

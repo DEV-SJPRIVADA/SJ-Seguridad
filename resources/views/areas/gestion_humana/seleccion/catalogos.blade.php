@@ -151,7 +151,7 @@
                                                                 method="POST"
                                                                 action="{{ route('gestion-humana.seleccion.catalogos.destroy', ['type' => $catalog['key'], 'item' => $item->id]) }}"
                                                                 class="cursos-catalogo-page__delete-form"
-                                                                onsubmit="return confirm('Eliminar este registro del catalogo?')"
+                                                                onsubmit="return confirm('¿Eliminar este registro del catálogo?')"
                                                             >
                                                                 @csrf
                                                                 @method('DELETE')
@@ -169,7 +169,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="5" class="text-muted">Sin registros en este catalogo.</td>
+                                                    <td colspan="5" class="text-muted">Sin registros en este catálogo.</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
@@ -347,7 +347,7 @@
                     editForm.action = button.getAttribute('data-update-url') || '';
                     var codeLabel = document.getElementById('seleccion-modal-code-label');
                     var nameLabel = document.getElementById('seleccion-modal-name-label');
-                    if (codeLabel) { codeLabel.textContent = button.getAttribute('data-code-label') || 'Codigo'; }
+                    if (codeLabel) { codeLabel.textContent = button.getAttribute('data-code-label') || 'Código'; }
                     if (nameLabel) { nameLabel.textContent = button.getAttribute('data-name-label') || 'Nombre'; }
                     openModal();
                     editName.focus();

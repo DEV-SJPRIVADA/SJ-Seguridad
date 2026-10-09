@@ -120,7 +120,7 @@
                                         >
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="approved-filter-export-status">Estado exportacion</label>
+                                        <label class="form-label" for="approved-filter-export-status">Estado exportación</label>
                                         <x-searchable-select
                                             id="approved-filter-export-status"
                                             name="export_status"
@@ -163,10 +163,10 @@
                                     <th>Folio</th>
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
-                                    <th>Area</th>
+                                    <th>Área</th>
                                     <th>Sede</th>
                                     <th>Items</th>
-                                    <th>Exportacion</th>
+                                    <th>Exportación</th>
                                     <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
                             </thead>

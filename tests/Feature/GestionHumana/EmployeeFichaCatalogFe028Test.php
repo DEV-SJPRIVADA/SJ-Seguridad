@@ -66,7 +66,7 @@ class EmployeeFichaCatalogFe028Test extends TestCase
         $this->assertDatabaseHas('payroll_catalog_items', [
             'catalog_type' => 'document_type',
             'code' => 'CE',
-            'name' => 'Cedula de extranjeria',
+            'name' => 'Cédula de extranjería',
         ]);
 
         $this->assertDatabaseHas('payroll_catalog_items', [

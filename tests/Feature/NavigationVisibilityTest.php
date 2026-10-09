@@ -34,7 +34,7 @@ class NavigationVisibilityTest extends TestCase
 
         $tabLabels = collect($adminModule['items'] ?? [])->pluck('label')->all();
 
-        $this->assertContains('Auditoria del sistema', $tabLabels);
+        $this->assertContains('Auditoría del sistema', $tabLabels);
     }
 
     public function test_super_admin_sees_canonical_requisitions_board_once(): void
@@ -191,7 +191,7 @@ class NavigationVisibilityTest extends TestCase
             ->assertSee('Ana Sidebar')
             ->assertSee('Operaciones')
             ->assertSee('Usuario')
-            ->assertSee('Cerrar sesion')
+            ->assertSee('Cerrar sesión')
             ->assertSee(config('app.name').' Logo', false);
     }
 

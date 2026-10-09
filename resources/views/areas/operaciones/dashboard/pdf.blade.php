@@ -20,7 +20,7 @@
             </td>
             <td>
                 <div class="caption">Regla</div>
-                <div style="font-size:10px;">>=90 ESTABLE | 75-89 ATENCION | &lt;75 CRITICO</div>
+                <div style="font-size:10px;">>=90 ESTABLE | 75-89 ATENCIÓN | &lt;75 CRÍTICO</div>
             </td>
         </tr>
     </table>
@@ -29,7 +29,7 @@
     <table class="dashboard-table">
         <thead>
             <tr>
-                <th>Codigo</th>
+                <th>Código</th>
                 <th>Indicador</th>
                 <th>Mes anterior ({{ $dashboard['previous_period']['label'] ?? '' }})</th>
                 <th>Resultado</th>
@@ -75,19 +75,19 @@
                                 <td>{{ $row['improvements_count'] }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="5">No hay usuarios con capturas registradas en este periodo.</td></tr>
+                            <tr><td colspan="5">No hay usuarios con capturas registradas en este período.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </td>
             <td>
-                <h4 class="section-title">Indicadores criticos</h4>
+                <h4 class="section-title">Indicadores críticos</h4>
                 <table class="dashboard-table">
                     <thead>
                         <tr>
                             <th>Usuario</th>
                             <th>Indicador</th>
-                            <th>Valor critico</th>
+                            <th>Valor crítico</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,7 +98,7 @@
                                 <td>{{ number_format((float) $row['critical_value'], 2) }}%</td>
                             </tr>
                         @empty
-                            <tr><td colspan="3">No hay indicadores en estado critico para este periodo.</td></tr>
+                            <tr><td colspan="3">No hay indicadores en estado crítico para este período.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

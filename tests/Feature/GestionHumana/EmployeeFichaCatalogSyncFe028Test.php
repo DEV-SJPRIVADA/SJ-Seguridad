@@ -85,7 +85,7 @@ class EmployeeFichaCatalogSyncFe028Test extends TestCase
         $profile = EmployeeFichaProfile::query()->create([
             'document_number' => '99887766',
             'full_name' => 'Test User',
-            'document_type' => 'CE — Cedula de extranjeria',
+            'document_type' => 'CE — Cédula de extranjería',
         ]);
 
         app(EmployeeFichaProfileCatalogSync::class)->syncAndSave($profile);

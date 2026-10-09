@@ -19,8 +19,8 @@
                         <table class="supply-table js-datatable" style="width:100%" data-dt-responsive="false" data-dt-compact="true">
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
-                                    <th>Titulo</th>
+                                    <th>Código</th>
+                                    <th>Título</th>
                                     <th>Tipo</th>
                                     <th>Prioridad</th>
                                     <th>Estado</th>

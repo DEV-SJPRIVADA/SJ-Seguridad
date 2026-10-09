@@ -14,7 +14,7 @@
                         </div>
                         <form method="GET" action="{{ route('indicadores.admin.consolidado.show', $indicator) }}" style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:flex-end;">
                             <div>
-                                <label class="form-label">Ano</label>
+                                <label class="form-label">Año</label>
                                 <select name="year" onchange="this.form.submit()" class="supply-input supply-select">
                                     @foreach ($headerFilters['years'] as $yearOption)
                                         <option value="{{ $yearOption }}" @selected($headerFilters['selectedYear'] === (int) $yearOption)>{{ $yearOption }}</option>
@@ -43,7 +43,7 @@
                             </div>
                             <div>
                                 <span class="status-pill {{ $headerFilters['isPeriodClosed'] ? 'status-pill--req-cancelada' : 'status-pill--req-contratado' }}">
-                                    {{ $headerFilters['isPeriodClosed'] ? 'Periodo cerrado' : 'Periodo abierto' }}
+                                    {{ $headerFilters['isPeriodClosed'] ? 'Período cerrado' : 'Período abierto' }}
                                 </span>
                             </div>
                         </form>

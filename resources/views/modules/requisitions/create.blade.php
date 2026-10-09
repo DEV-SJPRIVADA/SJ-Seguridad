@@ -7,7 +7,7 @@
         <div class="app-container">
             <div class="page-header-inner" style="padding-top: 0; margin-bottom: 1.25rem;">
                 <h2 class="page-title">Solicitar personal</h2>
-                <p class="page-subtitle">Completa las secciones del formulario. La solicitud queda registrada en tu area y solo gestion humana podra modificarla despues.</p>
+                <p class="page-subtitle">Completa las secciones del formulario. La solicitud queda registrada en tu área y solo Gestión Humana podrá modificarla después.</p>
             </div>
 
             <div class="req-form-layout">
@@ -56,25 +56,25 @@
                         </div>
                         <div class="panel__body">
                             <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item">Interno:personal administrativo; no requiere cliente de matriz.</li>
+                                <li class="req-form-guide__item">Interno: personal administrativo; no requiere cliente de matriz.</li>
                                 <li class="req-form-guide__item">Externo: debe elegir cliente por nombre o NIT.</li>
                                 <li class="req-form-guide__item">Motivo alineado con la necesidad real del servicio.</li>
                                 <li class="req-form-guide__item">Reemplazo: incluir datos del colaborador saliente.</li>
                                 <li class="req-form-guide__item">Cargo o servicio nuevo: puede indicar cantidad de plazas.</li>
                                 <li class="req-form-guide__item">Perfil detallado: funciones, turno y responsabilidades.</li>
-                                <li class="req-form-guide__item">Centro de costo valido para facturacion interna.</li>
+                                <li class="req-form-guide__item">Centro de costo válido para facturación interna.</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Que pasa despues</h3>
+                            <h3 class="panel-title">Qué pasa después</h3>
                         </div>
                         <div class="panel__body">
                             <p class="panel-text" style="margin: 0; line-height: 1.55;">
-                                Gestion humana recibe la solicitud, asigna reclutador y actualiza el estado.
-                                Puedes consultar el estado desde Mis requisiciones de tu area.
+                                Gestión Humana recibe la solicitud, asigna reclutador y actualiza el estado.
+                                Puedes consultar el estado desde Mis requisiciones de tu área.
                             </p>
                         </div>
                     </div>

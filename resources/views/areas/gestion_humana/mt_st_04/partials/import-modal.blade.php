@@ -12,7 +12,7 @@
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Importar matriz MT-ST-04</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        Upsert por cédula. La cédula debe existir en Ficha; nombre y cargo se leen de Ficha.
+                        Upsert por cédula. Si la cédula está en Ficha, nombre y cargo se leen de ahí; si no, igual se importa y queda marcada como Sin Ficha.
                         Si hay cédulas duplicadas en el archivo, la última fila gana.
                     </p>
                 </div>

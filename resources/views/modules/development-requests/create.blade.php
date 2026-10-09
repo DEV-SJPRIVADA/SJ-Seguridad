@@ -8,7 +8,7 @@
             <div class="page-header-inner development-requests-page__intro">
                 <h2 class="page-title">Nueva solicitud de desarrollo</h2>
                 <p class="page-subtitle">
-                    Formato FO-TIC-23. Completa las secciones en orden. Si eres el lider seleccionado, al enviar se radica de inmediato.
+                    Formato FO-TIC-23. Completa las secciones en orden. Si eres el líder seleccionado, al enviar se radica de inmediato.
                 </p>
             </div>
 
@@ -25,7 +25,7 @@
 
                         <div class="dev-req-form-actions">
                             <p class="dev-req-form-actions__note">
-                                Puedes guardar borrador y continuar despues, o enviar para aprobacion / radicacion.
+                                Puedes guardar borrador y continuar después, o enviar para aprobación / radicación.
                             </p>
                             <div class="dev-req-form-actions__group">
                                 <a
@@ -52,11 +52,11 @@
                         <div class="panel__body">
                             <ul class="dev-req-form-guide__list">
                                 <li class="dev-req-form-guide__item">Prioridad alineada con el impacto real del negocio.</li>
-                                <li class="dev-req-form-guide__item">Titulo concreto: que se pide y para que area.</li>
-                                <li class="dev-req-form-guide__item">Describe el proceso actual y el problema, no solo la solucion.</li>
+                                <li class="dev-req-form-guide__item">Título concreto: qué se pide y para qué área.</li>
+                                <li class="dev-req-form-guide__item">Describe el proceso actual y el problema, no solo la solución.</li>
                                 <li class="dev-req-form-guide__item">Pasos esperados del sistema en orden operativo.</li>
                                 <li class="dev-req-form-guide__item">Alcance SI / NO claro para evitar ambiguedades.</li>
-                                <li class="dev-req-form-guide__item">Criterio de aceptacion verificable al entregar.</li>
+                                <li class="dev-req-form-guide__item">Criterio de aceptación verificable al entregar.</li>
                                 <li class="dev-req-form-guide__item">Si hay urgencia, justifica la fecha deseada.</li>
                             </ul>
                         </div>
@@ -64,13 +64,13 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Que pasa despues</h3>
+                            <h3 class="panel-title">Qué pasa después</h3>
                         </div>
                         <div class="panel__body">
                             <ol class="dev-req-form-flow">
                                 <li class="dev-req-form-flow__item">
                                     <span class="dev-req-form-flow__step">1</span>
-                                    <span>El lider aprueba o devuelve la solicitud.</span>
+                                    <span>El líder aprueba o devuelve la solicitud.</span>
                                 </li>
                                 <li class="dev-req-form-flow__item">
                                     <span class="dev-req-form-flow__step">2</span>

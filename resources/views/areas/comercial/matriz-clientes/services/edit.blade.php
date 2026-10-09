@@ -20,7 +20,7 @@
 
                         <div class="comercial-form__meta">
                             <div class="comercial-form__meta-item">
-                                <span class="comercial-form__meta-label">Accion</span>
+                                <span class="comercial-form__meta-label">Acción</span>
                                 <span class="comercial-form__meta-value">Editar servicio</span>
                             </div>
                             <div class="comercial-form__meta-item">
@@ -55,8 +55,8 @@
                         </div>
                         <div class="panel__body">
                             <ul class="comercial-form-guide__list">
-                                <li class="comercial-form-guide__item">El cliente se selecciona por busqueda de nombre o NIT.</li>
-                                <li class="comercial-form-guide__item">Portafolio y tipo de servicio deben coincidir con la operacion real.</li>
+                                <li class="comercial-form-guide__item">El cliente se selecciona por búsqueda de nombre o NIT.</li>
+                                <li class="comercial-form-guide__item">Portafolio y tipo de servicio deben coincidir con la operación real.</li>
                                 <li class="comercial-form-guide__item">Fin de contrato alimenta alertas de por vencer / vencido.</li>
                                 <li class="comercial-form-guide__item">Inactivar el servicio se hace desde el detalle del cliente o listado.</li>
                             </ul>

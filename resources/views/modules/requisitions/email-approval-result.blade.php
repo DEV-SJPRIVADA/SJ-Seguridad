@@ -6,9 +6,9 @@
 
                 <div class="alert {{ $action === 'approve' ? 'alert--success' : 'alert--warning' }} ficha-empleados-page__alert">
                     @if ($action === 'approve')
-                        La requisicion <strong>{{ $requisition->code }}</strong> fue <strong>autorizada</strong> correctamente. Gestion humana puede continuar el proceso.
+                        La requisición <strong>{{ $requisition->code }}</strong> fue <strong>autorizada</strong> correctamente. Gestión Humana puede continuar el proceso.
                     @else
-                        La requisicion <strong>{{ $requisition->code }}</strong> fue <strong>rechazada</strong>.
+                        La requisición <strong>{{ $requisition->code }}</strong> fue <strong>rechazada</strong>.
                     @endif
                 </div>
 

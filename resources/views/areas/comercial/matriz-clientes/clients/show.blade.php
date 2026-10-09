@@ -67,17 +67,17 @@
                             </span>
                             <div>
                                 <h3 class="comercial-form__section-title">Datos del cliente</h3>
-                                <p class="comercial-form__section-desc">Informacion maestra del NIT.</p>
+                                <p class="comercial-form__section-desc">Información maestra del NIT.</p>
                             </div>
                         </header>
 
                         <div class="comercial-form__meta">
                             <div class="comercial-form__meta-item">
-                                <span class="comercial-form__meta-label">Telefono</span>
+                                <span class="comercial-form__meta-label">Teléfono</span>
                                 <span class="comercial-form__meta-value">{{ $client->phone ?: '—' }}</span>
                             </div>
                             <div class="comercial-form__meta-item">
-                                <span class="comercial-form__meta-label">Direccion</span>
+                                <span class="comercial-form__meta-label">Dirección</span>
                                 <span class="comercial-form__meta-value">{{ $client->address ?: '—' }}</span>
                             </div>
                             <div class="comercial-form__meta-item">
@@ -194,7 +194,7 @@
                                 <li class="comercial-form-guide__item">Servicios activos: {{ $activeCount }}</li>
                                 <li class="comercial-form-guide__item">Total servicios: {{ $totalCount }}</li>
                                 <li class="comercial-form-guide__item">Ciudad: {{ $client->city ?: '—' }}</li>
-                                <li class="comercial-form-guide__item">Telefono: {{ $client->phone ?: '—' }}</li>
+                                <li class="comercial-form-guide__item">Teléfono: {{ $client->phone ?: '—' }}</li>
                             </ul>
                         </div>
                     </div>

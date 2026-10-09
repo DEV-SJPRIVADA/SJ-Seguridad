@@ -1,6 +1,6 @@
 <div class="indicadores-subpanel">
-    <h4 class="indicadores-subpanel__title">Auditoria</h4>
-    <p class="indicadores-subpanel__text">Registro de acciones sobre capturas, periodos y configuracion.</p>
+    <h4 class="indicadores-subpanel__title">Auditoría</h4>
+    <p class="indicadores-subpanel__text">Registro de acciones sobre capturas, períodos y configuración.</p>
 
     <form method="GET" action="{{ route('indicadores.admin.ajustes') }}" class="indicadores-inline-form">
         <input type="hidden" name="section" value="auditoria">
@@ -17,14 +17,14 @@
                 />
             </div>
             <div class="indicadores-field indicadores-field--md">
-                <label class="form-label">Accion</label>
+                <label class="form-label">Acción</label>
                 <x-searchable-select
                     id="ajustes-audit-action"
                     name="action"
                     :options="collect($actions)->map(fn($ac) => ['value' => $ac, 'label' => $ac])->all()"
                     :value="request('action')"
                     placeholder="Todas las acciones"
-                    searchPlaceholder="Buscar accion…"
+                    searchPlaceholder="Buscar acción…"
                 />
             </div>
             <div class="indicadores-field indicadores-field--action">
@@ -40,7 +40,7 @@
                     <th>Fecha</th>
                     <th>Usuario</th>
                     <th>Evento</th>
-                    <th>Accion</th>
+                    <th>Acción</th>
                     <th>Motivo</th>
                 </tr>
             </thead>

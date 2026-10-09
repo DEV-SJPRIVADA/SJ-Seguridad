@@ -30,7 +30,7 @@
 
                         <div class="dev-req-form-actions">
                             <p class="dev-req-form-actions__note">
-                                Guarda los cambios o envia nuevamente para aprobacion / radicacion.
+                                Guarda los cambios o envía nuevamente para aprobación / radicación.
                             </p>
                             <div class="dev-req-form-actions__group">
                                 <a
@@ -56,10 +56,10 @@
                         </div>
                         <div class="panel__body">
                             <ul class="dev-req-form-guide__list">
-                                <li class="dev-req-form-guide__item">Corrige los campos que motivaron la devolucion.</li>
-                                <li class="dev-req-form-guide__item">Mantén alcance y criterios de aceptacion alineados.</li>
+                                <li class="dev-req-form-guide__item">Corrige los campos que motivaron la devolución.</li>
+                                <li class="dev-req-form-guide__item">Mantén alcance y criterios de aceptación alineados.</li>
                                 <li class="dev-req-form-guide__item">Actualiza anexos si aportan evidencia nueva.</li>
-                                <li class="dev-req-form-guide__item">Verifica lider y prioridad antes de radicar.</li>
+                                <li class="dev-req-form-guide__item">Verifica líder y prioridad antes de radicar.</li>
                             </ul>
                         </div>
                     </div>

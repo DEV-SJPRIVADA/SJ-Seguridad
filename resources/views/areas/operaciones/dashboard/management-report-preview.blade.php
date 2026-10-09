@@ -17,7 +17,7 @@
                 <div class="panel__header">
                     <div class="indicadores-panel-header">
                         <div>
-                            <h3 class="panel-title">Vista previa — Informe de gestion FO-GI-39</h3>
+                            <h3 class="panel-title">Vista previa — Informe de gestión FO-GI-39</h3>
                             <p class="panel-text">Revisa y edita las narrativas antes de descargar el PowerPoint.</p>
                         </div>
                         <div class="indicadores-filter-bar" style="margin:0;">
@@ -46,7 +46,7 @@
                     <form method="GET" action="{{ route('indicadores.export.management.preview') }}" class="indicadores-inline-form">
                         <div class="indicadores-filter-bar">
                             <div class="indicadores-field indicadores-field--xs">
-                                <label class="form-label">Ano</label>
+                                <label class="form-label">Año</label>
                                 <select name="year" class="supply-input supply-select">
                                     @foreach ($years as $yearOption)
                                         <option value="{{ $yearOption }}" @selected($year === (int) $yearOption)>{{ $yearOption }}</option>
@@ -76,7 +76,7 @@
                             <div class="panel__header"><h4 class="panel-title">Portada</h4></div>
                             <div class="panel__body">
                                 <div class="indicadores-field">
-                                    <label class="form-label">Titulo del informe</label>
+                                    <label class="form-label">Título del informe</label>
                                     <input
                                         type="text"
                                         name="report_title"

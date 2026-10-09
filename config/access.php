@@ -15,31 +15,31 @@ return [
         'view.dashboard' => 'Acceder al panel principal',
         'manage.users' => 'Gestionar usuarios, roles y permisos',
         'manage.notifications' => 'Configurar notificaciones por correo (destinatarios y tipos)',
-        'system.view.audit' => 'Ver auditoria global del sistema',
+        'system.view.audit' => 'Ver auditoría global del sistema',
         'manage.requisitions' => 'Gestionar requisiciones de personal (legacy)',
-        'manage.requisition.parameters' => 'Administrar catalogos de requisiciones',
-        'manage.commercial.parameters' => 'Administrar catalogos comerciales (legacy)',
+        'manage.requisition.parameters' => 'Administrar catálogos de requisiciones',
+        'manage.commercial.parameters' => 'Administrar catálogos comerciales (legacy)',
         'comercial.matriz.view' => 'Matriz comercial: Ver clientes y servicios (legacy)',
         'comercial.matriz.manage' => 'Matriz comercial: Administrar clientes y servicios (legacy)',
         'requisitions.tab.dashboard' => 'Requisiciones: Ver Dashboard',
         'requisitions.tab.solicitar' => 'Solicitar requisiciones de personal',
         'requisitions.tab.seguimiento' => 'Requisiciones: Mis requisiciones',
-        'requisitions.tab.gestion' => 'Requisiciones: Gestion de Solicitudes',
-        'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de seleccion',
+        'requisitions.tab.gestion' => 'Requisiciones: Gestión de Solicitudes',
+        'requisitions.selection_officer' => 'Requisiciones: Actuar como encargado de selección',
         'requisitions.approve.management' => 'Requisiciones: Autorizar cargo nuevo (gerencia)',
         'ficha_empleados.view' => 'Ficha empleados: Ver lista de espera y ficha',
         'ficha_empleados.manage' => 'Ficha empleados: Agregar a ficha empleados',
-        'ficha_empleados.terminate' => 'Ficha empleados: Registrar desvinculacion de empleados',
-        'archivo.view' => 'Archivo: Ver ubicacion documental de empleados',
+        'ficha_empleados.terminate' => 'Ficha empleados: Registrar desvinculación de empleados',
+        'archivo.view' => 'Archivo: Ver ubicación documental de empleados',
         'archivo.manage' => 'Archivo: Gestionar estantes y cajas',
         'plantillas_word.view' => 'Plantillas Word: Ver tipos y plantillas',
         'plantillas_word.manage' => 'Plantillas Word: Administrar tipos y plantillas',
         'cartas_notificacion.edit' => 'Cartas Notificación: Generar',
         'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Masivos y Seguimientos)',
         'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
-        'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nomina',
+        'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nómina',
         'cursos.view' => 'Cursos: Ver listado, filtros y export Excel',
-        'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
+        'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catálogo',
         'formacion.view' => 'Formación: Ver Dashboard, listado, filtros y export Excel',
         'formacion.edit' => 'Formación: Descargar plantilla e importar (replace-all)',
         'mt_st_04.view' => 'MT-ST-04: Ver',
@@ -55,23 +55,23 @@ return [
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
         'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
         'reportes_novedades.vacaciones.edit' => 'Vacaciones: Editar',
-        'reportes_novedades.vacaciones.review' => 'Vacaciones: Revisar (Nomina)',
+        'reportes_novedades.vacaciones.review' => 'Vacaciones: Revisar (Nómina)',
         'reportes_novedades.incapacidades.view' => 'Incapacidades: Ver',
         'reportes_novedades.incapacidades.edit' => 'Incapacidades: Editar',
-        'reportes_novedades.incapacidades.review' => 'Incapacidades: Revisar (Nomina)',
+        'reportes_novedades.incapacidades.review' => 'Incapacidades: Revisar (Nómina)',
         'reportes_novedades.retiros.view' => 'Retiros: Ver',
         'reportes_novedades.retiros.edit' => 'Retiros: Editar',
-        'reportes_novedades.retiros.review' => 'Retiros: Revisar (Nomina)',
+        'reportes_novedades.retiros.review' => 'Retiros: Revisar (Nómina)',
         'reportes_novedades.permisos.view' => 'Permisos: Ver',
         'reportes_novedades.permisos.edit' => 'Permisos: Editar',
-        'reportes_novedades.permisos.review' => 'Permisos: Revisar (Nomina)',
+        'reportes_novedades.permisos.review' => 'Permisos: Revisar (Nómina)',
 
         // Permisos Granulares de Suministros
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
-        'supply.tab.quality' => 'Suministros: Acceso a Aprobacion Insumos',
-        'supply.tab.catalog' => 'Suministros: Acceso a Catalogo',
+        'supply.tab.quality' => 'Suministros: Acceso a Aprobación Insumos',
+        'supply.tab.catalog' => 'Suministros: Acceso a Catálogo',
 
-        'manage.supply.catalog' => 'Administrar catalogo de suministros (Full)',
+        'manage.supply.catalog' => 'Administrar catálogo de suministros (Full)',
         'approve.supply.quality' => 'Aprobar insumos (permiso completo)',
         'manage.quality.documents' => 'Calidad: Administrar documentos',
 
@@ -84,7 +84,7 @@ return [
         // Solicitudes de desarrollo (TIC)
         'devreq.tab.create' => 'Solicitudes desarrollo: Crear',
         'devreq.tab.my_requests' => 'Solicitudes desarrollo: Mis solicitudes',
-        'devreq.tab.leader_approval' => 'Solicitudes desarrollo: Aprobacion lider',
+        'devreq.tab.leader_approval' => 'Solicitudes desarrollo: Aprobación líder',
         'devreq.tab.tic_queue' => 'Solicitudes desarrollo: Bandeja TIC',
         'devreq.tab.view' => 'Solicitudes desarrollo: Consulta',
     ],
@@ -102,14 +102,14 @@ return [
             'comercial.clients.edit' => 'Clientes: Editar',
             'comercial.services.view' => 'Servicios: Ver',
             'comercial.services.edit' => 'Servicios: Editar',
-            'comercial.parameters.edit' => 'Catalogos: Editar',
+            'comercial.parameters.edit' => 'Catálogos: Editar',
         ],
     ],
 
     'areas' => [
         'gerencia' => 'Gerencia',
-        'gestion_humana' => 'Gestion humana',
-        'juridico' => 'Juridico',
+        'gestion_humana' => 'Gestión Humana',
+        'juridico' => 'Jurídico',
         'operaciones' => 'Operaciones',
         'programacion' => 'Plan. y Programación',
         'comercial' => 'Comercial',
@@ -120,7 +120,7 @@ return [
     ],
 
     'area_actions' => [
-        'view' => 'Visualizacion',
+        'view' => 'Visualización',
         'manage' => 'Funcionalidad',
     ],
 
@@ -128,7 +128,7 @@ return [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
         'requisiciones' => 'Requisiciones',
-        'gestion_clientes' => 'Gestion Clientes',
+        'gestion_clientes' => 'Gestión Clientes',
         'suministros' => 'Suministros',
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
@@ -359,8 +359,8 @@ return [
         'programa' => 'Programa',
         'manual' => 'Manual',
         'reglamento' => 'Reglamento',
-        'politica' => 'Politica',
-        'indicador_gestion' => 'Indicador de gestion',
+        'politica' => 'Política',
+        'indicador_gestion' => 'Indicador de gestión',
         'protocolo' => 'Protocolo',
         'perfil_cargo' => 'Perfil de cargo',
         'formulario' => 'Formulario',
@@ -374,16 +374,16 @@ return [
             'security' => 'Seguridad',
         ],
         'sections' => [
-            'assigned_area' => 'Solicitar en su area',
+            'assigned_area' => 'Solicitar en su área',
             'global' => 'Funcionalidades transversales',
-            'other_areas' => 'Activa visualizacion de otras areas',
+            'other_areas' => 'Activa visualización de otras áreas',
         ],
         'help' => [
-            'area_key' => 'Contexto operativo del usuario. Las acciones de esta seccion solo aplican en el area seleccionada aqui.',
-            'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, tableros y funciones exclusivas por area.',
-            'assigned_area' => 'Pedir personal, insumos o compras en el area de Identidad. Los modulos del departamento (ficha, archivo, indicadores) estan en cada area.',
-            'global' => 'Acciones que no dependen del area base. Combinelas con tableros visibles en la seccion inferior.',
-            'other_areas' => 'Tableros visibles y modulos propios de cada area (GH, Compras, Operaciones, Comercial, Calidad).',
+            'area_key' => 'Contexto operativo del usuario. Las acciones de esta sección solo aplican en el área seleccionada aquí.',
+            'capabilities_intro' => 'Asigne permisos transversales una sola vez y, debajo, tableros y funciones exclusivas por área.',
+            'assigned_area' => 'Pedir personal, insumos o compras en el área de Identidad. Los módulos del departamento (ficha, archivo, indicadores) están en cada área.',
+            'global' => 'Acciones que no dependen del área base. Combínelas con tableros visibles en la sección inferior.',
+            'other_areas' => 'Tableros visibles y módulos propios de cada área (GH, Compras, Operaciones, Comercial, Calidad).',
         ],
         'assigned_area_permissions' => [
             'requisitions.tab.solicitar',
@@ -396,7 +396,7 @@ return [
         ],
         'global_groups' => [
             'administration' => [
-                'label' => 'Administracion del sistema',
+                'label' => 'Administración del sistema',
                 'permissions' => [
                     'view.dashboard',
                     'manage.users',
@@ -405,7 +405,7 @@ return [
                 ],
             ],
             'requisitions' => [
-                'label' => 'Requisiciones — Gestion humana',
+                'label' => 'Requisiciones — Gestión Humana',
                 'permissions' => [
                     'requisitions.tab.gestion',
                     'requisitions.tab.dashboard',
@@ -415,14 +415,14 @@ return [
                 ],
             ],
             'supplies_calidad' => [
-                'label' => 'Suministros — Calidad (aprobacion)',
+                'label' => 'Suministros — Calidad (aprobación)',
                 'permissions' => [
                     'supply.tab.quality',
                     'approve.supply.quality',
                 ],
             ],
             'supplies_compras' => [
-                'label' => 'Suministros — Compras (catalogo)',
+                'label' => 'Suministros — Compras (catálogo)',
                 'permissions' => [
                     'supply.tab.catalog',
                     'manage.supply.catalog',
@@ -435,13 +435,13 @@ return [
                 ],
             ],
             'directores' => [
-                'label' => 'Directores — Autorizacion compras',
+                'label' => 'Directores — Autorización compras',
                 'permissions' => [
                     'purchase.tab.approval',
                 ],
             ],
             'development_requests' => [
-                'label' => 'Solicitudes de desarrollo — Aprobacion lider',
+                'label' => 'Solicitudes de desarrollo — Aprobación líder',
                 'permissions' => [
                     'devreq.tab.leader_approval',
                 ],
@@ -455,7 +455,7 @@ return [
         ],
         'other_areas' => [
             'gestion_humana' => [
-                'label' => 'Gestion humana',
+                'label' => 'Gestión Humana',
                 'subgroups' => [
                     'boards' => [
                         'label' => 'Ver tableros',
@@ -629,7 +629,7 @@ return [
                         ],
                     ],
                     'matriz' => [
-                        'label' => 'Gestion Clientes (funciones)',
+                        'label' => 'Gestión Clientes (funciones)',
                         'permissions' => [
                             'comercial.clients.view',
                             'comercial.clients.edit',
@@ -650,7 +650,7 @@ return [
                         ],
                     ],
                     'area' => [
-                        'label' => 'Acceso al area',
+                        'label' => 'Acceso al área',
                         'permissions' => [
                             'view.area.calidad',
                             'manage.area.calidad',
@@ -683,7 +683,7 @@ return [
 
     'navigation' => [
         'administracion' => [
-            'label' => 'Administracion',
+            'label' => 'Administración',
             'patterns' => ['admin.users.*', 'admin.notifications.*', 'admin.audit.*'],
             'items' => [
                 [
@@ -693,13 +693,13 @@ return [
                     'patterns' => ['admin.users.index', 'admin.users.edit', 'admin.users.create'],
                 ],
                 [
-                    'label' => 'Configuracion de notificaciones',
+                    'label' => 'Configuración de notificaciones',
                     'route' => 'admin.notifications.index',
                     'permission' => 'manage.notifications',
                     'patterns' => ['admin.notifications.*'],
                 ],
                 [
-                    'label' => 'Auditoria del sistema',
+                    'label' => 'Auditoría del sistema',
                     'route' => 'admin.audit.index',
                     'permission' => 'system.view.audit',
                     'patterns' => ['admin.audit.*'],

@@ -60,7 +60,7 @@
 
                 <div class="cursos-registros-page__form-grid">
                     <div class="form-field">
-                        <label class="form-label" for="edit_document_number">CEDULA</label>
+                        <label class="form-label" for="edit_document_number">CÉDULA</label>
                         <div class="cursos-registros-page__identity-row">
                             <input
                                 id="edit_document_number"

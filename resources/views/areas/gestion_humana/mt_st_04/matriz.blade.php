@@ -10,6 +10,8 @@
             || (($filters['arma'] ?? 'todos') !== '' && ($filters['arma'] ?? 'todos') !== 'todos')
             || (($filters['apto'] ?? 'todos') !== '' && ($filters['apto'] ?? 'todos') !== 'todos')
             || (($filters['ciudad'] ?? 'todos') !== '' && ($filters['ciudad'] ?? 'todos') !== 'todos')
+            || (($filters['cargo'] ?? 'todos') !== '' && ($filters['cargo'] ?? 'todos') !== 'todos')
+            || (($filters['puesto'] ?? 'todos') !== '' && ($filters['puesto'] ?? 'todos') !== 'todos')
             || (($filters['ficha_estado'] ?? 'activo') !== '' && ($filters['ficha_estado'] ?? 'activo') !== 'activo');
     @endphp
 
@@ -72,7 +74,7 @@
                                             :allow-clear="false"
                                         />
                                     </div>
-                                    <div class="form-field">
+                                    <div class="form-field mt-st-04-filters__field--compact">
                                         <label class="form-label" for="filter_arma">Arma</label>
                                         <x-searchable-select
                                             id="filter_arma"
@@ -83,7 +85,7 @@
                                             :allow-clear="false"
                                         />
                                     </div>
-                                    <div class="form-field">
+                                    <div class="form-field mt-st-04-filters__field--compact">
                                         <label class="form-label" for="filter_apto">Apto</label>
                                         <x-searchable-select
                                             id="filter_apto"
@@ -103,6 +105,30 @@
                                             :value="$filters['ciudad']"
                                             placeholder="Todas"
                                             search-placeholder="Buscar ciudad…"
+                                            :allow-clear="false"
+                                        />
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_cargo">Cargo</label>
+                                        <x-searchable-select
+                                            id="filter_cargo"
+                                            name="cargo"
+                                            :options="$filterCargoOptions"
+                                            :value="$filters['cargo']"
+                                            placeholder="Todos"
+                                            search-placeholder="Buscar cargo…"
+                                            :allow-clear="false"
+                                        />
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_puesto">Puesto</label>
+                                        <x-searchable-select
+                                            id="filter_puesto"
+                                            name="puesto"
+                                            :options="$filterPuestoOptions"
+                                            :value="$filters['puesto']"
+                                            placeholder="Todos"
+                                            search-placeholder="Buscar puesto…"
                                             :allow-clear="false"
                                         />
                                     </div>

@@ -17,7 +17,7 @@
     <p class="panel-text">No hay permisos configurados para asignar.</p>
 @else
     <div class="perm-master-detail">
-        <nav class="perm-area-nav" aria-label="Areas y permisos">
+        <nav class="perm-area-nav" aria-label="Áreas y permisos">
             @foreach ($navigation as $item)
                 @php
                     $itemPermissions = $item['permissions'] ?? [];
@@ -73,8 +73,8 @@
                             @endif
                             @if ($item['type'] === 'assigned')
                                 <p class="perm-area-panel__meta">
-                                    Aplican en el area de Identidad:
-                                    <strong id="assigned-area-label">Sin area fija</strong>
+                                    Aplican en el área de Identidad:
+                                    <strong id="assigned-area-label">Sin área fija</strong>
                                 </p>
                             @endif
                         </div>

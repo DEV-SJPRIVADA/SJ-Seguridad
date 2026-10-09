@@ -6,7 +6,7 @@
         @csrf
 
         <div class="auth-form__header">
-            <h1 class="auth-title">{{ __('Iniciar sesion') }}</h1>
+            <h1 class="auth-title">{{ __('Iniciar sesión') }}</h1>
             <p class="auth-subtitle">
                 Accede a {{ config('app.name') }} con tus credenciales asignadas.
             </p>
@@ -14,14 +14,14 @@
 
         <!-- Email Address -->
         <div class="form-field">
-            <x-input-label for="email" class="form-label--auth" :value="__('Correo electronico')" />
+            <x-input-label for="email" class="form-label--auth" :value="__('Correo electrónico')" />
             <x-text-input id="email" class="form-input--auth" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" />
         </div>
 
         <!-- Password -->
         <div class="form-field">
-            <x-input-label for="password" class="form-label--auth" :value="__('Contrasena')" />
+            <x-input-label for="password" class="form-label--auth" :value="__('Contraseña')" />
 
             <x-password-input id="password" class="form-input--auth" name="password" required />
 
@@ -39,12 +39,12 @@
         <div class="auth-row auth-row--login">
             @if (Route::has('password.request'))
                 <a class="auth-link" href="{{ route('password.request') }}">
-                    {{ __('Olvidaste tu contrasena?') }}
+                    {{ __('¿Olvidaste tu contraseña?') }}
                 </a>
             @endif
 
             <x-primary-button class="btn--auth">
-                {{ __('Iniciar sesion') }}
+                {{ __('Iniciar sesión') }}
             </x-primary-button>
         </div>
     </form>

@@ -833,7 +833,7 @@ class CommercialMatrixTest extends TestCase
         $this->actingAs($user)
             ->get(route('comercial.parameters.index'))
             ->assertOk()
-            ->assertSee('Tablero de Parametros', false)
+            ->assertSee('Tablero de Parámetros', false)
             ->assertSee('Sectores', false);
 
         $this->actingAs($user)

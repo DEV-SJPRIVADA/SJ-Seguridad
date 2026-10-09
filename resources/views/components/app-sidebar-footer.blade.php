@@ -17,7 +17,7 @@
         <form method="POST" action="{{ route('logout') }}" class="app-sidebar-footer__logout-form">
             @csrf
             <button type="submit" class="btn btn--secondary btn--sm app-sidebar-footer__logout">
-                Cerrar sesion
+                Cerrar sesión
             </button>
         </form>
 

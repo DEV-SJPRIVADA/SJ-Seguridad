@@ -75,7 +75,7 @@ class AdminUserManagementTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Procesos');
-        $response->assertSee('Administracion');
+        $response->assertSee('Administración');
         $response->assertSee('Usuarios');
         $response->assertSee('aria-label="Nuevo usuario"', false);
         $response->assertDontSee('>Nuevo usuario<', false);
@@ -106,22 +106,22 @@ class AdminUserManagementTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.users.create'));
 
         $response->assertOk();
-        $response->assertSee('Cedula');
+        $response->assertSee('Cédula');
         $response->assertSee('perm-master-detail', false);
-        $response->assertSee('Solicitar en su area');
-        $response->assertDontSee('Mi area base');
+        $response->assertSee('Solicitar en su área');
+        $response->assertDontSee('Mi área base');
         $response->assertSee('Funcionalidades transversales');
         $response->assertSee('Solicitar requisiciones de personal');
-        $response->assertSee('Suministros — Calidad (aprobacion)');
-        $response->assertSee('Suministros — Compras (catalogo)');
+        $response->assertSee('Suministros — Calidad (aprobación)');
+        $response->assertSee('Suministros — Compras (catálogo)');
         $response->assertSee('Documentos de Calidad');
         $response->assertDontSee('Biblioteca en Operaciones');
         $response->assertSee('Compras');
-        $response->assertSee('Gestion humana');
-        $response->assertDontSee('Ver Suministros (Gestion humana)');
+        $response->assertSee('Gestión Humana');
+        $response->assertDontSee('Ver Suministros (Gestión Humana)');
         $response->assertSee('Ver Suministros (Compras)');
         $response->assertDontSee('Plantilla de perfil');
-        $response->assertDontSee('Vista previa del menu');
+        $response->assertDontSee('Vista previa del menú');
         $response->assertDontSee('value="manage.requisitions"', false);
     }
 
@@ -169,7 +169,7 @@ class AdminUserManagementTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard', ['module' => 'gestion_humana', 'board' => 'dashboard']));
 
         $response->assertOk();
-        $response->assertSee('Gestion humana');
+        $response->assertSee('Gestión Humana');
         $response->assertSee('Tablero activo');
         $response->assertSee('Dashboard');
     }
@@ -254,7 +254,7 @@ class AdminUserManagementTest extends TestCase
             'supply.tab.catalog',
         ]);
 
-        $this->assertContains('Marco acciones de catalogo de Suministros (Compras), pero no habilito ver Suministros en el menu de ninguna area.', $warnings);
+        $this->assertContains('Marcó acciones de catálogo de Suministros (Compras), pero no habilitó ver Suministros en el menú de ninguna área.', $warnings);
     }
 
     public function test_admin_user_index_shows_access_summary_for_super_admin(): void
@@ -292,11 +292,11 @@ class AdminUserManagementTest extends TestCase
         $response->assertOk();
         $response->assertSee('Permisos asignados');
         $response->assertSee('Solicitar requisiciones de personal');
-        $response->assertSee('Requisiciones: Gestion de Solicitudes');
-        $response->assertSee('Ver Requisiciones (Gestion humana)');
+        $response->assertSee('Requisiciones: Gestión de Solicitudes');
+        $response->assertSee('Ver Requisiciones (Gestión Humana)');
         $response->assertDontSee('Transversales');
-        $response->assertDontSee('Otras areas');
-        $response->assertDontSee('En su area');
+        $response->assertDontSee('Otras áreas');
+        $response->assertDontSee('En su área');
     }
 
     public function test_admin_can_update_user_permissions_without_setting_new_password(): void

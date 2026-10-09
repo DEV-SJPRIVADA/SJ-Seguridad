@@ -34,7 +34,7 @@
                         </span>
                         <div>
                             <h4 class="ficha-empleados-masivos-modal__card-title">Importar estantes y cajas</h4>
-                            <p class="ficha-empleados-masivos-modal__card-note">Descargue la plantilla eligiendo activos, retirados o todos. Por fila basta con <strong>estante</strong> o <strong>caja</strong> (uno de los dos); la cedula es obligatoria.</p>
+                            <p class="ficha-empleados-masivos-modal__card-note">Descargue la plantilla eligiendo activos, retirados o todos. Por fila basta con <strong>estante</strong> o <strong>caja</strong> (uno de los dos); la cédula es obligatoria.</p>
                         </div>
                     </div>
 

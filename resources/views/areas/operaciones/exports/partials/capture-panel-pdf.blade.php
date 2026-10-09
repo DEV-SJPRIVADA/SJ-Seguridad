@@ -26,34 +26,34 @@
             <div class="value">{{ number_format((float) $resultPercentage, 2) }}%</div>
         </td>
         <td>
-            <div class="caption">Semaforo</div>
+            <div class="caption">Semáforo</div>
             <div class="value">{{ $semaforo }}</div>
         </td>
         <td>
             <div class="caption">Cumple</div>
-            <div class="value">{{ $complies ? 'SI' : 'NO' }}</div>
+            <div class="value">{{ $complies ? 'Sí' : 'No' }}</div>
         </td>
         <td>
             <div class="caption">Mejora</div>
-            <div class="value">{{ ($improvementId ?? null) ? 'SI' : 'NO' }}</div>
+            <div class="value">{{ ($improvementId ?? null) ? 'Sí' : 'No' }}</div>
         </td>
     </tr>
 </table>
 
 @if (($improvementId ?? null) || trim((string) ($improvementAnalysis ?? '')) !== '' || trim((string) ($analysisText ?? '')) !== '')
     <div class="improvement-box">
-        <strong>Analisis y mejora</strong>
+        <strong>Análisis y mejora</strong>
         @if (trim((string) ($analysisText ?? '')) !== '')
-            <p><strong>Analisis captura:</strong> {{ $analysisText }}</p>
+            <p><strong>Análisis captura:</strong> {{ $analysisText }}</p>
         @endif
         @if (trim((string) ($improvementAnalysis ?? '')) !== '')
-            <p><strong>Analisis mejora:</strong> {{ $improvementAnalysis }}</p>
+            <p><strong>Análisis mejora:</strong> {{ $improvementAnalysis }}</p>
         @endif
         @if (trim((string) ($improvementActionTaken ?? '')) !== '')
-            <p><strong>Accion tomada:</strong> {{ $improvementActionTaken }}</p>
+            <p><strong>Acción tomada:</strong> {{ $improvementActionTaken }}</p>
         @endif
         @if (trim((string) ($improvementActionDefined ?? '')) !== '')
-            <p><strong>Accion definida:</strong> {{ $improvementActionDefined }}</p>
+            <p><strong>Acción definida:</strong> {{ $improvementActionDefined }}</p>
         @endif
         @if (trim((string) ($improvementRequired ?? '')) !== '')
             <p><strong>Mejora requerida:</strong> {{ $improvementRequired }}</p>

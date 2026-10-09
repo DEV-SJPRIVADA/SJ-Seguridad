@@ -1,7 +1,7 @@
 <div class="indicadores-subpanel">
     <h4 class="indicadores-subpanel__title">Capturadores de indicadores</h4>
     <p class="indicadores-subpanel__text">
-        Usuarios activos del area <strong>Operaciones</strong>. Active la captura para permitir el ingreso de datos en las fichas FT-OP.
+        Usuarios activos del área <strong>Operaciones</strong>. Active la captura para permitir el ingreso de datos en las fichas FT-OP.
         Los administradores de indicadores (<code>operations.manage</code>) siempre pueden capturar y consolidar.
         Active <strong>Suplencia</strong> para permitir que el usuario capture indicadores a nombre de otro capturador (vacaciones u otra ausencia).
     </p>
@@ -85,7 +85,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">No hay usuarios activos asignados al area Operaciones.</td>
+                        <td colspan="5">No hay usuarios activos asignados al área Operaciones.</td>
                     </tr>
                 @endforelse
             </tbody>

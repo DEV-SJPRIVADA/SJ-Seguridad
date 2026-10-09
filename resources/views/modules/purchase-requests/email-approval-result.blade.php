@@ -2,7 +2,7 @@
     <div class="page-section">
         <div class="app-container">
             <article class="req-approval-letter">
-                <h1 class="req-approval-letter__title">Decision registrada</h1>
+                <h1 class="req-approval-letter__title">Decisión registrada</h1>
 
                 <div class="alert {{ $estado === \App\Models\PurchaseRequest::ESTADO_APROBADO ? 'alert--success' : 'alert--warning' }} ficha-empleados-page__alert">
                     @if ($estado === \App\Models\PurchaseRequest::ESTADO_APROBADO)
@@ -15,7 +15,7 @@
                 <div class="req-approval-letter__panel">
                     <p><strong>Folio:</strong> {{ $purchaseRequest->folio() }}</p>
                     <p><strong>Solicitante:</strong> {{ $purchaseRequest->user?->name ?? '—' }}</p>
-                    <p><strong>Area:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
+                    <p><strong>Área:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
                 </div>
 
                 @if ($purchaseRequest->comentarios_director)

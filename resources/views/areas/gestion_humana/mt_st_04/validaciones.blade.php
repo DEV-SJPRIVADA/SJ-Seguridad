@@ -1,7 +1,9 @@
 <x-app-layout>
     @php
         $hasActiveFilters = ($filters['q'] ?? '') !== ''
-            || (($filters['cola'] ?? 'pendientes') !== 'pendientes');
+            || (($filters['cola'] ?? 'pendientes') !== 'pendientes')
+            || (($filters['ciudad'] ?? 'todos') !== '' && ($filters['ciudad'] ?? 'todos') !== 'todos')
+            || (($filters['cargo'] ?? 'todos') !== '' && ($filters['cargo'] ?? 'todos') !== 'todos');
     @endphp
 
     <x-slot name="header">
@@ -51,6 +53,30 @@
                                             :allow-clear="false"
                                         />
                                     </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_ciudad">Ciudad</label>
+                                        <x-searchable-select
+                                            id="filter_ciudad"
+                                            name="ciudad"
+                                            :options="$filterCiudadOptions"
+                                            :value="$filters['ciudad']"
+                                            placeholder="Todas"
+                                            search-placeholder="Buscar ciudad…"
+                                            :allow-clear="false"
+                                        />
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_cargo">Cargo</label>
+                                        <x-searchable-select
+                                            id="filter_cargo"
+                                            name="cargo"
+                                            :options="$filterCargoOptions"
+                                            :value="$filters['cargo']"
+                                            placeholder="Todos"
+                                            search-placeholder="Buscar cargo…"
+                                            :allow-clear="false"
+                                        />
+                                    </div>
                                     <div class="form-field cursos-registros-page__filter-actions">
                                         <button
                                             type="submit"
@@ -79,6 +105,16 @@
                             <strong id="mt-st-04-validaciones-count">…</strong>
                             <span>persona(s)</span>
                         </p>
+
+                        <div class="cursos-registros-page__table-actions">
+                            <x-export-excel
+                                route="{{ $exportUrl }}"
+                                label=""
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar a Excel (respeta filtros)"
+                                aria-label="Exportar a Excel"
+                            />
+                        </div>
                     </div>
 
                     <div class="data-table-wrap req-manage-shell__table cursos-registros-page__table-wrap data-table-wrap--booting">

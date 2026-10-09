@@ -23,8 +23,8 @@
 
             <div id="cursos-catalog-selector-screen">
                 <div class="page-header-inner ficha-empleados-catalogs-page__head">
-                    <h2 class="page-title">Catalogos de cursos</h2>
-                    <p class="page-subtitle">Tipos de curso y escuelas usadas en registros e importacion.</p>
+                    <h2 class="page-title">Catálogos de cursos</h2>
+                    <p class="page-subtitle">Tipos de curso y escuelas usadas en registros e importación.</p>
                 </div>
 
                 <div class="ficha-empleados-catalogs-page__grid">
@@ -204,7 +204,7 @@
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Gestionar: Escuelas</h3>
-                            <p class="panel-text">Entidades donde se realizan los cursos (CODIGO, NIT, NOMBRE). El codigo es unico.</p>
+                            <p class="panel-text">Entidades donde se realizan los cursos (CÓDIGO, NIT, NOMBRE). El código es único.</p>
                         </div>
                         <div class="panel__body section-stack">
                             <form
@@ -215,7 +215,7 @@
                                 @csrf
                                 <div class="ficha-empleados-catalogs-page__create-row cursos-catalogo-page__filters-row">
                                     <div class="form-field">
-                                        <label class="form-label" for="escuela_codigo_new">CODIGO</label>
+                                        <label class="form-label" for="escuela_codigo_new">CÓDIGO</label>
                                         <input id="escuela_codigo_new" name="codigo" type="text" class="form-input" maxlength="30" required value="{{ old('codigo') }}" placeholder="Ej. 015">
                                     </div>
                                     <div class="form-field">
@@ -248,7 +248,7 @@
                                 <table class="data-table js-datatable cursos-catalogo-page__escuelas-table" data-dt-responsive="false" data-dt-compact="true" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th>CODIGO</th>
+                                            <th>CÓDIGO</th>
                                             <th>NIT</th>
                                             <th>NOMBRE</th>
                                             <th>Estado</th>
@@ -277,7 +277,7 @@
                                                                 @method('PATCH')
                                                                 <div class="ficha-empleados-catalogs-page__create-row">
                                                                     <div class="form-field">
-                                                                        <label class="form-label">CODIGO</label>
+                                                                        <label class="form-label">CÓDIGO</label>
                                                                         <input name="codigo" type="text" class="form-input" maxlength="30" required value="{{ $escuela->codigo }}">
                                                                     </div>
                                                                     <div class="form-field">

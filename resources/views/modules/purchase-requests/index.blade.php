@@ -40,7 +40,7 @@
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
                                     <th>Director aprobador</th>
-                                    <th>Fecha de aprobacion</th>
+                                    <th>Fecha de aprobación</th>
                                     <th>Productos</th>
                                     <th>Estado</th>
                                     <th>Estado compras</th>

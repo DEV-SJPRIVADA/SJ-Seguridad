@@ -13,7 +13,7 @@
     <div class="copy-access-panel__header">
         <div>
             <h3 class="text-small font-bold">Copiar acceso de otro usuario</h3>
-            <p class="text-small text-muted">Precarga rol, permisos y opcionalmente area base y sede.</p>
+            <p class="text-small text-muted">Precarga rol, permisos y opcionalmente área base y sede.</p>
         </div>
     </div>
 
@@ -50,7 +50,7 @@
         <div class="copy-access-panel__options copy-access-panel__options--stack">
             <label class="copy-access-panel__toggle">
                 <input type="checkbox" name="include_area" value="1" form="{{ $copyFormId }}" @checked($includeAreaChecked)>
-                <span>Incluir area base</span>
+                <span>Incluir área base</span>
             </label>
             <label class="copy-access-panel__toggle">
                 <input type="checkbox" name="include_sede" value="1" form="{{ $copyFormId }}" @checked($includeSedeChecked)>

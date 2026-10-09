@@ -8,7 +8,7 @@
             <div class="panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Biblioteca de Documentos</h3>
-                    <p class="panel-text">Documentos de Calidad disponibles para el area {{ config("access.areas.{$module}") }}.</p>
+                    <p class="panel-text">Documentos de Calidad disponibles para el área {{ config("access.areas.{$module}") }}.</p>
                     <div style="margin-top:0.5rem;">
                         <x-export-excel route="{{ route('quality-documents.library.export', ['module' => $module]) }}" />
                     </div>
@@ -22,8 +22,8 @@
                             <table class="supply-table js-datatable">
                                 <thead>
                                     <tr>
-                                        <th>Codigo</th>
-                                        <th>Titulo</th>
+                                        <th>Código</th>
+                                        <th>Título</th>
                                         <th>Proceso</th>
                                         <th>Tipo documento</th>
                                         <th>Recurso</th>

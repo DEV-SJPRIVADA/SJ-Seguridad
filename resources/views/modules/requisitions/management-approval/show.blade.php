@@ -6,15 +6,15 @@
     <div class="page-section">
         <div class="app-container">
             <article class="req-approval-letter">
-                <h1 class="req-approval-letter__title">Autorizacion de requisicion (cargo nuevo)</h1>
+                <h1 class="req-approval-letter__title">Autorización de requisición (cargo nuevo)</h1>
 
                 @if ($isPending)
                     <p class="req-approval-letter__lead">
-                        Se registro una solicitud de personal que <strong>requiere autorizacion de gerencia</strong> antes de que Gestion humana continúe el proceso.
+                        Se registró una solicitud de personal que <strong>requiere autorización de gerencia</strong> antes de que Gestión Humana continúe el proceso.
                     </p>
                 @else
                     <div class="alert alert--info ficha-empleados-page__alert">
-                        Esta requisicion ya fue gestionada. Estado actual:
+                        Esta requisición ya fue gestionada. Estado actual:
                         <strong>{{ $statusLabels[$requisition->status] ?? $requisition->status }}</strong>.
                     </div>
                 @endif
@@ -40,7 +40,7 @@
                         @csrf
 
                         <p class="req-approval-letter__section-label">
-                            Revise los datos y registre su decision. Al autorizar, la requisicion pasa a <strong>Solicitada</strong> y Gestion humana puede continuar.
+                            Revise los datos y registre su decisión. Al autorizar, la requisición pasa a <strong>Solicitada</strong> y Gestión Humana puede continuar.
                         </p>
 
                         <div class="form-field">
@@ -74,7 +74,7 @@
                 </div>
 
                 <p class="req-approval-letter__hint">
-                    Tambien puede gestionar otras solicitudes desde <strong>Requisiciones → Autorizacion gerencia</strong> en el tablero de Gestion humana.
+                    También puede gestionar otras solicitudes desde <strong>Requisiciones → Autorización gerencia</strong> en el tablero de Gestión Humana.
                 </p>
 
                 <p class="req-approval-letter__signoff">

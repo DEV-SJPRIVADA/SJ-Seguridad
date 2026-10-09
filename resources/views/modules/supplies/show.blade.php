@@ -94,15 +94,15 @@
                             <span class="pur-req-form__meta-value">{{ $supplyRequest->user?->name ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Area</span>
+                            <span class="pur-req-form__meta-label">Área</span>
                             <span class="pur-req-form__meta-value">{{ $areaLabel }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Sede / utilizacion</span>
+                            <span class="pur-req-form__meta-label">Sede / utilización</span>
                             <span class="pur-req-form__meta-value">{{ $supplyRequest->site_utilization ?? $supplyRequest->site?->utilization ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Ubicacion</span>
+                            <span class="pur-req-form__meta-label">Ubicación</span>
                             <span class="pur-req-form__meta-value">{{ $supplyRequest->site_city ?? $supplyRequest->site?->city ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
@@ -154,7 +154,7 @@
                             </span>
                             <div>
                                 <h3 class="pur-req-form__section-title">Productos solicitados</h3>
-                                <p class="pur-req-form__section-desc">{{ $supplyRequest->items->count() }} linea(s) en esta solicitud.</p>
+                                <p class="pur-req-form__section-desc">{{ $supplyRequest->items->count() }} línea(s) en esta solicitud.</p>
                             </div>
                         </header>
 
@@ -165,7 +165,7 @@
                                         <th>#</th>
                                         <th>Foto</th>
                                         <th>Cantidad</th>
-                                        <th>Descripcion</th>
+                                        <th>Descripción</th>
                                         <th>Referencia</th>
                                         <th>Inventario reportado</th>
                                         <th>Cant. autorizada</th>
@@ -182,7 +182,7 @@
                                             <td class="pur-req-detail__item-name">
                                                 {{ $item->displayName() }}
                                                 @if ($item->is_not_in_catalog)
-                                                    <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Fuera de catalogo</span>
+                                                    <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Fuera de catálogo</span>
                                                 @endif
                                             </td>
                                             <td>{{ $item->referenceLabel() }}</td>
@@ -255,7 +255,7 @@
                                 <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folio() }}</li>
                                 <li class="pur-req-form-guide__item">Estado: {{ $supplyRequest->statusLabel() }}</li>
                                 <li class="pur-req-form-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Area: {{ $areaLabel }}</li>
+                                <li class="pur-req-form-guide__item">Área: {{ $areaLabel }}</li>
                                 <li class="pur-req-form-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
                                 @if ($supplyRequest->estadoComprasLabel())
                                     <li class="pur-req-form-guide__item">Compras: {{ $supplyRequest->estadoComprasLabel() }}</li>

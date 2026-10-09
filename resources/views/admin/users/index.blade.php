@@ -119,7 +119,7 @@
                                     </div>
 
                                     <p class="users-list-item__meta">
-                                        {{ $user->areaLabel() ?: 'Sin area base asignada' }}
+                                        {{ $user->areaLabel() ?: 'Sin área base asignada' }}
                                     </p>
 
                                     @if ($user->must_change_password)
@@ -158,7 +158,7 @@
                                             <h3 class="page-title page-title--sm title-spaced">{{ $selectedUser->name }}</h3>
                                             <p class="page-subtitle">{{ $selectedUser->email }}</p>
                                             @if ($selectedUser->document_number)
-                                                <p class="page-subtitle">Cedula: {{ $selectedUser->document_number }}</p>
+                                                <p class="page-subtitle">Cédula: {{ $selectedUser->document_number }}</p>
                                             @endif
                                         </div>
 
@@ -181,15 +181,15 @@
                                             <h4 class="panel-title">Ficha operativa</h4>
                                             <div class="detail-grid block-spaced">
                                                 <div class="card">
-                                                    <p class="text-caption">Cedula</p>
-                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->document_number ?: 'Sin cedula registrada' }}</p>
+                                                    <p class="text-caption">Cédula</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->document_number ?: 'Sin cédula registrada' }}</p>
                                                 </div>
                                                 <div class="card">
-                                                    <p class="text-caption">Area base</p>
-                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin area asignada' }}</p>
+                                                    <p class="text-caption">Área base</p>
+                                                    <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin área asignada' }}</p>
                                                 </div>
                                                 <div class="card">
-                                                    <p class="text-caption">Ultimo acceso</p>
+                                                    <p class="text-caption">Último acceso</p>
                                                     <p class="text-small text-small--strong block-spaced-sm"><x-date-table :value="$selectedUser->last_login_at" datetime empty="Sin acceso registrado" /></p>
                                                 </div>
                                                 <div class="card">
@@ -197,7 +197,7 @@
                                                     <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->creator?->name ?? 'Seeder / sistema' }}</p>
                                                 </div>
                                                 <div class="card">
-                                                    <p class="text-caption">Cambio de contrasena</p>
+                                                    <p class="text-caption">Cambio de contraseña</p>
                                                     <p class="text-small text-small--strong block-spaced-sm">{{ $selectedUser->must_change_password ? 'Pendiente al siguiente ingreso' : 'No requerido' }}</p>
                                                 </div>
                                             </div>
@@ -226,17 +226,17 @@
 
                                     <div class="section-stack">
                                         <div class="card card--info">
-                                            <h4 class="panel-title">Area base</h4>
-                                            <p class="text-small text-small--info block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin area asignada' }}</p>
+                                            <h4 class="panel-title">Área base</h4>
+                                            <p class="text-small text-small--info block-spaced-sm">{{ $selectedUser->areaLabel() ?: 'Sin área asignada' }}</p>
                                         </div>
 
                                         <div class="card card--warning">
-                                            <h4 class="panel-title warning-text">Accion rapida</h4>
+                                            <h4 class="panel-title warning-text">Acción rápida</h4>
                                             <p class="text-small block-spaced warning-text">
-                                                Desde la edicion puedes ajustar rol, area base, activacion y toda la matriz detallada de permisos del usuario.
+                                                Desde la edición puedes ajustar rol, área base, activación y toda la matriz detallada de permisos del usuario.
                                             </p>
                                             <a href="{{ route('admin.users.edit', $selectedUser) }}" class="btn btn--info">
-                                                Abrir formulario de edicion
+                                                Abrir formulario de edición
                                             </a>
                                         </div>
                                     </div>

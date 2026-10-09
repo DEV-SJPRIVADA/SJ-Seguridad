@@ -7,7 +7,7 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Aprobacion de Solicitud #{{ $request->id }}</h3>
+                    <h3 class="panel-title">Aprobación de solicitud #{{ $request->id }}</h3>
                     <p class="panel-text">Solicitado por <strong>{{ $request->user->name }}</strong> el {{ $request->created_at->format('d/m/Y') }}.</p>
                 </div>
 
@@ -37,7 +37,7 @@
                                             <td style="font-weight: 600; color: var(--color-primary);">
                                                 {{ $item->displayName() }}
                                                 @if($item->is_not_in_catalog)
-                                                    <span class="status-pill status-pill--warning" style="margin-left: 0.5rem;">Fuera de catalogo</span>
+                                                    <span class="status-pill status-pill--warning" style="margin-left: 0.5rem;">Fuera de catálogo</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
@@ -61,7 +61,7 @@
                         </div>
 
                         <div class="form-field block-spaced">
-                            <label class="form-label" for="quality_observations">Observaciones de aprobacion (opcional)</label>
+                            <label class="form-label" for="quality_observations">Observaciones de aprobación (opcional)</label>
                             <textarea
                                 id="quality_observations"
                                 name="quality_observations"

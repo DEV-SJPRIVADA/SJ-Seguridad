@@ -22,7 +22,7 @@
                             @endcan
                             <form method="GET" class="indicadores-inline-form" style="margin:0;">
                                 <div class="indicadores-field indicadores-field--xs">
-                                    <label class="form-label">Ano</label>
+                                    <label class="form-label">Año</label>
                                     <select name="year" onchange="this.form.submit()" class="supply-input supply-select">
                                         @foreach ($years as $yearOption)
                                             <option value="{{ $yearOption }}" @selected($year === (int) $yearOption)>{{ $yearOption }}</option>
@@ -75,7 +75,7 @@
                                     <td>{{ $row['user']->name }}</td>
                                     <td>{{ $row['result_percentage'] !== null ? number_format((float) $row['result_percentage'], 2).'%' : 'Sin registro' }}</td>
                                     <td>{{ $row['semaforo'] ?? '-' }}</td>
-                                    <td>{{ ($row['has_improvement'] ?? false) ? 'Si' : 'No' }}</td>
+                                    <td>{{ ($row['has_improvement'] ?? false) ? 'Sí' : 'No' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

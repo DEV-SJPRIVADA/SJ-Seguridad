@@ -95,14 +95,14 @@
             <form method="GET" action="{{ route('compras.dashboard') }}" class="dashboard-filters">
                 <div class="filter-grid">
                     <div class="form-field">
-                        <label class="form-label">Area solicitante</label>
+                        <label class="form-label">Área solicitante</label>
                         <x-searchable-select
                             id="compras-dashboard-area"
                             name="area_key"
                             :options="$areas"
                             :value="$filters['area_key'] ?? ''"
-                            placeholder="Todas las areas"
-                            searchPlaceholder="Buscar area…"
+                            placeholder="Todas las áreas"
+                            searchPlaceholder="Buscar área…"
                         />
                     </div>
                     <div class="form-field">
@@ -120,7 +120,7 @@
                         />
                     </div>
                     <div class="form-field form-field--year">
-                        <label class="form-label">Ano</label>
+                        <label class="form-label">Año</label>
                         <select name="year" class="form-select">
                             @foreach ($yearOptions as $year)
                                 <option value="{{ $year }}" @selected((int) $filters['year'] === (int) $year)>{{ $year }}</option>
@@ -141,7 +141,7 @@
                     </div>
                 </div>
                 <p class="form-hint" style="margin-top: 0.75rem; margin-bottom: 0;">
-                    Ano y mes aplican a solicitudes creadas, completadas y bandeja (fecha de aprobacion o ultima actualizacion).
+                    Año y mes aplican a solicitudes creadas, completadas y bandeja (fecha de aprobación o última actualización).
                 </p>
             </form>
 
@@ -204,7 +204,7 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Estado solicitudes (periodo)</h3>
+                            <h3 class="panel-title">Estado solicitudes (período)</h3>
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
@@ -217,7 +217,7 @@
                 <div class="form-panels block-spaced-lg">
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Bandeja por estado (periodo)</h3>
+                            <h3 class="panel-title">Bandeja por estado (período)</h3>
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">
@@ -241,7 +241,7 @@
                 <div class="form-panels block-spaced-lg">
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Top 5 areas solicitantes</h3>
+                            <h3 class="panel-title">Top 5 áreas solicitantes</h3>
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">

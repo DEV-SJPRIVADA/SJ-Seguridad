@@ -22,8 +22,8 @@
                             <table class="supply-table js-datatable">
                                 <thead>
                                     <tr>
-                                        <th>Codigo</th>
-                                        <th>Titulo</th>
+                                        <th>Código</th>
+                                        <th>Título</th>
                                         <th>Proceso</th>
                                         <th>Tipo documento</th>
                                         <th>Recurso</th>

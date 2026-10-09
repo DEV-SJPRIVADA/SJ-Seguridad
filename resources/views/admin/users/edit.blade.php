@@ -7,7 +7,7 @@
                     <h2 class="panel-title panel-title--page">Editar usuario</h2>
                     <p class="panel-text admin-user-edit__meta">
                         {{ $user->name }} · {{ $user->email }}
-                        · {{ $user->areaLabel() ?: 'Sin area base' }}
+                        · {{ $user->areaLabel() ?: 'Sin área base' }}
                         @if ($user->sede)
                             · {{ $user->sede->utilization }} ({{ $user->sede->city }})
                         @else

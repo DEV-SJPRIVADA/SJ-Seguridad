@@ -77,8 +77,8 @@
 
             <div id="parameter-selector-screen">
                 <div class="page-header-inner" style="padding-top: 0;">
-                    <h2 class="page-title">Tablero de Parametros</h2>
-                    <p class="page-subtitle">Catalogos que alimentan los formularios de servicios comerciales.</p>
+                    <h2 class="page-title">Tablero de Parámetros</h2>
+                    <p class="page-subtitle">Catálogos que alimentan los formularios de servicios comerciales.</p>
                 </div>
 
                 <div class="parameter-grid">
@@ -207,7 +207,7 @@
                                                             method="POST"
                                                             action="{{ route('comercial.parameters.destroy', ['type' => $catalog['key'], 'parameterId' => $item->id]) }}"
                                                             style="display:inline;"
-                                                            onsubmit="return confirm('Eliminar este parametro?')"
+                                                            onsubmit="return confirm('¿Eliminar este parámetro?')"
                                                         >
                                                             @csrf
                                                             @method('DELETE')
@@ -232,7 +232,7 @@
         <div id="param-modal-backdrop" style="position:absolute; inset:0; background:rgba(0,0,0,.5);" onclick="closeParamModal()"></div>
         <div class="panel" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem;">
             <div class="panel__header">
-                <h3 class="panel-title" id="param-modal-title">Editar parametro</h3>
+                <h3 class="panel-title" id="param-modal-title">Editar parámetro</h3>
                 <button type="button" class="btn btn--secondary" onclick="closeParamModal()">✕</button>
             </div>
             <form method="POST" id="param-edit-form" class="panel__body form-stack">

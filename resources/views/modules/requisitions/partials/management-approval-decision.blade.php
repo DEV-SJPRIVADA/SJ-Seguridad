@@ -6,13 +6,13 @@
 
 @if ($decisionLog)
     <div class="req-approval-letter__panel req-approval-letter__panel--decision">
-        <p class="req-approval-letter__section-label" style="margin-top: 0;">Decision de gerencia</p>
+        <p class="req-approval-letter__section-label" style="margin-top: 0;">Decisión de gerencia</p>
         <p>
             <strong>Resultado:</strong>
             {{ $statusLabels[$decisionLog->to_status] ?? $decisionLog->to_status }}
         </p>
         @if (filled($decisionLog->comment))
-            <p><strong>Observacion de gerencia:</strong> {{ $decisionLog->comment }}</p>
+            <p><strong>Observación de gerencia:</strong> {{ $decisionLog->comment }}</p>
         @endif
         <p class="req-approval-letter__decision-meta">
             {{ $decisionLog->author?->name ?? 'Sistema' }}

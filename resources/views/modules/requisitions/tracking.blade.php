@@ -63,7 +63,7 @@
                                                 name="q"
                                                 class="form-input"
                                                 value="{{ $filters['q'] }}"
-                                                placeholder="Codigo, solicitante, cargo, cliente..."
+                                                placeholder="Código, solicitante, cargo, cliente..."
                                             >
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__query-field--date">
@@ -182,9 +182,9 @@
                                 </form>
                             </div>
 
-                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($requisitions->count()) }} {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}">
+                            <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($requisitions->count()) }} {{ $requisitions->count() === 1 ? 'requisición encontrada' : 'requisiciones encontradas' }}">
                                 <strong>{{ number_format($requisitions->count()) }}</strong>
-                                {{ $requisitions->count() === 1 ? 'requisicion encontrada' : 'requisiciones encontradas' }}
+                                {{ $requisitions->count() === 1 ? 'requisición encontrada' : 'requisiciones encontradas' }}
                                 @if ($filters['status'] ?? '')
                                     · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
                                 @endif
@@ -223,7 +223,7 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
+                                    <th>Código</th>
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
                                     <th>Cargo</th>
@@ -256,7 +256,7 @@
                                             @endphp
                                             <span
                                                 class="status-pill status-pill--req-{{ $requisition->status }}"
-                                                @if ($rejectionComment) title="Observacion de gerencia: {{ $rejectionComment }}" @endif
+                                                @if ($rejectionComment) title="Observación de gerencia: {{ $rejectionComment }}" @endif
                                             >
                                                 {{ $statusLabels[$requisition->status] ?? $requisition->status }}
                                             </span>

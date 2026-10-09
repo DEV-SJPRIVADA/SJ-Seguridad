@@ -13,7 +13,7 @@
         <div class="panel__header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
             <div>
                 <h3 class="panel-title" id="apply-access-modal-title">Aplicar acceso de otro usuario</h3>
-                <p class="panel-text">Reemplazara rol y permisos directos de <strong>{{ $user->name }}</strong>. Los datos personales no cambian.</p>
+                <p class="panel-text">Reemplazará rol y permisos directos de <strong>{{ $user->name }}</strong>. Los datos personales no cambian.</p>
             </div>
             <button type="button" class="btn btn--secondary btn--sm" data-apply-access-close>Cerrar</button>
         </div>
@@ -45,7 +45,7 @@
                 <div class="copy-access-panel__options">
                     <label class="copy-access-panel__toggle">
                         <input type="checkbox" name="include_area" value="1" @checked(old('include_area', true))>
-                        <span>Incluir area base</span>
+                        <span>Incluir área base</span>
                     </label>
                     <label class="copy-access-panel__toggle">
                         <input type="checkbox" name="include_sede" value="1" @checked(old('include_sede', true))>

@@ -2,7 +2,7 @@
     <div class="panel__header">
         <h3 class="panel-title">Encargados de seleccion</h3>
         <p class="panel-text">
-            Usuarios activos del area <strong>Gestion humana</strong>. Active el permiso para que aparezcan en el select
+            Usuarios activos del área <strong>Gestión Humana</strong>. Active el permiso para que aparezcan en el select
             <strong>Reclutador</strong> al gestionar requisiciones.
         </p>
     </div>
@@ -39,7 +39,7 @@
                                     <label class="toggle-switch">
                                         <input type="checkbox"
                                                @checked($enabled)
-                                               aria-label="Encargado de seleccion activo para {{ $ghUser->name }}"
+                                               aria-label="Encargado de selección activo para {{ $ghUser->name }}"
                                                onchange="this.form.querySelector('[name=enabled]').value = this.checked ? '1' : '0'; this.form.submit();">
                                         <span class="toggle-slider"></span>
                                     </label>
@@ -48,7 +48,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3">No hay usuarios activos asignados al area Gestion humana.</td>
+                            <td colspan="3">No hay usuarios activos asignados al área Gestión Humana.</td>
                         </tr>
                     @endforelse
                 </tbody>

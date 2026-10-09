@@ -4,6 +4,7 @@ namespace App\Http\Controllers\GestionHumana;
 
 use App\Exports\MtSt04Export;
 use App\Exports\MtSt04ImportTemplateExport;
+use App\Exports\MtSt04ValidacionesExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\MtSt04\ImportMtSt04Request;
 use App\Http\Requests\GestionHumana\MtSt04\StoreMtSt04RegistroRequest;
@@ -71,7 +72,11 @@ class MtSt04Controller extends Controller
             'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.mt-st-04.dashboard.metrics'),
+            'matrizUrl' => route('gestion-humana.mt-st-04.matriz'),
             'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
+            'filterCiudadOptions' => $this->listService->cityFilterOptions(),
+            'filterCargoOptions' => $this->listService->cargoFilterOptions(),
+            'filterPuestoOptions' => $this->listService->puestoFilterOptions(),
         ]);
     }
 
@@ -106,6 +111,7 @@ class MtSt04Controller extends Controller
 
         $estado2Options = [
             ['value' => 'todos', 'label' => 'Todos'],
+            ['value' => '__sin_no_aplica__', 'label' => 'Sin NO APLICA'],
             ['value' => MtSt04Registro::ESTADO_VIGENTE, 'label' => 'VIGENTE'],
             ['value' => MtSt04Registro::ESTADO_VENCERA, 'label' => 'VENCERA'],
             ['value' => MtSt04Registro::ESTADO_VENCIDO, 'label' => 'VENCIDO'],
@@ -148,6 +154,8 @@ class MtSt04Controller extends Controller
             'filterAptoOptions' => $filterAptoOptions,
             'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
             'filterCiudadOptions' => $filterCiudadOptions,
+            'filterCargoOptions' => $this->listService->cargoFilterOptions(),
+            'filterPuestoOptions' => $this->listService->puestoFilterOptions(),
             'siNoOptions' => $siNoOptions,
             'lookupUrl' => route('gestion-humana.mt-st-04.matriz.lookup'),
             'datatableUrl' => route(
@@ -368,12 +376,18 @@ class MtSt04Controller extends Controller
             'canEdit' => $canEdit,
             'filters' => $filters,
             'filterColaOptions' => $filterColaOptions,
+            'filterCiudadOptions' => $this->validacionesService->cityFilterOptions($filters),
+            'filterCargoOptions' => $this->validacionesService->cargoFilterOptions($filters),
             'siNoOptions' => $siNoOptions,
             'lookupUrl' => route('gestion-humana.mt-st-04.matriz.lookup'),
-            'datatableUrl' => route('gestion-humana.mt-st-04.validaciones.datatable', array_filter([
-                'cola' => $filters['cola'] !== 'pendientes' ? $filters['cola'] : null,
-                'q' => $filters['q'] !== '' ? $filters['q'] : null,
-            ], fn ($v) => $v !== null && $v !== '')),
+            'datatableUrl' => route(
+                'gestion-humana.mt-st-04.validaciones.datatable',
+                $this->activeValidacionesFilterQuery($filters),
+            ),
+            'exportUrl' => route(
+                'gestion-humana.mt-st-04.validaciones.export',
+                $this->activeValidacionesFilterQuery($filters),
+            ),
             'showNuevoModal' => $showNuevoModal,
         ]);
     }
@@ -387,6 +401,35 @@ class MtSt04Controller extends Controller
             $this->validacionesFiltersFromRequest($request),
             $this->mtSt04Access->canEdit(auth()->user()),
         );
+    }
+
+    public function exportValidaciones(Request $request): StreamedResponse
+    {
+        abort_unless($this->mtSt04Access->canView(auth()->user()), 403);
+
+        $filters = $this->validacionesFiltersFromRequest($request);
+        $profiles = $this->validacionesService->filteredQuery($filters)->get([
+            'id',
+            'document_number',
+            'full_name',
+            'position_name',
+            'work_city_name',
+            'residence_city_name',
+            'cost_center_name',
+            'requires_psicofisicos',
+        ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'export_validaciones',
+            metadata: [
+                'rows' => $profiles->count(),
+                'filters' => $filters,
+            ],
+            userId: (int) auth()->id(),
+        );
+
+        return MtSt04ValidacionesExport::downloadCollection($profiles);
     }
 
     public function omitRequiresPsicofisicos(ToggleMtSt04RequiresPsicofisicosRequest $request): RedirectResponse
@@ -516,12 +559,15 @@ class MtSt04Controller extends Controller
     }
 
     /**
-     * @return array{ficha_estado: string}
+     * @return array{ficha_estado: string, ciudad: string, cargo: string, puesto: string}
      */
     private function dashboardFiltersFromRequest(Request $request): array
     {
         return $this->dashboardService->normalizeFilters([
             'ficha_estado' => (string) $request->query('ficha_estado', EmployeeFichaProfile::STATUS_ACTIVO),
+            'ciudad' => (string) $request->query('ciudad', 'todos'),
+            'cargo' => (string) $request->query('cargo', 'todos'),
+            'puesto' => (string) $request->query('puesto', 'todos'),
         ]);
     }
 
@@ -536,6 +582,8 @@ class MtSt04Controller extends Controller
      *     apto: string,
      *     ficha_estado: string,
      *     ciudad: string,
+     *     cargo: string,
+     *     puesto: string,
      * }
      */
     private function matrizFiltersFromRequest(Request $request): array
@@ -558,6 +606,16 @@ class MtSt04Controller extends Controller
             $ciudad = 'todos';
         }
 
+        $cargo = trim((string) ($bag['cargo'] ?? 'todos'));
+        if ($cargo === '') {
+            $cargo = 'todos';
+        }
+
+        $puesto = trim((string) ($bag['puesto'] ?? 'todos'));
+        if ($puesto === '') {
+            $puesto = 'todos';
+        }
+
         return [
             'document_number' => trim((string) ($bag['document_number'] ?? '')),
             'full_name' => trim((string) ($bag['full_name'] ?? '')),
@@ -568,6 +626,8 @@ class MtSt04Controller extends Controller
             'apto' => (string) ($bag['apto'] ?? 'todos'),
             'ficha_estado' => $fichaEstado,
             'ciudad' => $ciudad,
+            'cargo' => $cargo,
+            'puesto' => $puesto,
         ];
     }
 
@@ -582,6 +642,8 @@ class MtSt04Controller extends Controller
      *     apto: string,
      *     ficha_estado: string,
      *     ciudad: string,
+     *     cargo: string,
+     *     puesto: string,
      * }  $filters
      * @return array<string, string>
      */
@@ -613,6 +675,12 @@ class MtSt04Controller extends Controller
         if (($filters['ciudad'] ?? 'todos') !== 'todos') {
             $query['ciudad'] = $filters['ciudad'];
         }
+        if (($filters['cargo'] ?? 'todos') !== 'todos') {
+            $query['cargo'] = $filters['cargo'];
+        }
+        if (($filters['puesto'] ?? 'todos') !== 'todos') {
+            $query['puesto'] = $filters['puesto'];
+        }
         // Siempre pasar ficha_estado para que DT/export conserven el default (activo).
         $query['ficha_estado'] = $filters['ficha_estado'];
 
@@ -620,7 +688,7 @@ class MtSt04Controller extends Controller
     }
 
     /**
-     * @return array{q: string, cola: string}
+     * @return array{q: string, cola: string, ciudad: string, cargo: string}
      */
     private function validacionesFiltersFromRequest(Request $request): array
     {
@@ -630,9 +698,45 @@ class MtSt04Controller extends Controller
             $cola = 'pendientes';
         }
 
+        $ciudad = trim((string) ($bag['ciudad'] ?? 'todos'));
+        if ($ciudad === '') {
+            $ciudad = 'todos';
+        }
+
+        $cargo = trim((string) ($bag['cargo'] ?? 'todos'));
+        if ($cargo === '') {
+            $cargo = 'todos';
+        }
+
         return [
             'q' => trim((string) ($bag['q'] ?? '')),
             'cola' => $cola,
+            'ciudad' => $ciudad,
+            'cargo' => $cargo,
         ];
+    }
+
+    /**
+     * @param  array{q: string, cola: string, ciudad: string, cargo: string}  $filters
+     * @return array<string, string>
+     */
+    private function activeValidacionesFilterQuery(array $filters): array
+    {
+        $query = [];
+
+        if ($filters['q'] !== '') {
+            $query['q'] = $filters['q'];
+        }
+        if ($filters['cola'] !== 'pendientes') {
+            $query['cola'] = $filters['cola'];
+        }
+        if ($filters['ciudad'] !== 'todos') {
+            $query['ciudad'] = $filters['ciudad'];
+        }
+        if ($filters['cargo'] !== 'todos') {
+            $query['cargo'] = $filters['cargo'];
+        }
+
+        return $query;
     }
 }

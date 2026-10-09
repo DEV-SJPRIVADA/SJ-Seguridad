@@ -23,9 +23,9 @@
 
             <header class="notif-config-page__hero">
                 <div>
-                    <p class="eyebrow">Administracion</p>
-                    <h2 class="panel-title">Configuracion de notificaciones</h2>
-                    <p class="panel-text">Defina quien recibe cada correo automatico del sistema.</p>
+                    <p class="eyebrow">Administración</p>
+                    <h2 class="panel-title">Configuración de notificaciones</h2>
+                    <p class="panel-text">Defina quién recibe cada correo automático del sistema.</p>
                 </div>
                 <p class="notif-config-page__fallback">
                     <span class="notif-config-page__fallback-label">Respaldo si no hay destinatarios</span>
@@ -35,7 +35,7 @@
 
             <div class="notif-config-kpis">
                 <article class="notif-config-kpi">
-                    <span class="notif-config-kpi__label">Modulos</span>
+                    <span class="notif-config-kpi__label">Módulos</span>
                     <span class="notif-config-kpi__value">{{ $stats['modules'] }}</span>
                 </article>
                 <article class="notif-config-kpi">
@@ -59,7 +59,7 @@
                         id="notif-search"
                         type="search"
                         class="form-input"
-                        placeholder="Buscar aviso o modulo..."
+                        placeholder="Buscar aviso o módulo..."
                         x-model="search"
                         autocomplete="off"
                     >
@@ -78,7 +78,7 @@
                 <template x-if="filteredModules.length === 0">
                     <div class="panel">
                         <div class="panel__body">
-                            <p class="text-muted">No hay avisos que coincidan con la busqueda.</p>
+                            <p class="text-muted">No hay avisos que coincidan con la búsqueda.</p>
                         </div>
                     </div>
                 </template>
@@ -108,7 +108,7 @@
             <div class="notif-config-detail" x-show="screen === 'detail'" x-cloak>
                 <button type="button" class="notif-config-detail__back" @click="backToGrid()">
                     <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
-                    Volver a modulos
+                    Volver a módulos
                 </button>
 
                 <div class="notif-config-detail__layout" x-show="activeModule">
@@ -117,7 +117,7 @@
                             <h3 class="panel-title" x-text="activeModule?.module_label"></h3>
                             <p class="panel-text">Seleccione un aviso para editar destinatarios.</p>
                         </div>
-                        <nav class="notif-config-type-nav" aria-label="Avisos del modulo">
+                        <nav class="notif-config-type-nav" aria-label="Avisos del módulo">
                             <template x-for="type in filteredTypesForModule" :key="type.id">
                                 <button
                                     type="button"
@@ -147,7 +147,7 @@
                                 <h4 class="notif-config-recipients-block__title">Destinatarios</h4>
                                 <template x-if="activeType && activeType.emails.length === 0">
                                     <p class="notif-config-empty">
-                                        Sin destinatarios configurados. Al enviar este aviso se usara el correo de respaldo del sistema.
+                                        Sin destinatarios configurados. Al enviar este aviso se usará el correo de respaldo del sistema.
                                     </p>
                                 </template>
                                 <div class="notif-config-chips" x-show="activeType && activeType.emails.length > 0">
@@ -156,7 +156,7 @@
                                             method="POST"
                                             :action="detachUrl(activeType.id, assignedEmail.id)"
                                             class="notif-config-chip-form"
-                                            @submit="if (! confirm('Quitar este correo del aviso?')) { $event.preventDefault(); }"
+                                            @submit="if (! confirm('¿Quitar este correo del aviso?')) { $event.preventDefault(); }"
                                         >
                                             @csrf
                                             @method('DELETE')

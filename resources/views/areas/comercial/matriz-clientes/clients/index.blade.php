@@ -106,7 +106,7 @@
                             <strong>{{ number_format($clients->count()) }}</strong>
                             {{ $clients->count() === 1 ? 'cliente' : 'clientes' }}
                             @if ($filters['q'] ?? '')
-                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                · Búsqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
                             @if ($filters['city'] ?? '')
                                 · Ciudad: <strong>{{ $filters['city'] }}</strong>
@@ -114,7 +114,7 @@
                             @if ($filters['status'] ?? '')
                                 · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
                             @endif
-                            · El Excel exporta el detalle completo segun estos filtros
+                            · El Excel exporta el detalle completo según estos filtros
                         </p>
 
                         <div class="cursos-registros-page__table-actions">

@@ -166,6 +166,33 @@ class MtSt04MatrizTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_datatable_filters_estado_2_sin_no_aplica(): void
+    {
+        $viewer = $this->viewerUser();
+        $this->createFicha('1002003001', 'Ana', 'SUPERVISOR');
+        $this->createFicha('1002003002', 'Luis', 'GUARDA');
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003001',
+            'estado_2' => MtSt04Registro::ESTADO_VIGENTE,
+        ]);
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003002',
+            'estado_2' => MtSt04Registro::ESTADO_NO_APLICA,
+        ]);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.matriz.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+                'estado_2' => '__sin_no_aplica__',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertSee('Ana', false)
+            ->assertDontSee('Luis', false);
+    }
+
     public function test_datatable_filters_by_ciudad(): void
     {
         $viewer = $this->viewerUser();

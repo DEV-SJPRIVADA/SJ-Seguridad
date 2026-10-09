@@ -1,6 +1,6 @@
 <div class="indicadores-ftop03-row">
     <div>
-        <label class="form-label">Facturacion mensual</label>
+        <label class="form-label">Facturación mensual</label>
         <input type="number" step="0.01" name="form[facturacion_mensual]" value="{{ old('form.facturacion_mensual', $form['facturacion_mensual'] ?? '') }}" class="supply-input js-capture-field" data-field="facturacion_mensual" @disabled($isPeriodClosed || ($readOnly ?? false)) />
     </div>
     <div>
@@ -19,7 +19,7 @@
         @if ($readOnly ?? false)
             @if (($form['total_siniestros'] ?? 0) >= 1)
                 <button type="button" class="btn btn--secondary btn--sm js-open-classification-modal">
-                    Ver clasificacion
+                    Ver clasificación
                 </button>
             @endif
         @else
@@ -32,12 +32,12 @@
         @if ($readOnly ?? false)
             @if ($improvementId || trim((string) ($improvementAnalysis ?? '')) !== '')
                 <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal">
-                    Ver analisis
+                    Ver análisis
                 </button>
             @endif
         @else
             <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
-                Analisis
+                Análisis
             </button>
         @endif
     </div>

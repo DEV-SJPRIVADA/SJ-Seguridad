@@ -37,7 +37,7 @@
                     <form method="GET" class="indicadores-inline-form">
                         <div class="indicadores-filter-bar">
                             <div class="indicadores-field indicadores-field--xs">
-                                <label class="form-label">Ano</label>
+                                <label class="form-label">Año</label>
                                 <select name="year" class="supply-input supply-select">
                                     @foreach ($years as $yearOption)
                                         <option value="{{ $yearOption }}" @selected($year === (int) $yearOption)>{{ $yearOption }}</option>
@@ -73,7 +73,7 @@
                         </div>
                         <div class="card kpi-card">
                             <p class="text-caption">Regla</p>
-                            <p class="text-small">>=90 ESTABLE | 75-89 ATENCION | &lt;75 CRITICO</p>
+                            <p class="text-small">>=90 ESTABLE | 75-89 ATENCIÓN | &lt;75 CRÍTICO</p>
                         </div>
                     </div>
 
@@ -82,7 +82,7 @@
                     <table class="supply-table indicadores-table indicadores-kpi-table">
                         <thead>
                             <tr>
-                                <th>Codigo</th>
+                                <th>Código</th>
                                 <th>Indicador</th>
                                 <th>Mes anterior ({{ $dashboard['previous_period']['label'] ?? '' }})</th>
                                 <th>Resultado</th>
@@ -134,7 +134,7 @@
                                                 <td>{{ $row['improvements_count'] }}</td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="5">No hay usuarios con capturas registradas en este periodo.</td></tr>
+                                            <tr><td colspan="5">No hay usuarios con capturas registradas en este período.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -143,7 +143,7 @@
                         </div>
 
                         <div class="panel indicadores-nested-panel">
-                            <div class="panel__header"><h4 class="panel-title">Indicadores criticos</h4></div>
+                            <div class="panel__header"><h4 class="panel-title">Indicadores críticos</h4></div>
                             <div class="panel__body">
                                 <div class="indicadores-table-wrap">
                                 <table class="supply-table indicadores-table">
@@ -151,7 +151,7 @@
                                         <tr>
                                             <th>Usuario</th>
                                             <th>Indicador</th>
-                                            <th>Valor critico</th>
+                                            <th>Valor crítico</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -162,7 +162,7 @@
                                                 <td>{{ number_format((float) $row['critical_value'], 2) }}%</td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="3">No hay indicadores en estado critico para este periodo.</td></tr>
+                                            <tr><td colspan="3">No hay indicadores en estado crítico para este período.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>

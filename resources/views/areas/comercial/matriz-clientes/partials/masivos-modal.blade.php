@@ -38,7 +38,7 @@
                             <x-lucide-upload width="18" height="18" aria-hidden="true" />
                         </span>
                         <div>
-                            <h4 class="ficha-empleados-masivos-modal__card-title">Plantilla e importacion</h4>
+                            <h4 class="ficha-empleados-masivos-modal__card-title">Plantilla e importación</h4>
                             <p class="ficha-empleados-masivos-modal__card-note">Una fila por servicio. Incluye datos del cliente y estados del checklist.</p>
                         </div>
                     </div>
@@ -46,7 +46,7 @@
                     <div class="ficha-empleados-masivos-modal__import">
                         <a href="{{ route('comercial.matriz.clients.import-template') }}" class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action">
                             <x-selfhst-microsoft-excel-2013 width="15" height="15" aria-hidden="true" />
-                            Descargar plantilla vacia
+                            Descargar plantilla vacía
                         </a>
 
                         <form method="GET" action="{{ route('comercial.matriz.clients.export-import-template') }}" class="ficha-empleados-masivos-modal__export ficha-empleados-masivos-modal__export--import">

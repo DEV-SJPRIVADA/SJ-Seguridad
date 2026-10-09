@@ -12,7 +12,7 @@
             <div class="page-header-inner purchase-requests-page__intro">
                 <div class="pur-req-list__toolbar">
                     <div>
-                        <h2 class="page-title">Catalogo de suministros</h2>
+                        <h2 class="page-title">Catálogo de suministros</h2>
                         <p class="page-subtitle">Gestiona los productos disponibles para pedidos de insumos.</p>
                     </div>
                     <div class="pur-req-detail__toolbar-actions">
@@ -60,9 +60,9 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>Categoria</th>
+                                    <th>Categoría</th>
                                     <th>Producto</th>
-                                    <th>Descripcion</th>
+                                    <th>Descripción</th>
                                     <th>Estado</th>
                                     <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
@@ -98,7 +98,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-muted">No hay productos en el catalogo.</td>
+                                        <td colspan="5" class="text-muted">No hay productos en el catálogo.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -137,12 +137,12 @@
                         </div>
 
                         <div class="form-field">
-                            <label class="form-label" for="p-category">Categoria</label>
+                            <label class="form-label" for="p-category">Categoría</label>
                             <input type="text" name="category" id="p-category" class="form-input" placeholder="Ej: PAPELERIA">
                         </div>
 
                         <div class="form-field">
-                            <label class="form-label" for="p-description">Descripcion / presentacion</label>
+                            <label class="form-label" for="p-description">Descripción / presentación</label>
                             <input type="text" name="description" id="p-description" class="form-input" placeholder="Ej: Paquete x 500 hojas">
                         </div>
 

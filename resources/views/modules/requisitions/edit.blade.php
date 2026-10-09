@@ -7,7 +7,7 @@
         <div class="app-container">
             <div class="page-header-inner" style="padding-top: 0; margin-bottom: 1.25rem;">
                 <h2 class="page-title">Editar {{ $requisition->code }}</h2>
-                <p class="page-subtitle">Gestion humana puede ajustar datos operativos, registrar compensacion, cambiar el estado y dejar trazabilidad en el historial.</p>
+                <p class="page-subtitle">Gestión Humana puede ajustar datos operativos, registrar compensación, cambiar el estado y dejar trazabilidad en el historial.</p>
             </div>
 
             <div class="req-form-layout">
@@ -90,7 +90,7 @@
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de cambios</h3>
-                            <p class="panel-text">Trazabilidad de modificaciones en campos de la requisicion.</p>
+                            <p class="panel-text">Trazabilidad de modificaciones en campos de la requisición.</p>
                         </div>
                         <div class="panel__body">
                             @php
@@ -100,7 +100,7 @@
                             @endphp
 
                             @if ($changeBatches->isEmpty())
-                                <p class="panel-text" style="margin: 0;">Sin cambios registrados en edicion.</p>
+                                <p class="panel-text" style="margin: 0;">Sin cambios registrados en edición.</p>
                             @else
                                 <ul class="req-form-history req-form-history--scrollable">
                                     @foreach ($changeBatches as $batchLogs)
@@ -132,13 +132,13 @@
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Antes de guardar</h3>
-                            <p class="panel-text">Verifica coherencia entre motivo, cliente y compensacion.</p>
+                            <p class="panel-text">Verifica coherencia entre motivo, cliente y compensación.</p>
                         </div>
                         <div class="panel__body">
                             <ul class="req-form-guide__list">
                                 <li class="req-form-guide__item">Confirma que el estado refleje el avance real del proceso.</li>
-                                <li class="req-form-guide__item">Asigna reclutador cuando la solicitud entre en gestion activa.</li>
-                                <li class="req-form-guide__item">Valida la matriz de compensacion antes de contratacion.</li>
+                                <li class="req-form-guide__item">Asigna reclutador cuando la solicitud entre en gestión activa.</li>
+                                <li class="req-form-guide__item">Valida la matriz de compensación antes de contratación.</li>
                                 <li class="req-form-guide__item">Usa observaciones de GH para contexto visible en seguimiento.</li>
                                 <li class="req-form-guide__item">Cliente externo debe coincidir con la matriz comercial.</li>
                             </ul>

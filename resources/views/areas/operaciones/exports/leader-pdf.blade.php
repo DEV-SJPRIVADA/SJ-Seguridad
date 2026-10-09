@@ -13,7 +13,7 @@
     <h2>Reporte de captura</h2>
     <p><strong>Indicador:</strong> {{ $indicator->code }} - {{ $indicator->name }}</p>
     <p><strong>Usuario:</strong> {{ $user->name }}</p>
-    <p><strong>Periodo:</strong> {{ $year }}-{{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</p>
+    <p><strong>Período:</strong> {{ $year }}-{{ str_pad((string) $month, 2, '0', STR_PAD_LEFT) }}</p>
 
     <table>
         <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
@@ -25,16 +25,16 @@
                 </tr>
             @endforeach
             <tr><td>Resultado %</td><td>{{ $capture?->result_percentage }}</td></tr>
-            <tr><td>Semaforo</td><td>{{ $capture ? ($capture->complies ? 'VERDE' : 'ROJO') : '-' }}</td></tr>
-            <tr><td>Analisis</td><td>{{ $capture?->analysis_text }}</td></tr>
+            <tr><td>Semáforo</td><td>{{ $capture ? ($capture->complies ? 'VERDE' : 'ROJO') : '-' }}</td></tr>
+            <tr><td>Análisis</td><td>{{ $capture?->analysis_text }}</td></tr>
         </tbody>
     </table>
 
     @if ($capture?->improvement)
         <h3>Mejora</h3>
-        <p><strong>Analisis:</strong> {{ $capture->improvement->analysis }}</p>
-        <p><strong>Accion tomada:</strong> {{ $capture->improvement->action_taken }}</p>
-        <p><strong>Accion definida:</strong> {{ $capture->improvement->action_defined }}</p>
+        <p><strong>Análisis:</strong> {{ $capture->improvement->analysis }}</p>
+        <p><strong>Acción tomada:</strong> {{ $capture->improvement->action_taken }}</p>
+        <p><strong>Acción definida:</strong> {{ $capture->improvement->action_defined }}</p>
     @endif
 </body>
 </html>

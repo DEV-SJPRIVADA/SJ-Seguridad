@@ -85,7 +85,7 @@
                                         <th>Fecha inicio</th>
                                         <th>Fecha fin</th>
                                         <th>Fecha reintegro</th>
-                                        <th>Periodos</th>
+                                        <th>Períodos</th>
                                         <th>Firma</th>
                                         <th class="desvinculaciones-masivos__col-actions"></th>
                                     </tr>

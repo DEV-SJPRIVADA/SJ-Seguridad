@@ -74,13 +74,13 @@
                                             <input type="date" id="bandeja-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__field--compact">
-                                            <label class="req-manage-filters__label" for="bandeja-filter-area">Area solicitante</label>
+                                            <label class="req-manage-filters__label" for="bandeja-filter-area">Área solicitante</label>
                                             <x-searchable-select
                                                 id="bandeja-filter-area"
                                                 name="area_key"
                                                 :options="$areas"
                                                 :value="$filters['area_key'] ?? ''"
-                                                placeholder="Todas las areas"
+                                                placeholder="Todas las áreas"
                                                 searchPlaceholder="Buscar area…"
                                             />
                                         </div>
@@ -132,7 +132,7 @@
                                     · Tipo: <strong>{{ $filters['tipo'] === 'purchase' ? 'Solicitud compra' : 'Suministro' }}</strong>
                                 @endif
                                 @if ($filters['area_key'] ?? null)
-                                    · Area: <strong>{{ $areas[$filters['area_key']] ?? $filters['area_key'] }}</strong>
+                                    · Área: <strong>{{ $areas[$filters['area_key']] ?? $filters['area_key'] }}</strong>
                                 @endif
                                 @if ($hasDateFilters)
                                     · Fecha:
@@ -158,7 +158,7 @@
                                     <th>Folio</th>
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
-                                    <th>Area</th>
+                                    <th>Área</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>

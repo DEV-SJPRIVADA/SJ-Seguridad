@@ -923,7 +923,7 @@ class PurchaseRequestModuleTest extends TestCase
 
         $this->get($this->emailApprovalShowUrl($purchaseRequest, $director))
             ->assertOk()
-            ->assertSee('Autorizacion de solicitud de compra', false)
+            ->assertSee('Autorización de solicitud de compra', false)
             ->assertSee('Aprobar solicitud')
             ->assertSee('Ver PDF (FO-AD-44)');
     }
@@ -940,7 +940,7 @@ class PurchaseRequestModuleTest extends TestCase
             'estado' => PurchaseRequest::ESTADO_APROBADO,
             'comentarios_director' => 'Aprobado por correo',
         ])->assertOk()
-            ->assertSee('Decision registrada')
+            ->assertSee('Decisión registrada')
             ->assertSee('aprobada');
 
         $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);

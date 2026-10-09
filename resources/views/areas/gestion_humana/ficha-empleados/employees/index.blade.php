@@ -76,7 +76,7 @@
                                         name="q"
                                         class="form-input"
                                         value="{{ $filters['q'] }}"
-                                        placeholder="Cedula, nombre o codigo de requisicion"
+                                        placeholder="Cédula, nombre o código de requisición"
                                     >
                                     <button
                                         type="submit"
@@ -179,7 +179,7 @@
                                 · Estado: <strong>{{ $employmentStatusLabels[$employmentStatusMode === 'default_activo' ? 'activo' : $employmentStatusMode] ?? $employmentStatusMode }}</strong>
                             @endif
                             @if ($filters['q'] ?? '')
-                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                · Búsqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
                         </p>
                     </div>
@@ -198,7 +198,7 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>Cedula</th>
+                                    <th>Cédula</th>
                                     <th>Nombre completo</th>
                                     <th>Cargo</th>
                                     <th>Cliente</th>

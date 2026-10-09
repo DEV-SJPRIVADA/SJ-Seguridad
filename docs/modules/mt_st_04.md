@@ -200,11 +200,13 @@ Export: cédula + ficha live + editables + vencimientos/estados; respeta filtros
 
 ### Dashboard
 
-- Universo default = activos ficha; filtro `ficha_estado` en UI.
-- KPIs examen 1: Total, Vigente, Vencera, Vencido.
-- KPIs examen 2: mismos **excluyendo** `NO APLICA` del Total2 (conteo `no_aplica` aparte); charts sin segmento NO APLICA.
-- Aptos: SI / NO / sin dato.
-- ApexCharts patrón Formación/GH. Sin dimensión “año de carga” en V1.
+- Universo default = activos ficha; filtros UI compartidos por ambas subpestañas: `ficha_estado`, `ciudad`, `cargo` (`position_name`), `puesto` (`cost_center_name`).
+- UI con subpestañas (mismo chrome que Formación): **Psicofísicos** = examen 1; **Psicosensométricos** = examen 2.
+- KPIs clicables → Matriz con filtros del KPI (`estado_1` / `estado_2` / `apto`) + filtros activos del dashboard. Total senso usa `estado_2=__sin_no_aplica__`.
+- KPIs psicofísicos: Total, Vigente, Vencera, Vencido + Aptos / No aptos.
+- KPIs psicosensométricos: mismos **excluyendo** `NO APLICA` del Total (conteo `no_aplica` aparte); donut sin segmento NO APLICA.
+- Charts por bloque: donut estados; **tendencia de vencimientos por año** (`fecha_vencimiento_1` / `_2`); **barras horizontales por cargo** (Ficha `position_name`, top 15 + Otros). Psicosensométricos (tendencia/cargo) excluyen NO APLICA.
+- ApexCharts patrón Formación/GH (Vite).
 
 ### Auditoría
 
@@ -219,7 +221,7 @@ DELETE duro con `edit` (confirmación UI). Sin soft-delete.
 - DataTables server-side en Matriz (`js-mt-st-04-datatable`; no `.js-datatable`; `lengthMenu` sin `-1`).
 - Cabecera matriz en dos filas: grupo **Psicofísico (armas)** (azul) y **Psicosensométrico (vial)** (verde); celdas tintadas por grupo. Orden columnas: identidad → psico (arma…obs1) → senso (exam2…estado2) → acciones.
 - Modales Nuevo/Editar: secciones visuales Identificación | Psicofísico | Psicosensométrico (`.mt-st-04-form-section`).
-- **Validaciones:** activos Ficha con `requires_psicofisicos` y sin fila en matriz; + abre alta; omit/enable muta el flag. Flag también en Ficha (editores de ficha). Permisos: mismos `mt_st_04.view` / `.edit`.
+- **Validaciones:** activos Ficha con `requires_psicofisicos` y sin fila en matriz; + abre alta; omit/enable muta el flag. Filtros: `q`, `cola`, `ciudad`, `cargo`. Export Excel (`MtSt04ValidacionesExport` + `<x-export-excel>`, respeta filtros). Flag también en Ficha (editores de ficha). Permisos: mismos `mt_st_04.view` / `.edit`.
 - Alpine / modales CRUD e import (patrón GH).
 - Dashboard charts ApexCharts (Vite).
 - Selects: solo `<x-searchable-select>`.

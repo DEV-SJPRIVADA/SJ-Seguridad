@@ -8,7 +8,7 @@
 
 <div class="cursos-registros-page__form-grid">
     <div class="form-field">
-        <label class="form-label" for="{{ $prefix }}_document_number">CEDULA</label>
+        <label class="form-label" for="{{ $prefix }}_document_number">CÉDULA</label>
         <input
             id="{{ $prefix }}_document_number"
             name="document_number"
@@ -31,7 +31,7 @@
         <input id="{{ $prefix }}_email" name="email" type="email" class="form-input" maxlength="150" required value="{{ $v['email'] ?? '' }}">
     </div>
     <div class="form-field">
-        <label class="form-label" for="{{ $prefix }}_phone">TELEFONO</label>
+        <label class="form-label" for="{{ $prefix }}_phone">TELÉFONO</label>
         <input id="{{ $prefix }}_phone" name="phone" type="text" class="form-input" maxlength="40" required value="{{ $v['phone'] ?? '' }}">
     </div>
     <div class="form-field">
@@ -83,7 +83,7 @@
         <input id="{{ $prefix }}_shoes_size" name="shoes_size" type="text" class="form-input" maxlength="40" required value="{{ $v['shoes_size'] ?? '' }}">
     </div>
     <div class="form-field">
-        <label class="form-label" for="{{ $prefix }}_requisition_uniform_id">TIPO DOTACION</label>
+        <label class="form-label" for="{{ $prefix }}_requisition_uniform_id">TIPO DOTACIÓN</label>
         <x-searchable-select
             id="{{ $prefix }}_requisition_uniform_id"
             name="requisition_uniform_id"

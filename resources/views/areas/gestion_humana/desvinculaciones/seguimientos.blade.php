@@ -195,12 +195,12 @@
                             <thead>
                                 <tr>
                                     <th class="desvinculaciones-seguimientos__col-id">No</th>
-                                    <th class="desvinculaciones-seguimientos__col-doc">CEDULA</th>
+                                    <th class="desvinculaciones-seguimientos__col-doc">CÉDULA</th>
                                     <th class="desvinculaciones-seguimientos__col-name">NOMBRE Y APELLIDOS</th>
                                     <th class="desvinculaciones-seguimientos__col-wide">CARGO</th>
-                                    <th class="desvinculaciones-seguimientos__col-wide">TIPO DESVINCULACION</th>
+                                    <th class="desvinculaciones-seguimientos__col-wide">TIPO DESVINCULACIÓN</th>
                                     <th class="desvinculaciones-seguimientos__col-wide">FECHA DE REGISTRO</th>
-                                    <th class="desvinculaciones-seguimientos__col-wide">FECHA DESVINCULACION</th>
+                                    <th class="desvinculaciones-seguimientos__col-wide">FECHA DESVINCULACIÓN</th>
                                     @foreach ($checkLabels as $field => $label)
                                         <th class="desvinculaciones-seguimientos__check-th" title="{{ $label }}">{{ $label }}</th>
                                     @endforeach
@@ -876,7 +876,7 @@
                             if (json.followup && $row) {
                                 const okTodo = $row.querySelector('.js-seguimiento-ok-todo');
                                 if (okTodo) {
-                                    okTodo.textContent = json.followup.ok_todo ? 'Si' : 'No';
+                                    okTodo.textContent = json.followup.ok_todo ? 'Sí' : 'No';
                                 }
                             }
                         } catch (e) {
@@ -973,7 +973,7 @@
                         searchable: false,
                         render: (data) => (
                             '<span class="desvinculaciones-seguimientos__ok-todo js-seguimiento-ok-todo">'
-                            + (data ? 'Si' : 'No')
+                            + (data ? 'Sí' : 'No')
                             + '</span>'
                         ),
                     },

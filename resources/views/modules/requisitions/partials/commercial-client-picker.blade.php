@@ -9,7 +9,7 @@
     data-search-url="{{ $clientSearchUrl }}"
 >
     <x-input-label for="requisition_client_search" :value="'Cliente'.($clientRequired ? ' *' : '')" />
-    <p class="req-form__hint">Busque por nombre o NIT en la matriz comercial (min. 2 caracteres).</p>
+    <p class="req-form__hint">Busque por nombre o NIT en la matriz comercial (mín. 2 caracteres).</p>
 
     <div class="js-client-picker-search" style="{{ $selectedCommercialClient ? 'display:none;' : '' }}">
         <x-text-input

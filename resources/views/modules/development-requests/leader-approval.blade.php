@@ -7,7 +7,7 @@
         <div class="app-container">
             <div class="panel development-requests-page__panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Aprobacion lider</h3>
+                    <h3 class="panel-title">Aprobación líder</h3>
                     <p class="panel-text">Solicitudes pendientes de validacion institucional.</p>
                 </div>
                 <div class="panel__body">
@@ -18,9 +18,9 @@
                         <table class="supply-table js-datatable" style="width:100%" data-dt-compact="true">
                             <thead>
                                 <tr>
-                                    <th>Titulo</th>
+                                    <th>Título</th>
                                     <th>Solicitante</th>
-                                    <th>Area</th>
+                                    <th>Área</th>
                                     <th>Prioridad</th>
                                     <th>Fecha</th>
                                     <th>Acciones</th>

@@ -62,7 +62,7 @@
             <span class="comercial-form__section-step">2</span>
             <div>
                 <h3 class="comercial-form__section-title">Servicio / contrato</h3>
-                <p class="comercial-form__section-desc">Portafolio, contrato, asesor y clasificacion comercial.</p>
+                <p class="comercial-form__section-desc">Portafolio, contrato, asesor y clasificación comercial.</p>
             </div>
         </header>
 
@@ -127,7 +127,7 @@
         </div>
 
         <div class="form-field">
-            <x-input-label for="service_description" value="Descripcion del servicio" />
+            <x-input-label for="service_description" value="Descripción del servicio" />
             <textarea id="service_description" name="service_description" class="form-textarea" rows="3">{{ old('service_description', $service->service_description) }}</textarea>
         </div>
     </section>
@@ -151,7 +151,7 @@
                 <x-text-input id="contact_role" name="contact_role" class="form-input" :value="old('contact_role', $service->contact_role)" />
             </div>
             <div class="form-field">
-                <x-input-label for="contact_phone" value="Telefono contacto" />
+                <x-input-label for="contact_phone" value="Teléfono contacto" />
                 <x-text-input id="contact_phone" name="contact_phone" class="form-input" :value="old('contact_phone', $service->contact_phone)" />
             </div>
             <div class="form-field">
@@ -166,7 +166,7 @@
             <span class="comercial-form__section-step">4</span>
             <div>
                 <h3 class="comercial-form__section-title">Vigencia</h3>
-                <p class="comercial-form__section-desc">Fechas de contrato y duracion en meses.</p>
+                <p class="comercial-form__section-desc">Fechas de contrato y duración en meses.</p>
             </div>
         </header>
 
@@ -182,7 +182,7 @@
                 <x-input-error :messages="$errors->get('contract_end')" />
             </div>
             <div class="form-field">
-                <x-input-label for="duration_months" value="Duracion (meses)" />
+                <x-input-label for="duration_months" value="Duración (meses)" />
                 <x-text-input id="duration_months" name="duration_months" type="number" min="0" max="600" class="form-input" :value="old('duration_months', $service->duration_months)" />
                 <x-input-error :messages="$errors->get('duration_months')" />
             </div>

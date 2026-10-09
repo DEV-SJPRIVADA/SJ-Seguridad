@@ -17,7 +17,7 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header">
-                    <h3 class="panel-title">Autorizacion gerencia — cargo nuevo</h3>
+                    <h3 class="panel-title">Autorización gerencia — cargo nuevo</h3>
                     <p class="panel-text">Por defecto se muestran solo las pendientes; cambie la vista para consultar autorizadas o rechazadas.</p>
                 </div>
                 <div class="panel__body">
@@ -56,7 +56,7 @@
 
                             <p class="req-manage-filters__meta req-manage-filters__meta--approval">
                                 <strong>{{ number_format($requisitions->count()) }}</strong>
-                                {{ $requisitions->count() === 1 ? 'requisicion' : 'requisiciones' }}
+                                {{ $requisitions->count() === 1 ? 'requisición' : 'requisiciones' }}
                                 {{ $estadoMetaLabels[$currentEstado] ?? '' }}
                             </p>
                         </form>
@@ -66,7 +66,7 @@
                         <table class="data-table js-datatable" data-order='[[1, "desc"]]'>
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
+                                    <th>Código</th>
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
                                     <th>Cargo</th>
@@ -105,7 +105,7 @@
                                     <tr>
                                         <td colspan="7" class="text-muted">
                                             @if ($currentEstado === \App\Services\Requisitions\RequisitionManagementApprovalService::FILTER_PENDIENTE)
-                                                No hay requisiciones pendientes de autorizacion.
+                                                No hay requisiciones pendientes de autorización.
                                             @else
                                                 No hay requisiciones con la vista seleccionada.
                                             @endif

@@ -151,15 +151,15 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>CEDULA</th>
+                                    <th>CÉDULA</th>
                                     <th>NOMBRE</th>
                                     <th>CORREO</th>
-                                    <th>TELEFONO</th>
+                                    <th>TELÉFONO</th>
                                     <th>CIUDAD</th>
                                     <th>CARGO</th>
                                     <th>CLIENTE</th>
                                     <th>CAMISA</th>
-                                    <th>PANTALON</th>
+                                    <th>PANTALÓN</th>
                                     <th>ZAPATOS</th>
                                     <th>FECHA INGRESO</th>
                                     <th>RH</th>
@@ -272,7 +272,7 @@
                                 @method('PATCH')
                                 <div class="cursos-registros-page__form-grid">
                                     <div class="form-field">
-                                        <label class="form-label" for="edit_document_number">CEDULA</label>
+                                        <label class="form-label" for="edit_document_number">CÉDULA</label>
                                         <input id="edit_document_number" name="document_number" type="text" class="form-input" maxlength="50" required
                                             x-model="editForm.document_number"
                                             @blur="lookupDuplicates($event.target.value, 'edit')">
@@ -286,7 +286,7 @@
                                         <input id="edit_email" name="email" type="email" class="form-input" maxlength="150" required x-model="editForm.email">
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="edit_phone">TELEFONO</label>
+                                        <label class="form-label" for="edit_phone">TELÉFONO</label>
                                         <input id="edit_phone" name="phone" type="text" class="form-input" maxlength="40" required x-model="editForm.phone">
                                     </div>
                                     <div class="form-field">
@@ -338,7 +338,7 @@
                                         <input id="edit_shoes_size" name="shoes_size" type="text" class="form-input" maxlength="40" required x-model="editForm.shoes_size">
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="edit_requisition_uniform_id">TIPO DOTACION</label>
+                                        <label class="form-label" for="edit_requisition_uniform_id">TIPO DOTACIÓN</label>
                                         <x-searchable-select
                                             id="edit_requisition_uniform_id"
                                             name="requisition_uniform_id"

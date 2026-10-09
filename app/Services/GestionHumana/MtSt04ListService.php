@@ -24,6 +24,8 @@ class MtSt04ListService
      *     apto?: string|null,
      *     ficha_estado?: string|null,
      *     ciudad?: string|null,
+     *     cargo?: string|null,
+     *     puesto?: string|null,
      * }  $filters
      * @return Builder<MtSt04Registro>
      */
@@ -81,6 +83,12 @@ class MtSt04ListService
         if ($estado2 !== '' && $estado2 !== 'todos') {
             if ($estado2 === '__empty__') {
                 $query->whereNull('mt_st_04_registros.estado_2');
+            } elseif ($estado2 === '__sin_no_aplica__') {
+                // Misma regla que el Total del dashboard psicosensométrico.
+                $query->where(function (Builder $inner): void {
+                    $inner->whereNull('mt_st_04_registros.estado_2')
+                        ->orWhere('mt_st_04_registros.estado_2', '!=', MtSt04Registro::ESTADO_NO_APLICA);
+                });
             } else {
                 $query->where('mt_st_04_registros.estado_2', $estado2);
             }
@@ -102,6 +110,16 @@ class MtSt04ListService
             $query->whereRaw(EmployeeFichaProfile::displayCitySql('ficha').' = ?', [$ciudad]);
         }
 
+        $cargo = trim((string) ($filters['cargo'] ?? ''));
+        if ($cargo !== '' && $cargo !== 'todos') {
+            $query->where('ficha.position_name', $cargo);
+        }
+
+        $puesto = trim((string) ($filters['puesto'] ?? ''));
+        if ($puesto !== '' && $puesto !== 'todos') {
+            $query->where('ficha.cost_center_name', $puesto);
+        }
+
         if ($ordered) {
             $query->orderByDesc('mt_st_04_registros.id');
         }
@@ -116,30 +134,76 @@ class MtSt04ListService
      */
     public function cityFilterOptions(): array
     {
-        $citySql = EmployeeFichaProfile::displayCitySql('ficha');
+        return $this->distinctExpressionOptions(
+            EmployeeFichaProfile::displayCitySql('ficha'),
+            'Todas',
+        );
+    }
 
-        $cities = MtSt04Registro::query()
+    /**
+     * Opciones de filtro cargo (position_name en Ficha).
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function cargoFilterOptions(): array
+    {
+        return $this->distinctColumnOptions('ficha.position_name', 'Todos');
+    }
+
+    /**
+     * Opciones de filtro puesto (cost_center_name en Ficha).
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function puestoFilterOptions(): array
+    {
+        return $this->distinctColumnOptions('ficha.cost_center_name', 'Todos');
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function distinctColumnOptions(string $qualifiedColumn, string $allLabel): array
+    {
+        // Solo columnas ficha.* permitidas (evitar inyección en selectRaw).
+        $allowed = [
+            'ficha.position_name',
+            'ficha.cost_center_name',
+        ];
+        if (! in_array($qualifiedColumn, $allowed, true)) {
+            return [['value' => 'todos', 'label' => $allLabel]];
+        }
+
+        return $this->distinctExpressionOptions($qualifiedColumn, $allLabel);
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function distinctExpressionOptions(string $expression, string $allLabel): array
+    {
+        $values = MtSt04Registro::query()
             ->join(
                 'employee_ficha_profiles as ficha',
                 'ficha.document_number',
                 '=',
                 'mt_st_04_registros.document_number',
             )
-            ->selectRaw("{$citySql} as city")
-            ->whereRaw("{$citySql} is not null")
-            ->whereRaw("{$citySql} <> ''")
+            ->selectRaw("{$expression} as filter_value")
+            ->whereRaw("{$expression} is not null")
+            ->whereRaw("TRIM({$expression}) <> ''")
             ->distinct()
-            ->orderBy('city')
-            ->pluck('city')
-            ->filter(fn (mixed $city): bool => is_string($city) && trim($city) !== '')
+            ->orderBy('filter_value')
+            ->pluck('filter_value')
+            ->filter(fn (mixed $value): bool => is_string($value) && trim($value) !== '')
             ->values();
 
         $options = [
-            ['value' => 'todos', 'label' => 'Todas'],
+            ['value' => 'todos', 'label' => $allLabel],
         ];
 
-        foreach ($cities as $city) {
-            $options[] = ['value' => $city, 'label' => $city];
+        foreach ($values as $value) {
+            $options[] = ['value' => $value, 'label' => $value];
         }
 
         return $options;

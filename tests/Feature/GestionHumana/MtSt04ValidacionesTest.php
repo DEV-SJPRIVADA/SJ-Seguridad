@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class MtSt04ValidacionesTest extends TestCase
@@ -127,6 +128,108 @@ class MtSt04ValidacionesTest extends TestCase
         $tabs = config('access.mt_st_04_tabs');
 
         $this->assertSame('Validaciones', $tabs['validaciones']);
+    }
+
+    public function test_viewer_can_export_validaciones_respecting_filters(): void
+    {
+        $viewer = $this->userWithMtSt04(['mt_st_04.view', 'view.board.gestion_humana.mt_st_04']);
+
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '9005001',
+            'full_name' => 'EXPORT ANA',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_psicofisicos' => true,
+            'position_name' => 'SUPERVISOR',
+            'residence_city_name' => 'CALI',
+            'cost_center_name' => 'CC-01',
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '9005002',
+            'full_name' => 'EXPORT LUIS',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_psicofisicos' => true,
+            'position_name' => 'GUARDA',
+            'residence_city_name' => 'BOGOTA',
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.mt-st-04.validaciones.export', [
+                'ciudad' => 'CALI',
+            ]))
+            ->assertOk();
+
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            (string) $response->headers->get('content-type'),
+        );
+
+        $tmp = tempnam(sys_get_temp_dir(), 'mtst04val');
+        $this->assertNotFalse($tmp);
+        file_put_contents($tmp, $response->streamedContent());
+
+        $sheet = IOFactory::load($tmp)->getActiveSheet();
+        @unlink($tmp);
+
+        $this->assertSame('CEDULA', (string) $sheet->getCell([1, 2])->getValue());
+        $this->assertSame('9005001', (string) $sheet->getCell([1, 3])->getValue());
+        $this->assertSame('EXPORT ANA', (string) $sheet->getCell([2, 3])->getValue());
+        $this->assertSame('SUPERVISOR', (string) $sheet->getCell([3, 3])->getValue());
+        $this->assertSame('CALI', (string) $sheet->getCell([4, 3])->getValue());
+        $this->assertSame('CC-01', (string) $sheet->getCell([5, 3])->getValue());
+        $this->assertSame('SI', (string) $sheet->getCell([6, 3])->getValue());
+        $this->assertSame('', (string) $sheet->getCell([1, 4])->getValue());
+    }
+
+    public function test_validaciones_filters_by_ciudad_and_cargo(): void
+    {
+        $viewer = $this->userWithMtSt04(['mt_st_04.view', 'view.board.gestion_humana.mt_st_04']);
+
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '9004001',
+            'full_name' => 'ANA CALI SUPER',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_psicofisicos' => true,
+            'position_name' => 'SUPERVISOR',
+            'residence_city_name' => 'CALI',
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '9004002',
+            'full_name' => 'LUIS BOGOTA GUARDA',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_psicofisicos' => true,
+            'position_name' => 'GUARDA',
+            'residence_city_name' => 'BOGOTA',
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.mt-st-04.validaciones'))
+            ->assertOk()
+            ->assertSee('id="filter_ciudad"', false)
+            ->assertSee('id="filter_cargo"', false);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.validaciones.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'ciudad' => 'CALI',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertSee('ANA CALI SUPER', false)
+            ->assertDontSee('LUIS BOGOTA GUARDA', false);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.validaciones.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'cargo' => 'GUARDA',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertSee('LUIS BOGOTA GUARDA', false)
+            ->assertDontSee('ANA CALI SUPER', false);
     }
 
     /**

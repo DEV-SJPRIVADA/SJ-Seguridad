@@ -8,7 +8,7 @@
 
 <div class="cursos-registros-page__form-grid">
     <div class="form-field">
-        <label class="form-label" for="{{ $prefix }}_document_number">CEDULA</label>
+        <label class="form-label" for="{{ $prefix }}_document_number">CÉDULA</label>
         <input
             id="{{ $prefix }}_document_number"
             name="document_number"
@@ -67,7 +67,7 @@
         />
     </div>
     <div class="form-field">
-        <label class="form-label" for="{{ $prefix }}_afp_code">PENSION (AFP)</label>
+        <label class="form-label" for="{{ $prefix }}_afp_code">PENSIÓN (AFP)</label>
         <x-searchable-select
             id="{{ $prefix }}_afp_code"
             name="afp_code"
@@ -95,7 +95,7 @@
         />
     </div>
     <div class="form-field">
-        <label class="form-label" for="{{ $prefix }}_address">DIRECCION</label>
+        <label class="form-label" for="{{ $prefix }}_address">DIRECCIÓN</label>
         <input id="{{ $prefix }}_address" name="address" type="text" class="form-input" maxlength="255" required value="{{ $v['address'] ?? '' }}">
     </div>
     <div class="form-field">

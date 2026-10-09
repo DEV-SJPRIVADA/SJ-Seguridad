@@ -605,7 +605,7 @@
             <x-input-error :messages="$errors->get('payroll_extra.total_vacation_days')" />
         </div>
         <div class="form-field">
-            <label class="form-label" for="payroll_extra_pending_vacation_periods">Periodos pendientes vacaciones</label>
+            <label class="form-label" for="payroll_extra_pending_vacation_periods">Períodos pendientes vacaciones</label>
             <input id="payroll_extra_pending_vacation_periods" type="number" step="0.01" name="payroll_extra[pending_vacation_periods]" class="form-input" value="{{ old('payroll_extra.pending_vacation_periods', $payrollExtra('pending_vacation_periods')) }}">
             <x-input-error :messages="$errors->get('payroll_extra.pending_vacation_periods')" />
         </div>

@@ -64,7 +64,7 @@
                 </div>
 
                 <h2 class="page-title">Solicitud de compra {{ $purchaseRequest->folio() }}</h2>
-                <p class="page-subtitle">Detalle FO-AD-44 · seguimiento de autorizacion y compras.</p>
+                <p class="page-subtitle">Detalle FO-AD-44 · seguimiento de autorización y compras.</p>
                 <div class="pur-req-detail__pills">
                     <span class="status-pill {{ $estadoPill }}">{{ $estadoLabel }}</span>
                     @if ($purchaseRequest->urgente)
@@ -92,7 +92,7 @@
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->user?->name ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Area</span>
+                            <span class="pur-req-form__meta-label">Área</span>
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->areaLabel() ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
@@ -104,7 +104,7 @@
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->aprobador?->name ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Fecha de aprobacion</span>
+                            <span class="pur-req-form__meta-label">Fecha de aprobación</span>
                             <span class="pur-req-form__meta-value">
                                 @if ($purchaseRequest->fecha_aprobacion)
                                     <x-date-table :value="$purchaseRequest->fecha_aprobacion" />
@@ -129,7 +129,7 @@
                                 </span>
                                 <div>
                                     <h3 class="pur-req-form__section-title">Datos del cliente</h3>
-                                    <p class="pur-req-form__section-desc">Informacion asociada a la solicitud para cliente.</p>
+                                    <p class="pur-req-form__section-desc">Información asociada a la solicitud para cliente.</p>
                                 </div>
                             </header>
                             <div class="pur-req-form__meta">
@@ -161,7 +161,7 @@
                                 </span>
                                 <div>
                                     <h3 class="pur-req-form__section-title">Comentarios del director</h3>
-                                    <p class="pur-req-form__section-desc">Observacion registrada en la autorizacion.</p>
+                                    <p class="pur-req-form__section-desc">Observación registrada en la autorización.</p>
                                 </div>
                             </header>
                             <p class="pur-req-detail__block-body">{{ $purchaseRequest->comentarios_director }}</p>
@@ -175,7 +175,7 @@
                             </span>
                             <div>
                                 <h3 class="pur-req-form__section-title">Productos solicitados</h3>
-                                <p class="pur-req-form__section-desc">{{ $purchaseRequest->items->count() }} linea(s) en esta solicitud.</p>
+                                <p class="pur-req-form__section-desc">{{ $purchaseRequest->items->count() }} línea(s) en esta solicitud.</p>
                             </div>
                         </header>
 
@@ -186,10 +186,10 @@
                                         <th class="col-num">#</th>
                                         <th class="col-foto">Foto</th>
                                         <th class="col-qty">Cantidad</th>
-                                        <th>Descripcion</th>
+                                        <th>Descripción</th>
                                         <th>Referencia</th>
-                                        <th>Utilizacion</th>
-                                        <th>Ubicacion</th>
+                                        <th>Utilización</th>
+                                        <th>Ubicación</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -425,7 +425,7 @@
                     @if ($fromKey === 'processing' && $canProcess)
                         <div class="panel">
                             <div class="panel__header">
-                                <h3 class="panel-title">Accion compras</h3>
+                                <h3 class="panel-title">Acción compras</h3>
                                 <p class="panel-text">Actualiza el estado operativo en bandeja.</p>
                             </div>
                             <div class="panel__body">

@@ -1,6 +1,6 @@
 @php
     $objective = 'Medir el grado de cumplimiento del indicador.';
-    $process = 'Gestion Operativa';
+    $process = 'Gestión Operativa';
     $inputs = 'Base de datos del indicador';
     $colCount = 12;
     $pdfTwoPages = (bool) ($pdfSplitBeforeAnalysis ?? $pdfSplitAtCharts ?? false);
@@ -13,14 +13,14 @@
                 <img src="{{ $logoPath }}" alt="Logo" style="width:70px; height:auto;">
             @endif
         </td>
-        <td colspan="7" rowspan="4" class="sheet-title">FICHA DEL INDICADOR DE GESTION</td>
+        <td colspan="7" rowspan="4" class="sheet-title">FICHA DEL INDICADOR DE GESTIÓN</td>
         <td colspan="3">{{ $indicator->code }}</td>
     </tr>
     <tr>
         <td colspan="3">{{ ($months[$selectedMonth] ?? 'Mes').' de '.$selectedYear }}</td>
     </tr>
     <tr>
-        <td colspan="3">Version 02</td>
+        <td colspan="3">Versión 02</td>
     </tr>
     <tr>
         <td colspan="3">Pagina {{ $pdfTwoPages ? '1 de 2' : '1 de 1' }}</td>
@@ -38,9 +38,9 @@
     <tr>
         <td colspan="2" class="sheet-head">UNIDAD MEDIDA</td>
         <td class="sheet-head">META</td>
-        <td colspan="3" class="sheet-head">FRECUENCIA DE MEDICION</td>
+        <td colspan="3" class="sheet-head">FRECUENCIA DE MEDICIÓN</td>
         <td colspan="2" class="sheet-head">TENDENCIA</td>
-        <td colspan="4" class="sheet-head">INSUMOS PARA LA MEDICION</td>
+        <td colspan="4" class="sheet-head">INSUMOS PARA LA MEDICIÓN</td>
     </tr>
     <tr style="text-align:center;">
         <td colspan="2">{{ ucfirst((string) ($indicator->unit ?? 'Porcentaje')) }}</td>
@@ -59,7 +59,7 @@
         <td colspan="4">{{ $inputs }}</td>
     </tr>
     <tr>
-        <td colspan="2" class="sheet-head">CRITICO</td>
+        <td colspan="2" class="sheet-head">CRÍTICO</td>
         <td>{{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
         <td colspan="9"></td>
     </tr>
@@ -67,12 +67,12 @@
     <tr><td colspan="{{ $colCount }}" style="text-align:center;">({{ $indicator->formula_description ?? 'N/A' }})</td></tr>
     <tr><td colspan="{{ $colCount }}" class="sheet-head">RESPONSABILIDADES</td></tr>
     <tr>
-        <td colspan="4" class="sheet-head">RESULTADOS Y MEDICION</td>
+        <td colspan="4" class="sheet-head">RESULTADOS Y MEDICIÓN</td>
         <td colspan="4" class="sheet-head">RESULTADOS</td>
-        <td colspan="4" class="sheet-head">MEDICION</td>
+        <td colspan="4" class="sheet-head">MEDICIÓN</td>
     </tr>
     <tr style="text-align:center;">
-        <td colspan="4">Lider de Gestion Operativa</td>
+        <td colspan="4">Líder de Gestión Operativa</td>
         <td colspan="4">N.A.</td>
         <td colspan="4">N.A.</td>
     </tr>
@@ -108,17 +108,17 @@
     </tr>
     <tr style="text-align:center;">
         @for ($i = 0; $i < 12; $i++)
-            <td class="sheet-head">CRITICO {{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
+            <td class="sheet-head">CRÍTICO {{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
         @endfor
     </tr>
 </table>
 
 <div class="chart-box">
-    <div class="chart-title">GRAFICOS</div>
+    <div class="chart-title">GRÁFICOS</div>
     @if (! empty($chartImages['main']))
-        <img src="{{ $chartImages['main'] }}" alt="Grafico indicador">
+        <img src="{{ $chartImages['main'] }}" alt="Gráfico indicador">
     @else
-        <p style="padding: 20px;">Grafico no disponible</p>
+        <p style="padding: 20px;">Gráfico no disponible</p>
     @endif
 </div>
 
@@ -129,7 +129,7 @@
 
 <table class="sheet-table" style="border-top:none;">
     <tr class="sheet-head">
-        <td colspan="3">ANALISIS DE RESULTADOS</td>
+        <td colspan="3">ANÁLISIS DE RESULTADOS</td>
         <td>CUMPLE</td>
         <td>MEJORA</td>
     </tr>
@@ -138,8 +138,8 @@
             <td class="sheet-head" style="text-align:center;">{{ $selectedYear }}</td>
             <td class="sheet-head" style="text-align:center;">{{ $row['month'] }}</td>
             <td>{{ $row['analysis'] }}</td>
-            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['complies'] ? 'SI' : 'NO') : '' }}</td>
-            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['improvement'] ? 'SI' : 'NO') : '' }}</td>
+            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['complies'] ? 'Sí' : 'No') : '' }}</td>
+            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['improvement'] ? 'Sí' : 'No') : '' }}</td>
         </tr>
     @endforeach
 </table>

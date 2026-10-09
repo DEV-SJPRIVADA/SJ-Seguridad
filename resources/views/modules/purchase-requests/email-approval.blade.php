@@ -2,7 +2,7 @@
     <div class="page-section">
         <div class="app-container">
             <article class="req-approval-letter">
-                <h1 class="req-approval-letter__title">Autorizacion de solicitud de compra</h1>
+                <h1 class="req-approval-letter__title">Autorización de solicitud de compra</h1>
 
                 @if ($alreadyResolved ?? false)
                     <div class="alert alert--info ficha-empleados-page__alert">
@@ -11,14 +11,14 @@
                     </div>
                 @else
                     <p class="req-approval-letter__lead">
-                        Se registro una solicitud de compra que <strong>requiere su autorizacion</strong> como director asignado.
+                        Se registró una solicitud de compra que <strong>requiere su autorización</strong> como director asignado.
                     </p>
                 @endif
 
                 <div class="req-approval-letter__panel">
                     <p><strong>Folio:</strong> {{ $purchaseRequest->folio() }}</p>
                     <p><strong>Solicitante:</strong> {{ $purchaseRequest->user?->name ?? '—' }}</p>
-                    <p><strong>Area:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
+                    <p><strong>Área:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
                     <p><strong>Fecha:</strong> {{ optional($purchaseRequest->fecha_solicitud)->format('d/m/Y') ?? '—' }}</p>
                     <p><strong>Solicitud para:</strong> {{ $purchaseRequest->solicitud_para }}</p>
                     @if ($purchaseRequest->urgente)
@@ -32,7 +32,7 @@
                         <thead>
                             <tr>
                                 <th>Cantidad</th>
-                                <th>Descripcion</th>
+                                <th>Descripción</th>
                                 <th>Referencia</th>
                             </tr>
                         </thead>

@@ -55,7 +55,7 @@
                 </div>
 
                 <h2 class="page-title">Procesar suministro {{ $supplyRequest->folio() }}</h2>
-                <p class="page-subtitle">Registra el costo unitario de cada linea autorizada y completa el procesamiento en bandeja.</p>
+                <p class="page-subtitle">Registra el costo unitario de cada línea autorizada y completa el procesamiento en bandeja.</p>
                 <div class="pur-req-detail__pills">
                     <span class="status-pill status-pill--info">{{ $supplyRequest->statusLabel() }}</span>
                     @if ($estadoCompras)
@@ -74,7 +74,7 @@
                             <span class="pur-req-form__meta-value">{{ $supplyRequest->user?->name ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Area</span>
+                            <span class="pur-req-form__meta-label">Área</span>
                             <span class="pur-req-form__meta-value">{{ $areaLabel }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
@@ -84,7 +84,7 @@
                             </span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Sede / utilizacion</span>
+                            <span class="pur-req-form__meta-label">Sede / utilización</span>
                             <span class="pur-req-form__meta-value">{{ $supplyRequest->site_utilization ?? $supplyRequest->site?->utilization ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
@@ -107,7 +107,7 @@
                                 <span class="pur-req-form__section-step">1</span>
                                 <div>
                                     <h3 class="pur-req-form__section-title">Costeo de productos</h3>
-                                    <p class="pur-req-form__section-desc">Ingresa el costo unitario de cada linea con cantidad autorizada.</p>
+                                    <p class="pur-req-form__section-desc">Ingresa el costo unitario de cada línea con cantidad autorizada.</p>
                                 </div>
                             </header>
 
@@ -128,7 +128,7 @@
                                                 <td class="pur-req-form__item-desc">
                                                     {{ $item->displayName() }}
                                                     @if ($item->is_not_in_catalog)
-                                                        <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Fuera de catalogo</span>
+                                                        <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Fuera de catálogo</span>
                                                     @endif
                                                 </td>
                                                 <td class="text-center">{{ $item->approved_quantity ?? $item->requested_quantity }}</td>
@@ -190,7 +190,7 @@
                             <ul class="pur-req-form-guide__list">
                                 <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folio() }}</li>
                                 <li class="pur-req-form-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Area: {{ $areaLabel }}</li>
+                                <li class="pur-req-form-guide__item">Área: {{ $areaLabel }}</li>
                                 <li class="pur-req-form-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
                                 <li class="pur-req-form-guide__item">Revisor: {{ $supplyRequest->qualityReviewer?->name ?? '—' }}</li>
                             </ul>
@@ -199,12 +199,12 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Guia de costeo</h3>
+                            <h3 class="panel-title">Guía de costeo</h3>
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
                                 <li class="pur-req-form-guide__item">Usa la cantidad autorizada por Calidad.</li>
-                                <li class="pur-req-form-guide__item">El costo unitario es obligatorio en cada linea.</li>
+                                <li class="pur-req-form-guide__item">El costo unitario es obligatorio en cada línea.</li>
                                 <li class="pur-req-form-guide__item">Al completar se calcula el costo total.</li>
                                 <li class="pur-req-form-guide__item">PDF/Excel FO-AD-44 siguen disponibles desde el detalle.</li>
                             </ul>

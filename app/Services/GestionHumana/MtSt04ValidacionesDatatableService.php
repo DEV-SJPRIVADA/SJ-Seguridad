@@ -15,7 +15,7 @@ final class MtSt04ValidacionesDatatableService
     ) {}
 
     /**
-     * @param  array{q?: string|null, cola?: string|null}  $filters
+     * @param  array{q?: string|null, cola?: string|null, ciudad?: string|null, cargo?: string|null}  $filters
      */
     public function respond(Request $request, array $filters, bool $canEdit): JsonResponse
     {

@@ -163,7 +163,7 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>CEDULA</th>
+                                    <th>CÉDULA</th>
                                     <th>NOMBRE</th>
                                     <th>CARGO</th>
                                     <th>SERVICIO</th>
@@ -282,7 +282,7 @@
                                 @method('PATCH')
                                 <div class="cursos-registros-page__form-grid">
                                     <div class="form-field">
-                                        <label class="form-label" for="edit_document_number">CEDULA</label>
+                                        <label class="form-label" for="edit_document_number">CÉDULA</label>
                                         <input id="edit_document_number" name="document_number" type="text" class="form-input" maxlength="50" required
                                             x-model="editForm.document_number"
                                             @blur="lookupDuplicates($event.target.value, 'edit')">
@@ -332,7 +332,7 @@
                                         />
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="edit_afp_code">PENSION (AFP)</label>
+                                        <label class="form-label" for="edit_afp_code">PENSIÓN (AFP)</label>
                                         <x-searchable-select
                                             id="edit_afp_code"
                                             name="afp_code"
@@ -360,7 +360,7 @@
                                         />
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="edit_address">DIRECCION</label>
+                                        <label class="form-label" for="edit_address">DIRECCIÓN</label>
                                         <input id="edit_address" name="address" type="text" class="form-input" maxlength="255" required x-model="editForm.address">
                                     </div>
                                     <div class="form-field">

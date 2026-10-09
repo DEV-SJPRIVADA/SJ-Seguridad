@@ -16,11 +16,11 @@ class UserPermissionValidator
         $permissionSet = collect($permissions);
 
         if ($permissionSet->intersect(['requisitions.tab.solicitar', 'requisitions.tab.seguimiento'])->isNotEmpty() && blank($areaKey)) {
-            $warnings[] = 'Marco Solicitar o Mis requisiciones pero no definio area base. Esas acciones no funcionaran.';
+            $warnings[] = 'Marcó Solicitar o Mis requisiciones pero no definió área base. Esas acciones no funcionarán.';
         }
 
         if ($permissionSet->contains('supply.tab.my_requests') && blank($areaKey)) {
-            $warnings[] = 'Marco Mis solicitudes de suministros pero no definio area base.';
+            $warnings[] = 'Marcó Mis solicitudes de suministros pero no definió área base.';
         }
 
         $requisitionScoped = $permissionSet->intersect([
@@ -34,7 +34,7 @@ class UserPermissionValidator
                 || $permissionSet->contains('requisitions.approve.management');
 
             if (! $hasGhRequisitionHome) {
-                $warnings[] = 'Marco acciones de Requisiciones (GH); el menu las muestra bajo Gestion humana (hogar canonico). No requiere tableros en otras areas.';
+                $warnings[] = 'Marcó acciones de Requisiciones (GH); el menú las muestra bajo Gestión Humana (hogar canónico). No requiere tableros en otras áreas.';
             }
 
             $redundantRequisitionBoards = $permissionSet->filter(
@@ -44,18 +44,18 @@ class UserPermissionValidator
             );
 
             if ($redundantRequisitionBoards->isNotEmpty()) {
-                $warnings[] = 'Tiene tableros Requisiciones fuera de Gestion humana y alcance GH; el menu solo mostrara Requisiciones en GH (salvo su area base como solicitante).';
+                $warnings[] = 'Tiene tableros Requisiciones fuera de Gestión Humana y alcance GH; el menú solo mostrará Requisiciones en GH (salvo su área base como solicitante).';
             }
         }
 
         if ($permissionSet->contains('requisitions.approve.management')
             && ! $permissionSet->contains('view.board.gestion_humana.requisiciones')
         ) {
-            $warnings[] = 'Autorizacion gerencia aparece en el menu bajo Gestion humana → Requisiciones (hogar canonico).';
+            $warnings[] = 'Autorización gerencia aparece en el menú bajo Gestión Humana → Requisiciones (hogar canónico).';
         }
 
         if ($permissionSet->contains('purchase.tab.approval')) {
-            $warnings[] = 'Autorizacion de compras aparece en Compras → Solicitudes de compra → Pendientes (hogar canonico).';
+            $warnings[] = 'Autorización de compras aparece en Compras → Solicitudes de compra → Pendientes (hogar canónico).';
         }
 
         $supplyQualityScoped = $permissionSet->intersect([
@@ -64,7 +64,7 @@ class UserPermissionValidator
         ]);
 
         if ($supplyQualityScoped->isNotEmpty() && ! $this->hasSupplyBoard($permissionSet)) {
-            $warnings[] = 'Marco acciones de Suministros para Calidad, pero no habilito ver Suministros en el menu de ninguna area (normalmente Compras).';
+            $warnings[] = 'Marcó acciones de Suministros para Calidad, pero no habilitó ver Suministros en el menú de ninguna área (normalmente Compras).';
         }
 
         $supplyPurchasingScoped = $permissionSet->intersect([
@@ -74,11 +74,11 @@ class UserPermissionValidator
 
         if ($supplyPurchasingScoped->isNotEmpty()) {
             if (! $this->hasSupplyBoard($permissionSet)) {
-                $warnings[] = 'Marco acciones de catalogo de Suministros (Compras), pero no habilito ver Suministros en el menu de ninguna area.';
+                $warnings[] = 'Marcó acciones de catálogo de Suministros (Compras), pero no habilitó ver Suministros en el menú de ninguna área.';
             }
 
             if (! $permissionSet->contains('view.board.compras.suministros')) {
-                $warnings[] = 'Las acciones de catalogo de Suministros suelen combinarse con el tablero Suministros en el area Compras.';
+                $warnings[] = 'Las acciones de catálogo de Suministros suelen combinarse con el tablero Suministros en el área Compras.';
             }
         }
 
@@ -95,7 +95,7 @@ class UserPermissionValidator
             );
 
             if (! $hasOperationsBoard && $areaKey !== 'operaciones') {
-                $warnings[] = 'Marco permisos de Indicadores, pero no tiene tableros visibles en Operaciones ni area base Operaciones.';
+                $warnings[] = 'Marcó permisos de Indicadores, pero no tiene tableros visibles en Operaciones ni área base Operaciones.';
             }
         }
 
@@ -113,7 +113,7 @@ class UserPermissionValidator
             );
 
             if (! $hasCommercialBoard) {
-                $warnings[] = 'Marco funciones de Gestion Clientes, pero no habilito tableros visibles en Comercial.';
+                $warnings[] = 'Marcó funciones de Gestión Clientes, pero no habilitó tableros visibles en Comercial.';
             }
         }
 
@@ -121,7 +121,7 @@ class UserPermissionValidator
             && ! $permissionSet->contains('manage.users')
             && $areaKey !== 'calidad'
         ) {
-            $warnings[] = 'Marco administrar documentos de Calidad; confirme que el usuario opera desde el area Calidad para la pestaña Administrar.';
+            $warnings[] = 'Marcó administrar documentos de Calidad; confirme que el usuario opera desde el área Calidad para la pestaña Administrar.';
         }
 
         return array_values(array_unique($warnings));

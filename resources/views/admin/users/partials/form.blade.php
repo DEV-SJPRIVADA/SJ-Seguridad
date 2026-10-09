@@ -60,8 +60,8 @@
 
     <div class="user-form__tabs module-subnav">
         <div class="module-subnav__inner">
-            <p class="text-caption module-subnav__label">{{ $compactCreate ? 'Nuevo usuario' : 'Edicion de usuario' }}</p>
-            <nav class="module-tabs" aria-label="{{ $compactCreate ? 'Nuevo usuario' : 'Edicion de usuario' }}" role="tablist">
+            <p class="text-caption module-subnav__label">{{ $compactCreate ? 'Nuevo usuario' : 'Edición de usuario' }}</p>
+            <nav class="module-tabs" aria-label="{{ $compactCreate ? 'Nuevo usuario' : 'Edición de usuario' }}" role="tablist">
                 <button
                     type="button"
                     role="tab"
@@ -111,7 +111,7 @@
             @unless ($compactCreate)
                 <div class="section-header">
                     <h3 class="section-header__title">Datos generales</h3>
-                    <p class="section-header__desc">Informacion basica del usuario y su area operativa.</p>
+                    <p class="section-header__desc">Información básica del usuario y su área operativa.</p>
                 </div>
             @endunless
 
@@ -119,13 +119,13 @@
                 <div class="{{ $compactCreate && $copyCandidates->isNotEmpty() ? 'admin-user-create__datos-main' : '' }}">
                     <div class="form-grid {{ $compactCreate ? 'admin-user-create__grid' : 'form-grid--two' }}">
                         <div class="form-field">
-                            <label class="form-label">Cedula</label>
+                            <label class="form-label">Cédula</label>
                             <input name="document_number" type="text" class="form-input @error('document_number') form-input--invalid @enderror" value="{{ old('document_number', $user?->document_number) }}" maxlength="50" required>
                             <x-input-error :messages="$errors->get('document_number')" />
                             @if ($compactCreate)
-                                <p class="text-small text-muted">Contrasena temporal y acceso inicial.</p>
+                                <p class="text-small text-muted">Contraseña temporal y acceso inicial.</p>
                             @elseif (! $user)
-                                <p class="text-small text-muted">Se usara como contrasena temporal al crear el usuario.</p>
+                                <p class="text-small text-muted">Se usará como contraseña temporal al crear el usuario.</p>
                             @endif
                         </div>
                         <div class="form-field">
@@ -135,11 +135,11 @@
                         </div>
 
                         <div class="form-field">
-                            <label class="form-label">Correo electronico</label>
+                            <label class="form-label">Correo electrónico</label>
                             <input name="email" type="email" class="form-input @error('email') form-input--invalid @enderror" value="{{ old('email', $user?->email) }}" required>
                             <x-input-error :messages="$errors->get('email')" />
                             @if ($compactCreate)
-                                <p class="text-small text-muted">Recibira credenciales por correo.</p>
+                                <p class="text-small text-muted">Recibirá credenciales por correo.</p>
                             @endif
                         </div>
                         <div class="form-field">
@@ -157,14 +157,14 @@
                             <x-input-error :messages="$errors->get('role')" />
                         </div>
                         <div class="form-field">
-                            <label class="form-label">Area base</label>
+                            <label class="form-label">Área base</label>
                             <x-searchable-select
                                 id="user-area-key"
                                 name="area_key"
                                 :options="$areas"
                                 :value="old('area_key', $copyDefaults['area_key'] ?? $user?->area_key)"
-                                placeholder="Sin area fija"
-                                searchPlaceholder="Buscar area…"
+                                placeholder="Sin área fija"
+                                searchPlaceholder="Buscar área…"
                             />
                             <x-input-error :messages="$errors->get('area_key')" />
                             @unless ($compactCreate)
@@ -172,7 +172,7 @@
                             @endunless
                         </div>
                         <div class="form-field">
-                            <label class="form-label">Sede fisica</label>
+                            <label class="form-label">Sede física</label>
                             <div class="user-form__sede-row">
                                 <x-searchable-select
                                     id="user-sede-id"
@@ -207,7 +207,7 @@
                             </label>
                             <label class="admin-user-create__toggle">
                                 <input type="checkbox" name="must_change_password" value="1" class="form-check" @checked(old('must_change_password', true))>
-                                <span>Forzar cambio de contrasena al ingresar</span>
+                                <span>Forzar cambio de contraseña al ingresar</span>
                             </label>
                         </div>
                     @endif
@@ -270,7 +270,7 @@
         <div id="section-security" class="user-form__section" @if ($initialTab !== 'section-security') hidden @endif>
             <div class="section-header">
                 <h3 class="section-header__title">Seguridad de cuenta</h3>
-                <p class="section-header__desc">Control de acceso, contrasena y estado operativo del usuario.</p>
+                <p class="section-header__desc">Control de acceso, contraseña y estado operativo del usuario.</p>
             </div>
 
             <div class="form-grid form-grid--two">
@@ -283,7 +283,7 @@
                         </label>
                         <label class="checkbox-card user-form__security-option">
                             <input type="checkbox" name="must_change_password" value="1" class="form-check" @checked(old('must_change_password', $user?->must_change_password ?? true))>
-                            <span class="text-small font-bold">Forzar cambio de contrasena al ingresar</span>
+                            <span class="text-small font-bold">Forzar cambio de contraseña al ingresar</span>
                         </label>
                     </div>
                 </div>
@@ -292,13 +292,13 @@
                         <label class="form-label">Nueva contraseña (opcional)</label>
                         <x-password-input name="password" autocomplete="new-password" />
                         <x-input-error :messages="$errors->get('password')" />
-                        <p class="text-small text-muted">Dejar vacio para mantener la contrasena actual.</p>
+                        <p class="text-small text-muted">Dejar vacío para mantener la contraseña actual.</p>
                     </div>
                 @else
                     <div class="form-field">
                         <div class="card card--muted user-form__security-card">
                             <p class="text-caption">Contraseña inicial</p>
-                            <p class="text-small">La contrasena temporal sera la <strong>cedula</strong> ingresada. El usuario recibira un correo de bienvenida con sus credenciales.</p>
+                            <p class="text-small">La contraseña temporal será la <strong>cédula</strong> ingresada. El usuario recibirá un correo de bienvenida con sus credenciales.</p>
                         </div>
                     </div>
                 @endif

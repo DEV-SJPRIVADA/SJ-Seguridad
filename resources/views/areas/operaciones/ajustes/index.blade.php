@@ -8,13 +8,13 @@
             <div class="panel">
                 <div class="panel__header">
                     <h3 class="panel-title">Ajustes de indicadores</h3>
-                    <p class="panel-text">Periodos de captura, metas por indicador, capturadores y registro de auditoria.</p>
+                    <p class="panel-text">Períodos de captura, metas por indicador, capturadores y registro de auditoría.</p>
                 </div>
                 <div class="panel__body">
                     <nav class="indicadores-section-tabs" aria-label="Secciones de ajustes">
                         <a href="{{ route('indicadores.admin.ajustes', ['section' => 'periodos']) }}"
                            class="indicadores-section-tab {{ $section === 'periodos' ? 'indicadores-section-tab--active' : '' }}">
-                            Periodos
+                            Períodos
                         </a>
                         <a href="{{ route('indicadores.admin.ajustes', ['section' => 'metas']) }}"
                            class="indicadores-section-tab {{ $section === 'metas' ? 'indicadores-section-tab--active' : '' }}">

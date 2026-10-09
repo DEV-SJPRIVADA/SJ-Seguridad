@@ -11,7 +11,7 @@
     >
         <thead>
             <tr>
-                <th>CEDULA</th>
+                <th>CÉDULA</th>
                 <th>NOMBRE COMPLETO</th>
                 <th>ENCOLADO</th>
                 <th data-orderable="false">Acciones</th>

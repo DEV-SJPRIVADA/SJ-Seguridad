@@ -124,7 +124,7 @@
                             <strong>{{ number_format($services->count()) }}</strong>
                             {{ $services->count() === 1 ? 'servicio' : 'servicios' }}
                             @if ($filters['q'] ?? '')
-                                · Busqueda: <strong>{{ $filters['q'] }}</strong>
+                                · Búsqueda: <strong>{{ $filters['q'] }}</strong>
                             @endif
                             @if ($filters['portfolio'] ?? '')
                                 · Portafolio: <strong>{{ $portfolios[$filters['portfolio']] ?? $filters['portfolio'] }}</strong>
@@ -135,7 +135,7 @@
                             @if ($filters['status'] ?? '')
                                 · Estado: <strong>{{ $statusLabels[$filters['status']] ?? $filters['status'] }}</strong>
                             @endif
-                            · El Excel exporta el detalle completo segun estos filtros
+                            · El Excel exporta el detalle completo según estos filtros
                         </p>
 
                         <div class="cursos-registros-page__table-actions">

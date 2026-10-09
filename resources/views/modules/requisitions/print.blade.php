@@ -152,7 +152,7 @@
         {{-- GENERAL INFO --}}
         <table>
             <tr class="bg-gray">
-                <td style="width: 25%;" class="text-center">NRO.REQUISICION</td>
+                <td style="width: 25%;" class="text-center">NRO. REQUISICIÓN</td>
                 <td style="width: 25%;" class="text-center">FECHA DE SOLICITUD</td>
                 <td style="width: 50%;" class="text-center">FECHA Y HORA DE RECEPCIÓN EN GESTIÓN HUMANA</td>
             </tr>
@@ -177,7 +177,7 @@
 
         <table>
             <tr class="bg-gray">
-                <td style="width: 50%;" class="text-center">LIDER Y/O JEFE DE AREA QUIEN SOLICITA</td>
+                <td style="width: 50%;" class="text-center">LÍDER Y/O JEFE DE ÁREA QUIEN SOLICITA</td>
                 <td style="width: 50%;" class="text-center">PROCESO / ÁREA QUE SOLICITA</td>
             </tr>
             <tr class="value-row">
@@ -205,7 +205,7 @@
                 <td colspan="3" style="padding: 0; border: none;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr class="value-row">
-                            <td class="bg-gray text-center" style="width: 22%; white-space: nowrap;">A QUIEN REMPLAZA:</td>
+                            <td class="bg-gray text-center" style="width: 22%; white-space: nowrap;">A QUIÉN REEMPLAZA:</td>
                             <td style="width: 78%;">{{ $cell($isBlank ? null : ($requisition->replacement_name ?? '')) }}</td>
                         </tr>
                     </table>
@@ -217,7 +217,7 @@
         <table>
             <tr class="bg-gray">
                 <td colspan="6" style="width: 60%;" class="text-center">TIPO DE CONTRATO (Marque con una x)</td>
-                <td colspan="4" style="width: 40%;" class="text-center">AREA (Marque con una x)</td>
+                <td colspan="4" style="width: 40%;" class="text-center">ÁREA (Marque con una x)</td>
             </tr>
             <tr class="row-h12">
                 <td style="width: 15%;">Obra Labor</td>
@@ -283,7 +283,7 @@
                 <td>{{ $money($requisition->non_statutory_bonus ?? null) }}</td>
             </tr>
             <tr class="value-row">
-                <td class="label-cell">Otros valores, cuales:</td>
+                <td class="label-cell">Otros valores, cuáles:</td>
                 <td>{{ $cell($isBlank ? null : ($requisition->other_allowances ?: '')) }}</td>
             </tr>
             <tr>
@@ -320,7 +320,7 @@
                 <td class="checkbox-cell" style="width: 5%;">{{ $mark(! $isBlank && ($requisition->clientType?->name ?? null) != 'Grupo') }}</td>
             </tr>
             <tr class="value-row">
-                <td class="label-cell">TIPO DE PROGRAMACION:</td>
+                <td class="label-cell">TIPO DE PROGRAMACIÓN:</td>
                 <td style="width: 25%;">{{ $cell($isBlank ? null : $requisition->programmingType?->name) }}</td>
                 <td class="bg-gray text-center" style="width: 15%;">CCOS CR</td>
                 <td colspan="3">{{ $cell($isBlank ? null : ($requisition->cost_center ?? '')) }}</td>
@@ -348,7 +348,7 @@
         {{-- DOTACION --}}
         <table>
             <tr class="bg-gray">
-                <td colspan="10" class="text-center">DOTACION REQUERIDA:</td>
+                <td colspan="10" class="text-center">DOTACIÓN REQUERIDA:</td>
             </tr>
             <tr>
                 <td style="width: 15%;">ADMINISTRATIVA</td>

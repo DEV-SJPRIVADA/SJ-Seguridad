@@ -8,7 +8,7 @@
                             <div>
                                 <p class="eyebrow">Panel de trabajo</p>
                                 <h2 class="page-title title-spaced">{{ $selectedModule['label'] }}</h2>
-                                <p class="page-subtitle">Modulo habilitado por permisos directos de area o tableros autorizados.</p>
+                                <p class="page-subtitle">Módulo habilitado por permisos directos de área o tableros autorizados.</p>
                             </div>
 
                             @if ($selectedBoard)
@@ -21,22 +21,22 @@
 
                         <div class="dashboard-stat-grid block-spaced">
                             <article class="card card--muted">
-                                <p class="text-caption">Visualizacion</p>
+                                <p class="text-caption">Visualización</p>
                                 <p class="panel-title title-spaced">
                                     {{ ($selectedModule['can_view'] || $selectedModule['boards']->isNotEmpty()) ? 'Habilitada' : 'Sin acceso' }}
                                 </p>
                                 <p class="text-small text-muted block-spaced-sm">
-                                    {{ ($selectedModule['can_view'] || $selectedModule['boards']->isNotEmpty()) ? 'Tu usuario puede consultar informacion del modulo.' : 'No existe permiso de consulta para este modulo.' }}
+                                    {{ ($selectedModule['can_view'] || $selectedModule['boards']->isNotEmpty()) ? 'Tu usuario puede consultar información del módulo.' : 'No existe permiso de consulta para este módulo.' }}
                                 </p>
                             </article>
 
                             <article class="card card--muted">
-                                <p class="text-caption">Gestion</p>
+                                <p class="text-caption">Gestión</p>
                                 <p class="panel-title title-spaced">
                                     {{ $selectedModule['can_manage'] ? 'Habilitada' : 'Solo consulta' }}
                                 </p>
                                 <p class="text-small text-muted block-spaced-sm">
-                                    {{ $selectedModule['can_manage'] ? 'Tu usuario puede operar funciones dentro del modulo.' : 'Las acciones operativas siguen restringidas.' }}
+                                    {{ $selectedModule['can_manage'] ? 'Tu usuario puede operar funciones dentro del módulo.' : 'Las acciones operativas siguen restringidas.' }}
                                 </p>
                             </article>
 
@@ -44,7 +44,7 @@
                                 <p class="text-caption">Tableros visibles</p>
                                 <p class="panel-title title-spaced">{{ $selectedModule['boards']->count() }}</p>
                                 <p class="text-small text-small--info block-spaced-sm">
-                                    {{ $selectedModule['boards']->isNotEmpty() ? 'Puedes cambiar entre tableros desde la franja superior.' : 'No hay tableros habilitados para este modulo.' }}
+                                    {{ $selectedModule['boards']->isNotEmpty() ? 'Puedes cambiar entre tableros desde la franja superior.' : 'No hay tableros habilitados para este módulo.' }}
                                 </p>
                             </article>
                         </div>
@@ -65,8 +65,8 @@
                         <div class="dashboard-hero__header">
                             <div>
                                 <p class="eyebrow">Panel de trabajo</p>
-                                <h2 class="page-title title-spaced">Sin modulos visibles</h2>
-                                <p class="page-subtitle">Tu usuario no tiene modulos o tableros habilitados en este momento.</p>
+                                <h2 class="page-title title-spaced">Sin módulos visibles</h2>
+                                <p class="page-subtitle">Tu usuario no tiene módulos o tableros habilitados en este momento.</p>
                             </div>
                         </div>
                     @endif

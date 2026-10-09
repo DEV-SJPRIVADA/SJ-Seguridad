@@ -23,7 +23,7 @@
                 </div>
                 <h2 class="page-title">Nueva solicitud de insumos</h2>
                 <p class="page-subtitle">
-                    Selecciona productos del catalogo o agrega items no listados. La solicitud pasa a aprobacion de Calidad.
+                    Selecciona productos del catálogo o agrega items no listados. La solicitud pasa a aprobación de Calidad.
                 </p>
             </div>
 
@@ -58,7 +58,7 @@
                                 <span class="pur-req-form__meta-value">FO-AD-44</span>
                             </div>
                             <div class="pur-req-form__meta-item">
-                                <span class="pur-req-form__meta-label">Area</span>
+                                <span class="pur-req-form__meta-label">Área</span>
                                 <span class="pur-req-form__meta-value">{{ $areaLabel }}</span>
                             </div>
                             <div class="pur-req-form__meta-item">
@@ -71,15 +71,15 @@
                             <header class="pur-req-form__section-head">
                                 <span class="pur-req-form__section-step">1</span>
                                 <div>
-                                    <h3 class="pur-req-form__section-title">Catalogo y pedido</h3>
-                                    <p class="pur-req-form__section-desc">Agrega productos del catalogo o registra uno no listado.</p>
+                                    <h3 class="pur-req-form__section-title">Catálogo y pedido</h3>
+                                    <p class="pur-req-form__section-desc">Agrega productos del catálogo o registra uno no listado.</p>
                                 </div>
                             </header>
 
                             <div class="supply-cart-layout">
                                 <aside class="supply-cart-layout__catalog">
                                     <div class="supply-cart-layout__search">
-                                        <input type="search" id="catalog-search" class="form-input" placeholder="Buscar en el catalogo…">
+                                        <input type="search" id="catalog-search" class="form-input" placeholder="Buscar en el catálogo…">
                                     </div>
 
                                     <div class="supply-catalog-list" id="catalog-list">
@@ -121,7 +121,7 @@
                                     </div>
 
                                     <div id="cart-empty" class="supply-cart-empty">
-                                        Agrega productos desde el catalogo o registra uno no listado.
+                                        Agrega productos desde el catálogo o registra uno no listado.
                                     </div>
 
                                     <div id="cart-items" class="supply-cart-items"></div>
@@ -152,7 +152,7 @@
 
                         <div class="pur-req-form-actions">
                             <p class="pur-req-form-actions__note">
-                                Revisa cantidades e inventario antes de enviar. La solicitud ira a aprobacion de Calidad.
+                                Revisa cantidades e inventario antes de enviar. La solicitud irá a aprobación de Calidad.
                             </p>
                             <div class="pur-req-form-actions__group">
                                 <a
@@ -186,9 +186,9 @@
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Usa el catalogo cuando el producto exista.</li>
-                                <li class="pur-req-form-guide__item">Reporta inventario actual en cada linea de catalogo.</li>
-                                <li class="pur-req-form-guide__item">Producto no listado solo si no esta en catalogo.</li>
+                                <li class="pur-req-form-guide__item">Usa el catálogo cuando el producto exista.</li>
+                                <li class="pur-req-form-guide__item">Reporta inventario actual en cada línea de catálogo.</li>
+                                <li class="pur-req-form-guide__item">Producto no listado solo si no está en catálogo.</li>
                                 <li class="pur-req-form-guide__item">Debes tener sede asignada y activa.</li>
                             </ul>
                         </div>
@@ -196,7 +196,7 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Que pasa despues</h3>
+                            <h3 class="panel-title">Qué pasa después</h3>
                         </div>
                         <div class="panel__body">
                             <ol class="pur-req-form-flow">
@@ -316,7 +316,7 @@
                 wrapper.innerHTML = `
                     <div class="supply-cart-row__info">
                         <strong>Producto no listado</strong>
-                        <span class="status-pill status-pill--warning">Fuera de catalogo</span>
+                        <span class="status-pill status-pill--warning">Fuera de catálogo</span>
                     </div>
                     <div class="supply-cart-row__fields">
                         <input type="hidden" name="items[${itemIndex}][type]" value="custom">

@@ -10,9 +10,9 @@ Controlar en la plataforma la vigencia de los **exámenes psicofísicos** (manej
 
 Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 
-- **Dashboard** — totales y gráficos de estados del examen 1, del examen 2 (sin contar quienes no aplica) y de aptos / no aptos. Por defecto solo personal **activo** en Ficha; se puede ampliar a desvinculados o a todos.
+- **Dashboard** — subpestañas **Psicofísicos** (examen de armas: totales, aptos, estados, tendencia de vencimientos por año y cantidad por cargo) y **Psicosensométricos** (examen vial: mismos indicadores sin contar «No aplica»). Por defecto solo personal **activo** en Ficha; se puede ampliar a desvinculados o a todos.
 - **Matriz** — listado por páginas (una fila por cédula), filtros, exportación a Excel. Con permiso de edición: alta/edición/borrado, descarga de plantilla e importación.
-- **Validaciones** — personal activo en Ficha que requiere psicofísicos y aún no está en la Matriz. Desde aquí se puede agregar a la matriz o marcar que no requiere el examen (también configurable en Ficha empleados).
+- **Validaciones** — personal activo en Ficha que requiere psicofísicos y aún no está en la Matriz. Se puede filtrar por búsqueda, cola, **ciudad** y **cargo**, y **exportar a Excel** lo filtrado. Desde aquí se puede agregar a la matriz o marcar que no requiere el examen (también configurable en Ficha empleados).
 
 **En esta versión:**
 
@@ -58,11 +58,13 @@ Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 
 ### Usar el Dashboard
 
-1. Revise los totales del examen 1 (total, vigente, vencerá, vencido).
-2. Revise los del examen 2: el total no incluye a quienes están en «No aplica» (ese conteo aparece aparte).
-3. Revise aptos, no aptos y sin dato.
-4. Observe los gráficos de distribución de estados y de aptitud.
-5. Si necesita incluir personal desvinculado o todos, cambie el filtro de estado en Ficha y actualice la vista.
+1. Elija la subpestaña **Psicofísicos** o **Psicosensométricos** (como en Formación).
+2. En **Psicofísicos** revise totales (vigente / vencerá / vencido), aptos y no aptos.
+3. En **Psicosensométricos** revise los mismos estados: el total no incluye a quienes están en «No aplica» (ese conteo aparece aparte).
+4. **Clic en un KPI** abre la **Matriz** ya filtrada con ese criterio (y con ciudad/cargo/puesto/estado ficha si los tenía aplicados).
+5. En cada subpestaña revise: donut de estados, **tendencia de vencimientos por año** y **cantidad por cargo** (barras horizontales).
+6. Use los filtros de **ciudad**, **cargo** y **puesto** (aplican a ambas subpestañas). Puede limpiarlos con el botón X.
+7. Si necesita incluir personal desvinculado o todos, cambie el filtro de estado en Ficha.
 
 ### Consultar y filtrar la Matriz
 
@@ -105,3 +107,9 @@ Cada noche el sistema recalcula vencimientos y estados con la fecha del día (ho
 | 1.1 | 2026-10-09 | Feature | Matriz y modales: separación visual psicofísico vs psicosensométrico. |
 | 1.2 | 2026-10-09 | Feature | Pestaña Validaciones + flag «Requiere psicofísicos» en Ficha. |
 | 1.3 | 2026-10-09 | Feature | Alta/import permiten cédula sin Ficha; matriz marca «Sin Ficha». |
+| 1.4 | 2026-10-09 | Feature | Dashboard partido en Psicofísicos / Psicosensométricos; tendencia vencimientos por año y barras por cargo. |
+| 1.5 | 2026-10-09 | Feature | Dashboard: subpestañas Psicofísicos / Psicosensométricos (chrome Formación). |
+| 1.6 | 2026-10-09 | Feature | Dashboard: filtros ciudad, cargo y puesto (ambas subpestañas). |
+| 1.7 | 2026-10-09 | Feature | Dashboard: KPIs clicables abren Matriz filtrada. |
+| 1.8 | 2026-10-09 | Feature | Validaciones: filtros ciudad y cargo. |
+| 1.9 | 2026-10-09 | Feature | Validaciones: export Excel (respeta filtros). |

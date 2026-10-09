@@ -12,8 +12,8 @@
         <div>
             <h2 class="profile-section__title">Eliminar cuenta</h2>
             <p class="profile-section__desc">
-                Al eliminar tu cuenta se borraran de forma permanente tus datos y accesos.
-                Descarga cualquier informacion que necesites conservar antes de continuar.
+                Al eliminar tu cuenta se borrarán de forma permanente tus datos y accesos.
+                Descarga cualquier información que necesites conservar antes de continuar.
             </p>
         </div>
     </header>
@@ -28,21 +28,21 @@
             @csrf
             @method('delete')
 
-            <h2 class="panel-title">Confirmar eliminacion de cuenta</h2>
+            <h2 class="panel-title">Confirmar eliminación de cuenta</h2>
 
             <p class="panel-text">
-                Esta accion no se puede deshacer. Ingresa tu contrasena para confirmar
+                Esta acción no se puede deshacer. Ingresa tu contraseña para confirmar
                 que deseas eliminar permanentemente tu cuenta.
             </p>
 
             <div class="form-field">
-                <x-input-label for="password" value="Contrasena" class="sr-only" />
+                <x-input-label for="password" value="Contraseña" class="sr-only" />
 
                 <x-text-input
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="Contrasena"
+                    placeholder="Contraseña"
                 />
 
                 <x-input-error :messages="$errors->userDeletion->get('password')" />

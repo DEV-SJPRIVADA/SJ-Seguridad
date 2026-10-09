@@ -384,7 +384,7 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Distribucion por portafolio</h3>
+                            <h3 class="panel-title">Distribución por portafolio</h3>
                         </div>
                         <div class="panel__body">
                             <div class="chart-container">

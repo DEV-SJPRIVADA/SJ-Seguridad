@@ -28,11 +28,11 @@
 
     <div class="req-form__meta">
         <div class="req-form__meta-item">
-            <span class="req-form__meta-label">Lider / solicitante</span>
+            <span class="req-form__meta-label">Líder / solicitante</span>
             <span class="req-form__meta-value">{{ $leaderName }}</span>
         </div>
         <div class="req-form__meta-item">
-            <span class="req-form__meta-label">Area solicitante</span>
+            <span class="req-form__meta-label">Área solicitante</span>
             <span class="req-form__meta-value">{{ $moduleLabel }}</span>
         </div>
     </div>
@@ -42,7 +42,7 @@
             <span class="req-form__section-step">1</span>
             <div>
                 <h4 class="req-form__section-title">Motivo de la solicitud</h4>
-                <p class="req-form__section-desc">Indica el motivo. En reemplazo o movimiento interno se pedira cedula y nombre.</p>
+                <p class="req-form__section-desc">Indica el motivo. En reemplazo o movimiento interno se pedirá cédula y nombre.</p>
             </div>
         </header>
 
@@ -66,7 +66,7 @@
 
         <div id="js-replacement-group" class="req-form__replacement" @unless($showReplacementInitially) hidden @endunless>
             <div class="form-field">
-                <x-input-label for="replacement_document" value="Cedula a quien reemplaza" />
+                <x-input-label for="replacement_document" value="Cédula a quien reemplaza" />
                 <input id="replacement_document" name="replacement_document" type="text" class="form-input" value="{{ old('replacement_document') }}" placeholder="Documento de identidad">
                 <x-input-error :messages="$errors->get('replacement_document')" />
             </div>
@@ -104,14 +104,14 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="sex" value="Genero *" />
+                <x-input-label for="sex" value="Género *" />
                 <x-searchable-select
                     id="sex"
                     name="sex"
                     :options="$sexOptions"
                     :value="old('sex')"
-                    placeholder="Selecciona una opcion"
-                    searchPlaceholder="Buscar genero…"
+                    placeholder="Selecciona una opción"
+                    searchPlaceholder="Buscar género…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('sex')" />
@@ -120,7 +120,7 @@
             <div id="js-quantity-group" class="form-field" @unless($showQuantityInitially) hidden @endunless>
                 <x-input-label for="quantity_visible" value="Cantidad *" />
                 <input id="quantity_visible" type="number" min="1" max="999" class="form-input" value="{{ $showQuantityInitially ? $quantityValue : 1 }}">
-                <p class="req-form__hint">Cada unidad genera una requisicion independiente con codigo propio.</p>
+                <p class="req-form__hint">Cada unidad genera una requisición independiente con código propio.</p>
                 <x-input-error :messages="$errors->get('quantity')" />
             </div>
         </div>
@@ -132,21 +132,21 @@
         <header class="req-form__section-head">
             <span class="req-form__section-step">3</span>
             <div>
-                <h4 class="req-form__section-title">Servicio y ubicacion</h4>
-                <p class="req-form__section-desc">Tipo de cliente, ubicacion y condiciones del servicio.</p>
+                <h4 class="req-form__section-title">Servicio y ubicación</h4>
+                <p class="req-form__section-desc">Tipo de cliente, ubicación y condiciones del servicio.</p>
             </div>
         </header>
 
         <div class="form-grid form-grid--two">
             <div class="form-field">
-                <x-input-label for="operating_area_key" value="Area operativa *" />
+                <x-input-label for="operating_area_key" value="Área operativa *" />
                 <x-searchable-select
                     id="operating_area_key"
                     name="operating_area_key"
                     :options="$areaOptions"
                     :value="old('operating_area_key')"
-                    placeholder="Selecciona un area"
-                    searchPlaceholder="Buscar area…"
+                    placeholder="Selecciona un área"
+                    searchPlaceholder="Buscar área…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('operating_area_key')" />
@@ -195,14 +195,14 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="programming_type_id" value="Tipo de programacion *" />
+                <x-input-label for="programming_type_id" value="Tipo de programación *" />
                 <x-searchable-select
                     id="programming_type_id"
                     name="programming_type_id"
                     :options="$catalogs['programmingTypes']"
                     :value="old('programming_type_id')"
-                    placeholder="Selecciona una programacion"
-                    searchPlaceholder="Buscar programacion…"
+                    placeholder="Selecciona una programación"
+                    searchPlaceholder="Buscar programación…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('programming_type_id')" />
@@ -214,7 +214,7 @@
         <header class="req-form__section-head">
             <span class="req-form__section-step">4</span>
             <div>
-                <h4 class="req-form__section-title">Perfil y dotacion</h4>
+                <h4 class="req-form__section-title">Perfil y dotación</h4>
                 <p class="req-form__section-desc">Describe las funciones del puesto y el uniforme requerido.</p>
             </div>
         </header>
@@ -222,19 +222,19 @@
         <div class="form-grid form-grid--two">
             <div class="form-field form-field--full">
                 <x-input-label for="required_profile" value="Perfil requerido *" />
-                <textarea id="required_profile" name="required_profile" class="form-textarea" rows="4" required placeholder="Ej. Control de ingreso, rondas perimetrales, manejo de bitacora...">{{ old('required_profile') }}</textarea>
+                <textarea id="required_profile" name="required_profile" class="form-textarea" rows="4" required placeholder="Ej. Control de ingreso, rondas perimetrales, manejo de bitácora...">{{ old('required_profile') }}</textarea>
                 <x-input-error :messages="$errors->get('required_profile')" />
             </div>
 
             <div class="form-field form-field--full">
-                <x-input-label for="uniform_id" value="Dotacion requerida *" />
+                <x-input-label for="uniform_id" value="Dotación requerida *" />
                 <x-searchable-select
                     id="uniform_id"
                     name="uniform_id"
                     :options="$catalogs['uniforms']"
                     :value="old('uniform_id')"
-                    placeholder="Selecciona una dotacion"
-                    searchPlaceholder="Buscar dotacion…"
+                    placeholder="Selecciona una dotación"
+                    searchPlaceholder="Buscar dotación…"
                     :required="true"
                 />
                 <x-input-error :messages="$errors->get('uniform_id')" />
@@ -254,7 +254,7 @@
             <span class="req-form__section-step">5</span>
             <div>
                 <h4 class="req-form__section-title">Datos administrativos</h4>
-                <p class="req-form__section-desc">Centro de costo y observaciones para gestion humana.</p>
+                <p class="req-form__section-desc">Centro de costo y observaciones para Gestión Humana.</p>
             </div>
         </header>
 
@@ -267,7 +267,7 @@
 
             <div class="form-field form-field--full">
                 <x-input-label for="requester_observation" value="Observaciones del solicitante" />
-                <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3" placeholder="Informacion adicional que ayude a gestion humana (opcional).">{{ old('requester_observation') }}</textarea>
+                <textarea id="requester_observation" name="requester_observation" class="form-textarea" rows="3" placeholder="Información adicional que ayude a Gestión Humana (opcional).">{{ old('requester_observation') }}</textarea>
                 <x-input-error :messages="$errors->get('requester_observation')" />
             </div>
         </div>

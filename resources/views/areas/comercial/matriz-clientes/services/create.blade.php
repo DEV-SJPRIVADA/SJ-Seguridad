@@ -19,7 +19,7 @@
 
                         <div class="comercial-form__meta">
                             <div class="comercial-form__meta-item">
-                                <span class="comercial-form__meta-label">Accion</span>
+                                <span class="comercial-form__meta-label">Acción</span>
                                 <span class="comercial-form__meta-value">Nuevo servicio</span>
                             </div>
                             <div class="comercial-form__meta-item">
@@ -50,7 +50,7 @@
                         </div>
                         <div class="panel__body">
                             <ul class="comercial-form-guide__list">
-                                <li class="comercial-form-guide__item">Seleccione el cliente correcto por NIT o razon social.</li>
+                                <li class="comercial-form-guide__item">Seleccione el cliente correcto por NIT o razón social.</li>
                                 <li class="comercial-form-guide__item">Defina portafolio y tipo de servicio.</li>
                                 <li class="comercial-form-guide__item">Registre fechas de vigencia para alertas automaticas.</li>
                             </ul>

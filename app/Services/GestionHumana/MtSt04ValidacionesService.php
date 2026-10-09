@@ -5,6 +5,7 @@ namespace App\Services\GestionHumana;
 use App\Models\EmployeeFichaProfile;
 use App\Models\MtSt04Registro;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -14,7 +15,12 @@ use Illuminate\Support\Facades\DB;
 final class MtSt04ValidacionesService
 {
     /**
-     * @param  array{q?: string|null, cola?: string|null}  $filters
+     * @param  array{
+     *     q?: string|null,
+     *     cola?: string|null,
+     *     ciudad?: string|null,
+     *     cargo?: string|null,
+     * }  $filters
      * @return Builder<EmployeeFichaProfile>
      */
     public function filteredQuery(array $filters, bool $ordered = true): Builder
@@ -51,11 +57,88 @@ final class MtSt04ValidacionesService
             });
         }
 
+        $ciudad = trim((string) ($filters['ciudad'] ?? ''));
+        if ($ciudad !== '' && $ciudad !== 'todos') {
+            $query->whereRaw(EmployeeFichaProfile::displayCitySql().' = ?', [$ciudad]);
+        }
+
+        $cargo = trim((string) ($filters['cargo'] ?? ''));
+        if ($cargo !== '' && $cargo !== 'todos') {
+            $query->where('position_name', $cargo);
+        }
+
         if ($ordered) {
             $query->orderBy('full_name')->orderBy('document_number');
         }
 
         return $query;
+    }
+
+    /**
+     * Opciones ciudad de la cola actual (sin filtrar por ciudad/cargo).
+     *
+     * @param  array{cola?: string|null}  $filters
+     * @return list<array{value: string, label: string}>
+     */
+    public function cityFilterOptions(array $filters = []): array
+    {
+        $citySql = EmployeeFichaProfile::displayCitySql();
+        $values = $this->filteredQuery([
+            'cola' => $filters['cola'] ?? 'pendientes',
+        ], ordered: false)
+            ->selectRaw("{$citySql} as filter_value")
+            ->whereRaw("{$citySql} is not null")
+            ->whereRaw("TRIM({$citySql}) <> ''")
+            ->distinct()
+            ->orderBy('filter_value')
+            ->pluck('filter_value')
+            ->filter(fn (mixed $value): bool => is_string($value) && trim($value) !== '')
+            ->values();
+
+        return $this->selectOptionsWithAll($values, 'Todas');
+    }
+
+    /**
+     * Opciones cargo de la cola actual (sin filtrar por ciudad/cargo).
+     *
+     * @param  array{cola?: string|null}  $filters
+     * @return list<array{value: string, label: string}>
+     */
+    public function cargoFilterOptions(array $filters = []): array
+    {
+        $values = $this->filteredQuery([
+            'cola' => $filters['cola'] ?? 'pendientes',
+        ], ordered: false)
+            ->whereNotNull('position_name')
+            ->where('position_name', '!=', '')
+            ->distinct()
+            ->orderBy('position_name')
+            ->pluck('position_name')
+            ->filter(fn (mixed $value): bool => is_string($value) && trim($value) !== '')
+            ->values();
+
+        return $this->selectOptionsWithAll($values, 'Todos');
+    }
+
+    /**
+     * @param  Collection<int, mixed>|list<mixed>  $values
+     * @return list<array{value: string, label: string}>
+     */
+    private function selectOptionsWithAll(iterable $values, string $allLabel): array
+    {
+        $options = [
+            ['value' => 'todos', 'label' => $allLabel],
+        ];
+
+        foreach ($values as $value) {
+            $label = trim((string) $value);
+            if ($label === '') {
+                continue;
+            }
+            $options[] = ['value' => $label, 'label' => $label];
+        }
+
+        return $options;
     }
 
     public function setRequiresPsicofisicos(string $documentNumber, bool $requires): ?EmployeeFichaProfile

@@ -7,8 +7,8 @@
                     <x-lucide-search width="18" height="18" aria-hidden="true" />
                 </span>
                 <div>
-                    <h3 class="ficha-empleados-masivos-modal__title">Consulta multiple de archivo</h3>
-                    <p class="ficha-empleados-masivos-modal__lead">Ingrese varias cedulas y seleccione el motivo de consulta. Se registrara el historial y se filtrara el listado.</p>
+                    <h3 class="ficha-empleados-masivos-modal__title">Consulta múltiple de archivo</h3>
+                    <p class="ficha-empleados-masivos-modal__lead">Ingrese varias cédulas y seleccione el motivo de consulta. Se registrará el historial y se filtrará el listado.</p>
                 </div>
             </div>
             <button
@@ -40,16 +40,16 @@
 
             <div class="archivo-consult-modal__grid">
                 <div class="archivo-consult-modal__panel">
-                    <label class="req-manage-filters__label" for="archivo-consult-documents">Cedulas a consultar</label>
+                    <label class="req-manage-filters__label" for="archivo-consult-documents">Cédulas a consultar</label>
                     <textarea
                         id="archivo-consult-documents"
                         name="documents"
                         class="form-input archivo-consult-modal__textarea"
                         rows="10"
-                        placeholder="Una cedula por linea, o separadas por coma o punto y coma"
+                        placeholder="Una cédula por línea, o separadas por coma o punto y coma"
                         required
                     >{{ old('documents') }}</textarea>
-                    <p class="archivo-consult-modal__hint">Ejemplo: 1234567890, 9876543210 (hasta varias cedulas a la vez).</p>
+                    <p class="archivo-consult-modal__hint">Ejemplo: 1234567890, 9876543210 (hasta varias cédulas a la vez).</p>
                     @error('documents')
                         <p class="archivo-page__inline-error">{{ $message }}</p>
                     @enderror

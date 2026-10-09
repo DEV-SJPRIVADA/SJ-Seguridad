@@ -48,7 +48,7 @@ class UserPermissionFormBuilder
             if (preg_match('/^manage\.area\.(.+)$/', $name, $matches) === 1) {
                 $areaLabel = config("access.areas.{$matches[1]}", $matches[1]);
 
-                return "Gestionar area {$areaLabel}";
+                return "Gestionar área {$areaLabel}";
             }
 
             return $name;
@@ -166,7 +166,7 @@ class UserPermissionFormBuilder
 
         $sections = [
             'assigned_area' => [
-                'label' => $sectionLabels['assigned_area'] ?? 'Solicitar en su area',
+                'label' => $sectionLabels['assigned_area'] ?? 'Solicitar en su área',
                 'help' => config('access.admin_ui.help.assigned_area'),
                 'permissions' => $assignedArea,
             ],
@@ -176,7 +176,7 @@ class UserPermissionFormBuilder
                 'groups' => $globalGroups,
             ],
             'other_areas' => [
-                'label' => $sectionLabels['other_areas'] ?? 'Activa visualizacion de otras areas',
+                'label' => $sectionLabels['other_areas'] ?? 'Activa visualización de otras áreas',
                 'help' => config('access.admin_ui.help.other_areas'),
                 'areas' => $otherAreas,
             ],
@@ -205,7 +205,7 @@ class UserPermissionFormBuilder
             $navigation[] = [
                 'key' => '_assigned',
                 'type' => 'assigned',
-                'label' => $sections['assigned_area']['label'] ?? 'Solicitar en su area',
+                'label' => $sections['assigned_area']['label'] ?? 'Solicitar en su área',
                 'help' => $sections['assigned_area']['help'] ?? '',
                 'permissions' => $assignedPermissions,
             ];

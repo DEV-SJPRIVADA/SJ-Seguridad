@@ -14,7 +14,7 @@
             @endif
         </h2>
         <p><strong>Indicador:</strong> {{ $indicator->code }} — {{ $indicator->name }}</p>
-        <p><strong>Periodo:</strong> {{ ($months[$selectedMonth] ?? $month ?? $selectedMonth) }} {{ $selectedYear ?? $year }}</p>
+        <p><strong>Período:</strong> {{ ($months[$selectedMonth] ?? $month ?? $selectedMonth) }} {{ $selectedYear ?? $year }}</p>
         <p><strong>Capturador:</strong> {{ $captureUserName ?? ($user->name ?? 'N/A') }}</p>
         @if ($isConsolidadoView ?? false)
             <p><strong>Vista:</strong> {{ empty($exportUserId) ? 'Todos los capturadores (consolidado)' : 'Captura individual' }}</p>

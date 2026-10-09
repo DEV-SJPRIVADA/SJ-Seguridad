@@ -239,13 +239,13 @@
                                             </label>
                                         </th>
                                     @endif
-                                    <th>CEDULA</th>
+                                    <th>CÉDULA</th>
                                     <th>NOMBRE COMPLETO</th>
                                     <th>TIPO CURSO</th>
                                     <th>ESCUELA</th>
-                                    <th>CODIGO</th>
+                                    <th>CÓDIGO</th>
                                     <th>NIT</th>
-                                    <th>FECHA EXPEDICION</th>
+                                    <th>FECHA EXPEDICIÓN</th>
                                     <th>No.CURSO</th>
                                     <th>VIGENCIA</th>
                                     <th>ESTADO</th>

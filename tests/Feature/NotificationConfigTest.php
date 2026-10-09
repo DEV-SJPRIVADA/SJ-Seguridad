@@ -35,7 +35,7 @@ class NotificationConfigTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.notifications.index'))
             ->assertOk()
-            ->assertSee('Configuracion de notificaciones')
+            ->assertSee('Configuración de notificaciones')
             ->assertSee('Respaldo si no hay destinatarios')
             ->assertSee('Sin destinatarios')
             ->assertSee('Nueva requisicion')

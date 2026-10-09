@@ -6,7 +6,7 @@
                     <div>
                         <p class="eyebrow">Accesos de usuarios</p>
                         <h2 class="panel-title panel-title--page">Crear usuario</h2>
-                        <p class="panel-text">Datos base, rol y permisos. La contrasena temporal sera la cedula.</p>
+                        <p class="panel-text">Datos base, rol y permisos. La contraseña temporal será la cédula.</p>
                     </div>
                 </div>
                 <div class="form-actions__group">

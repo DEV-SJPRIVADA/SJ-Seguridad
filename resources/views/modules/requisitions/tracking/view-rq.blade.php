@@ -7,7 +7,7 @@
         <div class="app-container">
             <div class="page-header-inner" style="padding-top: 0; margin-bottom: 1.25rem;">
                 <h2 class="page-title">Ver Rq {{ $requisition->code }}</h2>
-                <p class="page-subtitle">Consulta completa de la requisicion en solo lectura. No se pueden editar datos desde Mis requisiciones.</p>
+                <p class="page-subtitle">Consulta completa de la requisición en solo lectura. No se pueden editar datos desde Mis requisiciones.</p>
             </div>
 
             <div class="req-form-layout">
@@ -72,7 +72,7 @@
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de cambios</h3>
-                            <p class="panel-text">Trazabilidad de modificaciones en campos de la requisicion.</p>
+                            <p class="panel-text">Trazabilidad de modificaciones en campos de la requisición.</p>
                         </div>
                         <div class="panel__body">
                             @php
@@ -82,7 +82,7 @@
                             @endphp
 
                             @if ($changeBatches->isEmpty())
-                                <p class="panel-text" style="margin: 0;">Sin cambios registrados en edicion.</p>
+                                <p class="panel-text" style="margin: 0;">Sin cambios registrados en edición.</p>
                             @else
                                 <ul class="req-form-history req-form-history--scrollable">
                                     @foreach ($changeBatches as $batchLogs)

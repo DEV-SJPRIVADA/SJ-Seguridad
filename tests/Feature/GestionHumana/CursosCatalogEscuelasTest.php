@@ -68,7 +68,7 @@ class CursosCatalogEscuelasTest extends TestCase
         $this->actingAs($editor)
             ->get(route('gestion-humana.cursos.catalogo'))
             ->assertOk()
-            ->assertSee('Catalogos de cursos', false)
+            ->assertSee('Catálogos de cursos', false)
             ->assertSee('Tipos de curso', false)
             ->assertSee('Escuelas', false)
             ->assertSee('data-catalog-key="escuelas"', false)

@@ -77,7 +77,7 @@ class IndicadorModuleTest extends TestCase
             ->get(route('indicadores.admin.ajustes'))
             ->assertOk()
             ->assertSee('Ajustes de indicadores')
-            ->assertSee('Periodos de captura')
+            ->assertSee('Períodos de captura')
             ->assertSee('Capturadores');
     }
 

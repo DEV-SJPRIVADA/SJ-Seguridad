@@ -7,7 +7,7 @@
     };
     $backLabel = match ($fromKey) {
         'tic_queue' => 'Volver a bandeja TIC',
-        'leader_approval' => 'Volver a aprobacion lider',
+        'leader_approval' => 'Volver a aprobación líder',
         default => 'Volver a mis solicitudes',
     };
     $statusPill = match ($developmentRequest->status) {
@@ -21,16 +21,16 @@
         default => 'status-pill--info',
     };
     $detailBlocks = [
-        ['title' => 'Descripcion general', 'value' => $developmentRequest->description],
-        ['title' => 'Como se hace hoy y cual es el problema', 'value' => $developmentRequest->current_process_problem],
-        ['title' => 'Que necesita que haga el sistema', 'value' => $developmentRequest->desired_steps],
-        ['title' => 'Quien usara esto', 'value' => $developmentRequest->users_description],
-        ['title' => 'Que no se deberia permitir', 'value' => $developmentRequest->restrictions],
-        ['title' => 'Alcance: que SI incluye', 'value' => $developmentRequest->scope_in],
+        ['title' => 'Descripción general', 'value' => $developmentRequest->description],
+        ['title' => 'Cómo se hace hoy y cuál es el problema', 'value' => $developmentRequest->current_process_problem],
+        ['title' => 'Qué necesita que haga el sistema', 'value' => $developmentRequest->desired_steps],
+        ['title' => 'Quién usará esto', 'value' => $developmentRequest->users_description],
+        ['title' => 'Qué no se debería permitir', 'value' => $developmentRequest->restrictions],
+        ['title' => 'Alcance: qué SÍ incluye', 'value' => $developmentRequest->scope_in],
         ['title' => 'Fuera de alcance', 'value' => $developmentRequest->scope_out],
-        ['title' => 'Criterio de aceptacion', 'value' => $developmentRequest->acceptance_criteria],
+        ['title' => 'Criterio de aceptación', 'value' => $developmentRequest->acceptance_criteria],
         ['title' => 'Reportes o indicadores', 'value' => $developmentRequest->reports],
-        ['title' => 'Justificacion de urgencia / fecha', 'value' => $developmentRequest->desired_date_justification],
+        ['title' => 'Justificación de urgencia / fecha', 'value' => $developmentRequest->desired_date_justification],
         ['title' => 'Notas adicionales', 'value' => $developmentRequest->notes],
     ];
     $hasAsideActions = $canLeaderDecide || ($canProcessTic && count($allowedTransitions) > 0) || $canUat;
@@ -71,7 +71,7 @@
             </div>
 
             <div class="dev-req-detail-layout">
-                <aside class="dev-req-detail-layout__rail dev-req-detail-layout__rail--history" aria-label="Historial y conversacion">
+                <aside class="dev-req-detail-layout__rail dev-req-detail-layout__rail--history" aria-label="Historial y conversación">
                     <section class="dev-req-form__section dev-req-detail__history-panel">
                         <header class="dev-req-form__section-head">
                             <span class="dev-req-form__section-step" aria-hidden="true">
@@ -159,7 +159,7 @@
                 <div class="dev-req-detail-layout__main">
                     <div class="dev-req-form__meta">
                         <div class="dev-req-form__meta-item">
-                            <span class="dev-req-form__meta-label">Area</span>
+                            <span class="dev-req-form__meta-label">Área</span>
                             <span class="dev-req-form__meta-value">{{ $developmentRequest->areaLabel() }}</span>
                         </div>
                         <div class="dev-req-form__meta-item">
@@ -182,7 +182,7 @@
                         @endif
                         @if ($developmentRequest->requester_phone)
                             <div class="dev-req-form__meta-item">
-                                <span class="dev-req-form__meta-label">Telefono</span>
+                                <span class="dev-req-form__meta-label">Teléfono</span>
                                 <span class="dev-req-form__meta-value">{{ $developmentRequest->requester_phone }}</span>
                             </div>
                         @endif
@@ -258,7 +258,7 @@
                                 </span>
                                 <div>
                                     <h3 class="dev-req-form__section-title">Bloque TIC</h3>
-                                    <p class="dev-req-form__section-desc">Informacion interna de analisis y planificacion.</p>
+                                    <p class="dev-req-form__section-desc">Información interna de análisis y planificación.</p>
                                 </div>
                             </header>
 
@@ -305,7 +305,7 @@
 
                             @foreach ([
                                 'Riesgos' => $developmentRequest->tic_risks,
-                                'Notas de analisis' => $developmentRequest->tic_analysis_notes,
+                                'Notas de análisis' => $developmentRequest->tic_analysis_notes,
                                 'Notas de cierre' => $developmentRequest->closure_notes,
                             ] as $label => $value)
                                 @continue(blank($value))
@@ -318,7 +318,7 @@
                     @endif
                 </div>
 
-                <aside class="dev-req-detail-layout__rail dev-req-detail-layout__rail--side" aria-label="Acciones y conversacion">
+                <aside class="dev-req-detail-layout__rail dev-req-detail-layout__rail--side" aria-label="Acciones y conversación">
                     <div class="dev-req-detail-layout__actions">
                     @if (! $hasAsideActions)
                         <section class="dev-req-aside-card">
@@ -343,7 +343,7 @@
                                     <dd>{{ $developmentRequest->prioridadLabel() }}</dd>
                                 </div>
                                 <div class="dev-req-aside-card__fact">
-                                    <dt>Area</dt>
+                                    <dt>Área</dt>
                                     <dd>{{ $developmentRequest->areaLabel() }}</dd>
                                 </div>
                                 @if ($developmentRequest->assignedProgrammer)
@@ -359,7 +359,7 @@
                     @if ($canLeaderDecide)
                         <div class="panel">
                             <div class="panel__header">
-                                <h3 class="panel-title">Decision del lider</h3>
+                                <h3 class="panel-title">Decisión del líder</h3>
                                 <p class="panel-text">Aprueba para radicar o rechaza con observacion.</p>
                             </div>
                             <div class="panel__body">
@@ -367,7 +367,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <div class="form-field bottom-spaced">
-                                        <label class="form-label" for="notes">Observacion</label>
+                                        <label class="form-label" for="notes">Observación</label>
                                         <textarea name="notes" id="notes" class="form-textarea" rows="3" placeholder="Obligatoria si rechaza">{{ old('notes') }}</textarea>
                                         <x-input-error :messages="$errors->get('notes')" />
                                     </div>
@@ -409,7 +409,7 @@
 
                                 <div class="panel__header panel__header--with-action">
                                     <div>
-                                        <h3 class="panel-title">Gestion TIC</h3>
+                                        <h3 class="panel-title">Gestión TIC</h3>
                                         <p class="panel-text">Transicion, asignacion y bloque interno.</p>
                                     </div>
                                     <button
@@ -496,7 +496,7 @@
                                         <textarea name="tic_risks" id="tic_risks" class="form-textarea" rows="2">{{ old('tic_risks', $developmentRequest->tic_risks) }}</textarea>
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="tic_analysis_notes">Notas de analisis</label>
+                                        <label class="form-label" for="tic_analysis_notes">Notas de análisis</label>
                                         <textarea name="tic_analysis_notes" id="tic_analysis_notes" class="form-textarea" rows="2">{{ old('tic_analysis_notes', $developmentRequest->tic_analysis_notes) }}</textarea>
                                     </div>
                                     <div class="form-field">
@@ -517,7 +517,7 @@
                         <div class="panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">UAT</h3>
-                                <p class="panel-text">Prueba de aceptacion del solicitante.</p>
+                                <p class="panel-text">Prueba de aceptación del solicitante.</p>
                             </div>
                             <div class="panel__body">
                                 <form method="POST" action="{{ route('development-requests.uat.update', ['module' => $module, 'development_request' => $developmentRequest]) }}">

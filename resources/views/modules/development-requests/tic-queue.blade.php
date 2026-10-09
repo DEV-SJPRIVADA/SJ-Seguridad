@@ -19,7 +19,7 @@
                     <p class="req-dashboard-kpi__value">{{ $kpis['entregados'] }}</p>
                 </div>
                 <div class="req-dashboard-kpi development-requests-kpi--sla">
-                    <p class="req-dashboard-kpi__label">Vencidos SLA analisis</p>
+                    <p class="req-dashboard-kpi__label">Vencidos SLA análisis</p>
                     <p class="req-dashboard-kpi__value">{{ $kpis['vencidos_sla'] }}</p>
                 </div>
             </div>
@@ -31,8 +31,8 @@
                             <x-lucide-triangle-alert width="16" height="16" />
                         </span>
                         <div>
-                            <h3 class="dev-req-form__section-title">SLA analisis vencido</h3>
-                            <p class="dev-req-form__section-desc">Urgente 2d · Importante/Mejora 5d · Soporte 3d (desde radicacion).</p>
+                            <h3 class="dev-req-form__section-title">SLA análisis vencido</h3>
+                            <p class="dev-req-form__section-desc">Urgente 2d · Importante/Mejora 5d · Soporte 3d (desde radicación).</p>
                         </div>
                     </header>
 
@@ -74,7 +74,7 @@
                             <x-searchable-select name="status" :options="$statusOptions" :value="$filters['status']" placeholder="Todos" :allowClear="true" />
                         </div>
                         <div class="form-field">
-                            <label class="form-label">Area</label>
+                            <label class="form-label">Área</label>
                             <x-searchable-select name="area_key" :options="$areaOptions" :value="$filters['area_key']" placeholder="Todas" :allowClear="true" />
                         </div>
                         <div class="form-field">
@@ -91,8 +91,8 @@
                         <table class="supply-table js-datatable" data-dt-compact="true">
                             <thead>
                                 <tr>
-                                    <th>Codigo</th>
-                                    <th>Titulo</th>
+                                    <th>Código</th>
+                                    <th>Título</th>
                                     <th>Estado</th>
                                     <th>Prioridad</th>
                                     <th>Solicitante</th>

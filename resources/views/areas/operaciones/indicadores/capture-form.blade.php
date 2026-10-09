@@ -16,11 +16,11 @@
                 <div class="indicadores-capture-toolbar__action">
                     @if (! ($readOnly ?? false))
                         <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal" @disabled($isPeriodClosed)>
-                            Abrir modal de analisis
+                            Abrir modal de análisis
                         </button>
                     @elseif ($improvementId || trim((string) ($improvementAnalysis ?? '')) !== '')
                         <button type="button" class="btn btn--secondary btn--sm js-open-improvement-modal">
-                            Ver analisis
+                            Ver análisis
                         </button>
                     @endif
                 </div>
@@ -44,7 +44,7 @@
                     <x-application-logo class="mx-auto h-20 w-20 text-sky-800" />
                 </td>
                 <td colspan="7" rowspan="4" class="border border-gray-600 text-center align-middle bg-gray-50 t-title">
-                    FICHA DEL INDICADOR DE GESTION
+                    FICHA DEL INDICADOR DE GESTIÓN
                 </td>
                 <td colspan="3" class="border border-gray-600 px-2 t-body">{{ $indicator->code }}</td>
             </tr>
@@ -52,7 +52,7 @@
                 <td colspan="3" class="border border-gray-600 px-2 t-body">{{ ($months[$selectedMonth] ?? 'Mes').' de '.$selectedYear }}</td>
             </tr>
             <tr style="height:26px;">
-                <td colspan="3" class="border border-gray-600 px-2 t-body">Version 02</td>
+                <td colspan="3" class="border border-gray-600 px-2 t-body">Versión 02</td>
             </tr>
             <tr style="height:26px;">
                 <td colspan="3" class="border border-gray-600 px-2 t-body">Pagina 1 de 1</td>
@@ -70,14 +70,14 @@
             </tr>
             <tr style="height:26px;">
                 <td colspan="8" class="border border-gray-600 px-2 t-body">Medir el grado de cumplimiento del indicador.</td>
-                <td colspan="4" class="border border-gray-600 text-center t-body">Gestion Operativa</td>
+                <td colspan="4" class="border border-gray-600 text-center t-body">Gestión Operativa</td>
             </tr>
             <tr style="height:26px;" class="bg-gray-100 text-center">
                 <td colspan="2" class="border border-gray-600 t-head">UNIDAD MEDIDA</td>
                 <td class="border border-gray-600 t-head">META</td>
-                <td colspan="3" class="border border-gray-600 t-head">FRECUENCIA DE MEDICION</td>
+                <td colspan="3" class="border border-gray-600 t-head">FRECUENCIA DE MEDICIÓN</td>
                 <td colspan="2" class="border border-gray-600 t-head">TENDENCIA</td>
-                <td colspan="4" class="border border-gray-600 t-head">INSUMOS PARA LA MEDICION</td>
+                <td colspan="4" class="border border-gray-600 t-head">INSUMOS PARA LA MEDICIÓN</td>
             </tr>
             <tr style="height:26px;" class="text-center">
                 <td colspan="2" class="border border-gray-600 t-body">{{ ucfirst((string) ($indicator->unit ?? 'Porcentaje')) }}</td>
@@ -96,7 +96,7 @@
                 <td colspan="4" class="border border-gray-600 t-body">Base de datos del indicador</td>
             </tr>
             <tr style="height:26px;" class="bg-gray-100 text-center">
-                <td colspan="2" class="border border-gray-600 t-head">CRITICO</td>
+                <td colspan="2" class="border border-gray-600 t-head">CRÍTICO</td>
                 <td class="border border-gray-600 t-body">{{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
                 <td colspan="9" class="border border-gray-600 t-body"></td>
             </tr>
@@ -110,12 +110,12 @@
                 <td colspan="12" class="border border-gray-600 text-center t-head">RESPONSABILIDADES</td>
             </tr>
             <tr style="height:26px;" class="bg-gray-100 text-center">
-                <td colspan="4" class="border border-gray-600 t-head">RESULTADOS Y MEDICION</td>
+                <td colspan="4" class="border border-gray-600 t-head">RESULTADOS Y MEDICIÓN</td>
                 <td colspan="4" class="border border-gray-600 t-head">RESULTADOS</td>
-                <td colspan="4" class="border border-gray-600 t-head">MEDICION</td>
+                <td colspan="4" class="border border-gray-600 t-head">MEDICIÓN</td>
             </tr>
             <tr style="height:26px;" class="text-center">
-                <td colspan="4" class="border border-gray-600 t-body">Lider de Gestion Operativa</td>
+                <td colspan="4" class="border border-gray-600 t-body">Líder de Gestión Operativa</td>
                 <td colspan="4" class="border border-gray-600 t-body">N.A.</td>
                 <td colspan="4" class="border border-gray-600 t-body">N.A.</td>
             </tr>
@@ -163,13 +163,13 @@
             </tr>
             <tr style="height:26px;" class="text-center">
                 @for ($i = 0; $i < 12; $i++)
-                    <td class="border border-gray-600 t-head">CRITICO {{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
+                    <td class="border border-gray-600 t-head">CRÍTICO {{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
                 @endfor
             </tr>
         </table>
 
         <div class="border border-gray-600 border-t-0" style="height:418px; width:888px; min-width:888px;">
-            <div class="h-[38px] border-b border-gray-600 flex items-center justify-center t-head bg-gray-100">GRAFICOS</div>
+            <div class="h-[38px] border-b border-gray-600 flex items-center justify-center t-head bg-gray-100">GRÁFICOS</div>
             <div id="ft-op-01-chart" data-chart='@json($chartPayload)' class="w-full h-[380px]"></div>
         </div>
 
@@ -182,7 +182,7 @@
                 <col style="width:74px;">
             </colgroup>
             <tr style="height:53px;" class="bg-gray-100 text-center">
-                <td colspan="3" class="border border-gray-600 t-head">ANALISIS DE RESULTADOS</td>
+                <td colspan="3" class="border border-gray-600 t-head">ANÁLISIS DE RESULTADOS</td>
                 <td class="border border-gray-600 t-head">CUMPLE</td>
                 <td class="border border-gray-600 t-head">MEJORA</td>
             </tr>
@@ -191,8 +191,8 @@
                     <td class="border border-gray-600 bg-gray-100 t-head text-center [writing-mode:vertical-rl] rotate-180">{{ $selectedYear }}</td>
                     <td class="border border-gray-600 bg-gray-100 t-head text-center">{{ $row['month'] }}</td>
                     <td class="border border-gray-600 px-2 align-top t-body">{{ $row['analysis'] }}</td>
-                    <td class="border border-gray-600 text-center t-head">{{ $row['has_capture'] ? ($row['complies'] ? 'SI' : 'NO') : '' }}</td>
-                    <td class="border border-gray-600 text-center t-head">{{ $row['has_capture'] ? ($row['improvement'] ? 'SI' : 'NO') : '' }}</td>
+                    <td class="border border-gray-600 text-center t-head">{{ $row['has_capture'] ? ($row['complies'] ? 'Sí' : 'No') : '' }}</td>
+                    <td class="border border-gray-600 text-center t-head">{{ $row['has_capture'] ? ($row['improvement'] ? 'Sí' : 'No') : '' }}</td>
                 </tr>
             @endforeach
         </table>

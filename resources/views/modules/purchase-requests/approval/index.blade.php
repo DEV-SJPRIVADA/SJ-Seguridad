@@ -17,7 +17,7 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Pendientes de autorizacion</h3>
+                    <h3 class="panel-title">Pendientes de autorización</h3>
                     <p class="panel-text panel-text--compact">Solicitudes asignadas a ti. Por defecto se muestran solo las pendientes; cambia la vista para consultar el historial.</p>
                 </div>
 
@@ -72,10 +72,10 @@
                                     <th>Folio</th>
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
-                                    <th>Area</th>
+                                    <th>Área</th>
                                     <th>Items</th>
                                     <th>Estado</th>
-                                    <th>Fecha resolucion</th>
+                                    <th>Fecha resolución</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -117,7 +117,7 @@
                                     <tr>
                                         <td colspan="8" class="text-muted">
                                             @if ($currentEstado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE)
-                                                No hay solicitudes pendientes de autorizacion.
+                                                No hay solicitudes pendientes de autorización.
                                             @else
                                                 No hay solicitudes con la vista seleccionada.
                                             @endif

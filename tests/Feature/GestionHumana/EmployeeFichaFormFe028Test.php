@@ -48,8 +48,8 @@ class EmployeeFichaFormFe028Test extends TestCase
             ->assertSee('Excluir auxilio de transporte', false)
             ->assertSee('id="payroll_extra_exclude_transport_allowance"', false)
             ->assertDontSee('Excluir horas extra', false)
-            ->assertSee('C — Cedula de ciudadania', false)
-            ->assertSee('CE — Cedula de extranjeria', false);
+            ->assertSee('C — Cédula de ciudadanía', false)
+            ->assertSee('CE — Cédula de extranjería', false);
     }
 
     public function test_edit_ficha_form_renders_required_payment_and_ccf_selectors(): void

@@ -109,7 +109,7 @@ class SystemAuditTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.audit.index'))
             ->assertOk()
-            ->assertSee('Auditoria del sistema')
+            ->assertSee('Auditoría del sistema')
             ->assertSee('consolidado_pdf');
     }
 

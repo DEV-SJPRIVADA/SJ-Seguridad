@@ -42,7 +42,7 @@
                 </div>
                 <h2 class="page-title">Reabrir solicitud {{ $purchaseRequest->folio() }}</h2>
                 <p class="page-subtitle">
-                    Corrige lo necesario y reenvia al director para una nueva autorizacion.
+                    Corrige lo necesario y reenvía al director para una nueva autorización.
                 </p>
             </div>
 
@@ -327,7 +327,7 @@
 
                         <div class="pur-req-form-actions">
                             <p class="pur-req-form-actions__note">
-                                Al reenviar, la solicitud vuelve a pendiente y el director recibe una nueva notificacion.
+                                Al reenviar, la solicitud vuelve a pendiente y el director recibe una nueva notificación.
                             </p>
                             <div class="pur-req-form-actions__group">
                                 <a
@@ -361,7 +361,7 @@
                             <ul class="pur-req-form-guide__list">
                                 <li class="pur-req-form-guide__item">Revisa el comentario del director arriba.</li>
                                 <li class="pur-req-form-guide__item">Confirma director, productos y urgencia.</li>
-                                <li class="pur-req-form-guide__item">Si es Cliente, completa razon social.</li>
+                                <li class="pur-req-form-guide__item">Si es Cliente, completa razón social.</li>
                                 <li class="pur-req-form-guide__item">Puedes quitar o agregar adjuntos antes de enviar.</li>
                             </ul>
                         </div>
@@ -369,7 +369,7 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Que pasa despues</h3>
+                            <h3 class="panel-title">Qué pasa después</h3>
                         </div>
                         <div class="panel__body">
                             <ol class="pur-req-form-flow">
@@ -379,7 +379,7 @@
                                 </li>
                                 <li class="pur-req-form-flow__item">
                                     <span class="pur-req-form-flow__step">2</span>
-                                    <span>El director recibe la nueva notificacion.</span>
+                                    <span>El director recibe la nueva notificación.</span>
                                 </li>
                                 <li class="pur-req-form-flow__item">
                                     <span class="pur-req-form-flow__step">3</span>

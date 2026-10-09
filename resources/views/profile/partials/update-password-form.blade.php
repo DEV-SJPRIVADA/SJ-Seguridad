@@ -9,7 +9,7 @@
         <div>
             <h2 class="profile-section__title">Seguridad de la cuenta</h2>
             <p class="profile-section__desc">
-                Usa una contrasena larga y unica para proteger tu acceso al sistema.
+                Usa una contraseña larga y única para proteger tu acceso al sistema.
             </p>
         </div>
     </header>
@@ -19,7 +19,7 @@
         @method('put')
 
         <div class="form-field">
-            <x-input-label for="update_password_current_password" value="Contrasena actual" />
+            <x-input-label for="update_password_current_password" value="Contraseña actual" />
             <x-password-input id="update_password_current_password" name="current_password" autocomplete="current-password" />
             <x-input-error :messages="$errors->updatePassword->get('current_password')" />
         </div>
@@ -32,14 +32,14 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="update_password_password_confirmation" value="Confirmar contrasena" />
+                <x-input-label for="update_password_password_confirmation" value="Confirmar contraseña" />
                 <x-password-input id="update_password_password_confirmation" name="password_confirmation" autocomplete="new-password" />
                 <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" />
             </div>
         </div>
 
         <div class="content-actions profile-form__actions">
-            <x-primary-button>Actualizar contrasena</x-primary-button>
+            <x-primary-button>Actualizar contraseña</x-primary-button>
 
             @if (session('status') === 'password-updated')
                 <p
@@ -48,7 +48,7 @@
                     x-transition
                     x-init="setTimeout(() => show = false, 2500)"
                     class="inline-feedback inline-feedback--success"
-                >Contrasena actualizada.</p>
+                >Contraseña actualizada.</p>
             @endif
         </div>
     </form>

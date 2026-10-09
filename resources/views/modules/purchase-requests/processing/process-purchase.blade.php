@@ -58,7 +58,7 @@
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->user?->name ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
-                            <span class="pur-req-form__meta-label">Area</span>
+                            <span class="pur-req-form__meta-label">Área</span>
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->areaLabel() ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
@@ -78,7 +78,7 @@
                             <span class="pur-req-form__section-step">1</span>
                             <div>
                                 <h3 class="pur-req-form__section-title">Productos de la solicitud</h3>
-                                <p class="pur-req-form__section-desc">Lineas FO-AD-44 (solo consulta).</p>
+                                <p class="pur-req-form__section-desc">Líneas FO-AD-44 (solo consulta).</p>
                             </div>
                         </header>
 
@@ -88,10 +88,10 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Cantidad</th>
-                                        <th>Descripcion</th>
+                                        <th>Descripción</th>
                                         <th>Referencia</th>
-                                        <th>Utilizacion</th>
-                                        <th>Ubicacion</th>
+                                        <th>Utilización</th>
+                                        <th>Ubicación</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -152,7 +152,7 @@
                                     id="comentarios_compras"
                                     class="form-textarea"
                                     rows="4"
-                                    placeholder="Observaciones del area de compras…"
+                                    placeholder="Observaciones del área de compras…"
                                 >{{ old('comentarios_compras', $purchaseRequest->comentarios_compras) }}</textarea>
                                 <x-input-error :messages="$errors->get('comentarios_compras')" />
                             </div>
@@ -160,7 +160,7 @@
 
                         <div class="pur-req-form-actions">
                             <p class="pur-req-form-actions__note">
-                                Al guardar, el solicitante puede recibir notificacion segun el estado elegido.
+                                Al guardar, el solicitante puede recibir notificación según el estado elegido.
                             </p>
                             <div class="pur-req-form-actions__group">
                                 <a
@@ -205,7 +205,7 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Guia de estados</h3>
+                            <h3 class="panel-title">Guía de estados</h3>
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">

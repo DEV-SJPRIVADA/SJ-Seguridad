@@ -7,9 +7,9 @@
             </svg>
         </div>
         <div>
-            <h2 class="profile-section__title">Informacion personal</h2>
+            <h2 class="profile-section__title">Información personal</h2>
             <p class="profile-section__desc">
-                Actualiza tu nombre y correo electronico de acceso al sistema.
+                Actualiza tu nombre y correo electrónico de acceso al sistema.
             </p>
         </div>
     </header>
@@ -32,7 +32,7 @@
             </div>
 
             <div class="form-field">
-                <x-input-label for="email" value="Correo electronico" />
+                <x-input-label for="email" value="Correo electrónico" />
                 <x-text-input id="email" name="email" type="email" :value="old('email', $user->email)" required autocomplete="username" />
                 <x-input-error :messages="$errors->get('email')" />
             </div>
@@ -41,16 +41,16 @@
         @if (Route::has('verification.send') && $user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
             <div class="notice notice--warning profile-form__notice">
                 <p class="text-small">
-                    Tu correo electronico aun no ha sido verificado.
+                    Tu correo electrónico aún no ha sido verificado.
 
                     <button form="send-verification" class="link-inline" type="submit">
-                        Haz clic aqui para reenviar el correo de verificacion.
+                        Haz clic aquí para reenviar el correo de verificación.
                     </button>
                 </p>
 
                 @if (session('status') === 'verification-link-sent')
                     <p class="inline-feedback inline-feedback--success block-spaced-sm">
-                        Se envio un nuevo enlace de verificacion a tu correo electronico.
+                        Se envió un nuevo enlace de verificación a tu correo electrónico.
                     </p>
                 @endif
             </div>

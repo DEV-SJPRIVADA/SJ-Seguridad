@@ -72,10 +72,20 @@ class MtSt04DashboardTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('gestion-humana.mt-st-04.dashboard'))
             ->assertOk()
-            ->assertSee('Examen psicofísico', false)
-            ->assertSee('Examen psicosensométrico', false)
-            ->assertSee('Estados examen 1', false)
+            ->assertSee('>Psicofísicos</button>', false)
+            ->assertSee('>Psicosensométricos</button>', false)
+            ->assertSee('formacion-dashboard-page__mode-tabs', false)
+            ->assertSee('goToMatriz', false)
+            ->assertSee("estado_1: 'VIGENTE'", false)
+            ->assertSee("estado_2: '__sin_no_aplica__'", false)
+            ->assertSee('Estados psicofísicos', false)
+            ->assertSee('Estados psicosensométricos', false)
+            ->assertSee('Tendencia de vencimientos', false)
+            ->assertSee('Cantidad por cargo', false)
             ->assertSee('mt-st-04-chart-examen1', false)
+            ->assertSee('mt-st-04-chart-examen1-anio', false)
+            ->assertSee('mt-st-04-chart-examen1-cargo', false)
+            ->assertSee('mt-st-04-chart-examen2', false)
             ->assertSee('mt-st-04-dashboard-charts', false)
             ->assertDontSee('select2', false)
             ->assertDontSee('excelHtml5', false);
@@ -94,11 +104,18 @@ class MtSt04DashboardTest extends TestCase
                     'examen1_estados',
                     'examen2_estados',
                     'aptos',
+                    'examen1_vencimientos_anio',
+                    'examen2_vencimientos_anio',
+                    'examen1_por_cargo',
+                    'examen2_por_cargo',
                 ],
                 'filters',
                 'labels',
             ])
             ->json();
+
+        $this->assertSame('Total psicofísicos', $metrics['labels']['examen1_total']);
+        $this->assertSame('Total psicosensométricos', $metrics['labels']['examen2_total']);
 
         // Universo default = 3 activos (desvinculado excluido).
         $this->assertSame(3, $metrics['kpis']['examen1']['total']);
@@ -120,6 +137,56 @@ class MtSt04DashboardTest extends TestCase
         $this->assertSame(['VIGENTE', 'VENCERA', 'VENCIDO'], $metrics['charts']['examen1_estados']['labels']);
         $this->assertSame([1, 1, 1], $metrics['charts']['examen1_estados']['data']);
         $this->assertSame([0, 1, 0], $metrics['charts']['examen2_estados']['data']);
+
+        $this->assertSame(['GUARDA', 'OPERADOR', 'SUPERVISOR'], $metrics['charts']['examen1_por_cargo']['labels']);
+        $this->assertSame([1, 1, 1], $metrics['charts']['examen1_por_cargo']['data']);
+        // Psicosensométricos por cargo excluye NO APLICA (solo Ana SUPERVISOR).
+        $this->assertSame(['SUPERVISOR'], $metrics['charts']['examen2_por_cargo']['labels']);
+        $this->assertSame([1], $metrics['charts']['examen2_por_cargo']['data']);
+    }
+
+    public function test_metrics_tendencia_vencimientos_por_anio_y_cargo(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $this->createFicha('1002003101', 'Ana', 'SUPERVISOR');
+        $this->createFicha('1002003102', 'Luis', 'GUARDA');
+        $this->createFicha('1002003103', 'Pedro', 'SUPERVISOR');
+
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003101',
+            'fecha_vencimiento_1' => '2026-05-01',
+            'fecha_vencimiento_2' => '2027-01-15',
+            'estado_1' => MtSt04Registro::ESTADO_VIGENTE,
+            'estado_2' => MtSt04Registro::ESTADO_VIGENTE,
+        ]);
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003102',
+            'fecha_vencimiento_1' => '2026-11-01',
+            'fecha_vencimiento_2' => null,
+            'estado_1' => MtSt04Registro::ESTADO_VIGENTE,
+            'estado_2' => MtSt04Registro::ESTADO_NO_APLICA,
+        ]);
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003103',
+            'fecha_vencimiento_1' => '2027-03-01',
+            'fecha_vencimiento_2' => '2027-08-01',
+            'estado_1' => MtSt04Registro::ESTADO_VENCERA,
+            'estado_2' => MtSt04Registro::ESTADO_VENCERA,
+        ]);
+
+        $metrics = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.dashboard.metrics'))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(['2026', '2027'], $metrics['charts']['examen1_vencimientos_anio']['labels']);
+        $this->assertSame([2, 1], $metrics['charts']['examen1_vencimientos_anio']['data']);
+        $this->assertSame(['2027'], $metrics['charts']['examen2_vencimientos_anio']['labels']);
+        $this->assertSame([2], $metrics['charts']['examen2_vencimientos_anio']['data']);
+
+        $this->assertSame(['SUPERVISOR', 'GUARDA'], $metrics['charts']['examen1_por_cargo']['labels']);
+        $this->assertSame([2, 1], $metrics['charts']['examen1_por_cargo']['data']);
     }
 
     public function test_metrics_no_aplica_excluded_from_examen2_total(): void
@@ -183,6 +250,77 @@ class MtSt04DashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('kpis.examen1.total', 2)
             ->assertJsonPath('filters.ficha_estado', 'todos');
+    }
+
+    public function test_metrics_filter_by_ciudad_cargo_and_puesto(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $this->createFicha('1002003201', 'Ana Cali', 'SUPERVISOR', EmployeeFichaProfile::STATUS_ACTIVO, [
+            'residence_city_name' => 'CALI',
+            'cost_center_name' => 'CC-CALI',
+        ]);
+        $this->createFicha('1002003202', 'Luis Bogota', 'GUARDA', EmployeeFichaProfile::STATUS_ACTIVO, [
+            'residence_city_name' => 'BOGOTA',
+            'cost_center_name' => 'CC-BOG',
+        ]);
+        $this->createFicha('1002003203', 'Pedro Cali', 'GUARDA', EmployeeFichaProfile::STATUS_ACTIVO, [
+            'residence_city_name' => 'CALI',
+            'cost_center_name' => 'CC-CALI',
+        ]);
+
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003201',
+            'estado_1' => MtSt04Registro::ESTADO_VIGENTE,
+            'estado_2' => MtSt04Registro::ESTADO_VIGENTE,
+        ]);
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003202',
+            'estado_1' => MtSt04Registro::ESTADO_VENCIDO,
+            'estado_2' => MtSt04Registro::ESTADO_NO_APLICA,
+        ]);
+        MtSt04Registro::factory()->create([
+            'document_number' => '1002003203',
+            'estado_1' => MtSt04Registro::ESTADO_VENCERA,
+            'estado_2' => MtSt04Registro::ESTADO_NO_APLICA,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.mt-st-04.dashboard'))
+            ->assertOk()
+            ->assertSee('id="dash_ciudad"', false)
+            ->assertSee('id="dash_cargo"', false)
+            ->assertSee('id="dash_puesto"', false);
+
+        $byCity = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.dashboard.metrics', [
+                'ciudad' => 'CALI',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('filters.ciudad', 'CALI')
+            ->json();
+        $this->assertSame(2, $byCity['kpis']['examen1']['total']);
+        $this->assertSame(1, $byCity['kpis']['examen2']['total']);
+
+        $byCargo = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.dashboard.metrics', [
+                'cargo' => 'GUARDA',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('filters.cargo', 'GUARDA')
+            ->json();
+        $this->assertSame(2, $byCargo['kpis']['examen1']['total']);
+        $this->assertSame(0, $byCargo['kpis']['examen2']['total']);
+        $this->assertSame(2, $byCargo['kpis']['examen2']['no_aplica']);
+
+        $byPuesto = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.dashboard.metrics', [
+                'puesto' => 'CC-BOG',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('filters.puesto', 'CC-BOG')
+            ->json();
+        $this->assertSame(1, $byPuesto['kpis']['examen1']['total']);
     }
 
     /**

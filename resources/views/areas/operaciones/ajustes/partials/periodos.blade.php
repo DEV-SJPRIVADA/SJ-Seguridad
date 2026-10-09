@@ -1,10 +1,10 @@
 <div class="indicadores-subpanel">
-    <h4 class="indicadores-subpanel__title">Crear periodo</h4>
+    <h4 class="indicadores-subpanel__title">Crear período</h4>
     <form method="POST" action="{{ route('indicadores.admin.periods.store') }}" class="indicadores-inline-form">
         @csrf
         <div class="indicadores-filter-bar">
             <div class="indicadores-field indicadores-field--xs">
-                <label class="form-label">Ano</label>
+                <label class="form-label">Año</label>
                 <select name="year" class="supply-input supply-select" required>
                     @foreach ($years as $year)
                         <option value="{{ $year }}">{{ $year }}</option>
@@ -34,7 +34,7 @@
                 />
             </div>
             <div class="indicadores-field indicadores-field--action">
-                <button type="submit" class="btn btn--primary btn--sm">Crear periodo</button>
+                <button type="submit" class="btn btn--primary btn--sm">Crear período</button>
             </div>
         </div>
     </form>
@@ -56,14 +56,14 @@
 @endif
 
 <div class="indicadores-subpanel" style="margin-top:1.25rem;">
-    <h4 class="indicadores-subpanel__title">Periodos de captura</h4>
+    <h4 class="indicadores-subpanel__title">Períodos de captura</h4>
     <p class="indicadores-subpanel__text">Control de apertura y cierre mensual.</p>
 
     <div class="indicadores-table-wrap">
         <table class="supply-table js-datatable indicadores-table indicadores-table--periods" data-server-pagination>
             <thead>
                 <tr>
-                    <th>Periodo</th>
+                    <th>Período</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>

@@ -15,7 +15,7 @@
             <x-input-error :messages="$errors->get('name')" />
         </div>
         <div class="form-field">
-            <x-input-label for="phone" value="Telefono" />
+            <x-input-label for="phone" value="Teléfono" />
             <x-text-input id="phone" name="phone" class="form-input" :value="old('phone', $client->phone)" />
             <x-input-error :messages="$errors->get('phone')" />
         </div>
@@ -27,7 +27,7 @@
     </div>
 
     <div class="form-field">
-        <x-input-label for="address" value="Direccion" />
+        <x-input-label for="address" value="Dirección" />
         <x-text-input id="address" name="address" class="form-input" :value="old('address', $client->address)" />
         <x-input-error :messages="$errors->get('address')" />
     </div>

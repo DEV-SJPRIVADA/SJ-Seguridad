@@ -10,11 +10,11 @@
                 <img src="{{ $logoPath }}" alt="Logo" style="width:70px; height:auto;">
             @endif
         </td>
-        <td colspan="8" rowspan="4" class="sheet-title">FICHA DEL INDICADOR DE GESTION</td>
+        <td colspan="8" rowspan="4" class="sheet-title">FICHA DEL INDICADOR DE GESTIÓN</td>
         <td colspan="4">{{ $indicator->code }}</td>
     </tr>
     <tr><td colspan="4">{{ ($months[$selectedMonth] ?? 'Mes').' de '.$selectedYear }}</td></tr>
-    <tr><td colspan="4">Version 02</td></tr>
+    <tr><td colspan="4">Versión 02</td></tr>
     <tr><td colspan="4">Pagina {{ $pdfTwoPages ? '1 de 2' : '1 de 1' }}</td></tr>
     <tr><td colspan="{{ $colCount }}" class="sheet-head">NOMBRE DEL INDICADOR</td></tr>
     <tr><td colspan="{{ $colCount }}" class="sheet-title">{{ strtoupper($indicator->name) }}</td></tr>
@@ -23,15 +23,15 @@
         <td colspan="5" class="sheet-head">PROCESO</td>
     </tr>
     <tr>
-        <td colspan="9">Determinar el impacto de los siniestros o reclamos en la facturacion de la empresa.</td>
-        <td colspan="5" style="text-align:center;">Operaciones y Gestion de Riesgos</td>
+        <td colspan="9">Determinar el impacto de los siniestros o reclamos en la facturación de la empresa.</td>
+        <td colspan="5" style="text-align:center;">Operaciones y Gestión de Riesgos</td>
     </tr>
     <tr>
         <td colspan="3" class="sheet-head">UNIDAD MEDIDA</td>
         <td class="sheet-head">META</td>
-        <td colspan="3" class="sheet-head">FRECUENCIA DE MEDICION</td>
+        <td colspan="3" class="sheet-head">FRECUENCIA DE MEDICIÓN</td>
         <td colspan="2" class="sheet-head">TENDENCIA</td>
-        <td colspan="5" class="sheet-head">INSUMOS PARA LA MEDICION</td>
+        <td colspan="5" class="sheet-head">INSUMOS PARA LA MEDICIÓN</td>
     </tr>
     <tr style="text-align:center;">
         <td colspan="3">{{ ucfirst((string) ($indicator->unit ?? 'Porcentaje')) }}</td>
@@ -50,7 +50,7 @@
         <td colspan="5">FO-GI-06 Control de No Conformidades / Reporte clientes</td>
     </tr>
     <tr>
-        <td colspan="3" class="sheet-head">CRITICO</td>
+        <td colspan="3" class="sheet-head">CRÍTICO</td>
         <td>{{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
         <td colspan="10"></td>
     </tr>
@@ -58,9 +58,9 @@
     <tr><td colspan="{{ $colCount }}" style="text-align:center;">{{ $indicator->formula_description }}</td></tr>
     <tr><td colspan="{{ $colCount }}" class="sheet-head">RESPONSABILIDADES</td></tr>
     <tr>
-        <td colspan="5" class="sheet-head">RESULTADOS Y MEDICION</td>
+        <td colspan="5" class="sheet-head">RESULTADOS Y MEDICIÓN</td>
         <td colspan="5" class="sheet-head">RESULTADOS</td>
-        <td colspan="4" class="sheet-head">MEDICION</td>
+        <td colspan="4" class="sheet-head">MEDICIÓN</td>
     </tr>
     <tr style="text-align:center;">
         <td colspan="5">Director de Operaciones / Director(a) Financiero</td>
@@ -79,7 +79,7 @@
         <td>TOTAL</td>
     </tr>
     <tr style="text-align:center;">
-        <td class="sheet-head">TOTAL FACTURACION MENSUAL</td>
+        <td class="sheet-head">TOTAL FACTURACIÓN MENSUAL</td>
         @for ($i = 1; $i <= 12; $i++)
             <td>$ {{ number_format($financeRows['facturacion'][$i] ?? 0, 0, ',', '.') }}</td>
         @endfor
@@ -106,7 +106,7 @@
         @endfor
     </tr>
     <tr style="text-align:center;">
-        <td class="sheet-head">CRITICO</td>
+        <td class="sheet-head">CRÍTICO</td>
         @for ($i = 0; $i < 13; $i++)
             <td>{{ number_format((float) ($indicator->critical_value ?? 0), 0) }}%</td>
         @endfor
@@ -115,7 +115,7 @@
 
 <div class="chart-box">
     @if (! empty($chartImages['finance']))
-        <img src="{{ $chartImages['finance'] }}" alt="Grafico facturacion">
+        <img src="{{ $chartImages['finance'] }}" alt="Gráfico facturación">
     @endif
 </div>
 
@@ -153,7 +153,7 @@
 
 <div class="chart-box">
     @if (! empty($chartImages['incident']))
-        <img src="{{ $chartImages['incident'] }}" alt="Grafico siniestros">
+        <img src="{{ $chartImages['incident'] }}" alt="Gráfico siniestros">
     @endif
 </div>
 
@@ -163,8 +163,8 @@
             <td style="width:28%;">TIPO DE SINIESTRO</td>
             <td>CANTIDAD</td>
             <td>%</td>
-            <td>PERIODO</td>
-            <td style="width:45%;">GRAFICO</td>
+            <td>PERÍODO</td>
+            <td style="width:45%;">GRÁFICO</td>
         </tr>
         @foreach (($quarterlyTables[$q]['rows'] ?? []) as $idx => $row)
             <tr style="text-align:center;">
@@ -179,7 +179,7 @@
                 @if ($idx === 0)
                     <td rowspan="{{ count($quarterlyTables[$q]['rows'] ?? []) + 1 }}">
                         @if (! empty($chartImages['quarter_'.$q]))
-                            <img src="{{ $chartImages['quarter_'.$q] }}" alt="Grafico trimestre {{ $q }}" style="max-width:280px;">
+                            <img src="{{ $chartImages['quarter_'.$q] }}" alt="Gráfico trimestre {{ $q }}" style="max-width:280px;">
                         @endif
                     </td>
                 @endif
@@ -200,7 +200,7 @@
 
 <table class="sheet-table" style="border-top:none; margin-top:8px;">
     <tr class="sheet-head">
-        <td colspan="3">ANALISIS DE RESULTADOS</td>
+        <td colspan="3">ANÁLISIS DE RESULTADOS</td>
         <td>CUMPLE</td>
         <td>MEJORA</td>
     </tr>
@@ -209,8 +209,8 @@
             <td class="sheet-head" style="text-align:center;">{{ $selectedYear }}</td>
             <td class="sheet-head" style="text-align:center;">{{ $row['month'] }}</td>
             <td>{{ $row['analysis'] }}</td>
-            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['complies'] ? 'SI' : 'NO') : '' }}</td>
-            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['improvement'] ? 'SI' : 'NO') : '' }}</td>
+            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['complies'] ? 'Sí' : 'No') : '' }}</td>
+            <td style="text-align:center;">{{ $row['has_capture'] ? ($row['improvement'] ? 'Sí' : 'No') : '' }}</td>
         </tr>
     @endforeach
 </table>
