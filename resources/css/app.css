@@ -3159,6 +3159,56 @@ a {
 }
 
 /* Plantillas Word â pagina */
+.plantillas-word-page__board-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.plantillas-word-page__card-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.plantillas-word-page__card-wrap--inactive .plantillas-word-page__card {
+    opacity: 0.72;
+}
+
+.plantillas-word-page__card {
+    text-decoration: none;
+    color: inherit;
+    min-height: 100%;
+}
+
+.plantillas-word-page__card-status {
+    margin-top: 0.15rem;
+}
+
+.plantillas-word-page__card-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.plantillas-word-page__empty-board {
+    grid-column: 1 / -1;
+}
+
+.plantillas-word-page__detail-toolbar {
+    margin-bottom: 0.75rem;
+}
+
+.plantillas-word-page__detail-title-block {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
 .plantillas-word-page {
     padding-top: 0.35rem;
     padding-bottom: 0.75rem;

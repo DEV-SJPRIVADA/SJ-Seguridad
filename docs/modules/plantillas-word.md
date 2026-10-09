@@ -9,9 +9,9 @@ Administrar **tipos de documento** y **plantillas Word (.docx)** en un tablero p
 
 ## Alcance actual
 
-- Tablero sidebar **Plantillas Word** (`plantillas_word`): catalogo editable de tipos + lista unica de plantillas con columna tipo.
-- CRUD tipos: crear, editar (nombre/activo/orden/code), eliminar (bloqueado si hay plantillas asociadas; preferir desactivar).
-- Plantillas: agregar (etiqueta + tipo activo + `.docx`), reemplazar (solo archivo), eliminar (confirmacion), descargar master.
+- Tablero sidebar **Plantillas Word** (`plantillas_word`): landing por **tarjetas de tipo** (activos e inactivos marcados); detalle `?type={id}` con plantillas de ese tipo.
+- CRUD tipos desde las tarjetas (modal crear/editar; eliminar si no hay plantillas; preferir desactivar).
+- Plantillas: en el detalle del tipo, agregar (etiqueta + tipo fijo oculto + `.docx`), reemplazar, eliminar, descargar master; labels de tipo solo con **nombre** (sin código).
 - Generacion/descarga:
   - **Ficha empleados** — tipo `desvinculacion` (permiso `ficha_empleados.terminate`); ver [`ficha-empleados.md`](ficha-empleados.md).
   - **Cliente interno → Cartas Vacaciones** — tipo `cartas_vacaciones`; exige **exactamente una** plantilla del tipo con archivo en disco; permisos `cliente_interno.cartas_vacaciones.*`; ver [`cliente-interno.md`](cliente-interno.md).
@@ -67,7 +67,7 @@ Servicio: `App\Services\GestionHumana\PlantillasWordAccessService` â€” `can
 
 | Vista | Descripcion |
 | --- | --- |
-| `resources/views/areas/gestion_humana/plantillas-word/index.blade.php` | Tablero con pestanas `?tab=plantillas` (default) \| `?tab=tipos`; en Plantillas filtros GET `q` / `type` / `file`; formularios de alta en secciones; selector `.docx` + acciones Lucide |
+| `resources/views/areas/gestion_humana/plantillas-word/index.blade.php` | Landing tarjetas de tipo; detalle `?type={id}` con filtros GET `q` / `file`; alta de plantilla sin selector de tipo; modales tipo/plantilla; selector `.docx` + acciones Lucide |
 
 ## Modelos y tablas
 

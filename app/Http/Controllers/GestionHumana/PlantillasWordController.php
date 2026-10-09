@@ -23,10 +23,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PlantillasWordController extends Controller
 {
-    public const TAB_TIPOS = 'tipos';
-
-    public const TAB_PLANTILLAS = 'plantillas';
-
     public function __construct(
         private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly TerminationLetterTemplateManager $templateManager,
@@ -37,34 +33,43 @@ class PlantillasWordController extends Controller
     {
         abort_unless($this->plantillasWordAccess->canView(auth()->user()), 403);
 
-        $activeTab = $this->resolveTab($request->query('tab'));
-        $filters = $this->resolveTemplateFilters($request);
-
         $types = WordDocumentType::query()
             ->withCount('templates')
             ->ordered()
             ->get();
 
-        $templatesQuery = TerminationLetterDocumentTemplate::query()
-            ->with('type')
-            ->ordered();
+        $selectedTypeId = $request->integer('type');
+        $selectedType = $selectedTypeId > 0
+            ? $types->firstWhere('id', $selectedTypeId)
+            : null;
 
-        if ($activeTab === self::TAB_PLANTILLAS) {
+        $filters = $this->resolveTemplateFilters($request);
+        $templates = collect();
+
+        if ($selectedType !== null) {
+            $templatesQuery = TerminationLetterDocumentTemplate::query()
+                ->with('type')
+                ->where('word_document_type_id', $selectedType->id)
+                ->ordered();
+
             $this->applyTemplateFilters($templatesQuery, $filters);
+            $templates = $templatesQuery->get();
         }
-
-        $templates = $templatesQuery->get();
-        $activeTypes = $types->where('is_active', true)->values();
 
         return view('areas.gestion_humana.plantillas-word.index', [
             'canManage' => $this->plantillasWordAccess->canManage(auth()->user()),
             'types' => $types,
-            'activeTypes' => $activeTypes,
+            'selectedType' => $selectedType,
             'templates' => $templates,
             'placeholders' => config('employee_ficha.letter_placeholders', []),
-            'activeTab' => $activeTab,
-            'subTabs' => $this->subTabs($activeTab),
             'filters' => $filters,
+            'typeSelectOptions' => $types
+                ->map(static fn (WordDocumentType $type): array => [
+                    'value' => (string) $type->id,
+                    'label' => $type->name.($type->is_active ? '' : ' (inactivo)'),
+                ])
+                ->values()
+                ->all(),
         ]);
     }
 
@@ -89,7 +94,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_TIPOS)
+        return $this->redirectToBoard()
             ->with('status', 'Tipo de documento creado correctamente.');
     }
 
@@ -114,7 +119,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_TIPOS)
+        return $this->redirectToBoard((int) $type->id)
             ->with('status', 'Tipo de documento actualizado.');
     }
 
@@ -123,8 +128,8 @@ class PlantillasWordController extends Controller
         abort_unless($this->plantillasWordAccess->canManage(auth()->user()), 403);
 
         if ($type->templates()->exists()) {
-            return $this->redirectToTab(self::TAB_TIPOS)
-                ->with('error', 'No se puede eliminar un tipo que tiene plantillas asociadas. Desactivelo o reasigne las plantillas.');
+            return $this->redirectToBoard()
+                ->with('error', 'No se puede eliminar un tipo que tiene plantillas asociadas. Desactívelo o reasigne las plantillas.');
         }
 
         $metadata = [
@@ -142,7 +147,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_TIPOS)
+        return $this->redirectToBoard()
             ->with('status', 'Tipo de documento eliminado.');
     }
 
@@ -170,7 +175,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_PLANTILLAS)
+        return $this->redirectToBoard((int) $type->id)
             ->with('status', 'Plantilla Word agregada correctamente.');
     }
 
@@ -202,7 +207,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_PLANTILLAS)
+        return $this->redirectToBoard((int) $template->word_document_type_id)
             ->with('status', 'Plantilla Word actualizada.');
     }
 
@@ -224,7 +229,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_PLANTILLAS)
+        return $this->redirectToBoard((int) $template->word_document_type_id)
             ->with('status', 'Archivo de plantilla reemplazado.');
     }
 
@@ -232,9 +237,10 @@ class PlantillasWordController extends Controller
     {
         abort_unless($this->plantillasWordAccess->canManage(auth()->user()), 403);
 
+        $typeId = (int) $template->word_document_type_id;
         $metadata = [
             'template_id' => $template->id,
-            'type_id' => $template->word_document_type_id,
+            'type_id' => $typeId,
             'label' => $template->label,
         ];
 
@@ -247,7 +253,7 @@ class PlantillasWordController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return $this->redirectToTab(self::TAB_PLANTILLAS)
+        return $this->redirectToBoard($typeId)
             ->with('status', 'Plantilla Word eliminada.');
     }
 
@@ -263,17 +269,8 @@ class PlantillasWordController extends Controller
         );
     }
 
-    private function resolveTab(mixed $tab): string
-    {
-        $value = is_string($tab) ? $tab : self::TAB_PLANTILLAS;
-
-        return in_array($value, [self::TAB_TIPOS, self::TAB_PLANTILLAS], true)
-            ? $value
-            : self::TAB_PLANTILLAS;
-    }
-
     /**
-     * @return array{q: string, type: string, file: string}
+     * @return array{q: string, file: string}
      */
     private function resolveTemplateFilters(Request $request): array
     {
@@ -282,30 +279,20 @@ class PlantillasWordController extends Controller
             $file = '';
         }
 
-        $type = (string) $request->query('type', '');
-        if ($type !== '' && ! ctype_digit($type)) {
-            $type = '';
-        }
-
         return [
             'q' => trim((string) $request->query('q', '')),
-            'type' => $type,
             'file' => $file,
         ];
     }
 
     /**
      * @param  Builder<TerminationLetterDocumentTemplate>  $query
-     * @param  array{q: string, type: string, file: string}  $filters
+     * @param  array{q: string, file: string}  $filters
      */
     private function applyTemplateFilters(Builder $query, array $filters): void
     {
         if ($filters['q'] !== '') {
             $query->where('label', 'like', '%'.$filters['q'].'%');
-        }
-
-        if ($filters['type'] !== '') {
-            $query->where('word_document_type_id', (int) $filters['type']);
         }
 
         if ($filters['file'] === 'cargada') {
@@ -321,31 +308,13 @@ class PlantillasWordController extends Controller
         }
     }
 
-    /**
-     * @return list<array{key: string, label: string, url: string, active: bool}>
-     */
-    private function subTabs(string $activeTab): array
+    private function redirectToBoard(?int $typeId = null): RedirectResponse
     {
-        return [
-            [
-                'key' => self::TAB_PLANTILLAS,
-                'label' => 'Plantillas',
-                'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_PLANTILLAS]),
-                'active' => $activeTab === self::TAB_PLANTILLAS,
-            ],
-            [
-                'key' => self::TAB_TIPOS,
-                'label' => 'Tipos de documento',
-                'url' => route('gestion-humana.plantillas-word.index', ['tab' => self::TAB_TIPOS]),
-                'active' => $activeTab === self::TAB_TIPOS,
-            ],
-        ];
-    }
+        $params = [];
+        if ($typeId !== null && $typeId > 0) {
+            $params['type'] = $typeId;
+        }
 
-    private function redirectToTab(string $tab): RedirectResponse
-    {
-        return redirect()->route('gestion-humana.plantillas-word.index', [
-            'tab' => $this->resolveTab($tab),
-        ]);
+        return redirect()->route('gestion-humana.plantillas-word.index', $params);
     }
 }

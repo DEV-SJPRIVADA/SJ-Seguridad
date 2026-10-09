@@ -70,7 +70,7 @@ class PlantillasWordCrudTest extends TestCase
                 'is_active' => '1',
                 'sort_order' => 10,
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index'));
 
         $type = WordDocumentType::query()->where('code', 'nuevo_tipo')->firstOrFail();
         $this->assertSame('Nuevo Tipo', $type->name);
@@ -83,7 +83,7 @@ class PlantillasWordCrudTest extends TestCase
                 'is_active' => '0',
                 'sort_order' => 5,
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['type' => $type->id]));
 
         $type->refresh();
         $this->assertSame('Nuevo Tipo Editado', $type->name);
@@ -92,7 +92,7 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->delete(route('gestion-humana.plantillas-word.types.destroy', $type))
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index'));
 
         $this->assertDatabaseMissing('word_document_types', ['id' => $type->id]);
     }
@@ -111,7 +111,7 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->delete(route('gestion-humana.plantillas-word.types.destroy', $type))
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']))
+            ->assertRedirect(route('gestion-humana.plantillas-word.index'))
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('word_document_types', ['id' => $type->id, 'code' => 'desvinculacion']);
@@ -129,7 +129,7 @@ class PlantillasWordCrudTest extends TestCase
                 'sort_order' => 1,
                 'template' => $this->makeDocxFixture('[NOMBRE]'),
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['type' => $type->id]));
 
         $template = TerminationLetterDocumentTemplate::query()->where('label', 'Aceptacion renuncia')->firstOrFail();
         $this->assertSame($type->id, $template->word_document_type_id);
@@ -153,7 +153,7 @@ class PlantillasWordCrudTest extends TestCase
                 'word_document_type_id' => $type->id,
                 'sort_order' => 7,
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['type' => $type->id]));
 
         $template->refresh();
         $this->assertSame('Aceptacion renuncia editada', $template->label);
@@ -175,7 +175,7 @@ class PlantillasWordCrudTest extends TestCase
             ->post(route('gestion-humana.plantillas-word.templates.replace', $template), [
                 'template' => $this->makeDocxFixture('[NOMBRE] [CEDULA]'),
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['type' => $type->id]));
 
         $template->refresh();
         $this->assertSame('Aceptacion renuncia editada', $template->label);
@@ -195,7 +195,7 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->delete(route('gestion-humana.plantillas-word.templates.destroy', $template))
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['type' => $type->id]));
 
         $this->assertDatabaseMissing('termination_letter_document_templates', ['id' => $template->id]);
         Storage::disk('local')->assertMissing((string) $template->template_path);
@@ -221,7 +221,7 @@ class PlantillasWordCrudTest extends TestCase
                 'is_active' => '1',
                 'sort_order' => 3,
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']));
+            ->assertRedirect(route('gestion-humana.plantillas-word.index'));
 
         $type = WordDocumentType::query()->where('code', 'otro_tipo')->firstOrFail();
 
@@ -257,7 +257,7 @@ class PlantillasWordCrudTest extends TestCase
         $this->assertSame(0, TerminationLetterDocumentTemplate::query()->count());
     }
 
-    public function test_index_lists_template_type_column(): void
+    public function test_index_lists_templates_inside_selected_type(): void
     {
         $manager = $this->managerUser();
         $type = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
@@ -270,45 +270,60 @@ class PlantillasWordCrudTest extends TestCase
         ]);
 
         $this->actingAs($manager)
-            ->get(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->get(route('gestion-humana.plantillas-word.index', ['type' => $type->id]))
             ->assertOk()
             ->assertSee('Carta listado', false)
             ->assertSee('Desvinculacion', false)
-            ->assertDontSee('Agregar tipo', false);
+            ->assertSee('Agregar plantilla', false)
+            ->assertDontSee('Tipos de documento', false);
     }
 
-    public function test_index_tabs_switch_between_tipos_and_plantillas(): void
+    public function test_index_shows_cards_then_type_detail(): void
     {
         $manager = $this->managerUser();
+        $type = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
 
         $this->actingAs($manager)
             ->get(route('gestion-humana.plantillas-word.index'))
             ->assertOk()
-            ->assertViewHas('activeTab', 'plantillas')
-            ->assertSee('Agregar plantilla', false)
-            ->assertDontSee('Agregar tipo', false);
-
-        $this->actingAs($manager)
-            ->get(route('gestion-humana.plantillas-word.index', ['tab' => 'tipos']))
-            ->assertOk()
+            ->assertViewHas('selectedType', null)
             ->assertSee('Tipos de documento', false)
-            ->assertSee('Agregar tipo', false)
+            ->assertSee('Desvinculacion', false)
             ->assertDontSee('Agregar plantilla', false);
 
         $this->actingAs($manager)
-            ->get(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->get(route('gestion-humana.plantillas-word.index', ['type' => $type->id]))
             ->assertOk()
+            ->assertSee('Volver al tablero', false)
             ->assertSee('Agregar plantilla', false)
-            ->assertDontSee('Agregar tipo', false);
+            ->assertDontSee('Elija un tipo para ver', false);
     }
 
-    public function test_plantillas_type_select_uses_numeric_id_not_code(): void
+    public function test_inactive_types_appear_on_cards_marked_inactive(): void
+    {
+        $manager = $this->managerUser();
+
+        WordDocumentType::query()->create([
+            'code' => 'archivado_card',
+            'name' => 'Tipo Archivado Card',
+            'is_active' => false,
+            'sort_order' => 99,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.plantillas-word.index'))
+            ->assertOk()
+            ->assertSee('Tipo Archivado Card', false)
+            ->assertSee('Inactivo', false);
+    }
+
+    public function test_plantillas_type_select_uses_numeric_id_and_name_only_label(): void
     {
         $manager = $this->managerUser();
         $type = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
 
         $content = $this->actingAs($manager)
-            ->get(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->get(route('gestion-humana.plantillas-word.index', ['type' => $type->id]))
             ->assertOk()
             ->getContent();
 
@@ -322,21 +337,35 @@ class PlantillasWordCrudTest extends TestCase
                 || str_contains($content, '\u0022value\u0022:\u0022desvinculacion\u0022'),
             'Type select must not use document type code as value'
         );
+
+        $nameOnlyLabel = '"label":"'.$type->name.'"';
+        $codePrefixedLabel = '"label":"'.$type->code.' — '.$type->name.'"';
+        $this->assertTrue(
+            str_contains($content, $nameOnlyLabel)
+                || str_contains($content, '\u0022label\u0022:\u0022'.$type->name.'\u0022'),
+            'Expected type select labels to use name only'
+        );
+        $this->assertFalse(
+            str_contains($content, $codePrefixedLabel)
+                || str_contains($content, '\u0022label\u0022:\u0022'.$type->code.' \u2014 '.$type->name.'\u0022'),
+            'Type select must not prefix labels with code'
+        );
     }
 
     public function test_store_template_rejects_type_code_string(): void
     {
         $manager = $this->managerUser();
+        $type = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
 
         $this->actingAs($manager)
-            ->from(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->from(route('gestion-humana.plantillas-word.index', ['type' => $type->id]))
             ->post(route('gestion-humana.plantillas-word.templates.store'), [
                 'label' => 'Plantilla invalida',
                 'word_document_type_id' => 'desvinculacion',
                 'sort_order' => 1,
                 'template' => $this->makeDocxFixture('[NOMBRE]'),
             ])
-            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']))
+            ->assertRedirect(route('gestion-humana.plantillas-word.index', ['type' => $type->id]))
             ->assertSessionHasErrors('word_document_type_id');
 
         $this->assertDatabaseMissing('termination_letter_document_templates', [
@@ -344,17 +373,10 @@ class PlantillasWordCrudTest extends TestCase
         ]);
     }
 
-    public function test_plantillas_tab_filters_by_label_type_and_file_status(): void
+    public function test_type_detail_filters_by_label_and_file_status(): void
     {
         $manager = $this->managerUser();
         $desvinculacion = WordDocumentType::query()->where('code', 'desvinculacion')->firstOrFail();
-
-        $otherType = WordDocumentType::query()->create([
-            'code' => 'otro_filtro',
-            'name' => 'Otro filtro',
-            'is_active' => true,
-            'sort_order' => 90,
-        ]);
 
         TerminationLetterDocumentTemplate::query()->create([
             'word_document_type_id' => $desvinculacion->id,
@@ -364,7 +386,7 @@ class PlantillasWordCrudTest extends TestCase
         ]);
 
         TerminationLetterDocumentTemplate::query()->create([
-            'word_document_type_id' => $otherType->id,
+            'word_document_type_id' => $desvinculacion->id,
             'label' => 'Contrato pendiente',
             'sort_order' => 2,
             'template_path' => null,
@@ -372,7 +394,7 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->get(route('gestion-humana.plantillas-word.index', [
-                'tab' => 'plantillas',
+                'type' => $desvinculacion->id,
                 'q' => 'Renuncia',
             ]))
             ->assertOk()
@@ -381,16 +403,7 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->get(route('gestion-humana.plantillas-word.index', [
-                'tab' => 'plantillas',
-                'type' => (string) $otherType->id,
-            ]))
-            ->assertOk()
-            ->assertSee('Contrato pendiente', false)
-            ->assertDontSee('Renuncia visible', false);
-
-        $this->actingAs($manager)
-            ->get(route('gestion-humana.plantillas-word.index', [
-                'tab' => 'plantillas',
+                'type' => $desvinculacion->id,
                 'file' => 'pendiente',
             ]))
             ->assertOk()
@@ -399,7 +412,7 @@ class PlantillasWordCrudTest extends TestCase
 
         $this->actingAs($manager)
             ->get(route('gestion-humana.plantillas-word.index', [
-                'tab' => 'plantillas',
+                'type' => $desvinculacion->id,
                 'file' => 'cargada',
             ]))
             ->assertOk()

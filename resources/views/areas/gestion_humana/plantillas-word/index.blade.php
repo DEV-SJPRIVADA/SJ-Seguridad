@@ -4,19 +4,12 @@
             <div class="app-container">
                 <div class="module-subnav__inner requisition-subtabs__inner">
                     <p class="text-caption module-subnav__label">Plantillas Word</p>
-                    <nav class="module-tabs" aria-label="Plantillas Word">
-                        @foreach ($subTabs as $tab)
-                            <a href="{{ $tab['url'] }}" class="module-tab {{ $tab['active'] ? 'module-tab--active' : '' }}">
-                                {{ $tab['label'] }}
-                            </a>
-                        @endforeach
-                    </nav>
                 </div>
             </div>
         </div>
     </x-slot>
 
-    <div class="page-section plantillas-word-page">
+    <div class="page-section plantillas-word-page ficha-empleados-catalogs-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success">{{ session('status') }}</div>
@@ -34,180 +27,130 @@
                 </div>
             @endif
 
-            @if ($activeTab === 'tipos')
-                <div class="panel plantillas-word-page__panel">
-                    <div class="panel__header panel__header--compact">
-                        <div class="plantillas-word-page__header-row">
-                            <h3 class="panel-title">Tipos de documento</h3>
-                        </div>
+            @if ($selectedType === null)
+                {{-- Landing: una tarjeta por tipo (activos e inactivos) --}}
+                <div class="page-header-inner ficha-empleados-catalogs-page__head plantillas-word-page__board-head">
+                    <div>
+                        <h2 class="page-title">Tipos de documento</h2>
+                        <p class="page-subtitle">Elija un tipo para ver y administrar sus plantillas Word.</p>
                     </div>
-                    <div class="panel__body section-stack">
-                        @if ($canManage)
-                            <section class="plantillas-word-form__section">
-                                <header class="plantillas-word-form__section-head">
-                                    <span class="plantillas-word-form__section-step">1</span>
-                                    <div>
-                                        <h4 class="plantillas-word-form__section-title">Agregar tipo</h4>
-                                        <p class="plantillas-word-form__section-desc">Defina codigo unico, nombre visible y orden de aparicion.</p>
-                                    </div>
-                                </header>
+                    @if ($canManage)
+                        <button
+                            type="button"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary btn-plantillas-word-type-create"
+                            title="Nuevo tipo"
+                            aria-label="Nuevo tipo"
+                        >
+                            <x-lucide-plus width="16" height="16" aria-hidden="true" />
+                        </button>
+                    @endif
+                </div>
 
-                                <form
-                                    method="POST"
-                                    action="{{ route('gestion-humana.plantillas-word.types.store') }}"
-                                    class="plantillas-word-form__create"
-                                >
-                                    @csrf
-                                    <div class="plantillas-word-form__create-row">
-                                        <div class="form-field">
-                                            <label class="form-label" for="type_code_new">Codigo</label>
-                                            <input
-                                                id="type_code_new"
-                                                name="code"
-                                                type="text"
-                                                class="form-input"
-                                                maxlength="50"
-                                                required
-                                                value="{{ old('code') }}"
-                                                placeholder="Ej. desvinculacion"
-                                            >
-                                        </div>
-                                        <div class="form-field plantillas-word-form__field--grow">
-                                            <label class="form-label" for="type_name_new">Nombre</label>
-                                            <input
-                                                id="type_name_new"
-                                                name="name"
-                                                type="text"
-                                                class="form-input"
-                                                maxlength="255"
-                                                required
-                                                value="{{ old('name') }}"
-                                                placeholder="Nombre visible"
-                                            >
-                                        </div>
-                                        <div class="form-field plantillas-word-form__field--sort">
-                                            <label class="form-label" for="type_sort_new">Orden</label>
-                                            <input
-                                                id="type_sort_new"
-                                                name="sort_order"
-                                                type="number"
-                                                min="0"
-                                                max="9999"
-                                                class="form-input"
-                                                value="{{ old('sort_order', 0) }}"
-                                            >
-                                        </div>
-                                        <div class="plantillas-word-form__create-actions">
-                                            <label class="plantillas-word-form__check">
-                                                <input type="checkbox" name="is_active" value="1" class="form-check" @checked(old('is_active', true))>
-                                                <span>Activo</span>
-                                            </label>
+                <div class="ficha-empleados-catalogs-page__grid">
+                    @forelse ($types as $type)
+                        <div class="plantillas-word-page__card-wrap {{ $type->is_active ? '' : 'plantillas-word-page__card-wrap--inactive' }}">
+                            <a
+                                href="{{ route('gestion-humana.plantillas-word.index', ['type' => $type->id]) }}"
+                                class="ficha-empleados-catalogs-page__card plantillas-word-page__card"
+                            >
+                                <span class="ficha-empleados-catalogs-page__card-icon" aria-hidden="true">
+                                    <x-lucide-file-text width="22" height="22" aria-hidden="true" />
+                                </span>
+                                <span class="ficha-empleados-catalogs-page__card-title">{{ $type->name }}</span>
+                                <span class="ficha-empleados-catalogs-page__card-count">
+                                    {{ $type->templates_count }} plantilla{{ $type->templates_count === 1 ? '' : 's' }}
+                                </span>
+                                @if (! $type->is_active)
+                                    <span class="status-pill status-pill--muted plantillas-word-page__card-status">Inactivo</span>
+                                @endif
+                            </a>
+                            @if ($canManage)
+                                <div class="plantillas-word-page__card-actions">
+                                    <button
+                                        type="button"
+                                        class="cursos-catalogo-page__icon-btn btn-plantillas-word-type-edit"
+                                        title="Editar tipo"
+                                        aria-label="Editar tipo"
+                                        data-code="{{ $type->code }}"
+                                        data-name="{{ $type->name }}"
+                                        data-active="{{ $type->is_active ? '1' : '0' }}"
+                                        data-sort="{{ $type->sort_order }}"
+                                        data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
+                                    >
+                                        <x-lucide-pencil width="16" height="16" aria-hidden="true" />
+                                    </button>
+                                    @if ($type->templates_count === 0)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
+                                            class="plantillas-word-page__icon-form"
+                                            onsubmit="return confirm('¿Eliminar este tipo de documento?')"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
                                             <button
                                                 type="submit"
-                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                                title="Agregar tipo"
-                                                aria-label="Agregar tipo"
+                                                class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
+                                                title="Eliminar tipo"
+                                                aria-label="Eliminar tipo"
                                             >
-                                                <x-lucide-plus width="16" height="16" aria-hidden="true" />
+                                                <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
                                             </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </section>
-                        @endif
-
-                        <div class="data-table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Codigo</th>
-                                        <th>Nombre</th>
-                                        <th class="plantillas-word-page__col-sort">Orden</th>
-                                        <th class="plantillas-word-page__col-status">Estado</th>
-                                        <th class="plantillas-word-page__col-count">Plantillas</th>
-                                        @if ($canManage)
-                                            <th class="plantillas-word-page__col-actions">Acciones</th>
-                                        @endif
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($types as $type)
-                                        <tr>
-                                            <td><code class="plantillas-word-page__code">{{ $type->code }}</code></td>
-                                            <td><span class="plantillas-word-page__name">{{ $type->name }}</span></td>
-                                            <td>{{ $type->sort_order }}</td>
-                                            <td>
-                                                <span class="status-pill {{ $type->is_active ? 'status-pill--success' : 'status-pill--muted' }}">
-                                                    {{ $type->is_active ? 'Activo' : 'Inactivo' }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $type->templates_count }}</td>
-                                            @if ($canManage)
-                                                <td class="table-actions">
-                                                    <div class="plantillas-word-page__row-actions">
-                                                        <button
-                                                            type="button"
-                                                            class="cursos-catalogo-page__icon-btn btn-plantillas-word-type-edit"
-                                                            title="Editar"
-                                                            aria-label="Editar"
-                                                            data-code="{{ $type->code }}"
-                                                            data-name="{{ $type->name }}"
-                                                            data-active="{{ $type->is_active ? '1' : '0' }}"
-                                                            data-sort="{{ $type->sort_order }}"
-                                                            data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
-                                                        >
-                                                            <x-lucide-pencil width="16" height="16" aria-hidden="true" />
-                                                        </button>
-                                                        @if ($type->templates_count === 0)
-                                                            <form
-                                                                method="POST"
-                                                                action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
-                                                                class="plantillas-word-page__icon-form"
-                                                                onsubmit="return confirm('Eliminar este tipo de documento?')"
-                                                            >
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button
-                                                                    type="submit"
-                                                                    class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
-                                                                    title="Eliminar"
-                                                                    aria-label="Eliminar"
-                                                                >
-                                                                    <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
-                                                                </button>
-                                                            </form>
-                                                        @else
-                                                            <span class="text-muted text-caption" title="Desactive el tipo en su lugar">Con plantillas</span>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="{{ $canManage ? 6 : 5 }}" class="text-muted">Sin tipos de documento.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                        </form>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
-                    </div>
+                    @empty
+                        <p class="text-muted plantillas-word-page__empty-board">Sin tipos de documento.</p>
+                    @endforelse
                 </div>
             @else
+                {{-- Detalle: plantillas del tipo seleccionado --}}
+                <div class="ficha-empleados-catalogs-page__manage-toolbar plantillas-word-page__detail-toolbar">
+                    <a
+                        href="{{ route('gestion-humana.plantillas-word.index') }}"
+                        class="ficha-empleados-catalogs-page__back"
+                    >
+                        <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
+                        Volver al tablero
+                    </a>
+                    @if (! empty($placeholders))
+                        <button
+                            type="button"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Ver variables"
+                            aria-label="Ver variables"
+                            x-data=""
+                            x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
+                        >
+                            <x-lucide-braces width="16" height="16" aria-hidden="true" />
+                        </button>
+                    @endif
+                </div>
+
                 <div class="panel plantillas-word-page__panel">
                     <div class="panel__header panel__header--compact">
                         <div class="plantillas-word-page__header-row">
-                            <h3 class="panel-title">Plantillas</h3>
-                            @if (! empty($placeholders))
+                            <div class="plantillas-word-page__detail-title-block">
+                                <h3 class="panel-title">{{ $selectedType->name }}</h3>
+                                @if (! $selectedType->is_active)
+                                    <span class="status-pill status-pill--muted">Inactivo</span>
+                                @endif
+                            </div>
+                            @if ($canManage)
                                 <button
                                     type="button"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Ver variables"
-                                    aria-label="Ver variables"
-                                    x-data=""
-                                    x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
+                                    class="cursos-catalogo-page__icon-btn btn-plantillas-word-type-edit"
+                                    title="Editar tipo"
+                                    aria-label="Editar tipo"
+                                    data-code="{{ $selectedType->code }}"
+                                    data-name="{{ $selectedType->name }}"
+                                    data-active="{{ $selectedType->is_active ? '1' : '0' }}"
+                                    data-sort="{{ $selectedType->sort_order }}"
+                                    data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $selectedType) }}"
                                 >
-                                    <x-lucide-braces width="16" height="16" aria-hidden="true" />
+                                    <x-lucide-pencil width="16" height="16" aria-hidden="true" />
                                 </button>
                             @endif
                         </div>
@@ -215,17 +158,17 @@
                     <div class="panel__body section-stack">
                         @php
                             $hasActiveFilters = ($filters['q'] ?? '') !== ''
-                                || ($filters['type'] ?? '') !== ''
                                 || ($filters['file'] ?? '') !== '';
                         @endphp
 
-                        @if ($canManage)
+                        @if ($canManage && $selectedType->is_active)
+                            {{-- Alta de plantilla: tipo fijo (oculto), sin selector --}}
                             <section class="plantillas-word-form__section">
                                 <header class="plantillas-word-form__section-head">
                                     <span class="plantillas-word-form__section-step">1</span>
                                     <div>
                                         <h4 class="plantillas-word-form__section-title">Agregar plantilla</h4>
-                                        <p class="plantillas-word-form__section-desc">Etiqueta, tipo activo y archivo master .docx (puede arrastrar y soltar).</p>
+                                        <p class="plantillas-word-form__section-desc">Etiqueta, orden y archivo master .docx (puede arrastrar y soltar).</p>
                                     </div>
                                 </header>
 
@@ -236,6 +179,7 @@
                                     class="plantillas-word-form__create"
                                 >
                                     @csrf
+                                    <input type="hidden" name="word_document_type_id" value="{{ $selectedType->id }}">
                                     <div class="plantillas-word-form__create-grid">
                                         <div class="form-field plantillas-word-form__field--grow">
                                             <label class="form-label" for="template_label_new">Etiqueta</label>
@@ -247,23 +191,8 @@
                                                 maxlength="255"
                                                 required
                                                 value="{{ old('label') }}"
-                                                placeholder="Ej. Aceptacion de renuncia"
+                                                placeholder="Ej. Aceptación de renuncia"
                                             >
-                                        </div>
-                                        <div class="form-field">
-                                            <label class="form-label" for="template_type_new">Tipo</label>
-                                            <x-searchable-select
-                                                id="template_type_new"
-                                                name="word_document_type_id"
-                                                :options="$activeTypes->map(fn ($type) => [
-                                                    'value' => (string) $type->id,
-                                                    'label' => $type->code.' — '.$type->name,
-                                                ])->values()->all()"
-                                                :value="old('word_document_type_id')"
-                                                placeholder="Seleccione tipo…"
-                                                searchPlaceholder="Buscar tipo…"
-                                                :required="true"
-                                            />
                                         </div>
                                         <div class="form-field plantillas-word-form__field--sort">
                                             <label class="form-label" for="template_sort_new">Orden</label>
@@ -315,6 +244,10 @@
                                     </div>
                                 </form>
                             </section>
+                        @elseif ($canManage && ! $selectedType->is_active)
+                            <p class="text-muted text-caption">
+                                Este tipo está inactivo: no se pueden agregar plantillas nuevas. Reactívelo desde Editar tipo.
+                            </p>
                         @endif
 
                         <form
@@ -322,7 +255,7 @@
                             action="{{ route('gestion-humana.plantillas-word.index') }}"
                             class="plantillas-word-page__filters"
                         >
-                            <input type="hidden" name="tab" value="plantillas">
+                            <input type="hidden" name="type" value="{{ $selectedType->id }}">
 
                             <div class="plantillas-word-page__filters-field plantillas-word-page__filters-field--search">
                                 <label class="sr-only" for="plantillas-word-filter-q">Buscar</label>
@@ -334,22 +267,6 @@
                                     value="{{ $filters['q'] ?? '' }}"
                                     placeholder="Buscar por etiqueta…"
                                 >
-                            </div>
-
-                            <div class="plantillas-word-page__filters-field plantillas-word-page__filters-field--type">
-                                <label class="sr-only" for="plantillas-word-filter-type">Tipo</label>
-                                <x-searchable-select
-                                    id="plantillas-word-filter-type"
-                                    name="type"
-                                    :options="$types->map(fn ($type) => [
-                                        'value' => (string) $type->id,
-                                        'label' => $type->code.' — '.$type->name,
-                                    ])->values()->all()"
-                                    :value="$filters['type'] ?? ''"
-                                    placeholder="Todos los tipos"
-                                    searchPlaceholder="Buscar tipo…"
-                                    :allowClear="true"
-                                />
                             </div>
 
                             <div class="plantillas-word-page__filters-field plantillas-word-page__filters-field--file">
@@ -380,7 +297,7 @@
                                 </button>
                                 @if ($hasActiveFilters)
                                     <a
-                                        href="{{ route('gestion-humana.plantillas-word.index', ['tab' => 'plantillas']) }}"
+                                        href="{{ route('gestion-humana.plantillas-word.index', ['type' => $selectedType->id]) }}"
                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                         title="Limpiar filtros"
                                         aria-label="Limpiar filtros"
@@ -397,12 +314,6 @@
                                 @if (($filters['q'] ?? '') !== '')
                                     · Etiqueta: <strong>{{ $filters['q'] }}</strong>
                                 @endif
-                                @if (($filters['type'] ?? '') !== '')
-                                    @php $filterType = $types->firstWhere('id', (int) $filters['type']); @endphp
-                                    @if ($filterType)
-                                        · Tipo: <strong>{{ $filterType->name }}</strong>
-                                    @endif
-                                @endif
                                 @if (($filters['file'] ?? '') === 'cargada')
                                     · Archivo: <strong>Cargada</strong>
                                 @elseif (($filters['file'] ?? '') === 'pendiente')
@@ -416,7 +327,6 @@
                                 <thead>
                                     <tr>
                                         <th>Etiqueta</th>
-                                        <th>Tipo</th>
                                         <th class="plantillas-word-page__col-sort">Orden</th>
                                         <th class="plantillas-word-page__col-file">Archivo</th>
                                         <th class="plantillas-word-page__col-actions-wide">Acciones</th>
@@ -426,14 +336,6 @@
                                     @forelse ($templates as $template)
                                         <tr>
                                             <td><span class="plantillas-word-page__name">{{ $template->label }}</span></td>
-                                            <td>
-                                                @if ($template->type)
-                                                    {{ $template->type->name }}
-                                                    <span class="text-muted">(<code class="plantillas-word-page__code">{{ $template->type->code }}</code>)</span>
-                                                @else
-                                                    <span class="text-muted">—</span>
-                                                @endif
-                                            </td>
                                             <td>{{ $template->sort_order }}</td>
                                             <td>
                                                 @if ($template->hasTemplateFile())
@@ -505,9 +407,9 @@
                                                         </form>
                                                         <form
                                                             method="POST"
-                                                            action="{{ route('gestion-humana.plantillas-word.templates.destroy', $template) }}"
+                                                            action="{{ route('gestion-humana.plantillas-word.templates.destroy', $template) }"
                                                             class="plantillas-word-page__icon-form"
-                                                            onsubmit="return confirm('Eliminar esta plantilla Word? Se borrara el archivo y el registro.');"
+                                                            onsubmit="return confirm('¿Eliminar esta plantilla Word? Se borrará el archivo y el registro.');"
                                                         >
                                                             @csrf
                                                             @method('DELETE')
@@ -526,7 +428,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-muted">Sin plantillas registradas. Agregue al menos una de tipo Desvinculacion para generar cartas.</td>
+                                            <td colspan="4" class="text-muted">Sin plantillas en este tipo.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -637,6 +539,7 @@
     </script>
 
     @if ($canManage)
+        {{-- Modal crear / editar tipo desde tarjetas --}}
         <div id="plantillas-word-type-modal" class="ficha-empleados-catalogs-page__modal" hidden>
             <div class="ficha-empleados-catalogs-page__modal-backdrop" data-type-modal-close></div>
             <div
@@ -652,7 +555,7 @@
                         </span>
                         <div>
                             <h3 class="ficha-empleados-catalogs-page__modal-title" id="plantillas-word-type-modal-title">Editar tipo</h3>
-                            <p class="ficha-empleados-catalogs-page__modal-lead">
+                            <p class="ficha-empleados-catalogs-page__modal-lead" id="plantillas-word-type-modal-lead">
                                 Actualice código, nombre, orden y si el tipo permanece activo.
                             </p>
                         </div>
@@ -669,7 +572,7 @@
                 </div>
                 <form method="POST" id="plantillas-word-type-edit-form" class="ficha-empleados-catalogs-page__modal-body">
                     @csrf
-                    @method('PATCH')
+                    <input type="hidden" name="_method" id="plantillas-word-type-method" value="PATCH">
                     <div class="ficha-empleados-catalogs-page__modal-fields">
                         <div class="form-field">
                             <label class="form-label" for="plantillas-word-edit-code">Código</label>
@@ -720,10 +623,14 @@
             (function () {
                 var modal = document.getElementById('plantillas-word-type-modal');
                 var editForm = document.getElementById('plantillas-word-type-edit-form');
+                var methodInput = document.getElementById('plantillas-word-type-method');
+                var titleEl = document.getElementById('plantillas-word-type-modal-title');
+                var leadEl = document.getElementById('plantillas-word-type-modal-lead');
                 var editCode = document.getElementById('plantillas-word-edit-code');
                 var editName = document.getElementById('plantillas-word-edit-name');
                 var editSort = document.getElementById('plantillas-word-edit-sort');
                 var editActive = document.getElementById('plantillas-word-edit-active');
+                var storeUrl = @json(route('gestion-humana.plantillas-word.types.store'));
 
                 function closeModal() {
                     if (modal) {
@@ -731,24 +638,50 @@
                     }
                 }
 
+                function openCreateModal() {
+                    editForm.action = storeUrl;
+                    methodInput.disabled = true;
+                    methodInput.value = 'POST';
+                    titleEl.textContent = 'Nuevo tipo';
+                    leadEl.textContent = 'Defina código único, nombre visible, orden y si el tipo inicia activo.';
+                    editCode.value = '';
+                    editName.value = '';
+                    editSort.value = '0';
+                    editActive.checked = true;
+                    modal.hidden = false;
+                    editCode.focus();
+                }
+
+                function openEditModal(button) {
+                    editForm.action = button.getAttribute('data-update-url');
+                    methodInput.disabled = false;
+                    methodInput.value = 'PATCH';
+                    titleEl.textContent = 'Editar tipo';
+                    leadEl.textContent = 'Actualice código, nombre, orden y si el tipo permanece activo.';
+                    editCode.value = button.getAttribute('data-code') || '';
+                    editName.value = button.getAttribute('data-name') || '';
+                    editSort.value = button.getAttribute('data-sort') || '0';
+                    editActive.checked = button.getAttribute('data-active') === '1';
+                    modal.hidden = false;
+                }
+
                 document.querySelectorAll('[data-type-modal-close]').forEach(function (button) {
                     button.addEventListener('click', closeModal);
                 });
 
+                document.querySelectorAll('.btn-plantillas-word-type-create').forEach(function (button) {
+                    button.addEventListener('click', openCreateModal);
+                });
+
                 document.querySelectorAll('.btn-plantillas-word-type-edit').forEach(function (button) {
                     button.addEventListener('click', function () {
-                        editForm.action = button.getAttribute('data-update-url');
-                        editCode.value = button.getAttribute('data-code') || '';
-                        editName.value = button.getAttribute('data-name') || '';
-                        editSort.value = button.getAttribute('data-sort') || '0';
-                        editActive.checked = button.getAttribute('data-active') === '1';
-                        modal.hidden = false;
+                        openEditModal(button);
                     });
                 });
             })();
         </script>
 
-        {{-- Modal Editar plantilla: etiqueta, tipo y orden --}}
+        {{-- Modal Editar plantilla: etiqueta, tipo (solo nombre) y orden --}}
         <div id="plantillas-word-template-modal" class="ficha-empleados-catalogs-page__modal plantillas-word-edit-modal-shell" hidden>
             <div class="ficha-empleados-catalogs-page__modal-backdrop" data-template-modal-close></div>
             <div class="panel plantillas-word-edit-modal" role="dialog" aria-modal="true" aria-labelledby="plantillas-word-template-modal-title">
@@ -799,10 +732,7 @@
                             <x-searchable-select
                                 id="plantillas-word-edit-template-type"
                                 name="word_document_type_id"
-                                :options="$types->map(fn ($type) => [
-                                    'value' => (string) $type->id,
-                                    'label' => $type->code.' — '.$type->name.($type->is_active ? '' : ' (inactivo)'),
-                                ])->values()->all()"
+                                :options="$typeSelectOptions"
                                 value=""
                                 placeholder="Seleccione tipo…"
                                 searchPlaceholder="Buscar tipo…"
