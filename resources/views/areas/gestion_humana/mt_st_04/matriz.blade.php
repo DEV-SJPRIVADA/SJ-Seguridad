@@ -50,7 +50,7 @@
                                         <input id="filter_q" name="q" type="text" class="form-input" value="{{ $filters['q'] }}" placeholder="Cédula o nombre">
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="filter_estado_1">Estado examen 1</label>
+                                        <label class="form-label" for="filter_estado_1">Estado psicofísico</label>
                                         <x-searchable-select
                                             id="filter_estado_1"
                                             name="estado_1"
@@ -61,7 +61,7 @@
                                         />
                                     </div>
                                     <div class="form-field">
-                                        <label class="form-label" for="filter_estado_2">Estado examen 2</label>
+                                        <label class="form-label" for="filter_estado_2">Estado psicosensométrico</label>
                                         <x-searchable-select
                                             id="filter_estado_2"
                                             name="estado_2"
@@ -178,25 +178,30 @@
                             style="width:100%"
                             aria-label="Matriz MT-ST-04"
                         >
+                            {{-- Cabecera en dos filas: identidad + grupos psicofísico / psicosensométrico --}}
                             <thead>
                                 <tr>
-                                    <th>Cédula</th>
-                                    <th>Nombre</th>
-                                    <th>Cargo</th>
-                                    <th>Ciudad</th>
-                                    <th>Puesto</th>
-                                    <th>Arma</th>
-                                    <th>Fecha examen 1</th>
-                                    <th>Vencimiento 1</th>
-                                    <th>Apto</th>
-                                    <th>Estado 1</th>
-                                    <th>Fecha examen 2</th>
-                                    <th>Vencimiento 2</th>
-                                    <th>Estado 2</th>
-                                    <th>Observaciones</th>
+                                    <th rowspan="2">Cédula</th>
+                                    <th rowspan="2">Nombre</th>
+                                    <th rowspan="2">Cargo</th>
+                                    <th rowspan="2">Ciudad</th>
+                                    <th rowspan="2">Puesto</th>
+                                    <th colspan="6" class="mt-st-04-th-group mt-st-04-th-group--psico">Psicofísico (armas)</th>
+                                    <th colspan="3" class="mt-st-04-th-group mt-st-04-th-group--senso">Psicosensométrico (vial)</th>
                                     @if ($canEdit)
-                                        <th>Acciones</th>
+                                        <th rowspan="2">Acciones</th>
                                     @endif
+                                </tr>
+                                <tr>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--psico">Arma</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--psico">Fecha examen</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--psico">Vencimiento</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--psico">Apto</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--psico">Estado</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--psico">Observaciones</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--senso">Fecha examen</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--senso">Vencimiento</th>
+                                    <th class="mt-st-04-th-sub mt-st-04-th-sub--senso">Estado</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -347,9 +352,24 @@
                 };
 
                 const canEdit = $table.data('dt-can-edit') === 1 || $table.data('dt-can-edit') === '1';
+                // Orden de datos: 0–4 identidad, 5–10 psicofísico (obs incluida), 11–13 psicosensométrico, 14 acciones.
                 const columnDefs = canEdit
                     ? [{ targets: [14], orderable: false, searchable: false }]
                     : [];
+
+                const tableEl = $table.get(0);
+                // Mide altura de la fila de grupos para anclar la 2ª fila sticky debajo.
+                const syncStickyHeaderOffset = function () {
+                    const scrollWrap = tableEl?.closest('.req-manage-table-scroll');
+                    const groupCell = tableEl?.querySelector('thead .mt-st-04-th-group');
+                    if (!scrollWrap || !groupCell) {
+                        return;
+                    }
+                    const height = Math.ceil(groupCell.getBoundingClientRect().height);
+                    if (height > 0) {
+                        scrollWrap.style.setProperty('--mt-st-04-sticky-sub-top', height + 'px');
+                    }
+                };
 
                 const api = $table.DataTable({
                     processing: true,
@@ -363,8 +383,23 @@
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     pageLength: 10,
                     responsive: false,
+                    orderCellsTop: true,
                     order: [[0, 'asc']],
                     columnDefs: columnDefs,
+                    // Tinte de celdas por grupo de examen (psicofísico / psicosensométrico).
+                    createdRow: function (row) {
+                        const cells = row.querySelectorAll('td');
+                        [5, 6, 7, 8, 9, 10].forEach(function (i) {
+                            if (cells[i]) {
+                                cells[i].classList.add('mt-st-04-td--psico');
+                            }
+                        });
+                        [11, 12, 13].forEach(function (i) {
+                            if (cells[i]) {
+                                cells[i].classList.add('mt-st-04-td--senso');
+                            }
+                        });
+                    },
                 });
 
                 api.on('xhr.dt', function (_event, _settings, json) {
@@ -372,7 +407,12 @@
                     if (json && typeof json.recordsFiltered !== 'undefined') {
                         updateMeta(json.recordsFiltered);
                     }
+                    syncStickyHeaderOffset();
                 });
+
+                api.on('draw.dt', syncStickyHeaderOffset);
+                window.addEventListener('resize', syncStickyHeaderOffset);
+                syncStickyHeaderOffset();
 
                 $table.on('click', '.js-mt-st-04-edit', function () {
                     try {

@@ -67,16 +67,16 @@ Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 
 1. Vaya a la pestaña **Matriz**.
 2. Por defecto solo ve personas **activas** en Ficha. Use el filtro de estado en Ficha para ver desvinculados o todos.
-3. Use los filtros de búsqueda (cédula o nombre), estado del examen 1, estado del examen 2, arma y apto.
+3. Use los filtros de búsqueda (cédula o nombre), estado psicofísico, estado psicosensométrico, arma y apto.
 4. El listado se carga por páginas; no se cargan todas las filas de una vez.
-5. Las columnas de nombre, cargo, ciudad y puesto reflejan lo que hay hoy en Ficha.
+5. Las columnas de nombre, cargo, ciudad y puesto reflejan lo que hay hoy en Ficha. En la tabla, el bloque **azul** es el examen psicofísico (armas) y el **verde** el psicosensométrico (vial); en Nuevo / Editar aparecen como secciones separadas.
 6. Para descargar lo filtrado a Excel, use el botón de exportar.
 
 ### Crear o editar un registro (solo edición)
 
 1. En **Matriz**, abra la opción de nuevo registro.
 2. Digite la **cédula**. El sistema busca en Ficha y muestra nombre, cargo, ciudad y puesto. Si la cédula no existe en Ficha, no podrá guardar.
-3. Complete arma, fecha de examen 1, apto, observaciones del examen 1, fecha de examen 2 y observaciones del examen 2 según corresponda.
+3. Complete la sección **psicofísico (armas)** (arma, fecha, apto, observaciones) y la de **psicosensométrico (vial)** (fecha y observaciones) según corresponda.
 4. Guarde. El sistema calcula solo las fechas de vencimiento y los estados.
 5. Para editar, use el icono de editar en la fila. La cédula no se cambia.
 6. Para eliminar, confirme el borrado (es definitivo).
@@ -101,3 +101,4 @@ Cada noche el sistema recalcula vencimientos y estados con la fecha del día (ho
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.0 | 2026-10-09 | Documentador | Versión inicial FEAT-045: tablero MT-ST-04 (Dashboard + Matriz, CRUD, import upsert, export, sync diario de estados). |
+| 1.1 | 2026-10-09 | Feature | Matriz y modales: separación visual psicofísico vs psicosensométrico. |

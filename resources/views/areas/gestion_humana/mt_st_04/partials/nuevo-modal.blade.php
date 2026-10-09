@@ -1,4 +1,4 @@
-{{-- Modal alta registro matriz MT-ST-04: cédula + lookup ficha + campos editables --}}
+{{-- Modal alta registro matriz MT-ST-04: cédula + lookup ficha + bloques por tipo de examen --}}
 @php
     $show = $show ?? false;
 @endphp
@@ -86,95 +86,120 @@
         <form
             method="POST"
             action="{{ route('gestion-humana.mt-st-04.matriz.store') }}"
-            class="cursos-registros-page__form"
+            class="cursos-registros-page__form mt-st-04-form"
         >
             @csrf
-            <div class="cursos-registros-page__form-grid">
-                <div class="form-field">
-                    <label class="form-label" for="create_document_number">Cédula</label>
-                    <div class="cursos-registros-page__identity-row">
-                        <input
-                            id="create_document_number"
-                            name="document_number"
-                            type="text"
-                            class="form-input"
-                            maxlength="50"
-                            required
-                            x-model="documentNumber"
-                            x-bind:readonly="identityLocked"
-                            @blur="lookupFicha($event.target.value)"
-                        >
-                        <button
-                            type="button"
-                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            x-show="identityLocked"
-                            x-cloak
-                            x-on:click="unlockIdentity()"
-                            title="Cambiar persona"
-                            aria-label="Cambiar persona"
-                        >
-                            <x-lucide-user-round-pen width="18" height="18" aria-hidden="true" />
-                        </button>
+
+            <section class="mt-st-04-form-section mt-st-04-form-section--identidad" aria-labelledby="mt-st-04-nuevo-identidad-title">
+                <div class="mt-st-04-form-section__head">
+                    <h4 class="mt-st-04-form-section__title" id="mt-st-04-nuevo-identidad-title">Identificación (Ficha)</h4>
+                    <p class="mt-st-04-form-section__desc">Busque la cédula para cargar nombre, cargo, ciudad y puesto.</p>
+                </div>
+                <div class="cursos-registros-page__form-grid">
+                    <div class="form-field">
+                        <label class="form-label" for="create_document_number">Cédula</label>
+                        <div class="cursos-registros-page__identity-row">
+                            <input
+                                id="create_document_number"
+                                name="document_number"
+                                type="text"
+                                class="form-input"
+                                maxlength="50"
+                                required
+                                x-model="documentNumber"
+                                x-bind:readonly="identityLocked"
+                                @blur="lookupFicha($event.target.value)"
+                            >
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                x-show="identityLocked"
+                                x-cloak
+                                x-on:click="unlockIdentity()"
+                                title="Cambiar persona"
+                                aria-label="Cambiar persona"
+                            >
+                                <x-lucide-user-round-pen width="18" height="18" aria-hidden="true" />
+                            </button>
+                        </div>
+                        <p class="panel-text" style="margin-top:0.25rem;font-size:0.8rem;color:var(--color-danger, #b91c1c);" x-show="lookupError" x-text="lookupError" x-cloak></p>
                     </div>
-                    <p class="panel-text" style="margin-top:0.25rem;font-size:0.8rem;color:var(--color-danger, #b91c1c);" x-show="lookupError" x-text="lookupError" x-cloak></p>
+                    <div class="form-field">
+                        <label class="form-label" for="create_full_name">Nombre</label>
+                        <input id="create_full_name" type="text" class="form-input" readonly x-model="fullName" placeholder="Desde Ficha">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_cargo">Cargo</label>
+                        <input id="create_cargo" type="text" class="form-input" readonly x-model="cargo" placeholder="Desde Ficha">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_ciudad">Ciudad</label>
+                        <input id="create_ciudad" type="text" class="form-input" readonly x-model="ciudad" placeholder="Desde Ficha">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_puesto">Puesto</label>
+                        <input id="create_puesto" type="text" class="form-input" readonly x-model="puesto" placeholder="Desde Ficha">
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_full_name">Nombre</label>
-                    <input id="create_full_name" type="text" class="form-input" readonly x-model="fullName" placeholder="Desde Ficha">
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_cargo">Cargo</label>
-                    <input id="create_cargo" type="text" class="form-input" readonly x-model="cargo" placeholder="Desde Ficha">
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_ciudad">Ciudad</label>
-                    <input id="create_ciudad" type="text" class="form-input" readonly x-model="ciudad" placeholder="Desde Ficha">
-                </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_puesto">Puesto</label>
-                    <input id="create_puesto" type="text" class="form-input" readonly x-model="puesto" placeholder="Desde Ficha">
-                </div>
+            </section>
 
-                <div class="form-field">
-                    <label class="form-label" for="create_arma">Arma</label>
-                    <x-searchable-select
-                        id="create_arma"
-                        name="arma"
-                        :options="$siNoOptions"
-                        :value="old('arma', '')"
-                        placeholder="Seleccionar"
-                        :allow-clear="true"
-                    />
+            <section class="mt-st-04-form-section mt-st-04-form-section--psico" aria-labelledby="mt-st-04-nuevo-psico-title">
+                <div class="mt-st-04-form-section__head">
+                    <h4 class="mt-st-04-form-section__title" id="mt-st-04-nuevo-psico-title">Examen psicofísico (armas)</h4>
+                    <p class="mt-st-04-form-section__desc">Arma, fecha de examen, aptitud y observaciones del examen 1.</p>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_fecha_examen_1">Fecha de examen (psicofísico)</label>
-                    <input id="create_fecha_examen_1" name="fecha_examen_1" type="date" class="form-input" value="{{ old('fecha_examen_1') }}">
+                <div class="cursos-registros-page__form-grid">
+                    <div class="form-field">
+                        <label class="form-label" for="create_arma">Arma</label>
+                        <x-searchable-select
+                            id="create_arma"
+                            name="arma"
+                            :options="$siNoOptions"
+                            :value="old('arma', '')"
+                            placeholder="Seleccionar"
+                            :allow-clear="true"
+                        />
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_fecha_examen_1">Fecha de examen</label>
+                        <input id="create_fecha_examen_1" name="fecha_examen_1" type="date" class="form-input" value="{{ old('fecha_examen_1') }}">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_apto">Apto</label>
+                        <x-searchable-select
+                            id="create_apto"
+                            name="apto"
+                            :options="$siNoOptions"
+                            :value="old('apto', '')"
+                            placeholder="Seleccionar"
+                            :allow-clear="true"
+                        />
+                    </div>
+                    <div class="form-field cursos-registros-page__form-span">
+                        <label class="form-label" for="create_observaciones_1">Observaciones</label>
+                        <textarea id="create_observaciones_1" name="observaciones_1" class="form-input" rows="2">{{ old('observaciones_1') }}</textarea>
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_apto">Apto</label>
-                    <x-searchable-select
-                        id="create_apto"
-                        name="apto"
-                        :options="$siNoOptions"
-                        :value="old('apto', '')"
-                        placeholder="Seleccionar"
-                        :allow-clear="true"
-                    />
-                </div>
-                <div class="form-field cursos-registros-page__form-span">
-                    <label class="form-label" for="create_observaciones_1">Observaciones</label>
-                    <textarea id="create_observaciones_1" name="observaciones_1" class="form-input" rows="2">{{ old('observaciones_1') }}</textarea>
-                </div>
+            </section>
 
-                <div class="form-field">
-                    <label class="form-label" for="create_fecha_examen_2">Fecha examen (psicosensométrico)</label>
-                    <input id="create_fecha_examen_2" name="fecha_examen_2" type="date" class="form-input" value="{{ old('fecha_examen_2') }}">
+            <section class="mt-st-04-form-section mt-st-04-form-section--senso" aria-labelledby="mt-st-04-nuevo-senso-title">
+                <div class="mt-st-04-form-section__head">
+                    <h4 class="mt-st-04-form-section__title" id="mt-st-04-nuevo-senso-title">Examen psicosensométrico (vial)</h4>
+                    <p class="mt-st-04-form-section__desc">
+                        Fecha de examen y observaciones del examen 2. Cargos GUARDA u OPERADOR quedan en NO APLICA.
+                    </p>
                 </div>
-                <div class="form-field cursos-registros-page__form-span">
-                    <label class="form-label" for="create_observaciones_2">Observaciones 2</label>
-                    <textarea id="create_observaciones_2" name="observaciones_2" class="form-input" rows="2">{{ old('observaciones_2') }}</textarea>
+                <div class="cursos-registros-page__form-grid">
+                    <div class="form-field">
+                        <label class="form-label" for="create_fecha_examen_2">Fecha de examen</label>
+                        <input id="create_fecha_examen_2" name="fecha_examen_2" type="date" class="form-input" value="{{ old('fecha_examen_2') }}">
+                    </div>
+                    <div class="form-field cursos-registros-page__form-span">
+                        <label class="form-label" for="create_observaciones_2">Observaciones</label>
+                        <textarea id="create_observaciones_2" name="observaciones_2" class="form-input" rows="2">{{ old('observaciones_2') }}</textarea>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <div class="cursos-registros-page__form-actions">
                 <button type="button" class="btn btn--secondary" x-on:click="$dispatch('close-modal', 'mt-st-04-nuevo')">Cancelar</button>

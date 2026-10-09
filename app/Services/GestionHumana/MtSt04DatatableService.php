@@ -97,8 +97,8 @@ final class MtSt04DatatableService
         $columnIndex = (int) $request->input('order.0.column', 0);
         $direction = $request->input('order.0.dir', 'desc') === 'asc' ? 'asc' : 'desc';
 
-        // Columnas: cédula, nombre, cargo, ciudad, puesto, arma, exam1, venc1, apto, est1,
-        // exam2, venc2, est2, obs [, acciones]
+        // Columnas: identidad (0–4), psicofísico (5–10: arma…estado+obs),
+        // psicosensométrico (11–13), acciones (14).
         match ($columnIndex) {
             0 => $query->orderBy('mt_st_04_registros.document_number', $direction),
             1 => $query->orderBy('ficha.full_name', $direction),
@@ -110,9 +110,10 @@ final class MtSt04DatatableService
             7 => $query->orderBy('mt_st_04_registros.fecha_vencimiento_1', $direction)->orderBy('mt_st_04_registros.id', $direction),
             8 => $query->orderBy('mt_st_04_registros.apto', $direction),
             9 => $query->orderBy('mt_st_04_registros.estado_1', $direction),
-            10 => $query->orderBy('mt_st_04_registros.fecha_examen_2', $direction)->orderBy('mt_st_04_registros.id', $direction),
-            11 => $query->orderBy('mt_st_04_registros.fecha_vencimiento_2', $direction)->orderBy('mt_st_04_registros.id', $direction),
-            12 => $query->orderBy('mt_st_04_registros.estado_2', $direction),
+            10 => $query->orderBy('mt_st_04_registros.observaciones_1', $direction),
+            11 => $query->orderBy('mt_st_04_registros.fecha_examen_2', $direction)->orderBy('mt_st_04_registros.id', $direction),
+            12 => $query->orderBy('mt_st_04_registros.fecha_vencimiento_2', $direction)->orderBy('mt_st_04_registros.id', $direction),
+            13 => $query->orderBy('mt_st_04_registros.estado_2', $direction),
             default => $query->orderByDesc('mt_st_04_registros.id'),
         };
     }
@@ -133,10 +134,10 @@ final class MtSt04DatatableService
             e(DisplayDate::date($row->fecha_vencimiento_1)),
             e((string) ($row->apto ?: '—')),
             $this->formatEstadoBadge($row->estado_1),
+            e(Str::limit((string) ($row->observaciones_1 ?? ''), 40) ?: '—'),
             e(DisplayDate::date($row->fecha_examen_2)),
             e(DisplayDate::date($row->fecha_vencimiento_2)),
             $this->formatEstadoBadge($row->estado_2),
-            e(Str::limit((string) ($row->observaciones_1 ?? ''), 40) ?: '—'),
         ];
 
         if ($canEdit) {

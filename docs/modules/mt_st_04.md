@@ -217,6 +217,8 @@ DELETE duro con `edit` (confirmación UI). Sin soft-delete.
 ## JavaScript / assets
 
 - DataTables server-side en Matriz (`js-mt-st-04-datatable`; no `.js-datatable`; `lengthMenu` sin `-1`).
+- Cabecera matriz en dos filas: grupo **Psicofísico (armas)** (azul) y **Psicosensométrico (vial)** (verde); celdas tintadas por grupo. Orden columnas: identidad → psico (arma…obs1) → senso (exam2…estado2) → acciones.
+- Modales Nuevo/Editar: secciones visuales Identificación | Psicofísico | Psicosensométrico (`.mt-st-04-form-section`).
 - Alpine / modales CRUD e import (patrón GH).
 - Dashboard charts ApexCharts (Vite).
 - Selects: solo `<x-searchable-select>`.

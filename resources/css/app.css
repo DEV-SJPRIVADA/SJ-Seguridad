@@ -15275,3 +15275,115 @@ a.req-dashboard-kpi:focus-visible {
     color: #475569;
     line-height: 1.4;
 }
+
+/* MT-ST-04: grupos visuales psicofísico vs psicosensométrico (matriz + modales) */
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-group--psico,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-group--psico,
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-sub--psico,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-sub--psico {
+    background-color: #0b4f7a !important;
+    border-bottom-color: #083a5a !important;
+}
+
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-group--senso,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-group--senso,
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-sub--senso,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-sub--senso {
+    background-color: #1e5f4a !important;
+    border-bottom-color: #164536 !important;
+}
+
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-group {
+    letter-spacing: 0.04em;
+    font-weight: 800;
+}
+
+/*
+ * Thead de 2 filas + sticky: la fila de grupos queda en top:0;
+ * la de subcolumnas se ancla debajo (var medida en JS) para no tapar
+ * «Psicofísico / Psicosensométrico» al hacer scroll vertical.
+ */
+.mt-st-04-matriz-page .req-manage-table-scroll table.dataTable thead tr:first-child th {
+    top: 0 !important;
+    z-index: 14 !important;
+}
+
+.mt-st-04-matriz-page .req-manage-table-scroll table.dataTable thead tr:nth-child(2) th {
+    top: var(--mt-st-04-sticky-sub-top, 2.75rem) !important;
+    z-index: 13 !important;
+    box-shadow: 0 2px 0 #002244;
+}
+
+.mt-st-04-matriz-page .req-manage-table-scroll table.dataTable thead tr:first-child th.mt-st-04-th-group {
+    box-shadow: none;
+}
+
+.mt-st-04-matriz-page .mt-st-04-td--psico {
+    background-color: color-mix(in srgb, #0b4f7a 6%, #fff);
+}
+
+.mt-st-04-matriz-page .mt-st-04-td--senso {
+    background-color: color-mix(in srgb, #1e5f4a 7%, #fff);
+}
+
+.mt-st-04-matriz-page .data-table tbody tr:hover .mt-st-04-td--psico {
+    background-color: color-mix(in srgb, #0b4f7a 11%, #fff);
+}
+
+.mt-st-04-matriz-page .data-table tbody tr:hover .mt-st-04-td--senso {
+    background-color: color-mix(in srgb, #1e5f4a 12%, #fff);
+}
+
+.mt-st-04-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.mt-st-04-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: var(--radius-lg, 0.75rem);
+    background: linear-gradient(180deg, #fbfdff 0%, #fff 100%);
+}
+
+.mt-st-04-form-section--psico {
+    border-color: color-mix(in srgb, #0b4f7a 28%, var(--color-border, #dbe3ef));
+    background: linear-gradient(180deg, #f3f9fd 0%, #fff 78%);
+    box-shadow: inset 3px 0 0 #0b4f7a;
+}
+
+.mt-st-04-form-section--senso {
+    border-color: color-mix(in srgb, #1e5f4a 28%, var(--color-border, #dbe3ef));
+    background: linear-gradient(180deg, #f3faf7 0%, #fff 78%);
+    box-shadow: inset 3px 0 0 #1e5f4a;
+}
+
+.mt-st-04-form-section__head {
+    margin: 0;
+}
+
+.mt-st-04-form-section__title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--brand-navy, #003366);
+}
+
+.mt-st-04-form-section--psico .mt-st-04-form-section__title {
+    color: #0b4f7a;
+}
+
+.mt-st-04-form-section--senso .mt-st-04-form-section__title {
+    color: #1e5f4a;
+}
+
+.mt-st-04-form-section__desc {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+}
