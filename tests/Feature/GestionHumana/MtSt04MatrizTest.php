@@ -166,7 +166,63 @@ class MtSt04MatrizTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_store_rejects_orphan_cedula(): void
+    public function test_datatable_filters_by_ciudad(): void
+    {
+        $viewer = $this->viewerUser();
+        $this->createFicha('1002003001', 'Ana Cali', 'SUPERVISOR', EmployeeFichaProfile::STATUS_ACTIVO, [
+            'residence_city_name' => 'CALI',
+        ]);
+        $this->createFicha('1002003002', 'Luis Bogota', 'SUPERVISOR', EmployeeFichaProfile::STATUS_ACTIVO, [
+            'residence_city_name' => 'BOGOTA',
+        ]);
+        MtSt04Registro::factory()->create(['document_number' => '1002003001']);
+        MtSt04Registro::factory()->create(['document_number' => '1002003002']);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.mt-st-04.matriz.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+                'ciudad' => 'CALI',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertSee('Ana Cali', false)
+            ->assertDontSee('Luis Bogota', false);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.mt-st-04.matriz', ['ciudad' => 'CALI']))
+            ->assertOk()
+            ->assertSee('id="filter_ciudad"', false);
+    }
+
+    public function test_datatable_and_lookup_use_residence_city_when_work_city_empty(): void
+    {
+        $editor = $this->editorUser();
+        $this->createFicha('1002003001', 'Ana Activa', 'SUPERVISOR', EmployeeFichaProfile::STATUS_ACTIVO, [
+            'work_city_name' => null,
+            'residence_city_name' => 'Cali',
+            'cost_center_name' => 'CC-01',
+        ]);
+        MtSt04Registro::factory()->create(['document_number' => '1002003001']);
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.mt-st-04.matriz.lookup', ['cedula' => '1002003001']))
+            ->assertOk()
+            ->assertJsonPath('ciudad', 'Cali');
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.mt-st-04.matriz.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'ficha_estado' => 'activo',
+            ]))
+            ->assertOk()
+            ->assertSee('Cali', false);
+    }
+
+    public function test_store_allows_orphan_cedula_and_datatable_marks_sin_ficha(): void
     {
         $editor = $this->editorUser();
 
@@ -176,9 +232,21 @@ class MtSt04MatrizTest extends TestCase
                 'document_number' => '9999999999',
                 'arma' => 'SI',
             ])
-            ->assertSessionHasErrors('document_number');
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseCount('mt_st_04_registros', 0);
+        $this->assertDatabaseHas('mt_st_04_registros', ['document_number' => '9999999999']);
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.mt-st-04.matriz.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'ficha_estado' => 'activo',
+            ]))
+            ->assertOk()
+            ->assertSee('Sin Ficha', false)
+            ->assertSee('9999999999', false);
     }
 
     public function test_store_rejects_duplicate_document_number(): void

@@ -276,6 +276,7 @@ return [
     'mt_st_04_tabs' => [
         'dashboard' => 'Dashboard',
         'matriz' => 'Matriz',
+        'validaciones' => 'Validaciones',
     ],
 
     'seleccion_tabs' => [

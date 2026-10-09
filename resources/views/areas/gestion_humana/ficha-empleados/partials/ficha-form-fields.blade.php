@@ -1,7 +1,8 @@
-{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false, $canEditRequiresCourses ?? false, $canEditRequiresAcreditacion ?? false, $showHiredDocumentSection ?? false, $fichaEntry ?? null, $isRehire ?? false --}}
+{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false, $canEditRequiresCourses ?? false, $canEditRequiresAcreditacion ?? false, $canEditRequiresPsicofisicos ?? false, $showHiredDocumentSection ?? false, $fichaEntry ?? null, $isRehire ?? false --}}
 @php
     $identityLocked = (bool) ($lockIdentityFields ?? false);
     $showRequirementFlags = ($canEditRequiresCourses ?? false) || ($canEditRequiresAcreditacion ?? false)
+        || ($canEditRequiresPsicofisicos ?? false)
         || ($canViewRequirementFlags ?? false);
 
     $payrollExtra = static function (string $key, mixed $default = null) use ($profile): mixed {
@@ -16,7 +17,7 @@
             <x-lucide-shield-check width="18" height="18" />
         </span>
         <div>
-            <h3 class="ficha-empleados-form__section-title">Cursos y acreditación</h3>
+            <h3 class="ficha-empleados-form__section-title">Requisitos de validación</h3>
             <p class="ficha-empleados-form__section-lead">
                 Si desactiva un requisito, la persona no aparecerá en las validaciones de ese módulo.
             </p>
@@ -75,6 +76,33 @@
                 </span>
             </label>
             @error('requires_acreditacion')<p class="text-small text-danger">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="ficha-empleados-form__requirement-item">
+            @if ($canEditRequiresPsicofisicos ?? false)
+                <input type="hidden" name="requires_psicofisicos" value="0">
+            @endif
+            <label class="ficha-empleados-form__requirement-card{{ ($canEditRequiresPsicofisicos ?? false) ? '' : ' ficha-empleados-form__requirement-card--locked' }}" for="requires_psicofisicos">
+                <input
+                    id="requires_psicofisicos"
+                    name="requires_psicofisicos"
+                    type="checkbox"
+                    value="1"
+                    class="ficha-empleados-form__requirement-input"
+                    data-requirement-flag="1"
+                    data-lock-disabled="{{ ($canEditRequiresPsicofisicos ?? false) ? '0' : '1' }}"
+                    @checked(old('requires_psicofisicos', ($profile->requires_psicofisicos ?? true) ? '1' : '0') == '1')
+                    @disabled(! ($canEditRequiresPsicofisicos ?? false))
+                >
+                <span class="ficha-empleados-form__requirement-icon" aria-hidden="true">
+                    <x-lucide-shield width="18" height="18" />
+                </span>
+                <span class="ficha-empleados-form__requirement-copy">
+                    <span class="ficha-empleados-form__requirement-label">Requiere psicofísicos</span>
+                    <span class="ficha-empleados-form__requirement-hint">Incluir en validaciones de MT-ST-04</span>
+                </span>
+            </label>
+            @error('requires_psicofisicos')<p class="text-small text-danger">{{ $message }}</p>@enderror
         </div>
     </div>
 </section>

@@ -73,13 +73,14 @@
                                     aria-label="Cambiar persona"
                                 >
                                     <x-lucide-user-round-pen width="18" height="18" aria-hidden="true" />
-                                </button>
-                            </div>
+                            </button>
                         </div>
-                        <div class="form-field">
-                            <label class="form-label" for="edit_full_name">Nombre</label>
-                            <input id="edit_full_name" type="text" class="form-input" readonly x-model="editForm.full_name">
-                        </div>
+                        <p class="panel-text mt-st-04-lookup-hint" x-show="editLookupHint" x-text="editLookupHint" x-cloak></p>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="edit_full_name">Nombre</label>
+                        <input id="edit_full_name" type="text" class="form-input" readonly x-model="editForm.full_name" placeholder="Sin Ficha">
+                    </div>
                         <div class="form-field">
                             <label class="form-label" for="edit_cargo">Cargo</label>
                             <input id="edit_cargo" type="text" class="form-input" readonly x-model="editForm.cargo">

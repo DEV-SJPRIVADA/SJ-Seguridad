@@ -163,6 +163,7 @@ trait EmployeeFichaProfileFieldRules
             'payment_method_code' => [$required, 'string', 'max:50', new PayrollCatalogCode('payment_method')],
             'requires_courses' => ['sometimes', 'boolean'],
             'requires_acreditacion' => ['sometimes', 'boolean'],
+            'requires_psicofisicos' => ['sometimes', 'boolean'],
             'economic_activity_code' => ['nullable', 'string', 'max:50', new PayrollCatalogCode('economic_activity')],
             'economic_activity_name' => ['nullable', 'string', 'max:150'],
             'linkage_type' => ['nullable', 'string', 'max:100', new PayrollCatalogCode('linkage_type')],

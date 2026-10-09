@@ -738,9 +738,10 @@ class FichaEmpleadosTest extends TestCase
         $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.create'))
             ->assertOk()
-            ->assertSee('Cursos y acreditación', false)
+            ->assertSee('Requisitos de validación', false)
             ->assertSee('id="requires_courses"', false)
             ->assertSee('id="requires_acreditacion"', false)
+            ->assertSee('id="requires_psicofisicos"', false)
             ->assertSee('aria-label="Acciones de creación"', false);
     }
 
@@ -774,6 +775,7 @@ class FichaEmpleadosTest extends TestCase
         $this->assertSame('Manual Empleado', $entry->profile?->full_name);
         $this->assertTrue((bool) $entry->profile?->requires_courses);
         $this->assertTrue((bool) $entry->profile?->requires_acreditacion);
+        $this->assertTrue((bool) $entry->profile?->requires_psicofisicos);
     }
 
     public function test_manual_employee_create_can_disable_requirement_flags(): void
@@ -793,6 +795,7 @@ class FichaEmpleadosTest extends TestCase
                 'document_type' => 'C',
                 'requires_courses' => '0',
                 'requires_acreditacion' => '0',
+                'requires_psicofisicos' => '0',
             ],
         ));
 
@@ -804,6 +807,7 @@ class FichaEmpleadosTest extends TestCase
         $response->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
         $this->assertFalse((bool) $entry->profile?->requires_courses);
         $this->assertFalse((bool) $entry->profile?->requires_acreditacion);
+        $this->assertFalse((bool) $entry->profile?->requires_psicofisicos);
     }
 
     public function test_manual_employee_create_rejects_duplicate_document(): void

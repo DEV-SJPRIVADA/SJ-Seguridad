@@ -465,6 +465,7 @@ class User extends Authenticatable
         return match ($firstTab) {
             'dashboard' => route('gestion-humana.mt-st-04.dashboard'),
             'matriz' => route('gestion-humana.mt-st-04.matriz'),
+            'validaciones' => route('gestion-humana.mt-st-04.validaciones'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }

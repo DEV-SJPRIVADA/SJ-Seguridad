@@ -130,13 +130,13 @@ class MtSt04ImportExportTest extends TestCase
         $this->assertSame(2, MtSt04Registro::query()->count());
     }
 
-    public function test_import_rejects_orphan_cedula_and_keeps_uniqueness(): void
+    public function test_import_accepts_orphan_cedula_and_upserts_known(): void
     {
         $editor = $this->editorUser();
         $this->createFicha('1002003001', 'Ana Activa', 'SUPERVISOR');
 
         $path = $this->makeImportFile([
-            ['9999999999', 'Sin Ficha', 'SI', '2026-01-01', 'SI', 'huérfana', '', ''],
+            ['9999999999', 'Sin Ficha', 'SI', '2026-01-01', 'SI', 'sin ficha', '', ''],
             ['1002003001', 'Ana', 'SI', '2026-01-01', 'SI', 'ok', '', ''],
         ]);
 
@@ -145,18 +145,11 @@ class MtSt04ImportExportTest extends TestCase
                 'import_file' => new UploadedFile($path, 'mt_st_04.xlsx', null, null, true),
             ])
             ->assertRedirect(route('gestion-humana.mt-st-04.matriz'))
-            ->assertSessionHas('status')
-            ->assertSessionHas('import_failures');
+            ->assertSessionHas('status');
 
-        $failures = session('import_failures');
-        $this->assertCount(1, $failures);
-        $this->assertStringContainsString(
-            'La cédula no existe en Ficha empleados.',
-            (string) ($failures[0]['reason'] ?? ''),
-        );
-
-        $this->assertDatabaseMissing('mt_st_04_registros', ['document_number' => '9999999999']);
+        $this->assertDatabaseHas('mt_st_04_registros', ['document_number' => '9999999999']);
         $this->assertSame(1, MtSt04Registro::query()->where('document_number', '1002003001')->count());
+        $this->assertSame(2, MtSt04Registro::query()->count());
     }
 
     public function test_import_last_duplicate_row_wins(): void
@@ -246,13 +239,15 @@ class MtSt04ImportExportTest extends TestCase
         $sheet = IOFactory::load($temp)->getActiveSheet();
         $this->assertSame('MT-ST-04 Matriz — '.config('app.name'), (string) $sheet->getCell([1, 1])->getValue());
         $this->assertSame('CEDULA', (string) $sheet->getCell([1, 2])->getValue());
+        $this->assertSame('EN FICHA', (string) $sheet->getCell([2, 2])->getValue());
         $this->assertSame('1002003001', (string) $sheet->getCell([1, 3])->getValue());
-        $this->assertSame('Ana Activa', (string) $sheet->getCell([2, 3])->getValue());
-        $this->assertSame('SUPERVISOR', (string) $sheet->getCell([3, 3])->getValue());
-        $this->assertSame('Bogotá', (string) $sheet->getCell([4, 3])->getValue());
-        $this->assertSame('CC-01', (string) $sheet->getCell([5, 3])->getValue());
-        $this->assertSame('SI', (string) $sheet->getCell([6, 3])->getValue());
-        $this->assertSame('VIGENTE', (string) $sheet->getCell([11, 3])->getValue());
+        $this->assertSame('SI', (string) $sheet->getCell([2, 3])->getValue());
+        $this->assertSame('Ana Activa', (string) $sheet->getCell([3, 3])->getValue());
+        $this->assertSame('SUPERVISOR', (string) $sheet->getCell([4, 3])->getValue());
+        $this->assertSame('Bogotá', (string) $sheet->getCell([5, 3])->getValue());
+        $this->assertSame('CC-01', (string) $sheet->getCell([6, 3])->getValue());
+        $this->assertSame('SI', (string) $sheet->getCell([7, 3])->getValue());
+        $this->assertSame('VIGENTE', (string) $sheet->getCell([12, 3])->getValue());
 
         if (is_file($temp)) {
             unlink($temp);

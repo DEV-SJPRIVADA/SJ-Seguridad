@@ -38,6 +38,7 @@ class MtSt04BoardAccessTest extends TestCase
 
         $this->assertSame('Dashboard', $tabs['dashboard']);
         $this->assertSame('Matriz', $tabs['matriz']);
+        $this->assertSame('Validaciones', $tabs['validaciones']);
         $this->assertSame('MT-ST-04', config('access.boards.mt_st_04'));
         $this->assertSame('gestion_humana', config('access.board_canonical_areas.mt_st_04.home'));
     }

@@ -7,6 +7,7 @@ use App\Exports\MtSt04ImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\MtSt04\ImportMtSt04Request;
 use App\Http\Requests\GestionHumana\MtSt04\StoreMtSt04RegistroRequest;
+use App\Http\Requests\GestionHumana\MtSt04\ToggleMtSt04RequiresPsicofisicosRequest;
 use App\Http\Requests\GestionHumana\MtSt04\UpdateMtSt04RegistroRequest;
 use App\Models\EmployeeFichaProfile;
 use App\Models\MtSt04Registro;
@@ -17,6 +18,8 @@ use App\Services\GestionHumana\MtSt04DatatableService;
 use App\Services\GestionHumana\MtSt04EstadoCalculator;
 use App\Services\GestionHumana\MtSt04ImportService;
 use App\Services\GestionHumana\MtSt04ListService;
+use App\Services\GestionHumana\MtSt04ValidacionesDatatableService;
+use App\Services\GestionHumana\MtSt04ValidacionesService;
 use App\Traits\HasMtSt04Tabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +40,8 @@ class MtSt04Controller extends Controller
         private readonly MtSt04ImportService $importService,
         private readonly MtSt04ImportTemplateExport $importTemplateExport,
         private readonly MtSt04AuditLogService $auditLogService,
+        private readonly MtSt04ValidacionesService $validacionesService,
+        private readonly MtSt04ValidacionesDatatableService $validacionesDatatableService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -54,9 +59,10 @@ class MtSt04Controller extends Controller
         $payload = $this->dashboardService->metrics($filters);
 
         $filterFichaEstadoOptions = [
-            ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos en ficha'],
+            ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos + sin Ficha'],
             ['value' => EmployeeFichaProfile::STATUS_DESVINCULADO, 'label' => 'Desvinculados'],
-            ['value' => 'todos', 'label' => 'Todos (ficha)'],
+            ['value' => 'sin_ficha', 'label' => 'Solo sin Ficha'],
+            ['value' => 'todos', 'label' => 'Todos'],
         ];
 
         return view('areas.gestion_humana.mt_st_04.dashboard', [
@@ -118,10 +124,13 @@ class MtSt04Controller extends Controller
         );
 
         $filterFichaEstadoOptions = [
-            ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos en ficha'],
+            ['value' => EmployeeFichaProfile::STATUS_ACTIVO, 'label' => 'Activos + sin Ficha'],
             ['value' => EmployeeFichaProfile::STATUS_DESVINCULADO, 'label' => 'Desvinculados'],
-            ['value' => 'todos', 'label' => 'Todos (ficha)'],
+            ['value' => 'sin_ficha', 'label' => 'Solo sin Ficha'],
+            ['value' => 'todos', 'label' => 'Todos'],
         ];
+
+        $filterCiudadOptions = $this->listService->cityFilterOptions();
 
         $filterQuery = $this->activeMatrizFilterQuery($filters);
         $errorBag = $request->session()->get('errors');
@@ -138,6 +147,7 @@ class MtSt04Controller extends Controller
             'filterArmaOptions' => $filterArmaOptions,
             'filterAptoOptions' => $filterAptoOptions,
             'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
+            'filterCiudadOptions' => $filterCiudadOptions,
             'siNoOptions' => $siNoOptions,
             'lookupUrl' => route('gestion-humana.mt-st-04.matriz.lookup'),
             'datatableUrl' => route(
@@ -263,6 +273,7 @@ class MtSt04Controller extends Controller
                 'full_name',
                 'position_name',
                 'work_city_name',
+                'residence_city_name',
                 'cost_center_name',
                 'employment_status',
             ]);
@@ -276,7 +287,7 @@ class MtSt04Controller extends Controller
             'document_number' => $profile->document_number,
             'full_name' => $profile->full_name,
             'cargo' => trim((string) ($profile->position_name ?? '')),
-            'ciudad' => trim((string) ($profile->work_city_name ?? '')),
+            'ciudad' => $profile->displayCityName(),
             'puesto' => trim((string) ($profile->cost_center_name ?? '')),
             'employment_status' => $profile->employment_status,
             'employee_ficha_profile_id' => $profile->id,
@@ -316,11 +327,112 @@ class MtSt04Controller extends Controller
             userId: (int) auth()->id(),
         );
 
+        if ((string) $request->input('_return_to') === 'validaciones') {
+            return redirect()
+                ->route('gestion-humana.mt-st-04.validaciones')
+                ->with('status', 'Registro creado correctamente. Ya no aparece en Validaciones.');
+        }
+
         return redirect()
             ->route('gestion-humana.mt-st-04.matriz', $this->activeMatrizFilterQuery(
                 $this->matrizFiltersFromRequest($request)
             ))
             ->with('status', 'Registro creado correctamente.');
+    }
+
+    public function validaciones(Request $request): View
+    {
+        abort_unless($this->mtSt04Access->canView(auth()->user()), 403);
+
+        $canEdit = $this->mtSt04Access->canEdit(auth()->user());
+        $filters = $this->validacionesFiltersFromRequest($request);
+
+        $siNoOptions = collect(config('mt_st_04.si_no', []))
+            ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
+            ->values()
+            ->all();
+
+        $filterColaOptions = [
+            ['value' => 'pendientes', 'label' => 'Pendientes (requieren y sin matriz)'],
+            ['value' => 'omitidos', 'label' => 'Omitidos (no requieren psicofísicos)'],
+        ];
+
+        $errorBag = $request->session()->get('errors');
+        $showNuevoModal = $canEdit
+            && $errorBag !== null
+            && (string) old('_return_to') === 'validaciones'
+            && ! $errorBag->has('import_file');
+
+        return view('areas.gestion_humana.mt_st_04.validaciones', [
+            'subTabs' => $this->getMtSt04SubTabs('validaciones'),
+            'canEdit' => $canEdit,
+            'filters' => $filters,
+            'filterColaOptions' => $filterColaOptions,
+            'siNoOptions' => $siNoOptions,
+            'lookupUrl' => route('gestion-humana.mt-st-04.matriz.lookup'),
+            'datatableUrl' => route('gestion-humana.mt-st-04.validaciones.datatable', array_filter([
+                'cola' => $filters['cola'] !== 'pendientes' ? $filters['cola'] : null,
+                'q' => $filters['q'] !== '' ? $filters['q'] : null,
+            ], fn ($v) => $v !== null && $v !== '')),
+            'showNuevoModal' => $showNuevoModal,
+        ]);
+    }
+
+    public function validacionesDatatable(Request $request): JsonResponse
+    {
+        abort_unless($this->mtSt04Access->canView(auth()->user()), 403);
+
+        return $this->validacionesDatatableService->respond(
+            $request,
+            $this->validacionesFiltersFromRequest($request),
+            $this->mtSt04Access->canEdit(auth()->user()),
+        );
+    }
+
+    public function omitRequiresPsicofisicos(ToggleMtSt04RequiresPsicofisicosRequest $request): RedirectResponse
+    {
+        $documentNumber = (string) $request->validated('document_number');
+        $profile = $this->validacionesService->setRequiresPsicofisicos($documentNumber, false);
+
+        abort_if($profile === null, 404);
+
+        $this->auditLogService->logEvent(
+            eventType: 'mt_st_04_requires',
+            action: 'disable_requires_psicofisicos',
+            metadata: [
+                'document_number' => $documentNumber,
+                'employee_ficha_profile_id' => $profile->id,
+                'requires_psicofisicos' => false,
+            ],
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.mt-st-04.validaciones', $this->validacionesFiltersFromRequest($request))
+            ->with('status', 'Ficha actualizada: la persona no requiere psicofísicos.');
+    }
+
+    public function enableRequiresPsicofisicos(ToggleMtSt04RequiresPsicofisicosRequest $request): RedirectResponse
+    {
+        $documentNumber = (string) $request->validated('document_number');
+        $profile = $this->validacionesService->setRequiresPsicofisicos($documentNumber, true);
+
+        abort_if($profile === null, 404);
+
+        $this->auditLogService->logEvent(
+            eventType: 'mt_st_04_requires',
+            action: 'enable_requires_psicofisicos',
+            metadata: [
+                'document_number' => $documentNumber,
+                'employee_ficha_profile_id' => $profile->id,
+                'requires_psicofisicos' => true,
+            ],
+            userId: (int) auth()->id(),
+        );
+
+        return redirect()
+            ->route('gestion-humana.mt-st-04.validaciones', ['cola' => 'omitidos'])
+            ->with('status', 'Ficha actualizada: la persona vuelve a requerir psicofísicos.');
     }
 
     public function updateMatriz(
@@ -423,6 +535,7 @@ class MtSt04Controller extends Controller
      *     arma: string,
      *     apto: string,
      *     ficha_estado: string,
+     *     ciudad: string,
      * }
      */
     private function matrizFiltersFromRequest(Request $request): array
@@ -434,9 +547,15 @@ class MtSt04Controller extends Controller
         if (! in_array($fichaEstado, [
             EmployeeFichaProfile::STATUS_ACTIVO,
             EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'sin_ficha',
             'todos',
         ], true)) {
             $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;
+        }
+
+        $ciudad = trim((string) ($bag['ciudad'] ?? 'todos'));
+        if ($ciudad === '') {
+            $ciudad = 'todos';
         }
 
         return [
@@ -448,6 +567,7 @@ class MtSt04Controller extends Controller
             'arma' => (string) ($bag['arma'] ?? 'todos'),
             'apto' => (string) ($bag['apto'] ?? 'todos'),
             'ficha_estado' => $fichaEstado,
+            'ciudad' => $ciudad,
         ];
     }
 
@@ -461,6 +581,7 @@ class MtSt04Controller extends Controller
      *     arma: string,
      *     apto: string,
      *     ficha_estado: string,
+     *     ciudad: string,
      * }  $filters
      * @return array<string, string>
      */
@@ -489,9 +610,29 @@ class MtSt04Controller extends Controller
         if ($filters['apto'] !== 'todos') {
             $query['apto'] = $filters['apto'];
         }
+        if (($filters['ciudad'] ?? 'todos') !== 'todos') {
+            $query['ciudad'] = $filters['ciudad'];
+        }
         // Siempre pasar ficha_estado para que DT/export conserven el default (activo).
         $query['ficha_estado'] = $filters['ficha_estado'];
 
         return $query;
+    }
+
+    /**
+     * @return array{q: string, cola: string}
+     */
+    private function validacionesFiltersFromRequest(Request $request): array
+    {
+        $bag = $request->isMethod('GET') ? $request : $request->query();
+        $cola = (string) ($bag['cola'] ?? 'pendientes');
+        if (! in_array($cola, ['pendientes', 'omitidos'], true)) {
+            $cola = 'pendientes';
+        }
+
+        return [
+            'q' => trim((string) ($bag['q'] ?? '')),
+            'cola' => $cola,
+        ];
     }
 }

@@ -50,6 +50,7 @@ class EmployeeFichaProfile extends Model
         'employment_status',
         'requires_courses',
         'requires_acreditacion',
+        'requires_psicofisicos',
         'work_center_name',
         'cost_center_code',
         'cost_center_name',
@@ -90,6 +91,7 @@ class EmployeeFichaProfile extends Model
             'payroll_extra' => 'array',
             'requires_courses' => 'boolean',
             'requires_acreditacion' => 'boolean',
+            'requires_psicofisicos' => 'boolean',
         ];
     }
 
@@ -181,5 +183,26 @@ class EmployeeFichaProfile extends Model
     public function payrollExtraValue(string $key, mixed $default = null): mixed
     {
         return data_get($this->payroll_extra, $key, $default);
+    }
+
+    /**
+     * Ciudad para tableros: preferir trabajo; si está vacía, residencia (la más poblada en Ficha).
+     */
+    public function displayCityName(): string
+    {
+        $work = trim((string) ($this->work_city_name ?? ''));
+        if ($work !== '') {
+            return $work;
+        }
+
+        return trim((string) ($this->residence_city_name ?? ''));
+    }
+
+    /**
+     * Expresión SQL COALESCE trabajo → residencia (MySQL y SQLite).
+     */
+    public static function displayCitySql(string $table = 'employee_ficha_profiles'): string
+    {
+        return "COALESCE(NULLIF({$table}.work_city_name, ''), {$table}.residence_city_name)";
     }
 }

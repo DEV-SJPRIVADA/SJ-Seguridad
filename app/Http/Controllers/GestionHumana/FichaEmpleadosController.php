@@ -355,6 +355,7 @@ class FichaEmpleadosController extends Controller
         // En alta: quien gestiona ficha puede definir los requisitos iniciales.
         $canEditRequiresCourses = true;
         $canEditRequiresAcreditacion = true;
+        $canEditRequiresPsicofisicos = true;
         $canViewRequirementFlags = true;
 
         $fichaEntry = null;
@@ -363,6 +364,7 @@ class FichaEmpleadosController extends Controller
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
             'requires_courses' => true,
             'requires_acreditacion' => true,
+            'requires_psicofisicos' => true,
         ]);
 
         $desde = $request->query('desde');
@@ -396,6 +398,7 @@ class FichaEmpleadosController extends Controller
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
             'canEditRequiresCourses' => $canEditRequiresCourses,
             'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion,
+            'canEditRequiresPsicofisicos' => $canEditRequiresPsicofisicos,
             'canViewRequirementFlags' => $canViewRequirementFlags,
         ]);
     }
@@ -592,7 +595,9 @@ class FichaEmpleadosController extends Controller
         $user = auth()->user();
         $canEditRequiresCourses = $canManage && $user !== null && app(CursosAccessService::class)->canEdit($user);
         $canEditRequiresAcreditacion = $canManage && $user !== null && app(AcreditacionesAccessService::class)->canEdit($user);
-        $canViewRequirementFlags = $canEditRequiresCourses || $canEditRequiresAcreditacion;
+        // 2B: quien edita Ficha puede activar/inactivar «Requiere psicofísicos» sin mt_st_04.edit.
+        $canEditRequiresPsicofisicos = $canManage;
+        $canViewRequirementFlags = $canEditRequiresCourses || $canEditRequiresAcreditacion || $canEditRequiresPsicofisicos;
         $fichaEntry->load(['requisition.position', 'requisition.city', 'requisition.client', 'requisition.contractType', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
 
@@ -657,6 +662,7 @@ class FichaEmpleadosController extends Controller
             'canViewEmployeeAcreditaciones' => $canViewEmployeeLookups,
             'canEditRequiresCourses' => $canEditRequiresCourses,
             'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion,
+            'canEditRequiresPsicofisicos' => $canEditRequiresPsicofisicos,
             'canViewRequirementFlags' => $canViewRequirementFlags,
         ]);
     }
@@ -731,6 +737,8 @@ class FichaEmpleadosController extends Controller
             if (app(AcreditacionesAccessService::class)->canEdit($user)) {
                 $attributes['requires_acreditacion'] = $request->boolean('requires_acreditacion');
             }
+            // Editores de Ficha pueden mutar el flag MT-ST-04 (decisión 2B).
+            $attributes['requires_psicofisicos'] = $request->boolean('requires_psicofisicos');
         }
 
         $firstSurname = trim((string) ($attributes['first_surname'] ?? $profile->first_surname));
@@ -987,7 +995,7 @@ class FichaEmpleadosController extends Controller
      */
     private function applyRequirementFlagsForCreate(Request $request, array $attributes): array
     {
-        unset($attributes['requires_courses'], $attributes['requires_acreditacion']);
+        unset($attributes['requires_courses'], $attributes['requires_acreditacion'], $attributes['requires_psicofisicos']);
 
         if ($request->exists('requires_courses')) {
             $attributes['requires_courses'] = $request->boolean('requires_courses');
@@ -995,6 +1003,10 @@ class FichaEmpleadosController extends Controller
 
         if ($request->exists('requires_acreditacion')) {
             $attributes['requires_acreditacion'] = $request->boolean('requires_acreditacion');
+        }
+
+        if ($request->exists('requires_psicofisicos')) {
+            $attributes['requires_psicofisicos'] = $request->boolean('requires_psicofisicos');
         }
 
         return $attributes;

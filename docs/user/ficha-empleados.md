@@ -89,7 +89,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 ### Completar ficha de empleado
 
 1. En **Pendientes**, **En ficha** o **Nuevo empleado**, abra el formulario de ficha (permiso de edición).
-2. En **Nuevo empleado** / **Gestionar empleado**, la primera sección es **Cursos y acreditación**: marque o desmarque si la persona requiere cursos y/o acreditación (por defecto ambos activos). Si desactiva un requisito, no aparecerá en las validaciones de ese módulo.
+2. En **Nuevo empleado** / **Gestionar empleado**, la primera sección es **Requisitos de validación**: marque o desmarque si la persona requiere cursos, acreditación y/o psicofísicos (MT-ST-04) (por defecto activos). Si desactiva un requisito, no aparecerá en las validaciones de ese módulo.
 3. Diligencie documento (cédula) y las secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
 4. Los campos marcados con **\*** son obligatorios para guardar.
 5. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.

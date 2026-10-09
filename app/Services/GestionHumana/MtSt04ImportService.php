@@ -14,7 +14,8 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
- * Import upsert MT-ST-04 por cédula: última fila del archivo gana; cédula debe existir en Ficha.
+ * Import upsert MT-ST-04 por cédula: última fila del archivo gana.
+ * Cédulas sin Ficha se aceptan (quedan marcadas en la matriz).
  */
 class MtSt04ImportService
 {
@@ -88,10 +89,6 @@ class MtSt04ImportService
                     ->where('document_number', $cedula)
                     ->first(['id', 'document_number', 'position_name']);
 
-                if ($profile === null) {
-                    throw new \InvalidArgumentException('La cédula no existe en Ficha empleados.');
-                }
-
                 $arma = $this->normalizeSiNo($data['arma'] ?? null, 'ARMA');
                 $apto = $this->normalizeSiNo($data['apto'] ?? null, 'APTO');
                 $fechaExamen1 = $this->parseOptionalDate($data['fecha_examen_1'] ?? null, 'FECHA DE EXAMEN');
@@ -116,7 +113,7 @@ class MtSt04ImportService
                 $pending[$cedula] = [
                     'row' => $row,
                     'payload' => $payload,
-                    'cargo' => trim((string) ($profile->position_name ?? '')),
+                    'cargo' => trim((string) ($profile?->position_name ?? '')),
                 ];
             } catch (\Throwable $e) {
                 $failure = ImportFailureRow::make(

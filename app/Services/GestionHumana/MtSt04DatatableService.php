@@ -2,6 +2,7 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Models\EmployeeFichaProfile;
 use App\Models\MtSt04Registro;
 use App\Support\DisplayDate;
 use Illuminate\Database\Eloquent\Builder;
@@ -75,6 +76,7 @@ final class MtSt04DatatableService
                 ->orWhere('ficha.full_name', 'like', $like)
                 ->orWhere('ficha.position_name', 'like', $like)
                 ->orWhere('ficha.work_city_name', 'like', $like)
+                ->orWhere('ficha.residence_city_name', 'like', $like)
                 ->orWhere('ficha.cost_center_name', 'like', $like)
                 ->orWhere('mt_st_04_registros.estado_1', 'like', $like)
                 ->orWhere('mt_st_04_registros.estado_2', 'like', $like)
@@ -103,7 +105,7 @@ final class MtSt04DatatableService
             0 => $query->orderBy('mt_st_04_registros.document_number', $direction),
             1 => $query->orderBy('ficha.full_name', $direction),
             2 => $query->orderBy('ficha.position_name', $direction),
-            3 => $query->orderBy('ficha.work_city_name', $direction),
+            3 => $query->orderByRaw(EmployeeFichaProfile::displayCitySql('ficha').' '.$direction),
             4 => $query->orderBy('ficha.cost_center_name', $direction),
             5 => $query->orderBy('mt_st_04_registros.arma', $direction),
             6 => $query->orderBy('mt_st_04_registros.fecha_examen_1', $direction)->orderBy('mt_st_04_registros.id', $direction),
@@ -123,9 +125,13 @@ final class MtSt04DatatableService
      */
     private function formatRow(MtSt04Registro $row, bool $canEdit): array
     {
+        $sinFicha = $row->ficha_profile_id === null;
+
         $cells = [
-            e((string) $row->document_number),
-            e((string) ($row->ficha_full_name ?: '—')),
+            $this->formatCedulaCell((string) $row->document_number, $sinFicha),
+            $sinFicha
+                ? '<span class="status-pill status-pill--warning" title="La cédula no está en Ficha empleados">Sin Ficha</span>'
+                : e((string) ($row->ficha_full_name ?: '—')),
             e((string) ($row->ficha_position_name ?: '—')),
             e((string) ($row->ficha_work_city_name ?: '—')),
             e((string) ($row->ficha_cost_center_name ?: '—')),
@@ -145,6 +151,20 @@ final class MtSt04DatatableService
         }
 
         return $cells;
+    }
+
+    private function formatCedulaCell(string $documentNumber, bool $sinFicha): string
+    {
+        $cedula = e($documentNumber);
+
+        if (! $sinFicha) {
+            return $cedula;
+        }
+
+        return sprintf(
+            '<span class="mt-st-04-cedula mt-st-04-cedula--sin-ficha" title="Sin Ficha empleados">%s</span>',
+            $cedula,
+        );
     }
 
     private function formatEstadoBadge(?string $estado): string
@@ -173,6 +193,7 @@ final class MtSt04DatatableService
             'cargo' => (string) ($row->ficha_position_name ?? ''),
             'ciudad' => (string) ($row->ficha_work_city_name ?? ''),
             'puesto' => (string) ($row->ficha_cost_center_name ?? ''),
+            'sin_ficha' => $row->ficha_profile_id === null,
             'arma' => $row->arma ?? '',
             'fecha_examen_1' => optional($row->fecha_examen_1)?->format('Y-m-d') ?? '',
             'fecha_vencimiento_1' => optional($row->fecha_vencimiento_1)?->format('Y-m-d') ?? '',

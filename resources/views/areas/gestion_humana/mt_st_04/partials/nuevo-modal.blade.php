@@ -1,6 +1,7 @@
 {{-- Modal alta registro matriz MT-ST-04: cédula + lookup ficha + bloques por tipo de examen --}}
 @php
     $show = $show ?? false;
+    $returnTo = $returnTo ?? '';
 @endphp
 <x-modal name="mt-st-04-nuevo" maxWidth="2xl" :show="$show" focusable>
     <div
@@ -14,6 +15,20 @@
             ciudad: @js(old('ciudad', '')),
             puesto: @js(old('puesto', '')),
             lookupError: '',
+            init() {
+                // Prefill desde Validaciones (icono agregar) u otros emisores.
+                window.addEventListener('mt-st-04-prefill-nuevo', (event) => {
+                    const data = event.detail || {};
+                    this.documentNumber = data.document_number || '';
+                    this.fullName = data.full_name || '';
+                    this.cargo = data.cargo || '';
+                    this.ciudad = data.ciudad || '';
+                    this.puesto = data.puesto || '';
+                    this.lookupError = '';
+                    this.identityLocked = Boolean(this.documentNumber);
+                    this.$dispatch('open-modal', 'mt-st-04-nuevo');
+                });
+            },
             async lookupFicha(cedula) {
                 const value = String(cedula || '').trim();
                 this.lookupError = '';
@@ -30,13 +45,17 @@
                         this.cargo = data.cargo || '';
                         this.ciudad = data.ciudad || '';
                         this.puesto = data.puesto || '';
+                        this.lookupError = '';
                         this.identityLocked = true;
                     } else {
-                        this.lookupError = 'La cédula no existe en Ficha empleados.';
+                        // Se permite guardar sin Ficha; se marca en la matriz.
+                        this.documentNumber = value;
                         this.fullName = '';
                         this.cargo = '';
                         this.ciudad = '';
                         this.puesto = '';
+                        this.lookupError = 'Sin Ficha empleados: se puede guardar igual; aparecerá marcado en la matriz.';
+                        this.identityLocked = true;
                     }
                 } catch (e) {}
             },
@@ -89,6 +108,9 @@
             class="cursos-registros-page__form mt-st-04-form"
         >
             @csrf
+            @if ($returnTo !== '')
+                <input type="hidden" name="_return_to" value="{{ $returnTo }}">
+            @endif
 
             <section class="mt-st-04-form-section mt-st-04-form-section--identidad" aria-labelledby="mt-st-04-nuevo-identidad-title">
                 <div class="mt-st-04-form-section__head">
@@ -122,7 +144,7 @@
                                 <x-lucide-user-round-pen width="18" height="18" aria-hidden="true" />
                             </button>
                         </div>
-                        <p class="panel-text" style="margin-top:0.25rem;font-size:0.8rem;color:var(--color-danger, #b91c1c);" x-show="lookupError" x-text="lookupError" x-cloak></p>
+                        <p class="panel-text mt-st-04-lookup-hint" x-show="lookupError" x-text="lookupError" x-cloak></p>
                     </div>
                     <div class="form-field">
                         <label class="form-label" for="create_full_name">Nombre</label>

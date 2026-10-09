@@ -10,7 +10,7 @@ Tablero de área **Gestión Humana** que digitaliza la matriz Excel **MT-ST-04**
 ## Alcance actual
 
 - Tablero sidebar **MT-ST-04** (`board` key `mt_st_04`, hogar `gestion_humana`, `base_area_tab => false`).
-- Pestañas exactas: **Dashboard** | **Matriz**. **Sin** Catálogos / `*.parameters.edit`.
+- Pestañas: **Dashboard** | **Matriz** | **Validaciones**. **Sin** Catálogos / `*.parameters.edit`.
 - Permisos: `view.board.gestion_humana.mt_st_04` + `mt_st_04.view` + `mt_st_04.edit`. Dashboard con `view` (edit ⇒ view). Asignación Spatie **manual** (sin migración legacy).
 - Tabla `mt_st_04_registros` (1 fila / `document_number` unique); enlace lógico a Ficha por cédula (**sin FK**).
 - Matriz: CRUD modal, lookup Ficha, filtros (ficha activo/desvinculado/todos + operativos), DT `serverSide: true`, export filtrado, plantilla + import upsert.
@@ -98,7 +98,7 @@ Trait: `HasMtSt04Tabs` → pestañas `.module-tab` Dashboard \| Matriz.
 | Modelo | Tabla | Notas |
 | --- | --- | --- |
 | `MtSt04Registro` | `mt_st_04_registros` | Unique `document_number`; factory; `created_by` / `updated_by` → users `nullOnDelete` |
-| `EmployeeFichaProfile` | `employee_ficha_profiles` | Lectura live: `full_name`, `position_name`, `work_city_name`, `cost_center_name`, `employment_status` |
+| `EmployeeFichaProfile` | `employee_ficha_profiles` | Lectura live: `full_name`, `position_name`, CIUDAD = `work_city_name` o si vacío `residence_city_name`, `cost_center_name`, `employment_status` |
 
 ### Columnas `mt_st_04_registros`
 
@@ -123,7 +123,7 @@ Trait: `HasMtSt04Tabs` → pestañas `.module-tab` Dashboard \| Matriz.
 | `MtSt04EstadoCalculator` | Vencimientos + estados; `applyToModel`; `syncAll` (chunk 200, cargo live Ficha) |
 | `MtSt04ListService` | Query filtrada compartida (DT / export / dashboard) |
 | `MtSt04DatatableService` | Protocolo DataTables server-side; clase JS `js-mt-st-04-datatable`; tope length 100 |
-| `MtSt04ImportService` | Upsert por cédula; última duplicada gana; rechaza huérfanas |
+| `MtSt04ImportService` | Upsert por cédula; última duplicada gana; acepta cédulas sin Ficha |
 | `MtSt04DashboardService` | `metrics()` KPIs + series charts |
 | `MtSt04AuditLogService` | Wrapper `SystemAuditService` (`module=mt_st_04`, `area=gestion_humana`) |
 | `SyncMtSt04EstadosCommand` | `mt_st_04:sync-estados {--date=} {--dry-run}` |
@@ -150,7 +150,7 @@ Offset vs Cursos 06:15 / Acreditaciones 06:20.
 ### Identidad y Ficha
 
 1. Una fila por cédula.
-2. Alta / update / import: cédula **debe existir** en `employee_ficha_profiles`; no crear huérfanos.
+2. Alta / update / import: cédula **puede no existir** en Ficha; se guarda igual y la matriz marca **Sin Ficha** (filtro activo incluye esas filas; hay filtro «Solo sin Ficha»).
 3. NOMBRE / CARGO / CIUDAD / PUESTO solo lectura live (no snapshot como verdad).
 4. Lookup (edit): JSON con esos campos + `employment_status`.
 
@@ -188,7 +188,7 @@ Sea `hoy` = inicio del día Bogotá.
 
 - Default: `employment_status = activo` en Ficha.
 - Filtro `ficha_estado`: `activo` | `desvinculado` | `todos`.
-- Filtros operativos UI: `q` (cédula/nombre; DT search también cubre cargo), `estado_1`, `estado_2`, `arma`, `apto`. (Nit review: no hay control dedicado “cargo”; cubierto por search DT.)
+- Filtros operativos UI: `q` (cédula/nombre; DT search también cubre cargo), `estado_1`, `estado_2`, `arma`, `apto`, `ciudad` (ciudad efectiva Ficha: trabajo o residencia). (Nit review: no hay control dedicado “cargo”; cubierto por search DT.)
 - Sin bulk.
 
 ### Import / plantilla / export
@@ -219,6 +219,7 @@ DELETE duro con `edit` (confirmación UI). Sin soft-delete.
 - DataTables server-side en Matriz (`js-mt-st-04-datatable`; no `.js-datatable`; `lengthMenu` sin `-1`).
 - Cabecera matriz en dos filas: grupo **Psicofísico (armas)** (azul) y **Psicosensométrico (vial)** (verde); celdas tintadas por grupo. Orden columnas: identidad → psico (arma…obs1) → senso (exam2…estado2) → acciones.
 - Modales Nuevo/Editar: secciones visuales Identificación | Psicofísico | Psicosensométrico (`.mt-st-04-form-section`).
+- **Validaciones:** activos Ficha con `requires_psicofisicos` y sin fila en matriz; + abre alta; omit/enable muta el flag. Flag también en Ficha (editores de ficha). Permisos: mismos `mt_st_04.view` / `.edit`.
 - Alpine / modales CRUD e import (patrón GH).
 - Dashboard charts ApexCharts (Vite).
 - Selects: solo `<x-searchable-select>`.

@@ -116,6 +116,7 @@ final class MtSt04DashboardService
         if (! in_array($fichaEstado, [
             EmployeeFichaProfile::STATUS_ACTIVO,
             EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'sin_ficha',
             'todos',
         ], true)) {
             $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;

@@ -18,6 +18,7 @@ trait HasMtSt04Tabs
         return collect($tabs)->map(function (string $tab) use ($activeTab, $routeName): array {
             $targetRoute = match ($tab) {
                 'dashboard' => 'gestion-humana.mt-st-04.dashboard',
+                'validaciones' => 'gestion-humana.mt-st-04.validaciones',
                 default => 'gestion-humana.mt-st-04.matriz',
             };
 
@@ -26,6 +27,8 @@ trait HasMtSt04Tabs
                     || str_starts_with((string) $routeName, 'gestion-humana.mt-st-04.dashboard'),
                 'matriz' => $activeTab === 'matriz'
                     || str_starts_with((string) $routeName, 'gestion-humana.mt-st-04.matriz'),
+                'validaciones' => $activeTab === 'validaciones'
+                    || str_starts_with((string) $routeName, 'gestion-humana.mt-st-04.validaciones'),
                 default => $tab === $activeTab,
             };
 

@@ -43,6 +43,7 @@ class MtSt04Export extends BaseExport
     {
         return [
             ['key' => 'document_number', 'label' => 'CEDULA'],
+            ['key' => 'en_ficha', 'label' => 'EN FICHA'],
             ['key' => 'full_name', 'label' => 'NOMBRE COMPLETO'],
             ['key' => 'cargo', 'label' => 'CARGO'],
             ['key' => 'ciudad', 'label' => 'CIUDAD'],
@@ -65,9 +66,12 @@ class MtSt04Export extends BaseExport
      */
     public static function mapRegistro(MtSt04Registro $registro): array
     {
+        $enFicha = $registro->ficha_profile_id !== null;
+
         return [
             'document_number' => $registro->document_number,
-            'full_name' => (string) ($registro->ficha_full_name ?? ''),
+            'en_ficha' => $enFicha ? 'SI' : 'NO',
+            'full_name' => $enFicha ? (string) ($registro->ficha_full_name ?? '') : 'SIN FICHA',
             'cargo' => (string) ($registro->ficha_position_name ?? ''),
             'ciudad' => (string) ($registro->ficha_work_city_name ?? ''),
             'puesto' => (string) ($registro->ficha_cost_center_name ?? ''),

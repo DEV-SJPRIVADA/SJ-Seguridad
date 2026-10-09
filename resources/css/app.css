@@ -15387,3 +15387,14 @@ a.req-dashboard-kpi:focus-visible {
     color: #64748b;
     line-height: 1.4;
 }
+
+.mt-st-04-lookup-hint {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #b45309;
+}
+
+.mt-st-04-cedula--sin-ficha {
+    font-weight: 700;
+    color: #b45309;
+}

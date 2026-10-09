@@ -6,6 +6,7 @@ use App\Models\EmployeeFichaProfile;
 use App\Models\MtSt04Registro;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Query filtrada de la matriz MT-ST-04 con join live a Ficha.
@@ -22,6 +23,7 @@ class MtSt04ListService
      *     arma?: string|null,
      *     apto?: string|null,
      *     ficha_estado?: string|null,
+     *     ciudad?: string|null,
      * }  $filters
      * @return Builder<MtSt04Registro>
      */
@@ -36,9 +38,11 @@ class MtSt04ListService
             )
             ->select([
                 'mt_st_04_registros.*',
+                'ficha.id as ficha_profile_id',
                 'ficha.full_name as ficha_full_name',
                 'ficha.position_name as ficha_position_name',
-                'ficha.work_city_name as ficha_work_city_name',
+                // CIUDAD: work_city si existe; si no, residence_city (casi toda la Ficha real).
+                DB::raw(EmployeeFichaProfile::displayCitySql('ficha').' as ficha_work_city_name'),
                 'ficha.cost_center_name as ficha_cost_center_name',
                 'ficha.employment_status as ficha_employment_status',
             ]);
@@ -92,11 +96,53 @@ class MtSt04ListService
             $query->where('mt_st_04_registros.apto', $apto);
         }
 
+        // Misma ciudad efectiva que la columna CIUDAD (trabajo o, si vacío, residencia).
+        $ciudad = trim((string) ($filters['ciudad'] ?? ''));
+        if ($ciudad !== '' && $ciudad !== 'todos') {
+            $query->whereRaw(EmployeeFichaProfile::displayCitySql('ficha').' = ?', [$ciudad]);
+        }
+
         if ($ordered) {
             $query->orderByDesc('mt_st_04_registros.id');
         }
 
         return $query;
+    }
+
+    /**
+     * Opciones de filtro ciudad (ciudades efectivas presentes en la matriz).
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function cityFilterOptions(): array
+    {
+        $citySql = EmployeeFichaProfile::displayCitySql('ficha');
+
+        $cities = MtSt04Registro::query()
+            ->join(
+                'employee_ficha_profiles as ficha',
+                'ficha.document_number',
+                '=',
+                'mt_st_04_registros.document_number',
+            )
+            ->selectRaw("{$citySql} as city")
+            ->whereRaw("{$citySql} is not null")
+            ->whereRaw("{$citySql} <> ''")
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city')
+            ->filter(fn (mixed $city): bool => is_string($city) && trim($city) !== '')
+            ->values();
+
+        $options = [
+            ['value' => 'todos', 'label' => 'Todas'],
+        ];
+
+        foreach ($cities as $city) {
+            $options[] = ['value' => $city, 'label' => $city];
+        }
+
+        return $options;
     }
 
     /**
@@ -111,11 +157,28 @@ class MtSt04ListService
             return;
         }
 
+        // Solo filas sin match en Ficha (import/formulario sin ficha).
+        if ($fichaEstado === 'sin_ficha') {
+            $query->whereNull('ficha.id');
+
+            return;
+        }
+
         if (! in_array($fichaEstado, [
             EmployeeFichaProfile::STATUS_ACTIVO,
             EmployeeFichaProfile::STATUS_DESVINCULADO,
         ], true)) {
             $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;
+        }
+
+        // Activos: incluye cédulas sin Ficha para que no queden ocultas tras el import.
+        if ($fichaEstado === EmployeeFichaProfile::STATUS_ACTIVO) {
+            $query->where(function (Builder $inner): void {
+                $inner->where('ficha.employment_status', EmployeeFichaProfile::STATUS_ACTIVO)
+                    ->orWhereNull('ficha.id');
+            });
+
+            return;
         }
 
         $query->where('ficha.employment_status', $fichaEstado);

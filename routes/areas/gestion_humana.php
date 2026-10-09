@@ -209,6 +209,11 @@ Route::middleware(['password.changed'])
         Route::post('/matriz', [MtSt04Controller::class, 'storeMatriz'])->name('matriz.store');
         Route::patch('/matriz/{registro}', [MtSt04Controller::class, 'updateMatriz'])->name('matriz.update');
         Route::delete('/matriz/{registro}', [MtSt04Controller::class, 'destroyMatriz'])->name('matriz.destroy');
+
+        Route::get('/validaciones', [MtSt04Controller::class, 'validaciones'])->name('validaciones');
+        Route::get('/validaciones/datatable', [MtSt04Controller::class, 'validacionesDatatable'])->name('validaciones.datatable');
+        Route::post('/validaciones/omitir', [MtSt04Controller::class, 'omitRequiresPsicofisicos'])->name('validaciones.omit');
+        Route::post('/validaciones/habilitar', [MtSt04Controller::class, 'enableRequiresPsicofisicos'])->name('validaciones.enable');
     });
 
 Route::middleware(['password.changed'])

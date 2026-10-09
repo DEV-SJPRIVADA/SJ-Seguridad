@@ -12,10 +12,11 @@ Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 
 - **Dashboard** — totales y gráficos de estados del examen 1, del examen 2 (sin contar quienes no aplica) y de aptos / no aptos. Por defecto solo personal **activo** en Ficha; se puede ampliar a desvinculados o a todos.
 - **Matriz** — listado por páginas (una fila por cédula), filtros, exportación a Excel. Con permiso de edición: alta/edición/borrado, descarga de plantilla e importación.
+- **Validaciones** — personal activo en Ficha que requiere psicofísicos y aún no está en la Matriz. Desde aquí se puede agregar a la matriz o marcar que no requiere el examen (también configurable en Ficha empleados).
 
 **En esta versión:**
 
-- Nombre, cargo, ciudad y puesto se toman de la **Ficha empleados** (solo lectura). La cédula debe existir en Ficha antes de dar de alta o importar.
+- Nombre, cargo, ciudad y puesto se toman de la **Ficha empleados** (solo lectura) cuando la cédula existe. La **ciudad** usa ciudad de trabajo; si está vacía, ciudad de residencia. Si no está en Ficha, igual se puede guardar/importar y la fila se marca como **Sin Ficha**.
 - Las fechas de vencimiento y los estados (Vigente / Vencerá / Vencido / No aplica) los calcula el sistema; no se editan a mano.
 - No hay acciones masivas sobre varias filas a la vez (solo importación o fila a fila).
 - No se incluye la columna **RETIRADOS** del Excel antiguo.
@@ -66,8 +67,8 @@ Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 ### Consultar y filtrar la Matriz
 
 1. Vaya a la pestaña **Matriz**.
-2. Por defecto solo ve personas **activas** en Ficha. Use el filtro de estado en Ficha para ver desvinculados o todos.
-3. Use los filtros de búsqueda (cédula o nombre), estado psicofísico, estado psicosensométrico, arma y apto.
+2. Por defecto ve **activos en Ficha** y también filas **sin Ficha**. Use el filtro de estado para desvinculados, solo sin Ficha o todos.
+3. Use los filtros de búsqueda (cédula o nombre), estado psicofísico, estado psicosensométrico, arma, apto y ciudad.
 4. El listado se carga por páginas; no se cargan todas las filas de una vez.
 5. Las columnas de nombre, cargo, ciudad y puesto reflejan lo que hay hoy en Ficha. En la tabla, el bloque **azul** es el examen psicofísico (armas) y el **verde** el psicosensométrico (vial); en Nuevo / Editar aparecen como secciones separadas.
 6. Para descargar lo filtrado a Excel, use el botón de exportar.
@@ -75,7 +76,7 @@ Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 ### Crear o editar un registro (solo edición)
 
 1. En **Matriz**, abra la opción de nuevo registro.
-2. Digite la **cédula**. El sistema busca en Ficha y muestra nombre, cargo, ciudad y puesto. Si la cédula no existe en Ficha, no podrá guardar.
+2. Digite la **cédula**. El sistema busca en Ficha y muestra nombre, cargo, ciudad y puesto. Si la cédula no está en Ficha, igual puede guardar: en la matriz aparecerá marcada como **Sin Ficha**.
 3. Complete la sección **psicofísico (armas)** (arma, fecha, apto, observaciones) y la de **psicosensométrico (vial)** (fecha y observaciones) según corresponda.
 4. Guarde. El sistema calcula solo las fechas de vencimiento y los estados.
 5. Para editar, use el icono de editar en la fila. La cédula no se cambia.
@@ -87,10 +88,10 @@ Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
 2. Descargue la **plantilla** y complete las columnas (cédula, arma, fechas de examen, apto, observaciones). El nombre completo en el archivo es solo ayuda: el sistema usa Ficha.
 3. No intente poner en el archivo las columnas de estado o de vencimiento: no se toman del Excel.
 4. Importe el archivo. Si una cédula se repite varias veces en el mismo archivo, **gana la última fila**.
-5. Filas sin cédula en Ficha se rechazan con mensaje; las vacías se omiten.
+5. Filas vacías se omiten. Cédulas sin Ficha **sí se importan** y quedan marcadas como Sin Ficha en la matriz.
 6. Tras un import exitoso, revise el listado y el Dashboard.
 
-**Importante:** cada cédula debe existir previamente en Ficha empleados. Una misma cédula no puede tener dos filas en la matriz.
+**Importante:** una misma cédula no puede tener dos filas en la matriz.
 
 ### Cómo se actualizan los estados sin editar
 
@@ -102,3 +103,5 @@ Cada noche el sistema recalcula vencimientos y estados con la fecha del día (ho
 | --- | --- | --- | --- |
 | 1.0 | 2026-10-09 | Documentador | Versión inicial FEAT-045: tablero MT-ST-04 (Dashboard + Matriz, CRUD, import upsert, export, sync diario de estados). |
 | 1.1 | 2026-10-09 | Feature | Matriz y modales: separación visual psicofísico vs psicosensométrico. |
+| 1.2 | 2026-10-09 | Feature | Pestaña Validaciones + flag «Requiere psicofísicos» en Ficha. |
+| 1.3 | 2026-10-09 | Feature | Alta/import permiten cédula sin Ficha; matriz marca «Sin Ficha». |

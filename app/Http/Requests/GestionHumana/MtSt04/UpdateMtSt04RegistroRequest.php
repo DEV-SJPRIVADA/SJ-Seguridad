@@ -31,7 +31,6 @@ class UpdateMtSt04RegistroRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::exists('employee_ficha_profiles', 'document_number'),
                 Rule::unique('mt_st_04_registros', 'document_number')->ignore($registro->id),
             ],
             'arma' => ['nullable', 'string', Rule::in($siNo)],
@@ -50,7 +49,6 @@ class UpdateMtSt04RegistroRequest extends FormRequest
     {
         return [
             'document_number.required' => 'La cédula es obligatoria.',
-            'document_number.exists' => 'La cédula no existe en Ficha empleados.',
             'document_number.unique' => 'Ya existe un registro en la matriz con esa cédula.',
         ];
     }

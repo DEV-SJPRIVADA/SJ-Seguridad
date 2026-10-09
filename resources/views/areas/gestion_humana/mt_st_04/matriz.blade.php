@@ -9,6 +9,7 @@
             || (($filters['estado_2'] ?? 'todos') !== '' && ($filters['estado_2'] ?? 'todos') !== 'todos')
             || (($filters['arma'] ?? 'todos') !== '' && ($filters['arma'] ?? 'todos') !== 'todos')
             || (($filters['apto'] ?? 'todos') !== '' && ($filters['apto'] ?? 'todos') !== 'todos')
+            || (($filters['ciudad'] ?? 'todos') !== '' && ($filters['ciudad'] ?? 'todos') !== 'todos')
             || (($filters['ficha_estado'] ?? 'activo') !== '' && ($filters['ficha_estado'] ?? 'activo') !== 'activo');
     @endphp
 
@@ -90,6 +91,18 @@
                                             :options="$filterAptoOptions"
                                             :value="$filters['apto']"
                                             placeholder="Todos"
+                                            :allow-clear="false"
+                                        />
+                                    </div>
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_ciudad">Ciudad</label>
+                                        <x-searchable-select
+                                            id="filter_ciudad"
+                                            name="ciudad"
+                                            :options="$filterCiudadOptions"
+                                            :value="$filters['ciudad']"
+                                            placeholder="Todas"
+                                            search-placeholder="Buscar ciudad…"
                                             :allow-clear="false"
                                         />
                                     </div>
@@ -254,6 +267,7 @@
                         estado_2: '',
                         update_url: '',
                     },
+                    editLookupHint: '',
                     async lookupFicha(cedula, mode) {
                         const value = String(cedula || '').trim();
                         if (!value) return;
@@ -264,13 +278,22 @@
                             });
                             if (!res.ok) return;
                             const data = await res.json();
-                            if (!data.found) return;
                             if (mode === 'edit') {
-                                this.editForm.document_number = data.document_number || value;
-                                this.editForm.full_name = data.full_name || '';
-                                this.editForm.cargo = data.cargo || '';
-                                this.editForm.ciudad = data.ciudad || '';
-                                this.editForm.puesto = data.puesto || '';
+                                if (data.found) {
+                                    this.editForm.document_number = data.document_number || value;
+                                    this.editForm.full_name = data.full_name || '';
+                                    this.editForm.cargo = data.cargo || '';
+                                    this.editForm.ciudad = data.ciudad || '';
+                                    this.editForm.puesto = data.puesto || '';
+                                    this.editLookupHint = '';
+                                } else {
+                                    this.editForm.document_number = value;
+                                    this.editForm.full_name = '';
+                                    this.editForm.cargo = '';
+                                    this.editForm.ciudad = '';
+                                    this.editForm.puesto = '';
+                                    this.editLookupHint = 'Sin Ficha empleados: se puede guardar igual; aparecerá marcado en la matriz.';
+                                }
                                 this.editIdentityLocked = true;
                             }
                         } catch (e) {}
@@ -313,14 +336,19 @@
                             update_url: row.update_url || '',
                         };
                         this.editIdentityLocked = Boolean(this.editForm.document_number);
+                        this.editLookupHint = row.sin_ficha
+                            ? 'Sin Ficha empleados: se puede guardar igual; aparecerá marcado en la matriz.'
+                            : '';
                         this.editOpen = true;
                         this.syncEditSelects();
                     },
                     closeEdit() {
                         this.editOpen = false;
+                        this.editLookupHint = '';
                     },
                     unlockEditIdentity() {
                         this.editIdentityLocked = false;
+                        this.editLookupHint = '';
                         this.editForm.document_number = '';
                         this.editForm.full_name = '';
                         this.editForm.cargo = '';
