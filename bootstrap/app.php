@@ -42,6 +42,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->timezone('America/Bogota')
             ->withoutOverlapping();
 
+        $schedule->command('mt_st_04:sync-estados')
+            ->dailyAt('06:25')
+            ->timezone('America/Bogota')
+            ->withoutOverlapping();
+
         $schedule->command('audit:purge --force')
             ->monthlyOn(1, '03:00')
             ->timezone('America/Bogota');

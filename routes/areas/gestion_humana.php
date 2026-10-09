@@ -12,6 +12,7 @@ use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\FichaTypeLetterController;
 use App\Http\Controllers\GestionHumana\FormacionController;
+use App\Http\Controllers\GestionHumana\MtSt04Controller;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesIncapacidadesController;
@@ -189,6 +190,25 @@ Route::middleware(['password.changed'])
         Route::get('/formaciones/plantilla-importacion', [FormacionController::class, 'importTemplate'])->name('formaciones.import-template');
         Route::post('/formaciones/importar', [FormacionController::class, 'import'])->name('formaciones.import');
         Route::get('/formaciones/opciones', [FormacionController::class, 'formacionesOptions'])->name('formaciones.options');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/mt-st-04')
+    ->name('gestion-humana.mt-st-04.')
+    ->group(function (): void {
+        Route::get('/', [MtSt04Controller::class, 'index'])->name('index');
+        Route::get('/dashboard', [MtSt04Controller::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [MtSt04Controller::class, 'dashboardMetrics'])->name('dashboard.metrics');
+
+        Route::get('/matriz', [MtSt04Controller::class, 'matriz'])->name('matriz');
+        Route::get('/matriz/datatable', [MtSt04Controller::class, 'matrizDatatable'])->name('matriz.datatable');
+        Route::get('/matriz/exportar', [MtSt04Controller::class, 'exportMatriz'])->name('matriz.export');
+        Route::get('/matriz/plantilla-importacion', [MtSt04Controller::class, 'importTemplate'])->name('matriz.import-template');
+        Route::post('/matriz/importar', [MtSt04Controller::class, 'importMatriz'])->name('matriz.import');
+        Route::get('/matriz/lookup', [MtSt04Controller::class, 'matrizLookup'])->name('matriz.lookup');
+        Route::post('/matriz', [MtSt04Controller::class, 'storeMatriz'])->name('matriz.store');
+        Route::patch('/matriz/{registro}', [MtSt04Controller::class, 'updateMatriz'])->name('matriz.update');
+        Route::delete('/matriz/{registro}', [MtSt04Controller::class, 'destroyMatriz'])->name('matriz.destroy');
     });
 
 Route::middleware(['password.changed'])

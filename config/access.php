@@ -42,6 +42,8 @@ return [
         'cursos.edit' => 'Cursos: CRUD registros, plantilla, import y catalogo',
         'formacion.view' => 'Formación: Ver Dashboard, listado, filtros y export Excel',
         'formacion.edit' => 'Formación: Descargar plantilla e importar (replace-all)',
+        'mt_st_04.view' => 'MT-ST-04: Ver',
+        'mt_st_04.edit' => 'MT-ST-04: Editar',
         'seleccion.view' => 'Selección: Ver dashboard, listados y export Excel',
         'seleccion.edit' => 'Selección: CRUD Ingreso, Examen ocupacional y Catálogos',
         'cliente_interno.solicitudes.view' => 'Cliente interno: Ver solicitudes',
@@ -135,6 +137,7 @@ return [
         'desvinculaciones' => 'Desvinculaciones',
         'cursos' => 'Cursos',
         'formacion' => 'Formación',
+        'mt_st_04' => 'MT-ST-04',
         'seleccion' => 'Selección',
         'cliente_interno' => 'Cliente interno',
         'acreditaciones' => 'Acreditaciones',
@@ -205,6 +208,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'mt_st_04' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
         'seleccion' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
@@ -264,6 +271,11 @@ return [
     'formacion_tabs' => [
         'dashboard' => 'Dashboard',
         'formaciones' => 'Formaciones',
+    ],
+
+    'mt_st_04_tabs' => [
+        'dashboard' => 'Dashboard',
+        'matriz' => 'Matriz',
     ],
 
     'seleccion_tabs' => [
@@ -456,6 +468,7 @@ return [
                             'view.board.gestion_humana.desvinculaciones',
                             'view.board.gestion_humana.cursos',
                             'view.board.gestion_humana.formacion',
+                            'view.board.gestion_humana.mt_st_04',
                             'view.board.gestion_humana.seleccion',
                             'view.board.gestion_humana.cliente_interno',
                             'view.board.gestion_humana.acreditaciones',
@@ -510,6 +523,13 @@ return [
                         'permissions' => [
                             'formacion.view',
                             'formacion.edit',
+                        ],
+                    ],
+                    'mt_st_04' => [
+                        'label' => 'MT-ST-04',
+                        'permissions' => [
+                            'mt_st_04.view',
+                            'mt_st_04.edit',
                         ],
                     ],
                     'seleccion' => [

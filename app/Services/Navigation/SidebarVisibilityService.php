@@ -14,6 +14,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
+use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -35,6 +36,7 @@ class SidebarVisibilityService
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
+        private readonly MtSt04AccessService $mtSt04Access,
         private readonly SeleccionAccessService $seleccionAccess,
         private readonly ClienteInternoAccessService $clienteInternoAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
@@ -70,6 +72,7 @@ class SidebarVisibilityService
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'formacion' => $this->shouldShowFormacionBoard($user, $areaKey),
+            'mt_st_04' => $this->shouldShowMtSt04Board($user, $areaKey),
             'seleccion' => $this->shouldShowSeleccionBoard($user, $areaKey),
             'cliente_interno' => $this->shouldShowClienteInternoBoard($user, $areaKey),
             'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
@@ -234,6 +237,15 @@ class SidebarVisibilityService
         }
 
         return $this->formacionAccess->canViewBoard($user);
+    }
+
+    private function shouldShowMtSt04Board(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->mtSt04Access->canViewBoard($user);
     }
 
     private function shouldShowSeleccionBoard(User $user, string $areaKey): bool

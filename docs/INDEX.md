@@ -44,6 +44,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Selección | [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md) | [`user/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/seleccion.md) |
 | Cliente interno | [`modules/cliente-interno.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cliente-interno.md) | [`user/cliente-interno.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cliente-interno.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md) | [`user/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/acreditaciones.md) |
+| MT-ST-04 | [`modules/mt_st_04.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/mt_st_04.md) | [`user/mt_st_04.md`](c:/laragon/www/SJSEGURIDAD/docs/user/mt_st_04.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md) | [`user/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/user/plantillas-word.md) |
 | Cartas Notificación | [`modules/cartas-notificacion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cartas-notificacion.md) | [`user/cartas-notificacion.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cartas-notificacion.md) |
 | Suministros | [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md) | [`user/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/user/suministros.md) |
@@ -69,6 +70,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/seleccion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/seleccion.md)
 - [`modules/cliente-interno.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cliente-interno.md)
 - [`modules/acreditaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/acreditaciones.md)
+- [`modules/mt_st_04.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/mt_st_04.md)
 - [`modules/plantillas-word.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/plantillas-word.md)
 - [`modules/cartas-notificacion.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cartas-notificacion.md)
 - [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md)

@@ -55,6 +55,10 @@ return [
             'label' => 'Formación',
             'area' => 'gestion_humana',
         ],
+        'mt_st_04' => [
+            'label' => 'MT-ST-04',
+            'area' => 'gestion_humana',
+        ],
         'seleccion' => [
             'label' => 'Selección',
             'area' => 'gestion_humana',

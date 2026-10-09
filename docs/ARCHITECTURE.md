@@ -97,6 +97,7 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 | gestion_humana / cliente_interno | `routes/areas/gestion_humana.php` | `GestionHumana\ClienteInternoController` | `resources/views/areas/gestion_humana/cliente_interno/` | `docs/modules/cliente-interno.md` | `docs/user/cliente-interno.md` |
 | gestion_humana / cartas_notificacion | `routes/areas/gestion_humana.php` | `GestionHumana\CartasNotificacionController` | `resources/views/areas/gestion_humana/cartas_notificacion/` | `docs/modules/cartas-notificacion.md` | `docs/user/cartas-notificacion.md` |
 | gestion_humana / acreditaciones | `routes/areas/gestion_humana.php` | `GestionHumana\AcreditacionesController` | `resources/views/areas/gestion_humana/acreditaciones/` | `docs/modules/acreditaciones.md` | `docs/user/acreditaciones.md` |
+| gestion_humana / mt_st_04 | `routes/areas/gestion_humana.php` | `GestionHumana\MtSt04Controller` | `resources/views/areas/gestion_humana/mt_st_04/` | `docs/modules/mt_st_04.md` | `docs/user/mt_st_04.md` |
 | admin-users | `routes/web.php` (grupo admin) | `Admin\UserController` | `resources/views/admin/` | `docs/modules/admin-users.md` | `docs/user/admin-users.md` |
 | audit-log (transversal) | `routes/web.php` (admin auditoria) | `Admin\SystemAuditController`, `SystemAuditService` | `resources/views/admin/audit/` | `docs/modules/audit-log.md` | `docs/user/audit-log.md` |
 | branding | — | — | layouts, components | `docs/modules/branding.md` | — |

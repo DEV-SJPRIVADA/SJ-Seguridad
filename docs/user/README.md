@@ -25,6 +25,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Selección | [`modules/seleccion.md`](../modules/seleccion.md) | [`seleccion.md`](seleccion.md) |
 | Cliente interno | [`modules/cliente-interno.md`](../modules/cliente-interno.md) | [`cliente-interno.md`](cliente-interno.md) |
 | Acreditaciones | [`modules/acreditaciones.md`](../modules/acreditaciones.md) | [`acreditaciones.md`](acreditaciones.md) |
+| MT-ST-04 | [`modules/mt_st_04.md`](../modules/mt_st_04.md) | [`mt_st_04.md`](mt_st_04.md) |
 | Plantillas Word | [`modules/plantillas-word.md`](../modules/plantillas-word.md) | [`plantillas-word.md`](plantillas-word.md) |
 | Cartas Notificación | [`modules/cartas-notificacion.md`](../modules/cartas-notificacion.md) | [`cartas-notificacion.md`](cartas-notificacion.md) |
 | Suministros | [`modules/suministros.md`](../modules/suministros.md) | [`suministros.md`](suministros.md) |

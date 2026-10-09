@@ -70,6 +70,10 @@ class PermissionCatalog
                                 return true;
                             }
 
+                            if ($boardKey === 'mt_st_04' && $areaKey !== 'gestion_humana') {
+                                return true;
+                            }
+
                             if ($boardKey === 'seleccion' && $areaKey !== 'gestion_humana') {
                                 return true;
                             }

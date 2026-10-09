@@ -190,6 +190,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `seleccion` — **Selección** (`view.board.gestion_humana.seleccion` + `seleccion.view` / `edit`)
   - `cliente_interno` — **Cliente interno** (`view.board.gestion_humana.cliente_interno` + `cliente_interno.solicitudes.view` / `edit` + `cliente_interno.cartas_vacaciones.view` / `edit` + `cliente_interno.parameters.edit`)
   - `acreditaciones` — **Acreditaciones** (`view.board.gestion_humana.acreditaciones` + `acreditaciones.view` / `edit`)
+  - `mt_st_04` — **MT-ST-04** (`view.board.gestion_humana.mt_st_04` + `mt_st_04.view` / `edit`)
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
   - `cartas_notificacion` — **Cartas Notificación** (`view.board.gestion_humana.cartas_notificacion` + **solo** `cartas_notificacion.edit`; **sin** `.view`)
@@ -246,6 +247,23 @@ Tablero **Acreditaciones** (Dashboard, Acreditados, Reporte Diario APO, Validaci
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Acreditaciones*).
 - Dependencia operativa: cédula en Ficha para Acreditados; Export Apo exige Ficha activa + identidad completa; CodigoCurso APO vive en `curso_tipos.cursos` (módulo Cursos).
 - Doc: [`docs/modules/acreditaciones.md`](modules/acreditaciones.md), [`docs/user/acreditaciones.md`](user/acreditaciones.md).
+
+### MT-ST-04 (Gestion humana)
+
+Tablero **MT-ST-04** (Dashboard + Matriz: listado server-side, CRUD, plantilla/import upsert, export). Asignación **manual** en Admin (no viene por defecto en `administrador` / `usuario`). Independiente de Cursos / Acreditaciones más allá del lookup por cédula en Ficha.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.mt_st_04` | Ver tablero **MT-ST-04** en sidebar GH |
+| `mt_st_04.view` | Dashboard, Matriz, filtros, export Excel |
+| `mt_st_04.edit` | CRUD, lookup Ficha, plantilla e import (implica view en servicio de acceso) |
+
+- Pestanas: `dashboard`, `matriz` (`config/access.php` → `mt_st_04_tabs`). **Sin** pestaña parámetros / `mt_st_04.parameters.edit`. **Sin** permiso board dashboard aparte.
+- Servicio: `MtSt04AccessService` — `canView` = `view` ∨ `edit`; `canEdit` = `edit`; bypass `manage.users`.
+- Seed / sync: `super-admin` todos; `administrador` y `usuario` **sin** paquete por defecto. **Sin** migración automática de permisos legacy.
+- Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *MT-ST-04*). Labels: `MT-ST-04`, `MT-ST-04: Ver`, `MT-ST-04: Editar`.
+- Dependencia operativa: cédula en Ficha empleados para alta/import; estados recalculados al guardar y por comando diario `mt_st_04:sync-estados`.
+- Doc: [`docs/modules/mt_st_04.md`](modules/mt_st_04.md), [`docs/user/mt_st_04.md`](user/mt_st_04.md).
 
 ### Selección (Gestion humana)
 

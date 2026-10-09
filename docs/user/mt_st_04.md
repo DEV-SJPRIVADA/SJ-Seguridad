@@ -1,0 +1,103 @@
+# MT-ST-04 — Guía de usuario
+
+> Documentación operativa para usuarios finales. Ubicación: `docs/user/mt_st_04.md`.
+
+## Objetivo
+
+Controlar en la plataforma la vigencia de los **exámenes psicofísicos** (manejo de armas) y **psicosensométricos** (seguridad vial) del personal, en lugar de la matriz Excel **MT-ST-04**: ver indicadores, consultar y filtrar la matriz, exportar, y —con permiso de edición— crear o actualizar registros e importar desde Excel.
+
+## Alcance
+
+Aplica al tablero **MT-ST-04** en **Gestión Humana**, con dos pestañas:
+
+- **Dashboard** — totales y gráficos de estados del examen 1, del examen 2 (sin contar quienes no aplica) y de aptos / no aptos. Por defecto solo personal **activo** en Ficha; se puede ampliar a desvinculados o a todos.
+- **Matriz** — listado por páginas (una fila por cédula), filtros, exportación a Excel. Con permiso de edición: alta/edición/borrado, descarga de plantilla e importación.
+
+**En esta versión:**
+
+- Nombre, cargo, ciudad y puesto se toman de la **Ficha empleados** (solo lectura). La cédula debe existir en Ficha antes de dar de alta o importar.
+- Las fechas de vencimiento y los estados (Vigente / Vencerá / Vencido / No aplica) los calcula el sistema; no se editan a mano.
+- No hay acciones masivas sobre varias filas a la vez (solo importación o fila a fila).
+- No se incluye la columna **RETIRADOS** del Excel antiguo.
+- No hay pestaña de catálogos: Arma y Apto son opciones fijas Sí / No.
+
+## Definiciones
+
+| Término | Significado |
+| --- | --- |
+| MT-ST-04 | Tablero de control de exámenes psicofísicos y psicosensométricos. |
+| Examen 1 (psicofísico) | Examen ligado al manejo de armas: fecha de examen, arma (Sí/No), apto (Sí/No), observaciones y estado de vigencia. |
+| Examen 2 (psicosensométrico) | Examen de seguridad vial: fecha de examen, observaciones y estado de vigencia (o «No aplica» según el cargo). |
+| Matriz | Pestaña del listado operativo (una persona = una cédula). |
+| Dashboard | Pantalla de indicadores y gráficos del universo filtrado. |
+| Vencimiento | Fecha de examen + 364 días (la calcula el sistema). |
+| Vigente | El vencimiento aún no entra en la ventana de alerta ni está vencido. |
+| Vencerá | Faltan 30 días o menos (incluido el día del vencimiento) hasta la fecha de vencimiento. |
+| Vencido | La fecha de vencimiento ya pasó. |
+| No aplica | En el examen 2, cuando el cargo en Ficha es exactamente **GUARDA** u **OPERADOR** (no aplica a cargos compuestos como «GUARDA SJ»). |
+| Plantilla | Archivo Excel con las columnas correctas para cargar datos editables. |
+| Importar | Cargar un Excel que crea o actualiza filas por cédula (si la cédula ya existe, se actualiza). |
+| Ficha | Registro de empleado en el tablero Ficha empleados; fuente de nombre, cargo, ciudad y puesto. |
+
+## Responsabilidades
+
+| Perfil | Puede |
+| --- | --- |
+| Consulta (ver tablero + permiso de consulta) | Ver Dashboard y Matriz; filtrar; exportar a Excel. No crea, edita, borra, descarga plantilla ni importa. |
+| Operativo (permiso de edición) | Todo lo anterior + alta/edición/borrado de filas, consulta de datos de Ficha por cédula, plantilla e importación. |
+| Administración de usuarios | Asignar el tablero y los permisos de MT-ST-04 a quienes correspondan (no vienen por defecto al rol usuario/administrador). |
+
+## Desarrollo
+
+### Entrar al tablero
+
+1. En el menú de **Gestión Humana**, abra **MT-ST-04**.
+2. Por defecto entra al **Dashboard**.
+3. Use las pestañas superiores para cambiar entre **Dashboard** y **Matriz**.
+
+### Usar el Dashboard
+
+1. Revise los totales del examen 1 (total, vigente, vencerá, vencido).
+2. Revise los del examen 2: el total no incluye a quienes están en «No aplica» (ese conteo aparece aparte).
+3. Revise aptos, no aptos y sin dato.
+4. Observe los gráficos de distribución de estados y de aptitud.
+5. Si necesita incluir personal desvinculado o todos, cambie el filtro de estado en Ficha y actualice la vista.
+
+### Consultar y filtrar la Matriz
+
+1. Vaya a la pestaña **Matriz**.
+2. Por defecto solo ve personas **activas** en Ficha. Use el filtro de estado en Ficha para ver desvinculados o todos.
+3. Use los filtros de búsqueda (cédula o nombre), estado del examen 1, estado del examen 2, arma y apto.
+4. El listado se carga por páginas; no se cargan todas las filas de una vez.
+5. Las columnas de nombre, cargo, ciudad y puesto reflejan lo que hay hoy en Ficha.
+6. Para descargar lo filtrado a Excel, use el botón de exportar.
+
+### Crear o editar un registro (solo edición)
+
+1. En **Matriz**, abra la opción de nuevo registro.
+2. Digite la **cédula**. El sistema busca en Ficha y muestra nombre, cargo, ciudad y puesto. Si la cédula no existe en Ficha, no podrá guardar.
+3. Complete arma, fecha de examen 1, apto, observaciones del examen 1, fecha de examen 2 y observaciones del examen 2 según corresponda.
+4. Guarde. El sistema calcula solo las fechas de vencimiento y los estados.
+5. Para editar, use el icono de editar en la fila. La cédula no se cambia.
+6. Para eliminar, confirme el borrado (es definitivo).
+
+### Descargar plantilla e importar (solo edición)
+
+1. En **Matriz**, abra la opción de importación / plantilla.
+2. Descargue la **plantilla** y complete las columnas (cédula, arma, fechas de examen, apto, observaciones). El nombre completo en el archivo es solo ayuda: el sistema usa Ficha.
+3. No intente poner en el archivo las columnas de estado o de vencimiento: no se toman del Excel.
+4. Importe el archivo. Si una cédula se repite varias veces en el mismo archivo, **gana la última fila**.
+5. Filas sin cédula en Ficha se rechazan con mensaje; las vacías se omiten.
+6. Tras un import exitoso, revise el listado y el Dashboard.
+
+**Importante:** cada cédula debe existir previamente en Ficha empleados. Una misma cédula no puede tener dos filas en la matriz.
+
+### Cómo se actualizan los estados sin editar
+
+Cada noche el sistema recalcula vencimientos y estados con la fecha del día (horario de Colombia). También se recalculan al guardar o al importar. Si el cargo en Ficha cambia (por ejemplo de un cargo compuesto a GUARDA), el estado del examen 2 se ajusta en el próximo guardado o en el recálculo diario.
+
+## Control de cambios
+
+| Version | Fecha | Autor | Descripcion del cambio |
+| --- | --- | --- | --- |
+| 1.0 | 2026-10-09 | Documentador | Versión inicial FEAT-045: tablero MT-ST-04 (Dashboard + Matriz, CRUD, import upsert, export, sync diario de estados). |

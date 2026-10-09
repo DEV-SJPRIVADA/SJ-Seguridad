@@ -12,6 +12,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
+use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -444,6 +445,26 @@ class User extends Authenticatable
         return match ($firstTab) {
             'dashboard' => route('gestion-humana.formacion.dashboard'),
             'formaciones' => route('gestion-humana.formacion.formaciones'),
+            default => route('dashboard', ['module' => 'gestion_humana']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function mtSt04BoardTabsFor(): Collection
+    {
+        return collect(app(MtSt04AccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultMtSt04BoardUrl(): string
+    {
+        $tabs = $this->mtSt04BoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('gestion-humana.mt-st-04.dashboard'),
+            'matriz' => route('gestion-humana.mt-st-04.matriz'),
             default => route('dashboard', ['module' => 'gestion_humana']),
         };
     }

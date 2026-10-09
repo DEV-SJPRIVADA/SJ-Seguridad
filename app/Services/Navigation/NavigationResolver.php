@@ -14,6 +14,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
+use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -37,6 +38,7 @@ class NavigationResolver
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
+        private readonly MtSt04AccessService $mtSt04Access,
         private readonly SeleccionAccessService $seleccionAccess,
         private readonly ClienteInternoAccessService $clienteInternoAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
@@ -300,6 +302,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'mt_st_04') {
+                            if ($key !== 'gestion_humana') {
+                                return null;
+                            }
+
+                            if (! $this->mtSt04Access->canViewBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'gestion-humana.mt-st-04.dashboard',
+                                'url' => $user->defaultMtSt04BoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'gestion-humana.mt-st-04.'),
+                            ];
+                        }
+
                         if ($boardKey === 'seleccion') {
                             if ($key !== 'gestion_humana') {
                                 return null;
@@ -482,6 +501,7 @@ class NavigationResolver
                             $boardKey === 'desvinculaciones' => str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.') && $key === 'gestion_humana',
                             $boardKey === 'cursos' => str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana',
                             $boardKey === 'formacion' => str_starts_with((string) $routeName, 'gestion-humana.formacion.') && $key === 'gestion_humana',
+                            $boardKey === 'mt_st_04' => str_starts_with((string) $routeName, 'gestion-humana.mt-st-04.') && $key === 'gestion_humana',
                             $boardKey === 'seleccion' => str_starts_with((string) $routeName, 'gestion-humana.seleccion.') && $key === 'gestion_humana',
                             $boardKey === 'cliente_interno' => str_starts_with((string) $routeName, 'gestion-humana.cliente-interno.') && $key === 'gestion_humana',
                             $boardKey === 'acreditaciones' => str_starts_with((string) $routeName, 'gestion-humana.acreditaciones.') && $key === 'gestion_humana',
@@ -580,6 +600,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.cursos.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.formacion.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.mt-st-04.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.seleccion.') && $key === 'gestion_humana'
                 ) || (

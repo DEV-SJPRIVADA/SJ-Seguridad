@@ -67,6 +67,26 @@ npm ci && npm run build
 
 Mismos pasos de `composer` / `migrate --force` / caches / `npm` que en el Linux Server, adaptados al panel File Manager o SSH de Hostinger si aplica. Ver tambien checklist en [`LOCAL_SETUP.md`](LOCAL_SETUP.md).
 
+## Procedimiento: sync diario de estados GH (scheduler)
+
+En producción el cron debe ejecutar `php artisan schedule:run` cada minuto. Los comandos de recálculo de estados viven en `bootstrap/app.php` (`withSchedule`), zona `America/Bogota`, `withoutOverlapping()`:
+
+| Comando | Hora | Modulo |
+| --- | --- | --- |
+| `cursos:sync-estados` | 06:15 | Cursos |
+| `acreditaciones:sync-estados` | 06:20 | Acreditaciones |
+| `mt_st_04:sync-estados` | 06:25 | MT-ST-04 |
+
+### MT-ST-04 — sync manual
+
+```bash
+php artisan mt_st_04:sync-estados
+php artisan mt_st_04:sync-estados --dry-run
+php artisan mt_st_04:sync-estados --date=2026-10-09
+```
+
+Tras deploy de FEAT-045: `php artisan migrate --force`, `php artisan app:sync-permissions`, asignar board + `mt_st_04.view` / `.edit` en Admin, verificar `php artisan schedule:list`. Detalle: [`modules/mt_st_04.md`](modules/mt_st_04.md).
+
 ## Procedimiento: import historico de desvinculaciones
 
 Carga de la hoja **NOVEDADES** (≥ 2025-05-01) a Seguimientos + Retiros **sin generar cartas**. Detalle tecnico: [`modules/desvinculaciones.md`](modules/desvinculaciones.md).
