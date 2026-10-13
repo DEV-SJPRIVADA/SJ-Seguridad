@@ -162,16 +162,19 @@ class AdminUserManagementTest extends TestCase
 
     public function test_user_with_board_permission_sees_its_module_and_tab(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['must_change_password' => false]);
         $user->assignRole('usuario');
         $user->givePermissionTo('view.board.gestion_humana.dashboard');
 
-        $response = $this->actingAs($user)->get(route('dashboard', ['module' => 'gestion_humana', 'board' => 'dashboard']));
+        // FEAT-046: board dashboard GH redirige al informe de área (ya no al placeholder).
+        $this->actingAs($user)
+            ->get(route('dashboard', ['module' => 'gestion_humana', 'board' => 'dashboard']))
+            ->assertRedirect(route('gestion-humana.dashboard'));
 
-        $response->assertOk();
-        $response->assertSee('Gestión Humana');
-        $response->assertSee('Tablero activo');
-        $response->assertSee('Dashboard');
+        $this->actingAs($user)
+            ->get(route('gestion-humana.dashboard'))
+            ->assertOk()
+            ->assertSee('Dashboard de Gestión Humana', false);
     }
 
     public function test_user_without_module_query_is_redirected_to_first_authorized_board(): void

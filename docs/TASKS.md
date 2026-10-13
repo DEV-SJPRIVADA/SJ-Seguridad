@@ -32,6 +32,7 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
+| FEAT-046 | Dashboard de área GH (informe mensual KPI + gráficos) | orquestado | Si (Aprobado con observaciones; smoke DevTools pendiente login) | [`docs/runs/FEAT-046-run-log.md`](runs/FEAT-046-run-log.md) | 2026-10-13 |
 | FEAT-045 | Tablero GH MT-ST-04 (psicofísicos / psicosensométricos) | orquestado | Si (GO-with-nits) | [`docs/runs/FEAT-045-run-log.md`](runs/FEAT-045-run-log.md) | 2026-10-09 |
 | FEAT-044 | Tablero GH Cartas Notificación (solo edit, lote Word sin BD) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-044-run-log.md`](runs/FEAT-044-run-log.md) | 2026-10-08 |
 | FEAT-043 | Cliente interno — pestaña Cartas Vacaciones (lote cédulas → Word/ZIP) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-043-run-log.md`](runs/FEAT-043-run-log.md) | 2026-10-07 |

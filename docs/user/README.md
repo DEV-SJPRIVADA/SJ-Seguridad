@@ -18,6 +18,7 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Admin usuarios | [`modules/admin-users.md`](../modules/admin-users.md) | [`admin-users.md`](admin-users.md) |
 | Requisiciones | [`modules/requisitions.md`](../modules/requisitions.md) | [`requisitions.md`](requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](../modules/ficha-empleados.md) | [`ficha-empleados.md`](ficha-empleados.md) |
+| Dashboard área GH | [`modules/gestion-humana-dashboard.md`](../modules/gestion-humana-dashboard.md) | [`gestion-humana-dashboard.md`](gestion-humana-dashboard.md) |
 | Desvinculaciones | [`modules/desvinculaciones.md`](../modules/desvinculaciones.md) | [`desvinculaciones.md`](desvinculaciones.md) |
 | MT-GH-04 Novedades | [`modules/reportes-novedades.md`](../modules/reportes-novedades.md) | [`reportes-novedades.md`](reportes-novedades.md) |
 | Cursos | [`modules/cursos.md`](../modules/cursos.md) | [`cursos.md`](cursos.md) |

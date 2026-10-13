@@ -476,6 +476,7 @@ class NavigationResolver
                         $url = match (true) {
                             $key === 'comercial' && $boardKey === 'dashboard' => route('comercial.dashboard'),
                             $key === 'compras' && $boardKey === 'dashboard' => route('compras.dashboard'),
+                            $key === 'gestion_humana' && $boardKey === 'dashboard' => route('gestion-humana.dashboard'),
                             default => route('dashboard', ['module' => $key, 'board' => $boardKey]),
                         };
 
@@ -508,6 +509,7 @@ class NavigationResolver
                             $boardKey === 'reportes_novedades' => str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.') && $key === 'gestion_humana',
                             $key === 'comercial' && $boardKey === 'dashboard' => $routeName === 'comercial.dashboard',
                             $key === 'compras' && $boardKey === 'dashboard' => $routeName === 'compras.dashboard',
+                            $key === 'gestion_humana' && $boardKey === 'dashboard' => str_starts_with((string) $routeName, 'gestion-humana.dashboard'),
                             default => $routeName === 'dashboard' && $requestBoard === $boardKey && $requestModule === $key,
                         };
 
@@ -517,6 +519,7 @@ class NavigationResolver
                                 $boardKey === 'requisiciones' => 'requisitions.dashboard',
                                 $key === 'comercial' && $boardKey === 'dashboard' => 'comercial.dashboard',
                                 $key === 'compras' && $boardKey === 'dashboard' => 'compras.dashboard',
+                                $key === 'gestion_humana' && $boardKey === 'dashboard' => 'gestion-humana.dashboard',
                                 default => 'dashboard',
                             },
                             'url' => $url,
@@ -586,6 +589,8 @@ class NavigationResolver
                         $routeName === 'compras.dashboard'
                         || str_starts_with((string) $routeName, 'purchase-requests.processing.')
                     ) && $key === 'compras'
+                ) || (
+                    str_starts_with((string) $routeName, 'gestion-humana.dashboard') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.ficha-empleados.') && $key === 'gestion_humana'
                 ) || (

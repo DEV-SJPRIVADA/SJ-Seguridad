@@ -12,6 +12,7 @@ use App\Http\Controllers\GestionHumana\FichaEmpleadosCatalogController;
 use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\FichaTypeLetterController;
 use App\Http\Controllers\GestionHumana\FormacionController;
+use App\Http\Controllers\GestionHumana\GestionHumanaAreaDashboardController;
 use App\Http\Controllers\GestionHumana\MtSt04Controller;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesController;
@@ -22,6 +23,23 @@ use App\Http\Controllers\GestionHumana\ReportesNovedadesVacacionesController;
 use App\Http\Controllers\GestionHumana\SeleccionController;
 use App\Http\Controllers\GestionHumana\TerminationLetterController;
 use Illuminate\Support\Facades\Route;
+
+// Dashboard de área GH (informe mensual) — board `dashboard`.
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana')
+    ->name('gestion-humana.')
+    ->group(function (): void {
+        Route::get('/dashboard', [GestionHumanaAreaDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/metrics', [GestionHumanaAreaDashboardController::class, 'metrics'])->name('dashboard.metrics');
+
+        // Catálogo conceptos/áreas ↔ cargos (mismo permiso del tablero).
+        Route::get('/dashboard/conceptos', [GestionHumanaAreaDashboardController::class, 'conceptosIndex'])->name('dashboard.conceptos.index');
+        Route::post('/dashboard/conceptos', [GestionHumanaAreaDashboardController::class, 'conceptosStore'])->name('dashboard.conceptos.store');
+        Route::patch('/dashboard/conceptos/{concepto}', [GestionHumanaAreaDashboardController::class, 'conceptosUpdate'])->name('dashboard.conceptos.update');
+        Route::delete('/dashboard/conceptos/{concepto}', [GestionHumanaAreaDashboardController::class, 'conceptosDestroy'])->name('dashboard.conceptos.destroy');
+        Route::post('/dashboard/conceptos/{concepto}/cargos', [GestionHumanaAreaDashboardController::class, 'cargosStore'])->name('dashboard.conceptos.cargos.store');
+        Route::delete('/dashboard/concepto-cargos/{cargo}', [GestionHumanaAreaDashboardController::class, 'cargosDestroy'])->name('dashboard.concepto-cargos.destroy');
+    });
 
 Route::middleware(['password.changed'])
     ->prefix('gestion-humana/ficha-empleados/catalogos')

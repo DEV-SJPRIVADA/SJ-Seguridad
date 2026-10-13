@@ -380,6 +380,14 @@ Permisos funcionales (independientes de Ficha empleados):
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Plantillas Word*).
 - Doc: [`docs/modules/plantillas-word.md`](modules/plantillas-word.md), [`docs/user/plantillas-word.md`](user/plantillas-word.md).
 
+### Dashboard de área Gestión Humana (FEAT-046)
+
+El tablero sidebar **Dashboard** (`view.board.gestion_humana.dashboard`) ya no abre el placeholder genérico: redirige a la pantalla real del informe mensual (KPIs + gráficos) en `/gestion-humana/dashboard` (+ JSON `/gestion-humana/dashboard/metrics`).
+
+- **Sin permiso nuevo** y **sin** cambios a `config/access.php` por esta feature.
+- Gate: `view.board.gestion_humana.dashboard` ∨ bypass `manage.users`.
+- Doc: [`docs/modules/gestion-humana-dashboard.md`](modules/gestion-humana-dashboard.md), [`docs/user/gestion-humana-dashboard.md`](user/gestion-humana-dashboard.md).
+
 Esto produce permisos como:
 
 - `view.board.gestion_humana.dashboard`

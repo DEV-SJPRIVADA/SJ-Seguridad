@@ -37,6 +37,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Notificaciones (admin) | [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md) | [`user/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/user/notifications-config.md) |
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
+| Dashboard área GH | [`modules/gestion-humana-dashboard.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/gestion-humana-dashboard.md) | [`user/gestion-humana-dashboard.md`](c:/laragon/www/SJSEGURIDAD/docs/user/gestion-humana-dashboard.md) |
 | Desvinculaciones | [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md) | [`user/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/desvinculaciones.md) |
 | MT-GH-04 Novedades | [`modules/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/reportes-novedades.md) | [`user/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/user/reportes-novedades.md) |
 | Cursos | [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md) | [`user/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/user/cursos.md) |
@@ -63,6 +64,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)
 - [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md)
+- [`modules/gestion-humana-dashboard.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/gestion-humana-dashboard.md)
 - [`modules/desvinculaciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/desvinculaciones.md)
 - [`modules/reportes-novedades.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/reportes-novedades.md)
 - [`modules/cursos.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/cursos.md)

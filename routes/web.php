@@ -178,6 +178,10 @@ Route::get('/dashboard', function () {
         return redirect()->route('compras.dashboard');
     }
 
+    if ($selectedModuleKey === 'gestion_humana' && $selectedBoardKey === 'dashboard') {
+        return redirect()->route('gestion-humana.dashboard');
+    }
+
     if ($selectedModule && $selectedBoardKey === 'gestion_clientes') {
         return redirect(auth()->user()->defaultGestionClientesBoardUrl());
     }
