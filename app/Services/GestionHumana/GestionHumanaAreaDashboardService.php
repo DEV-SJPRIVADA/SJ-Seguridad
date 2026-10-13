@@ -4,7 +4,7 @@ namespace App\Services\GestionHumana;
 
 use App\Models\AcreditacionAcreditado;
 use App\Models\ClienteInternoSolicitud;
-use App\Models\EmployeeArchiveConsultation;
+use App\Models\EmployeeArchiveConsultationItem;
 use App\Models\EmployeeFichaProfile;
 use App\Models\FormacionRegistro;
 use App\Models\GhAreaDashboardConceptoCargo;
@@ -358,11 +358,15 @@ final class GestionHumanaAreaDashboardService
             ->count();
     }
 
+    /**
+     * KPI Archivo = ítems del historial (cédulas/documentos), no cabeceras de consulta.
+     * Año por created_at; mes por month_number (mismo criterio que el historial de Archivo).
+     */
     private function countArchivoConsultas(int $anio, int $mes): int
     {
-        return EmployeeArchiveConsultation::query()
+        return EmployeeArchiveConsultationItem::query()
             ->whereYear('created_at', $anio)
-            ->whereMonth('created_at', $mes)
+            ->where('month_number', $mes)
             ->count();
     }
 
@@ -521,7 +525,8 @@ final class GestionHumanaAreaDashboardService
     }
 
     /**
-     * Pie de motivos: cada clave en consultation_types cuenta 1 (multi-motivo por consulta).
+     * Pie de motivos sobre ítems del historial (misma base que el KPI Archivo).
+     * Cada cédula suma 1 a cada motivo de su consulta (multi-motivo).
      *
      * @return array{labels: list<string>, data: list<int>}
      */
@@ -536,14 +541,15 @@ final class GestionHumanaAreaDashboardService
             $counts[$key] = 0;
         }
 
-        EmployeeArchiveConsultation::query()
+        EmployeeArchiveConsultationItem::query()
+            ->with(['consultation:id,consultation_types'])
             ->whereYear('created_at', $anio)
-            ->whereMonth('created_at', $mes)
+            ->where('month_number', $mes)
             ->orderBy('id')
             ->chunkById(500, function ($rows) use (&$counts): void {
                 foreach ($rows as $row) {
-                    $types = $row->consultation_types ?? [];
-                    if (! is_array($types)) {
+                    $types = $row->consultation?->consultation_types ?? [];
+                    if (! is_array($types) || $types === []) {
                         continue;
                     }
                     foreach ($types as $typeKey) {

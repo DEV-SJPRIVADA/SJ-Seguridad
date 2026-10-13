@@ -5,6 +5,7 @@ namespace Tests\Feature\GestionHumana;
 use App\Models\AcreditacionAcreditado;
 use App\Models\ClienteInternoSolicitud;
 use App\Models\EmployeeArchiveConsultation;
+use App\Models\EmployeeArchiveConsultationItem;
 use App\Models\EmployeeFichaProfile;
 use App\Models\FormacionRegistro;
 use App\Models\GhAreaDashboardConcepto;
@@ -213,16 +214,31 @@ class GestionHumanaAreaDashboardTest extends TestCase
         ]);
 
         $archiveUser = $viewer;
-        EmployeeArchiveConsultation::query()->create([
+        $archiveConsultation = EmployeeArchiveConsultation::query()->create([
             'user_id' => $archiveUser->id,
-            'document_numbers' => ['1001'],
+            'document_numbers' => ['1001', '1002'],
             'consultation_types' => ['juridico', 'gerencia'],
-            'documents_requested' => 1,
-            'documents_matched' => 1,
+            'documents_requested' => 2,
+            'documents_matched' => 2,
             'delivered_to' => 'GH',
             'created_at' => '2026-10-08 10:00:00',
             'updated_at' => '2026-10-08 10:00:00',
         ]);
+        // KPI Archivo cuenta ítems (cédulas), no cabeceras de consulta.
+        foreach ([['1001', 'Activo Uno'], ['1002', 'Activo Dos']] as [$doc, $name]) {
+            EmployeeArchiveConsultationItem::query()->create([
+                'employee_archive_consultation_id' => $archiveConsultation->id,
+                'document_number' => $doc,
+                'full_name' => $name,
+                'concept' => 'Consulta prueba',
+                'delivered_to' => 'GH',
+                'week_of_month' => 2,
+                'month_number' => 10,
+                'month_label' => 'Octubre',
+                'created_at' => '2026-10-08 10:00:00',
+                'updated_at' => '2026-10-08 10:00:00',
+            ]);
+        }
 
         $metrics = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.dashboard.metrics', [
@@ -275,12 +291,12 @@ class GestionHumanaAreaDashboardTest extends TestCase
         $this->assertSame(1, $metrics['kpis']['acreditaciones']);
         $this->assertSame(1, $metrics['kpis']['cliente_interno']);
         $this->assertSame(2, $metrics['kpis']['formacion']);
-        $this->assertSame(1, $metrics['kpis']['archivo']);
+        $this->assertSame(2, $metrics['kpis']['archivo']);
         $this->assertSame(['ACREDITADO', 'EN PROCESO', 'POR VENCER'], $metrics['charts']['estado_acreditacion']['labels']);
         $this->assertSame(['VIGENTE', 'VENCERA', 'VENCIDO'], $metrics['charts']['estado_psicofisicos']['labels']);
-        // Pie archivo: juridico + gerencia = 2 segmentos.
+        // Pie archivo: 2 ítems × 2 motivos (juridico + gerencia) = suma 4.
         $this->assertCount(2, $metrics['charts']['consultas_archivo']['labels']);
-        $this->assertSame(2, array_sum($metrics['charts']['consultas_archivo']['data']));
+        $this->assertSame(4, array_sum($metrics['charts']['consultas_archivo']['data']));
 
         // Filtro ciudad (displayCitySql).
         $byCity = $this->actingAs($viewer)
@@ -308,7 +324,7 @@ class GestionHumanaAreaDashboardTest extends TestCase
         // CI / Formación / Archivo ignoran ciudad.
         $this->assertSame(1, $byCity['kpis']['cliente_interno']);
         $this->assertSame(2, $byCity['kpis']['formacion']);
-        $this->assertSame(1, $byCity['kpis']['archivo']);
+        $this->assertSame(2, $byCity['kpis']['archivo']);
     }
 
     public function test_rotacion_display_em_dash_when_denominator_zero(): void

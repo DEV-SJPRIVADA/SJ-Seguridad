@@ -148,7 +148,7 @@ Lista: `ESCOLTA`, `ESCOLTA MENSUAL`, `ESCOLTA SJ`, `GUARDA`, `GUARDA SJ`, `GUARD
 | Psicofisicos | `estado_1 = VIGENTE` MT-ST-04 (+ join ficha) |
 | Cliente interno | Solicitudes `anio`+`mes` |
 | Formacion | `formacion_registros` `anio`+`mes` |
-| Archivo | Consultas con `created_at` en ano/mes |
+| Archivo | Ítems del historial (`employee_archive_consultation_items`): `whereYear(created_at)` + `month_number` (cédulas/documentos, no cabeceras) |
 
 ### Graficos (7)
 
@@ -160,7 +160,7 @@ Lista: `ESCOLTA`, `ESCOLTA MENSUAL`, `ESCOLTA SJ`, `GUARDA`, `GUARDA SJ`, `GUARD
 | `personal_por_cargos` | Barras | Top 15 cargos entre activos EOM del mes |
 | `estado_psicofisicos` | Barras/donut | VIGENTE / VENCERA / VENCIDO |
 | `estado_acreditacion` | Barras/donut | ACREDITADO / EN PROCESO / POR VENCER (sin DESACREDITADO V1) |
-| `consultas_archivo` | Pie | Motivos: expandir JSON `consultation_types`; labels `config('employee_ficha.archive_consultation_types')`. Multi-motivo: cada motivo cuenta |
+| `consultas_archivo` | Pie | Misma base que KPI Archivo (ítems año+`month_number`); cada cédula suma 1 a cada motivo de su consulta (`consultation_types`). Labels desde `config('employee_ficha.archive_consultation_types')` |
 
 ### Payload metrics JSON (contrato)
 

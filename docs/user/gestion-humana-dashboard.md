@@ -64,7 +64,7 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 
 ### Leer las tarjetas (indicadores)
 
-1. Revise las diez tarjetas: personal activo, ingresos, desvinculaciones, rotación, personal operativo (con %), acreditaciones, psicofísicos, cliente interno, formación y archivo.
+1. Revise las diez tarjetas: personal activo, ingresos, desvinculaciones, rotación, personal operativo (con %), acreditaciones, psicofísicos, cliente interno, formación y archivo (archivo = cantidad de cédulas/documentos del historial del mes, no el número de consultas).
 2. Si la rotación muestra **—**, significa que no hay personal base suficiente en el mes actual y el anterior para calcular el porcentaje.
 3. Personal operativo solo cuenta cargos de la lista operativa acordada; un cargo escrito distinto en la ficha no entra en ese conteo.
 
@@ -76,7 +76,7 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 4. **Personal por concepto / área:** activos del mes agrupados por conceptos (Administración, Comercial, Guardas, etc.). Lo que no esté asignado aparece en **OTROS**.
 5. **Estado psicofísicos:** distribución Vigente / Vencerá / Vencido.
 6. **Estado acreditación:** Acreditado / En proceso / Por vencer.
-7. **Consultas archivo:** motivos de consulta del mes (una consulta con varios motivos suma en cada motivo).
+7. **Consultas archivo:** motivos del mes sobre las mismas cédulas del KPI Archivo (si una consulta tiene varios motivos, cada cédula suma en cada motivo).
 
 ### Administrar conceptos / áreas
 
@@ -95,3 +95,5 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 | --- | --- | --- | --- |
 | 1.0 | 2026-10-13 | Documentador | Versión inicial FEAT-046 (informe mensual KPI + gráficos). |
 | 1.1 | 2026-10-13 | Feature | Personal por concepto/área + modal CRUD (mismo permiso del tablero). |
+| 1.2 | 2026-10-13 | Feature | KPI Archivo = ítems del historial (año + mes), no cabeceras de consulta. |
+| 1.3 | 2026-10-13 | Feature | Pie Consultas Archivo alineado a ítems (misma base que el KPI). |
