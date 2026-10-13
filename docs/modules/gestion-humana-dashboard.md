@@ -152,12 +152,14 @@ Lista: `ESCOLTA`, `ESCOLTA MENSUAL`, `ESCOLTA SJ`, `GUARDA`, `GUARDA SJ`, `GUARD
 
 ### Graficos (7)
 
+Líneas y barras muestran **etiquetas de valor** (`dataLabels` en `gh-area-dashboard-charts.js`, formato `es-CO`). Los donuts ya mostraban porcentaje/total.
+
 | Key payload | Tipo | Serie |
 | --- | --- | --- |
 | `evolucion_personal` | Linea | Activos EOM por mes (+ dims ficha); año vigente hasta mes actual, año pasado Ene–Dic |
 | `ingresos_vs_desvinculaciones` | Barras agrupadas | Ingresos vs bajas por mes (mismo tope que evolución personal) |
 | `evolucion_formacion` | Linea | Personas del ciclo por mes (hasta mes actual si el año es el vigente; año pasado = Ene–Dic) |
-| `personal_por_cargos` | Barras | Top 15 cargos entre activos EOM del mes |
+| `personal_por_concepto` | Barras horizontales | Activos EOM del mes agrupados por concepto/área (cargos sin mapa → OTROS) |
 | `estado_psicofisicos` | Barras/donut | VIGENTE / VENCERA / VENCIDO |
 | `estado_acreditacion` | Barras/donut | ACREDITADO / EN PROCESO / POR VENCER (sin DESACREDITADO V1) |
 | `consultas_archivo` | Pie | Misma base que KPI Archivo (ítems año+`month_number`); cada cédula suma 1 a cada motivo de su consulta (`consultation_types`). Labels desde `config('employee_ficha.archive_consultation_types')` |

@@ -13145,6 +13145,21 @@ a.req-dashboard-kpi:focus-visible {
     }
 }
 
+/* Dashboard área GH: título de cabecera */
+.gh-area-dashboard-page__header {
+    padding-block: 0.35rem;
+    text-align: center;
+}
+
+.gh-area-dashboard-page__title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-text, #0f172a);
+    text-align: center;
+}
+
 /* Dashboard área GH: KPI 1 fila + charts 3+4 (portátil / monitor ≥960px) */
 .gh-area-dashboard-page__charts {
     display: flex;
@@ -13164,32 +13179,132 @@ a.req-dashboard-kpi:focus-visible {
 
 .gh-area-dashboard-page__charts-row--bottom {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* Evita estirar paneles con vacío inferior; cada card sigue su contenido. */
+    align-items: start;
 }
 
-@media (min-width: 960px) {
+/* Fila inferior: contenedores más bajos (donuts + barras horizontales). */
+.gh-area-dashboard-page__charts-row--bottom .cursos-dashboard-page__chart {
+    min-height: 200px;
+    height: 210px;
+}
+
+.gh-area-dashboard-page__charts-row--bottom .gh-area-dashboard-page__chart--concepto {
+    min-height: 0;
+    height: auto;
+}
+
+/* Títulos de gráficos centrados (los 7 paneles del informe). */
+.gh-area-dashboard-page__charts .panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.5rem;
+    text-align: center;
+}
+
+.gh-area-dashboard-page__charts .panel-title {
+    margin: 0;
+    text-align: center;
+    width: 100%;
+}
+
+.gh-area-dashboard-page__charts .panel__body {
+    padding: 0.25rem 0.5rem 0.5rem;
+}
+
+/* Etiquetas de datos Apex: sin caja (no tapan barras); halo blanco para leer sobre color. */
+.gh-area-dashboard-page .apexcharts-datalabels rect {
+    fill: transparent !important;
+    fill-opacity: 0 !important;
+    stroke: none !important;
+}
+
+.gh-area-dashboard-page .apexcharts-datalabels text {
+    fill: #0f172a !important;
+    paint-order: stroke fill;
+    stroke: #ffffff;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+/*
+ * KPIs área GH: 10 en una fila (portátil + monitor), texto/número centrados,
+ * label de 2 líneas fijas para que los valores no “salten” verticalmente.
+ */
+.gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 0.4rem;
+}
+
+.gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi {
+    display: grid;
+    grid-template-rows: 2.55em minmax(1.35em, auto) 1.05em;
+    justify-items: center;
+    align-items: center;
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0.45rem 0.3rem;
+}
+
+.gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-label {
+    margin: 0;
+    width: 100%;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(0.48rem, 0.7vw, 0.68rem);
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-value {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    font-size: clamp(0.95rem, 1.25vw, 1.35rem);
+    line-height: 1.05;
+}
+
+.gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .formacion-dashboard-page__kpi-hint {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    font-size: clamp(0.48rem, 0.65vw, 0.65rem);
+    line-height: 1.1;
+    color: #64748b;
+}
+
+@media (min-width: 1280px) {
     .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid {
-        grid-template-columns: repeat(10, minmax(0, 1fr));
         gap: 0.5rem;
     }
 
     .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi {
-        padding: 0.55rem 0.6rem;
-        min-width: 0;
+        padding: 0.55rem 0.45rem;
+    }
+}
+
+/* Solo en pantallas muy angostas (móvil): 2 filas de 5; portátil sigue en 1×10. */
+@media (max-width: 899px) {
+    .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.5rem;
     }
 
     .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-label {
         font-size: 0.62rem;
-        line-height: 1.2;
-        white-space: normal;
     }
 
     .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-value {
-        font-size: 1.25rem;
-        margin-top: 0.25rem;
-    }
-
-    .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .formacion-dashboard-page__kpi-hint {
-        font-size: 0.65rem;
+        font-size: 1.2rem;
     }
 }
 
@@ -13197,6 +13312,69 @@ a.req-dashboard-kpi:focus-visible {
     .gh-area-dashboard-page__charts-row--top,
     .gh-area-dashboard-page__charts-row--bottom {
         grid-template-columns: 1fr;
+    }
+
+    /* Altura suficiente en tablet/móvil: etiquetas, ejes y leyenda sin recorte. */
+    .gh-area-dashboard-page__charts-row--top .cursos-dashboard-page__chart {
+        min-height: 280px;
+        height: 300px;
+    }
+
+    .gh-area-dashboard-page__charts-row--bottom .cursos-dashboard-page__chart {
+        min-height: 260px;
+        height: 270px;
+    }
+
+    .gh-area-dashboard-page__charts-row--bottom .gh-area-dashboard-page__chart--concepto {
+        min-height: 240px;
+        height: auto;
+    }
+
+    .gh-area-dashboard-page__charts .panel,
+    .gh-area-dashboard-page__charts .panel__body {
+        overflow: visible;
+    }
+}
+
+@media (max-width: 639px) {
+    .gh-area-dashboard-page__charts {
+        gap: 0.65rem;
+    }
+
+    .gh-area-dashboard-page__charts-row--top .cursos-dashboard-page__chart {
+        min-height: 300px;
+        height: 320px;
+    }
+
+    .gh-area-dashboard-page__charts-row--bottom .cursos-dashboard-page__chart {
+        min-height: 280px;
+        height: 290px;
+    }
+
+    .gh-area-dashboard-page__charts-row--bottom .gh-area-dashboard-page__chart--concepto {
+        min-height: 260px;
+    }
+
+    /* KPIs más legibles en celular (2 columnas). */
+    .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi {
+        padding: 0.55rem 0.5rem;
+        grid-template-rows: auto minmax(1.4em, auto) 1.05em;
+    }
+
+    .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-label {
+        font-size: 0.68rem;
+        overflow-wrap: break-word;
+        word-break: normal;
+        hyphens: manual;
+    }
+
+    .gh-area-dashboard-page .gh-area-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-value {
+        font-size: 1.35rem;
     }
 }
 

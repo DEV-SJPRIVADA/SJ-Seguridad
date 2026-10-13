@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="app-container" style="padding-block: 0.2rem;">
-            <h2 class="panel-title" style="margin:0;">Dashboard de Gestión Humana – Informe Mensual</h2>
+        <div class="app-container gh-area-dashboard-page__header">
+            <h2 class="gh-area-dashboard-page__title">Dashboard de Gestión Humana – Informe Mensual</h2>
         </div>
     </x-slot>
 
@@ -193,7 +193,7 @@
                             <h3 class="panel-title">Personal por concepto / área</h3>
                         </div>
                         <div class="panel__body">
-                            <div id="gh-area-chart-personal-por-concepto" class="cursos-dashboard-page__chart cursos-dashboard-page__chart--tall"></div>
+                            <div id="gh-area-chart-personal-por-concepto" class="cursos-dashboard-page__chart gh-area-dashboard-page__chart--concepto"></div>
                         </div>
                     </div>
                     <div class="panel">

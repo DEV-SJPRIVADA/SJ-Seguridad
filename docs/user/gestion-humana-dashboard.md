@@ -70,10 +70,10 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 
 ### Leer los gráficos
 
-1. **Evolución de personal:** activos al cierre de cada mes (del año en curso solo hasta el mes de hoy; años pasados Ene–Dic; respeta ciudad/cargo/cliente).
-2. **Ingresos vs desvinculaciones:** altas y bajas por mes (mismo tope de meses que la evolución de personal).
-3. **Evolución formación:** personas del ciclo por mes (mismo tope; criterio Formación → Por persona; no ciudad/cargo/cliente).
-4. **Personal por concepto / área:** activos del mes agrupados por conceptos (Administración, Comercial, Guardas, etc.). Lo que no esté asignado aparece en **OTROS**.
+1. **Evolución de personal:** activos al cierre de cada mes (del año en curso solo hasta el mes de hoy; años pasados Ene–Dic; respeta ciudad/cargo/cliente). Cada punto muestra el número.
+2. **Ingresos vs desvinculaciones:** altas y bajas por mes (mismo tope de meses que la evolución de personal). Las barras muestran el valor encima.
+3. **Evolución formación:** personas del ciclo por mes (mismo tope; criterio Formación → Por persona; no ciudad/cargo/cliente). Cada punto muestra el número.
+4. **Personal por concepto / área:** activos del mes agrupados por conceptos (Administración, Comercial, Guardas, etc.). Lo que no esté asignado aparece en **OTROS**. Cada barra muestra el número.
 5. **Estado psicofísicos:** distribución Vigente / Vencerá / Vencido.
 6. **Estado acreditación:** Acreditado / En proceso / Por vencer.
 7. **Consultas archivo:** motivos del mes sobre las mismas cédulas del KPI Archivo (si una consulta tiene varios motivos, cada cédula suma en cada motivo).
@@ -99,3 +99,5 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 | 1.3 | 2026-10-13 | Feature | Pie Consultas Archivo alineado a ítems (misma base que el KPI). |
 | 1.4 | 2026-10-13 | Feature | KPI y Evolución Formación = personas del ciclo (como Formación dashboard). |
 | 1.5 | 2026-10-13 | Feature | Gráficos de tendencia: año vigente hasta mes actual; años pasados Ene–Dic. |
+| 1.6 | 2026-10-13 | Feature | Etiquetas numéricas en gráficos de barra y de tendencia. |
+| 1.7 | 2026-10-13 | Feature | Etiquetas con fondo blanco; verticales en Personal, Ingresos vs Desvinculaciones y Formación. |
