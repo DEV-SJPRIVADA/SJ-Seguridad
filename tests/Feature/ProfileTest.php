@@ -24,18 +24,35 @@ class ProfileTest extends TestCase
         $response->assertSee('update_password_current_password', false);
         $response->assertSee('update_password_password', false);
         $response->assertSee('update_password_password_confirmation', false);
+        $response->assertDontSee('Eliminar cuenta', false);
+        $response->assertSee('title="Guardar cambios"', false);
+        $response->assertSee('title="Actualizar contraseña"', false);
     }
 
-    public function test_delete_account_option_is_hidden_for_non_super_admin_users(): void
+    public function test_delete_account_section_is_never_shown_on_profile(): void
     {
         $user = User::factory()->create();
+        Role::findOrCreate('super-admin', 'web');
+        $user->assignRole('super-admin');
 
-        $response = $this
-            ->actingAs($user)
-            ->get('/profile');
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertOk()
+            ->assertDontSee('Eliminar cuenta', false)
+            ->assertDontSee('confirm-user-deletion', false);
+    }
 
-        $response->assertOk();
-        $response->assertDontSee('Eliminar cuenta');
+    public function test_profile_self_delete_route_is_removed(): void
+    {
+        $user = User::factory()->create();
+        Role::findOrCreate('super-admin', 'web');
+        $user->assignRole('super-admin');
+
+        $this->actingAs($user)
+            ->delete('/profile', ['password' => 'password'])
+            ->assertMethodNotAllowed();
+
+        $this->assertNotNull($user->fresh());
     }
 
     public function test_profile_information_can_be_updated(): void
@@ -76,59 +93,5 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->refresh()->email_verified_at);
-    }
-
-    public function test_super_admin_can_delete_their_account(): void
-    {
-        $user = User::factory()->create();
-        Role::findOrCreate('super-admin', 'web');
-        $user->assignRole('super-admin');
-
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
-
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
-
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
-    }
-
-    public function test_non_super_admin_user_cannot_delete_their_account(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
-            ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
-            ]);
-
-        $response->assertForbidden();
-        $this->assertNotNull($user->fresh());
-    }
-
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
-        Role::findOrCreate('super-admin', 'web');
-        $user->assignRole('super-admin');
-
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
-                'password' => 'wrong-password',
-            ]);
-
-        $response
-            ->assertSessionHasErrorsIn('userDeletion', 'password')
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->fresh());
     }
 }

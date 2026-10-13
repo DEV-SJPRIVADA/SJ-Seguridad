@@ -196,7 +196,7 @@ window.renderGhAreaDashboardCharts = function renderGhAreaDashboardCharts(charts
         'evolucionFormacion',
         charts?.evolucion_formacion || { labels: [], data: [] },
         BRAND_NAVY,
-        'Formación',
+        'Personas',
     );
     renderPorCargos(charts?.personal_por_concepto || { labels: [], data: [] });
     renderDonut(

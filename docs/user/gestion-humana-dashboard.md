@@ -64,15 +64,15 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 
 ### Leer las tarjetas (indicadores)
 
-1. Revise las diez tarjetas: personal activo, ingresos, desvinculaciones, rotación, personal operativo (con %), acreditaciones, psicofísicos, cliente interno, formación y archivo (archivo = cantidad de cédulas/documentos del historial del mes, no el número de consultas).
+1. Revise las diez tarjetas: personal activo, ingresos, desvinculaciones, rotación, personal operativo (con %), acreditaciones, psicofísicos, cliente interno, formación (personas del ciclo, igual que Formación → Por persona) y archivo (cédulas/documentos del historial del mes, no cabeceras de consulta).
 2. Si la rotación muestra **—**, significa que no hay personal base suficiente en el mes actual y el anterior para calcular el porcentaje.
 3. Personal operativo solo cuenta cargos de la lista operativa acordada; un cargo escrito distinto en la ficha no entra en ese conteo.
 
 ### Leer los gráficos
 
-1. **Evolución de personal:** activos al cierre de cada mes del año (respeta ciudad/cargo/cliente).
-2. **Ingresos vs desvinculaciones:** altas y bajas por mes del año.
-3. **Evolución formación:** registros de formación por mes (solo año; no ciudad/cargo/cliente).
+1. **Evolución de personal:** activos al cierre de cada mes (del año en curso solo hasta el mes de hoy; años pasados Ene–Dic; respeta ciudad/cargo/cliente).
+2. **Ingresos vs desvinculaciones:** altas y bajas por mes (mismo tope de meses que la evolución de personal).
+3. **Evolución formación:** personas del ciclo por mes (mismo tope; criterio Formación → Por persona; no ciudad/cargo/cliente).
 4. **Personal por concepto / área:** activos del mes agrupados por conceptos (Administración, Comercial, Guardas, etc.). Lo que no esté asignado aparece en **OTROS**.
 5. **Estado psicofísicos:** distribución Vigente / Vencerá / Vencido.
 6. **Estado acreditación:** Acreditado / En proceso / Por vencer.
@@ -97,3 +97,5 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 | 1.1 | 2026-10-13 | Feature | Personal por concepto/área + modal CRUD (mismo permiso del tablero). |
 | 1.2 | 2026-10-13 | Feature | KPI Archivo = ítems del historial (año + mes), no cabeceras de consulta. |
 | 1.3 | 2026-10-13 | Feature | Pie Consultas Archivo alineado a ítems (misma base que el KPI). |
+| 1.4 | 2026-10-13 | Feature | KPI y Evolución Formación = personas del ciclo (como Formación dashboard). |
+| 1.5 | 2026-10-13 | Feature | Gráficos de tendencia: año vigente hasta mes actual; años pasados Ene–Dic. |

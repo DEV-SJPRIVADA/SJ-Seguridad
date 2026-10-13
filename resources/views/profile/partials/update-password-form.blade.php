@@ -1,10 +1,7 @@
 <section class="profile-section profile-form">
     <header class="profile-section__header">
         <div class="profile-section__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+            <x-lucide-lock width="20" height="20" />
         </div>
         <div>
             <h2 class="profile-section__title">Seguridad de la cuenta</h2>
@@ -38,8 +35,15 @@
             </div>
         </div>
 
-        <div class="content-actions profile-form__actions">
-            <x-primary-button>Actualizar contraseña</x-primary-button>
+        <div class="content-actions content-actions--end profile-form__actions">
+            <button
+                type="submit"
+                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                title="Actualizar contraseña"
+                aria-label="Actualizar contraseña"
+            >
+                <x-lucide-save width="18" height="18" aria-hidden="true" />
+            </button>
 
             @if (session('status') === 'password-updated')
                 <p

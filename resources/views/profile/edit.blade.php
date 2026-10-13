@@ -59,14 +59,6 @@
                     @include('profile.partials.update-password-form')
                 </div>
             </div>
-
-            @if (auth()->user()?->hasRole('super-admin'))
-                <div class="panel profile-card profile-card--danger">
-                    <div class="profile-card__inner">
-                        @include('profile.partials.delete-user-form')
-                    </div>
-                </div>
-            @endif
         </div>
     </div>
 </x-app-layout>

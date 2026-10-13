@@ -202,15 +202,31 @@ class GestionHumanaAreaDashboardTest extends TestCase
             'mes' => 9,
         ]);
 
+        // KPI Formación = personas del ciclo (no filas): 2 personas distintas.
         FormacionRegistro::factory()->create([
             'anio' => 2026,
             'mes' => 10,
             'fecha_inicio' => '2026-10-01',
+            'numero_id' => '900001',
+            'nombre_curso' => 'Inducción SST',
+            'calificacion' => '9',
         ]);
         FormacionRegistro::factory()->create([
             'anio' => 2026,
             'mes' => 10,
             'fecha_inicio' => '2026-10-15',
+            'numero_id' => '900002',
+            'nombre_curso' => 'Inducción SST',
+            'calificacion' => '8',
+        ]);
+        // Misma persona, otro curso → no incrementa el KPI de personas.
+        FormacionRegistro::factory()->create([
+            'anio' => 2026,
+            'mes' => 10,
+            'fecha_inicio' => '2026-10-20',
+            'numero_id' => '900001',
+            'nombre_curso' => 'Primeros auxilios',
+            'calificacion' => '9',
         ]);
 
         $archiveUser = $viewer;
@@ -343,6 +359,39 @@ class GestionHumanaAreaDashboardTest extends TestCase
         $this->assertSame(0, $metrics['meta']['activos_mes_anterior']);
         $this->assertSame(0.0, (float) $metrics['kpis']['rotacion_mensual_pct']);
         $this->assertSame('—', $metrics['kpis']['rotacion_display']);
+    }
+
+    public function test_trend_charts_stop_at_current_month_for_current_year(): void
+    {
+        // setUp fija now = 2026-10-15 America/Bogota → año vigente corta en octubre.
+        $viewer = $this->viewerUser();
+
+        $current = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.dashboard.metrics', [
+                'anio' => 2026,
+                'mes' => 10,
+            ]))
+            ->assertOk()
+            ->json('charts');
+
+        $this->assertCount(10, $current['evolucion_personal']['labels']);
+        $this->assertSame('Oct', $current['evolucion_personal']['labels'][9]);
+        $this->assertCount(10, $current['ingresos_vs_desvinculaciones']['labels']);
+        $this->assertCount(10, $current['evolucion_formacion']['labels']);
+        $this->assertCount(10, $current['evolucion_formacion']['data']);
+
+        $past = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.dashboard.metrics', [
+                'anio' => 2025,
+                'mes' => 6,
+            ]))
+            ->assertOk()
+            ->json('charts');
+
+        $this->assertCount(12, $past['evolucion_personal']['labels']);
+        $this->assertSame('Dic', $past['evolucion_personal']['labels'][11]);
+        $this->assertCount(12, $past['ingresos_vs_desvinculaciones']['labels']);
+        $this->assertCount(12, $past['evolucion_formacion']['labels']);
     }
 
     public function test_operative_positions_case_insensitive_exact_match(): void

@@ -6,7 +6,6 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\ClienteInternoSolicitud;
 use App\Models\EmployeeArchiveConsultationItem;
 use App\Models\EmployeeFichaProfile;
-use App\Models\FormacionRegistro;
 use App\Models\GhAreaDashboardConceptoCargo;
 use App\Models\MtSt04Registro;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,6 +18,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class GestionHumanaAreaDashboardService
 {
+    public function __construct(
+        private readonly FormacionDashboardService $formacionDashboardService,
+    ) {}
+
     private const MONTH_LABELS = [
         1 => 'Ene',
         2 => 'Feb',
@@ -350,12 +353,12 @@ final class GestionHumanaAreaDashboardService
             ->count();
     }
 
+    /**
+     * Mismo KPI «Personas» del dashboard Formación → Por persona (ciclo).
+     */
     private function countFormacion(int $anio, int $mes): int
     {
-        return FormacionRegistro::query()
-            ->where('anio', $anio)
-            ->where('mes', $mes)
-            ->count();
+        return (int) $this->formacionDashboardService->buildCicloMetrics($anio, $mes)['personas'];
     }
 
     /**
@@ -371,6 +374,26 @@ final class GestionHumanaAreaDashboardService
     }
 
     /**
+     * Tope de ejes de tendencia: año en curso → mes calendario actual; años pasados → 12;
+     * años futuros → sin puntos (0).
+     */
+    private function lastTrendMonthForYear(int $anio): int
+    {
+        $now = now('America/Bogota');
+        $currentYear = (int) $now->year;
+
+        if ($anio < $currentYear) {
+            return 12;
+        }
+
+        if ($anio > $currentYear) {
+            return 0;
+        }
+
+        return max(1, min(12, (int) $now->month));
+    }
+
+    /**
      * @param  array{ciudad: string, cargo: string, cliente: string}  $filters
      * @return array{labels: list<string>, data: list<int>}
      */
@@ -378,8 +401,9 @@ final class GestionHumanaAreaDashboardService
     {
         $labels = [];
         $data = [];
+        $lastMonth = $this->lastTrendMonthForYear($anio);
 
-        for ($month = 1; $month <= 12; $month++) {
+        for ($month = 1; $month <= $lastMonth; $month++) {
             $labels[] = self::MONTH_LABELS[$month];
             $eom = $this->endOfMonth($anio, $month);
             $data[] = $this->countActivosEom($eom, $filters);
@@ -400,8 +424,9 @@ final class GestionHumanaAreaDashboardService
         $labels = [];
         $ingresos = [];
         $desvinculaciones = [];
+        $lastMonth = $this->lastTrendMonthForYear($anio);
 
-        for ($month = 1; $month <= 12; $month++) {
+        for ($month = 1; $month <= $lastMonth; $month++) {
             $labels[] = self::MONTH_LABELS[$month];
             $ingresos[] = $this->countHiresInMonth($anio, $month, $filters);
             $desvinculaciones[] = $this->countTerminationsInMonth($anio, $month, $filters);
@@ -415,21 +440,19 @@ final class GestionHumanaAreaDashboardService
     }
 
     /**
+     * Personas del ciclo por mes (misma lógica que Formación → Por persona).
+     *
      * @return array{labels: list<string>, data: list<int>}
      */
     private function chartEvolucionFormacion(int $anio): array
     {
-        $counts = FormacionRegistro::query()
-            ->where('anio', $anio)
-            ->select('mes', DB::raw('COUNT(*) as aggregate'))
-            ->groupBy('mes')
-            ->pluck('aggregate', 'mes');
-
         $labels = [];
         $data = [];
-        for ($month = 1; $month <= 12; $month++) {
+        $lastMonth = $this->lastTrendMonthForYear($anio);
+
+        for ($month = 1; $month <= $lastMonth; $month++) {
             $labels[] = self::MONTH_LABELS[$month];
-            $data[] = (int) ($counts[$month] ?? 0);
+            $data[] = (int) $this->formacionDashboardService->buildCicloMetrics($anio, $month)['personas'];
         }
 
         return [

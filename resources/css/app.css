@@ -9448,6 +9448,7 @@ a.req-dashboard-kpi:focus-visible {
 .profile-form__actions {
     margin-top: 0.35rem;
     padding-top: 0.35rem;
+    justify-content: flex-end;
 }
 
 /* Usuarios admin: base amigable para portatil; en monitor alto llena hasta 0.5rem del fondo */

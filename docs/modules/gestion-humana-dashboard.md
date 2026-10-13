@@ -84,7 +84,7 @@ Sin tablas propias. Lectura agregada:
 | `MtSt04Registro` | `mt_st_04_registros` | Card VIGENTE + chart estados examen 1 (join ficha para dims) |
 | `AcreditacionAcreditado` | `acreditacion_acreditados` | Card ACREDITADO + chart 3 estados (join ficha) |
 | `ClienteInternoSolicitud` | `cliente_interno_solicitudes` | Count `anio`+`mes` |
-| `FormacionRegistro` | `formacion_registros` | Count `anio`+`mes` + serie anual |
+| `FormacionRegistro` / `FormacionDashboardService` | `formacion_registros` | KPI + serie = personas del ciclo (`buildCicloMetrics`) |
 | `EmployeeArchiveConsultation` | `employee_archive_consultations` | Count `created_at` ano/mes + pie motivos JSON |
 
 ## Servicios / jobs / mail (si aplica)
@@ -147,16 +147,16 @@ Lista: `ESCOLTA`, `ESCOLTA MENSUAL`, `ESCOLTA SJ`, `GUARDA`, `GUARDA SJ`, `GUARD
 | Acreditaciones | Estado `ACREDITADO` (+ join ficha dims) |
 | Psicofisicos | `estado_1 = VIGENTE` MT-ST-04 (+ join ficha) |
 | Cliente interno | Solicitudes `anio`+`mes` |
-| Formacion | `formacion_registros` `anio`+`mes` |
+| Formacion | Personas ciclo (`buildCicloMetrics` → `personas`) año+mes |
 | Archivo | Ítems del historial (`employee_archive_consultation_items`): `whereYear(created_at)` + `month_number` (cédulas/documentos, no cabeceras) |
 
 ### Graficos (7)
 
 | Key payload | Tipo | Serie |
 | --- | --- | --- |
-| `evolucion_personal` | Linea | Activos EOM 12 meses del ano (+ dims ficha) |
-| `ingresos_vs_desvinculaciones` | Barras agrupadas | Ingresos vs bajas por mes |
-| `evolucion_formacion` | Linea | Registros formacion por mes (solo ano) |
+| `evolucion_personal` | Linea | Activos EOM por mes (+ dims ficha); año vigente hasta mes actual, año pasado Ene–Dic |
+| `ingresos_vs_desvinculaciones` | Barras agrupadas | Ingresos vs bajas por mes (mismo tope que evolución personal) |
+| `evolucion_formacion` | Linea | Personas del ciclo por mes (hasta mes actual si el año es el vigente; año pasado = Ene–Dic) |
 | `personal_por_cargos` | Barras | Top 15 cargos entre activos EOM del mes |
 | `estado_psicofisicos` | Barras/donut | VIGENTE / VENCERA / VENCIDO |
 | `estado_acreditacion` | Barras/donut | ACREDITADO / EN PROCESO / POR VENCER (sin DESACREDITADO V1) |
