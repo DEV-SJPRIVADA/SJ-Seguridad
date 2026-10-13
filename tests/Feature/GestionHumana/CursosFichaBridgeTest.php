@@ -6,6 +6,7 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\CursoTipo;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
+use App\Models\MtSt04Registro;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\RequisitionCity;
@@ -138,6 +139,51 @@ class CursosFichaBridgeTest extends TestCase
             ->assertSee('Acreditaciones del empleado', false)
             ->assertSee('VIGILANTE', false)
             ->assertSee('OK ficha', false);
+    }
+
+    public function test_edit_ficha_shows_psicofisicos_modal_when_required(): void
+    {
+        $manager = $this->fichaManager();
+        $entry = $this->createEntryWithProfile('6666001122', 'Psico Bridge');
+        $entry->profile->update(['requires_psicofisicos' => true]);
+
+        MtSt04Registro::factory()->create([
+            'document_number' => '6666001122',
+            'arma' => MtSt04Registro::ARMA_SI,
+            'apto' => MtSt04Registro::APTO_SI,
+            'estado_1' => MtSt04Registro::ESTADO_VIGENTE,
+            'fecha_examen_1' => '2026-01-10',
+            'fecha_vencimiento_1' => '2027-01-09',
+            'observaciones_1' => 'OK psico ficha',
+            'estado_2' => MtSt04Registro::ESTADO_VENCERA,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertSee('Consultar psicofísicos', false)
+            ->assertSee('ficha-employee-psicofisicos', false)
+            ->assertSee('Psicofísicos del empleado', false)
+            ->assertSee('OK psico ficha', false)
+            ->assertSee('VIGENTE', false);
+    }
+
+    public function test_edit_ficha_hides_psicofisicos_when_not_required(): void
+    {
+        $manager = $this->fichaManager();
+        $entry = $this->createEntryWithProfile('7777001122', 'Sin Psico');
+        $entry->profile->update(['requires_psicofisicos' => false]);
+
+        MtSt04Registro::factory()->create([
+            'document_number' => '7777001122',
+            'estado_1' => MtSt04Registro::ESTADO_VIGENTE,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertDontSee('Consultar psicofísicos', false)
+            ->assertDontSee('ficha-employee-psicofisicos', false);
     }
 
     private function fichaViewer(): User

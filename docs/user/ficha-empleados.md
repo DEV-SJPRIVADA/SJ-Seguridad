@@ -83,7 +83,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. En la pestaña **Empleados**, cambie a la pill **En ficha**.
 2. Haga clic en una fila para abrir el detalle de la ficha.
-3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. Use el icono **Generar Cartas** (documento) en la barra superior: se abre el mismo modal con **tipo de documento** (todos los tipos activos de Plantillas Word), lista compacta de plantillas según el tipo y firmante. En ficha de desvinculado el icono abre el mismo modal preseleccionando desvinculación; en activo, contratación. **Contratación** y **desvinculación** mantienen sus reglas; el resto de tipos del catálogo (por ejemplo Cliente interno) se pueden generar con vínculo activo o cerrado, usando los mismos permisos de ficha. Tipos no aplicables aparecen deshabilitados con mensaje. Al generar se llama al endpoint del tipo elegido. Con permiso de ver ficha también puede abrir **Consultar cursos** (gorro) y **Consultar acreditación** (insignia) para ver el historial por cédula sin salir de la ficha.
+3. Con permiso solo de **ver**, la ficha se muestra en **solo lectura** (sin «Habilitar edición» ni Guardar). Con permiso de **edición**, use **Habilitar edición** (barra sobre el formulario) y guarde. Use el icono **Generar Cartas** (documento) en la barra superior: se abre el mismo modal con **tipo de documento** (todos los tipos activos de Plantillas Word), lista compacta de plantillas según el tipo y firmante. En ficha de desvinculado el icono abre el mismo modal preseleccionando desvinculación; en activo, contratación. **Contratación** y **desvinculación** mantienen sus reglas; el resto de tipos del catálogo (por ejemplo Cliente interno) se pueden generar con vínculo activo o cerrado, usando los mismos permisos de ficha. Tipos no aplicables aparecen deshabilitados con mensaje. Al generar se llama al endpoint del tipo elegido. Con permiso de ver ficha también puede abrir **Consultar cursos** (gorro) y **Consultar acreditación** (insignia) para ver el historial por cédula sin salir de la ficha. Si el empleado **requiere psicofísicos**, aparece además el icono **Consultar psicofísicos** (pulso) con el estado MT-ST-04 (arma, apto, vigencia psicofísico y vial).
 4. En el filtro **Desvinculado** aparece la columna **Recontratable** (Si/No) según lo registrado al desvincular.
 
 ### Completar ficha de empleado
@@ -164,6 +164,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.37 | 2026-10-13 | Agent | Ficha: icono **Consultar psicofísicos** (modal MT-ST-04 por cédula) junto a cursos/acreditación; visible solo si `requires_psicofisicos`. |
 | 1.36 | 2026-10-06 | Agent | Selectores searchable: al pasar el mouse sobre un valor truncado se muestra el texto completo (`title`). |
 | 1.35 | 2026-10-06 | Agent | Catálogos: modal de edición rediseñado (cabecera con icono, orden/activo en fila, pie con iconos cancelar/guardar). |
 | 1.34 | 2026-10-05 | Agent | Temp Word: mantiene `sys_get_temp_dir` como primera opción (como antes); storage solo si el temp del sistema no es usable. |

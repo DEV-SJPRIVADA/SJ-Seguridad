@@ -167,6 +167,19 @@
                             </button>
                         @endif
 
+                        {{-- Consulta MT-ST-04 solo si el perfil requiere psicofísicos --}}
+                        @if ($canViewEmployeePsicofisicos ?? false)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Consultar psicofísicos"
+                                aria-label="Consultar estado de psicofísicos del empleado"
+                                x-on:click="$dispatch('open-modal', 'ficha-employee-psicofisicos')"
+                            >
+                                <x-lucide-heart-pulse width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+
                         @if ($employmentHistory->isNotEmpty())
                             <button
                                 type="button"
@@ -368,6 +381,12 @@
                 'entry' => $entry,
                 'employeeAcreditaciones' => $employeeAcreditaciones ?? collect(),
                 'canViewEmployeeAcreditaciones' => $canViewEmployeeAcreditaciones ?? false,
+            ])
+
+            @include('areas.gestion_humana.ficha-empleados.partials.employee-psicofisicos-modal', [
+                'entry' => $entry,
+                'employeePsicofisicos' => $employeePsicofisicos ?? collect(),
+                'canViewEmployeePsicofisicos' => $canViewEmployeePsicofisicos ?? false,
             ])
         </div>
     </div>

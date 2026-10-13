@@ -16,6 +16,7 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
+use App\Models\MtSt04Registro;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
@@ -624,7 +625,10 @@ class FichaEmpleadosController extends Controller
         $documentNumber = $this->resolveEntryDocumentNumber($fichaEntry, $profile);
         $employeeCursos = $this->employeeCursosForDocumentNumber($documentNumber);
         $employeeAcreditaciones = $this->employeeAcreditacionesForDocumentNumber($documentNumber);
+        $employeePsicofisicos = $this->employeePsicofisicosForDocumentNumber($documentNumber);
         $canViewEmployeeLookups = $this->fichaEmpleadosAccess->canView(auth()->user());
+        // Icono/modal psicofísicos solo si la ficha exige el requisito (requires_psicofisicos).
+        $canViewEmployeePsicofisicos = $canViewEmployeeLookups && (bool) ($profile->requires_psicofisicos ?? false);
         $canGenerateLetters = $this->canGenerateLetters($letterPeriod);
         $canGenerateContratacionLetters = $this->canGenerateContratacionLetters($activePeriod);
         // Icono/modal en desvinculado: manage o terminate (tipos genéricos); desvinculación sigue exigiendo terminate.
@@ -658,8 +662,10 @@ class FichaEmpleadosController extends Controller
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
             'employeeCursos' => $employeeCursos,
             'employeeAcreditaciones' => $employeeAcreditaciones,
+            'employeePsicofisicos' => $employeePsicofisicos,
             'canViewEmployeeCursos' => $canViewEmployeeLookups,
             'canViewEmployeeAcreditaciones' => $canViewEmployeeLookups,
+            'canViewEmployeePsicofisicos' => $canViewEmployeePsicofisicos,
             'canEditRequiresCourses' => $canEditRequiresCourses,
             'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion,
             'canEditRequiresPsicofisicos' => $canEditRequiresPsicofisicos,
@@ -1073,6 +1079,24 @@ class FichaEmpleadosController extends Controller
         return AcreditacionAcreditado::query()
             ->where('document_number', $documentNumber)
             ->orderByDesc('vigencia_acr')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    /**
+     * Registros MT-ST-04 del empleado (consulta psicofísicos / psicosensométricos desde ficha).
+     *
+     * @return Collection<int, MtSt04Registro>
+     */
+    private function employeePsicofisicosForDocumentNumber(string $documentNumber): Collection
+    {
+        if ($documentNumber === '') {
+            return collect();
+        }
+
+        return MtSt04Registro::query()
+            ->where('document_number', $documentNumber)
+            ->orderByDesc('fecha_examen_1')
             ->orderByDesc('id')
             ->get();
     }
