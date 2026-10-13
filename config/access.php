@@ -35,7 +35,7 @@ return [
         'plantillas_word.view' => 'Plantillas Word: Ver tipos y plantillas',
         'plantillas_word.manage' => 'Plantillas Word: Administrar tipos y plantillas',
         'cartas_notificacion.edit' => 'Cartas Notificación: Generar',
-        'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Masivos y Seguimientos)',
+        'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Dashboard, Masivos y Seguimientos)',
         'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nómina',
         'cursos.view' => 'Cursos: Ver listado, filtros y export Excel',
@@ -257,6 +257,7 @@ return [
     ],
 
     'desvinculaciones_tabs' => [
+        'dashboard' => 'Dashboard',
         'masivos' => 'Masivos',
         'seguimientos' => 'Seguimientos',
     ],

@@ -93,10 +93,19 @@ final class TerminationFollowupDatatableService
         $columnIndex = (int) $request->input('order.0.column', 0);
         $direction = $request->input('order.0.dir', 'desc') === 'asc' ? 'asc' : 'desc';
         $checkFields = array_values(EmployeeTerminationFollowup::CHECK_FIELDS);
+        $checkCount = count($checkFields);
+        $checksFrom = 7;
+        $checksTo = $checksFrom + $checkCount - 1;
+        $okTodoIndex = $checksTo + 1;
+        $payrollIndex = $okTodoIndex + 1;
+        $letterIndex = $payrollIndex + 1;
+        $causeRepeatIndex = $letterIndex + 1;
+        $rehireableIndex = $causeRepeatIndex + 1;
+        $notesIndex = $rehireableIndex + 1;
 
-        // Columnas 7–14: checks booleanos.
-        if ($columnIndex >= 7 && $columnIndex <= 14) {
-            $field = $checkFields[$columnIndex - 7] ?? null;
+        // Checks booleanos (índices dinámicos según CHECK_FIELDS).
+        if ($columnIndex >= $checksFrom && $columnIndex <= $checksTo) {
+            $field = $checkFields[$columnIndex - $checksFrom] ?? null;
             if ($field !== null) {
                 $query->orderBy($field, $direction)->orderByDesc('id');
 
@@ -104,8 +113,8 @@ final class TerminationFollowupDatatableService
             }
         }
 
-        // OK TODO (índice 15): AND de los 8 checks (misma lógica que isOkTodo).
-        if ($columnIndex === 15) {
+        // OK TODO: AND de los checks de Seguimientos (misma lógica que isOkTodo).
+        if ($columnIndex === $okTodoIndex) {
             $expr = implode(' AND ', array_map(
                 static fn (string $field): string => $field.' = 1',
                 $checkFields,
@@ -120,13 +129,13 @@ final class TerminationFollowupDatatableService
             1 => $query->orderBy('document_number', $direction)->orderByDesc('id'),
             2 => $query->orderBy('full_name', $direction)->orderByDesc('id'),
             3 => $query->orderBy('position_name', $direction)->orderByDesc('id'),
-            4, 18 => $query->orderBy('termination_cause_name', $direction)->orderByDesc('id'),
+            4, $causeRepeatIndex => $query->orderBy('termination_cause_name', $direction)->orderByDesc('id'),
             5 => $query->orderBy('registered_at', $direction)->orderByDesc('id'),
             6 => $query->orderBy('termination_date', $direction)->orderByDesc('id'),
-            16 => $query->orderBy('payroll_delivered_at', $direction)->orderByDesc('id'),
-            17 => $query->orderBy('letter_generated', $direction)->orderByDesc('id'),
-            19 => $query->orderBy('is_rehireable', $direction)->orderByDesc('id'),
-            20 => $query->orderBy('termination_notes', $direction)->orderByDesc('id'),
+            $payrollIndex => $query->orderBy('payroll_delivered_at', $direction)->orderByDesc('id'),
+            $letterIndex => $query->orderBy('letter_generated', $direction)->orderByDesc('id'),
+            $rehireableIndex => $query->orderBy('is_rehireable', $direction)->orderByDesc('id'),
+            $notesIndex => $query->orderBy('termination_notes', $direction)->orderByDesc('id'),
             default => $query->orderByDesc('id'),
         };
     }

@@ -403,8 +403,10 @@ class User extends Authenticatable
         $firstTab = $tabs->first();
 
         return match ($firstTab) {
+            'dashboard' => route('gestion-humana.desvinculaciones.dashboard'),
             'seguimientos' => route('gestion-humana.desvinculaciones.seguimientos'),
-            default => route('gestion-humana.desvinculaciones.masivos'),
+            'masivos' => route('gestion-humana.desvinculaciones.masivos'),
+            default => route('gestion-humana.desvinculaciones.dashboard'),
         };
     }
 

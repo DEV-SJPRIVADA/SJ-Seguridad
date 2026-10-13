@@ -15,6 +15,7 @@ use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\GestionHumana\BulkTerminationService;
 use App\Services\GestionHumana\DesvinculacionesAuditLogService;
+use App\Services\GestionHumana\DesvinculacionesDashboardService;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
 use App\Services\GestionHumana\HistoricalTerminationImportService;
 use App\Services\GestionHumana\TerminationFollowupDatatableService;
@@ -41,13 +42,44 @@ class DesvinculacionesController extends Controller
         private readonly TerminationFollowupDatatableService $followupDatatableService,
         private readonly DesvinculacionesAuditLogService $auditLogService,
         private readonly HistoricalTerminationImportService $historicalImportService,
+        private readonly DesvinculacionesDashboardService $dashboardService,
     ) {}
 
     public function index(Request $request): RedirectResponse
     {
         $this->authorizeView();
 
-        return redirect()->route('gestion-humana.desvinculaciones.masivos', $request->query());
+        return redirect()->route('gestion-humana.desvinculaciones.dashboard', $request->query());
+    }
+
+    public function dashboard(Request $request): View
+    {
+        $this->authorizeView();
+
+        $filters = $this->dashboardFiltersFromRequest($request);
+        $payload = $this->dashboardService->metrics($filters);
+        $options = $this->dashboardService->filterSelectOptions((int) $payload['filters']['anio']);
+
+        return view('areas.gestion_humana.desvinculaciones.dashboard', [
+            'subTabs' => $this->subTabs('dashboard'),
+            'filters' => $payload['filters'],
+            'initialPayload' => $payload,
+            'metricsUrl' => route('gestion-humana.desvinculaciones.dashboard.metrics'),
+            'yearOptions' => $options['anios'],
+            'monthOptions' => $options['meses'],
+            'cityOptions' => $options['ciudades'],
+            'positionOptions' => $options['cargos'],
+            'clientOptions' => $options['clientes'],
+        ]);
+    }
+
+    public function dashboardMetrics(Request $request): JsonResponse
+    {
+        $this->authorizeView();
+
+        return response()->json(
+            $this->dashboardService->metrics($this->dashboardFiltersFromRequest($request))
+        );
     }
 
     public function masivos(): View
@@ -381,6 +413,7 @@ class DesvinculacionesController extends Controller
             ->map(fn (string $label, string $key): array => [
                 'label' => $label,
                 'url' => match ($key) {
+                    'dashboard' => route('gestion-humana.desvinculaciones.dashboard'),
                     'seguimientos' => route('gestion-humana.desvinculaciones.seguimientos'),
                     default => route('gestion-humana.desvinculaciones.masivos'),
                 },
@@ -388,6 +421,20 @@ class DesvinculacionesController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array{anio?: string, mes?: string, ciudad?: string, cargo?: string, cliente?: string}
+     */
+    private function dashboardFiltersFromRequest(Request $request): array
+    {
+        return [
+            'anio' => $request->string('anio')->toString() ?: null,
+            'mes' => $request->string('mes')->toString() ?: null,
+            'ciudad' => $request->string('ciudad')->toString() ?: null,
+            'cargo' => $request->string('cargo')->toString() ?: null,
+            'cliente' => $request->string('cliente')->toString() ?: null,
+        ];
     }
 
     /**

@@ -141,6 +141,8 @@ Route::middleware(['password.changed'])
     ->name('gestion-humana.desvinculaciones.')
     ->group(function (): void {
         Route::get('/', [DesvinculacionesController::class, 'index'])->name('index');
+        Route::get('/dashboard', [DesvinculacionesController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/metrics', [DesvinculacionesController::class, 'dashboardMetrics'])->name('dashboard.metrics');
         Route::get('/masivos', [DesvinculacionesController::class, 'masivos'])->name('masivos');
         Route::get('/masivos/plantillas', [DesvinculacionesController::class, 'templates'])->name('masivos.templates');
         Route::get('/masivos/firmas', [DesvinculacionesController::class, 'signatories'])->name('masivos.signatories');

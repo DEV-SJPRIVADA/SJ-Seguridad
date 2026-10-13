@@ -13160,6 +13160,89 @@ a.req-dashboard-kpi:focus-visible {
     text-align: center;
 }
 
+/* Dashboard Desvinculaciones: 3 KPI + charts 2+3 */
+.desvinculaciones-dashboard-page__kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.desvinculaciones-dashboard-page .desvinculaciones-dashboard-page__kpi-grid .cursos-dashboard-page__kpi {
+    display: grid;
+    grid-template-rows: 2.4em minmax(1.35em, auto) 1.05em;
+    justify-items: center;
+    align-items: center;
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0.5rem 0.4rem;
+}
+
+.desvinculaciones-dashboard-page .desvinculaciones-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-label,
+.desvinculaciones-dashboard-page .desvinculaciones-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-value,
+.desvinculaciones-dashboard-page .desvinculaciones-dashboard-page__kpi-grid .formacion-dashboard-page__kpi-hint {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.desvinculaciones-dashboard-page .desvinculaciones-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-label {
+    font-size: clamp(0.55rem, 0.75vw, 0.7rem);
+    line-height: 1.15;
+}
+
+.desvinculaciones-dashboard-page .desvinculaciones-dashboard-page__kpi-grid .cursos-dashboard-page__kpi-value {
+    font-size: clamp(1.05rem, 1.4vw, 1.4rem);
+}
+
+.desvinculaciones-dashboard-page__charts-row--top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.desvinculaciones-dashboard-page__charts-row--bottom {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+}
+
+.desvinculaciones-dashboard-page__chart--bars {
+    min-height: 0;
+    height: auto;
+}
+
+.desvinculaciones-dashboard-page__charts .panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.desvinculaciones-dashboard-page__charts .panel-title {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+@media (max-width: 959px) {
+    .desvinculaciones-dashboard-page__kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .desvinculaciones-dashboard-page__charts-row--top,
+    .desvinculaciones-dashboard-page__charts-row--bottom {
+        grid-template-columns: 1fr;
+    }
+
+    .desvinculaciones-dashboard-page__charts-row--top .cursos-dashboard-page__chart {
+        min-height: 280px;
+        height: 300px;
+    }
+
+    .desvinculaciones-dashboard-page__charts-row--bottom .cursos-dashboard-page__chart:not(.desvinculaciones-dashboard-page__chart--bars) {
+        min-height: 260px;
+        height: 280px;
+    }
+}
+
 /* Dashboard área GH: KPI 1 fila + charts 3+4 (portátil / monitor ≥960px) */
 .gh-area-dashboard-page__charts {
     display: flex;

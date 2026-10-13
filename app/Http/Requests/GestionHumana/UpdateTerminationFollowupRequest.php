@@ -43,7 +43,6 @@ class UpdateTerminationFollowupRequest extends FormRequest
             'check_enviado' => 'enviado',
             'check_control_roll' => 'control roll',
             'check_retiro_arl' => 'retiro arl',
-            'check_retiro_cesantias' => 'retiro cesantias',
             'check_recibido' => 'recibido',
             'check_paz_y_salvo' => 'paz y salvo',
             'check_reporte_noved' => 'reporte noved',

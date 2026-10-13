@@ -38,13 +38,16 @@ class DesvinculacionesSeguimientosTest extends TestCase
         Config::set('audit.queue', false);
     }
 
-    public function test_ok_todo_is_false_with_seven_checks_and_true_with_eight(): void
+    public function test_ok_todo_is_false_with_six_checks_and_true_with_seven(): void
     {
         $followup = $this->createFollowup();
 
         $fields = EmployeeTerminationFollowup::CHECK_FIELDS;
+        $this->assertCount(7, $fields);
+        $this->assertNotContains('check_retiro_cesantias', $fields);
+
         foreach ($fields as $index => $field) {
-            $followup->{$field} = $index < 7;
+            $followup->{$field} = $index < 6;
         }
         $followup->save();
         $followup->refresh();
@@ -58,6 +61,20 @@ class DesvinculacionesSeguimientosTest extends TestCase
 
         $this->assertTrue($followup->isOkTodo());
         $this->assertTrue($followup->ok_todo);
+    }
+
+    public function test_retiro_cesantias_does_not_affect_ok_todo(): void
+    {
+        $followup = $this->createFollowup();
+        $followup->forceFill(array_fill_keys(EmployeeTerminationFollowup::CHECK_FIELDS, true))->save();
+        $followup->refresh();
+
+        $this->assertTrue($followup->isOkTodo());
+
+        $followup->forceFill(['check_retiro_cesantias' => false])->save();
+        $followup->refresh();
+
+        $this->assertTrue($followup->isOkTodo());
     }
 
     public function test_seguimientos_datatable_returns_rows_ordered_by_id_desc(): void

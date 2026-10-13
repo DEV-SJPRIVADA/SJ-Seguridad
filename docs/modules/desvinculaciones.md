@@ -9,7 +9,8 @@ Tablero de area **Gestion Humana** para (1) desvincular varios empleados activos
 
 ## Alcance actual (V1)
 
-- Tablero sidebar **Desvinculaciones** (`desvinculaciones`) en `gestion_humana`, pestanas **Masivos** / **Seguimientos**.
+- Tablero sidebar **Desvinculaciones** (`desvinculaciones`) en `gestion_humana`, pestañas **Dashboard** / **Masivos** / **Seguimientos**.
+- **Dashboard:** informe mensual (KPI + ApexCharts) con `desvinculaciones.view`; filtros año/mes/ciudad/cargo/cliente; fuente periodos con `termination_date` + ficha para ciudad/cliente.
 - Permisos propios (paquete de 4 keys); Masivos **no** exige `ficha_empleados.terminate`.
 - Lookup por cedula solo si empleado **activo** + periodo abierto.
 - Lote: continuar ante fallos; reporte `ok[]` / `failed[]`; ZIP de cartas exitosas via token one-shot.
@@ -32,7 +33,9 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 
 | Metodo | URI | Nombre | Permiso / notas |
 | --- | --- | --- | --- |
-| GET | `/` | `index` | Redirect a Masivos. `desvinculaciones.view` |
+| GET | `/` | `index` | Redirect a Dashboard. `desvinculaciones.view` |
+| GET | `/dashboard` | `dashboard` | Informe mensual KPI + gráficos. `desvinculaciones.view` |
+| GET | `/dashboard/metrics` | `dashboard.metrics` | JSON métricas/filtros. `desvinculaciones.view` |
 | GET | `/masivos` | `masivos` | Vista Masivos. `desvinculaciones.view` |
 | GET | `/masivos/plantillas` | `masivos.templates` | JSON plantillas. `desvinculaciones.masivos` |
 | GET | `/masivos/firmas` | `masivos.signatories` | JSON catalogo `firmas`. `desvinculaciones.masivos` |
@@ -58,7 +61,7 @@ Hooks sin rutas nuevas (Ficha):
 | Permiso | Uso |
 | --- | --- |
 | `view.board.gestion_humana.desvinculaciones` | Ver tablero en sidebar GH |
-| `desvinculaciones.view` | Acceder al tablero (UI Masivos + lectura Seguimientos) |
+| `desvinculaciones.view` | Acceder al tablero (Dashboard + UI Masivos + lectura Seguimientos) |
 | `desvinculaciones.masivos` | Lookup, plantillas/firmas JSON, procesar lote, descargar ZIP |
 | `desvinculaciones.seguimientos.edit` | PATCH checks / fecha entregado nomina; revertir desvinculacion |
 
@@ -94,7 +97,10 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | --- | --- |
 | `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: iconos superior derecha (multi-cedula / +fila), filas con trash, Desvincular/limpiar/ZIP icon-only; lookup blur/Enter; modal pegar hasta 500; reporte |
 | `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | DataTables **server-side** (`.js-desvinculaciones-seguimientos-datatable`) + filtros Alpine (q, status, campo fecha + rango) + buscador nativo DT (`lf`); encabezados ordenables (server-side) salvo Acciones; checks con títulos horizontales cortos; altura de `.req-manage-table-scroll` al viewport; export Excel, checks/fecha nómina con autosave, OK TODO RO, icono revertir + modal import histórico / revertir |
-| `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestanas `module-tab` Masivos / Seguimientos |
+| `areas/gestion_humana/desvinculaciones/dashboard.blade.php` | Informe mensual KPI + charts |
+| `DesvinculacionesDashboardService` | Métricas (periodos + ficha) |
+| `resources/js/desvinculaciones-dashboard-charts.js` | ApexCharts del Dashboard |
+| `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestañas `module-tab` Dashboard / Masivos / Seguimientos |
 | `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
 
 ## Modelos y tablas
@@ -111,7 +117,8 @@ Migracion: `2026_09_14_103500_create_employee_termination_followups_table.php` (
 | Snapshots | `document_number`, `full_name`, `position_name`, causal code/name, `is_rehireable`, `termination_notes`, `termination_date` |
 | `registered_at` | FECHA DE REGISTRO al crear |
 | `letter_generated` | default false |
-| 8 checks | `check_orden_examenes`, `check_enviado`, `check_control_roll`, `check_retiro_arl`, `check_retiro_cesantias`, `check_recibido`, `check_paz_y_salvo`, `check_reporte_noved` (default false) |
+| Checks operativos (UI/OK TODO) | `check_orden_examenes`, `check_enviado`, `check_control_roll`, `check_retiro_arl`, `check_recibido`, `check_paz_y_salvo`, `check_reporte_noved` (default false) |
+| `check_retiro_cesantias` | Persiste en BD e import histórico; **fuera** de Seguimientos / OK TODO |
 | `payroll_delivered_at` | Fecha entregado nomina (nullable date) |
 | `created_by` | FK users `nullOnDelete` |
 | timestamps | |
@@ -120,11 +127,11 @@ Migracion: `2026_09_14_103500_create_employee_termination_followups_table.php` (
 
 Modelo: `App\Models\EmployeeTerminationFollowup`
 
-- Constantes `CHECK_FIELDS` / `CHECK_LABELS` (labels UI en mayusculas).
-- Accessor `ok_todo` / `isOkTodo()` = AND de los 8 checks (columna UI; no exige fecha nómina).
+- Constantes `CHECK_FIELDS` / `CHECK_LABELS` (7 checks UI en mayusculas; sin RET. CESANT).
+- Accessor `ok_todo` / `isOkTodo()` = AND de esos 7 checks (columna UI; no exige fecha nómina).
 - Scopes: `search`, `okTodo`, `incompletos`, `sinCarta`, `statusFilter` (`todos` \| `incompletos` \| `ok_todo` \| `sin_carta`), `dateFieldBetween` / `payrollDeliveredBetween`.
-  - **`ok_todo` (filtro):** 8 checks true **y** `payroll_delivered_at` no nulo.
-  - **`incompletos` (filtro):** algún check en false **o** sin `payroll_delivered_at` (default al cargar la vista / datatable sin `status`).
+  - **`ok_todo` (filtro):** 7 checks true **y** `payroll_delivered_at` no nulo.
+  - **`incompletos` (filtro):** algún check operativo en false **o** sin `payroll_delivered_at` (default al cargar la vista / datatable sin `status`).
   - **Rango fechas:** columna elegida con `fecha_campo` (`DATE_FILTER_FIELDS`; default `termination_date` / FECHA DESVINCULACION).
 - Relaciones: `fichaEntry`, `employmentPeriod`, `creator`.
 - Relaciones inversas: `EmployeeFichaEmploymentPeriod::terminationFollowup()`, `PersonalRequisitionFichaEntry::terminationFollowups()`.
@@ -168,7 +175,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 
 ### Acceso / nav
 
-1. Labels exactos: tablero **Desvinculaciones**; pestanas **Masivos** / **Seguimientos**.
+1. Labels exactos: tablero **Desvinculaciones**; pestañas **Dashboard** / **Masivos** / **Seguimientos**.
 2. Sidebar: `view.board.gestion_humana.desvinculaciones` (o bypass). Entrar: `desvinculaciones.view`.
 3. Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultDesvinculacionesBoardUrl()`.
 
@@ -190,10 +197,10 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 13. Un registro por periodo cerrado (unique).
 14. Orden default **desc** por id / mas reciente.
 15. Causal, rehire, notas, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo).
-16. 8 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms.
+16. 7 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms. Sin columna RET. CESANT.
 17. OK TODO solo lectura, calculado.
 18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` (sin chip Todos; default incompletos) + `rehireable` (`1`/`0`, vacío = todos) + selector `fecha_campo` + rango Desde/Hasta. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda/recontratable vacíos.
-19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 8 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
+19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 7 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
 20. **Revertir** por fila (permiso edit): modal con motivo; anula fila Retiros en MT-GH-04 Novedades (si existe), reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
 
 ## JavaScript / assets
@@ -244,7 +251,7 @@ Comando: `php artisan desvinculaciones:import-historico {path} [--dry-run] [--li
 | Idempotencia | Si ya hay followup misma entry + `termination_date` → **actualiza** checks / causal / notas / nómina |
 | Reingresos | Si `hire_date` (perfil o periodo activo) es **posterior** a la fecha de retiro Excel → crea histórico **sin** cerrar el vínculo vigente ni poner perfil `desvinculado` (`created_keep_activo`) |
 | Causales | Alias Excel → código catálogo Ficha (`RENUNCIA`, `FIN_CONTRATO`, `PERIODO_PRUEBA`, `SIN_JUSTA_CAUSA`, `CON_JUSTA_CAUSA`, `FALLECIMIENTO`, `LEGALIZACION_INASISTENCIAS`) + `PayrollCatalogItem::upsertPair` |
-| Checks H–O | Mapeo a los 8 booleanos del followup (`TRUE`/`SI`/`1`/`X`) |
+| Checks H–O | Mapeo a booleanos del followup (`TRUE`/`SI`/`1`/`X`); incluye cesantías en BD, fuera de OK TODO UI |
 | Dry-run | Cuenta métricas sin escribir BD |
 
 **No** genera cartas Word. Carga real solo tras OK explícito del operador (usar `--dry-run` primero).

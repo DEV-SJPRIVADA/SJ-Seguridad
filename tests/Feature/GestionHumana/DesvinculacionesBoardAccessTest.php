@@ -36,6 +36,7 @@ class DesvinculacionesBoardAccessTest extends TestCase
     {
         $tabs = config('access.desvinculaciones_tabs');
 
+        $this->assertSame('Dashboard', $tabs['dashboard']);
         $this->assertSame('Masivos', $tabs['masivos']);
         $this->assertSame('Seguimientos', $tabs['seguimientos']);
         $this->assertSame('Desvinculaciones', config('access.boards.desvinculaciones'));
@@ -68,7 +69,7 @@ class DesvinculacionesBoardAccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_desvinculaciones_index_redirects_to_masivos_with_view(): void
+    public function test_desvinculaciones_index_redirects_to_dashboard_with_view(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
         $viewer->givePermissionTo([
@@ -78,7 +79,7 @@ class DesvinculacionesBoardAccessTest extends TestCase
 
         $this->actingAs($viewer)
             ->get(route('gestion-humana.desvinculaciones.index'))
-            ->assertRedirect(route('gestion-humana.desvinculaciones.masivos'));
+            ->assertRedirect(route('gestion-humana.desvinculaciones.dashboard'));
     }
 
     public function test_desvinculaciones_masivos_allows_view_permission(): void
@@ -137,7 +138,7 @@ class DesvinculacionesBoardAccessTest extends TestCase
 
         $user->givePermissionTo('desvinculaciones.view');
 
-        $this->assertSame(['masivos', 'seguimientos'], $service->visibleTabsFor($user));
+        $this->assertSame(['dashboard', 'masivos', 'seguimientos'], $service->visibleTabsFor($user));
     }
 
     public function test_audit_module_desvinculaciones_is_configured(): void

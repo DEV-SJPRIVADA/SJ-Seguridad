@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/cursos-dashboard-charts.js',
                 'resources/js/formacion-dashboard-charts.js',
                 'resources/js/gh-area-dashboard-charts.js',
+                'resources/js/desvinculaciones-dashboard-charts.js',
                 'resources/js/cliente-interno-dashboard-charts.js',
                 'resources/js/seleccion-dashboard-charts.js',
                 'resources/js/acreditaciones-dashboard-charts.js',

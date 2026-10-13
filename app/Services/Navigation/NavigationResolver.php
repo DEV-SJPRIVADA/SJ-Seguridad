@@ -262,7 +262,7 @@ class NavigationResolver
 
                             return [
                                 'label' => $boardLabel,
-                                'route' => 'gestion-humana.desvinculaciones.masivos',
+                                'route' => 'gestion-humana.desvinculaciones.dashboard',
                                 'url' => $user->defaultDesvinculacionesBoardUrl(),
                                 'active' => str_starts_with((string) $routeName, 'gestion-humana.desvinculaciones.'),
                             ];

@@ -8,10 +8,11 @@ Dar a Gestion Humana un tablero propio para desvincular varios empleados a la ve
 
 ## Alcance
 
-Aplica al tablero **Desvinculaciones** en el area **Gestion Humana**, con dos pestanas:
+Aplica al tablero **Desvinculaciones** en el área **Gestión Humana**, con tres pestañas:
 
-- **Masivos** — buscar empleados activos por cedula, indicar fecha de desvinculacion, tipo de carta y firma; opcionalmente causal, si es recontratable y observaciones; ejecutar **Desvincular** sobre el lote; ver el reporte de exitos y fallos; descargar el ZIP de cartas generadas.
-- **Seguimientos** — consultar y marcar los ocho controles post-retiro; filtrar por texto, estado o rango de **fecha entregado nomina**; exportar a Excel lo filtrado; ver si ya hay carta generada y si el caso quedo **OK TODO**; guardar cambios al marcar (sin boton Guardar).
+- **Dashboard** — ver desvinculaciones del mes/año, causal principal y gráficos (evolución, por causal, ciudad, cliente y cargo). Filtre por año, mes, ciudad, cargo y cliente.
+- **Masivos** — buscar empleados activos por cédula, indicar fecha de desvinculación, tipo de carta y firma; opcionalmente causal, si es recontratable y observaciones; ejecutar **Desvincular** sobre el lote; ver el reporte de éxitos y fallos; descargar el ZIP de cartas generadas.
+- **Seguimientos** — consultar y marcar los ocho controles post-retiro; filtrar por texto, estado o rango de **fecha entregado nómina**; exportar a Excel lo filtrado; ver si ya hay carta generada y si el caso quedó **OK TODO**; guardar cambios al marcar (sin botón Guardar).
 
 **En esta version no hay:** colores o semaforos del Excel antiguo, ni envio de correo al desvincular. La regeneracion de una carta que fallo se hace desde **Ficha empleados** (no desde Seguimientos).
 
@@ -21,14 +22,15 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Termino | Significado |
 | --- | --- |
-| Desvinculaciones | Tablero de Gestion Humana para lotes y seguimiento post-retiro. |
-| Masivos | Pestana para procesar varias desvinculaciones en una grilla. |
-| Seguimientos | Pestana con el checklist despues de desvincular (Masivos o Ficha). |
+| Desvinculaciones | Tablero de Gestión Humana para informe, lotes y seguimiento post-retiro. |
+| Dashboard | Pestaña de indicadores y gráficos de desvinculaciones (mes/año). |
+| Masivos | Pestaña para procesar varias desvinculaciones en una grilla. |
+| Seguimientos | Pestaña con el checklist después de desvincular (Masivos o Ficha). |
 | FECHA DESVINCULACION | Fecha unica que cierra el vinculo (ultimo dia / fecha de retiro unificados en Masivos). |
 | TIPO CARTA | Plantilla Word de desvinculacion elegida por fila (debe existir cargada en Plantillas Word). |
 | FIRMA | Firmante del catalogo de firmas, por fila. |
 | Tiene carta generada | Indica Si/No si el sistema logro generar y guardar la carta de ese retiro. |
-| OK TODO | Indicador automatico: solo pasa a Si cuando los ocho checks estan marcados. |
+| OK TODO | Indicador automatico: solo pasa a Si cuando los siete checks operativos estan marcados. |
 | Paquete de permisos | Los cuatro permisos del tablero que se asignan juntos en Admin (ver Desarrollo). |
 
 ## Responsabilidades
@@ -70,10 +72,10 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 ### Usar Seguimientos
 
 1. Abra la pestana **Seguimientos**.
-2. Filtre por texto (cedula o nombre), por estado (incompletos, OK TODO, sin carta), por **Recontratable** (Todos / Sí / No) y/o por rango de fechas. Elija el **campo fecha** (registro, desvinculacion o entregado nomina; por defecto **fecha desvinculacion**) y complete Desde/Hasta. Al usar fechas, los chips de estado se desactivan hasta que elija uno de nuevo. Al abrir la pestana, por defecto se muestran los **incompletos**. El filtro **OK TODO** solo incluye filas con los ocho checks en Si **y** con fecha entregado nomina. Use el icono de limpiar para volver a incompletos y vaciar busqueda/fechas/recontratable. Encima de la tabla tambien esta el buscador de DataTables (filtrado en vivo sobre el listado).
+2. Filtre por texto (cedula o nombre), por estado (incompletos, OK TODO, sin carta), por **Recontratable** (Todos / Sí / No) y/o por rango de fechas. Elija el **campo fecha** (registro, desvinculacion o entregado nomina; por defecto **fecha desvinculacion**) y complete Desde/Hasta. Al usar fechas, los chips de estado se desactivan hasta que elija uno de nuevo. Al abrir la pestana, por defecto se muestran los **incompletos**. El filtro **OK TODO** solo incluye filas con los siete checks en Si **y** con fecha entregado nomina. Use el icono de limpiar para volver a incompletos y vaciar busqueda/fechas/recontratable. Encima de la tabla tambien esta el buscador de DataTables (filtrado en vivo sobre el listado).
 3. Revise columnas de solo lectura: tipo de desvinculacion (causal), fechas, cargo, cedula, nombre, recontratable, observaciones y si **tiene carta generada**.
-4. Marque los ocho checks operativos (orden examenes, enviado, control roll, retiro ARL, retiro cesantias, recibido, paz y salvo, reporte noved) y, si aplica, la **fecha entregado nomina**. Los cambios se guardan solos al soltar el control (unos instantes despues).
-5. **OK TODO** se calcula solo: pasa a Si cuando los ocho checks estan en verdadero; no se puede forzar a mano.
+4. Marque los siete checks operativos (examenes, enviado, control roll, retiro ARL, recibido, paz y salvo, reporte noved) y, si aplica, la **fecha entregado nomina**. Los cambios se guardan solos al soltar el control (unos instantes despues).
+5. **OK TODO** se calcula solo: pasa a Si cuando esos siete checks estan en verdadero; no se puede forzar a mano.
 6. Use **Exportar Excel** para descargar el listado con los filtros activos (incluye cedula, nombre, cargo, tipo desvinculacion, fechas, checks, OK TODO y observaciones).
 7. Si el caso esta **sin carta**, regenere la carta en **Ficha empleados** del empleado (vinculo cerrado → Generar cartas). Al generar con exito, Seguimientos mostrara que ya tiene carta.
 8. No se elimina ni se oculta un seguimiento de forma silenciosa. Para **revertir** la desvinculación (reactivar al empleado): use el icono de reabrir en la fila, confirme con un **motivo obligatorio**. El sistema deja al empleado activo, quita la fila de Seguimientos, borra las cartas de ese retiro y, si había una fila automática en **MT-GH-04 Novedades → Retiros**, esa novedad deja de mostrarse allí.
@@ -96,6 +98,9 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.18 | 2026-10-13 | Agent | Dashboard: texto Desvinculaciones (antes Bajas); se quitan KPI Recontratables y Causales distintas. |
+| 1.17 | 2026-10-13 | Agent | Nueva pestaña Dashboard (KPI + gráficos) con permiso desvinculaciones.view. |
+| 1.16 | 2026-10-13 | Agent | Seguimientos: se quita RET. CESANT; OK TODO pasa a 7 checks operativos. |
 | 1.15 | 2026-10-06 | Agent | Seguimientos: encabezados legibles y ordenamiento en casi todas las columnas. |
 | 1.14 | 2026-10-06 | Agent | Seguimientos: import histórico por UI (Simular / Cargar) con permiso de edición. |
 | 1.13 | 2026-10-06 | Agent | Aclaración: producción en servidor Linux propio; carga histórica vía SSH. |

@@ -15,6 +15,9 @@ class EmployeeTerminationFollowup extends Model
     use HasFactory;
 
     /**
+     * Checks operativos de Seguimientos (UI + OK TODO).
+     * `check_retiro_cesantias` queda en BD/import histórico, fuera del tablero.
+     *
      * @var list<string>
      */
     public const CHECK_FIELDS = [
@@ -22,7 +25,6 @@ class EmployeeTerminationFollowup extends Model
         'check_enviado',
         'check_control_roll',
         'check_retiro_arl',
-        'check_retiro_cesantias',
         'check_recibido',
         'check_paz_y_salvo',
         'check_reporte_noved',
@@ -38,7 +40,6 @@ class EmployeeTerminationFollowup extends Model
         'check_enviado' => 'ENVIADO',
         'check_control_roll' => 'CONTROL ROLL',
         'check_retiro_arl' => 'RETIRO ARL',
-        'check_retiro_cesantias' => 'RET. CESANT',
         'check_recibido' => 'RECIBIDO',
         'check_paz_y_salvo' => 'PAZ Y SALVO',
         'check_reporte_noved' => 'REP. NOVED',
@@ -143,7 +144,7 @@ class EmployeeTerminationFollowup extends Model
     }
 
     /**
-     * OK TODO calculado (AND de los 8 checks). No es columna de BD.
+     * OK TODO calculado (AND de los checks de Seguimientos). No es columna de BD.
      */
     protected function okTodo(): Attribute
     {
@@ -171,7 +172,7 @@ class EmployeeTerminationFollowup extends Model
     }
 
     /**
-     * Completo para filtros: los 8 checks en verdadero y con FECHA ENTREGADO NOMINA.
+     * Completo para filtros: checks de Seguimientos en verdadero y con FECHA ENTREGADO NOMINA.
      *
      * @param  Builder<static>  $query
      * @return Builder<static>

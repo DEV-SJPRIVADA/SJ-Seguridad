@@ -30,7 +30,7 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 | Informe mensual | Vista del Dashboard de área con indicadores y gráficos del mes/año elegidos. |
 | Personal activo | Personas que, según fechas de ingreso y retiro de la ficha, estaban activas al **cierre** del mes (último día del mes). |
 | Ingresos del mes | Altas cuya fecha de ingreso cae en el año y mes seleccionados. |
-| Desvinculaciones | Bajas cuya fecha de retiro cae en el año y mes seleccionados. |
+| Desvinculaciones | Desvinculaciones cuya fecha de retiro cae en el año y mes seleccionados. |
 | Rotación mensual | Porcentaje que compara las desvinculaciones del mes con el promedio de personal activo al cierre de ese mes y del mes anterior. Si no hay base para calcular, se muestra **—**. |
 | Personal operativo | Activos al cierre del mes cuyo cargo coincide exactamente con una lista fija de cargos operativos (escolta, guarda, operador, supervisor, etc.). También se muestra el porcentaje respecto al total de activos. |
 | Ciudad (filtro) | Ciudad de trabajo; si no hay, ciudad de residencia (misma lógica que en Ficha). |
