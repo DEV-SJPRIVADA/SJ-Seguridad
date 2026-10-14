@@ -398,6 +398,7 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 
 43. Default export: solo `valida=true`. Modal Sí: limpia + blandas; **nunca** duras aunque `include_novedades=true`.
 44. Filename: `APO` + `settings.nit` + `Ymd` (Bogotá) + `str_pad(seq, 2, '0')` + `.xls` (ej. `…01.xls`). Seq diario 1…99; unique `(export_date, seq)` + reintento. Clave config `filename_prefix` es legacy no usada (el prefijo real usa `settings.nit`).
+44b. El `.xls` siempre tiene 2 hojas: **ApoDatos** (headers A–X) y **Retiros** (`Nit`, `RazonSocial`, `TipoDocumento`, `NoDocumento`, `FechaRetiro`). Modo `acreditar`: llena ApoDatos (universo EN_PROCESO/POR_VENCER/DESACREDITADO); Retiros solo títulos. Modo `retirar`: carga por IDs **sin** filtro de universo (sirve para `ACREDITADO`); llena Retiros (`FechaRetiro` = **día anterior** Bogotá `d/m/Y`); ApoDatos solo títulos; UI no exige Valida=Sí.
 45. Writer: `App\Exports\AcreditacionExportApoXlsExport` (PhpSpreadsheet `Writer\Xls`); **no** BaseExport / excelHtml5.
 46. Tab + rutas Export Apo: **`acreditaciones.edit`**. GET sin edit → 403.
 
@@ -541,6 +542,8 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.18 | 2026-10-14 | Export Apo **Retirar**: genera aunque el ID esté fuera de universo (p. ej. `ACREDITADO`); no exige Valida=Sí ni modal de novedades. |
+| 1.17 | 2026-10-14 | Export Apo: hoja **Retiros**; botones **Acreditar .xls** / **Retirar** (`export_mode`); ApoDatos o Retiros según modo. |
 | 1.16 | 2026-10-14 | Export Apo: `seq_pad` 2 dígitos (`…01.xls`); tope diario 99. |
 | 1.15 | 2026-10-14 | Modal Nuevo acreditado: cargo desde Ficha en cola; layout check+Estado / Cargo+APO+Vigen / Renovaciones+Fecha; CSS secciones. |
 | 1.14 | 2026-09-29 | Filtro multi-cédula (`document_numbers`, exacto, max 500, sin historial) en Acreditados, Validaciones (4 colas), Export Apo preview y componente compartido. |

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\GestionHumana;
 
+use App\Exports\AcreditacionExportApoXlsExport;
 use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionCargo;
 use App\Models\AcreditacionExportApoRun;
@@ -42,6 +43,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [1],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
             ])
             ->assertForbidden();
     }
@@ -59,6 +61,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [$acreditado->id],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
             ]);
 
         $response->assertOk();
@@ -67,8 +70,14 @@ class AcreditacionesExportApoGenerateTest extends TestCase
 
         $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
         file_put_contents($temp, $response->streamedContent());
-        $sheet = IOFactory::load($temp)->getActiveSheet();
+        $workbook = IOFactory::load($temp);
         @unlink($temp);
+
+        $this->assertSame(2, $workbook->getSheetCount());
+        $sheet = $workbook->getSheetByName('ApoDatos');
+        $this->assertNotNull($sheet);
+        $retiros = $workbook->getSheetByName('Retiros');
+        $this->assertNotNull($retiros);
 
         $headers = [];
         for ($col = 1; $col <= 30; $col++) {
@@ -85,7 +94,6 @@ class AcreditacionesExportApoGenerateTest extends TestCase
         $this->assertNotContains('novedad', $headers);
         $this->assertNotContains('motivo', array_map('strtolower', $headers));
         $this->assertCount(24, $headers);
-        $this->assertSame(1, $sheet->getParent()->getSheetCount());
         $this->assertSame('ApoDatos', $sheet->getTitle());
 
         $this->assertSame('9005767186', (string) $sheet->getCell('A2')->getValue());
@@ -93,6 +101,15 @@ class AcreditacionesExportApoGenerateTest extends TestCase
         $this->assertSame('15/05/1990', (string) $sheet->getCell('I2')->getValue());
         $this->assertSame('10/01/2020', (string) $sheet->getCell('L2')->getValue());
         $this->assertSame('2201', (string) $sheet->getCell('M2')->getValue());
+
+        $this->assertSame(['Nit', 'RazonSocial', 'TipoDocumento', 'NoDocumento', 'FechaRetiro'], [
+            (string) $retiros->getCell('A1')->getValue(),
+            (string) $retiros->getCell('B1')->getValue(),
+            (string) $retiros->getCell('C1')->getValue(),
+            (string) $retiros->getCell('D1')->getValue(),
+            (string) $retiros->getCell('E1')->getValue(),
+        ]);
+        $this->assertSame('', trim((string) $retiros->getCell('A2')->getValue()));
 
         $this->assertDatabaseHas('acreditacion_export_apo_runs', [
             'file_name' => 'APO90057671862026092801.xls',
@@ -102,6 +119,107 @@ class AcreditacionesExportApoGenerateTest extends TestCase
             'rows_blocked' => 0,
             'include_novedades' => 0,
         ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_generate_retirar_fills_retiros_and_leaves_apodatos_headers_only(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-28 10:30:00', 'America/Bogota'));
+
+        $editor = $this->editorUser();
+        $cedula = '4005006017';
+        $acreditado = $this->seedValidCandidate($cedula, 'ESCOLTA', '2', '2201');
+
+        $response = $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.export-apo.generate'), [
+                'ids' => [$acreditado->id],
+                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+                'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_RETIRAR,
+            ]);
+
+        $response->assertOk();
+        $response->assertDownload('APO90057671862026092801.xls');
+
+        $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
+        file_put_contents($temp, $response->streamedContent());
+        $workbook = IOFactory::load($temp);
+        @unlink($temp);
+
+        $apo = $workbook->getSheetByName('ApoDatos');
+        $retiros = $workbook->getSheetByName('Retiros');
+        $this->assertNotNull($apo);
+        $this->assertNotNull($retiros);
+
+        $this->assertSame('Nit', (string) $apo->getCell('A1')->getValue());
+        $this->assertSame('', trim((string) $apo->getCell('A2')->getValue()));
+
+        $this->assertSame('9005767186', (string) $retiros->getCell('A2')->getValue());
+        $this->assertSame($cedula, (string) $retiros->getCell('D2')->getValue());
+        // Congelado en 28/09 → FechaRetiro = día anterior.
+        $expectedFechaRetiro = Carbon::now('America/Bogota')->subDay()->format('d/m/Y');
+        $this->assertSame($expectedFechaRetiro, (string) $retiros->getCell('E2')->getValue());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_retirar_allows_acreditado_fuera_de_universo_export_apo(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-28 14:00:00', 'America/Bogota'));
+
+        $editor = $this->editorUser();
+        $cedula = '1000256867';
+        $this->createCompleteFicha($cedula, [
+            'full_name' => 'POLANIA ESPINOSA JUAN CAMILO',
+            'first_name' => 'JUAN',
+            'second_name' => 'CAMILO',
+            'first_surname' => 'POLANIA',
+            'second_surname' => 'ESPINOSA',
+        ]);
+
+        $acreditado = AcreditacionAcreditado::factory()->create([
+            'document_number' => $cedula,
+            'full_name' => 'POLANIA ESPINOSA JUAN CAMILO',
+            'cargo_apo' => 'ESCOLTA',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            'vigencia_acr' => '2027-03-12',
+            'fecha_solicitud' => null,
+        ]);
+
+        // Acreditar sigue bloqueando fuera de universo.
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.acreditaciones.export-apo'))
+            ->post(route('gestion-humana.acreditaciones.export-apo.generate'), [
+                'ids' => [$acreditado->id],
+                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+                'include_novedades' => true,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
+            ])
+            ->assertRedirect(route('gestion-humana.acreditaciones.export-apo'))
+            ->assertSessionHas('error');
+
+        $response = $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.export-apo.generate'), [
+                'ids' => [$acreditado->id],
+                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+                'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_RETIRAR,
+            ]);
+
+        $response->assertOk();
+        $response->assertDownload('APO90057671862026092801.xls');
+
+        $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
+        file_put_contents($temp, $response->streamedContent());
+        $retiros = IOFactory::load($temp)->getSheetByName('Retiros');
+        @unlink($temp);
+
+        $this->assertNotNull($retiros);
+        $this->assertSame($cedula, (string) $retiros->getCell('D2')->getValue());
+        // Congelado en 28/09 → FechaRetiro = día anterior.
+        $expectedFechaRetiro = Carbon::now('America/Bogota')->subDay()->format('d/m/Y');
+        $this->assertSame($expectedFechaRetiro, (string) $retiros->getCell('E2')->getValue());
 
         Carbon::setTestNow();
     }
@@ -119,6 +237,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [$a->id],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
             ])
             ->assertOk()
             ->assertDownload('APO90057671862026092801.xls');
@@ -128,6 +247,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [$b->id],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_RETIRAR,
             ])
             ->assertOk()
             ->assertDownload('APO90057671862026092802.xls');
@@ -168,6 +288,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [$acreditado->id],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => true,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
             ])
             ->assertRedirect(route('gestion-humana.acreditaciones.export-apo'))
             ->assertSessionHas('error');
@@ -188,6 +309,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [$ok->id, $soft->id],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => false,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
             ]);
 
         $response->assertOk();
@@ -195,9 +317,10 @@ class AcreditacionesExportApoGenerateTest extends TestCase
 
         $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
         file_put_contents($temp, $response->streamedContent());
-        $sheet = IOFactory::load($temp)->getActiveSheet();
+        $sheet = IOFactory::load($temp)->getSheetByName('ApoDatos');
         @unlink($temp);
 
+        $this->assertNotNull($sheet);
         $this->assertSame('7008009001', (string) $sheet->getCell('D2')->getValue());
         $this->assertSame('', trim((string) $sheet->getCell('D3')->getValue()));
 
@@ -225,15 +348,17 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'ids' => [$ok->id, $soft->id],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
                 'include_novedades' => true,
+                'export_mode' => AcreditacionExportApoXlsExport::MODE_ACREDITAR,
             ]);
 
         $response->assertOk();
 
         $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
         file_put_contents($temp, $response->streamedContent());
-        $sheet = IOFactory::load($temp)->getActiveSheet();
+        $sheet = IOFactory::load($temp)->getSheetByName('ApoDatos');
         @unlink($temp);
 
+        $this->assertNotNull($sheet);
         $docs = [
             (string) $sheet->getCell('D2')->getValue(),
             (string) $sheet->getCell('D3')->getValue(),

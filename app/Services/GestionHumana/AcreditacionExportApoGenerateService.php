@@ -26,6 +26,7 @@ final class AcreditacionExportApoGenerateService
      * @return array{
      *     response: StreamedResponse,
      *     run: AcreditacionExportApoRun,
+     *     export_mode: string,
      * }
      */
     public function generate(
@@ -33,14 +34,21 @@ final class AcreditacionExportApoGenerateService
         string $vigenciaPolicy,
         bool $includeNovedades,
         ?int $userId = null,
+        string $exportMode = AcreditacionExportApoXlsExport::MODE_ACREDITAR,
     ): array {
         $policy = $this->rowResolver->normalizePolicy($vigenciaPolicy);
+        $exportMode = $this->xlsExport->normalizeMode($exportMode);
         $requestedIds = array_values(array_unique(array_filter(array_map('intval', $ids))));
 
         if ($requestedIds === []) {
             throw ValidationException::withMessages([
                 'ids' => 'Seleccione al menos un candidato.',
             ]);
+        }
+
+        // Retirar: permite IDs fuera del universo Export Apo (p. ej. ACREDITADO).
+        if ($exportMode === AcreditacionExportApoXlsExport::MODE_RETIRAR) {
+            return $this->generateRetiros($requestedIds, $policy, $userId);
         }
 
         $candidates = $this->candidateService->findCandidatesByIds($requestedIds);
@@ -89,6 +97,80 @@ final class AcreditacionExportApoGenerateService
             ]);
         }
 
+        return $this->finishGenerate(
+            exportRows: $exportRows,
+            exportMode: AcreditacionExportApoXlsExport::MODE_ACREDITAR,
+            userId: $userId,
+            vigenciaPolicy: $policy,
+            includeNovedades: $includeNovedades,
+            rowsSelected: count($requestedIds),
+            rowsOk: $rowsOk,
+            rowsNovedad: $rowsNovedad,
+            rowsBlocked: $rowsBlocked,
+        );
+    }
+
+    /**
+     * Retiros: carga por IDs sin filtro de universo; no aplica bloqueos de curso/ficha Export Apo.
+     *
+     * @param  list<int>  $requestedIds
+     * @return array{
+     *     response: StreamedResponse,
+     *     run: AcreditacionExportApoRun,
+     *     export_mode: string,
+     * }
+     */
+    private function generateRetiros(array $requestedIds, string $policy, ?int $userId): array
+    {
+        $acreditados = $this->candidateService->findByIds($requestedIds);
+
+        if ($acreditados->isEmpty()) {
+            throw ValidationException::withMessages([
+                'ids' => 'No se encontraron acreditados para retirar con los IDs seleccionados.',
+            ]);
+        }
+
+        $exportRows = $acreditados
+            ->map(fn (AcreditacionAcreditado $row): array => [
+                'document_number' => (string) $row->document_number,
+                'cargo_apo' => (string) $row->cargo_apo,
+                'acreditado_id' => (int) $row->id,
+            ])
+            ->values()
+            ->all();
+
+        return $this->finishGenerate(
+            exportRows: $exportRows,
+            exportMode: AcreditacionExportApoXlsExport::MODE_RETIRAR,
+            userId: $userId,
+            vigenciaPolicy: $policy,
+            includeNovedades: false,
+            rowsSelected: count($requestedIds),
+            rowsOk: count($exportRows),
+            rowsNovedad: 0,
+            rowsBlocked: max(0, count($requestedIds) - count($exportRows)),
+        );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $exportRows
+     * @return array{
+     *     response: StreamedResponse,
+     *     run: AcreditacionExportApoRun,
+     *     export_mode: string,
+     * }
+     */
+    private function finishGenerate(
+        array $exportRows,
+        string $exportMode,
+        ?int $userId,
+        string $vigenciaPolicy,
+        bool $includeNovedades,
+        int $rowsSelected,
+        int $rowsOk,
+        int $rowsNovedad,
+        int $rowsBlocked,
+    ): array {
         $settings = AcreditacionExportApoSetting::singleton();
         $exportDate = Carbon::now('America/Bogota')->toDateString();
         $ymd = Carbon::parse($exportDate, 'America/Bogota')->format('Ymd');
@@ -100,20 +182,21 @@ final class AcreditacionExportApoGenerateService
             seqPad: $seqPad,
             nit: (string) $settings->nit,
             userId: $userId,
-            vigenciaPolicy: $policy,
+            vigenciaPolicy: $vigenciaPolicy,
             includeNovedades: $includeNovedades,
-            rowsSelected: count($requestedIds),
+            rowsSelected: $rowsSelected,
             rowsOk: $rowsOk,
             rowsNovedad: $rowsNovedad,
             rowsBlocked: $rowsBlocked,
             rowsExported: count($exportRows),
         );
 
-        $response = $this->xlsExport->download($exportRows, $settings, $run->file_name);
+        $response = $this->xlsExport->download($exportRows, $settings, $run->file_name, $exportMode);
 
         return [
             'response' => $response,
             'run' => $run,
+            'export_mode' => $exportMode,
         ];
     }
 

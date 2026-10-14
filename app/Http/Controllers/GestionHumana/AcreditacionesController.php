@@ -1402,6 +1402,7 @@ class AcreditacionesController extends Controller
                 $request->vigenciaPolicy(),
                 $request->includeNovedades(),
                 (int) auth()->id(),
+                $request->exportMode(),
             );
         } catch (ValidationException $e) {
             return redirect()
@@ -1421,6 +1422,7 @@ class AcreditacionesController extends Controller
                 'file_name' => $run->file_name,
                 'export_date' => optional($run->export_date)?->format('Y-m-d'),
                 'seq' => $run->seq,
+                'export_mode' => $result['export_mode'] ?? 'acreditar',
                 'vigencia_policy' => $run->vigencia_policy,
                 'include_novedades' => $run->include_novedades,
                 'rows_selected' => $run->rows_selected,

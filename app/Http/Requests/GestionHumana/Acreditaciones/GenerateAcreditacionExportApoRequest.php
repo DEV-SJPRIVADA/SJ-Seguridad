@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GestionHumana\Acreditaciones;
 
+use App\Exports\AcreditacionExportApoXlsExport;
 use App\Services\Access\AcreditacionesAccessService;
 use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -36,6 +37,14 @@ class GenerateAcreditacionExportApoRequest extends FormRequest
                 ]),
             ],
             'include_novedades' => ['required', 'boolean'],
+            'export_mode' => [
+                'required',
+                'string',
+                Rule::in([
+                    AcreditacionExportApoXlsExport::MODE_ACREDITAR,
+                    AcreditacionExportApoXlsExport::MODE_RETIRAR,
+                ]),
+            ],
         ];
     }
 
@@ -52,6 +61,8 @@ class GenerateAcreditacionExportApoRequest extends FormRequest
             'vigencia_policy.in' => 'Política de vigencia no válida.',
             'include_novedades.required' => 'Indique si desea incluir filas con novedad.',
             'include_novedades.boolean' => 'El valor de incluir novedades no es válido.',
+            'export_mode.required' => 'Indique si desea acreditar o retirar.',
+            'export_mode.in' => 'Modo de exportación no válido.',
         ];
     }
 
@@ -74,5 +85,10 @@ class GenerateAcreditacionExportApoRequest extends FormRequest
     public function includeNovedades(): bool
     {
         return (bool) $this->validated('include_novedades');
+    }
+
+    public function exportMode(): string
+    {
+        return (string) $this->validated('export_mode');
     }
 }

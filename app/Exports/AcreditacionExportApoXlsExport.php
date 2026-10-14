@@ -3,24 +3,34 @@
 namespace App\Exports;
 
 use App\Models\AcreditacionExportApoSetting;
+use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Export SuperVigilancia APO en formato .xls (1 hoja, headers A–X).
+ * Export SuperVigilancia APO en formato .xls (hojas ApoDatos + Retiros).
  * No usa BaseExport (emite .xlsx).
  */
 class AcreditacionExportApoXlsExport
 {
+    public const MODE_ACREDITAR = 'acreditar';
+
+    public const MODE_RETIRAR = 'retirar';
+
     /**
      * @param  list<array<string, mixed>>  $rows  Filas ya filtradas (sin Valida/motivo)
      */
-    public function download(array $rows, AcreditacionExportApoSetting $settings, string $fileName): StreamedResponse
-    {
-        $spreadsheet = $this->buildSpreadsheet($rows, $settings);
+    public function download(
+        array $rows,
+        AcreditacionExportApoSetting $settings,
+        string $fileName,
+        string $exportMode = self::MODE_ACREDITAR,
+    ): StreamedResponse {
+        $spreadsheet = $this->buildSpreadsheet($rows, $settings, $exportMode);
 
         return response()->streamDownload(function () use ($spreadsheet): void {
             (new Xls($spreadsheet))->save('php://output');
@@ -32,23 +42,61 @@ class AcreditacionExportApoXlsExport
     /**
      * @param  list<array<string, mixed>>  $rows
      */
-    public function buildSpreadsheet(array $rows, AcreditacionExportApoSetting $settings): Spreadsheet
-    {
+    public function buildSpreadsheet(
+        array $rows,
+        AcreditacionExportApoSetting $settings,
+        string $exportMode = self::MODE_ACREDITAR,
+    ): Spreadsheet {
+        $mode = $this->normalizeMode($exportMode);
         $spreadsheet = new Spreadsheet;
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('ApoDatos');
 
-        /** @var list<string> $headers */
-        $headers = array_values(config('acreditaciones.export_apo.headers', []));
+        $apoSheet = $spreadsheet->getActiveSheet();
+        $apoSheet->setTitle('ApoDatos');
+        $this->writeHeaderRow($apoSheet, array_values(config('acreditaciones.export_apo.headers', [])));
 
+        if ($mode === self::MODE_ACREDITAR) {
+            $this->writeApoDatosRows($apoSheet, $rows, $settings);
+        }
+
+        $retirosSheet = $spreadsheet->createSheet();
+        $retirosSheet->setTitle('Retiros');
+        $this->writeHeaderRow($retirosSheet, array_values(config('acreditaciones.export_apo.retiros_headers', [])));
+
+        if ($mode === self::MODE_RETIRAR) {
+            $this->writeRetirosRows($retirosSheet, $rows, $settings);
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        return $spreadsheet;
+    }
+
+    public function normalizeMode(string $mode): string
+    {
+        $mode = trim($mode);
+
+        return $mode === self::MODE_RETIRAR ? self::MODE_RETIRAR : self::MODE_ACREDITAR;
+    }
+
+    /**
+     * @param  list<string>  $headers
+     */
+    private function writeHeaderRow(Worksheet $sheet, array $headers): void
+    {
         foreach ($headers as $index => $header) {
             $col = Coordinate::stringFromColumnIndex($index + 1);
             $sheet->setCellValue($col.'1', $header);
         }
+    }
 
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function writeApoDatosRows(Worksheet $sheet, array $rows, AcreditacionExportApoSetting $settings): void
+    {
         $excelRow = 2;
         foreach ($rows as $row) {
-            $values = $this->mapRowValues($row, $settings);
+            $values = $this->mapApoDatosValues($row, $settings);
             foreach ($values as $index => $value) {
                 $col = Coordinate::stringFromColumnIndex($index + 1);
                 $sheet->setCellValueExplicit(
@@ -59,15 +107,43 @@ class AcreditacionExportApoXlsExport
             }
             $excelRow++;
         }
+    }
 
-        return $spreadsheet;
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function writeRetirosRows(Worksheet $sheet, array $rows, AcreditacionExportApoSetting $settings): void
+    {
+        // SuperVigilancia: FechaRetiro = día anterior (Bogotá), no la fecha de generación.
+        $fechaRetiro = Carbon::now('America/Bogota')->subDay()->format('d/m/Y');
+        $excelRow = 2;
+
+        foreach ($rows as $row) {
+            $values = [
+                (string) $settings->nit,
+                (string) $settings->razon_social,
+                (string) $settings->tipo_documento,
+                (string) ($row['document_number'] ?? ''),
+                $fechaRetiro,
+            ];
+
+            foreach ($values as $index => $value) {
+                $col = Coordinate::stringFromColumnIndex($index + 1);
+                $sheet->setCellValueExplicit(
+                    $col.$excelRow,
+                    (string) $value,
+                    DataType::TYPE_STRING,
+                );
+            }
+            $excelRow++;
+        }
     }
 
     /**
      * @param  array<string, mixed>  $row
      * @return list<string>
      */
-    private function mapRowValues(array $row, AcreditacionExportApoSetting $settings): array
+    private function mapApoDatosValues(array $row, AcreditacionExportApoSetting $settings): array
     {
         return [
             (string) $settings->nit,

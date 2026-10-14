@@ -28,7 +28,7 @@
                 'discapacidad' => $exportApoSettings->discapacidad,
             ]),
         })"
-        x-on:export-apo-generate.window="submitGenerate($event.detail.include)"
+        x-on:export-apo-generate.window="submitGenerate($event.detail.include, $event.detail.mode || pendingExportMode)"
         @acreditaciones-open-edit.window="openEdit($event.detail)"
     >
         <div class="app-container">
@@ -86,11 +86,23 @@
                                         x-show="hasValidated"
                                         x-cloak
                                         x-bind:disabled="selectedCount === 0 || previewLoading || generateLoading"
-                                        x-on:click="openGenerateModal()"
-                                        title="Generar archivo APO .xls"
+                                        x-on:click="openGenerateModal('acreditar')"
+                                        title="Acreditar: llena hoja ApoDatos; Retiros solo títulos"
                                     >
                                         <x-lucide-download width="16" height="16" aria-hidden="true" />
-                                        <span x-text="generateLoading ? 'Generando…' : 'Generar .xls'"></span>
+                                        <span x-text="generateLoading && pendingExportMode === 'acreditar' ? 'Generando…' : 'Acreditar .xls'"></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn--secondary btn--sm"
+                                        x-show="hasValidated"
+                                        x-cloak
+                                        x-bind:disabled="selectedCount === 0 || previewLoading || generateLoading"
+                                        x-on:click="openGenerateModal('retirar')"
+                                        title="Retirar: llena hoja Retiros; ApoDatos solo títulos"
+                                    >
+                                        <x-lucide-user-minus width="16" height="16" aria-hidden="true" />
+                                        <span x-text="generateLoading && pendingExportMode === 'retirar' ? 'Generando…' : 'Retirar'"></span>
                                     </button>
                                     <button
                                         type="button"
@@ -363,7 +375,7 @@
                         type="button"
                         class="btn btn--secondary"
                         title="Exportar solo filas con Valida = Sí"
-                        x-on:click="$dispatch('export-apo-generate', { include: false })"
+                        x-on:click="$dispatch('export-apo-generate', { include: false, mode: pendingExportMode })"
                     >
                         Solo válidas
                     </button>
@@ -372,7 +384,7 @@
                         class="btn btn--primary"
                         title="Incluir novedades blandas en el .xls"
                         x-bind:disabled="selectedSoftCount === 0"
-                        x-on:click="$dispatch('export-apo-generate', { include: true })"
+                        x-on:click="$dispatch('export-apo-generate', { include: true, mode: pendingExportMode })"
                     >
                         Incluir novedades
                     </button>
@@ -403,6 +415,7 @@
                     selected: {},
                     previewLoading: false,
                     generateLoading: false,
+                    pendingExportMode: 'acreditar',
                     hasValidated: false,
                     previewError: '',
                     allPreviewRows: [],
@@ -867,10 +880,17 @@
                         }
                     },
 
-                    openGenerateModal() {
+                    openGenerateModal(mode = 'acreditar') {
                         this.previewError = '';
+                        this.pendingExportMode = mode === 'retirar' ? 'retirar' : 'acreditar';
                         if (this.selectedCount === 0) {
                             this.previewError = 'Seleccione al menos un candidato.';
+                            return;
+                        }
+
+                        // Retirar: permite fuera de universo / Valida=No (llena hoja Retiros).
+                        if (this.pendingExportMode === 'retirar') {
+                            this.submitGenerate(false, 'retirar');
                             return;
                         }
 
@@ -881,13 +901,18 @@
                             return;
                         }
 
-                        this.submitGenerate(false);
+                        this.submitGenerate(false, this.pendingExportMode);
                     },
 
-                    submitGenerate(includeNovedades) {
+                    submitGenerate(includeNovedades, mode = null) {
                         window.dispatchEvent(new CustomEvent('close-modal', {
                             detail: 'export-apo-novedades',
                         }));
+
+                        const exportMode = mode === 'retirar' || mode === 'acreditar'
+                            ? mode
+                            : (this.pendingExportMode === 'retirar' ? 'retirar' : 'acreditar');
+                        this.pendingExportMode = exportMode;
 
                         const ids = this.selectedIds();
                         if (ids.length === 0) {
@@ -929,6 +954,12 @@
                         novedades.name = 'include_novedades';
                         novedades.value = includeNovedades ? '1' : '0';
                         form.appendChild(novedades);
+
+                        const modeInput = document.createElement('input');
+                        modeInput.type = 'hidden';
+                        modeInput.name = 'export_mode';
+                        modeInput.value = exportMode;
+                        form.appendChild(modeInput);
 
                         document.body.appendChild(form);
                         form.submit();

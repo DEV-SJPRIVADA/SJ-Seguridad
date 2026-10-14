@@ -146,6 +146,18 @@ return [
             'EducacionS',
             'Discapacidad',
         ],
+        // Segunda hoja del .xls (solo se llena en modo retirar).
+        'retiros_headers' => [
+            'Nit',
+            'RazonSocial',
+            'TipoDocumento',
+            'NoDocumento',
+            'FechaRetiro',
+        ],
+        'export_modes' => [
+            'acreditar' => 'Acreditar',
+            'retirar' => 'Retirar',
+        ],
         'vigencia_policies' => [
             'VIGENTE' => 'Solo VIGENTE',
             'VIGENTE_ACTUALIZAR' => 'VIGENTE + ACTUALIZAR',
