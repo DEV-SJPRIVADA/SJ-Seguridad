@@ -99,7 +99,7 @@ return [
     */
     'export_apo' => [
         'filename_prefix' => 'APO9005767186',
-        'seq_pad' => 3,
+        'seq_pad' => 2,
         'dashboard_last_n' => 20,
         'dashboard_novedad_policy' => 'VIGENTE_ACTUALIZAR',
         'dashboard_novedad_chunk' => 50,

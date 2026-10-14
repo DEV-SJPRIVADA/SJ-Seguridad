@@ -200,8 +200,8 @@ Singleton: seeder idempotente y/o `AcreditacionExportApoSetting::singleton()` (c
 | Columna | Tipo | Notas |
 | --- | --- | --- |
 | `export_date` | date | Día calendario `America/Bogota` |
-| `seq` | unsignedSmallInteger | 1…999; reinicia por día |
-| `file_name` | string(80) | Ej. `APO900576718620260928001.xls` |
+| `seq` | unsignedSmallInteger | 1…99; reinicia por día (`seq_pad` = 2) |
+| `file_name` | string(80) | Ej. `APO90057671862026092801.xls` |
 | `user_id` | FK users nullable | `nullOnDelete` |
 | `vigencia_policy` | string(30) | `VIGENTE` \| `VIGENTE_ACTUALIZAR` |
 | `include_novedades` | boolean | Modal Sí/No |
@@ -397,7 +397,7 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 | `sin_curso_match` / `curso_vencido_sin_alterna` / `codigo_curso_vacio` / `escuela_no_catalogo` / `cargo_acreditacion_no_resoluble` / `cargo_acreditacion_ambiguo` | Blanda | Sí |
 
 43. Default export: solo `valida=true`. Modal Sí: limpia + blandas; **nunca** duras aunque `include_novedades=true`.
-44. Filename: `APO` + `settings.nit` + `Ymd` (Bogotá) + `str_pad(seq, 3, '0')` + `.xls`. Seq diario persistido; unique `(export_date, seq)` + reintento. Clave config `filename_prefix` es legacy no usada (el prefijo real usa `settings.nit`).
+44. Filename: `APO` + `settings.nit` + `Ymd` (Bogotá) + `str_pad(seq, 2, '0')` + `.xls` (ej. `…01.xls`). Seq diario 1…99; unique `(export_date, seq)` + reintento. Clave config `filename_prefix` es legacy no usada (el prefijo real usa `settings.nit`).
 45. Writer: `App\Exports\AcreditacionExportApoXlsExport` (PhpSpreadsheet `Writer\Xls`); **no** BaseExport / excelHtml5.
 46. Tab + rutas Export Apo: **`acreditaciones.edit`**. GET sin edit → 403.
 
@@ -541,6 +541,7 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.16 | 2026-10-14 | Export Apo: `seq_pad` 2 dígitos (`…01.xls`); tope diario 99. |
 | 1.15 | 2026-10-14 | Modal Nuevo acreditado: cargo desde Ficha en cola; layout check+Estado / Cargo+APO+Vigen / Renovaciones+Fecha; CSS secciones. |
 | 1.14 | 2026-09-29 | Filtro multi-cédula (`document_numbers`, exacto, max 500, sin historial) en Acreditados, Validaciones (4 colas), Export Apo preview y componente compartido. |
 | 1.13 | 2026-09-29 | Dashboard: filtro `ficha_estado` (activo por defecto, alineado con listado/export Acreditados). |

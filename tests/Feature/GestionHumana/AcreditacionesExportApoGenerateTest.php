@@ -63,7 +63,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/vnd.ms-excel');
-        $response->assertDownload('APO900576718620260928001.xls');
+        $response->assertDownload('APO90057671862026092801.xls');
 
         $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
         file_put_contents($temp, $response->streamedContent());
@@ -95,7 +95,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
         $this->assertSame('2201', (string) $sheet->getCell('M2')->getValue());
 
         $this->assertDatabaseHas('acreditacion_export_apo_runs', [
-            'file_name' => 'APO900576718620260928001.xls',
+            'file_name' => 'APO90057671862026092801.xls',
             'seq' => 1,
             'rows_exported' => 1,
             'rows_ok' => 1,
@@ -121,7 +121,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'include_novedades' => false,
             ])
             ->assertOk()
-            ->assertDownload('APO900576718620260928001.xls');
+            ->assertDownload('APO90057671862026092801.xls');
 
         $this->actingAs($editor)
             ->post(route('gestion-humana.acreditaciones.export-apo.generate'), [
@@ -130,7 +130,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
                 'include_novedades' => false,
             ])
             ->assertOk()
-            ->assertDownload('APO900576718620260928002.xls');
+            ->assertDownload('APO90057671862026092802.xls');
 
         $this->assertSame(2, AcreditacionExportApoRun::query()->whereDate('export_date', '2026-09-28')->count());
 
@@ -191,7 +191,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
             ]);
 
         $response->assertOk();
-        $response->assertDownload('APO900576718620260928001.xls');
+        $response->assertDownload('APO90057671862026092801.xls');
 
         $temp = tempnam(sys_get_temp_dir(), 'apo-xls-');
         file_put_contents($temp, $response->streamedContent());

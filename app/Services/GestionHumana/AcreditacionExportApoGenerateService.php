@@ -92,7 +92,7 @@ final class AcreditacionExportApoGenerateService
         $settings = AcreditacionExportApoSetting::singleton();
         $exportDate = Carbon::now('America/Bogota')->toDateString();
         $ymd = Carbon::parse($exportDate, 'America/Bogota')->format('Ymd');
-        $seqPad = (int) config('acreditaciones.export_apo.seq_pad', 3);
+        $seqPad = (int) config('acreditaciones.export_apo.seq_pad', 2);
 
         $run = $this->persistRunWithSeq(
             exportDate: $exportDate,
@@ -159,9 +159,10 @@ final class AcreditacionExportApoGenerateService
 
                     $seq = $maxSeq + 1;
 
-                    if ($seq > 999) {
+                    // Tope alineado a seq_pad=2 (01…99).
+                    if ($seq > 99) {
                         throw ValidationException::withMessages([
-                            'ids' => 'Se alcanzó el límite diario de secuencias Export Apo (999).',
+                            'ids' => 'Se alcanzó el límite diario de secuencias Export Apo (99).',
                         ]);
                     }
 
