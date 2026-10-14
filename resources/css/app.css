@@ -3167,21 +3167,30 @@ a {
     margin-bottom: 1rem;
 }
 
-.plantillas-word-page__card-wrap {
+/* Contenedor = tarjeta visual; acciones abajo centradas (no fuera del grid) */
+.plantillas-word-page__card-wrap.plantillas-word-page__card {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: default;
 }
 
-.plantillas-word-page__card-wrap--inactive .plantillas-word-page__card {
+.plantillas-word-page__card-wrap--inactive {
     opacity: 0.72;
 }
 
-.plantillas-word-page__card {
+.plantillas-word-page__card-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    flex: 1 1 auto;
+    width: 100%;
     text-decoration: none;
     color: inherit;
-    min-height: 100%;
+    text-align: center;
 }
 
 .plantillas-word-page__card-status {
@@ -3191,7 +3200,11 @@ a {
 .plantillas-word-page__card-actions {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 0.35rem;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 0.15rem;
 }
 
 .plantillas-word-page__empty-board {

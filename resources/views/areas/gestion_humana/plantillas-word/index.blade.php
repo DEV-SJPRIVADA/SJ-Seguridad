@@ -48,10 +48,11 @@
 
                 <div class="ficha-empleados-catalogs-page__grid">
                     @forelse ($types as $type)
-                        <div class="plantillas-word-page__card-wrap {{ $type->is_active ? '' : 'plantillas-word-page__card-wrap--inactive' }}">
+                        {{-- Tarjeta: enlace de contenido + acciones abajo centradas (dentro del card) --}}
+                        <div class="plantillas-word-page__card-wrap ficha-empleados-catalogs-page__card plantillas-word-page__card {{ $type->is_active ? '' : 'plantillas-word-page__card-wrap--inactive' }}">
                             <a
                                 href="{{ route('gestion-humana.plantillas-word.index', ['type' => $type->id]) }}"
-                                class="ficha-empleados-catalogs-page__card plantillas-word-page__card"
+                                class="plantillas-word-page__card-link"
                             >
                                 <span class="ficha-empleados-catalogs-page__card-icon" aria-hidden="true">
                                     <x-lucide-file-text width="22" height="22" aria-hidden="true" />
