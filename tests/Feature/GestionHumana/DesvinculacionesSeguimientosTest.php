@@ -224,6 +224,31 @@ class DesvinculacionesSeguimientosTest extends TestCase
             ->assertJsonPath('data.0.id', $no->id);
     }
 
+    public function test_seguimientos_datatable_filters_motivados_status(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $yes = $this->createFollowup([
+            'document_number' => '6363636363',
+            'full_name' => 'No Motivado Recontratable',
+            'is_rehireable' => true,
+        ]);
+        $no = $this->createFollowup([
+            'document_number' => '6464646464',
+            'full_name' => 'Motivado No Recontratable',
+            'is_rehireable' => false,
+        ]);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.desvinculaciones.seguimientos.datatable', [
+                'status' => 'motivados',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.id', $no->id)
+            ->assertJsonMissing(['id' => $yes->id]);
+    }
+
     public function test_seguimientos_datatable_filters_by_payroll_delivered_date_range(): void
     {
         $viewer = $this->viewerUser();

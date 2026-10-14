@@ -16,7 +16,8 @@ Administrar **tipos de documento** y **plantillas Word (.docx)** en un tablero p
   - **Ficha empleados** — tipo `desvinculacion` (permiso `ficha_empleados.terminate`); ver [`ficha-empleados.md`](ficha-empleados.md).
   - **Cliente interno → Cartas Vacaciones** — tipo `cartas_vacaciones`; exige **exactamente una** plantilla del tipo con archivo en disco; permisos `cliente_interno.cartas_vacaciones.*`; ver [`cliente-interno.md`](cliente-interno.md).
   - **Cartas Notificación** (tablero GH) — tipo `cartas_notificacion`; exige **exactamente una** plantilla del tipo con archivo; permiso `cartas_notificacion.edit`; ver [`cartas-notificacion.md`](cartas-notificacion.md).
-- Seed tipos (`WordDocumentTypeSeeder`, idempotente): `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`. Config también declara `word_document_type_codes.contratacion` (tipo puede existir vía UI/migraciones previas). **No** migran plantillas legacy pack RENUNCIA (hay que re-subir).
+  - **Inasistencias** (tablero GH) — tipo `inasistencias`; exige **exactamente una** plantilla del tipo con archivo; permiso `inasistencias.edit`; ver [`inasistencias.md`](inasistencias.md).
+- Seed tipos (`WordDocumentTypeSeeder`, idempotente): `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`, `inasistencias`. Config también declara `word_document_type_codes.contratacion` (tipo puede existir vía UI/migraciones previas). **No** migran plantillas legacy pack RENUNCIA (hay que re-subir).
 - **Fuera de alcance:** editor Word en app, envio por correo, historial de cartas generadas, seleccion de varias plantillas por lote en Cartas Vacaciones / Cartas Notificación.
 
 ## Rutas
@@ -102,6 +103,7 @@ Config estable: `config/employee_ficha.php` → `word_document_type_codes`:
 | `contratacion` | `contratacion` | Migración `2026_08_21_164930_seed_contratacion_word_document_type` (+ config) |
 | `cartas_vacaciones` | `cartas_vacaciones` | Cliente interno → Cartas Vacaciones (seed seeder FEAT-043) |
 | `cartas_notificacion` | `cartas_notificacion` | Tablero Cartas Notificación (seed seeder FEAT-044) |
+| `inasistencias` | `inasistencias` | Tablero Inasistencias |
 
 Packs/causas soportadas de FEAT-027 **retirados**.
 
@@ -111,7 +113,8 @@ Packs/causas soportadas de FEAT-027 **retirados**.
 - Generacion de cartas (Ficha): `TerminationLetterPackGeneratorService` — por IDs, 1→docx / N→zip, sin gate por causal; ver doc Ficha.
 - Generacion Cartas Vacaciones (Cliente interno): `ClienteInternoCartasVacacionesGeneratorService` — resuelve **exactamente 1** plantilla `cartas_vacaciones` con archivo; `LetterVariableBuilder::buildForCartasVacaciones`; DocxRenderer + Zip; sin persistencia; ver [`cliente-interno.md`](cliente-interno.md).
 - Generacion Cartas Notificación (tablero GH): `CartasNotificacionGeneratorService` — resuelve **exactamente 1** plantilla `cartas_notificacion` con archivo; `LetterVariableBuilder::buildForCartasNotificacion`; DocxRenderer + Zip; sin persistencia; ver [`cartas-notificacion.md`](cartas-notificacion.md).
-- Audit plantillas (este tablero): `EmployeeFichaAuditLogService` — `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete). Audit generate cartas CI: `ClienteInternoAuditLogService` → `cartas_vacaciones_generate`. Audit generate Cartas Notificación: `CartasNotificacionAuditLogService` → `cartas_notificacion_generate`.
+- Generación Inasistencias (tablero GH): `InasistenciasGeneratorService` — exactamente 1 plantilla `inasistencias`; `LetterVariableBuilder::buildForInasistencias`; DocxRenderer + Zip + **histórico BD** (sin archivo); ver [`inasistencias.md`](inasistencias.md).
+- Audit plantillas (este tablero): `EmployeeFichaAuditLogService` — `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete). Audit generate cartas CI: `ClienteInternoAuditLogService` → `cartas_vacaciones_generate`. Audit generate Cartas Notificación: `CartasNotificacionAuditLogService` → `cartas_notificacion_generate`. Audit Inasistencias: `InasistenciasAuditLogService` → `inasistencias_generate`.
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — `TemplateProcessor` PhpWord con macros canónicas `${CLAVE}` (+ fallback temporal `[CLAVE]`); previo merge de split-runs en XML.
 - `App\Services\GestionHumana\Letter\LetterVariableBuilder` — builder único: `build()` (ficha/periodo/entrada), `buildForCartasVacaciones(row)` (lote CI) y `buildForCartasNotificacion(row)` (lote Cartas Notificación). Catálogo UI: `config/employee_ficha.php` → `letter_placeholders`. Modal **Variables disponibles** en `plantillas-word/index` con filtro Alpine (clave / descripción / categoría).
 

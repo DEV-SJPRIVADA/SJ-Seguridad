@@ -22,7 +22,7 @@ Tablero de area **Gestion Humana** para registrar, consultar y analizar **solici
 - Dias de respuesta: hábiles lun–vie (sin festivos V1) + override `dias_respuesta_manual`.
 - Seed ESTADO: Pendiente, En proceso, Respondida, Cerrada. Seed SOLICITUD: **vacío** (también se pueden crear al importar Excel).
 - Audit: `ClienteInternoAuditLogService` → `SystemAuditService` (`module=cliente_interno`, `area=gestion_humana`), incl. `cartas_vacaciones_generate`.
-- Selectores: `<x-searchable-select>` / Alpine `searchableSelect` (firma por fila). Charts: ApexCharts + entry Vite `cliente-interno-dashboard-charts.js`.
+- Selectores: `<x-searchable-select>` / Alpine `searchableSelect` (firma por fila). Charts: ApexCharts + entry Vite `cliente-interno-dashboard-charts.js` (evento `cliente-interno-dashboard-charts-ready` + `waitForChartsReady` para evitar race al recargar).
 - Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` vía `app:sync-permissions`. Migración Spatie FEAT-043: quien tenía `solicitudes.edit` recibe `cartas_vacaciones.view` + `.edit`.
 
 **Fuera de alcance:** historial/re-descarga de cartas, envío por correo, bridge Reportes-Novedades→Vacaciones, varias plantillas seleccionables por generación, permiso KPI de dashboard propio, soft-delete solicitudes, jobs async, Select2 / `excelHtml5` / Repository / `migrate:fresh`. (Festivos CO sí aplican al cálculo de fecha fin de Cartas Vacaciones vía `App\Support\ColombiaHolidays`.)

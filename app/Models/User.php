@@ -12,6 +12,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
+use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
@@ -387,6 +388,26 @@ class User extends Authenticatable
     public function defaultCartasNotificacionBoardUrl(): string
     {
         return route('gestion-humana.cartas-notificacion.index');
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function inasistenciasBoardTabsFor(): Collection
+    {
+        return collect(app(InasistenciasAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultInasistenciasBoardUrl(): string
+    {
+        $tabs = $this->inasistenciasBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'generar' => route('gestion-humana.inasistencias.generar'),
+            'historico' => route('gestion-humana.inasistencias.historico'),
+            default => route('gestion-humana.inasistencias.historico'),
+        };
     }
 
     /**

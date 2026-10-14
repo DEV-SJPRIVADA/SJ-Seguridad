@@ -153,7 +153,7 @@ class DesvinculacionesController extends Controller
 
         $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'string', 'in:,incompletos,ok_todo,sin_carta'],
+            'status' => ['nullable', 'string', 'in:,incompletos,ok_todo,sin_carta,motivados'],
             'rehireable' => ['nullable', 'string', 'in:,0,1'],
             'fecha_campo' => ['nullable', 'string', 'in:registered_at,termination_date,payroll_delivered_at'],
             'fecha_desde' => ['nullable', 'date'],
@@ -492,7 +492,7 @@ class DesvinculacionesController extends Controller
             ->get(['code', 'name'])
             ->map(static fn (PayrollCatalogItem $item): array => [
                 'value' => (string) $item->code,
-                'label' => $item->code.' — '.$item->name,
+                'label' => (string) $item->name,
             ])
             ->values()
             ->all();

@@ -311,6 +311,76 @@ class LetterVariableBuilder
     }
 
     /**
+     * Variables para Inasistencias (tablero GH): fila de grilla + ficha por cédula.
+     * FECHA_INI_AUS y DIAS provienen de la grilla (DIAS = días calendario hasta hoy).
+     *
+     * @param  array{
+     *     cedula: string,
+     *     nombre_completo?: string,
+     *     cargo?: string,
+     *     ciudad?: string,
+     *     fecha_ini_aus: string|CarbonInterface,
+     *     dias?: int|string,
+     *     signatory_id: int
+     * }  $row
+     * @return array<string, string>
+     */
+    public function buildForInasistencias(array $row): array
+    {
+        $firma = $this->resolveSignatory(isset($row['signatory_id']) ? (int) $row['signatory_id'] : null);
+        $cedula = trim((string) ($row['cedula'] ?? ''));
+        $nombreFila = trim((string) ($row['nombre_completo'] ?? ''));
+        $cargoFila = trim((string) ($row['cargo'] ?? ''));
+        $ciudadFila = trim((string) ($row['ciudad'] ?? ''));
+        $profile = $this->resolveProfileByDocument($cedula);
+
+        $variables = [];
+        foreach ($this->catalogKeys() as $key) {
+            $variables[$key] = '';
+        }
+
+        if ($profile !== null) {
+            $this->fillProfileVariables($variables, $profile);
+        }
+
+        $variables['CEDULA'] = $cedula !== '' ? $cedula : (string) ($variables['CEDULA'] ?? '');
+        $variables['DOCUMENTO'] = $variables['CEDULA'] !== ''
+            ? $variables['CEDULA']
+            : (string) ($variables['DOCUMENTO'] ?? '');
+        $variables['NOMBRE_COMPLETO'] = $nombreFila !== ''
+            ? $nombreFila
+            : (string) ($variables['NOMBRE_COMPLETO'] ?? '');
+        $variables['CARGO'] = $cargoFila !== ''
+            ? $cargoFila
+            : (string) ($variables['CARGO'] ?? '');
+
+        $fechaIniAus = null;
+        if (isset($row['fecha_ini_aus']) && $row['fecha_ini_aus'] !== '') {
+            $fechaIniAus = Carbon::parse($row['fecha_ini_aus']);
+        }
+
+        $variables['FECHA_INI_AUS'] = $this->formatLongDate($fechaIniAus, uppercase: true);
+
+        $dias = isset($row['dias']) && $row['dias'] !== '' && $row['dias'] !== null
+            ? (int) $row['dias']
+            : ($fechaIniAus !== null
+                ? (int) max(1, $fechaIniAus->copy()->startOfDay()->diffInDays(now()->startOfDay()) + 1)
+                : 0);
+        $variables['DIAS'] = (string) max(0, $dias);
+
+        $variables['FIRMA'] = $firma['name'];
+        $variables['CARGO_FIRMA'] = $firma['code'];
+        $variables['FECHA'] = $this->formatLongDate(now());
+
+        $variables['NOMBRE'] = $variables['NOMBRE_COMPLETO'];
+        $variables['CIUDAD'] = $ciudadFila !== ''
+            ? $ciudadFila
+            : (string) ($variables['CIUDAD_RESIDENCIA'] ?? '');
+
+        return $variables;
+    }
+
+    /**
      * Normaliza duración contrato a "6" | "12" (o vacío si no es opción válida).
      */
     private function normalizeDuracionContrato(mixed $value): string

@@ -38,7 +38,7 @@
                         <x-searchable-select
                             id="termination_cause_code"
                             name="termination_cause_code"
-                            :options="collect($catalogs['termination_cause'] ?? [])->map(fn($item) => ['value' => $item['code'], 'label' => $item['code'] . ' — ' . $item['name']])->all()"
+                            :options="collect($catalogs['termination_cause'] ?? [])->map(fn($item) => ['value' => $item['code'], 'label' => $item['name']])->all()"
                             :value="old('termination_cause_code')"
                             placeholder="— Seleccione causal —"
                             searchPlaceholder="Buscar causal…"
@@ -80,17 +80,20 @@
                     @if ($canForceNovedadesConflict ?? false)
                         {{-- Solo super-admin: continuar pese a cruce con MT-GH-04 --}}
                         <div class="form-field form-grid__full">
-                            <label class="form-check">
+                            <label class="ficha-empleados-terminate-modal__force" for="force_novedades_conflict">
                                 <input
                                     type="checkbox"
+                                    id="force_novedades_conflict"
                                     name="force_novedades_conflict"
                                     value="1"
                                     class="form-check"
                                     @checked(old('force_novedades_conflict'))
                                 >
-                                <span>Forzar desvinculación a pesar del cruce con vacaciones / incapacidad / permiso</span>
+                                <span class="ficha-empleados-terminate-modal__force-copy">
+                                    <span class="ficha-empleados-terminate-modal__force-title">Forzar desvinculación a pesar del cruce con vacaciones / incapacidad / permiso</span>
+                                    <span class="ficha-empleados-terminate-modal__force-hint">Visible solo para super-admin. Use solo si confirmó el caso con GH/Nómina.</span>
+                                </span>
                             </label>
-                            <p class="form-hint">Visible solo para super-admin. Use solo si confirmó el caso con GH/Nómina.</p>
                         </div>
                     @endif
                 </div>

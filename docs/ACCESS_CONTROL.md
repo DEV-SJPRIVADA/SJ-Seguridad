@@ -194,6 +194,21 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `archivo` — **Archivo** (`view.board.gestion_humana.archivo` + `archivo.view` / `manage`)
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
   - `cartas_notificacion` — **Cartas Notificación** (`view.board.gestion_humana.cartas_notificacion` + **solo** `cartas_notificacion.edit`; **sin** `.view`)
+  - `inasistencias` — **Inasistencias** (`view.board.gestion_humana.inasistencias` + `inasistencias.view` / `inasistencias.edit`; `edit` implica `view`)
+
+### Inasistencias (Gestion humana)
+
+Tablero **Inasistencias** con pestañas **Generar** | **Histórico**. Asignación **manual** en Admin.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.gestion_humana.inasistencias` | Ver tablero en sidebar GH |
+| `inasistencias.view` | Histórico + export Excel |
+| `inasistencias.edit` | Generar (lookup, Excel, Word/ZIP); implica view |
+
+- Labels Admin: `Inasistencias`, `Inasistencias: Ver`, `Inasistencias: Generar`.
+- Plantilla Word: tipo seed `inasistencias`; exactamente una plantilla con archivo.
+- Detalle: [`modules/inasistencias.md`](modules/inasistencias.md).
 
 ### Cartas Notificación (Gestion humana)
 
@@ -376,7 +391,7 @@ Permisos funcionales (independientes de Ficha empleados):
 - Generar **Cartas Vacaciones** desde Cliente interno usa `cliente_interno.cartas_vacaciones.edit` (no requiere `plantillas_word.*`); el tipo seed `cartas_vacaciones` vive en este tablero (regla operativa: exactamente una plantilla con archivo).
 - Generar **Cartas Notificación** desde su tablero GH usa `cartas_notificacion.edit` (no requiere `plantillas_word.*`); el tipo seed `cartas_notificacion` vive en este tablero (regla operativa: exactamente una plantilla con archivo).
 - Bypass: `manage.users`.
-- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word. Tipos seed: `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`.
+- Seed: `super-admin` todos; rol `administrador` recibe board + view + manage de Plantillas Word. Tipos seed: `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`, `inasistencias`.
 - Admin UI: **Activa visualizacion de otras areas → Gestion humana** (tablero en *Ver tableros*; funciones en subgroup *Plantillas Word*).
 - Doc: [`docs/modules/plantillas-word.md`](modules/plantillas-word.md), [`docs/user/plantillas-word.md`](user/plantillas-word.md).
 

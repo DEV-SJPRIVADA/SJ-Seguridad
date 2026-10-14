@@ -4086,6 +4086,46 @@ a {
     padding: 0 1rem;
 }
 
+/* Checkbox de forzar cruce: fila flex (no usar .form-check en el label) */
+.ficha-empleados-terminate-modal__force {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-surface-muted, #f8fafc) 80%, #fff);
+    cursor: pointer;
+}
+
+.ficha-empleados-terminate-modal__force .form-check {
+    margin: 0.15rem 0 0;
+    flex-shrink: 0;
+}
+
+.ficha-empleados-terminate-modal__force-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.ficha-empleados-terminate-modal__force-title {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text, #0f172a);
+    line-height: 1.35;
+}
+
+.ficha-empleados-terminate-modal__force-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-text-soft, #64748b);
+    line-height: 1.35;
+}
+
 .ficha-empleados-terminate-modal__actions {
     display: flex;
     justify-content: flex-end;

@@ -129,9 +129,10 @@ Modelo: `App\Models\EmployeeTerminationFollowup`
 
 - Constantes `CHECK_FIELDS` / `CHECK_LABELS` (7 checks UI en mayusculas; sin RET. CESANT).
 - Accessor `ok_todo` / `isOkTodo()` = AND de esos 7 checks (columna UI; no exige fecha nómina).
-- Scopes: `search`, `okTodo`, `incompletos`, `sinCarta`, `statusFilter` (`todos` \| `incompletos` \| `ok_todo` \| `sin_carta`), `dateFieldBetween` / `payrollDeliveredBetween`.
+- Scopes: `search`, `okTodo`, `incompletos`, `sinCarta`, `motivados`, `statusFilter` (`todos` \| `incompletos` \| `ok_todo` \| `sin_carta` \| `motivados`), `dateFieldBetween` / `payrollDeliveredBetween`.
   - **`ok_todo` (filtro):** 7 checks true **y** `payroll_delivered_at` no nulo.
   - **`incompletos` (filtro):** algún check operativo en false **o** sin `payroll_delivered_at` (default al cargar la vista / datatable sin `status`).
+  - **`motivados` (filtro):** `is_rehireable = false` (recontratable = No).
   - **Rango fechas:** columna elegida con `fecha_campo` (`DATE_FILTER_FIELDS`; default `termination_date` / FECHA DESVINCULACION).
 - Relaciones: `fichaEntry`, `employmentPeriod`, `creator`.
 - Relaciones inversas: `EmployeeFichaEmploymentPeriod::terminationFollowup()`, `PersonalRequisitionFichaEntry::terminationFollowups()`.
@@ -199,7 +200,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 15. Causal, rehire, notas, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo).
 16. 7 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms. Sin columna RET. CESANT.
 17. OK TODO solo lectura, calculado.
-18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` (sin chip Todos; default incompletos) + `rehireable` (`1`/`0`, vacío = todos) + selector `fecha_campo` + rango Desde/Hasta. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda/recontratable vacíos.
+18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` / `motivados` (sin chip Todos; default incompletos) + `rehireable` (`1`/`0`, vacío = todos) + selector `fecha_campo` + rango Desde/Hasta. **Motivados** = recontratable No. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda/recontratable vacíos.
 19. **Export Excel** del listado filtrado (`desvinculaciones.view`): columnas No, CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACION, FECHA DE REGISTRO, FECHA DESVINCULACION, 7 checks, OK TODO, OBSERVACIONES. Checks/OK TODO como Si/No. Audit `export` / `seguimientos_excel`.
 20. **Revertir** por fila (permiso edit): modal con motivo; anula fila Retiros en MT-GH-04 Novedades (si existe), reabre periodo, perfil activo, elimina followup, borra carta en disco. Regenerar carta (si aplica): en **Ficha** con `ficha_empleados.terminate`.
 

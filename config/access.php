@@ -35,6 +35,8 @@ return [
         'plantillas_word.view' => 'Plantillas Word: Ver tipos y plantillas',
         'plantillas_word.manage' => 'Plantillas Word: Administrar tipos y plantillas',
         'cartas_notificacion.edit' => 'Cartas Notificación: Generar',
+        'inasistencias.view' => 'Inasistencias: Ver histórico y export',
+        'inasistencias.edit' => 'Inasistencias: Generar',
         'desvinculaciones.view' => 'Desvinculaciones: Acceder al tablero (Dashboard, Masivos y Seguimientos)',
         'desvinculaciones.masivos' => 'Desvinculaciones: Ejecutar desvinculaciones masivas',
         'desvinculaciones.seguimientos.edit' => 'Desvinculaciones: Editar checks y fecha entregado nómina',
@@ -145,6 +147,7 @@ return [
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'cartas_notificacion' => 'Cartas Notificación',
+        'inasistencias' => 'Inasistencias',
         'documentos' => 'Biblioteca Calidad',
     ],
 
@@ -193,6 +196,10 @@ return [
             'base_area_tab' => false,
         ],
         'cartas_notificacion' => [
+            'home' => 'gestion_humana',
+            'base_area_tab' => false,
+        ],
+        'inasistencias' => [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
@@ -301,6 +308,11 @@ return [
         'validaciones' => 'Validaciones',
         'export_apo' => 'Export Apo',
         'catalogo' => 'Catálogo',
+    ],
+
+    'inasistencias_tabs' => [
+        'generar' => 'Generar',
+        'historico' => 'Histórico',
     ],
 
     'reportes_novedades_tabs' => [
@@ -467,6 +479,7 @@ return [
                             'view.board.gestion_humana.archivo',
                             'view.board.gestion_humana.plantillas_word',
                             'view.board.gestion_humana.cartas_notificacion',
+                            'view.board.gestion_humana.inasistencias',
                             'view.board.gestion_humana.desvinculaciones',
                             'view.board.gestion_humana.cursos',
                             'view.board.gestion_humana.formacion',
@@ -503,6 +516,13 @@ return [
                         'label' => 'Cartas Notificación',
                         'permissions' => [
                             'cartas_notificacion.edit',
+                        ],
+                    ],
+                    'inasistencias' => [
+                        'label' => 'Inasistencias',
+                        'permissions' => [
+                            'inasistencias.view',
+                            'inasistencias.edit',
                         ],
                     ],
                     'desvinculaciones' => [

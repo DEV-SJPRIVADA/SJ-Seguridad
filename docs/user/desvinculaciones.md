@@ -72,7 +72,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 ### Usar Seguimientos
 
 1. Abra la pestana **Seguimientos**.
-2. Filtre por texto (cedula o nombre), por estado (incompletos, OK TODO, sin carta), por **Recontratable** (Todos / Sí / No) y/o por rango de fechas. Elija el **campo fecha** (registro, desvinculacion o entregado nomina; por defecto **fecha desvinculacion**) y complete Desde/Hasta. Al usar fechas, los chips de estado se desactivan hasta que elija uno de nuevo. Al abrir la pestana, por defecto se muestran los **incompletos**. El filtro **OK TODO** solo incluye filas con los siete checks en Si **y** con fecha entregado nomina. Use el icono de limpiar para volver a incompletos y vaciar busqueda/fechas/recontratable. Encima de la tabla tambien esta el buscador de DataTables (filtrado en vivo sobre el listado).
+2. Filtre por texto (cedula o nombre), por estado (incompletos, OK TODO, sin carta, **Motivados**), por **Recontratable** (Todos / Sí / No) y/o por rango de fechas. Elija el **campo fecha** (registro, desvinculacion o entregado nomina; por defecto **fecha desvinculacion**) y complete Desde/Hasta. Al usar fechas, los chips de estado se desactivan hasta que elija uno de nuevo. Al abrir la pestana, por defecto se muestran los **incompletos**. El filtro **OK TODO** solo incluye filas con los siete checks en Si **y** con fecha entregado nomina. El filtro **Motivados** muestra solo quienes tienen recontratable en **No**. Use el icono de limpiar para volver a incompletos y vaciar busqueda/fechas/recontratable. Encima de la tabla tambien esta el buscador de DataTables (filtrado en vivo sobre el listado).
 3. Revise columnas de solo lectura: tipo de desvinculacion (causal), fechas, cargo, cedula, nombre, recontratable, observaciones y si **tiene carta generada**.
 4. Marque los siete checks operativos (examenes, enviado, control roll, retiro ARL, recibido, paz y salvo, reporte noved) y, si aplica, la **fecha entregado nomina**. Los cambios se guardan solos al soltar el control (unos instantes despues).
 5. **OK TODO** se calcula solo: pasa a Si cuando esos siete checks estan en verdadero; no se puede forzar a mano.
@@ -98,6 +98,8 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.20 | 2026-10-14 | Agent | Selector Causal (Masivos / modal desvinculación): solo muestra el nombre, no el código. |
+| 1.19 | 2026-10-14 | Agent | Seguimientos: chip de estado Motivados (recontratable = No). |
 | 1.18 | 2026-10-13 | Agent | Dashboard: texto Desvinculaciones (antes Bajas); se quitan KPI Recontratables y Causales distintas. |
 | 1.17 | 2026-10-13 | Agent | Nueva pestaña Dashboard (KPI + gráficos) con permiso desvinculaciones.view. |
 | 1.16 | 2026-10-13 | Agent | Seguimientos: se quita RET. CESANT; OK TODO pasa a 7 checks operativos. |

@@ -438,6 +438,7 @@
                         { value: 'incompletos', label: 'Incompletos' },
                         { value: 'ok_todo', label: 'OK TODO' },
                         { value: 'sin_carta', label: 'Sin carta' },
+                        { value: 'motivados', label: 'Motivados' },
                     ],
                     total: 0,
                     saving: {},

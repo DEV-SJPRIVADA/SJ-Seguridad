@@ -58,6 +58,10 @@ class PermissionCatalog
                                 return true;
                             }
 
+                            if ($boardKey === 'inasistencias' && $areaKey !== 'gestion_humana') {
+                                return true;
+                            }
+
                             if ($boardKey === 'desvinculaciones' && $areaKey !== 'gestion_humana') {
                                 return true;
                             }

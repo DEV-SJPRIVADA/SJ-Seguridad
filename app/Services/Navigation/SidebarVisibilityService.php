@@ -14,6 +14,7 @@ use App\Services\Access\DesvinculacionesAccessService;
 use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
+use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
@@ -33,6 +34,7 @@ class SidebarVisibilityService
         private readonly ArchivoAccessService $archivoAccess,
         private readonly PlantillasWordAccessService $plantillasWordAccess,
         private readonly CartasNotificacionAccessService $cartasNotificacionAccess,
+        private readonly InasistenciasAccessService $inasistenciasAccess,
         private readonly DesvinculacionesAccessService $desvinculacionesAccess,
         private readonly CursosAccessService $cursosAccess,
         private readonly FormacionAccessService $formacionAccess,
@@ -69,6 +71,7 @@ class SidebarVisibilityService
             'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
             'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
             'cartas_notificacion' => $this->shouldShowCartasNotificacionBoard($user, $areaKey),
+            'inasistencias' => $this->shouldShowInasistenciasBoard($user, $areaKey),
             'desvinculaciones' => $this->shouldShowDesvinculacionesBoard($user, $areaKey),
             'cursos' => $this->shouldShowCursosBoard($user, $areaKey),
             'formacion' => $this->shouldShowFormacionBoard($user, $areaKey),
@@ -210,6 +213,15 @@ class SidebarVisibilityService
         }
 
         return $this->cartasNotificacionAccess->canViewBoard($user);
+    }
+
+    private function shouldShowInasistenciasBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'gestion_humana') {
+            return false;
+        }
+
+        return $this->inasistenciasAccess->canViewBoard($user);
     }
 
     private function shouldShowDesvinculacionesBoard(User $user, string $areaKey): bool

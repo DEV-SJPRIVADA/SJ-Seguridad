@@ -212,6 +212,17 @@ class EmployeeTerminationFollowup extends Model
     }
 
     /**
+     * Motivados: recontratable = No (no aptos para reingreso).
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeMotivados(Builder $query): Builder
+    {
+        return $query->where('is_rehireable', false);
+    }
+
+    /**
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
@@ -221,6 +232,7 @@ class EmployeeTerminationFollowup extends Model
             'incompletos' => $query->incompletos(),
             'ok_todo' => $query->okTodo(),
             'sin_carta' => $query->sinCarta(),
+            'motivados' => $query->motivados(),
             default => $query,
         };
     }

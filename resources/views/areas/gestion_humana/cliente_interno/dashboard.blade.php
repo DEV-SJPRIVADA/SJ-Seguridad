@@ -142,6 +142,7 @@
                     loading: false,
                     error: '',
                     refreshTimer: null,
+                    _chartsReadyTimer: null,
                     _lastCharts: config.initial?.charts || {},
                     get promedioDiasLabel() {
                         const value = this.diasRespuesta?.promedio;
@@ -160,7 +161,43 @@
                         return (this.porEstado || []).filter((row) => Number(row.total) > 0).length;
                     },
                     init() {
-                        this.$nextTick(() => this.renderCharts(config.initial));
+                        // Vite carga ApexCharts async: sin wait el primer paint deja KPIs sí y charts vacíos.
+                        this.waitForChartsReady(() => this.paintCharts());
+                    },
+                    waitForChartsReady(onReady) {
+                        const run = () => {
+                            if (typeof window.renderClienteInternoDashboardCharts !== 'function') {
+                                return false;
+                            }
+                            onReady();
+                            return true;
+                        };
+
+                        if (run()) {
+                            return;
+                        }
+
+                        const onReadyEvent = () => run();
+                        window.addEventListener('cliente-interno-dashboard-charts-ready', onReadyEvent, { once: true });
+                        window.addEventListener('load', onReadyEvent, { once: true });
+
+                        let attempts = 0;
+                        clearInterval(this._chartsReadyTimer);
+                        this._chartsReadyTimer = setInterval(() => {
+                            attempts += 1;
+                            if (run() || attempts > 60) {
+                                clearInterval(this._chartsReadyTimer);
+                                this._chartsReadyTimer = null;
+                            }
+                        }, 50);
+                    },
+                    paintCharts() {
+                        this.$nextTick(() => {
+                            this.renderCharts(this._lastCharts);
+                            requestAnimationFrame(() => {
+                                this.renderCharts(this._lastCharts);
+                            });
+                        });
                     },
                     goToSolicitudes(overrides = {}) {
                         if (!this.canViewSolicitudes) {
@@ -180,9 +217,12 @@
                             ? `${this.solicitudesUrl}?${query}`
                             : this.solicitudesUrl;
                     },
-                    renderCharts(payload) {
-                        this._lastCharts = payload?.charts || this._lastCharts || {};
-                        window.renderClienteInternoDashboardCharts?.(this._lastCharts);
+                    renderCharts(chartsOrPayload) {
+                        this._lastCharts = chartsOrPayload?.charts || chartsOrPayload || this._lastCharts || {};
+                        if (typeof window.renderClienteInternoDashboardCharts !== 'function') {
+                            return;
+                        }
+                        window.renderClienteInternoDashboardCharts(this._lastCharts);
                     },
                     onSelectChange(key, event) {
                         let value = event?.detail?.value;
@@ -248,7 +288,8 @@
                             this.filters.mes = String(payload.filters?.mes ?? this.filters.mes ?? '');
                             this.porEstado = Array.isArray(payload.por_estado) ? payload.por_estado : [];
                             this.diasRespuesta = { ...defaultDias, ...(payload.dias_respuesta || {}) };
-                            this.$nextTick(() => this.renderCharts(payload));
+                            this._lastCharts = payload.charts || {};
+                            this.paintCharts();
                         } catch (e) {
                             this.error = e?.message || 'Error al actualizar.';
                         } finally {

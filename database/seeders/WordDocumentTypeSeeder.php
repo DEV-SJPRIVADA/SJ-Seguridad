@@ -35,5 +35,14 @@ class WordDocumentTypeSeeder extends Seeder
                 'sort_order' => 4,
             ]
         );
+
+        WordDocumentType::query()->firstOrCreate(
+            ['code' => 'inasistencias'],
+            [
+                'name' => 'Inasistencias',
+                'is_active' => true,
+                'sort_order' => 5,
+            ]
+        );
     }
 }

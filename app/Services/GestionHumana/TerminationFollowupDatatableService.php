@@ -235,7 +235,7 @@ final class TerminationFollowupDatatableService
             return '';
         }
 
-        return in_array($status, ['incompletos', 'ok_todo', 'sin_carta'], true)
+        return in_array($status, ['incompletos', 'ok_todo', 'sin_carta', 'motivados'], true)
             ? $status
             : 'incompletos';
     }

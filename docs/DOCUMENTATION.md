@@ -86,6 +86,7 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | MT-ST-04 | [`modules/mt_st_04.md`](modules/mt_st_04.md) | [`user/mt_st_04.md`](user/mt_st_04.md) | Area gestion_humana |
 | Plantillas Word | [`modules/plantillas-word.md`](modules/plantillas-word.md) | [`user/plantillas-word.md`](user/plantillas-word.md) | Area gestion_humana |
 | Cartas Notificación | [`modules/cartas-notificacion.md`](modules/cartas-notificacion.md) | [`user/cartas-notificacion.md`](user/cartas-notificacion.md) | Area gestion_humana |
+| Inasistencias | [`modules/inasistencias.md`](modules/inasistencias.md) | [`user/inasistencias.md`](user/inasistencias.md) | Area gestion_humana |
 | Branding / UI | [`modules/branding.md`](modules/branding.md) | — (solo tecnica) | Transversal; calidad al crear pantallas: `.cursor/rules/module-ui-quality.mdc` |
 
 ---

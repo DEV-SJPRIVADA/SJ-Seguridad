@@ -13,6 +13,7 @@ use App\Http\Controllers\GestionHumana\FichaEmpleadosController;
 use App\Http\Controllers\GestionHumana\FichaTypeLetterController;
 use App\Http\Controllers\GestionHumana\FormacionController;
 use App\Http\Controllers\GestionHumana\GestionHumanaAreaDashboardController;
+use App\Http\Controllers\GestionHumana\InasistenciasController;
 use App\Http\Controllers\GestionHumana\MtSt04Controller;
 use App\Http\Controllers\GestionHumana\PlantillasWordController;
 use App\Http\Controllers\GestionHumana\ReportesNovedadesController;
@@ -134,6 +135,20 @@ Route::middleware(['password.changed'])
         Route::get('/import-template', [CartasNotificacionController::class, 'importTemplate'])->name('import-template');
         Route::post('/import-preview', [CartasNotificacionController::class, 'importPreview'])->name('import-preview');
         Route::post('/generar', [CartasNotificacionController::class, 'generate'])->name('generate');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('gestion-humana/inasistencias')
+    ->name('gestion-humana.inasistencias.')
+    ->group(function (): void {
+        Route::get('/', [InasistenciasController::class, 'generar'])->name('index');
+        Route::get('/generar', [InasistenciasController::class, 'generar'])->name('generar');
+        Route::get('/historico', [InasistenciasController::class, 'historico'])->name('historico');
+        Route::get('/historico/export', [InasistenciasController::class, 'exportHistorico'])->name('historico.export');
+        Route::post('/lookup', [InasistenciasController::class, 'lookup'])->name('lookup');
+        Route::get('/import-template', [InasistenciasController::class, 'importTemplate'])->name('import-template');
+        Route::post('/import-preview', [InasistenciasController::class, 'importPreview'])->name('import-preview');
+        Route::post('/generar', [InasistenciasController::class, 'generate'])->name('generate');
     });
 
 Route::middleware(['password.changed'])

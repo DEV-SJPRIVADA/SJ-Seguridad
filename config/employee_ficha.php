@@ -370,6 +370,7 @@ return [
         'contratacion' => 'contratacion',
         'cartas_vacaciones' => 'cartas_vacaciones',
         'cartas_notificacion' => 'cartas_notificacion',
+        'inasistencias' => 'inasistencias',
     ],
 
     'termination_letter_signatory' => [
@@ -517,6 +518,19 @@ return [
             'NOMBRE_COMPLETO' => 'Nombre completo de la fila (autollenado o manual)',
             'DURACION_CONTRATO' => 'Duración del contrato en meses (6 o 12; viene de la grilla/Excel)',
             'FECHA_TERMINACION' => 'Fecha de terminación de la fila (formato largo español en MAYÚSCULAS)',
+            'FIRMA' => 'Nombre del firmante (catálogo firmas)',
+            'CARGO_FIRMA' => 'Cargo del firmante (código del catálogo)',
+            'FECHA' => 'Fecha de emisión de la carta (hoy)',
+        ],
+        // Orientación para plantillas del tipo inasistencias.
+        'Inasistencias' => [
+            'CEDULA' => 'Cédula de la fila (grilla Inasistencias)',
+            'NOMBRE' => 'Nombre completo (alias de NOMBRE_COMPLETO)',
+            'NOMBRE_COMPLETO' => 'Nombre completo de la fila (autollenado desde ficha)',
+            'CARGO' => 'Cargo del empleado (ficha)',
+            'CIUDAD' => 'Ciudad (residencia / trabajo según ficha)',
+            'FECHA_INI_AUS' => 'Fecha inicio de ausencia (formato largo español en MAYÚSCULAS)',
+            'DIAS' => 'Días inclusivos desde FECHA_INI_AUS hasta hoy (ej. 12→14 = 3)',
             'FIRMA' => 'Nombre del firmante (catálogo firmas)',
             'CARGO_FIRMA' => 'Cargo del firmante (código del catálogo)',
             'FECHA' => 'Fecha de emisión de la carta (hoy)',

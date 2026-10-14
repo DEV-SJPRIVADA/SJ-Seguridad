@@ -134,3 +134,5 @@ window.renderClienteInternoDashboardCharts = function renderClienteInternoDashbo
     renderEstado(charts?.por_estado || { labels: [], data: [] });
     renderDias(charts?.dias_respuesta || { labels: [], data: [] });
 };
+
+window.dispatchEvent(new CustomEvent('cliente-interno-dashboard-charts-ready'));
