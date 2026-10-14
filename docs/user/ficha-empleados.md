@@ -46,7 +46,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. En la seccion **Cierre**, cambie el **Estado** a **Contratado**.
 3. Complete **Cedula persona contratada** y **Nombre completo persona contratada** (obligatorios solo con este estado); no los confunda con **Cedula/Nombre a quien reemplaza** (seccion Motivo).
 4. Guarde. Si la cedula ya esta registrada en otra requisicion, aparecera una alerta de confirmacion indicando el codigo de esa requisicion; confirme solo si esta seguro de que es la misma persona (el registro existente se reasigna a la requisicion actual).
-5. La persona queda automaticamente en la lista de espera de **Ficha empleados** (pill **Pendientes**).
+5. La persona queda automaticamente en la lista de espera de **Ficha empleados** (pill **Pendientes**). Además se crea un **perfil mínimo** (aún no En ficha): ya puede aparecer en colas de **Cursos**, **Acreditaciones** y **Validaciones** de psicofísicos. Completar la ficha con **Gestionar Empleado** / import sigue siendo lo que lo mueve a **En ficha** y lo incluye en Plantilla masivos.
 
 ### Consultar la lista de espera (Pendientes)
 
@@ -164,6 +164,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.38 | 2026-10-14 | Agent | Al marcar **Contratado** se crea perfil mínimo y se habilitan colas Cursos/Acreditación/psicofísicos sin pasar aún a En ficha ni a Plantilla masivos. |
 | 1.37 | 2026-10-13 | Agent | Ficha: icono **Consultar psicofísicos** (modal MT-ST-04 por cédula) junto a cursos/acreditación; visible solo si `requires_psicofisicos`. |
 | 1.36 | 2026-10-06 | Agent | Selectores searchable: al pasar el mouse sobre un valor truncado se muestra el texto completo (`title`). |
 | 1.35 | 2026-10-06 | Agent | Catálogos: modal de edición rediseñado (cabecera con icono, orden/activo en fila, pie con iconos cancelar/guardar). |

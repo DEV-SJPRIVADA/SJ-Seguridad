@@ -43,6 +43,7 @@ Indice adicional: `index('hired_document')` (no unico — la unicidad practica l
 - `movedBy(): BelongsTo` → `User` (`moved_to_ficha_by`)
 - `creator(): BelongsTo` → `User` (`created_by`)
 - Scopes: `scopePending()` → `whereNull('moved_to_ficha_at')`; `scopeInFicha()` → `whereNotNull('moved_to_ficha_at')`
+- `isRehirePending()`: pendiente + al menos un periodo **cerrado** (independiente de `employment_status` del perfil)
 - Accessors delegados a `requisition` (evitan N+1 con `loadMissing`/`with` en el controlador): `requisitionCode()`, `positionName()`, `clientName()`, `cityName()`
 
 ### `App\Models\PersonalRequisition` (relacion nueva)
@@ -54,9 +55,12 @@ Indice adicional: `index('hired_document')` (no unico — la unicidad practica l
 
 Invocado desde `RequisitionController::update` dentro de la misma transaccion, cuando GH guarda una requisicion en Gestion:
 
-1. **`status` distinto de `contratado`:** si la entrada propia (`personal_requisition_id` = requisicion actual) esta **pendiente**, se **elimina**. Si ya esta **en ficha**, se **conserva** (caso raro documentado abajo).
-2. **`status = contratado` sin duplicado:** upsert normal — crea la entrada si no existe, o actualiza `hired_document`/`hired_full_name` de la entrada propia si ya existe.
-3. **`status = contratado` con cedula duplicada y `confirm_duplicate_hired=1`:** la entrada de la **otra** requisicion se **reasigna** (`personal_requisition_id` = requisicion actual, `hired_full_name` actualizado); si la requisicion actual ya tenia su propia entrada, se descarta para respetar la relacion 1:1. Si la entrada reasignada ya estaba **en ficha**, conserva ese estado.
+1. **`status` distinto de `contratado`:** si la entrada propia (`personal_requisition_id` = requisicion actual) esta **pendiente**, se ejecuta cleanup (`EmployeeFichaOnHiredBootstrap::cleanupBeforePendingEntryDelete`: descarta colas abiertas de cursos/acreditación y borra el perfil — el FK del perfil es `nullOnDelete`, no cascade) y luego se **elimina** la entry. Si ya esta **en ficha**, se **conserva** (caso raro documentado abajo).
+2. **`status = contratado` sin duplicado:** upsert de la entry + **`EmployeeFichaOnHiredBootstrap`**: perfil mínimo (`requires_courses` / `requires_acreditacion` / `requires_psicofisicos` = true, `employment_status` = activo), encola Cursos y Acreditaciones si aplica. **No** setea `moved_to_ficha_at` ni abre periodo laboral. Plantilla masivos sigue excluyendo Pendientes.
+3. **`status = contratado` con cedula duplicada y `confirm_duplicate_hired=1`:** la entrada de la **otra** requisicion se **reasigna** + bootstrap de perfil/colas. Si la entrada reasignada ya estaba **en ficha**, conserva ese estado.
+4. **Reingreso recontratable:** limpia `moved_to_ficha_at`, reactiva perfil a activo, re-encola si elegible. `isRehirePending()` se basa en periodos **cerrados** + aún pendiente (no en `employment_status` desvinculado), porque bootstrap/carta dejan el perfil activo.
+
+Servicio: `App\Services\GestionHumana\EmployeeFichaOnHiredBootstrap`. Tests: `tests/Feature/GestionHumana/EmployeeFichaOnHiredBootstrapTest.php`.
 
 ### Deteccion de duplicado (`App\Rules\Requisitions\HiredDocumentNotDuplicated`)
 
@@ -159,6 +163,8 @@ Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agrega
 ## Modelo `employee_ficha_profiles`
 
 Perfil 1:1 con `personal_requisition_ficha_entry` (nullable si import masivo crea entrada sin requisición). Campos alineados a `EMPLEADOS.xlsx` + `employment_status` (`activo`|`desvinculado`) y `termination_date` (snapshot del ultimo cierre).
+
+**Bootstrap al Contratado:** puede existir perfil con entry aún **Pendiente** (`moved_to_ficha_at` null) — identidad + flags `requires_*` + estado activo, **sin** periodo abierto. Eso desbloquea Cursos / Acreditaciones / Validaciones MT-ST-04; **no** implica En ficha ni filas en Plantilla masivos.
 
 **Ciudad de trabajo:** columnas `work_city_code` / `work_city_name` (catalogo `city`). Prefill desde la ciudad de la requisicion (`EmployeeFichaProfilePrefill`; upsert al catalogo Ciudad si no existe). Editable en formulario. Incluidas en plantilla de **importacion / exportar datos para actualizar** (`codigo_ciudad_trabajo`, `ciudad_trabajo`). **No** forman parte de `PlantillaMasivosMapper` / export nómina.
 

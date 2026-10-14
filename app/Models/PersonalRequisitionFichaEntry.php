@@ -70,10 +70,25 @@ class PersonalRequisitionFichaEntry extends Model
         return $this->hasMany(EmployeeTerminationFollowup::class, 'personal_requisition_ficha_entry_id');
     }
 
+    /**
+     * Pendiente de gestionar reingreso: aún no En ficha y ya tuvo al menos un vínculo cerrado.
+     * No depende de employment_status del perfil (bootstrap/carta rápida lo dejan en activo).
+     */
     public function isRehirePending(): bool
     {
-        return $this->moved_to_ficha_at === null
-            && $this->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO;
+        if ($this->moved_to_ficha_at !== null) {
+            return false;
+        }
+
+        if ($this->relationLoaded('employmentPeriods')) {
+            return $this->employmentPeriods
+                ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+                ->isNotEmpty();
+        }
+
+        return $this->employmentPeriods()
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_CERRADO)
+            ->exists();
     }
 
     public function rehireableLabel(): ?string

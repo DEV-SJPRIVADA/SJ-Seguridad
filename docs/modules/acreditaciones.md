@@ -12,8 +12,8 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
 - Tablero sidebar **Acreditaciones** (`board` key `acreditaciones`, hogar `gestion_humana`, `base_area_tab => false`).
 - Pestanas: **Dashboard**, **Acreditados**, **Reporte Diario**, **Validaciones**, **Export Apo**, **Catálogo**. **Catálogo**, **Validaciones** y **Export Apo** solo visibles/operativas con `acreditaciones.edit`. **Dashboard** con `acreditaciones.view`.
 - **Funcional:**
-  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al entrar a ficha post-deploy). Acciones de fila icon-only: Nuevo acreditado (`plus`) / Omitir (`ban`); volver con `arrow-left`. Coexiste con Validaciones `sin_acreditacion`.
-  - Ficha: `requires_acreditacion` (default true). Modal «Nuevo acreditado»: check activo exige datos; desactivado solo actualiza ficha y omite pending. Validaciones excluyen flag false. Editable en ficha con `ficha_empleados.manage` + `acreditaciones.edit`.
+  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Nuevo acreditado (`plus`) / Omitir (`ban`); volver con `arrow-left`. Coexiste con Validaciones `sin_acreditacion`.
+  - Ficha: `requires_acreditacion` (default true). Modal «Nuevo acreditado»: check activo exige datos; desactivado solo actualiza ficha y omite pending. Prefill desde cola carga `position_name` (cargo) + lookup forzado si falta. Layout: Identidad (check+Estado); sección **Datos de acreditación** (Cargo|Cargo APO|Vigen.ACR + observaciones); sección **Renovaciones** (Renovaciones|Fecha solicitud). Validaciones excluyen flag false. Editable en ficha con `ficha_empleados.manage` + `acreditaciones.edit`.
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
@@ -541,6 +541,7 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.15 | 2026-10-14 | Modal Nuevo acreditado: cargo desde Ficha en cola; layout check+Estado / Cargo+APO+Vigen / Renovaciones+Fecha; CSS secciones. |
 | 1.14 | 2026-09-29 | Filtro multi-cédula (`document_numbers`, exacto, max 500, sin historial) en Acreditados, Validaciones (4 colas), Export Apo preview y componente compartido. |
 | 1.13 | 2026-09-29 | Dashboard: filtro `ficha_estado` (activo por defecto, alineado con listado/export Acreditados). |
 | 1.12 | 2026-09-29 | Dashboard: filtros + gráficos ApexCharts; se quitan KPIs candidatos/novedad y tabla de corridas Export Apo. |

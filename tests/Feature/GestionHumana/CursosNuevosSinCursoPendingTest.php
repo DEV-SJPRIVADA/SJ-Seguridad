@@ -147,6 +147,7 @@ class CursosNuevosSinCursoPendingTest extends TestCase
         $activo = EmployeeFichaProfile::query()->create([
             'document_number' => '6001',
             'full_name' => 'En Cola',
+            'position_name' => 'GUARDA DE SEGURIDAD',
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
         ]);
         EmployeeCursoPending::factory()->pending()->create([
@@ -180,6 +181,8 @@ class CursosNuevosSinCursoPendingTest extends TestCase
             ->assertOk()
             ->assertSee('En Cola', false)
             ->assertSee('6001', false)
+            ->assertSee('>Cargo</th>', false)
+            ->assertSee('GUARDA DE SEGURIDAD', false)
             ->assertSee('Agregar curso', false)
             ->assertSee('No aplica / omitir', false)
             ->assertSee('cursos-catalogo-page__icon-btn', false)

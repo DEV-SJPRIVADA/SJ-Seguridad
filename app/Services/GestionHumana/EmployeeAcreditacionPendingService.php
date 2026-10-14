@@ -223,7 +223,7 @@ class EmployeeAcreditacionPendingService
     {
         return EmployeeAcreditacionPending::query()
             ->pendingWithActiveProfile()
-            ->with(['employeeFichaProfile:id,document_number,full_name,employment_status'])
+            ->with(['employeeFichaProfile:id,document_number,full_name,employment_status,position_name'])
             ->orderByDesc('enqueued_at')
             ->orderByDesc('id')
             ->get();

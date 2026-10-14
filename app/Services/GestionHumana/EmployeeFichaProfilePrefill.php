@@ -165,10 +165,11 @@ class EmployeeFichaProfilePrefill
      * Atributos editables sugeridos desde requisicion. No incluye campos exportables a plantilla
      * masivos/nomina que deban salir exclusivamente del catalogo (centro costo, residencia, centro trabajo).
      * Si incluye ciudad de trabajo (no va a plantilla nomina; viene de la ciudad de la requisicion).
+     * Público para bootstrap al Contratado y otros consumidores que persisten el mínimo.
      *
      * @return array<string, mixed>
      */
-    private function attributesForEntry(PersonalRequisitionFichaEntry $entry): array
+    public function attributesForEntry(PersonalRequisitionFichaEntry $entry): array
     {
         $requisition = $entry->requisition;
         $firstSurname = $entry->first_surname ?: $requisition?->hired_first_surname;

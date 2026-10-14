@@ -88,6 +88,43 @@ class AcreditacionesNuevosSinAcreditacionPendingTest extends TestCase
             ->assertSee('Volver a acreditados', false);
     }
 
+    public function test_cola_nuevo_modal_prefill_includes_cargo_from_ficha_position_name(): void
+    {
+        $profile = EmployeeFichaProfile::query()->create([
+            'document_number' => '6101',
+            'full_name' => 'Con Cargo Ficha',
+            'position_name' => 'SUPERVISOR DE SEGURIDAD',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+        EmployeeAcreditacionPending::factory()->pending()->create([
+            'document_number' => '6101',
+            'full_name' => 'Con Cargo Ficha',
+            'employee_ficha_profile_id' => $profile->id,
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados', ['cola' => 'nuevos-sin-acreditacion']))
+            ->assertOk()
+            ->assertSee('>Cargo</th>', false)
+            ->assertSee('SUPERVISOR DE SEGURIDAD', false)
+            ->assertSee('data-cargo="SUPERVISOR DE SEGURIDAD"', false)
+            ->assertSee('acreditaciones-nuevo-modal__req-row', false)
+            ->assertSee('Datos de acreditación', false)
+            ->assertSee('>Renovaciones</h4>', false);
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.lookup', ['cedula' => '6101']))
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'document_number' => '6101',
+                'full_name' => 'Con Cargo Ficha',
+                'cargo' => 'SUPERVISOR DE SEGURIDAD',
+            ]);
+    }
+
     public function test_omit_sets_requires_acreditacion_false_on_ficha(): void
     {
         $activo = EmployeeFichaProfile::query()->create([

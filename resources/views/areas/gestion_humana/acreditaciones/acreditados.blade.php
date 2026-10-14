@@ -647,14 +647,17 @@
                         this.omitOpen = false;
                     },
                     openCreateFromPending(row) {
-                        window.dispatchEvent(new CustomEvent('acreditaciones-nuevo-prefill', {
-                            detail: {
-                                document_number: row.document_number || '',
-                                full_name: row.full_name || '',
-                                cargo: row.cargo || '',
-                            },
-                        }));
+                        // Abrir primero para que el modal Alpine reciba el prefill (cargo desde Ficha).
                         this.$dispatch('open-modal', 'acreditaciones-nuevo');
+                        this.$nextTick(() => {
+                            window.dispatchEvent(new CustomEvent('acreditaciones-nuevo-prefill', {
+                                detail: {
+                                    document_number: row.document_number || '',
+                                    full_name: row.full_name || '',
+                                    cargo: row.cargo || '',
+                                },
+                            }));
+                        });
                     },
                     openEdit(detail) {
                         this.editForm = {

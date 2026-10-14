@@ -6,16 +6,19 @@ use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
+use App\Services\GestionHumana\EmployeeFichaOnHiredBootstrap;
 
 class PersonalRequisitionFichaSync
 {
     public function __construct(
         private readonly EmployeeFichaEmploymentPeriodService $employmentPeriodService,
+        private readonly EmployeeFichaOnHiredBootstrap $onHiredBootstrap,
     ) {}
 
     /**
      * Mantiene sincronizada la entrada 1:1 de `personal_requisition_ficha_entries`
      * con el estado y los datos de contratacion capturados en la requisicion.
+     * En Contratado también asegura perfil mínimo + colas cursos/acreditación.
      */
     public function syncOnUpdate(
         PersonalRequisition $requisition,
@@ -35,6 +38,7 @@ class PersonalRequisitionFichaSync
 
         if ($newStatus !== PersonalRequisition::STATUS_CONTRATADO) {
             if ($ownEntry !== null && $ownEntry->moved_to_ficha_at === null) {
+                $this->onHiredBootstrap->cleanupBeforePendingEntryDelete($ownEntry, $userId);
                 $ownEntry->delete();
             }
 
@@ -59,6 +63,7 @@ class PersonalRequisitionFichaSync
             && $existingByDocument->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
             && $this->employmentPeriodService->isRehireable($existingByDocument)) {
             if ($ownEntry !== null && $ownEntry->id !== $existingByDocument->id) {
+                $this->onHiredBootstrap->cleanupBeforePendingEntryDelete($ownEntry, $userId);
                 $ownEntry->delete();
             }
 
@@ -73,6 +78,8 @@ class PersonalRequisitionFichaSync
                 'moved_to_ficha_by' => null,
             ]);
 
+            $this->onHiredBootstrap->bootstrap($existingByDocument->fresh(), $userId);
+
             return;
         }
 
@@ -83,6 +90,7 @@ class PersonalRequisitionFichaSync
 
         if ($otherEntry !== null && $confirmDuplicate) {
             if ($ownEntry !== null && $ownEntry->id !== $otherEntry->id) {
+                $this->onHiredBootstrap->cleanupBeforePendingEntryDelete($ownEntry, $userId);
                 $ownEntry->delete();
             }
 
@@ -94,6 +102,8 @@ class PersonalRequisitionFichaSync
                 'second_name' => $secondName ?: $otherEntry->second_name,
                 'hired_full_name' => $fullName,
             ]);
+
+            $this->onHiredBootstrap->bootstrap($otherEntry->fresh(), $userId);
 
             return;
         }
@@ -108,10 +118,12 @@ class PersonalRequisitionFichaSync
                 'hired_full_name' => $fullName,
             ]);
 
+            $this->onHiredBootstrap->bootstrap($ownEntry->fresh(), $userId);
+
             return;
         }
 
-        PersonalRequisitionFichaEntry::query()->create([
+        $entry = PersonalRequisitionFichaEntry::query()->create([
             'personal_requisition_id' => $requisition->id,
             'hired_document' => $document,
             'first_surname' => $firstSurname,
@@ -121,5 +133,7 @@ class PersonalRequisitionFichaSync
             'hired_full_name' => $fullName,
             'created_by' => $userId,
         ]);
+
+        $this->onHiredBootstrap->bootstrap($entry->fresh(), $userId);
     }
 }

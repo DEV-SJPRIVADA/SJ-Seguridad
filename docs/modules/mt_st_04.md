@@ -221,7 +221,7 @@ DELETE duro con `edit` (confirmación UI). Sin soft-delete.
 - DataTables server-side en Matriz (`js-mt-st-04-datatable`; no `.js-datatable`; `lengthMenu` sin `-1`).
 - Cabecera matriz en dos filas: grupo **Psicofísico (armas)** (azul) y **Psicosensométrico (vial)** (verde); celdas tintadas por grupo. Orden columnas: identidad → psico (arma…obs1) → senso (exam2…estado2) → acciones.
 - Modales Nuevo/Editar: secciones visuales Identificación | Psicofísico | Psicosensométrico (`.mt-st-04-form-section`).
-- **Validaciones:** activos Ficha con `requires_psicofisicos` y sin fila en matriz; + abre alta; omit/enable muta el flag. Filtros: `q`, `cola`, `ciudad`, `cargo`. Export Excel (`MtSt04ValidacionesExport` + `<x-export-excel>`, respeta filtros). Flag también en Ficha (editores de ficha). Permisos: mismos `mt_st_04.view` / `.edit`.
+- **Validaciones:** activos Ficha con `requires_psicofisicos` y sin fila en matriz; + abre alta; omit/enable muta el flag. El perfil mínimo al **Contratado** (`EmployeeFichaOnHiredBootstrap`, flag true) hace visibles a esos contratados en Pendientes sin exigir En ficha. Filtros: `q`, `cola`, `ciudad`, `cargo`. Export Excel (`MtSt04ValidacionesExport` + `<x-export-excel>`, respeta filtros). Flag también en Ficha (editores de ficha). Permisos: mismos `mt_st_04.view` / `.edit`.
 - Alpine / modales CRUD e import (patrón GH).
 - Dashboard charts ApexCharts (Vite).
 - Selects: solo `<x-searchable-select>`.

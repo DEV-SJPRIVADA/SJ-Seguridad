@@ -8,9 +8,9 @@
         || $requiresAcreditacionOld === '1'
         || $requiresAcreditacionOld === 'true';
 @endphp
-<x-modal name="acreditaciones-nuevo" maxWidth="2xl" :show="$show" focusable>
+<x-modal name="acreditaciones-nuevo" maxWidth="3xl" :show="$show" focusable>
     <div
-        class="modal-card ficha-empleados-masivos-modal cursos-registros-page__create-modal"
+        class="modal-card ficha-empleados-masivos-modal cursos-registros-page__create-modal acreditaciones-nuevo-modal"
         x-data="{
             lookupUrl: @js($lookupUrl),
             identityLocked: {{ $show && old('document_number') ? 'true' : 'false' }},
@@ -18,20 +18,25 @@
             fullName: @js(old('full_name', '')),
             cargo: @js(old('cargo', '')),
             requiresAcreditacion: {{ $requiresAcreditacionChecked ? 'true' : 'false' }},
-            async lookupName(cedula) {
+            async lookupName(cedula, { force = false } = {}) {
                 const value = String(cedula || '').trim();
-                if (!value || this.identityLocked) return;
+                if (!value || (this.identityLocked && !force)) return;
                 try {
                     const res = await fetch(this.lookupUrl + '?cedula=' + encodeURIComponent(value), {
                         headers: { 'Accept': 'application/json' },
                     });
                     if (!res.ok) return;
                     const data = await res.json();
-                    if (data.found && data.full_name) {
+                    if (data.found) {
                         this.documentNumber = data.document_number || value;
-                        this.fullName = data.full_name;
-                        this.cargo = data.cargo || '';
-                        this.identityLocked = true;
+                        if (data.full_name) {
+                            this.fullName = data.full_name;
+                        }
+                        // Completar cargo desde Ficha (también si venía vacío en prefill).
+                        if (data.cargo) {
+                            this.cargo = data.cargo;
+                        }
+                        this.identityLocked = Boolean(this.documentNumber && this.fullName);
                     }
                 } catch (e) {}
             },
@@ -49,8 +54,9 @@
                 this.fullName = name;
                 this.cargo = cargo;
                 this.identityLocked = Boolean(doc && name);
-                if (doc && (! name || ! cargo)) {
-                    this.lookupName(doc);
+                // Si falta nombre o cargo, forzar lookup aunque la identidad ya esté bloqueada.
+                if (doc && (!name || !cargo)) {
+                    this.lookupName(doc, { force: true });
                 }
             },
             prefillFromPending(detail) {
@@ -68,7 +74,7 @@
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo acreditado</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        La cédula debe existir en Ficha empleados. Si desactiva «Requiere acreditación», puede guardar solo esa marca en ficha.
+                        La cédula debe existir en Ficha empleados. Si desactiva «Requiere acreditación», solo se actualiza esa marca en ficha.
                     </p>
                 </div>
             </div>
@@ -95,7 +101,7 @@
         <form
             method="POST"
             action="{{ route('gestion-humana.acreditaciones.acreditados.store') }}"
-            class="cursos-registros-page__form"
+            class="cursos-registros-page__form acreditaciones-nuevo-modal__form"
         >
             @csrf
             @if (! empty($validacionesReturn))
@@ -105,71 +111,95 @@
             @elseif (! empty($returnContext))
                 <input type="hidden" name="_return_context" value="{{ $returnContext }}">
             @endif
-            <div class="cursos-registros-page__form-grid">
-                <div class="form-field">
-                    <label class="form-label" for="create_document_number">CÉDULA</label>
-                    <div class="cursos-registros-page__identity-row">
+
+            {{-- Identidad desde Ficha --}}
+            <section class="acreditaciones-nuevo-modal__section" aria-label="Identidad">
+                <h4 class="acreditaciones-nuevo-modal__section-title">Identidad</h4>
+                <div class="acreditaciones-nuevo-modal__grid acreditaciones-nuevo-modal__grid--2">
+                    <div class="form-field">
+                        <label class="form-label" for="create_document_number">Cédula</label>
+                        <div class="cursos-registros-page__identity-row">
+                            <input
+                                id="create_document_number"
+                                name="document_number"
+                                type="text"
+                                class="form-input"
+                                maxlength="50"
+                                required
+                                x-model="documentNumber"
+                                x-bind:readonly="identityLocked"
+                                @blur="lookupName($event.target.value)"
+                            >
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                x-show="identityLocked"
+                                x-cloak
+                                x-on:click="unlockIdentity()"
+                                title="Cambiar persona"
+                                aria-label="Cambiar persona"
+                            >
+                                <x-lucide-user-round-pen width="18" height="18" aria-hidden="true" />
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_full_name">Nombre completo</label>
                         <input
-                            id="create_document_number"
-                            name="document_number"
+                            id="create_full_name"
                             type="text"
                             class="form-input"
-                            maxlength="50"
-                            required
-                            x-model="documentNumber"
-                            x-bind:readonly="identityLocked"
-                            @blur="lookupName($event.target.value)"
+                            maxlength="255"
+                            readonly
+                            x-model="fullName"
+                            placeholder="Se completa desde Ficha"
                         >
-                        <button
-                            type="button"
-                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            x-show="identityLocked"
-                            x-cloak
-                            x-on:click="unlockIdentity()"
-                            title="Cambiar persona"
-                            aria-label="Cambiar persona"
-                        >
-                            <x-lucide-user-round-pen width="18" height="18" aria-hidden="true" />
-                        </button>
                     </div>
                 </div>
-                <div class="form-field">
-                    <label class="form-label" for="create_full_name">NOMBRE COMPLETO</label>
-                    <input
-                        id="create_full_name"
-                        type="text"
-                        class="form-input"
-                        maxlength="255"
-                        readonly
-                        x-model="fullName"
-                        placeholder="Se completa desde Ficha"
-                    >
-                </div>
-                <div class="form-field cursos-registros-page__form-span">
-                    <label class="cursos-registros-page__checkbox-label">
-                        <input type="hidden" name="requires_acreditacion" value="0">
-                        <input
-                            id="create_requires_acreditacion"
-                            name="requires_acreditacion"
-                            type="checkbox"
-                            value="1"
-                            x-model="requiresAcreditacion"
-                        >
-                        Esta persona requiere acreditación
-                    </label>
-                    <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;" x-show="!requiresAcreditacion" x-cloak>
-                        Al guardar se actualizará la ficha (no requiere acreditación) y no se creará un acreditado.
-                    </p>
-                </div>
 
-                <fieldset
-                    class="cursos-registros-page__form-span"
-                    style="border:0;margin:0;padding:0;min-inline-size:0;"
-                    :disabled="!requiresAcreditacion"
-                >
-                    <div class="cursos-registros-page__form-grid" :class="{ 'opacity-50': !requiresAcreditacion }">
+                {{-- Requisito + Estado en la misma fila --}}
+                <div class="acreditaciones-nuevo-modal__req-row">
+                    <div class="form-field acreditaciones-nuevo-modal__req-check">
+                        <label class="cursos-registros-page__checkbox-label">
+                            <input type="hidden" name="requires_acreditacion" value="0">
+                            <input
+                                id="create_requires_acreditacion"
+                                name="requires_acreditacion"
+                                type="checkbox"
+                                value="1"
+                                x-model="requiresAcreditacion"
+                            >
+                            Esta persona requiere acreditación
+                        </label>
+                        <p class="acreditaciones-nuevo-modal__hint" x-show="!requiresAcreditacion" x-cloak>
+                            Al guardar se actualizará la ficha (no requiere acreditación) y no se creará un acreditado.
+                        </p>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="create_estado">Estado</label>
+                        <input
+                            id="create_estado"
+                            type="text"
+                            class="form-input"
+                            readonly
+                            value="Automático"
+                            title="Se calcula al guardar"
+                        >
+                    </div>
+                </div>
+            </section>
+
+            {{-- Cargo | Cargo APO | Vigen.ACR (+ observaciones) --}}
+            <fieldset
+                class="acreditaciones-nuevo-modal__section acreditaciones-nuevo-modal__section--acred"
+                style="border:0;min-inline-size:0;"
+                :disabled="!requiresAcreditacion"
+            >
+                <h4 class="acreditaciones-nuevo-modal__section-title">Datos de acreditación</h4>
+                <div :class="{ 'opacity-50': !requiresAcreditacion }">
+                    <div class="acreditaciones-nuevo-modal__grid acreditaciones-nuevo-modal__grid--3">
                         <div class="form-field">
-                            <label class="form-label" for="create_cargo">CARGO</label>
+                            <label class="form-label" for="create_cargo">Cargo</label>
                             <input
                                 id="create_cargo"
                                 name="cargo"
@@ -182,19 +212,19 @@
                             >
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="create_cargo_apo">CARGO APO</label>
+                            <label class="form-label" for="create_cargo_apo">Cargo APO</label>
                             <x-searchable-select
                                 id="create_cargo_apo"
                                 name="cargo_apo"
                                 :options="$cargoApoOptions"
                                 :value="old('cargo_apo')"
-                                placeholder="Seleccionar CARGO APO"
+                                placeholder="Seleccionar cargo APO"
                                 :required="true"
                                 :allow-clear="false"
                             />
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="create_vigencia_acr">VIGEN.ACR</label>
+                            <label class="form-label" for="create_vigencia_acr">Vigen.ACR</label>
                             <input
                                 id="create_vigencia_acr"
                                 name="vigencia_acr"
@@ -203,19 +233,31 @@
                                 value="{{ old('vigencia_acr') }}"
                             >
                         </div>
+                    </div>
+
+                    <div class="form-field acreditaciones-nuevo-modal__grid--spaced">
+                        <label class="form-label" for="create_observaciones">Observaciones</label>
+                        <textarea
+                            id="create_observaciones"
+                            name="observaciones"
+                            class="form-input"
+                            rows="2"
+                        >{{ old('observaciones') }}</textarea>
+                    </div>
+                </div>
+            </fieldset>
+
+            {{-- Renovación + fecha de solicitud --}}
+            <fieldset
+                class="acreditaciones-nuevo-modal__section acreditaciones-nuevo-modal__section--acred"
+                style="border:0;min-inline-size:0;"
+                :disabled="!requiresAcreditacion"
+            >
+                <h4 class="acreditaciones-nuevo-modal__section-title">Renovaciones</h4>
+                <div :class="{ 'opacity-50': !requiresAcreditacion }">
+                    <div class="acreditaciones-nuevo-modal__grid acreditaciones-nuevo-modal__grid--2">
                         <div class="form-field">
-                            <label class="form-label" for="create_estado">ESTADO</label>
-                            <input
-                                id="create_estado"
-                                type="text"
-                                class="form-input"
-                                readonly
-                                value="Automático"
-                                title="Se calcula al guardar"
-                            >
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="create_renovacion">RENOVACIONES</label>
+                            <label class="form-label" for="create_renovacion">Renovaciones</label>
                             <x-searchable-select
                                 id="create_renovacion"
                                 name="renovacion"
@@ -226,7 +268,7 @@
                             />
                         </div>
                         <div class="form-field">
-                            <label class="form-label" for="create_fecha_solicitud">FECHA SOLICITUD</label>
+                            <label class="form-label" for="create_fecha_solicitud">Fecha solicitud</label>
                             <input
                                 id="create_fecha_solicitud"
                                 name="fecha_solicitud"
@@ -235,22 +277,14 @@
                                 value="{{ old('fecha_solicitud') }}"
                             >
                         </div>
-                        <div class="form-field cursos-registros-page__form-span">
-                            <label class="form-label" for="create_observaciones">OBSERVACIONES</label>
-                            <textarea
-                                id="create_observaciones"
-                                name="observaciones"
-                                class="form-input"
-                                rows="2"
-                            >{{ old('observaciones') }}</textarea>
-                        </div>
                     </div>
-                </fieldset>
-            </div>
-            <p class="panel-text" style="font-size:0.85rem;" x-show="requiresAcreditacion">
-                Debe indicar al menos una fecha (VIGEN.ACR o FECHA SOLICITUD). El ESTADO no es editable.
-            </p>
-            <div class="cursos-registros-page__form-actions">
+                </div>
+                <p class="acreditaciones-nuevo-modal__hint" x-show="requiresAcreditacion">
+                    Debe indicar al menos una fecha (Vigen.ACR o fecha solicitud). El estado no es editable.
+                </p>
+            </fieldset>
+
+            <div class="acreditaciones-nuevo-modal__actions">
                 <button
                     type="submit"
                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
