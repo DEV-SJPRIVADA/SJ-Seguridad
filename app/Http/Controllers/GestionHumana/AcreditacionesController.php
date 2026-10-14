@@ -1394,7 +1394,7 @@ class AcreditacionesController extends Controller
         return response()->json($preview);
     }
 
-    public function exportApoGenerate(GenerateAcreditacionExportApoRequest $request): StreamedResponse|RedirectResponse
+    public function exportApoGenerate(GenerateAcreditacionExportApoRequest $request): StreamedResponse|RedirectResponse|JsonResponse
     {
         try {
             $result = $this->exportApoGenerateService->generate(
@@ -1405,6 +1405,11 @@ class AcreditacionesController extends Controller
                 $request->exportMode(),
             );
         } catch (ValidationException $e) {
+            // Fetch/XHR: JSON 422; POST clásico: redirect con flash.
+            if ($request->expectsJson()) {
+                throw $e;
+            }
+
             return redirect()
                 ->route('gestion-humana.acreditaciones.export-apo')
                 ->withInput()

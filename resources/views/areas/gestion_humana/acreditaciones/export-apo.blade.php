@@ -904,7 +904,24 @@
                         this.submitGenerate(false, this.pendingExportMode);
                     },
 
-                    submitGenerate(includeNovedades, mode = null) {
+                    filenameFromDisposition(header) {
+                        if (! header) {
+                            return 'APO_export.xls';
+                        }
+                        const utf = header.match(/filename\*=UTF-8''([^;]+)/i);
+                        if (utf && utf[1]) {
+                            try {
+                                return decodeURIComponent(utf[1]);
+                            } catch (e) {
+                                return utf[1];
+                            }
+                        }
+                        const plain = header.match(/filename="?([^";]+)"?/i);
+                        return plain ? plain[1] : 'APO_export.xls';
+                    },
+
+                    // Genera .xls vía fetch (sin navegar) para poder notificar y resetear el botón.
+                    async submitGenerate(includeNovedades, mode = null) {
                         window.dispatchEvent(new CustomEvent('close-modal', {
                             detail: 'export-apo-novedades',
                         }));
@@ -920,49 +937,88 @@
                             return;
                         }
 
+                        this.previewError = '';
                         this.generateLoading = true;
 
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = this.generateUrl;
-                        form.style.display = 'none';
-
-                        const csrf = document.createElement('input');
-                        csrf.type = 'hidden';
-                        csrf.name = '_token';
-                        csrf.value = this.csrfToken
+                        const token = this.csrfToken
                             || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                             || '';
-                        form.appendChild(csrf);
 
-                        ids.forEach((id) => {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = 'ids[]';
-                            input.value = String(id);
-                            form.appendChild(input);
-                        });
+                        try {
+                            const response = await fetch(this.generateUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json, application/vnd.ms-excel, application/octet-stream, */*',
+                                    'X-CSRF-TOKEN': token,
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                body: JSON.stringify({
+                                    ids,
+                                    vigencia_policy: this.currentVigenciaPolicy(),
+                                    include_novedades: !! includeNovedades,
+                                    export_mode: exportMode,
+                                }),
+                            });
 
-                        const policy = document.createElement('input');
-                        policy.type = 'hidden';
-                        policy.name = 'vigencia_policy';
-                        policy.value = this.currentVigenciaPolicy();
-                        form.appendChild(policy);
+                            const contentType = response.headers.get('Content-Type') || '';
 
-                        const novedades = document.createElement('input');
-                        novedades.type = 'hidden';
-                        novedades.name = 'include_novedades';
-                        novedades.value = includeNovedades ? '1' : '0';
-                        form.appendChild(novedades);
+                            if (! response.ok) {
+                                let message = 'No se pudo generar el archivo Export Apo.';
+                                if (contentType.includes('application/json')) {
+                                    const data = await response.json().catch(() => ({}));
+                                    message = data.message
+                                        || (data.errors && Object.values(data.errors).flat()[0])
+                                        || message;
+                                }
+                                this.previewError = message;
+                                if (typeof window.showToast === 'function') {
+                                    window.showToast(message, 'error');
+                                }
+                                return;
+                            }
 
-                        const modeInput = document.createElement('input');
-                        modeInput.type = 'hidden';
-                        modeInput.name = 'export_mode';
-                        modeInput.value = exportMode;
-                        form.appendChild(modeInput);
+                            const blob = await response.blob();
+                            const filename = this.filenameFromDisposition(
+                                response.headers.get('Content-Disposition')
+                            );
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.URL.revokeObjectURL(url);
 
-                        document.body.appendChild(form);
-                        form.submit();
+                            if (exportMode === 'retirar') {
+                                if (typeof window.showToast === 'function') {
+                                    window.showToast('Documento de retiro generado correctamente.', 'success');
+                                }
+                                this.clearAll();
+                                return;
+                            }
+
+                            if (typeof window.showToast === 'function') {
+                                window.showToast('Documento de acreditación generado correctamente.', 'success');
+                            }
+
+                            // Acreditar: revalida el mismo conjunto sin limpiar filtros/preview.
+                            const refreshIds = this.allPreviewRows
+                                .map((row) => Number(row.acreditado_id))
+                                .filter((id) => id > 0);
+                            if (refreshIds.length > 0) {
+                                await this.runValidate(refreshIds);
+                            }
+                        } catch (e) {
+                            const message = 'Error de red al generar el archivo Export Apo.';
+                            this.previewError = message;
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(message, 'error');
+                            }
+                        } finally {
+                            this.generateLoading = false;
+                        }
                     },
 
                     clearAll() {
