@@ -7,10 +7,13 @@
             || ($filters['cargo_apo'] ?? '') !== ''
             || (($filters['estado'] ?? 'todos') !== '' && ($filters['estado'] ?? 'todos') !== 'todos')
             || (($filters['renovacion'] ?? 'todos') !== '' && ($filters['renovacion'] ?? 'todos') !== 'todos')
-            || (($filters['ficha_estado'] ?? 'activo') !== '' && ($filters['ficha_estado'] ?? 'activo') !== 'activo')
+            || (($filters['ficha_estado'] ?? 'todos') !== '' && ($filters['ficha_estado'] ?? 'todos') !== 'todos')
+            || (($filters['en_perfil'] ?? '') !== '')
             || ($filters['vigencia_desde'] ?? '') !== ''
             || ($filters['vigencia_hasta'] ?? '') !== ''
             || (is_array($filters['document_numbers'] ?? null) && ($filters['document_numbers'] ?? []) !== []);
+        $enPerfilFilter = (string) ($filters['en_perfil'] ?? '');
+        $fichaEstadoFilter = (string) ($filters['ficha_estado'] ?? 'todos');
     @endphp
 
     <x-slot name="header">
@@ -110,17 +113,6 @@
                                     />
                                 </div>
                                 <div class="form-field">
-                                    <label class="form-label" for="filter_ficha_estado">Estado en ficha</label>
-                                    <x-searchable-select
-                                        id="filter_ficha_estado"
-                                        name="ficha_estado"
-                                        :options="$filterFichaEstadoOptions"
-                                        :value="$filters['ficha_estado']"
-                                        placeholder="Activos en ficha"
-                                        :allow-clear="false"
-                                    />
-                                </div>
-                                <div class="form-field">
                                     <label class="form-label" for="filter_vigencia_desde">VIGEN.ACR desde</label>
                                     <input id="filter_vigencia_desde" name="vigencia_desde" type="date" class="form-input" value="{{ $filters['vigencia_desde'] }}">
                                 </div>
@@ -128,6 +120,8 @@
                                     <label class="form-label" for="filter_vigencia_hasta">VIGEN.ACR hasta</label>
                                     <input id="filter_vigencia_hasta" name="vigencia_hasta" type="date" class="form-input" value="{{ $filters['vigencia_hasta'] }}">
                                 </div>
+                                <input type="hidden" name="en_perfil" id="filter_en_perfil" value="{{ $enPerfilFilter }}">
+                                <input type="hidden" name="ficha_estado" id="filter_ficha_estado" value="{{ $fichaEstadoFilter }}">
                                 <div class="form-field cursos-registros-page__filter-actions">
                                     <button
                                         type="submit"
@@ -160,9 +154,47 @@
                                     </a>
                                 </div>
                             </div>
+
+                            {{-- Chips: En perfil + Estado en ficha (mismo estilo module-tab que Cursos) --}}
+                            <div class="cursos-registros-page__chip-filters">
+                                <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro en perfil">
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $enPerfilFilter === '' ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('en_perfil', '')"
+                                    >Todos</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ in_array($enPerfilFilter, ['1', 'si', 'sí'], true) ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('en_perfil', '1')"
+                                    >En perfil</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ in_array($enPerfilFilter, ['0', 'no'], true) ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('en_perfil', '0')"
+                                    >Sin perfil</button>
+                                </div>
+                                <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro estado en ficha">
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $fichaEstadoFilter === 'todos' || $fichaEstadoFilter === '' ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('ficha_estado', 'todos')"
+                                    >Todos (ficha)</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $fichaEstadoFilter === 'activo' ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('ficha_estado', 'activo')"
+                                    >Activos</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $fichaEstadoFilter === 'desvinculado' ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('ficha_estado', 'desvinculado')"
+                                    >Desvinculados</button>
+                                </div>
+                            </div>
                             <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;">
-                                Por defecto solo se listan empleados <strong>activos en ficha</strong>.
-                                Use «Estado en ficha» para ver desvinculados o todos.
+                                Por defecto se listan <strong>todos</strong> los acreditados (con o sin ficha).
+                                Use los chips para filtrar por perfil o estado en ficha.
                                 El rango de fechas filtra por <strong>VIGEN.ACR</strong> (vencimiento).
                             </p>
                         </form>
@@ -289,6 +321,7 @@
                                     <th>RENOVACIONES</th>
                                     <th>FECHA SOLICITUD</th>
                                     <th>OBSERVACIONES</th>
+                                    <th>EN PERFIL</th>
                                     @if ($canEdit)
                                         <th>Acciones</th>
                                     @endif
@@ -428,6 +461,17 @@
                     init() {
                         if (this.canEdit && this.bulkSelectableUrl) {
                             this.loadBulkSelectable();
+                        }
+                    },
+                    setChipFilter(name, value) {
+                        const id = name === 'en_perfil' ? 'filter_en_perfil' : 'filter_ficha_estado';
+                        const input = document.getElementById(id);
+                        if (input) {
+                            input.value = value == null ? '' : String(value);
+                        }
+                        const form = document.querySelector('.acreditaciones-acreditados-page form.req-manage-filters');
+                        if (form) {
+                            form.requestSubmit();
                         }
                     },
                     async loadBulkSelectable() {
@@ -673,7 +717,8 @@
                             observaciones: detail?.observaciones || '',
                             update_url: detail?.update_url || '',
                         };
-                        this.editIdentityLocked = Boolean(this.editForm.document_number);
+                        // Se bloquea solo si el lookup confirma ficha; sin perfil deja nombre/cargo editables.
+                        this.editIdentityLocked = false;
                         this.editOpen = true;
                         this.syncEditCargoApo(this.editForm.cargo_apo);
                         this.syncEditRenovacion(this.editForm.renovacion);
@@ -698,9 +743,11 @@
                                 if (mode === 'edit') {
                                     this.editForm.document_number = data.document_number || value;
                                     this.editForm.full_name = data.full_name;
-                                    this.editForm.cargo = data.cargo || '';
+                                    this.editForm.cargo = data.cargo || this.editForm.cargo || '';
                                     this.editIdentityLocked = true;
                                 }
+                            } else if (mode === 'edit') {
+                                this.editIdentityLocked = false;
                             }
                         } catch (e) {}
                     },
@@ -792,8 +839,8 @@
                     responsive: false,
                     order: [[canEdit ? 1 : 0, 'asc']],
                     columnDefs: canEdit
-                        ? [{ targets: [0, 10], orderable: false, searchable: false }]
-                        : [],
+                        ? [{ targets: [0, 10, 11], orderable: false, searchable: false }]
+                        : [{ targets: [9], orderable: false, searchable: false }],
                 });
 
                 api.on('xhr.dt', function (_event, _settings, json) {

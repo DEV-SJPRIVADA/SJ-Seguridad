@@ -173,14 +173,38 @@ class AcreditacionesImportTest extends TestCase
         $this->assertSame('obs texto', $texto->observaciones);
     }
 
-    public function test_import_fails_without_ficha_and_invalid_vigencia_text(): void
+    public function test_import_allows_cedula_without_ficha_using_excel_name_and_cargo(): void
+    {
+        $editor = $this->editorUser();
+        $this->activeCargo('VIGILANTE');
+
+        $path = $this->makeImportFile([
+            ['999', 'Persona Libre', 'GUARDA LIBRE', 'VIGILANTE', '2027-01-01', '', 'obs libre'],
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.import'), [
+                'import_file' => new UploadedFile($path, 'acreditados.xlsx', null, null, true),
+            ])
+            ->assertRedirect(route('gestion-humana.acreditaciones.acreditados'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('acreditacion_acreditados', [
+            'document_number' => '999',
+            'full_name' => 'Persona Libre',
+            'cargo' => 'GUARDA LIBRE',
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+    }
+
+    public function test_import_rejects_without_name_or_invalid_vigencia_text(): void
     {
         $editor = $this->editorUser();
         $this->activeCargo('VIGILANTE');
         $this->createFicha('300', 'Con Ficha Vigencia Invalida');
 
         $path = $this->makeImportFile([
-            ['999', 'Sin Ficha', 'GUARDA', 'VIGILANTE', '2027-01-01', '', ''],
+            ['999', '', '', 'VIGILANTE', '2027-01-01', '', ''],
             ['300', 'Con Ficha', 'GUARDA', 'VIGILANTE', 'texto-invalido', '', ''],
         ]);
 
@@ -195,7 +219,7 @@ class AcreditacionesImportTest extends TestCase
         $failures = session('import_failures');
         $this->assertCount(2, $failures);
         $this->assertStringContainsString(
-            'La cedula no existe en Ficha empleados.',
+            'El nombre completo es obligatorio',
             (string) ($failures[0]['reason'] ?? ''),
         );
         $this->assertStringContainsString(

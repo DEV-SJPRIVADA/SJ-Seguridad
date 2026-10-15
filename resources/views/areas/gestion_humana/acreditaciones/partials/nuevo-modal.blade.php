@@ -74,7 +74,8 @@
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo acreditado</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        La cédula debe existir en Ficha empleados. Si desactiva «Requiere acreditación», solo se actualiza esa marca en ficha.
+                        Si la cédula está en Ficha, nombre y cargo se completan solos. Si no, puede capturarlos a mano.
+                        Si desactiva «Requiere acreditación», la cédula sí debe existir en Ficha (solo actualiza esa marca).
                     </p>
                 </div>
             </div>
@@ -147,12 +148,14 @@
                         <label class="form-label" for="create_full_name">Nombre completo</label>
                         <input
                             id="create_full_name"
+                            name="full_name"
                             type="text"
                             class="form-input"
                             maxlength="255"
-                            readonly
+                            required
                             x-model="fullName"
-                            placeholder="Se completa desde Ficha"
+                            x-bind:readonly="identityLocked"
+                            placeholder="Desde Ficha o manual"
                         >
                     </div>
                 </div>
@@ -206,9 +209,9 @@
                                 type="text"
                                 class="form-input"
                                 maxlength="255"
-                                readonly
                                 x-model="cargo"
-                                placeholder="Se completa desde Ficha"
+                                x-bind:readonly="identityLocked"
+                                placeholder="Desde Ficha o manual"
                             >
                         </div>
                         <div class="form-field">

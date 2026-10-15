@@ -457,6 +457,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.9         | 2026-10-15                 | Dashboard: valores visibles en los gráficos y títulos centrados |
 | 1.8         | 2026-10-06                 | Solicitar: Cancelar y Generar como iconos |
 | 1.7         | 2026-10-06                 | Gestión/editar: Volver y Guardar como iconos |
 | 1.6         | 2026-10-01                 | Tendencia de Solicitudes sin filtro mes; KPIs y demás gráficos sí lo usan |

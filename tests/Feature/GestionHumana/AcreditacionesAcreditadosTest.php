@@ -74,19 +74,37 @@ class AcreditacionesAcreditadosTest extends TestCase
             ->assertOk();
     }
 
-    public function test_create_requires_ficha_and_sets_full_name_and_estado(): void
+    public function test_create_allows_without_ficha_and_prefers_ficha_name_when_present(): void
     {
         $editor = $this->editorUser();
         $cargo = $this->activeCargo('VIGILANTE');
 
+        // Sin ficha: nombre y cargo del formulario.
         $this->actingAs($editor)
             ->post(route('gestion-humana.acreditaciones.acreditados.store'), $this->validPayload([
-                'document_number' => '9999',
+                'document_number' => '8888',
                 'cargo_apo' => $cargo->cargo_apo,
                 'vigencia_acr' => '2027-01-01',
-                'full_name' => 'Nombre Del Cliente Ignorado',
+                'full_name' => 'Persona Sin Ficha',
+                'cargo' => 'Guarda Manual',
             ]))
-            ->assertSessionHasErrors('document_number');
+            ->assertRedirect(route('gestion-humana.acreditaciones.acreditados'));
+
+        $sinFicha = AcreditacionAcreditado::query()->where('document_number', '8888')->first();
+        $this->assertNotNull($sinFicha);
+        $this->assertSame('Persona Sin Ficha', $sinFicha->full_name);
+        $this->assertSame('Guarda Manual', $sinFicha->cargo);
+
+        // Sin nombre/cargo y sin ficha → error.
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.store'), $this->validPayload([
+                'document_number' => '7777',
+                'cargo_apo' => $cargo->cargo_apo,
+                'vigencia_acr' => '2027-01-01',
+                'full_name' => '',
+                'cargo' => '',
+            ]))
+            ->assertSessionHasErrors(['full_name', 'cargo']);
 
         $this->createFicha('9999', 'Nombre Desde Ficha');
 
@@ -286,7 +304,7 @@ class AcreditacionesAcreditadosTest extends TestCase
             ->assertSessionHasErrors('observaciones');
     }
 
-    public function test_datatable_defaults_to_active_ficha_and_can_show_desvinculados(): void
+    public function test_datatable_defaults_to_todos_and_filters_ficha_and_en_perfil(): void
     {
         $viewer = $this->viewerUser();
         $cargo = $this->activeCargo('VIGILANTE');
@@ -309,6 +327,14 @@ class AcreditacionesAcreditadosTest extends TestCase
             'vigencia_acr' => '2027-01-01',
             'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
         ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5102',
+            'full_name' => 'Sin Perfil Uno',
+            'cargo' => 'Guarda Libre',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
 
         $default = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
@@ -318,8 +344,19 @@ class AcreditacionesAcreditadosTest extends TestCase
             ]));
 
         $default->assertOk();
-        $this->assertSame(1, $default->json('recordsFiltered'));
-        $this->assertStringContainsString('5100', $default->json('data.0.0'));
+        $this->assertSame(3, $default->json('recordsFiltered'));
+
+        $activos = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'ficha_estado' => EmployeeFichaProfile::STATUS_ACTIVO,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $activos->assertOk();
+        $this->assertSame(1, $activos->json('recordsFiltered'));
+        $this->assertStringContainsString('5100', $activos->json('data.0.0'));
 
         $desvinculados = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
@@ -333,16 +370,26 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->assertSame(1, $desvinculados->json('recordsFiltered'));
         $this->assertStringContainsString('5101', $desvinculados->json('data.0.0'));
 
-        $todos = $this->actingAs($viewer)
+        $sinPerfil = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
-                'ficha_estado' => 'todos',
+                'en_perfil' => '0',
                 'draw' => 1,
                 'start' => 0,
                 'length' => 10,
             ]));
 
-        $todos->assertOk();
-        $this->assertSame(2, $todos->json('recordsFiltered'));
+        $sinPerfil->assertOk();
+        $this->assertSame(1, $sinPerfil->json('recordsFiltered'));
+        $sinText = implode(' ', $sinPerfil->json('data.0'));
+        $this->assertStringContainsString('Sin Perfil Uno', $sinText);
+        $this->assertStringContainsString('No', $sinText);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.acreditaciones.acreditados'))
+            ->assertOk()
+            ->assertSee('En perfil', false)
+            ->assertSee('Sin perfil', false)
+            ->assertSee('EN PERFIL', false);
     }
 
     public function test_datatable_filters_by_estado_and_vigencia(): void

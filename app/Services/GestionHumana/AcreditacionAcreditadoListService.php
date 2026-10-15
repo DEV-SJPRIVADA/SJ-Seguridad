@@ -25,6 +25,7 @@ class AcreditacionAcreditadoListService
      *     vigencia_desde?: string|null,
      *     vigencia_hasta?: string|null,
      *     ficha_estado?: string|null,
+     *     en_perfil?: string|null,
      * }  $filters
      * @return Builder<AcreditacionAcreditado>
      */
@@ -35,6 +36,9 @@ class AcreditacionAcreditadoListService
         if ($ordered) {
             $query->orderByDesc('id');
         }
+
+        // Listado: todos (con/sin perfil). Chips `en_perfil` + `ficha_estado` acotan.
+        $this->applyEnPerfilFilter($query, (string) ($filters['en_perfil'] ?? ''));
 
         $cedula = trim((string) ($filters['document_number'] ?? ''));
         if ($cedula !== '') {
@@ -85,12 +89,52 @@ class AcreditacionAcreditadoListService
     }
 
     /**
+     * Filtro chip: `1`/`si` = tiene fila en employee_ficha_profiles; `0`/`no` = sin perfil; vacío = todos.
+     *
+     * @param  Builder<AcreditacionAcreditado>  $query
+     */
+    private function applyEnPerfilFilter(Builder $query, string $raw): void
+    {
+        $normalized = strtolower(trim($raw));
+
+        if (in_array($normalized, ['1', 'si', 'sí', 'true'], true)) {
+            $query->whereExists(function ($sub): void {
+                $sub->selectRaw('1')
+                    ->from('employee_ficha_profiles')
+                    ->whereColumn(
+                        'employee_ficha_profiles.document_number',
+                        'acreditacion_acreditados.document_number',
+                    );
+            });
+
+            return;
+        }
+
+        if (in_array($normalized, ['0', 'no', 'false'], true)) {
+            $query->whereNotExists(function ($sub): void {
+                $sub->selectRaw('1')
+                    ->from('employee_ficha_profiles')
+                    ->whereColumn(
+                        'employee_ficha_profiles.document_number',
+                        'acreditacion_acreditados.document_number',
+                    );
+            });
+        }
+    }
+
+    /**
      * @param  Builder<AcreditacionAcreditado>  $query
      * @param  array<string, mixed>  $filters
      */
     private function applyFichaEstadoFilter(Builder $query, array $filters): void
     {
-        $fichaEstado = (string) ($filters['ficha_estado'] ?? EmployeeFichaProfile::STATUS_ACTIVO);
+        // Sin perfil no tiene employment_status; el chip `en_perfil=0` ya acotó el universo.
+        $enPerfil = strtolower(trim((string) ($filters['en_perfil'] ?? '')));
+        if (in_array($enPerfil, ['0', 'no', 'false'], true)) {
+            return;
+        }
+
+        $fichaEstado = (string) ($filters['ficha_estado'] ?? 'todos');
 
         if ($fichaEstado === '' || $fichaEstado === 'todos') {
             return;
@@ -100,7 +144,7 @@ class AcreditacionAcreditadoListService
             EmployeeFichaProfile::STATUS_ACTIVO,
             EmployeeFichaProfile::STATUS_DESVINCULADO,
         ], true)) {
-            $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;
+            return;
         }
 
         $query->whereExists(function ($sub) use ($fichaEstado): void {

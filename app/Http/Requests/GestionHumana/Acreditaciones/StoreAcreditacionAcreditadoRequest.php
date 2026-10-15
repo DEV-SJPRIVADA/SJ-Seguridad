@@ -35,13 +35,17 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
     public function rules(): array
     {
         $obsMax = (int) config('acreditaciones.limits.observaciones_max', 5000);
+        $docMax = (int) config('acreditaciones.limits.document_number_max', 50);
+        $nameMax = (int) config('acreditaciones.limits.full_name_max', 255);
+        $cargoMax = (int) config('acreditaciones.limits.cargo_max', 255);
 
+        // Marcar «no requiere acreditación» sigue exigiendo ficha (actualiza el perfil).
         if (! $this->wantsAcreditadoRecord()) {
             return [
                 'document_number' => [
                     'required',
                     'string',
-                    'max:'.(int) config('acreditaciones.limits.document_number_max', 50),
+                    'max:'.$docMax,
                     Rule::exists('employee_ficha_profiles', 'document_number'),
                 ],
                 'requires_acreditacion' => ['nullable', 'boolean'],
@@ -52,13 +56,17 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
             'document_number' => [
                 'required',
                 'string',
-                'max:'.(int) config('acreditaciones.limits.document_number_max', 50),
-                Rule::exists('employee_ficha_profiles', 'document_number'),
+                'max:'.$docMax,
+            ],
+            'full_name' => [
+                'required',
+                'string',
+                'max:'.$nameMax,
             ],
             'cargo' => [
-                'nullable',
+                'required',
                 'string',
-                'max:'.(int) config('acreditaciones.limits.cargo_max', 255),
+                'max:'.$cargoMax,
             ],
             'cargo_apo' => [
                 'required',
@@ -83,6 +91,8 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
         return [
             'document_number.required' => 'La cédula es obligatoria.',
             'document_number.exists' => 'La cédula no existe en Ficha empleados.',
+            'full_name.required' => 'El nombre completo es obligatorio.',
+            'cargo.required' => 'El cargo es obligatorio.',
             'cargo_apo.required' => 'El CARGO APO es obligatorio.',
             'cargo_apo.unique' => 'Ya existe un acreditado con esa cédula y CARGO APO.',
         ];
@@ -106,14 +116,6 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
                     $validator->errors()->add(
                         'vigencia_acr',
                         'Debe indicar al menos una fecha: VIGEN.ACR o FECHA SOLICITUD.',
-                    );
-                }
-
-                $cedula = trim((string) $this->input('document_number'));
-                if ($cedula !== '' && $this->resolvedCargo() === '') {
-                    $validator->errors()->add(
-                        'cargo',
-                        'La ficha de esta cédula no tiene cargo. Complete el cargo en Ficha empleados.',
                     );
                 }
 
@@ -141,6 +143,7 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
     {
         $this->merge([
             'document_number' => trim((string) $this->input('document_number')),
+            'full_name' => $this->resolvedFullName(),
             'cargo' => $this->resolvedCargo(),
             'cargo_apo' => trim((string) $this->input('cargo_apo')),
             'vigencia_acr' => $this->nullableDate('vigencia_acr'),
@@ -157,30 +160,41 @@ class StoreAcreditacionAcreditadoRequest extends FormRequest
     }
 
     /**
-     * Nombre desde Ficha (ignora input del cliente).
+     * Nombre desde Ficha si existe; si no, el del formulario.
      */
     public function resolvedFullName(): string
     {
-        $cedula = (string) $this->input('document_number');
+        $cedula = trim((string) $this->input('document_number'));
+        if ($cedula !== '') {
+            $fromFicha = trim((string) EmployeeFichaProfile::query()
+                ->where('document_number', $cedula)
+                ->value('full_name'));
 
-        return (string) EmployeeFichaProfile::query()
-            ->where('document_number', $cedula)
-            ->value('full_name');
+            if ($fromFicha !== '') {
+                return $fromFicha;
+            }
+        }
+
+        return trim((string) $this->input('full_name'));
     }
 
     /**
-     * Cargo desde Ficha (`position_name`; ignora input del cliente).
+     * Cargo desde Ficha (`position_name`) si existe; si no, el del formulario.
      */
     public function resolvedCargo(): string
     {
         $cedula = trim((string) $this->input('document_number'));
-        if ($cedula === '') {
-            return '';
+        if ($cedula !== '') {
+            $fromFicha = trim((string) EmployeeFichaProfile::query()
+                ->where('document_number', $cedula)
+                ->value('position_name'));
+
+            if ($fromFicha !== '') {
+                return $fromFicha;
+            }
         }
 
-        return trim((string) EmployeeFichaProfile::query()
-            ->where('document_number', $cedula)
-            ->value('position_name'));
+        return trim((string) $this->input('cargo'));
     }
 
     private function nullableTrim(string $key): ?string

@@ -3,6 +3,7 @@ import {
     BRAND_BLUE,
     BRAND_NAVY,
     STATUS_DONUT_COLORS,
+    STATUS_NEUTRAL,
     sharedChart,
 } from './charts/apex-defaults';
 
@@ -48,6 +49,38 @@ function statusChartColors(status) {
     return STATUS_DONUT_COLORS;
 }
 
+/** Celular: tipografía/ejes más compactos. */
+function isMobileChartViewport() {
+    return window.matchMedia('(max-width: 639px)').matches;
+}
+
+/**
+ * Etiquetas numéricas horizontales sin caja opaca.
+ * La legibilidad va por trazo blanco en CSS (.req-dashboard-charts).
+ */
+function numericDataLabels(enabled = true) {
+    return {
+        enabled,
+        style: {
+            fontSize: '11px',
+            fontWeight: 700,
+            colors: ['#0f172a'],
+        },
+        background: {
+            enabled: false,
+        },
+        formatter(val) {
+            const n = Number(val);
+
+            if (!Number.isFinite(n)) {
+                return '';
+            }
+
+            return n.toLocaleString('es-CO');
+        },
+    };
+}
+
 function mountChart(el, options) {
     const chart = new ApexCharts(el, options);
     chart.render();
@@ -56,33 +89,75 @@ function mountChart(el, options) {
     return chart;
 }
 
+function hasNumericSeries(values) {
+    return Array.isArray(values) && values.some((value) => Number(value) > 0);
+}
+
 function renderTrend(data) {
     const el = document.querySelector('#trendChart');
     if (!el) {
         return null;
     }
 
+    const labels = data?.trend?.labels?.length ? data.trend.labels : ['Sin datos'];
+    const series = data?.trend?.labels?.length ? data.trend.data.map(Number) : [0];
+    const hasValues = hasNumericSeries(series);
+    const mobile = isMobileChartViewport();
+
     return mountChart(el, {
         ...sharedChart,
-        chart: { ...sharedChart.chart, type: 'area', height: '100%' },
-        series: [{ name: 'Solicitudes', data: data.trend.data }],
+        chart: {
+            ...sharedChart.chart,
+            type: 'area',
+            height: '100%',
+            parentHeightOffset: 0,
+        },
+        grid: {
+            ...sharedChart.grid,
+            padding: {
+                top: 18,
+                right: mobile ? 4 : 6,
+                left: mobile ? 0 : 4,
+                bottom: 0,
+            },
+        },
+        series: [{ name: 'Solicitudes', data: series }],
         colors: [BRAND_BLUE],
         fill: {
             type: 'solid',
             opacity: 0.15,
         },
         stroke: { curve: 'smooth', width: 2 },
+        markers: { size: hasValues ? (mobile ? 3 : 4) : 0 },
+        dataLabels: {
+            ...numericDataLabels(hasValues),
+            // Encima del punto, horizontal (valores pequeños).
+            offsetY: -12,
+            style: {
+                fontSize: mobile ? '10px' : '11px',
+                fontWeight: 700,
+                colors: ['#0f172a'],
+            },
+        },
         xaxis: {
-            categories: data.trend.labels,
-            labels: { style: { fontSize: '11px' } },
+            categories: labels,
+            labels: {
+                style: { fontSize: mobile ? '9px' : '11px' },
+                rotate: mobile ? -45 : 0,
+                rotateAlways: mobile,
+                hideOverlappingLabels: true,
+            },
         },
         yaxis: {
-            labels: { style: { fontSize: '11px' } },
+            labels: { style: { fontSize: mobile ? '9px' : '11px' } },
             min: 0,
             forceNiceScale: true,
         },
         legend: { show: false },
-        tooltip: { y: { formatter: (v) => String(v) } },
+        tooltip: {
+            enabled: hasValues,
+            y: { formatter: (v) => String(v) },
+        },
     });
 }
 
@@ -92,28 +167,59 @@ function renderStatus(data) {
         return null;
     }
 
+    const labels = data?.status?.labels?.length ? data.status.labels : ['Sin datos'];
+    const series = data?.status?.labels?.length ? data.status.data.map(Number) : [0];
+    const hasValues = hasNumericSeries(series);
+    const mobile = isMobileChartViewport();
+
     return mountChart(el, {
         ...sharedChart,
-        chart: { ...sharedChart.chart, type: 'donut', height: '100%' },
-        series: data.status.data.map(Number),
-        labels: data.status.labels,
-        colors: statusChartColors(data.status),
+        chart: {
+            ...sharedChart.chart,
+            type: 'donut',
+            height: '100%',
+            parentHeightOffset: 0,
+        },
+        series: hasValues ? series : [1],
+        labels: hasValues ? labels : ['Sin datos'],
+        colors: hasValues ? statusChartColors(data.status) : [STATUS_NEUTRAL],
         legend: {
             position: 'bottom',
             horizontalAlign: 'center',
-            fontSize: '10px',
+            fontSize: mobile ? '10px' : '11px',
             itemMargin: { horizontal: 6, vertical: 2 },
             height: 52,
             offsetY: 0,
+        },
+        dataLabels: {
+            enabled: hasValues,
+            style: {
+                fontSize: mobile ? '10px' : '12px',
+            },
         },
         stroke: { width: 0 },
         plotOptions: {
             pie: {
                 donut: {
-                    size: '62%',
+                    size: mobile ? '55%' : '58%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            formatter(w) {
+                                if (!hasValues) {
+                                    return '0';
+                                }
+
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                            },
+                        },
+                    },
                 },
             },
         },
+        tooltip: { enabled: hasValues },
     });
 }
 
@@ -123,20 +229,34 @@ function renderCities(data) {
         return null;
     }
 
+    const labels = data?.cities?.labels?.length ? data.cities.labels : ['Sin datos'];
+    const series = data?.cities?.labels?.length ? data.cities.data.map(Number) : [0];
+    const hasValues = hasNumericSeries(series);
+
     return mountChart(el, {
         ...sharedChart,
-        chart: { ...sharedChart.chart, type: 'bar', height: '100%' },
-        series: [{ name: 'Solicitudes', data: data.cities.data }],
+        chart: {
+            ...sharedChart.chart,
+            type: 'bar',
+            height: '100%',
+            parentHeightOffset: 0,
+        },
+        series: [{ name: 'Solicitudes', data: series }],
         plotOptions: {
             bar: {
                 horizontal: true,
                 borderRadius: 8,
                 barHeight: '60%',
+                dataLabels: { position: 'top' },
             },
+        },
+        dataLabels: {
+            ...numericDataLabels(hasValues),
+            offsetX: 6,
         },
         colors: [BRAND_NAVY],
         xaxis: {
-            categories: data.cities.labels,
+            categories: labels,
             labels: { style: { fontSize: '11px' } },
             min: 0,
             forceNiceScale: true,
@@ -145,6 +265,11 @@ function renderCities(data) {
             labels: { style: { fontSize: '11px' } },
         },
         legend: { show: false },
+        grid: {
+            ...sharedChart.grid,
+            padding: { top: 0, right: 16, left: 0, bottom: 0 },
+        },
+        tooltip: { enabled: hasValues },
     });
 }
 
@@ -154,32 +279,67 @@ function renderClients(data) {
         return null;
     }
 
+    const labels = data?.clients?.labels?.length ? data.clients.labels : ['Sin datos'];
+    const series = data?.clients?.labels?.length ? data.clients.data.map(Number) : [0];
+    const hasValues = hasNumericSeries(series);
+    const mobile = isMobileChartViewport();
+
     return mountChart(el, {
         ...sharedChart,
-        chart: { ...sharedChart.chart, type: 'bar', height: '100%' },
-        series: [{ name: 'Solicitudes', data: data.clients.data }],
+        chart: {
+            ...sharedChart.chart,
+            type: 'bar',
+            height: '100%',
+            parentHeightOffset: 0,
+        },
+        grid: {
+            ...sharedChart.grid,
+            // Espacio superior para que el número quede encima de la barra, no en el borde.
+            padding: {
+                top: 28,
+                right: mobile ? 4 : 8,
+                left: mobile ? 0 : 4,
+                bottom: 0,
+            },
+        },
+        series: [{ name: 'Solicitudes', data: series }],
         plotOptions: {
             bar: {
                 horizontal: false,
                 borderRadius: 8,
-                columnWidth: '55%',
+                columnWidth: mobile ? '70%' : '55%',
+                dataLabels: { position: 'top' },
+            },
+        },
+        dataLabels: {
+            ...numericDataLabels(hasValues),
+            // Horizontal y claramente encima de la columna.
+            offsetY: -16,
+            style: {
+                fontSize: mobile ? '10px' : '11px',
+                fontWeight: 700,
+                colors: ['#0f172a'],
             },
         },
         colors: [BRAND_BLUE],
         xaxis: {
-            categories: data.clients.labels,
+            categories: labels,
             labels: {
-                style: { fontSize: '11px' },
+                style: { fontSize: mobile ? '9px' : '11px' },
                 trim: true,
                 maxHeight: 48,
+                rotate: mobile ? -45 : 0,
+                rotateAlways: mobile,
+                hideOverlappingLabels: true,
             },
         },
         yaxis: {
-            labels: { style: { fontSize: '11px' } },
+            labels: { style: { fontSize: mobile ? '9px' : '11px' } },
             min: 0,
             forceNiceScale: true,
         },
         legend: { show: false },
+        tooltip: { enabled: hasValues },
     });
 }
 

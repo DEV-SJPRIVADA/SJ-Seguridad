@@ -19,7 +19,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 **En esta versión (Acreditados):**
 
-- La cédula debe existir previamente en **Ficha empleados**; el nombre completo se toma siempre de la ficha (no se edita a mano ni se toma del Excel).
+- Si la cédula está en **Ficha empleados**, el nombre y el cargo se toman de la ficha. Si no, puede capturarlos a mano o traerlos en el Excel de importación.
 - El **tipo** de acreditación es el **CARGO APO** del catálogo. Una misma persona puede tener varias acreditaciones si el CARGO APO es distinto.
 - Si se vuelve a cargar la misma cédula con el mismo CARGO APO, el sistema **actualiza** el registro existente (no duplica).
 - El **estado** (ACREDITADO, EN PROCESO, POR VENCER, DESACREDITADO) lo calcula el sistema; no se elige en el formulario ni en el Excel.
@@ -66,7 +66,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 | --- | --- |
 | Acreditado | Registro de una persona acreditada (o en trámite) para un tipo de cargo APO concreto. |
 | Cédula | Número de documento. En Acreditados debe existir en Ficha empleados. |
-| Nombre completo | En Acreditados: nombre tomado de la ficha. En Reporte Diario: nombre armado desde el Excel APO. |
+| Nombre completo | En Acreditados: de la ficha si existe; si no, del formulario o Excel. En Reporte Diario: nombre armado desde el Excel APO. |
 | CARGO | Cargo del empleado en Ficha. Se completa al buscar la cédula; en import se ignora la columna Excel. |
 | CARGO APO | Tipo de acreditación (por ejemplo VIGILANTE, ESCOLTA). Define la unicidad junto con la cédula en Acreditados. En Validaciones es el valor que se compara con el **Cargo** del Excel APO. En Export Apo define el match con el curso F/R del mismo cargo. |
 | VIGEN.ACR | Fecha de **vencimiento** de la acreditación (Acreditados o columna del Excel Acreditados APO). |
@@ -133,7 +133,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 ### Filtrar, exportar y eliminar (Acreditados)
 
-1. Use los filtros (estado de acreditación, estado en ficha, cédula, **varias cédulas** con el icono de lista, cargo, CARGO APO, rango de fechas de vigencia). Por defecto solo aparecen empleados **activos en ficha**; elija «Desvinculados» o «Todos (ficha)» para ver inactivos. El filtro de varias cédulas es exacto (coma, salto de línea o `;`, máximo 500) y **no** guarda historial. Los botones de filtrar, limpiar y exportar son iconos (pase el cursor para ver la ayuda).
+1. Use los filtros (estado de acreditación, cédula, **varias cédulas** con el icono de lista, cargo, CARGO APO, rango de fechas de vigencia) y los chips **En perfil / Sin perfil** y **Activos / Desvinculados / Todos (ficha)**. Por defecto aparecen **todos** los acreditados (con o sin ficha); la columna **EN PERFIL** indica si la cédula está en Ficha. El filtro de varias cédulas es exacto (coma, salto de línea o `;`, máximo 500) y **no** guarda historial. Los botones de filtrar, limpiar y exportar son iconos (pase el cursor para ver la ayuda).
 2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro, todas las páginas) y usar **Actualizar seleccionados** para poner la misma observación y/o fecha de solicitud a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO.
 3. Con filas marcadas, el botón icono **Cargar en Export Apo** abre Export Apo y valida solo esos registros (aunque no estén en el universo habitual: aparecerán bloqueados con motivo).
 4. Use **Nuevo** o **Editar** para un registro puntual. El estado se calcula solo; no se elige a mano.
@@ -146,7 +146,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 2. Complete las filas a partir de la fila de datos (no borre los encabezados). Incluya cédula y CARGO APO. En **VIGEN.ACR** puede ir una fecha, quedar vacío o decir «en proceso» (queda sin vigencia y el estado pasa a **EN PROCESO**). El nombre y el **CARGO** en Excel se ignoran (el sistema usa Ficha). No agregue columna de estado.
 3. Suba el archivo desde el modal de carga masiva.
 4. Revise el resumen: filas nuevas, actualizadas y fallidas. Si hay fallos, descargue el reporte mientras esté disponible.
-5. Causas frecuentes de fallo: cédula ausente en Ficha, ficha sin cargo, CARGO APO no activo en catálogo, o texto inválido en VIGEN.ACR (que no sea fecha ni «enproceso»).
+5. Causas frecuentes de fallo: sin nombre/cargo cuando la cédula no está en Ficha, CARGO APO no activo en catálogo, o texto inválido en VIGEN.ACR (que no sea fecha ni «enproceso»).
 
 ### Cargar el Reporte Diario (Excel APO)
 
@@ -231,6 +231,7 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.22 | 2026-10-15 | Feature | Acreditados: columna EN PERFIL, chips En perfil/Sin perfil y estado ficha; alta e import sin ficha (nombre/cargo manual o Excel). |
 | 1.21 | 2026-10-14 | Feature | Export Apo: Acreditar/Retirar con aviso de éxito; Retirar limpia; Acreditar revalida sin borrar el preview. |
 | 1.20 | 2026-10-02 | Feature | Cola Nuevos sin acreditación: acciones de fila y volver pasan a iconos. |
 | 1.19 | 2026-09-29 | Feature | Filtro varias cédulas (modal, exacto, max 500, sin historial) en Acreditados, Validaciones, Export Apo preview y Cursos registros; export respeta el filtro. |

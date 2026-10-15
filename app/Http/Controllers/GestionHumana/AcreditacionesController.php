@@ -620,6 +620,14 @@ class AcreditacionesController extends Controller
         $filters = $this->acreditadoFiltersFromRequest($request);
         $rows = $this->acreditadoListService->all($filters);
 
+        $exportDocs = $rows->pluck('document_number')->unique()->filter()->values()->all();
+        $inProfileDocs = $exportDocs === []
+            ? collect()
+            : EmployeeFichaProfile::query()
+                ->whereIn('document_number', $exportDocs)
+                ->pluck('document_number')
+                ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
+
         $columns = [
             ['key' => 'document_number', 'label' => 'CEDULA'],
             ['key' => 'full_name', 'label' => 'NOMBRE COMPLETO'],
@@ -630,6 +638,7 @@ class AcreditacionesController extends Controller
             ['key' => 'renovacion', 'label' => 'RENOVACIONES'],
             ['key' => 'fecha_solicitud', 'label' => 'FECHA SOLICITUD'],
             ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
+            ['key' => 'en_perfil', 'label' => 'EN PERFIL'],
         ];
 
         $data = $rows->map(fn (AcreditacionAcreditado $row): array => [
@@ -642,6 +651,7 @@ class AcreditacionesController extends Controller
             'renovacion' => $row->renovacionLabel() === '—' ? null : $row->renovacionLabel(),
             'fecha_solicitud' => optional($row->fecha_solicitud)?->format('Y-m-d'),
             'observaciones' => $row->observaciones,
+            'en_perfil' => $inProfileDocs->has((string) $row->document_number) ? 'Si' : 'No',
         ]);
 
         return (new BaseExport(
@@ -1658,17 +1668,24 @@ class AcreditacionesController extends Controller
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
      *     ficha_estado: string,
+     *     en_perfil: string,
      * }
      */
     private function acreditadoFiltersFromRequest(Request $request): array
     {
-        $fichaEstado = (string) $request->input('ficha_estado', EmployeeFichaProfile::STATUS_ACTIVO);
+        // Por defecto todos (con/sin perfil); chips acotan activos/desvinculados/en perfil.
+        $fichaEstado = (string) $request->input('ficha_estado', 'todos');
         if (! in_array($fichaEstado, [
             EmployeeFichaProfile::STATUS_ACTIVO,
             EmployeeFichaProfile::STATUS_DESVINCULADO,
             'todos',
         ], true)) {
-            $fichaEstado = EmployeeFichaProfile::STATUS_ACTIVO;
+            $fichaEstado = 'todos';
+        }
+
+        $enPerfil = strtolower(trim((string) $request->input('en_perfil', '')));
+        if (! in_array($enPerfil, ['', '0', '1', 'si', 'sí', 'no', 'true', 'false'], true)) {
+            $enPerfil = '';
         }
 
         return [
@@ -1683,6 +1700,7 @@ class AcreditacionesController extends Controller
             'vigencia_desde' => trim((string) $request->input('vigencia_desde', '')),
             'vigencia_hasta' => trim((string) $request->input('vigencia_hasta', '')),
             'ficha_estado' => $fichaEstado,
+            'en_perfil' => $enPerfil,
         ];
     }
 
@@ -1697,6 +1715,7 @@ class AcreditacionesController extends Controller
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
      *     ficha_estado: string,
+     *     en_perfil: string,
      * }  $filters
      * @return array<string, string>
      */
@@ -1737,8 +1756,13 @@ class AcreditacionesController extends Controller
             $query['vigencia_hasta'] = $filters['vigencia_hasta'];
         }
 
-        // Always pass ficha_estado so datatable/export keep the same default (activo).
-        $query['ficha_estado'] = $filters['ficha_estado'];
+        if ($filters['ficha_estado'] !== '' && $filters['ficha_estado'] !== 'todos') {
+            $query['ficha_estado'] = $filters['ficha_estado'];
+        }
+
+        if (($filters['en_perfil'] ?? '') !== '') {
+            $query['en_perfil'] = $filters['en_perfil'];
+        }
 
         return $query;
     }

@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana;
 
 use App\Models\AcreditacionAcreditado;
+use App\Models\EmployeeFichaProfile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,8 +45,14 @@ final class AcreditacionAcreditadoDatatableService
         /** @var Collection<int, AcreditacionAcreditado> $rows */
         $rows = $query->get();
 
+        $inProfileDocs = $this->documentNumbersInProfile($rows);
+
         $data = $rows
-            ->map(fn (AcreditacionAcreditado $row): array => $this->formatRow($row, $canEdit))
+            ->map(fn (AcreditacionAcreditado $row): array => $this->formatRow(
+                $row,
+                $canEdit,
+                $inProfileDocs->has((string) $row->document_number),
+            ))
             ->values()
             ->all();
 
@@ -55,6 +62,28 @@ final class AcreditacionAcreditadoDatatableService
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * @param  Collection<int, AcreditacionAcreditado>  $rows
+     * @return Collection<string, true>
+     */
+    private function documentNumbersInProfile(Collection $rows): Collection
+    {
+        $docs = $rows->pluck('document_number')
+            ->filter(fn ($doc): bool => filled($doc))
+            ->map(fn ($doc): string => (string) $doc)
+            ->unique()
+            ->values();
+
+        if ($docs->isEmpty()) {
+            return collect();
+        }
+
+        return EmployeeFichaProfile::query()
+            ->whereIn('document_number', $docs->all())
+            ->pluck('document_number')
+            ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
     }
 
     /**
@@ -139,7 +168,7 @@ final class AcreditacionAcreditadoDatatableService
         $logical = $columnIndex - $offset;
 
         // Logical: CEDULA, NOMBRE, CARGO, CARGO APO, VIGEN.ACR, ESTADO, RENOVACIONES,
-        // FECHA SOLICITUD, OBSERVACIONES [, Acciones]
+        // FECHA SOLICITUD, OBSERVACIONES, EN PERFIL [, Acciones]
         match ($logical) {
             0 => $query->orderBy('document_number', $direction),
             1 => $query->orderBy('full_name', $direction),
@@ -156,7 +185,7 @@ final class AcreditacionAcreditadoDatatableService
     /**
      * @return list<string>
      */
-    private function formatRow(AcreditacionAcreditado $row, bool $canEdit): array
+    private function formatRow(AcreditacionAcreditado $row, bool $canEdit, bool $inProfile): array
     {
         $estadoLabel = $this->estadoCalculator->estadoLabel((string) $row->estado);
         $estadoClass = match ($row->estado) {
@@ -165,6 +194,11 @@ final class AcreditacionAcreditadoDatatableService
             AcreditacionAcreditado::ESTADO_EN_PROCESO => 'status-pill status-pill--info',
             default => 'status-pill status-pill--danger',
         };
+
+        $enPerfilLabel = $inProfile ? 'Sí' : 'No';
+        $enPerfilClass = $inProfile
+            ? 'status-pill status-pill--success'
+            : 'status-pill status-pill--muted';
 
         $cells = [];
 
@@ -182,6 +216,7 @@ final class AcreditacionAcreditadoDatatableService
             e($row->renovacionLabel()),
             e(optional($row->fecha_solicitud)?->format('Y-m-d') ?: '—'),
             e(Str::limit((string) ($row->observaciones ?? ''), 60) ?: '—'),
+            sprintf('<span class="%s">%s</span>', e($enPerfilClass), e($enPerfilLabel)),
         ]);
 
         if ($canEdit) {

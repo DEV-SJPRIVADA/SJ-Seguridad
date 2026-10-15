@@ -29,7 +29,8 @@
                     <div>
                         <h3 class="ficha-empleados-masivos-modal__title" id="acreditaciones-edit-title">Editar acreditado</h3>
                         <p class="ficha-empleados-masivos-modal__lead">
-                            La cédula debe existir en Ficha empleados. El estado se recalcula al guardar.
+                            Si la cédula está en Ficha, nombre y cargo se toman de ahí. Si no, puede editarlos a mano.
+                            El estado se recalcula al guardar.
                         </p>
                     </div>
                 </div>
@@ -91,12 +92,14 @@
                         <label class="form-label" for="edit_full_name">NOMBRE COMPLETO</label>
                         <input
                             id="edit_full_name"
+                            name="full_name"
                             type="text"
                             class="form-input"
                             maxlength="255"
-                            readonly
+                            required
                             x-model="editForm.full_name"
-                            placeholder="Se completa desde Ficha"
+                            x-bind:readonly="editIdentityLocked"
+                            placeholder="Desde Ficha o manual"
                         >
                     </div>
 
@@ -108,9 +111,10 @@
                             type="text"
                             class="form-input"
                             maxlength="255"
-                            readonly
+                            required
                             x-model="editForm.cargo"
-                            placeholder="Se completa desde Ficha"
+                            x-bind:readonly="editIdentityLocked"
+                            placeholder="Desde Ficha o manual"
                         >
                     </div>
 
