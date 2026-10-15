@@ -97,6 +97,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
                 $isHired ? 'required' : 'nullable',
                 'string',
                 'max:50',
+                // Evita pegar el nombre en cédula (causa perfiles/entries inválidos).
+                ...($isHired ? ['regex:/^\d{5,20}$/'] : []),
                 ...($isHired ? [new HiredDocumentNotDuplicated($requisitionId, $confirmDuplicateHired, $confirmDuplicateHiredDocument ?: null)] : []),
             ],
             'hired_first_surname' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
@@ -123,6 +125,16 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             'hired_second_name' => 'segundo nombre persona contratada',
             'hired_full_name' => 'nombre persona contratada',
             'hiring_date' => 'fecha de ingreso',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'hired_document.regex' => 'La cédula persona contratada debe contener solo números (sin nombre ni letras).',
         ];
     }
 

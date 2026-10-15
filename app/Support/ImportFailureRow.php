@@ -18,6 +18,7 @@ final class ImportFailureRow
      *     identifier_label: string,
      *     severity: string,
      *     reason: string,
+     *     field: string|null,
      *     raw: array<string, mixed>
      * }
      */
@@ -28,6 +29,7 @@ final class ImportFailureRow
         string $severity,
         string $reason,
         array $raw = [],
+        ?string $field = null,
     ): array {
         return [
             'row' => $row,
@@ -35,6 +37,7 @@ final class ImportFailureRow
             'identifier_label' => $identifierLabel,
             'severity' => $severity,
             'reason' => $reason,
+            'field' => $field !== null && $field !== '' ? $field : null,
             'raw' => $raw,
         ];
     }

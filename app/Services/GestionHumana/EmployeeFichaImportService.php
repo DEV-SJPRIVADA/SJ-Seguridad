@@ -124,13 +124,15 @@ class EmployeeFichaImportService
                     }
                 });
             } catch (\Throwable $e) {
+                $humanized = $this->humanizeImportException($e);
                 $failure = ImportFailureRow::make(
                     $row,
                     $cedula,
                     'Cedula',
                     ImportFailureRow::SEVERITY_ERROR,
-                    $e->getMessage(),
+                    $humanized['reason'],
                     $data,
+                    $humanized['field'],
                 );
                 $stats['failures'][] = $failure;
                 $stats['errors'][] = ImportFailureRow::message($failure);
@@ -182,7 +184,6 @@ class EmployeeFichaImportService
         $nameParts = $this->resolveImportNameParts($data);
 
         $documentType = $this->valueNormalizer->documentType($data['tipo_documento'] ?? null);
-        $sex = $this->valueNormalizer->sex($data['sexo'] ?? null);
         $accountType = $this->valueNormalizer->accountType($data['tipo_de_cuenta'] ?? null);
         $riskLevel = $this->valueNormalizer->riskLevel($data['nivel_riesgo_arp'] ?? null);
         $salaryType = $this->valueNormalizer->salaryType($data['tipo_salario'] ?? null);
@@ -210,7 +211,6 @@ class EmployeeFichaImportService
             'address' => $this->stringOrNull($data['direccion'] ?? null),
             'phone' => $this->stringOrNull($data['telefono'] ?? null),
             'blood_type' => $this->stringOrNull($data['tipo_sangre'] ?? null),
-            'sex' => $sex,
             'salary' => $this->numericOrNull($data['salario'] ?? null),
             'education_level' => $this->stringOrNull($data['escolaridad'] ?? null),
             'marital_status' => $this->stringOrNull($data['estado_civil'] ?? null),
@@ -243,9 +243,83 @@ class EmployeeFichaImportService
             'payroll_extra' => $this->mapPayrollExtraFromImport($data),
         ];
 
+        // Sexo: M/F se aplican; vacío limpia; «NO APLICA» u otros no mapeables no se envían (no pisan el valor actual).
+        if ($this->valueNormalizer->sexShouldApply($data['sexo'] ?? null)) {
+            $payload['sex'] = $this->valueNormalizer->sex($data['sexo'] ?? null);
+        }
+
         $this->seedCatalogPairsFromRow($data, $payload);
 
         return $payload;
+    }
+
+    /**
+     * Convierte SQLSTATE crudos en mensaje legible (campo + motivo) para el reporte de importación.
+     *
+     * @return array{reason: string, field: string|null}
+     */
+    private function humanizeImportException(\Throwable $e): array
+    {
+        $message = $e->getMessage();
+        $field = null;
+
+        if (preg_match("/Data too long for column '([^']+)'/i", $message, $matches) === 1) {
+            $field = $matches[1];
+            $label = $this->importFieldLabel($field);
+
+            return [
+                'field' => $field,
+                'reason' => "Campo «{$label}» ({$field}): el valor es demasiado largo o no es válido para ese campo.",
+            ];
+        }
+
+        if (preg_match("/Duplicate entry '([^']*)' for key '([^']+)'/i", $message, $matches) === 1) {
+            $field = $matches[2];
+
+            return [
+                'field' => $field,
+                'reason' => "Dato duplicado («{$matches[1]}»). Ya existe un registro con esa clave ({$matches[2]}).",
+            ];
+        }
+
+        if (preg_match("/Out of range value for column '([^']+)'/i", $message, $matches) === 1) {
+            $field = $matches[1];
+            $label = $this->importFieldLabel($field);
+
+            return [
+                'field' => $field,
+                'reason' => "Campo «{$label}» ({$field}): el valor numérico está fuera de rango.",
+            ];
+        }
+
+        // Quitar el SQL completo del mensaje (poco útil en el Excel de reporte).
+        if (str_contains($message, ' (Connection:')) {
+            $message = trim(explode(' (Connection:', $message, 2)[0]);
+        }
+        if (str_contains($message, ' SQL:')) {
+            $message = trim(explode(' SQL:', $message, 2)[0]);
+        }
+
+        return [
+            'field' => $field,
+            'reason' => $message !== '' ? $message : 'Error al guardar la fila.',
+        ];
+    }
+
+    private function importFieldLabel(string $column): string
+    {
+        return match ($column) {
+            'sex' => 'sexo',
+            'document_type' => 'tipo_documento',
+            'document_number' => 'cedula',
+            'linkage_type' => 'tipo_vinculacion',
+            'account_type' => 'tipo_de_cuenta',
+            'account_number' => 'cuenta',
+            'phone' => 'telefono',
+            'salary' => 'salario',
+            'full_name' => 'nombre',
+            default => $column,
+        };
     }
 
     /**

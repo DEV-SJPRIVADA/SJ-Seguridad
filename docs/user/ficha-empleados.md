@@ -139,9 +139,9 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 ### Importar empleados masivamente
 
 1. Pulse **Descargar plantilla vacia** (formato vacío) o **Exportar datos para actualizar** (mismo formato con datos actuales de empleados en ficha).
-2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). El orden sigue el extracto tipo nompr07; al final van opcionales `codigo_ciudad_trabajo`, `ciudad_trabajo` y `codigo_requisicion`. Puede pegar valores legibles (`CEDULA`, `Masculino`, `Ahorro`); el sistema los guarda como códigos (`C`, `M`, `1`) para la plantilla de nómina.
+2. Edite filas desde la fila 3; `cedula` es obligatoria. Use `primer_apellido`, `segundo_apellido`, `primer_nombre` y `segundo_nombre` (como en la ficha). `nombre` completo es opcional (plantillas antiguas). El orden sigue el extracto tipo nompr07; al final van opcionales `codigo_ciudad_trabajo`, `ciudad_trabajo` y `codigo_requisicion`. Puede pegar valores legibles (`CEDULA`, `Masculino`, `Ahorro`); el sistema los guarda como códigos (`C`, `M`, `1`) para la plantilla de nómina. En **sexo**, use `M`/`F` (o Masculino/Femenino); si el extracto trae **NO APLICA**, el import lo ignora y **no borra** el sexo ya guardado.
 3. Suba el archivo con **Importar**; verá un indicador de carga mientras se procesa el archivo.
-4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas).
+4. Al terminar, el resumen aparece arriba del listado. Si hubo filas con error, se muestra el **detalle de errores** en pantalla (hasta 100 líneas) y puede descargar el **reporte Excel** (columnas Fila, Identificador, Tipo, **Campo**, Motivo + datos de la fila).
 5. Si la cédula ya existe, el import **actualiza** el perfil (no duplica) y también sincroniza el nombre del listado (`hired_full_name`) con los apellidos/nombres del Excel.
 6. Si el Excel trae nombres con `?` por encoding roto (p. ej. `MU?OZ`), el import los corrige a `Ñ`/`Ó` al guardar.
 
@@ -164,6 +164,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.39 | 2026-10-15 | Agent | Import masivo: `sexo` NO APLICA no falla ni pisa el valor; reporte de errores con columna Campo y motivo legible. |
 | 1.38 | 2026-10-14 | Agent | Al marcar **Contratado** se crea perfil mínimo y se habilitan colas Cursos/Acreditación/psicofísicos sin pasar aún a En ficha ni a Plantilla masivos. |
 | 1.37 | 2026-10-13 | Agent | Ficha: icono **Consultar psicofísicos** (modal MT-ST-04 por cédula) junto a cursos/acreditación; visible solo si `requires_psicofisicos`. |
 | 1.36 | 2026-10-06 | Agent | Selectores searchable: al pasar el mouse sobre un valor truncado se muestra el texto completo (`title`). |

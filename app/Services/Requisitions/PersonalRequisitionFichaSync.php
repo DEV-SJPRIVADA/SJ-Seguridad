@@ -7,6 +7,7 @@ use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use App\Services\GestionHumana\EmployeeFichaOnHiredBootstrap;
+use Illuminate\Validation\ValidationException;
 
 class PersonalRequisitionFichaSync
 {
@@ -83,12 +84,29 @@ class PersonalRequisitionFichaSync
             return;
         }
 
+        // Misma regla null-safe que HiredDocumentNotDuplicated (import masivo deja RQ null).
         $otherEntry = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', $document)
-            ->where('personal_requisition_id', '!=', $requisition->id)
+            ->where(function ($query) use ($requisition): void {
+                $query->whereNull('personal_requisition_id')
+                    ->orWhere('personal_requisition_id', '!=', $requisition->id);
+            })
             ->first();
 
-        if ($otherEntry !== null && $confirmDuplicate) {
+        if ($otherEntry !== null) {
+            if (! $confirmDuplicate) {
+                // Defensa: sin confirmación no crear/actualizar (evita 500 por unique document_number).
+                $otherEntry->loadMissing('requisition:id,code');
+                $label = $otherEntry->requisition?->code
+                    ?? ($otherEntry->personal_requisition_id === null
+                        ? 'Ficha empleados (sin requisición)'
+                        : '#'.$otherEntry->personal_requisition_id);
+
+                throw ValidationException::withMessages([
+                    'hired_document' => "DUPLICATE_HIRED_DOCUMENT: Esta cédula ya está registrada ({$label}). Confirme para continuar.",
+                ]);
+            }
+
             if ($ownEntry !== null && $ownEntry->id !== $otherEntry->id) {
                 $this->onHiredBootstrap->cleanupBeforePendingEntryDelete($ownEntry, $userId);
                 $ownEntry->delete();

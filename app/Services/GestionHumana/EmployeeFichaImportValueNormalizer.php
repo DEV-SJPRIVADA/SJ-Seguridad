@@ -33,16 +33,42 @@ class EmployeeFichaImportValueNormalizer
         };
     }
 
+    /**
+     * Normaliza sexo a M/F. Valores tipo «NO APLICA» / N/A → null (no forzar un código inválido).
+     */
     public function sex(mixed $value): ?string
     {
-        $value = mb_strtoupper(trim((string) ($value ?? '')));
+        $raw = trim((string) ($value ?? ''));
+        if ($raw === '' || $raw === '.') {
+            return null;
+        }
+
+        $upper = mb_strtoupper($raw);
+        $compact = preg_replace('/[\s.\-\/\\\\_]+/u', '', $upper) ?? $upper;
 
         return match (true) {
-            $value === '' => null,
-            str_starts_with($value, 'M') => 'M',
-            str_starts_with($value, 'F') => 'F',
-            default => $value,
+            in_array($compact, ['NOAPLICA', 'NOAPLICABLE', 'NA', 'ND', 'SINDATO', 'SININFORMACION'], true) => null,
+            in_array($compact, ['M', 'MASCULINO', 'MASC', 'HOMBRE', '1'], true) => 'M',
+            in_array($compact, ['F', 'FEMENINO', 'FEM', 'MUJER', '2'], true) => 'F',
+            // Compat: extractos que empiezan por M/F (Masculino / Femenino).
+            str_starts_with($upper, 'M') => 'M',
+            str_starts_with($upper, 'F') => 'F',
+            default => mb_strlen($upper) <= 5 ? $upper : null,
         };
+    }
+
+    /**
+     * true si el Excel trae un sexo usable o vacío explícito; false si es «NO APLICA» u otro no mapeable
+     * (en actualización no debe pisar el valor existente).
+     */
+    public function sexShouldApply(mixed $value): bool
+    {
+        $raw = trim((string) ($value ?? ''));
+        if ($raw === '' || $raw === '.') {
+            return true;
+        }
+
+        return $this->sex($value) !== null;
     }
 
     public function accountType(mixed $value): ?string

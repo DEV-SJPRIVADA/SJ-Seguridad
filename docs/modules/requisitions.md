@@ -153,7 +153,7 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 - Motivo **Cargo nuevo**: estado inicial pendiente gerencia; GH no edita hasta `solicitada`.
 - Aprobar gerencia → `solicitada`; rechazar → `cancelada` + correo al solicitante.
 - Cierre `contratado`: obligatorios `hiring_date`, compensacion requerida por validacion, `hired_document` y `hired_full_name` (una persona por fila). Independientes de `replacement_*`.
-- Guardar `contratado` upsert 1:1 en `personal_requisition_ficha_entries`; cedula ya usada en otra requisicion pide confirmacion (SweetAlert2).
+- Guardar `contratado` upsert 1:1 en `personal_requisition_ficha_entries`; `hired_document` solo dígitos (5–20). Cédula ya usada en otra RQ **o** en Ficha sin RQ (p. ej. import masivo, `personal_requisition_id` null) pide confirmación (SweetAlert2) y vincula la entry existente (no crea perfil duplicado / no 500 por unique).
 - Tras crear, el solicitante no edita; solo GH (salvo bloqueo por pendiente gerencia).
 
 ## Encargados de seleccion (Reclutador)

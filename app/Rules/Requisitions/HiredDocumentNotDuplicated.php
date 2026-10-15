@@ -28,9 +28,16 @@ class HiredDocumentNotDuplicated implements ValidationRule
             return;
         }
 
+        // Incluye entradas huérfanas (personal_requisition_id NULL, p. ej. import masivo):
+        // en SQL `NULL != id` no es verdadero y antes se escapaban del chequeo → 500 por unique.
         $conflict = PersonalRequisitionFichaEntry::query()
             ->where('hired_document', $document)
-            ->when($this->requisitionId !== null, fn ($query) => $query->where('personal_requisition_id', '!=', $this->requisitionId))
+            ->when($this->requisitionId !== null, function ($query): void {
+                $query->where(function ($inner): void {
+                    $inner->whereNull('personal_requisition_id')
+                        ->orWhere('personal_requisition_id', '!=', $this->requisitionId);
+                });
+            })
             ->with(['requisition:id,code', 'profile'])
             ->first();
 
@@ -49,13 +56,19 @@ class HiredDocumentNotDuplicated implements ValidationRule
         if ($conflict->moved_to_ficha_at !== null
             && $conflict->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
             && ! $periodService->isRehireable($conflict)) {
-            $fail('REHIRE_NOT_ALLOWED: Esta cedula corresponde a un empleado desvinculado no recontratable.');
+            $fail('REHIRE_NOT_ALLOWED: Esta cédula corresponde a un empleado desvinculado no recontratable.');
+
+            return;
+        }
+
+        if ($conflict->personal_requisition_id === null) {
+            $fail('DUPLICATE_HIRED_DOCUMENT: Esta cédula ya está registrada en Ficha empleados (sin requisición vinculada). Confirme para vincularla a esta RQ.');
 
             return;
         }
 
         $code = $conflict->requisition?->code ?? ('#'.$conflict->personal_requisition_id);
 
-        $fail("DUPLICATE_HIRED_DOCUMENT: Esta cedula ya esta registrada en otra requisicion ({$code}). Confirme para continuar.");
+        $fail("DUPLICATE_HIRED_DOCUMENT: Esta cédula ya está registrada en otra requisición ({$code}). Confirme para continuar.");
     }
 }

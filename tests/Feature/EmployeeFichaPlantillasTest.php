@@ -15,6 +15,7 @@ use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
 use App\Services\GestionHumana\EmployeeFichaImportRowMapper;
+use App\Services\GestionHumana\EmployeeFichaImportService;
 use App\Services\GestionHumana\EmployeeFichaNameParser;
 use App\Services\GestionHumana\PlantillaMasivosMapper;
 use App\Support\PermissionCatalog;
@@ -520,6 +521,58 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->assertSame('Dependiente', $profile->payrollExtraValue('contributor_type'));
         $this->assertSame('A1', $profile->payrollExtraValue('salary_scale'));
         $this->assertSame(20.0, (float) $profile->payrollExtraValue('total_vacation_days'));
+    }
+
+    public function test_import_ignores_sexo_no_aplica_and_keeps_existing_sex(): void
+    {
+        $manager = $this->managerUser();
+        $entry = $this->createInFichaEntry('94369108', 'GARCIA CRUZ JHON JAIRO');
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '94369108',
+            'full_name' => 'GARCIA CRUZ JHON JAIRO',
+            'sex' => 'M',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '94369108',
+            'primer_apellido' => 'GARCIA',
+            'segundo_apellido' => 'CRUZ',
+            'primer_nombre' => 'JHON',
+            'segundo_nombre' => 'JAIRO',
+            'sexo' => 'NO APLICA',
+            'fecha_ingreso' => '2020-01-15',
+            'edad' => '53',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ])
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertSessionHas('import_result', function (array $result): bool {
+                return ($result['updated'] ?? 0) === 1 && ($result['failed'] ?? 0) === 0;
+            });
+
+        $profile = EmployeeFichaProfile::query()->where('document_number', '94369108')->firstOrFail();
+        $this->assertSame('M', $profile->sex);
+        $this->assertSame(53, (int) $profile->payrollExtraValue('age'));
+    }
+
+    public function test_import_humanizes_sql_column_too_long_errors(): void
+    {
+        $service = app(EmployeeFichaImportService::class);
+        $method = new \ReflectionMethod($service, 'humanizeImportException');
+
+        $result = $method->invoke($service, new \RuntimeException(
+            "SQLSTATE[22001]: String data, right truncated: 1406 Data too long for column 'sex' at row 1 (Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: sjseguridad, SQL: update `employee_ficha_profiles` set `sex` = NO APLICA)"
+        ));
+
+        $this->assertSame('sex', $result['field']);
+        $this->assertStringContainsString('Campo «sexo»', $result['reason']);
+        $this->assertStringContainsString('demasiado largo', $result['reason']);
+        $this->assertStringNotContainsString('SQL:', $result['reason']);
     }
 
     public function test_seed_catalogs_command_dry_run(): void

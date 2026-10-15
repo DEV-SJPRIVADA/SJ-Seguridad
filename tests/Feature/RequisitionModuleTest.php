@@ -7,6 +7,7 @@ use App\Mail\PersonalRequisitionManagementApprovalMail;
 use App\Mail\PersonalRequisitionNotification;
 use App\Mail\PersonalRequisitionStatusChangedMail;
 use App\Models\CommercialClient;
+use App\Models\EmployeeFichaProfile;
 use App\Models\NotificationEmail;
 use App\Models\NotificationType;
 use App\Models\PersonalRequisition;
@@ -2206,6 +2207,116 @@ class RequisitionModuleTest extends TestCase
             'personal_requisition_id' => $requisitionB->id,
             'hired_document' => '999888777',
             'hired_full_name' => 'Reasignada Persona',
+        ]);
+    }
+
+    public function test_update_orphan_ficha_hired_document_requires_confirmation(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-ORPH-01');
+
+        $orphan = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '77091887',
+            'hired_full_name' => 'ORTIZ MEJIA LUIS FELIPE',
+            'first_surname' => 'ORTIZ',
+            'first_name' => 'LUIS',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $orphan->id,
+            'document_number' => '77091887',
+            'full_name' => 'ORTIZ MEJIA LUIS FELIPE',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+            $this->hiredPayload([
+                'hired_document' => '77091887',
+                'hired_first_surname' => 'ORTIZ',
+                'hired_second_surname' => 'MEJIA',
+                'hired_first_name' => 'LUIS',
+                'hired_second_name' => 'FELIPE',
+            ])
+        );
+
+        $response->assertSessionHasErrors('hired_document');
+        $this->assertStringStartsWith(
+            'DUPLICATE_HIRED_DOCUMENT:',
+            session('errors')->get('hired_document')[0]
+        );
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'id' => $orphan->id,
+            'personal_requisition_id' => null,
+        ]);
+        $this->assertDatabaseCount('employee_ficha_profiles', 1);
+    }
+
+    public function test_update_orphan_ficha_hired_document_confirmed_links_without_duplicate_profile(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-ORPH-02');
+
+        $orphan = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '77091887',
+            'hired_full_name' => 'ORTIZ MEJIA LUIS FELIPE',
+            'first_surname' => 'ORTIZ',
+            'first_name' => 'LUIS',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $orphan->id,
+            'document_number' => '77091887',
+            'full_name' => 'ORTIZ MEJIA LUIS FELIPE',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+            $this->hiredPayload([
+                'hired_document' => '77091887',
+                'hired_first_surname' => 'ORTIZ',
+                'hired_second_surname' => 'MEJIA',
+                'hired_first_name' => 'LUIS',
+                'hired_second_name' => 'FELIPE',
+                'confirm_duplicate_hired' => 1,
+                'confirm_duplicate_hired_document' => '77091887',
+            ])
+        );
+
+        $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+        $this->assertDatabaseCount('personal_requisition_ficha_entries', 1);
+        $this->assertDatabaseCount('employee_ficha_profiles', 1);
+        $this->assertDatabaseHas('personal_requisition_ficha_entries', [
+            'id' => $orphan->id,
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '77091887',
+        ]);
+        $this->assertDatabaseHas('employee_ficha_profiles', [
+            'id' => $profile->id,
+            'document_number' => '77091887',
+            'personal_requisition_ficha_entry_id' => $orphan->id,
+        ]);
+    }
+
+    public function test_update_hired_document_rejects_name_instead_of_cedula(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-NAME-01');
+
+        $response = $this->actingAs($manager)->patch(
+            route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+            $this->hiredPayload([
+                'hired_document' => 'LUIS FELIPE ORTIZ MEJIA',
+            ])
+        );
+
+        $response->assertSessionHasErrors('hired_document');
+        $this->assertDatabaseMissing('personal_requisition_ficha_entries', [
+            'personal_requisition_id' => $requisition->id,
         ]);
     }
 

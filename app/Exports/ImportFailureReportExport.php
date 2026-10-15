@@ -69,6 +69,7 @@ class ImportFailureReportExport
             'Fila',
             'Identificador',
             'Tipo',
+            'Campo',
             'Motivo',
         ];
 
@@ -88,6 +89,7 @@ class ImportFailureReportExport
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++).$row, (int) ($failure['row'] ?? 0));
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++).$row, (string) ($failure['identifier'] ?? ''));
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++).$row, $this->severityLabel((string) ($failure['severity'] ?? '')));
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++).$row, (string) ($failure['field'] ?? ''));
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++).$row, (string) ($failure['reason'] ?? ''));
 
             $raw = is_array($failure['raw'] ?? null) ? $failure['raw'] : [];
