@@ -51,6 +51,8 @@ trait EmployeeFichaMasivosPayload
             'payroll_extra' => [
                 'ccf_code' => 'CCF01',
             ],
+            // Obligatoria solo en store (alta / Gestionar); update ficha la ignora si no aplica.
+            'archive_box' => 'CAJA-TEST-01',
         ], $overrides);
     }
 }

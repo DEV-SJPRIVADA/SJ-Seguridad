@@ -1,4 +1,4 @@
-{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false, $canEditRequiresCourses ?? false, $canEditRequiresAcreditacion ?? false, $canEditRequiresPsicofisicos ?? false, $showHiredDocumentSection ?? false, $fichaEntry ?? null, $isRehire ?? false --}}
+{{-- Variables: $profile, $catalogs, $lockIdentityFields ?? false, $canEditRequiresCourses ?? false, $canEditRequiresAcreditacion ?? false, $canEditRequiresPsicofisicos ?? false, $showHiredDocumentSection ?? false, $showArchiveSection ?? false, $fichaEntry ?? null, $isRehire ?? false --}}
 @php
     $identityLocked = (bool) ($lockIdentityFields ?? false);
     $showRequirementFlags = ($canEditRequiresCourses ?? false) || ($canEditRequiresAcreditacion ?? false)
@@ -645,3 +645,49 @@
         </div>
     </div>
 </section>
+
+@if ($showArchiveSection ?? false)
+{{-- Ubicación física del expediente: alimenta Archivo → Historias laborales (solo alta / Gestionar). --}}
+<section class="ficha-empleados-form__section">
+    <header class="ficha-empleados-form__section-head">
+        <span class="ficha-empleados-form__section-icon" aria-hidden="true">
+            <x-lucide-archive width="18" height="18" />
+        </span>
+        <div>
+            <h3 class="ficha-empleados-form__section-title">Archivo</h3>
+            <p class="ficha-empleados-form__section-lead">
+                Ubicación física del expediente. La caja se refleja en Archivo → Historias laborales.
+            </p>
+        </div>
+    </header>
+    <div class="form-grid form-grid--two">
+        <div class="form-field">
+            <label class="form-label" for="archive_shelf">Estante</label>
+            <input
+                id="archive_shelf"
+                name="archive_shelf"
+                type="text"
+                class="form-input"
+                maxlength="100"
+                value="{{ old('archive_shelf', $profile->archive_shelf) }}"
+                placeholder="Estante (opcional)"
+            >
+            <x-input-error :messages="$errors->get('archive_shelf')" />
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="archive_box">Caja <span class="text-danger">*</span></label>
+            <input
+                id="archive_box"
+                name="archive_box"
+                type="text"
+                class="form-input"
+                maxlength="100"
+                required
+                value="{{ old('archive_box', $profile->archive_box) }}"
+                placeholder="Caja del expediente"
+            >
+            <x-input-error :messages="$errors->get('archive_box')" />
+        </div>
+    </div>
+</section>
+@endif

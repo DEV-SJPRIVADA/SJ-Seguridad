@@ -172,6 +172,7 @@
                         'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion ?? false,
                         'canViewRequirementFlags' => $canViewRequirementFlags ?? false,
                         'showHiredDocumentSection' => true,
+                        'showArchiveSection' => true,
                         'fichaEntry' => $fichaEntry,
                         'isRehire' => $isRehire ?? false,
                     ])

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Requisitions;
 
+use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
 use App\Models\PersonalRequisition;
@@ -15,6 +16,7 @@ class StorePersonalRequisitionRequest extends FormRequest
 {
     use ResolvesCommercialClient;
     use ResolvesReplacementPersonFields;
+    use UppercasesValidatedText;
 
     /**
      * Determine if the user is authorized to make this request.

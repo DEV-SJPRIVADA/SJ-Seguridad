@@ -136,12 +136,13 @@ Regla Cursor (obligatoria para agentes): [`.cursor/rules/module-ui-quality.mdc`]
 1. Elegir una **pantalla referencia** del mismo tipo (listado, dashboard, modal import, subnav) y clonar su shell (`req-manage-page`, filtros `details`, toolbar icon-only, DataTables, modales opacos).
 2. Reutilizar tokens `--brand-*`, alturas `--control-*`, pills `.module-tab`, `<x-searchable-select>`, icon-btn canónicos.
 3. No inventar tipografías, gradientes ajenos, Select2, ni `{modulo}__icon-btn`.
-4. Cerrar con checklist de `module-ui-quality.mdc` + `npm run build` si hubo CSS/JS + smoke DevTools si hay UI.
+4. Cerrar con checklist de `module-ui-quality.mdc` (+ `dashboard-ui.mdc` si es dashboard) + `npm run build` si hubo CSS/JS + smoke DevTools si hay UI.
 
 ### Referencias Blade
 
 | Tipo | Vista modelo |
 | --- | --- |
+| **Dashboard KPI + ApexCharts** | `areas/gestion_humana/dashboard.blade.php` + `resources/js/gh-area-dashboard-charts.js` (regla [`.cursor/rules/dashboard-ui.mdc`](../../.cursor/rules/dashboard-ui.mdc)) |
 | Listado + filtros + DT | `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` |
 | Listado cursos | `areas/gestion_humana/cursos/registros.blade.php` |
 | Import modal | `areas/gestion_humana/formacion/formaciones.blade.php` (+ partial import) |

@@ -62,6 +62,7 @@ class PersonalRequisition extends Model
         'recruiter_name',
         'hiring_date',
         'hired_document',
+        'hired_birth_date',
         'hired_first_surname',
         'hired_second_surname',
         'hired_first_name',
@@ -77,6 +78,7 @@ class PersonalRequisition extends Model
         return [
             'request_date' => 'date',
             'hiring_date' => 'date',
+            'hired_birth_date' => 'date',
             'status_changed_at' => 'datetime',
             'closed_at' => 'datetime',
             'base_salary' => 'decimal:2',

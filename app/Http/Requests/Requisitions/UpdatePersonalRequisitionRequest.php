@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Requisitions;
 
+use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
 use App\Models\PersonalRequisition;
@@ -16,6 +17,7 @@ class UpdatePersonalRequisitionRequest extends FormRequest
 {
     use ResolvesCommercialClient;
     use ResolvesReplacementPersonFields;
+    use UppercasesValidatedText;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -101,6 +103,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
                 ...($isHired ? ['regex:/^\d{5,20}$/'] : []),
                 ...($isHired ? [new HiredDocumentNotDuplicated($requisitionId, $confirmDuplicateHired, $confirmDuplicateHiredDocument ?: null)] : []),
             ],
+            // Obligatorio al guardar Contratado; legado puede quedar null hasta el próximo cambio.
+            'hired_birth_date' => [$isHired ? 'required' : 'nullable', 'date', 'before:today'],
             'hired_first_surname' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
             'hired_second_surname' => ['nullable', 'string', 'max:100'],
             'hired_first_name' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
@@ -119,6 +123,7 @@ class UpdatePersonalRequisitionRequest extends FormRequest
     {
         return [
             'hired_document' => 'cédula persona contratada',
+            'hired_birth_date' => 'fecha de nacimiento persona contratada',
             'hired_first_surname' => 'primer apellido persona contratada',
             'hired_second_surname' => 'segundo apellido persona contratada',
             'hired_first_name' => 'primer nombre persona contratada',

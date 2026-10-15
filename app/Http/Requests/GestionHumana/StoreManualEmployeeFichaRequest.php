@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GestionHumana;
 
+use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Http\Requests\GestionHumana\Concerns\EmployeeFichaProfileFieldRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -9,6 +10,7 @@ use Illuminate\Validation\Rule;
 class StoreManualEmployeeFichaRequest extends FormRequest
 {
     use EmployeeFichaProfileFieldRules;
+    use UppercasesValidatedText;
 
     public function authorize(): bool
     {
@@ -36,6 +38,9 @@ class StoreManualEmployeeFichaRequest extends FormRequest
                 Rule::unique('personal_requisition_ficha_entries', 'hired_document')->ignore($fichaEntryId),
             ],
             'hired_full_name' => ['nullable', 'string', 'max:255'],
+            // Ubicación física (Archivo → Historias laborales); solo en alta / Gestionar.
+            'archive_shelf' => ['nullable', 'string', 'max:100'],
+            'archive_box' => ['required', 'string', 'max:100'],
         ], $this->employeeFichaProfileFieldRules(requireCore: true));
     }
 
@@ -48,6 +53,8 @@ class StoreManualEmployeeFichaRequest extends FormRequest
             'ficha_entry_id' => 'registro pendiente',
             'hired_document' => 'cédula',
             'hired_full_name' => 'nombre completo',
+            'archive_shelf' => 'estante',
+            'archive_box' => 'caja',
         ]);
     }
 

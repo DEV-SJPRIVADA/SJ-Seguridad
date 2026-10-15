@@ -46,6 +46,10 @@ Tablas operativas grandes: `serverSide: true` + endpoint JSON (no `@foreach` mas
 
 La **primera** entrega visual debe verse como un rediseño pulido, no un prototipo feo. Copiar shell de un modulo referencia (Seguimientos / Cursos / Formacion), chrome `req-manage-*`, searchable-select, icon-btn canonicos, tokens branding. Regla: [`.cursor/rules/module-ui-quality.mdc`](module-ui-quality.mdc) + [`docs/modules/branding.md`](../../docs/modules/branding.md).
 
+## Dashboards (KPI + graficos)
+
+Referencia canónica: **Gestion Humana área** (`/gestion-humana/dashboard`, vista + `gh-area-dashboard-charts.js`). Titulos de charts centrados; dataLabels visibles (horizontales si los numeros son pequenos; encima de barras). Regla: [`.cursor/rules/dashboard-ui.mdc`](dashboard-ui.mdc).
+
 ## Navegacion chrome
 
 Mismo estilo pill para sidebar (`.sidebar-link`), tableros y pestanas (`.module-tab`). Padding contenedor ↔ botones: `0.2rem`. Detalle: [`.cursor/rules/nav-chrome-ui.mdc`](nav-chrome-ui.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).

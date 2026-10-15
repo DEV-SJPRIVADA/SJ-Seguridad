@@ -116,6 +116,7 @@ class EmployeeFichaCatalogSyncFe028Test extends TestCase
                 'account_number',
                 'payment_method_code',
                 'payroll_extra.ccf_code',
+                'archive_box',
             ]);
     }
 

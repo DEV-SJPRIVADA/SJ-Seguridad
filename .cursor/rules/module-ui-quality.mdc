@@ -16,9 +16,9 @@ Si el front suena a dashboard genérico (cards sueltas, botones Bootstrap crudos
    - Listado operativo + filtros: **Desvinculaciones Seguimientos**, **Cursos registros**, **Formación formaciones**, **Ficha empleados**.
    - Tablero con pestañas: partial `subnav` + `<x-slot name="header">` + `.module-tab`.
    - Modal import/export: Formación / Cliente interno / Archivo.
-   - Dashboard KPI: Formación dashboard o Comercial (mismo lenguaje de cards/KPI del proyecto).
+   - Dashboard KPI + charts: **Gestión Humana área** (`gestion-humana/dashboard`) — referencia canónica. Ver [`dashboard-ui.mdc`](dashboard-ui.mdc).
 2. Leer [`docs/modules/branding.md`](../../docs/modules/branding.md) (tokens, chrome, iconos, alturas).
-3. Reglas hermanas: `nav-chrome-ui.mdc`, `icon-buttons-ui.mdc`, `datatables-server-side.mdc`, `orthography-and-comments.mdc`.
+3. Reglas hermanas: `dashboard-ui.mdc`, `nav-chrome-ui.mdc`, `icon-buttons-ui.mdc`, `datatables-server-side.mdc`, `orthography-and-comments.mdc`.
 
 ## Shell obligatorio (listados / tableros)
 

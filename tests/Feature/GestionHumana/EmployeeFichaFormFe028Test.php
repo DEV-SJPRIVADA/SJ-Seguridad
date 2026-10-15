@@ -272,6 +272,82 @@ class EmployeeFichaFormFe028Test extends TestCase
             ->assertSee('Lugar de nacimiento', false);
     }
 
+    public function test_create_form_shows_archive_section_with_required_box(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertOk()
+            ->assertSee('>Archivo</h3>', false)
+            ->assertSee('id="archive_shelf"', false)
+            ->assertSee('id="archive_box"', false)
+            ->assertSee('name="archive_box"', false);
+    }
+
+    public function test_edit_ficha_form_does_not_show_archive_section(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809999001',
+            'hired_full_name' => 'Sin Seccion Archivo',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809999001',
+            'full_name' => 'Sin Seccion Archivo',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertDontSee('id="archive_box"', false)
+            ->assertDontSee('name="archive_shelf"', false);
+    }
+
+    public function test_store_requires_archive_box_and_persists_archive_location(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $missingBox = $this->masivosCorePayload([
+            'hired_document' => '809999002',
+            'hired_full_name' => 'Sin Caja Archivo',
+            'archive_box' => '',
+            'archive_shelf' => 'E-3',
+        ]);
+
+        $this->actingAs($manager)
+            ->from(route('gestion-humana.ficha-empleados.employees.create'))
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), $missingBox)
+            ->assertSessionHasErrors('archive_box');
+
+        $this->actingAs($manager)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), $this->masivosCorePayload([
+                'hired_document' => '809999003',
+                'hired_full_name' => 'Con Caja Archivo',
+                'archive_shelf' => 'Estante A',
+                'archive_box' => 'Caja 12',
+            ]))
+            ->assertRedirect();
+
+        $entry = PersonalRequisitionFichaEntry::query()
+            ->where('hired_document', '809999003')
+            ->firstOrFail();
+
+        $this->assertSame('ESTANTE A', $entry->profile?->archive_shelf);
+        $this->assertSame('CAJA 12', $entry->profile?->archive_box);
+    }
+
     public function test_store_requires_birth_place(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);

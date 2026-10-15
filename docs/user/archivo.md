@@ -76,6 +76,7 @@ La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-10-15 | Agent | Al crear empleado en Ficha (nuevo / Gestionar) se puede capturar estante y caja; aparece en Historias laborales. |
 | 1.8 | 2026-10-05 | Archivo | Historial de consultas: export Excel, botón Actualizar como icono, filtro mes actual por defecto. |
 | 1.7 | 2026-09-18 | Archivo | Import: basta con estante o caja (uno de los dos) para actualizar la fila. |
 | 1.6 | 2026-09-18 | Archivo | Export plantilla: elegir activos, retirados o todos (datos de ficha). |

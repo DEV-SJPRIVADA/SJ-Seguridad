@@ -241,6 +241,18 @@ Permite generar cartas Word de tipo `contratacion` **antes** de mover el registr
 | Audit | `contratacion_letter_pack` / `generate_quick` (`still_pending: true`) |
 | Tests | `tests/Feature/GestionHumana/ContratacionQuickLetterTest.php` |
 
+### Persistencia en mayúsculas (2026-10-15)
+
+Al guardar desde **alta manual** (`StoreManualEmployeeFichaRequest`, POST `empleados/nuevo`) y desde **carta rápida** (`GenerateQuickContratacionLetterRequest`), los textos validados se normalizan a mayúsculas UTF-8 vía el trait `App\Http\Requests\Concerns\UppercasesValidatedText` y `App\Support\UppercaseFormText`. Se excluyen correos, códigos de catálogo (`*_code`), `sex`, `document_type` y demás claves técnicas listadas en `UppercaseFormText::DEFAULT_EXCEPT`.
+
+### Fecha de nacimiento desde requisición (2026-10-15)
+
+`personal_requisitions.hired_birth_date` (capturada en Gestión al marcar Contratado) alimenta `employee_ficha_profiles.birth_date` vía `EmployeeFichaOnHiredBootstrap` / `EmployeeFichaProfilePrefill`. Si el usuario cambia la fecha en la RQ, el perfil se actualiza; en carta rápida / Gestionar empleado se precarga cuando el perfil aún no la tiene.
+
+### Sección Archivo en alta (2026-10-15)
+
+En `empleados/nuevo` (alta manual y Gestionar desde pendiente) hay una sección final **Archivo**: `archive_shelf` (estante, opcional) y `archive_box` (caja, obligatoria). Se persisten en `employee_ficha_profiles` y se muestran en Archivo → Historias laborales. No aparece en edición de ficha.
+
 ## Modal Generar Cartas (desde ficha En ficha)
 
 Icono de barra **Generar Cartas** (visible con vínculo **activo** + `ficha_empleados.manage` **o** con vínculo **cerrado** + `ficha_empleados.terminate`). Ambos iconos abren el **mismo modal** (`ficha-generate-cartas`); el de desvinculación preselecciona tipo `desvinculacion` y el de activo preselecciona `contratacion`. El download del último pack de desvinculación se mantiene aparte.

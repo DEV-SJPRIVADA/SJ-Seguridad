@@ -164,6 +164,9 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.42 | 2026-10-15 | Agent | Alta / Gestionar empleado: sección Archivo al final (estante opcional, caja obligatoria) que alimenta Historias laborales. |
+| 1.41 | 2026-10-15 | Agent | Fecha de nacimiento capturada al marcar Contratado en la RQ se precarga en ficha / carta de contratación. |
+| 1.40 | 2026-10-15 | Agent | Al guardar alta manual (`empleados/nuevo`) y carta de contratación, los textos se persisten en mayúsculas (excepto correo y códigos de catálogo). |
 | 1.39 | 2026-10-15 | Agent | Import masivo: `sexo` NO APLICA no falla ni pisa el valor; reporte de errores con columna Campo y motivo legible. |
 | 1.38 | 2026-10-14 | Agent | Al marcar **Contratado** se crea perfil mínimo y se habilitan colas Cursos/Acreditación/psicofísicos sin pasar aún a En ficha ni a Plantilla masivos. |
 | 1.37 | 2026-10-13 | Agent | Ficha: icono **Consultar psicofísicos** (modal MT-ST-04 por cédula) junto a cursos/acreditación; visible solo si `requires_psicofisicos`. |

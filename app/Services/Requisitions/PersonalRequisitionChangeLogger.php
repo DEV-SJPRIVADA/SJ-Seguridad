@@ -52,6 +52,7 @@ class PersonalRequisitionChangeLogger
         'human_resources_observation' => 'Observacion de gestion humana',
         'hiring_date' => 'Fecha de contratacion',
         'hired_document' => 'Cedula contratado',
+        'hired_birth_date' => 'Fecha de nacimiento contratado',
         'hired_first_surname' => 'Primer apellido contratado',
         'hired_second_surname' => 'Segundo apellido contratado',
         'hired_first_name' => 'Primer nombre contratado',
@@ -183,7 +184,7 @@ class PersonalRequisitionChangeLogger
             return PersonalRequisition::statuses()[(string) $value] ?? (string) $value;
         }
 
-        if ($field === 'hiring_date') {
+        if (in_array($field, ['hiring_date', 'hired_birth_date'], true)) {
             if ($value instanceof \DateTimeInterface) {
                 return $value->format('Y-m-d');
             }

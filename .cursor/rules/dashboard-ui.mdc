@@ -1,0 +1,46 @@
+---
+description: Dashboards KPI/charts — referencia canónica gestion-humana/dashboard (GH área)
+globs: "**/dashboard.blade.php,resources/js/**/*dashboard*charts*.js,resources/css/app.css,docs/modules/branding.md"
+alwaysApply: true
+---
+
+# Dashboards (KPI + ApexCharts)
+
+**Referencia canónica:** Dashboard de área Gestión Humana.
+
+| Pieza | Ruta |
+| --- | --- |
+| Vista | `resources/views/areas/gestion_humana/dashboard.blade.php` |
+| Charts JS | `resources/js/gh-area-dashboard-charts.js` |
+| CSS | `.gh-area-dashboard-page*` en `resources/css/app.css` |
+| URL | `/gestion-humana/dashboard` |
+
+Antes de codear un dashboard nuevo o rediseñar uno: **abrir esa vista + su JS** y clonar shell / patrones. No inventar layout de cards/charts genérico.
+
+## Checklist obligatorio
+
+1. **Filtros:** `<x-searchable-select>` + panel compacto (mismo lenguaje que GH / Cursos dashboard).
+2. **KPIs:** familia `cursos-dashboard-page__kpi` (o equivalente ya usado en el módulo); sin cards Bootstrap genéricas ni gradientes ajenos.
+3. **Títulos de gráficos:** centrados en el `panel__header` (como `.gh-area-dashboard-page__charts .panel-title`).
+4. **Etiquetas Apex (`dataLabels`):**
+   - Números visibles en series (línea/área/barras/donut con total al centro cuando aplique).
+   - Valores **pequeños** (típicamente 1–3 dígitos): etiquetas **horizontales** encima del punto/barra (`offsetY` negativo + `grid.padding.top` suficiente). No rotar a vertical salvo series densas tipo informe GH.
+   - Barras verticales: número **encima** de la columna, no pegado al borde del contenedor.
+   - Barras horizontales: número al final de la barra (`offsetX`).
+   - Sin caja opaca sobre la barra; halo blanco vía CSS (mismo truco que `.gh-area-dashboard-page .apexcharts-datalabels`).
+5. **Defaults:** `resources/js/charts/apex-defaults.js` (`sharedChart`, colores brand). Toolbar Apex off.
+6. **Vite:** chunk `*-dashboard-charts.js` + JSON embebido o endpoint metrics; tras CSS/JS → `npm run build`.
+7. **Docs:** actualizar `docs/modules/{modulo}.md` (+ user si cambia UX).
+8. **Smoke:** Chrome DevTools MCP en la URL del dashboard.
+
+## Prohibido
+
+- Dashboard “API + divs” sin chrome GH.
+- Títulos de charts alineados a la izquierda por defecto.
+- `dataLabels: { enabled: false }` en series operativas sin motivo de negocio.
+- Select2, tipografías Inter/Roboto, KPIs con look de plantilla AI genérica.
+
+## Relación con otras reglas
+
+- Shell general de módulos: [`module-ui-quality.mdc`](module-ui-quality.mdc).
+- Tokens / referencias: [`docs/modules/branding.md`](../../docs/modules/branding.md).

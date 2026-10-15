@@ -152,7 +152,8 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 - Estados operativos: `pendiente_autorizacion_gerencia`, `solicitada`, `en_gestion`, `contratado`, `cancelada` (legacy `aprobada` posible en import).
 - Motivo **Cargo nuevo**: estado inicial pendiente gerencia; GH no edita hasta `solicitada`.
 - Aprobar gerencia → `solicitada`; rechazar → `cancelada` + correo al solicitante.
-- Cierre `contratado`: obligatorios `hiring_date`, compensacion requerida por validacion, `hired_document` y `hired_full_name` (una persona por fila). Independientes de `replacement_*`.
+- Cierre `contratado`: obligatorios `hiring_date`, compensacion requerida por validacion, `hired_document`, `hired_birth_date` (fecha de nacimiento) y `hired_full_name` (una persona por fila). Independientes de `replacement_*`. Registros legado pueden tener `hired_birth_date` null hasta el próximo guardado en Contratado.
+- Al guardar `contratado`, `hired_birth_date` se sincroniza a `employee_ficha_profiles.birth_date` (bootstrap/prefill) y se usa en carta rápida / Gestionar empleado cuando el perfil aún no la tiene.
 - Guardar `contratado` upsert 1:1 en `personal_requisition_ficha_entries`; `hired_document` solo dígitos (5–20). Cédula ya usada en otra RQ **o** en Ficha sin RQ (p. ej. import masivo, `personal_requisition_id` null) pide confirmación (SweetAlert2) y vincula la entry existente (no crea perfil duplicado / no 500 por unique).
 - Tras crear, el solicitante no edita; solo GH (salvo bloqueo por pendiente gerencia).
 
@@ -217,7 +218,7 @@ Cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas envia
 
 | Modelo / tabla | Notas |
 | --- | --- |
-| `personal_requisitions` | Nucleo; compensacion; `recruiter_id`→users; `service_structure`; `hired_*`; `hiring_date` |
+| `personal_requisitions` | Nucleo; compensacion; `recruiter_id`→users; `service_structure`; `hired_*` (incl. `hired_birth_date`); `hiring_date` |
 | `personal_requisition_status_logs` | Transiciones de estado + comentarios gerencia |
 | `personal_requisition_change_logs` | Edicion campo a campo (`change_batch`) |
 | `personal_requisition_ficha_entries` | Lista de espera ficha 1:1 |
@@ -255,6 +256,8 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 | --- | --- |
 | 2026-09-29 | Impresión FO-GH-22: fila TIPO DE PROGRAMACION + CCOS CR (`cost_center`) en la misma línea |
 | 2026-09-24 | Impresión FO-GH-22: recepción GH = `created_at` del primer status log `solicitada` (`humanResourcesReceivedAt`) |
+| 2026-10-15 | Gestion editar (Contratado): `hired_birth_date` obligatorio (legado null hasta próximo cambio); sync a perfil ficha + prefill carta/Gestionar |
+| 2026-10-15 | Solicitar/Gestion editar: textos del form se persisten en mayúsculas (UTF-8; excluye email/status/sex/códigos) |
 | 2026-10-15 | Dashboard: dataLabels Apex como GH (números en series/donut) + títulos de gráficos centrados |
 | 2026-10-01 | Tendencia de Solicitudes ignora filtro mes (serie anual); KPIs y demas charts siguen con mes |
 | 2026-10-01 | KPIs del Dashboard enlazan a Gestion arrastrando filtros; Gestion agrega cliente/cargo/ciudad |

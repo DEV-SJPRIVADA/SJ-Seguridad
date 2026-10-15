@@ -457,6 +457,8 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.11        | 2026-10-15                 | Gestión/editar Contratado: Fecha de nacimiento obligatoria junto a la cédula (se refleja en ficha) |
+| 1.10        | 2026-10-15                 | Solicitar y Gestión/editar: textos se guardan en mayúsculas (excepto correo y códigos) |
 | 1.9         | 2026-10-15                 | Dashboard: valores visibles en los gráficos y títulos centrados |
 | 1.8         | 2026-10-06                 | Solicitar: Cancelar y Generar como iconos |
 | 1.7         | 2026-10-06                 | Gestión/editar: Volver y Guardar como iconos |

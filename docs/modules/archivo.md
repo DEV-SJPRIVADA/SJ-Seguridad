@@ -34,6 +34,8 @@ Columnas nuevas en `employee_ficha_profiles`:
 
 Migracion: `2026_08_06_120740_add_archive_fields_to_employee_ficha_profiles_table.php`.
 
+**Alta desde Ficha empleados (2026-10-15):** en `empleados/nuevo` (alta manual / Gestionar desde pendiente) se captura `archive_box` (obligatoria) y `archive_shelf` (opcional); al guardar quedan en el perfil y se ven en Historias laborales. La edición posterior sigue siendo por este tablero Archivo.
+
 ## Permisos (`config/access.php`)
 
 | Permiso | Descripcion |

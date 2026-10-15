@@ -112,18 +112,18 @@ class ContratacionQuickLetterTest extends TestCase
 
         $entry->refresh();
         $this->assertNull($entry->moved_to_ficha_at);
-        $this->assertSame('Pérez Gómez Ana María', $entry->hired_full_name);
+        $this->assertSame('PÉREZ GÓMEZ ANA MARÍA', $entry->hired_full_name);
 
         $profile = $entry->profile;
         $this->assertNotNull($profile);
-        $this->assertSame('Pérez Gómez Ana María', $profile->full_name);
-        $this->assertSame('Medellín', $profile->birth_place);
-        $this->assertSame('Calle 10 #20-30', $profile->address);
+        $this->assertSame('PÉREZ GÓMEZ ANA MARÍA', $profile->full_name);
+        $this->assertSame('MEDELLÍN', $profile->birth_place);
+        $this->assertSame('CALLE 10 #20-30', $profile->address);
         $this->assertSame($city->code, $profile->residence_city_code);
         $this->assertSame($city->name, $profile->residence_city_name);
         $this->assertSame('3001234567', $profile->phone);
         $this->assertSame('ana.perez@example.com', $profile->email);
-        $this->assertSame('Vigilante', $profile->position_name);
+        $this->assertSame('VIGILANTE', $profile->position_name);
         $this->assertEquals(1500000.0, (float) $profile->salary);
 
         $period = EmployeeFichaEmploymentPeriod::query()
@@ -137,14 +137,14 @@ class ContratacionQuickLetterTest extends TestCase
         Storage::disk('local')->assertExists((string) $period->termination_letter_path);
 
         $text = $this->extractDocxText(Storage::disk('local')->path((string) $period->termination_letter_path));
-        $this->assertStringContainsString('Pérez Gómez Ana María', $text);
+        $this->assertStringContainsString('PÉREZ GÓMEZ ANA MARÍA', $text);
         $this->assertStringContainsString((string) $entry->hired_document, $text);
-        $this->assertStringContainsString('Medellín', $text);
-        $this->assertStringContainsString('Calle 10 #20-30', $text);
+        $this->assertStringContainsString('MEDELLÍN', $text);
+        $this->assertStringContainsString('CALLE 10 #20-30', $text);
         $this->assertStringContainsString($city->name, $text);
         $this->assertStringContainsString('3001234567', $text);
         $this->assertStringContainsString('ana.perez@example.com', $text);
-        $this->assertStringContainsString('Vigilante', $text);
+        $this->assertStringContainsString('VIGILANTE', $text);
         $this->assertStringNotContainsString('${NOMBRE_COMPLETO}', $text);
         $this->assertStringNotContainsString('${CARGO}', $text);
 

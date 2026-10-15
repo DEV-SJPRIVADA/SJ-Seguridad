@@ -404,7 +404,8 @@
                 </div>
             </header>
 
-            <div class="form-grid form-grid--two">
+            {{-- Ingreso, cédula y nacimiento en una fila (form-grid--three; en móvil apilan a 1 col). --}}
+            <div class="form-grid form-grid--three">
                 <div class="form-field">
                     <x-input-label for="hiring_date" value="Fecha de ingreso *" />
                     <input id="hiring_date" name="hiring_date" type="date" class="form-input" value="{{ old('hiring_date', $requisition?->hiring_date?->format('Y-m-d')) }}">
@@ -417,6 +418,14 @@
                     <x-input-error :messages="$hiredDocumentErrors" />
                 </div>
 
+                <div class="form-field">
+                    <x-input-label for="hired_birth_date" value="Fecha de nacimiento *" />
+                    <input id="hired_birth_date" name="hired_birth_date" type="date" class="form-input" value="{{ old('hired_birth_date', $requisition?->hired_birth_date?->format('Y-m-d')) }}">
+                    <x-input-error :messages="$errors->get('hired_birth_date')" />
+                </div>
+            </div>
+
+            <div class="form-grid form-grid--two">
                 <div class="form-field">
                     <x-input-label for="hired_first_surname" value="Primer apellido *" />
                     <input id="hired_first_surname" name="hired_first_surname" type="text" class="form-input" value="{{ old('hired_first_surname', $requisition?->hired_first_surname) }}" placeholder="Primer apellido">

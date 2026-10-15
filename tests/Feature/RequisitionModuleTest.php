@@ -112,7 +112,7 @@ class RequisitionModuleTest extends TestCase
             'requested_by' => $user->id,
             'requesting_area_key' => 'operaciones',
             'status' => PersonalRequisition::STATUS_SOLICITADA,
-            'service_structure' => 'Turno 6x2, descanso dominical y posta fija en porteria.',
+            'service_structure' => 'TURNO 6X2, DESCANSO DOMINICAL Y POSTA FIJA EN PORTERIA.',
         ]);
         $this->assertDatabaseHas('personal_requisition_status_logs', [
             'to_status' => PersonalRequisition::STATUS_SOLICITADA,
@@ -208,7 +208,7 @@ class RequisitionModuleTest extends TestCase
             'requested_by' => $user->id,
             'request_reason_id' => $movimientoInterno->id,
             'replacement_document' => '1098765432',
-            'replacement_name' => 'Ana Movimiento',
+            'replacement_name' => 'ANA MOVIMIENTO',
         ]);
     }
 
@@ -264,6 +264,7 @@ class RequisitionModuleTest extends TestCase
         ]);
 
         $updatedStructure = 'Turno 12x36, descanso intermedio y cobertura en dos postas.';
+        $updatedStructureUpper = mb_strtoupper($updatedStructure, 'UTF-8');
 
         $response = $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge(
             $this->validPayload(),
@@ -277,13 +278,13 @@ class RequisitionModuleTest extends TestCase
         $response->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
         $this->assertDatabaseHas('personal_requisitions', [
             'id' => $requisition->id,
-            'service_structure' => $updatedStructure,
+            'service_structure' => $updatedStructureUpper,
         ]);
         $this->assertDatabaseHas('personal_requisition_change_logs', [
             'personal_requisition_id' => $requisition->id,
             'field_key' => 'service_structure',
             'field_label' => 'Estructura del servicio',
-            'new_value' => $updatedStructure,
+            'new_value' => $updatedStructureUpper,
             'changed_by' => $manager->id,
         ]);
 
@@ -291,7 +292,7 @@ class RequisitionModuleTest extends TestCase
             ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
             ->assertOk()
             ->assertSee('Estructura del servicio', false)
-            ->assertSee($updatedStructure, false);
+            ->assertSee($updatedStructureUpper, false);
     }
 
     public function test_user_can_create_internal_requisition_without_commercial_client(): void
@@ -1263,7 +1264,7 @@ class RequisitionModuleTest extends TestCase
             'personal_requisition_id' => $requisition->id,
             'field_key' => 'human_resources_observation',
             'old_value' => null,
-            'new_value' => 'Se ajusta cantidad por nueva necesidad.',
+            'new_value' => 'SE AJUSTA CANTIDAD POR NUEVA NECESIDAD.',
             'changed_by' => $manager->id,
         ]);
         $this->assertDatabaseCount('personal_requisition_status_logs', 0);
@@ -2071,9 +2072,10 @@ class RequisitionModuleTest extends TestCase
         $this->actingAs($manager)
             ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
             ->assertOk()
-            ->assertSee('Imprimir Rq', false)
+            ->assertSee('Imprimir RQ', false)
             ->assertSee($printUrl, false)
-            ->assertSee('target="_blank"', false);
+            ->assertSee('target="_blank"', false)
+            ->assertSee('name="hired_birth_date"', false);
     }
 
     public function test_update_requires_hired_document_and_name_when_status_contratado(): void
@@ -2081,11 +2083,49 @@ class RequisitionModuleTest extends TestCase
         [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-0001');
 
         $payload = $this->hiredPayload();
-        unset($payload['hired_document'], $payload['hired_first_surname'], $payload['hired_first_name'], $payload['hired_full_name']);
+        unset(
+            $payload['hired_document'],
+            $payload['hired_birth_date'],
+            $payload['hired_first_surname'],
+            $payload['hired_first_name'],
+            $payload['hired_full_name'],
+        );
 
         $this->actingAs($manager)
             ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $payload)
-            ->assertSessionHasErrors(['hired_document', 'hired_first_surname', 'hired_first_name']);
+            ->assertSessionHasErrors(['hired_document', 'hired_birth_date', 'hired_first_surname', 'hired_first_name']);
+    }
+
+    public function test_update_contratado_persists_hired_birth_date_and_syncs_profile(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-BIRTH');
+
+        $this->actingAs($manager)
+            ->patch(
+                route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+                $this->hiredPayload(['hired_birth_date' => '1988-03-21']),
+            )
+            ->assertRedirect(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]));
+
+        $requisition->refresh();
+        $this->assertSame('1988-03-21', $requisition->hired_birth_date?->format('Y-m-d'));
+
+        $entry = PersonalRequisitionFichaEntry::query()
+            ->where('personal_requisition_id', $requisition->id)
+            ->firstOrFail();
+
+        $this->assertNotNull($entry->profile);
+        $this->assertSame('1988-03-21', $entry->profile->birth_date?->format('Y-m-d'));
+
+        $this->actingAs($manager)
+            ->patch(
+                route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+                $this->hiredPayload(['hired_birth_date' => '1985-11-02']),
+            )
+            ->assertRedirect();
+
+        $this->assertSame('1985-11-02', $entry->fresh()->profile?->birth_date?->format('Y-m-d'));
+        $this->assertSame('1985-11-02', $requisition->fresh()->hired_birth_date?->format('Y-m-d'));
     }
 
     public function test_update_hired_fields_nullable_when_status_not_contratado(): void
@@ -2110,12 +2150,12 @@ class RequisitionModuleTest extends TestCase
         $this->assertDatabaseHas('personal_requisitions', [
             'id' => $requisition->id,
             'hired_document' => '100200300',
-            'hired_full_name' => 'Contratado Prueba',
+            'hired_full_name' => 'CONTRATADO PRUEBA',
         ]);
         $this->assertDatabaseHas('personal_requisition_ficha_entries', [
             'personal_requisition_id' => $requisition->id,
             'hired_document' => '100200300',
-            'hired_full_name' => 'Contratado Prueba',
+            'hired_full_name' => 'CONTRATADO PRUEBA',
             'moved_to_ficha_at' => null,
             'created_by' => $manager->id,
         ]);
@@ -2139,7 +2179,7 @@ class RequisitionModuleTest extends TestCase
         $this->assertDatabaseHas('personal_requisition_ficha_entries', [
             'id' => $entryId,
             'personal_requisition_id' => $requisition->id,
-            'hired_full_name' => 'Actualizado Prueba',
+            'hired_full_name' => 'ACTUALIZADO PRUEBA',
         ]);
     }
 
@@ -2206,7 +2246,7 @@ class RequisitionModuleTest extends TestCase
             'id' => $entry->id,
             'personal_requisition_id' => $requisitionB->id,
             'hired_document' => '999888777',
-            'hired_full_name' => 'Reasignada Persona',
+            'hired_full_name' => 'REASIGNADA PERSONA',
         ]);
     }
 
@@ -2400,6 +2440,7 @@ class RequisitionModuleTest extends TestCase
             'statutory_bonus' => 50000,
             'hiring_date' => now()->toDateString(),
             'hired_document' => '100200300',
+            'hired_birth_date' => '1990-05-15',
             'hired_first_surname' => 'Contratado',
             'hired_first_name' => 'Prueba',
             'hired_full_name' => 'Contratado Prueba',

@@ -659,6 +659,9 @@ class RequisitionController extends Controller
                 'hired_document' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
                     ? $request->input('hired_document')
                     : null,
+                'hired_birth_date' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                    ? $request->input('hired_birth_date')
+                    : null,
                 'hired_first_surname' => $newStatus === PersonalRequisition::STATUS_CONTRATADO
                     ? $request->input('hired_first_surname')
                     : null,

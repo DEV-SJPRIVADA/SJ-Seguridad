@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GestionHumana;
 
+use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Rules\GestionHumana\PayrollCatalogCode;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Support\ColombianCurrencyParser;
@@ -10,6 +11,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class GenerateQuickContratacionLetterRequest extends FormRequest
 {
+    use UppercasesValidatedText;
+
     public function authorize(): bool
     {
         $user = $this->user();

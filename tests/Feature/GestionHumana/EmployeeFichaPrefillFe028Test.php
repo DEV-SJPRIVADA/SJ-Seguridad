@@ -18,10 +18,12 @@ use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\EmployeeFichaMasivosPayload;
 use Tests\TestCase;
 
 class EmployeeFichaPrefillFe028Test extends TestCase
 {
+    use EmployeeFichaMasivosPayload;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -134,26 +136,16 @@ class EmployeeFichaPrefillFe028Test extends TestCase
 
         $entry = $this->createPendingEntry();
 
-        $payload = [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => $entry->hired_document,
-            'hired_full_name' => $entry->hired_full_name,
-            'sex' => 'M',
-            'hire_date' => now()->subMonth()->toDateString(),
-            'position_code' => 'VIG',
-            'salary' => '2500000',
-            'cost_center_code' => 'CC01',
-            'eps_code' => 'EPS01',
-            'afp_code' => 'AFP01',
-            'bank_code' => 'B01',
-            'account_type' => '1',
-            'account_number' => '1234567890',
-            'payment_method_code' => '1',
-            'payroll_extra' => ['ccf_code' => 'CCF01'],
-        ];
-
         $this->actingAs($manager)
-            ->post(route('gestion-humana.ficha-empleados.employees.store'), $payload)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+                $this->masivosCorePayload(),
+                [
+                    'ficha_entry_id' => $entry->id,
+                    'hired_document' => $entry->hired_document,
+                    'hired_full_name' => $entry->hired_full_name,
+                    'archive_box' => 'CAJA-PREFILL-01',
+                ],
+            ))
             ->assertRedirect();
 
         $period = $entry->fresh()->activeEmploymentPeriod;
@@ -180,27 +172,17 @@ class EmployeeFichaPrefillFe028Test extends TestCase
 
         $entry = $this->createPendingEntry(['city_id' => $city->id]);
 
-        $payload = [
-            'ficha_entry_id' => $entry->id,
-            'hired_document' => $entry->hired_document,
-            'hired_full_name' => $entry->hired_full_name,
-            'sex' => 'M',
-            'hire_date' => now()->subMonth()->toDateString(),
-            'position_code' => 'VIG',
-            'salary' => '2500000',
-            'cost_center_code' => 'CC01',
-            'eps_code' => 'EPS01',
-            'afp_code' => 'AFP01',
-            'bank_code' => 'B01',
-            'account_type' => '1',
-            'account_number' => '1234567890',
-            'payment_method_code' => '1',
-            'payroll_extra' => ['ccf_code' => 'CCF01'],
-            // work_city_code intentionally omitted — must come from requisition.city_id
-        ];
-
+        // work_city_code intentionally omitted — must come from requisition.city_id
         $this->actingAs($manager)
-            ->post(route('gestion-humana.ficha-empleados.employees.store'), $payload)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), array_merge(
+                $this->masivosCorePayload(),
+                [
+                    'ficha_entry_id' => $entry->id,
+                    'hired_document' => $entry->hired_document,
+                    'hired_full_name' => $entry->hired_full_name,
+                    'archive_box' => 'CAJA-PREFILL-02',
+                ],
+            ))
             ->assertRedirect();
 
         $profile = $entry->fresh('profile')->profile;

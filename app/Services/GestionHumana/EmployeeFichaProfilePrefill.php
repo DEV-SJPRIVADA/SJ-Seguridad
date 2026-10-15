@@ -33,10 +33,16 @@ class EmployeeFichaProfilePrefill
 
         if ($entry->profile !== null) {
             if ($entry->isRehirePending()) {
-                return $this->mergeRehireProfile($entry->profile, $prefillAttributes);
+                return $this->withMissingBirthDate(
+                    $this->mergeRehireProfile($entry->profile, $prefillAttributes),
+                    $prefillAttributes,
+                );
             }
 
-            return $this->withMissingWorkCity($entry->profile, $prefillAttributes);
+            return $this->withMissingBirthDate(
+                $this->withMissingWorkCity($entry->profile, $prefillAttributes),
+                $prefillAttributes,
+            );
         }
 
         return new EmployeeFichaProfile($prefillAttributes);
@@ -137,6 +143,22 @@ class EmployeeFichaProfilePrefill
     }
 
     /**
+     * Completa fecha de nacimiento desde la RQ cuando el perfil aún no la tiene (carta / Gestionar).
+     *
+     * @param  array<string, mixed>  $prefillAttributes
+     */
+    private function withMissingBirthDate(EmployeeFichaProfile $profile, array $prefillAttributes): EmployeeFichaProfile
+    {
+        if (filled($profile->birth_date) || ! filled($prefillAttributes['birth_date'] ?? null)) {
+            return $profile;
+        }
+
+        $profile->birth_date = $prefillAttributes['birth_date'];
+
+        return $profile;
+    }
+
+    /**
      * @param  array<string, mixed>  $prefillAttributes
      */
     private function mergeRehireProfile(EmployeeFichaProfile $existing, array $prefillAttributes): EmployeeFichaProfile
@@ -207,6 +229,7 @@ class EmployeeFichaProfilePrefill
             'second_name' => $secondName,
             'document_type' => 'C',
             'sex' => $this->mapSex($requisition?->sex),
+            'birth_date' => $requisition?->hired_birth_date,
             'salary' => $requisition?->base_salary,
             'hire_date' => $requisition?->hiring_date ?? $requisition?->request_date,
             'contract_end_date' => null,
