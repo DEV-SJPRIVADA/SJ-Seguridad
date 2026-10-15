@@ -86,17 +86,19 @@ class EmployeeCursoImportService
                     throw new \InvalidArgumentException('El numero de curso es obligatorio.');
                 }
 
+                // Con o sin ficha: si hay perfil se usa su nombre; si no, el del Excel.
                 $profile = EmployeeFichaProfile::query()
                     ->where('document_number', $cedula)
                     ->first(['id', 'full_name']);
 
-                if ($profile === null) {
-                    throw new \InvalidArgumentException('La cedula no existe en Ficha empleados.');
-                }
-
-                $fullName = trim((string) ($profile->full_name ?? ''));
+                $fullName = trim((string) ($profile?->full_name ?? ''));
                 if ($fullName === '') {
-                    throw new \InvalidArgumentException('La ficha de esta cedula no tiene nombre completo.');
+                    $fullName = trim((string) ($data['nombre_completo'] ?? ''));
+                }
+                if ($fullName === '') {
+                    throw new \InvalidArgumentException(
+                        'El nombre completo es obligatorio cuando la cedula no existe en Ficha empleados.',
+                    );
                 }
 
                 $tipoLabel = trim((string) ($data['tipo_curso'] ?? ''));
@@ -132,7 +134,7 @@ class EmployeeCursoImportService
                 $observaciones = $observaciones === '' ? null : $observaciones;
 
                 $numeroAnterior = trim((string) ($data['numero_curso_anterior'] ?? ''));
-                $profileId = (int) $profile->id;
+                $profileId = $profile !== null ? (int) $profile->id : null;
 
                 $estadoProbe = new EmployeeCurso(['fecha_expedicion' => $fecha]);
                 $estado = $this->estadoSyncService->resolveEstadoFromVigencia($estadoProbe);

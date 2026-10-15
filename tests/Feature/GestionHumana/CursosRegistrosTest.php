@@ -417,7 +417,7 @@ class CursosRegistrosTest extends TestCase
         $this->assertStringNotContainsString('B1', $rowText);
     }
 
-    public function test_datatable_excludes_desvinculados(): void
+    public function test_datatable_includes_sin_perfil_and_filters_en_perfil(): void
     {
         $viewer = $this->viewerUser();
         $tipo = CursoTipo::factory()->create();
@@ -430,20 +430,16 @@ class CursosRegistrosTest extends TestCase
             'numero_curso' => 'ACT-NC',
         ]);
 
-        $desvinculado = EmployeeCurso::factory()->create([
+        EmployeeCurso::factory()->create([
             'curso_tipo_id' => $tipo->id,
-            'document_number' => 'DES-1',
-            'full_name' => 'Desvinculado Listado',
+            'document_number' => 'SIN-1',
+            'full_name' => 'Sin Perfil Listado',
             'fecha_expedicion' => '2026-01-01',
-            'numero_curso' => 'DES-NC',
-        ]);
-        EmployeeFichaProfile::query()->create([
-            'document_number' => $desvinculado->document_number,
-            'full_name' => $desvinculado->full_name,
-            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'numero_curso' => 'SIN-NC',
+            'employee_ficha_profile_id' => null,
         ]);
 
-        $response = $this->actingAs($viewer)
+        $all = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.cursos.registros.datatable', [
                 'draw' => 1,
                 'start' => 0,
@@ -451,12 +447,37 @@ class CursosRegistrosTest extends TestCase
             ]))
             ->assertOk();
 
-        $this->assertSame(1, $response->json('recordsFiltered'));
-        $rowText = collect($response->json('data'))
+        $this->assertSame(2, $all->json('recordsFiltered'));
+        $allText = collect($all->json('data'))
             ->map(fn (array $row): string => implode(' ', $row))
             ->implode(' ');
-        $this->assertStringContainsString('Activo Listado', $rowText);
-        $this->assertStringNotContainsString('Desvinculado Listado', $rowText);
+        $this->assertStringContainsString('Activo Listado', $allText);
+        $this->assertStringContainsString('Sin Perfil Listado', $allText);
+
+        $sinPerfil = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'en_perfil' => '0',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $sinPerfil->json('recordsFiltered'));
+        $sinText = collect($sinPerfil->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+        $this->assertStringContainsString('Sin Perfil Listado', $sinText);
+        $this->assertStringContainsString('No', $sinText);
+        $this->assertStringNotContainsString('Activo Listado', $sinText);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.cursos.registros'))
+            ->assertOk()
+            ->assertSee('En perfil', false)
+            ->assertSee('Sin perfil', false)
+            ->assertSee('Solo ACTUALIZAR', false)
+            ->assertSee('EN PERFIL', false);
     }
 
     public function test_datatable_requires_view_permission(): void

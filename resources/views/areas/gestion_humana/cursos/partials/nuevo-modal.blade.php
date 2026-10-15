@@ -53,8 +53,8 @@
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Nuevo registro</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        La cédula y el nombre se toman de Ficha empleados (solo lectura tras la búsqueda).
-                        Si desactiva «Requiere cursos», puede guardar solo esa marca en ficha sin datos del curso.
+                        Si la cédula está en Ficha, el nombre se completa solo. Si no está en perfil, puede digitar cédula y nombre.
+                        Si desactiva «Requiere cursos», necesita ficha y solo actualiza esa marca sin crear curso.
                     </p>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                         class="form-input"
                         maxlength="255"
                         x-bind:required="requiresCourses"
-                        readonly
+                        x-bind:readonly="identityLocked"
                         x-model="fullName"
                         x-ref="createName"
                     >

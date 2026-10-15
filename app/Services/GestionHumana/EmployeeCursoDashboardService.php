@@ -43,6 +43,7 @@ class EmployeeCursoDashboardService
             'estado' => $filters['estado'] ?? 'todos',
             'fecha_desde' => $filters['fecha_desde'] ?? '',
             'fecha_hasta' => $filters['fecha_hasta'] ?? '',
+            'solo_activos_ficha' => true,
         ], ordered: false)
             ->with(['cursoTipo:id,tipo_curso'])
             ->get([

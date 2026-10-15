@@ -11,7 +11,7 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 - **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo. Solo considera personal **activo en Ficha**.
-- **Cursos** — listado paginado (carga por paginas), filtros (incluye **varias cédulas** con icono, exacto, sin historial), alta/edicion/eliminacion, documento, export Excel e import masivo. Solo lista cursos de personal **activo en Ficha**. En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
+- **Cursos** — listado paginado (carga por paginas), filtros (incluye **varias cédulas** con icono, exacto, sin historial), chips **En perfil / Sin perfil** y **Solo ACTUALIZAR**, columna **EN PERFIL**, alta/edicion/eliminacion, documento, export Excel e import masivo. Puede registrar cursos **aunque la cédula no esté en Ficha** (manual o Excel con nombre). En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
 - **Validaciones** — colas de hallazgo en vivo (sin gate de reporte):
   - **Activos sin curso**: personas activas en Ficha con **Requiere cursos** activo y sin ningún registro de curso. Con edición: **Agregar curso**.
   - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Con edición: editar y marcar SOLICITADO.
@@ -57,7 +57,7 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 ### Importar masivos (renovaciones)
 
 1. En **Cursos**, abra el icono de carga / plantilla masivos y descargue la **plantilla vacia**.
-2. Complete datos desde la fila 3. La **cedula debe existir en Ficha**; el nombre del Excel se **ignora** (se toma de Ficha).
+2. Complete datos desde la fila 3. Si la **cédula está en Ficha**, el nombre se toma de ahí; si **no está en perfil**, use la columna **NOMBRE COMPLETO** del Excel (obligatoria en ese caso).
 3. **Alta o correccion del mismo numero:** deje **No.CURSO ANTERIOR** vacio y llene **No.CURSO** (con formato que incluya el codigo de escuela, ej. `ECSP0015-M256412`). El sistema busca la escuela en el catalogo y guarda codigo, NIT y nombre.
 4. **Renovacion** (cambia No.CURSO, fecha y a veces tipo, p. ej. Fundamentacion → Reentrenamiento):
    - En **No.CURSO ANTERIOR** ponga el numero que hoy tiene el registro vencido.
@@ -75,6 +75,7 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.14 | 2026-10-15 | Registros: columna EN PERFIL; chips En perfil/Sin perfil y Solo ACTUALIZAR; alta e import permiten cédulas sin ficha. |
 | 1.13 | 2026-10-02 | Cola Nuevos sin curso: acciones de fila y volver a registros pasan a iconos. |
 | 1.12 | 2026-09-29 | Nueva pestaña Validaciones: activos sin curso + por actualizar/vencidos (una fila por curso); reutiliza cursos.view/edit; coexiste con cola Nuevos sin curso. |
 | 1.11 | 2026-09-29 | Registros: filtro varias cédulas (modal, exacto, max 500, sin historial); el Excel respeta ese filtro. |

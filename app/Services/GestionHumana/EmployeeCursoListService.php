@@ -25,6 +25,8 @@ class EmployeeCursoListService
      *     vigencia?: string|null,
      *     estado?: string|null,
      *     solo_actualizar?: bool|string|null,
+     *     en_perfil?: string|null,
+     *     solo_activos_ficha?: bool|string|null,
      *     fecha_desde?: string|null,
      *     fecha_hasta?: string|null,
      * }  $filters
@@ -33,7 +35,12 @@ class EmployeeCursoListService
     {
         $query = EmployeeCurso::query()->with(['cursoTipo', 'cursoEscuela']);
 
-        $this->constrainToActiveFicha($query);
+        // Dashboard mantiene solo activos en Ficha; Registros lista todos (con/sin perfil).
+        if (filter_var($filters['solo_activos_ficha'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $this->constrainToActiveFicha($query);
+        }
+
+        $this->applyEnPerfilFilter($query, (string) ($filters['en_perfil'] ?? ''));
 
         if ($ordered) {
             $query->orderByDesc('fecha_expedicion')->orderByDesc('id');
@@ -102,7 +109,7 @@ class EmployeeCursoListService
     }
 
     /**
-     * Dashboard y registros solo operan sobre personal activo en Ficha.
+     * Dashboard: solo personal con ficha activa.
      */
     private function constrainToActiveFicha(Builder $query): void
     {
@@ -115,6 +122,38 @@ class EmployeeCursoListService
                 )
                 ->where('employee_ficha_profiles.employment_status', EmployeeFichaProfile::STATUS_ACTIVO);
         });
+    }
+
+    /**
+     * Filtro chip: `1`/`si` = tiene fila en employee_ficha_profiles; `0`/`no` = sin perfil; vacío = todos.
+     */
+    private function applyEnPerfilFilter(Builder $query, string $raw): void
+    {
+        $normalized = strtolower(trim($raw));
+
+        if (in_array($normalized, ['1', 'si', 'sí', 'true'], true)) {
+            $query->whereExists(function ($sub): void {
+                $sub->selectRaw('1')
+                    ->from('employee_ficha_profiles')
+                    ->whereColumn(
+                        'employee_ficha_profiles.document_number',
+                        'employee_cursos.document_number',
+                    );
+            });
+
+            return;
+        }
+
+        if (in_array($normalized, ['0', 'no', 'false'], true)) {
+            $query->whereNotExists(function ($sub): void {
+                $sub->selectRaw('1')
+                    ->from('employee_ficha_profiles')
+                    ->whereColumn(
+                        'employee_ficha_profiles.document_number',
+                        'employee_cursos.document_number',
+                    );
+            });
+        }
     }
 
     /**

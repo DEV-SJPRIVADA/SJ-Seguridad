@@ -18,9 +18,9 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
   - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (`employee_curso_pending`; solo `cursos.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Agregar curso (`plus`) / Omitir (`ban`); volver a registros con icono `arrow-left`.
   - Ficha: `employee_ficha_profiles.requires_courses` (default true). Modal «Nuevo registro»: con check activo exige datos de curso; desactivado solo actualiza ficha (`requires_courses=false`) y omite pending si existe. Editable en ficha con `ficha_empleados.manage` + `cursos.edit`.
   - Servicios: `EmployeeCursoValidacionesService`, `EmployeeCursoValidacionesDatatableService`.
-- Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton). **Solo personal activo en Ficha** (misma regla que Registros vía `EmployeeCursoListService`).
+- Dashboard: KPIs + graficos ApexCharts; filtros con refresh AJAX (sin boton). **Solo personal activo en Ficha** (`EmployeeCursoListService` con `solo_activos_ficha=true`).
   - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
-- Registros / export / bulk-selectable: solo cursos cuya cédula tiene `employee_ficha_profiles.employment_status = activo`.
+- Registros / export / bulk-selectable: lista **todos** los `employee_cursos` (con o sin ficha). Columna **EN PERFIL** (Sí/No según exista fila en `employee_ficha_profiles`). Chips: Todos / En perfil / Sin perfil + chip **Solo ACTUALIZAR** (reemplaza el checkbox). Alta e import permiten cédulas sin perfil (nombre obligatorio en Excel/manual); si hay ficha se enlaza `employee_ficha_profile_id`.
 - Unicidad de registro: `(document_number, numero_curso)`.
 - Filtro multi-cédula: query `document_numbers` (exacto, max 500, modal compartido `<x-multi-cedula-filter>`; sin historial). Coexiste con `document_number` parcial.
 - Al crear/editar registro: seleccionar **escuela** del catalogo (solo nombre en el selector); se guardan snapshot `escuela_codigo`, `escuela_nit` y `escuela_nombre` (mas FK `curso_escuela_id`).
@@ -77,8 +77,8 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Clave | Obligatorio valor | Notas |
 | --- | --- | --- |
-| `cedula` | Si | Debe existir en `employee_ficha_profiles` |
-| `nombre_completo` | Header si; valor ignorado | Nombre siempre desde Ficha |
+| `cedula` | Si | Puede no existir en Ficha |
+| `nombre_completo` | Si sin ficha; con ficha opcional | Si hay perfil se usa el nombre de Ficha; si no, el del Excel (obligatorio) |
 | `tipo_curso` | Si | Match catalogo case-insensitive |
 | `fecha_expedicion` | Si | Fecha valida |
 | `numero_curso_anterior` | No (opcional) | Clave de renovacion |

@@ -8,7 +8,10 @@
             || ($filters['vigencia'] ?? '') !== ''
             || (($filters['estado'] ?? 'todos') !== '' && ($filters['estado'] ?? 'todos') !== 'todos')
             || (bool) ($filters['solo_actualizar'] ?? false)
+            || (($filters['en_perfil'] ?? '') !== '')
             || (is_array($filters['document_numbers'] ?? null) && ($filters['document_numbers'] ?? []) !== []);
+        $enPerfilFilter = (string) ($filters['en_perfil'] ?? '');
+        $soloActualizarFilter = (bool) ($filters['solo_actualizar'] ?? false);
     @endphp
 
     <x-slot name="header">
@@ -99,19 +102,8 @@
                                         :allow-clear="false"
                                     />
                                 </div>
-                                <div class="form-field cursos-registros-page__solo-actualizar">
-                                    <label class="form-label" for="filter_solo_actualizar">Solo ACTUALIZAR</label>
-                                    <label class="cursos-registros-page__checkbox-label">
-                                        <input
-                                            id="filter_solo_actualizar"
-                                            name="solo_actualizar"
-                                            type="checkbox"
-                                            value="1"
-                                            @checked($filters['solo_actualizar'])
-                                        >
-                                        Filtrar
-                                    </label>
-                                </div>
+                                <input type="hidden" name="en_perfil" id="filter_en_perfil" value="{{ $enPerfilFilter }}">
+                                <input type="hidden" name="solo_actualizar" id="filter_solo_actualizar" value="{{ $soloActualizarFilter ? '1' : '' }}">
                                 <div class="form-field cursos-registros-page__filter-actions">
                                     <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
@@ -141,6 +133,34 @@
                                     >
                                         <x-lucide-upload width="18" height="18" aria-hidden="true" />
                                     </button>
+                                </div>
+                            </div>
+
+                            {{-- Chips: En perfil + Solo ACTUALIZAR (mismo estilo module-tab) --}}
+                            <div class="cursos-registros-page__chip-filters">
+                                <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro en perfil">
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $enPerfilFilter === '' ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('en_perfil', '')"
+                                    >Todos</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ in_array($enPerfilFilter, ['1', 'si', 'sí'], true) ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('en_perfil', '1')"
+                                    >En perfil</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ in_array($enPerfilFilter, ['0', 'no'], true) ? 'module-tab--active' : '' }}"
+                                        x-on:click="setChipFilter('en_perfil', '0')"
+                                    >Sin perfil</button>
+                                </div>
+                                <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro vigencia ACTUALIZAR">
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $soloActualizarFilter ? 'module-tab--active' : '' }}"
+                                        x-on:click="toggleSoloActualizarChip()"
+                                    >Solo ACTUALIZAR</button>
                                 </div>
                             </div>
                         </form>
@@ -250,6 +270,7 @@
                                     <th>VIGENCIA</th>
                                     <th>ESTADO</th>
                                     <th>OBSERVACIONES</th>
+                                    <th>EN PERFIL</th>
                                     <th>DOCUMENTO</th>
                                     @if ($canEdit)
                                         <th>Acciones</th>
@@ -481,6 +502,27 @@
                     init() {
                         if (this.canEdit && this.bulkSelectableUrl && ! this.colaMode) {
                             this.loadBulkSelectable();
+                        }
+                    },
+                    setChipFilter(name, value) {
+                        const input = document.getElementById(name === 'en_perfil' ? 'filter_en_perfil' : 'filter_solo_actualizar');
+                        if (input) {
+                            input.value = value == null ? '' : String(value);
+                        }
+                        const form = document.querySelector('.cursos-registros-page form.req-manage-filters');
+                        if (form) {
+                            form.requestSubmit();
+                        }
+                    },
+                    toggleSoloActualizarChip() {
+                        const input = document.getElementById('filter_solo_actualizar');
+                        if (! input) {
+                            return;
+                        }
+                        input.value = input.value === '1' ? '' : '1';
+                        const form = document.querySelector('.cursos-registros-page form.req-manage-filters');
+                        if (form) {
+                            form.requestSubmit();
                         }
                     },
                     async loadBulkSelectable() {
@@ -761,9 +803,10 @@
                 $table.closest('.req-manage-shell__table, .data-table-wrap').addClass('data-table-wrap--dt-compact');
 
                 const canEdit = $table.data('dt-can-edit') === 1 || $table.data('dt-can-edit') === '1';
+                // Columnas: [select?] cédula, nombre, tipo, escuela, código, nit, fecha, no.curso, vigencia, estado, obs, en perfil, doc, [acciones?]
                 const columnDefs = [
-                    { targets: canEdit ? [0, 12, 13] : [11], orderable: false, searchable: false },
-                    { targets: canEdit ? [9] : [8], orderable: false },
+                    { targets: canEdit ? [0, 13, 14] : [12], orderable: false, searchable: false },
+                    { targets: canEdit ? [9, 12] : [8, 11], orderable: false },
                 ];
 
                 const api = $table.DataTable({

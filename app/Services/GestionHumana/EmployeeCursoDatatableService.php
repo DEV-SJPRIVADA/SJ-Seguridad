@@ -4,6 +4,7 @@ namespace App\Services\GestionHumana;
 
 use App\Models\CursoEscuela;
 use App\Models\EmployeeCurso;
+use App\Models\EmployeeFichaProfile;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ final class EmployeeCursoDatatableService
      *     vigencia?: string|null,
      *     estado?: string|null,
      *     solo_actualizar?: bool|string|null,
+     *     en_perfil?: string|null,
      *     fecha_desde?: string|null,
      *     fecha_hasta?: string|null,
      * }  $filters
@@ -59,8 +61,14 @@ final class EmployeeCursoDatatableService
 
         $this->escuelaCodigoIndex = null;
 
+        $inProfileDocs = $this->documentNumbersInProfile($cursos);
+
         $rows = $cursos
-            ->map(fn (EmployeeCurso $curso): array => $this->formatRow($curso, $canEdit))
+            ->map(fn (EmployeeCurso $curso): array => $this->formatRow(
+                $curso,
+                $canEdit,
+                $inProfileDocs->has((string) $curso->document_number),
+            ))
             ->values()
             ->all();
 
@@ -72,6 +80,28 @@ final class EmployeeCursoDatatableService
             'recordsFiltered' => $recordsFiltered,
             'data' => $rows,
         ]);
+    }
+
+    /**
+     * @param  Collection<int, EmployeeCurso>  $cursos
+     * @return Collection<string, true>
+     */
+    private function documentNumbersInProfile(Collection $cursos): Collection
+    {
+        $docs = $cursos->pluck('document_number')
+            ->filter(fn ($doc): bool => filled($doc))
+            ->map(fn ($doc): string => (string) $doc)
+            ->unique()
+            ->values();
+
+        if ($docs->isEmpty()) {
+            return collect();
+        }
+
+        return EmployeeFichaProfile::query()
+            ->whereIn('document_number', $docs->all())
+            ->pluck('document_number')
+            ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
     }
 
     /**
@@ -175,7 +205,7 @@ final class EmployeeCursoDatatableService
     /**
      * @return list<string>
      */
-    private function formatRow(EmployeeCurso $curso, bool $canEdit): array
+    private function formatRow(EmployeeCurso $curso, bool $canEdit, bool $inProfile): array
     {
         $vigencia = $curso->computeVigencia();
         $vigenciaClass = match ($vigencia) {
@@ -183,6 +213,11 @@ final class EmployeeCursoDatatableService
             EmployeeCurso::VIGENCIA_ACTUALIZAR => 'status-pill status-pill--warning',
             default => 'status-pill status-pill--danger',
         };
+
+        $enPerfilLabel = $inProfile ? 'Sí' : 'No';
+        $enPerfilClass = $inProfile
+            ? 'status-pill status-pill--success'
+            : 'status-pill status-pill--muted';
 
         $escuelaDisplay = $this->resolveEscuelaDisplay($curso);
 
@@ -204,6 +239,7 @@ final class EmployeeCursoDatatableService
             sprintf('<span class="%s">%s</span>', e($vigenciaClass), e($vigencia)),
             e((string) ($curso->estado ?: '—')),
             e(Str::limit((string) $curso->observaciones, 60) ?: '—'),
+            sprintf('<span class="%s">%s</span>', e($enPerfilClass), e($enPerfilLabel)),
             $this->formatDocumentCell($curso, $canEdit),
         ]);
 

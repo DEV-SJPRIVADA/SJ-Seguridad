@@ -699,6 +699,14 @@ class CursosController extends Controller
         $filters = $this->filtersFromRequest($request);
         $rows = $this->listService->all($filters);
 
+        $exportDocs = $rows->pluck('document_number')->unique()->filter()->values()->all();
+        $inProfileDocs = $exportDocs === []
+            ? collect()
+            : EmployeeFichaProfile::query()
+                ->whereIn('document_number', $exportDocs)
+                ->pluck('document_number')
+                ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
+
         $columns = [
             ['key' => 'document_number', 'label' => 'CEDULA'],
             ['key' => 'full_name', 'label' => 'NOMBRE COMPLETO'],
@@ -711,6 +719,7 @@ class CursosController extends Controller
             ['key' => 'vigencia', 'label' => 'VIGENCIA'],
             ['key' => 'estado', 'label' => 'ESTADO'],
             ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
+            ['key' => 'en_perfil', 'label' => 'EN PERFIL'],
             ['key' => 'documento', 'label' => 'DOCUMENTO'],
         ];
 
@@ -726,6 +735,7 @@ class CursosController extends Controller
             'vigencia' => $curso->computeVigencia(),
             'estado' => $curso->estado,
             'observaciones' => $curso->observaciones,
+            'en_perfil' => $inProfileDocs->has((string) $curso->document_number) ? 'Si' : 'No',
             'documento' => $curso->hasDocument() ? ($curso->document_original_name ?: 'Si') : '',
         ]);
 
@@ -908,6 +918,11 @@ class CursosController extends Controller
      */
     private function filtersFromRequest(Request $request): array
     {
+        $enPerfil = strtolower(trim((string) $request->input('en_perfil', '')));
+        if (! in_array($enPerfil, ['', '1', '0', 'si', 'sí', 'no'], true)) {
+            $enPerfil = '';
+        }
+
         return [
             'document_number' => trim((string) $request->input('document_number', '')),
             'document_numbers' => app(DocumentNumberListParser::class)->fromInput(
@@ -918,6 +933,7 @@ class CursosController extends Controller
             'vigencia' => strtoupper(trim((string) $request->input('vigencia', ''))),
             'estado' => (string) $request->input('estado', 'todos'),
             'solo_actualizar' => $request->boolean('solo_actualizar'),
+            'en_perfil' => $enPerfil,
         ];
     }
 
@@ -986,6 +1002,10 @@ class CursosController extends Controller
 
         if ($filters['solo_actualizar']) {
             $query['solo_actualizar'] = 1;
+        }
+
+        if (($filters['en_perfil'] ?? '') !== '') {
+            $query['en_perfil'] = $filters['en_perfil'];
         }
 
         return $query;

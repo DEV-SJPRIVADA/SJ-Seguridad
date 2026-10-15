@@ -183,13 +183,37 @@ class CursosImportTest extends TestCase
         );
     }
 
-    public function test_import_rejects_cedula_not_in_ficha(): void
+    public function test_import_allows_cedula_without_ficha_using_excel_name(): void
     {
         $editor = $this->editorUser();
         CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
 
         $path = $this->makeImportFile([
-            ['999', 'Persona Libre', 'ALTURAS', '2026-03-01', '', 'NC-9', ''],
+            ['999', 'Persona Libre', 'ALTURAS', '2026-03-01', '', 'ECSP0015-NC9', ''],
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.cursos.registros.import'), [
+                'import_file' => new UploadedFile($path, 'cursos.xlsx', null, null, true),
+            ])
+            ->assertRedirect(route('gestion-humana.cursos.registros'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('employee_cursos', [
+            'document_number' => '999',
+            'numero_curso' => 'ECSP0015-NC9',
+            'full_name' => 'Persona Libre',
+            'employee_ficha_profile_id' => null,
+        ]);
+    }
+
+    public function test_import_rejects_cedula_without_ficha_and_without_name(): void
+    {
+        $editor = $this->editorUser();
+        CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
+
+        $path = $this->makeImportFile([
+            ['998', '', 'ALTURAS', '2026-03-01', '', 'ECSP0015-NC8', ''],
         ]);
 
         $this->actingAs($editor)
@@ -200,16 +224,15 @@ class CursosImportTest extends TestCase
             ->assertSessionHas('import_failures');
 
         $this->assertDatabaseMissing('employee_cursos', [
-            'document_number' => '999',
-            'numero_curso' => 'NC-9',
+            'document_number' => '998',
         ]);
 
         $failures = session('import_failures');
         $this->assertIsArray($failures);
         $this->assertNotEmpty($failures);
         $this->assertStringContainsString(
-            'La cedula no existe en Ficha empleados.',
-            (string) ($failures[0]['reason'] ?? ''),
+            'nombre completo es obligatorio',
+            mb_strtolower((string) ($failures[0]['reason'] ?? '')),
         );
     }
 
