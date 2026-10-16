@@ -21,6 +21,7 @@ final class UppercaseFormText
         '_method',
         'status',
         'sex',
+        'hired_sex',
         'operating_area_key',
         'requesting_area_key',
         'document_type',

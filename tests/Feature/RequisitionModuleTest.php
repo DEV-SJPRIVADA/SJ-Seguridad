@@ -2086,6 +2086,7 @@ class RequisitionModuleTest extends TestCase
         unset(
             $payload['hired_document'],
             $payload['hired_birth_date'],
+            $payload['hired_sex'],
             $payload['hired_first_surname'],
             $payload['hired_first_name'],
             $payload['hired_full_name'],
@@ -2093,7 +2094,41 @@ class RequisitionModuleTest extends TestCase
 
         $this->actingAs($manager)
             ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $payload)
-            ->assertSessionHasErrors(['hired_document', 'hired_birth_date', 'hired_first_surname', 'hired_first_name']);
+            ->assertSessionHasErrors(['hired_document', 'hired_birth_date', 'hired_sex', 'hired_first_surname', 'hired_first_name']);
+    }
+
+    public function test_update_contratado_persists_hired_sex_to_sex_and_profile(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-SEX');
+
+        $this->actingAs($manager)
+            ->patch(
+                route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+                $this->hiredPayload([
+                    'sex' => 'indiferente',
+                    'hired_sex' => 'femenino',
+                ]),
+            )
+            ->assertRedirect();
+
+        $requisition->refresh();
+        $this->assertSame('femenino', $requisition->sex);
+
+        $entry = PersonalRequisitionFichaEntry::query()
+            ->where('personal_requisition_id', $requisition->id)
+            ->firstOrFail();
+
+        $this->assertSame('F', $entry->profile?->sex);
+
+        $this->actingAs($manager)
+            ->patch(
+                route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]),
+                $this->hiredPayload(['hired_sex' => 'masculino']),
+            )
+            ->assertRedirect();
+
+        $this->assertSame('masculino', $requisition->fresh()->sex);
+        $this->assertSame('M', $entry->fresh()->profile?->sex);
     }
 
     public function test_update_contratado_persists_hired_birth_date_and_syncs_profile(): void
@@ -2441,6 +2476,7 @@ class RequisitionModuleTest extends TestCase
             'hiring_date' => now()->toDateString(),
             'hired_document' => '100200300',
             'hired_birth_date' => '1990-05-15',
+            'hired_sex' => 'femenino',
             'hired_first_surname' => 'Contratado',
             'hired_first_name' => 'Prueba',
             'hired_full_name' => 'Contratado Prueba',

@@ -561,6 +561,7 @@ class RequisitionController extends Controller
                 'changeLogs.author',
             ]),
             'sexOptions' => $this->sexOptions(),
+            'hiredSexOptions' => $this->hiredSexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'seguimiento'),
             'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
@@ -610,6 +611,7 @@ class RequisitionController extends Controller
             'moduleLabel' => config("access.areas.{$module}"),
             'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'statusLogs.author', 'changeLogs.author']),
             'sexOptions' => $this->sexOptions(),
+            'hiredSexOptions' => $this->hiredSexOptions(),
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
             'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
@@ -626,10 +628,15 @@ class RequisitionController extends Controller
         $newStatus = $request->string('status')->toString();
 
         DB::transaction(function () use ($request, $requisition, $oldStatus, $newStatus): void {
+            // Contratado: el género de la persona contratada (hired_sex) es el que queda en sex → perfil/APO.
+            $persistedSex = $newStatus === PersonalRequisition::STATUS_CONTRATADO
+                ? (string) $request->input('hired_sex')
+                : $request->string('sex')->toString();
+
             $updateData = [
                 'managed_by' => $request->user()->id,
                 'position_id' => $request->integer('position_id'),
-                'sex' => $request->string('sex')->toString(),
+                'sex' => $persistedSex,
                 'quantity' => $request->integer('quantity'),
                 'replacement_document' => $request->input('replacement_document'),
                 'replacement_name' => $request->input('replacement_name'),
@@ -983,6 +990,19 @@ class RequisitionController extends Controller
             'masculino' => 'Masculino',
             'femenino' => 'Femenino',
             'indiferente' => 'Indiferente',
+        ];
+    }
+
+    /**
+     * Género de la persona contratada (sin Indiferente; alineado a ficha / Export Apo).
+     *
+     * @return array<string, string>
+     */
+    private function hiredSexOptions(): array
+    {
+        return [
+            'masculino' => 'Masculino',
+            'femenino' => 'Femenino',
         ];
     }
 

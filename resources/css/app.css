@@ -5477,6 +5477,10 @@ a {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.form-grid--four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .form-layout {
     display: grid;
     gap: 1.5rem;
@@ -9954,6 +9958,7 @@ a.req-dashboard-kpi:focus-visible {
     .detail-grid,
     .form-grid--two,
     .form-grid--three,
+    .form-grid--four,
     .req-form__meta,
     .req-form__meta--edit,
     .req-form__replacement,

@@ -404,8 +404,14 @@
                 </div>
             </header>
 
-            {{-- Ingreso, cédula y nacimiento en una fila (form-grid--three; en móvil apilan a 1 col). --}}
-            <div class="form-grid form-grid--three">
+            @php
+                // Género de la persona contratada (solo M/F); se persiste en sex al guardar Contratado.
+                $hiredSexDefault = in_array($requisition?->sex, ['masculino', 'femenino'], true)
+                    ? $requisition->sex
+                    : '';
+            @endphp
+            {{-- Ingreso, cédula, nacimiento y género en una fila (form-grid--four; en móvil apilan). --}}
+            <div class="form-grid form-grid--four">
                 <div class="form-field">
                     <x-input-label for="hiring_date" value="Fecha de ingreso *" />
                     <input id="hiring_date" name="hiring_date" type="date" class="form-input" value="{{ old('hiring_date', $requisition?->hiring_date?->format('Y-m-d')) }}">
@@ -422,6 +428,20 @@
                     <x-input-label for="hired_birth_date" value="Fecha de nacimiento *" />
                     <input id="hired_birth_date" name="hired_birth_date" type="date" class="form-input" value="{{ old('hired_birth_date', $requisition?->hired_birth_date?->format('Y-m-d')) }}">
                     <x-input-error :messages="$errors->get('hired_birth_date')" />
+                </div>
+
+                <div class="form-field">
+                    <x-input-label for="hired_sex" value="Género *" />
+                    <x-searchable-select
+                        id="hired_sex"
+                        name="hired_sex"
+                        :options="$hiredSexOptions ?? ['masculino' => 'Masculino', 'femenino' => 'Femenino']"
+                        :value="old('hired_sex', $hiredSexDefault)"
+                        placeholder="Selecciona una opción"
+                        searchPlaceholder="Buscar género…"
+                        :allowClear="false"
+                    />
+                    <x-input-error :messages="$errors->get('hired_sex')" />
                 </div>
             </div>
 

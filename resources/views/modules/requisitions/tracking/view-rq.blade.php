@@ -21,6 +21,7 @@
                                 'areaOptions' => $areaOptions,
                                 'catalogs' => $catalogs,
                                 'sexOptions' => $sexOptions,
+                                'hiredSexOptions' => $hiredSexOptions ?? [],
                                 'statusLabels' => $statusLabels,
                                 'clientSearchUrl' => $clientSearchUrl,
                                 'selectedCommercialClient' => $selectedCommercialClient,

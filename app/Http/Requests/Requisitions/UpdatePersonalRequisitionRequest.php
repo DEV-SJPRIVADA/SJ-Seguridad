@@ -105,6 +105,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
             ],
             // Obligatorio al guardar Contratado; legado puede quedar null hasta el próximo cambio.
             'hired_birth_date' => [$isHired ? 'required' : 'nullable', 'date', 'before:today'],
+            // Género de la persona contratada (solo M/F); se escribe en sex al persistir Contratado.
+            'hired_sex' => [$isHired ? 'required' : 'nullable', 'string', Rule::in(['masculino', 'femenino'])],
             'hired_first_surname' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
             'hired_second_surname' => ['nullable', 'string', 'max:100'],
             'hired_first_name' => [$isHired ? 'required' : 'nullable', 'string', 'max:100'],
@@ -124,6 +126,7 @@ class UpdatePersonalRequisitionRequest extends FormRequest
         return [
             'hired_document' => 'cédula persona contratada',
             'hired_birth_date' => 'fecha de nacimiento persona contratada',
+            'hired_sex' => 'género persona contratada',
             'hired_first_surname' => 'primer apellido persona contratada',
             'hired_second_surname' => 'segundo apellido persona contratada',
             'hired_first_name' => 'primer nombre persona contratada',

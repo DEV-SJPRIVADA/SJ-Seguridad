@@ -106,13 +106,17 @@ class EmployeeFichaOnHiredBootstrap
             'second_name' => $entry->second_name ?: ($attributes['second_name'] ?? $profile->second_name),
         ]);
 
-        // Fecha de nacimiento: la RQ es fuente de verdad cuando viene informada.
+        // Fecha de nacimiento / género contratado: la RQ es fuente de verdad cuando vienen informados.
         if (filled($attributes['birth_date'] ?? null)) {
             $profile->birth_date = $attributes['birth_date'];
         }
 
+        if (filled($attributes['sex'] ?? null)) {
+            $profile->sex = $attributes['sex'];
+        }
+
         // Solo completar gaps de prefill RQ (no pisar nómina ya guardada).
-        foreach (['sex', 'salary', 'hire_date', 'position_code', 'position_name', 'work_city_code', 'work_city_name', 'document_type'] as $field) {
+        foreach (['salary', 'hire_date', 'position_code', 'position_name', 'work_city_code', 'work_city_name', 'document_type'] as $field) {
             if (! filled($profile->{$field}) && array_key_exists($field, $attributes) && filled($attributes[$field] ?? null)) {
                 $profile->{$field} = $attributes[$field];
             }

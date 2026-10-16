@@ -152,8 +152,8 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 - Estados operativos: `pendiente_autorizacion_gerencia`, `solicitada`, `en_gestion`, `contratado`, `cancelada` (legacy `aprobada` posible en import).
 - Motivo **Cargo nuevo**: estado inicial pendiente gerencia; GH no edita hasta `solicitada`.
 - Aprobar gerencia → `solicitada`; rechazar → `cancelada` + correo al solicitante.
-- Cierre `contratado`: obligatorios `hiring_date`, compensacion requerida por validacion, `hired_document`, `hired_birth_date` (fecha de nacimiento) y `hired_full_name` (una persona por fila). Independientes de `replacement_*`. Registros legado pueden tener `hired_birth_date` null hasta el próximo guardado en Contratado.
-- Al guardar `contratado`, `hired_birth_date` se sincroniza a `employee_ficha_profiles.birth_date` (bootstrap/prefill) y se usa en carta rápida / Gestionar empleado cuando el perfil aún no la tiene.
+- Cierre `contratado`: obligatorios `hiring_date`, compensacion requerida por validacion, `hired_document`, `hired_birth_date`, `hired_sex` (género Masculino/Femenino de la persona contratada) y `hired_full_name` (una persona por fila). Independientes de `replacement_*`. Registros legado pueden tener nacimiento/género contratado vacíos hasta el próximo guardado en Contratado.
+- Al guardar `contratado`, el formulario `hired_sex` se persiste en la columna existente `sex` (sin columna nueva) y sincroniza `employee_ficha_profiles.sex` (M/F); `hired_birth_date` → `birth_date`. Así Export Apo / nómina siguen el mismo mapeo que hoy.
 - Guardar `contratado` upsert 1:1 en `personal_requisition_ficha_entries`; `hired_document` solo dígitos (5–20). Cédula ya usada en otra RQ **o** en Ficha sin RQ (p. ej. import masivo, `personal_requisition_id` null) pide confirmación (SweetAlert2) y vincula la entry existente (no crea perfil duplicado / no 500 por unique).
 - Tras crear, el solicitante no edita; solo GH (salvo bloqueo por pendiente gerencia).
 
@@ -256,6 +256,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 | --- | --- |
 | 2026-09-29 | Impresión FO-GH-22: fila TIPO DE PROGRAMACION + CCOS CR (`cost_center`) en la misma línea |
 | 2026-09-24 | Impresión FO-GH-22: recepción GH = `created_at` del primer status log `solicitada` (`humanResourcesReceivedAt`) |
+| 2026-10-16 | Gestion editar (Contratado): campo UI `hired_sex` (M/F) en fila contratado; se guarda en `sex` y sincroniza perfil (pisa género de solicitud) |
 | 2026-10-15 | Gestion editar (Contratado): `hired_birth_date` obligatorio (legado null hasta próximo cambio); sync a perfil ficha + prefill carta/Gestionar |
 | 2026-10-15 | Solicitar/Gestion editar: textos del form se persisten en mayúsculas (UTF-8; excluye email/status/sex/códigos) |
 | 2026-10-15 | Dashboard: dataLabels Apex como GH (números en series/donut) + títulos de gráficos centrados |
