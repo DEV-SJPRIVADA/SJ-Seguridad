@@ -417,6 +417,70 @@ class CursosRegistrosTest extends TestCase
         $this->assertStringNotContainsString('B1', $rowText);
     }
 
+    public function test_filter_sin_documento_and_solo_activos_ficha(): void
+    {
+        $viewer = $this->viewerUser();
+        $tipo = CursoTipo::factory()->create();
+
+        $this->createCursoWithActiveFicha([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'DOC-OK',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'DOC-OK-1',
+            'document_path' => 'employee-cursos/ok.pdf',
+            'document_original_name' => 'ok.pdf',
+        ]);
+        $this->createCursoWithActiveFicha([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'DOC-NO',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'DOC-NO-1',
+            'document_path' => null,
+        ]);
+
+        $desvinculado = EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'DOC-DES',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'DOC-DES-1',
+            'document_path' => null,
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => $desvinculado->document_number,
+            'full_name' => $desvinculado->full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ]);
+
+        $sinDoc = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'sin_documento' => 1,
+                'solo_activos_ficha' => 1,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $sinDoc->json('recordsFiltered'));
+        $rowText = collect($sinDoc->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+        $this->assertStringContainsString('DOC-NO', $rowText);
+        $this->assertStringNotContainsString('DOC-OK', $rowText);
+        $this->assertStringNotContainsString('DOC-DES', $rowText);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.cursos.registros', [
+                'sin_documento' => 1,
+                'solo_activos_ficha' => 1,
+                'vigencia' => 'VIGENTE',
+            ]))
+            ->assertOk()
+            ->assertSee('Sin documento', false)
+            ->assertSee('Solo activos Ficha', false)
+            ->assertSee('sin_documento=1', false);
+    }
+
     public function test_datatable_includes_sin_perfil_and_filters_en_perfil(): void
     {
         $viewer = $this->viewerUser();
@@ -439,8 +503,26 @@ class CursosRegistrosTest extends TestCase
             'employee_ficha_profile_id' => null,
         ]);
 
+        // Por defecto: solo activos en Ficha (excluye sin perfil).
+        $defaultActivos = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk();
+
+        $this->assertSame(1, $defaultActivos->json('recordsFiltered'));
+        $defaultText = collect($defaultActivos->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+        $this->assertStringContainsString('Activo Listado', $defaultText);
+        $this->assertStringNotContainsString('Sin Perfil Listado', $defaultText);
+
+        // Opt-out explícito: ver todos (incl. sin perfil).
         $all = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'solo_activos_ficha' => 0,
                 'draw' => 1,
                 'start' => 0,
                 'length' => 25,
@@ -456,6 +538,7 @@ class CursosRegistrosTest extends TestCase
 
         $sinPerfil = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'solo_activos_ficha' => 0,
                 'en_perfil' => '0',
                 'draw' => 1,
                 'start' => 0,
@@ -477,6 +560,9 @@ class CursosRegistrosTest extends TestCase
             ->assertSee('En perfil', false)
             ->assertSee('Sin perfil', false)
             ->assertSee('Solo ACTUALIZAR', false)
+            ->assertSee('Solo activos Ficha', false)
+            ->assertSee('name="solo_activos_ficha"', false)
+            ->assertSee('value="1"', false)
             ->assertSee('EN PERFIL', false);
     }
 

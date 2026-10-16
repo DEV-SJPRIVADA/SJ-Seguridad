@@ -12902,6 +12902,32 @@ a.req-dashboard-kpi:focus-visible {
     height: 320px;
 }
 
+.cursos-dashboard-page__charts .panel__header {
+    justify-content: center;
+    text-align: center;
+}
+
+.cursos-dashboard-page__charts .panel-title {
+    margin: 0;
+    text-align: center;
+    width: 100%;
+}
+
+/* Etiquetas Apex: sin caja; halo blanco para leer sobre barras/donut. */
+.cursos-dashboard-page .apexcharts-datalabels rect {
+    fill: transparent !important;
+    fill-opacity: 0 !important;
+    stroke: none !important;
+}
+
+.cursos-dashboard-page .apexcharts-datalabels text {
+    fill: #0f172a !important;
+    paint-order: stroke fill;
+    stroke: #ffffff;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
 /* Formación dashboard */
 .formacion-dashboard-page__filter-actions,
 .cursos-dashboard-page__filter-actions {

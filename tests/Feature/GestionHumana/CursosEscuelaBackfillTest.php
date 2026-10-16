@@ -78,7 +78,7 @@ class CursosEscuelaBackfillTest extends TestCase
         ]);
         $tipo = CursoTipo::factory()->create(['tipo_curso' => 'ALTURAS']);
 
-        EmployeeCurso::factory()->create([
+        $curso = EmployeeCurso::factory()->create([
             'document_number' => '777',
             'full_name' => 'Sin Snapshot',
             'curso_tipo_id' => $tipo->id,
@@ -87,6 +87,11 @@ class CursosEscuelaBackfillTest extends TestCase
             'escuela_codigo' => null,
             'escuela_nit' => null,
             'escuela_nombre' => null,
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => $curso->document_number,
+            'full_name' => $curso->full_name,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
         ]);
 
         $json = $this->actingAs($editor)

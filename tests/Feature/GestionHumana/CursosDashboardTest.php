@@ -78,7 +78,9 @@ class CursosDashboardTest extends TestCase
             ->assertSee('Dashboard', false)
             ->assertSee('cursos-dashboard-page', false)
             ->assertSee('Total cursos', false)
-            ->assertSee('Por actualizar / vencidos sin solicitar', false);
+            ->assertSee('Por actualizar / vencidos sin solicitar', false)
+            ->assertSee('goToRegistros', false)
+            ->assertSee('gestion-humana/cursos/registros', false);
 
         $all = $this->actingAs($viewer)
             ->getJson(route('gestion-humana.cursos.dashboard.metrics'))

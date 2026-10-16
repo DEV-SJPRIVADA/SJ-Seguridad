@@ -25,6 +25,7 @@ class EmployeeCursoListService
      *     vigencia?: string|null,
      *     estado?: string|null,
      *     solo_actualizar?: bool|string|null,
+     *     sin_documento?: bool|string|null,
      *     en_perfil?: string|null,
      *     solo_activos_ficha?: bool|string|null,
      *     fecha_desde?: string|null,
@@ -82,6 +83,13 @@ class EmployeeCursoListService
         $fechaHasta = trim((string) ($filters['fecha_hasta'] ?? ''));
         if ($fechaHasta !== '') {
             $query->whereDate('fecha_expedicion', '<=', $fechaHasta);
+        }
+
+        if (filter_var($filters['sin_documento'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $query->where(function (Builder $inner): void {
+                $inner->whereNull('document_path')
+                    ->orWhere('document_path', '');
+            });
         }
 
         $soloActualizar = filter_var($filters['solo_actualizar'] ?? false, FILTER_VALIDATE_BOOLEAN);

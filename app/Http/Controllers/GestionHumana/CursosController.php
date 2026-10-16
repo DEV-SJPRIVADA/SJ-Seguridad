@@ -83,6 +83,7 @@ class CursosController extends Controller
             'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.cursos.dashboard.metrics'),
+            'registrosUrl' => route('gestion-humana.cursos.registros'),
             'tipoOptions' => $tipoOptions,
             'yearOptions' => $this->dashboardService->yearOptions(),
             'filterVigenciaOptions' => [
@@ -914,6 +915,10 @@ class CursosController extends Controller
      *     vigencia: string,
      *     estado: string,
      *     solo_actualizar: bool,
+     *     sin_documento: bool,
+     *     solo_activos_ficha: bool,
+     *     fecha_desde: string,
+     *     fecha_hasta: string,
      * }
      */
     private function filtersFromRequest(Request $request): array
@@ -933,6 +938,13 @@ class CursosController extends Controller
             'vigencia' => strtoupper(trim((string) $request->input('vigencia', ''))),
             'estado' => (string) $request->input('estado', 'todos'),
             'solo_actualizar' => $request->boolean('solo_actualizar'),
+            'sin_documento' => $request->boolean('sin_documento'),
+            // Por defecto solo personal activo en Ficha (igual que el dashboard).
+            'solo_activos_ficha' => $request->has('solo_activos_ficha')
+                ? $request->boolean('solo_activos_ficha')
+                : true,
+            'fecha_desde' => trim((string) $request->input('fecha_desde', '')),
+            'fecha_hasta' => trim((string) $request->input('fecha_hasta', '')),
             'en_perfil' => $enPerfil,
         ];
     }
@@ -968,6 +980,10 @@ class CursosController extends Controller
      *     vigencia: string,
      *     estado: string,
      *     solo_actualizar: bool,
+     *     sin_documento?: bool,
+     *     solo_activos_ficha?: bool,
+     *     fecha_desde?: string,
+     *     fecha_hasta?: string,
      * }  $filters
      * @return array<string, int|string>
      */
@@ -1002,6 +1018,21 @@ class CursosController extends Controller
 
         if ($filters['solo_actualizar']) {
             $query['solo_actualizar'] = 1;
+        }
+
+        if (! empty($filters['sin_documento'])) {
+            $query['sin_documento'] = 1;
+        }
+
+        // Siempre persistir el flag para que datatable/export no pierdan el opt-out (0).
+        $query['solo_activos_ficha'] = ! empty($filters['solo_activos_ficha']) ? 1 : 0;
+
+        if (($filters['fecha_desde'] ?? '') !== '') {
+            $query['fecha_desde'] = $filters['fecha_desde'];
+        }
+
+        if (($filters['fecha_hasta'] ?? '') !== '') {
+            $query['fecha_hasta'] = $filters['fecha_hasta'];
         }
 
         if (($filters['en_perfil'] ?? '') !== '') {

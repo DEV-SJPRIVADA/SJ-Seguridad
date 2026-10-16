@@ -8,10 +8,16 @@
             || ($filters['vigencia'] ?? '') !== ''
             || (($filters['estado'] ?? 'todos') !== '' && ($filters['estado'] ?? 'todos') !== 'todos')
             || (bool) ($filters['solo_actualizar'] ?? false)
+            || (bool) ($filters['sin_documento'] ?? false)
+            || (($filters['fecha_desde'] ?? '') !== '')
+            || (($filters['fecha_hasta'] ?? '') !== '')
             || (($filters['en_perfil'] ?? '') !== '')
             || (is_array($filters['document_numbers'] ?? null) && ($filters['document_numbers'] ?? []) !== []);
         $enPerfilFilter = (string) ($filters['en_perfil'] ?? '');
         $soloActualizarFilter = (bool) ($filters['solo_actualizar'] ?? false);
+        $sinDocumentoFilter = (bool) ($filters['sin_documento'] ?? false);
+        // Default del listado: activos en Ficha (no cuenta como “filtro extra” del panel).
+        $soloActivosFichaFilter = (bool) ($filters['solo_activos_ficha'] ?? true);
     @endphp
 
     <x-slot name="header">
@@ -104,6 +110,11 @@
                                 </div>
                                 <input type="hidden" name="en_perfil" id="filter_en_perfil" value="{{ $enPerfilFilter }}">
                                 <input type="hidden" name="solo_actualizar" id="filter_solo_actualizar" value="{{ $soloActualizarFilter ? '1' : '' }}">
+                                <input type="hidden" name="sin_documento" id="filter_sin_documento" value="{{ $sinDocumentoFilter ? '1' : '' }}">
+                                <input type="hidden" name="solo_activos_ficha" id="filter_solo_activos_ficha" value="{{ $soloActivosFichaFilter ? '1' : '0' }}">
+                                {{-- Fechas heredadas del dashboard (KPI); se conservan al refiltrar --}}
+                                <input type="hidden" name="fecha_desde" id="filter_fecha_desde" value="{{ $filters['fecha_desde'] ?? '' }}">
+                                <input type="hidden" name="fecha_hasta" id="filter_fecha_hasta" value="{{ $filters['fecha_hasta'] ?? '' }}">
                                 <div class="form-field cursos-registros-page__filter-actions">
                                     <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
@@ -155,12 +166,22 @@
                                         x-on:click="setChipFilter('en_perfil', '0')"
                                     >Sin perfil</button>
                                 </div>
-                                <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro vigencia ACTUALIZAR">
+                                <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtros rápidos de listado">
                                     <button
                                         type="button"
                                         class="module-tab {{ $soloActualizarFilter ? 'module-tab--active' : '' }}"
-                                        x-on:click="toggleSoloActualizarChip()"
+                                        x-on:click="toggleBooleanChip('filter_solo_actualizar')"
                                     >Solo ACTUALIZAR</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $sinDocumentoFilter ? 'module-tab--active' : '' }}"
+                                        x-on:click="toggleBooleanChip('filter_sin_documento')"
+                                    >Sin documento</button>
+                                    <button
+                                        type="button"
+                                        class="module-tab {{ $soloActivosFichaFilter ? 'module-tab--active' : '' }}"
+                                        x-on:click="toggleBooleanChip('filter_solo_activos_ficha')"
+                                    >Solo activos Ficha</button>
                                 </div>
                             </div>
                         </form>
@@ -505,7 +526,9 @@
                         }
                     },
                     setChipFilter(name, value) {
-                        const input = document.getElementById(name === 'en_perfil' ? 'filter_en_perfil' : 'filter_solo_actualizar');
+                        const input = document.getElementById(
+                            name === 'en_perfil' ? 'filter_en_perfil' : `filter_${name}`,
+                        );
                         if (input) {
                             input.value = value == null ? '' : String(value);
                         }
@@ -514,12 +537,17 @@
                             form.requestSubmit();
                         }
                     },
-                    toggleSoloActualizarChip() {
-                        const input = document.getElementById('filter_solo_actualizar');
+                    toggleBooleanChip(inputId) {
+                        const input = document.getElementById(inputId);
                         if (! input) {
                             return;
                         }
-                        input.value = input.value === '1' ? '' : '1';
+                        // solo_activos_ficha usa 0/1 (default on); el resto usa vacío/1.
+                        if (inputId === 'filter_solo_activos_ficha') {
+                            input.value = input.value === '1' ? '0' : '1';
+                        } else {
+                            input.value = input.value === '1' ? '' : '1';
+                        }
                         const form = document.querySelector('.cursos-registros-page form.req-manage-filters');
                         if (form) {
                             form.requestSubmit();
