@@ -7,6 +7,7 @@
         'csrfToken' => csrf_token(),
         'maxRows' => $manualMaxRows ?? 500,
         'defaultVigenciaPolicy' => $defaultVigenciaPolicy,
+        'initialDocuments' => $initialManualDocuments ?? [],
         'generoOptions' => $manualGeneroOptions ?? [],
         'cargoOptions' => $manualCargoOptions ?? [],
         'codigoCursoOptions' => $manualCodigoCursoOptions ?? [],
@@ -445,6 +446,7 @@
                         cargoOptions: Array.isArray(config.cargoOptions) ? config.cargoOptions : [],
                         codigoCursoOptions: Array.isArray(config.codigoCursoOptions) ? config.codigoCursoOptions : [],
                         nitEscuelaOptions: Array.isArray(config.nitEscuelaOptions) ? config.nitEscuelaOptions : [],
+                        initialDocuments: Array.isArray(config.initialDocuments) ? config.initialDocuments : [],
                         maxRows,
                         rows: Array.from({ length: 2 }, () => emptyRow()),
                         filterText: '',
@@ -456,6 +458,30 @@
                         bulkPasteError: '',
                         bulkApplying: false,
                         bulkModalOpen: false,
+
+                        async init() {
+                            // Precarga desde Validaciones (cola sin acreditación → Manual).
+                            if (this.initialDocuments.length < 1) {
+                                return;
+                            }
+                            this.bulkApplying = true;
+                            try {
+                                const results = await this.prefillDocuments(this.initialDocuments);
+                                this.rows = [];
+                                results.forEach((item) => {
+                                    this.fillOrPushRow(item);
+                                });
+                                if (this.rows.length < 1) {
+                                    this.rows = Array.from({ length: 2 }, () => emptyRow());
+                                }
+                                this.successMessage = 'Se precargaron ' + this.rows.filter((r) => String(r.document_number || '').trim() !== '').length + ' cédula(s) desde Validaciones.';
+                            } catch (e) {
+                                this.errorMessage = e?.message || 'No se pudo precargar las cédulas desde Validaciones.';
+                                this.rows = Array.from({ length: 2 }, () => emptyRow());
+                            } finally {
+                                this.bulkApplying = false;
+                            }
+                        },
 
                         generoOptionsFor(row) {
                             return withExtraOption(this.generoOptions, row?.genero);

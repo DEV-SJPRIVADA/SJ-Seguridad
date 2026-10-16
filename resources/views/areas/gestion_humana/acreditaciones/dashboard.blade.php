@@ -4,9 +4,10 @@
     </x-slot>
 
     <div
-        class="page-section cursos-dashboard-page"
+        class="page-section cursos-dashboard-page acreditaciones-dashboard-page"
         x-data="acreditacionesDashboardPage(@js([
             'metricsUrl' => $metricsUrl,
+            'acreditadosUrl' => $acreditadosUrl,
             'initial' => $initialPayload,
             'filters' => $filters,
         ]))"
@@ -81,30 +82,62 @@
                 </div>
             </div>
 
+            {{-- KPIs clicables → Acreditados con el mismo filtro de contexto + estado del KPI --}}
             <div class="cursos-dashboard-page__kpi-grid">
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#0f172a;">
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#0f172a;"
+                    title="Ver todos en Acreditados"
+                    x-on:click="goToAcreditados({})"
+                >
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.total">Total</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.total">0</p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#0369a1;">
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#0369a1;"
+                    title="Ver EN PROCESO en Acreditados"
+                    x-on:click="goToAcreditados({ estado: 'EN_PROCESO' })"
+                >
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.en_proceso">EN PROCESO</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.en_proceso">0</p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#15803d;">
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#15803d;"
+                    title="Ver ACREDITADO en Acreditados"
+                    x-on:click="goToAcreditados({ estado: 'ACREDITADO' })"
+                >
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.acreditado">ACREDITADO</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.acreditado">0</p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#ca8a04;">
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#ca8a04;"
+                    title="Ver POR VENCER en Acreditados"
+                    x-on:click="goToAcreditados({ estado: 'POR_VENCER' })"
+                >
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.por_vencer">POR VENCER</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.por_vencer">0</p>
-                </div>
-                <div class="card cursos-dashboard-page__kpi" style="border-left-color:#be123c;">
+                </button>
+                <button
+                    type="button"
+                    class="card cursos-dashboard-page__kpi formacion-dashboard-page__kpi-link"
+                    style="border-left-color:#be123c;"
+                    title="Ver DESACREDITADO en Acreditados"
+                    x-on:click="goToAcreditados({ estado: 'DESACREDITADO' })"
+                >
                     <p class="cursos-dashboard-page__kpi-label" x-text="labels.desacreditado">DESACREDITADO</p>
                     <p class="cursos-dashboard-page__kpi-value" x-text="kpis.desacreditado">0</p>
-                </div>
+                </button>
             </div>
 
-            <div class="cursos-dashboard-page__charts">
+            {{-- Charts: títulos centrados + dataLabels (mismo criterio que dashboard Requisiciones). --}}
+            <div class="cursos-dashboard-page__charts acreditaciones-dashboard-page__charts">
                 <div class="panel">
                     <div class="panel__header">
                         <h3 class="panel-title">Por estado</h3>
@@ -132,7 +165,7 @@
                 <div class="panel cursos-dashboard-page__chart-wide">
                     <div class="panel__header">
                         <h3 class="panel-title">Tendencia vencimientos <span x-text="filters.anio"></span></h3>
-                        <p class="panel-text">Acreditaciones con VIGEN.ACR en cada mes</p>
+                        <p class="panel-text acreditaciones-dashboard-page__chart-hint">Acreditaciones con VIGEN.ACR en cada mes</p>
                     </div>
                     <div class="panel__body">
                         <div id="acreditaciones-chart-trend-vencimientos" class="cursos-dashboard-page__chart cursos-dashboard-page__chart--tall"></div>
@@ -149,6 +182,7 @@
             function acreditacionesDashboardPage(config) {
                 return {
                     metricsUrl: config.metricsUrl,
+                    acreditadosUrl: config.acreditadosUrl || '',
                     filters: { ...config.filters },
                     kpis: { ...(config.initial?.kpis || {}) },
                     labels: { ...(config.initial?.labels || {}) },
@@ -175,6 +209,42 @@
                     scheduleRefresh() {
                         clearTimeout(this.refreshTimer);
                         this.refreshTimer = setTimeout(() => this.refresh(), 300);
+                    },
+                    /** Navega a Acreditados con filtros del dashboard + estado del KPI. */
+                    goToAcreditados(overrides = {}) {
+                        if (! this.acreditadosUrl) {
+                            return;
+                        }
+                        const params = new URLSearchParams();
+                        const cargoApo = String(this.filters.cargo_apo || '').trim();
+                        const fichaEstado = String(this.filters.ficha_estado || '').trim();
+                        const fechaDesde = String(this.filters.fecha_desde || '').trim();
+                        const fechaHasta = String(this.filters.fecha_hasta || '').trim();
+
+                        if (cargoApo) {
+                            params.set('cargo_apo', cargoApo);
+                        }
+                        if (fichaEstado) {
+                            params.set('ficha_estado', fichaEstado);
+                        }
+                        if (fechaDesde) {
+                            params.set('fecha_solicitud_desde', fechaDesde);
+                        }
+                        if (fechaHasta) {
+                            params.set('fecha_solicitud_hasta', fechaHasta);
+                        }
+
+                        if (Object.prototype.hasOwnProperty.call(overrides, 'estado')) {
+                            const estado = String(overrides.estado || '').trim();
+                            if (estado && estado !== 'todos') {
+                                params.set('estado', estado);
+                            }
+                        }
+
+                        const query = params.toString();
+                        window.location.href = query
+                            ? `${this.acreditadosUrl}?${query}`
+                            : this.acreditadosUrl;
                     },
                     async refresh() {
                         if (!this.metricsUrl) {

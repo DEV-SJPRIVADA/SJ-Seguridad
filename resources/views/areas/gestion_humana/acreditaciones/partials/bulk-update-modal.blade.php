@@ -96,6 +96,18 @@
                             class="form-input"
                             x-model="bulkForm.fecha_solicitud"
                             autocomplete="off"
+                            title="Fecha de solicitud"
+                        >
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="bulk_vigencia_acr">VIGEN.ACR</label>
+                        <input
+                            id="bulk_vigencia_acr"
+                            type="date"
+                            class="form-input"
+                            x-model="bulkForm.vigencia_acr"
+                            autocomplete="off"
+                            title="Vigencia de acreditación"
                         >
                     </div>
                     <div class="form-field cursos-registros-page__form-span">
@@ -112,7 +124,8 @@
                 </div>
 
                 <p class="acreditaciones-bulk-modal__hint">
-                    Si indica fecha de solicitud, el estado de esos registros pasará a <strong>EN PROCESO</strong>.
+                    Si indica fecha de solicitud, el estado pasa a <strong>EN PROCESO</strong>.
+                    Si solo cambia <strong>VIGEN.ACR</strong>, el estado se recalcula con esa vigencia.
                 </p>
 
                 <div class="cursos-registros-page__form-actions acreditaciones-bulk-modal__actions">

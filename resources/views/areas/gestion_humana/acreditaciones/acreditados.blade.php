@@ -11,6 +11,8 @@
             || (($filters['en_perfil'] ?? '') !== '')
             || ($filters['vigencia_desde'] ?? '') !== ''
             || ($filters['vigencia_hasta'] ?? '') !== ''
+            || ($filters['fecha_solicitud_desde'] ?? '') !== ''
+            || ($filters['fecha_solicitud_hasta'] ?? '') !== ''
             || (is_array($filters['document_numbers'] ?? null) && ($filters['document_numbers'] ?? []) !== []);
         $enPerfilFilter = (string) ($filters['en_perfil'] ?? '');
         $fichaEstadoFilter = (string) ($filters['ficha_estado'] ?? 'todos');
@@ -119,6 +121,14 @@
                                 <div class="form-field">
                                     <label class="form-label" for="filter_vigencia_hasta">VIGEN.ACR hasta</label>
                                     <input id="filter_vigencia_hasta" name="vigencia_hasta" type="date" class="form-input" value="{{ $filters['vigencia_hasta'] }}">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="filter_fecha_solicitud_desde">Solicitud desde</label>
+                                    <input id="filter_fecha_solicitud_desde" name="fecha_solicitud_desde" type="date" class="form-input" value="{{ $filters['fecha_solicitud_desde'] ?? '' }}">
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label" for="filter_fecha_solicitud_hasta">Solicitud hasta</label>
+                                    <input id="filter_fecha_solicitud_hasta" name="fecha_solicitud_hasta" type="date" class="form-input" value="{{ $filters['fecha_solicitud_hasta'] ?? '' }}">
                                 </div>
                                 <input type="hidden" name="en_perfil" id="filter_en_perfil" value="{{ $enPerfilFilter }}">
                                 <input type="hidden" name="ficha_estado" id="filter_ficha_estado" value="{{ $fichaEstadoFilter }}">
@@ -441,6 +451,7 @@
                     bulkForm: {
                         observaciones: '',
                         fecha_solicitud: '',
+                        vigencia_acr: '',
                         renovacion: '',
                     },
                     editOpen: false,
@@ -512,6 +523,7 @@
                     get bulkHasPayload() {
                         return String(this.bulkForm.observaciones || '').trim() !== ''
                             || String(this.bulkForm.fecha_solicitud || '').trim() !== ''
+                            || String(this.bulkForm.vigencia_acr || '').trim() !== ''
                             || String(this.bulkForm.renovacion || '').trim() !== '';
                     },
                     isSelected(id) {
@@ -558,7 +570,7 @@
                         if (this.selectedCount < 1) {
                             return;
                         }
-                        this.bulkForm = { observaciones: '', fecha_solicitud: '', renovacion: '' };
+                        this.bulkForm = { observaciones: '', fecha_solicitud: '', vigencia_acr: '', renovacion: '' };
                         this.bulkUpdateOpen = true;
                         this.submittingBulk = false;
                         this.syncBulkRenovacion('');
@@ -605,6 +617,7 @@
 
                         const observaciones = String(this.bulkForm.observaciones || '').trim();
                         const fecha = String(this.bulkForm.fecha_solicitud || '').trim();
+                        const vigencia = String(this.bulkForm.vigencia_acr || '').trim();
                         const renovacion = String(this.bulkForm.renovacion || '').trim();
 
                         if (observaciones !== '') {
@@ -612,6 +625,9 @@
                         }
                         if (fecha !== '') {
                             append('fecha_solicitud', fecha);
+                        }
+                        if (vigencia !== '') {
+                            append('vigencia_acr', vigencia);
                         }
                         if (renovacion !== '') {
                             append('renovacion', renovacion);

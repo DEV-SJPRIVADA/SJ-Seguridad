@@ -116,7 +116,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 1. Abra la pestaña **Dashboard**.
 2. Use los filtros (fecha de solicitud, cargo APO, estado en ficha, año de tendencia) si quiere acotar el universo. Por defecto solo se cuentan empleados **activos en ficha** (alineado con Acreditados/export); elija «Desvinculados» o «Todos (ficha)» para ampliar.
-3. Revise los KPIs por estado y los gráficos (incluye tendencia de solicitudes y de vencimientos VIGEN.ACR); al cambiar un filtro se actualizan juntos.
+3. Revise los KPIs por estado y los gráficos (incluye tendencia de solicitudes y de vencimientos VIGEN.ACR); al cambiar un filtro se actualizan juntos. Pulse un KPI para abrir **Acreditados** ya filtrado (estado del KPI y los filtros activos del dashboard: cargo APO, estado ficha y fechas de solicitud).
 4. Esta pantalla es solo lectura; para generar el archivo use **Export Apo**.
 
 ### Registrar o editar un acreditado
@@ -131,7 +131,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 ### Filtrar, exportar y eliminar (Acreditados)
 
 1. Use los filtros (estado de acreditación, cédula, **varias cédulas** con el icono de lista, cargo, CARGO APO, rango de fechas de vigencia) y los chips **En perfil / Sin perfil** y **Activos / Desvinculados / Todos (ficha)**. Por defecto aparecen **todos** los acreditados (con o sin ficha); la columna **EN PERFIL** indica si la cédula está en Ficha. El filtro de varias cédulas es exacto (coma, salto de línea o `;`, máximo 500) y **no** guarda historial. Los botones de filtrar, limpiar y exportar son iconos (pase el cursor para ver la ayuda).
-2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro, todas las páginas) y usar **Actualizar seleccionados** para poner la misma observación y/o fecha de solicitud a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO.
+2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro, todas las páginas) y usar **Actualizar seleccionados** para poner la misma observación, fecha de solicitud, **VIGEN.ACR** y/o renovaciones a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO; si solo cambia VIGEN.ACR, el estado se recalcula.
 3. Con filas marcadas, el botón icono **Cargar en Export Apo** abre Export Apo y valida solo esos registros (aunque no estén en el universo habitual: aparecerán bloqueados con motivo).
 4. Use **Nuevo** o **Editar** para un registro puntual. El estado se calcula solo; no se elige a mano.
 5. Para Excel del listado, use el icono de Excel: se descarga según los filtros actuales. Incluye el estado calculado.
@@ -171,8 +171,8 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
    - Si no hay carga o falta Enproceso / Acreditado APO, verá el mensaje y un enlace a **Reporte Diario**. Complete la carga allí y vuelva.
    - Si ambos están cargados, podrá usar **Ejecutar validaciones**.
 4. Pulse **Ejecutar validaciones**. No se ejecuta solo al entrar ni al cambiar la fecha; al cambiar la fecha se limpian los resultados hasta una nueva ejecución.
-5. Tras ejecutar verá el resumen de conteos y las **cuatro colas**. Cada cola tiene **filtros** propios (cédula, **varias cédulas**, nombre y campos de la cola); en **Ficha activa sin acreditación** el **Cargo Ficha** es un selector con los cargos activos del catálogo de Ficha. Use la lupa para aplicar y la X para limpiar. Los resultados son de esa corrida en pantalla; si sale y vuelve, o la sesión de resultados expiró, debe ejecutar de nuevo.
-6. En las colas con acreditado existente puede marcar filas (o «seleccionar todos» del filtro actual) y usar el botón **Cargar en Export Apo** para validar solo esos IDs en Export Apo. En **Ficha activa sin acreditación** no hay ID de acreditado: primero cree el registro con **Nuevo**.
+5. Tras ejecutar verá el resumen de conteos y las **cuatro colas**. Cada cola tiene **filtros** propios (cédula, **varias cédulas**, nombre y campos de la cola); en **Ficha activa sin acreditación** el **Cargo Ficha** es un selector con los cargos activos del catálogo de Ficha; en **EN PROCESO en sistema / ACREDITADO en APO** puede filtrar también por **VIGEN.ACR APO** (fecha). Use la lupa para aplicar y la X para limpiar. Los resultados son de esa corrida en pantalla; si sale y vuelve, o la sesión de resultados expiró, debe ejecutar de nuevo.
+6. Las **cuatro colas** tienen casilla por fila y «seleccionar todos» del filtro actual (todas las páginas del filtro). En colas con acreditado, **Cargar en Export Apo** abre Automática con esos IDs. En **Ficha activa sin acreditación** la selección es por cédula y **Cargar en Export Apo** abre el modo **Manual** precargando esas cédulas; también puede crear el registro con **Nuevo**.
 
 ### Interpretar las cuatro colas
 
@@ -224,6 +224,11 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.29 | 2026-10-16 | Feature | Dashboard Acreditaciones: gráficos con etiquetas de valores y títulos centrados. |
+| 1.28 | 2026-10-16 | Feature | Dashboard Acreditaciones: clic en KPI abre Acreditados con el filtro correspondiente. |
+| 1.27 | 2026-10-16 | Feature | Validaciones: Ficha activa sin acreditación con casillas por cédula; Cargar en Export Apo abre Manual precargado. |
+| 1.26 | 2026-10-16 | Feature | Validaciones: selección de fila / todos del filtro en las 4 colas; filtro VIGEN.ACR APO en EN PROCESO ya acreditado. |
+| 1.25 | 2026-10-16 | Feature | Acreditados: Actualizar seleccionados permite cambiar también VIGEN.ACR. |
 | 1.24 | 2026-10-16 | Feature | Export Apo Manual: fechas con selector de fecha; Género, Cargo, Código curso y NIT escuela con búsqueda; diseño de grilla mejorado. |
 | 1.23 | 2026-10-16 | Feature | Export Apo Manual: modo Automática/Manual, grilla editable, prefill ficha/acreditado, Acreditar/Retirar sin Valida. |
 | 1.22 | 2026-10-15 | Feature | Acreditados: columna EN PERFIL, chips En perfil/Sin perfil y estado ficha; alta e import sin ficha (nombre/cargo manual o Excel). |

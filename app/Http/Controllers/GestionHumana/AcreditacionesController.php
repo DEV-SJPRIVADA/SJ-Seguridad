@@ -124,6 +124,7 @@ class AcreditacionesController extends Controller
             'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.acreditaciones.dashboard.metrics'),
+            'acreditadosUrl' => route('gestion-humana.acreditaciones.acreditados'),
             'filterCargoApoOptions' => $filterCargoApoOptions,
             'filterFichaEstadoOptions' => $filterFichaEstadoOptions,
             'yearOptions' => $this->dashboardService->yearOptions(),
@@ -296,15 +297,20 @@ class AcreditacionesController extends Controller
         $ids = array_values(array_map('intval', $request->validated('ids')));
         $observacionesInput = $request->validated('observaciones');
         $fechaSolicitudInput = $request->validated('fecha_solicitud');
+        $vigenciaAcrInput = $request->validated('vigencia_acr');
         $renovacionInput = $request->validated('renovacion');
 
         $applyObservaciones = is_string($observacionesInput) && trim($observacionesInput) !== '';
         $applyFechaSolicitud = filled($fechaSolicitudInput);
+        $applyVigenciaAcr = filled($vigenciaAcrInput);
         $applyRenovacion = filled($renovacionInput);
 
         $observaciones = $applyObservaciones ? trim((string) $observacionesInput) : null;
         $fechaSolicitud = $applyFechaSolicitud
             ? Carbon::parse((string) $fechaSolicitudInput)->toDateString()
+            : null;
+        $vigenciaAcr = $applyVigenciaAcr
+            ? Carbon::parse((string) $vigenciaAcrInput)->toDateString()
             : null;
         $renovacion = $applyRenovacion ? (string) $renovacionInput : null;
 
@@ -314,9 +320,11 @@ class AcreditacionesController extends Controller
             $ids,
             $applyObservaciones,
             $applyFechaSolicitud,
+            $applyVigenciaAcr,
             $applyRenovacion,
             $observaciones,
             $fechaSolicitud,
+            $vigenciaAcr,
             $renovacion,
             &$updatedCount,
         ): void {
@@ -331,6 +339,10 @@ class AcreditacionesController extends Controller
 
                 if ($applyFechaSolicitud) {
                     $row->fecha_solicitud = $fechaSolicitud;
+                }
+
+                if ($applyVigenciaAcr) {
+                    $row->vigencia_acr = $vigenciaAcr;
                 }
 
                 if ($applyRenovacion) {
@@ -354,6 +366,7 @@ class AcreditacionesController extends Controller
                     'updated_count' => $updatedCount,
                     'applied_observaciones' => $applyObservaciones,
                     'applied_fecha_solicitud' => $applyFechaSolicitud,
+                    'applied_vigencia_acr' => $applyVigenciaAcr,
                     'applied_renovacion' => $applyRenovacion,
                 ],
                 userId: (int) auth()->id(),
@@ -1361,6 +1374,14 @@ class AcreditacionesController extends Controller
             ->values()
             ->all();
 
+        // Cédulas desde Validaciones (cola sin acreditación) → abrir Manual y precargar.
+        $initialManualDocuments = app(DocumentNumberListParser::class)
+            ->fromInput($request->input('document_numbers'), $maxIds);
+        $requestedMode = mb_strtolower(trim((string) $request->input('mode', '')), 'UTF-8');
+        $initialWorkMode = $autoValidateIds !== []
+            ? 'automatica'
+            : (($requestedMode === 'manual' || $initialManualDocuments !== []) ? 'manual' : 'automatica');
+
         /** @var array<string, string> $renovacionLabels */
         $renovacionLabels = config('acreditaciones.renovaciones', []);
         $renovacionOptions = collect($renovacionLabels)
@@ -1459,6 +1480,8 @@ class AcreditacionesController extends Controller
             'manualGenerateUrl' => route('gestion-humana.acreditaciones.export-apo.manual.generate'),
             'exportApoSettings' => $settings,
             'autoValidateIds' => $autoValidateIds,
+            'initialWorkMode' => $initialWorkMode,
+            'initialManualDocuments' => $initialManualDocuments,
             'cargoApoOptions' => $cargoApoOptions,
             'renovacionOptions' => $renovacionOptions,
             'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
@@ -1861,6 +1884,8 @@ class AcreditacionesController extends Controller
             'renovacion' => (string) $request->input('renovacion', 'todos'),
             'vigencia_desde' => trim((string) $request->input('vigencia_desde', '')),
             'vigencia_hasta' => trim((string) $request->input('vigencia_hasta', '')),
+            'fecha_solicitud_desde' => trim((string) $request->input('fecha_solicitud_desde', '')),
+            'fecha_solicitud_hasta' => trim((string) $request->input('fecha_solicitud_hasta', '')),
             'ficha_estado' => $fichaEstado,
             'en_perfil' => $enPerfil,
         ];
@@ -1876,6 +1901,8 @@ class AcreditacionesController extends Controller
      *     renovacion: string,
      *     vigencia_desde: string,
      *     vigencia_hasta: string,
+     *     fecha_solicitud_desde: string,
+     *     fecha_solicitud_hasta: string,
      *     ficha_estado: string,
      *     en_perfil: string,
      * }  $filters
@@ -1916,6 +1943,14 @@ class AcreditacionesController extends Controller
 
         if ($filters['vigencia_hasta'] !== '') {
             $query['vigencia_hasta'] = $filters['vigencia_hasta'];
+        }
+
+        if (($filters['fecha_solicitud_desde'] ?? '') !== '') {
+            $query['fecha_solicitud_desde'] = $filters['fecha_solicitud_desde'];
+        }
+
+        if (($filters['fecha_solicitud_hasta'] ?? '') !== '') {
+            $query['fecha_solicitud_hasta'] = $filters['fecha_solicitud_hasta'];
         }
 
         if ($filters['ficha_estado'] !== '' && $filters['ficha_estado'] !== 'todos') {

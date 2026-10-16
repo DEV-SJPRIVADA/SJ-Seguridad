@@ -35,6 +35,7 @@ class AcreditacionValidacionesDatatableRequest extends FormRequest
             'cargo_apo' => ['nullable', 'string', 'max:150'],
             'estado' => ['nullable', 'string', 'max:50'],
             'personal_tipo' => ['nullable', 'string', Rule::in(['', 'OPERATIVO', 'ADMINISTRATIVO'])],
+            'vigencia_apo' => ['nullable', 'date', 'date_format:Y-m-d'],
         ];
     }
 

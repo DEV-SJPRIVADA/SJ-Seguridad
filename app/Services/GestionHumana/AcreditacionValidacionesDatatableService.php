@@ -81,14 +81,16 @@ final class AcreditacionValidacionesDatatableService
     }
 
     /**
-     * IDs de acreditados del filtro actual (todas las páginas) para cargar en Export Apo.
+     * Filas elegibles del filtro actual (todas las páginas) para selección masiva.
+     * Con acreditado_id → Export Apo Automática; sin ID (cola sin acreditación) → por cédula (Manual).
      *
      * @return list<array{
-     *     id: int,
+     *     id: int|null,
      *     document_number: string,
      *     full_name: string,
      *     cargo_apo: string,
-     *     estado: string
+     *     estado: string,
+     *     select_kind: string
      * }>
      */
     public function bulkSelectableRows(
@@ -112,15 +114,25 @@ final class AcreditacionValidacionesDatatableService
         $maxIds = (int) config('acreditaciones.limits.bulk_max_ids', 500);
 
         return $filtered
-            ->filter(fn (array $row): bool => (int) ($row['acreditado_id'] ?? 0) > 0)
+            ->filter(function (array $row): bool {
+                $id = (int) ($row['acreditado_id'] ?? 0);
+                $document = trim((string) ($row['document_number'] ?? ''));
+
+                return $id > 0 || $document !== '';
+            })
             ->take($maxIds)
-            ->map(fn (array $row): array => [
-                'id' => (int) $row['acreditado_id'],
-                'document_number' => (string) ($row['document_number'] ?? ''),
-                'full_name' => (string) ($row['full_name'] ?? ''),
-                'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
-                'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
-            ])
+            ->map(function (array $row): array {
+                $id = (int) ($row['acreditado_id'] ?? 0);
+
+                return [
+                    'id' => $id > 0 ? $id : null,
+                    'document_number' => (string) ($row['document_number'] ?? ''),
+                    'full_name' => (string) ($row['full_name'] ?? ''),
+                    'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
+                    'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
+                    'select_kind' => $id > 0 ? 'acreditado' : 'document',
+                ];
+            })
             ->values()
             ->all();
     }
@@ -272,27 +284,41 @@ final class AcreditacionValidacionesDatatableService
     private function formatSelectCell(array $row): string
     {
         $acreditadoId = (int) ($row['acreditado_id'] ?? 0);
+        $document = trim((string) ($row['document_number'] ?? ''));
 
-        if ($acreditadoId <= 0) {
-            return '<span class="cursos-registros-page__select-label" title="Sin registro en Acreditados">—</span>';
+        if ($acreditadoId > 0) {
+            $payload = e(json_encode([
+                'id' => $acreditadoId,
+                'document_number' => $document,
+                'full_name' => (string) ($row['full_name'] ?? ''),
+                'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
+                'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
+            ], JSON_UNESCAPED_UNICODE));
+
+            return sprintf(
+                '<label class="cursos-registros-page__select-label">'.
+                '<input type="checkbox" class="cursos-registros-page__select-checkbox js-validaciones-row-select" '.
+                'value="%d" data-validaciones-row="%s" aria-label="Seleccionar cédula %s">'.
+                '</label>',
+                $acreditadoId,
+                $payload,
+                e($document),
+            );
         }
 
-        $payload = e(json_encode([
-            'id' => $acreditadoId,
-            'document_number' => (string) ($row['document_number'] ?? ''),
-            'full_name' => (string) ($row['full_name'] ?? ''),
-            'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
-            'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
-        ], JSON_UNESCAPED_UNICODE));
+        // Cola sin acreditación: selección por cédula (Export Apo Manual / select-all del filtro).
+        if ($document === '') {
+            return '<span class="cursos-registros-page__select-label" title="Sin cédula">—</span>';
+        }
 
         return sprintf(
             '<label class="cursos-registros-page__select-label">'.
-            '<input type="checkbox" class="cursos-registros-page__select-checkbox js-validaciones-row-select" '.
-            'value="%d" data-validaciones-row="%s" aria-label="Seleccionar cédula %s">'.
+            '<input type="checkbox" class="cursos-registros-page__select-checkbox js-validaciones-row-select-doc" '.
+            'value="%s" data-document-number="%s" aria-label="Seleccionar cédula %s">'.
             '</label>',
-            $acreditadoId,
-            $payload,
-            e((string) ($row['document_number'] ?? '')),
+            e($document),
+            e($document),
+            e($document),
         );
     }
 

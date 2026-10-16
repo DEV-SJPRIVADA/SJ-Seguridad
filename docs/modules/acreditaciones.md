@@ -18,7 +18,7 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
   - **Export Apo** (FEAT-039) — submodos **Automática** / **Manual** (mismo `acreditaciones.edit`; sin permiso nuevo). **Automática:** candidatos (universo estados + Ficha activa); **Validar** carga preview A–X + Valida/motivo; filtro multi-cédula; selección; modal novedades blandas; generar `.xls`. Desde **Acreditados** / **Validaciones**: **Cargar en Export Apo**. **Manual:** grilla editable estilo Cartas (add/remove/pegar varias cédulas); prefill desde acreditado o ficha si existe (si no, captura a mano); columnas A–X editables excepto params fijos de Catálogo; **Acreditar** / **Retirar** sin Valida/universo/novedades; mismo Writer Xls + seq + audit (`source=manual`).
-  - **Dashboard** — KPIs por estado (Total + EN PROCESO / ACREDITADO / POR VENCER / DESACREDITADO), filtros (fecha solicitud, cargo APO, `ficha_estado` activo por defecto, año tendencia) y gráficos ApexCharts (estado, cargo APO, tendencia mensual). Los filtros afectan KPIs y gráficos. Sin corridas Export Apo ni KPIs de candidatos/novedad.
+  - **Dashboard** — KPIs por estado (Total + EN PROCESO / ACREDITADO / POR VENCER / DESACREDITADO), filtros (fecha solicitud, cargo APO, `ficha_estado` activo por defecto, año tendencia) y gráficos ApexCharts (estado, cargo APO, tendencia mensual). Los filtros afectan KPIs y gráficos. Clic en KPI → **Acreditados** con `estado` del KPI + `cargo_apo` / `ficha_estado` / `fecha_solicitud_*` del dashboard. Sin corridas Export Apo ni KPIs de candidatos/novedad.
 - Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
 - Acreditados: cédula **puede** no existir en Ficha (nombre/cargo manual o Excel). Marcar «no requiere acreditación» sí exige ficha. Reporte Diario: cédula ausente en Ficha **no** bloquea. Export Apo exige Ficha **activa** + campos identidad completos (bloqueo duro si incompleta).
@@ -270,7 +270,7 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `AcreditacionValidacionesGateService` | Gate: cabecera del dia + `origenHasPriorData(PROCESO)` + `origenHasPriorData(ACREDITADO)` |
 | `AcreditacionValidacionesRunnerService` | Calcula las 4 colas; `sin_acreditacion` incluye cargo Ficha + personal_tipo; arma `ficha_entry_id` cuando aplica |
 | `AcreditacionValidacionesResultStore` | Cache get/put keyed `user_id` + fecha + `run_token`; TTL `config('acreditaciones.validaciones.cache_ttl_seconds')` (5400 s); `get` valida `user_id` del payload |
-| `AcreditacionValidacionesRowFilter` | Filtros AJAX por cola sobre filas en cache (cédula, nombre, cargo, cargo_apo, estado, personal_tipo) |
+| `AcreditacionValidacionesRowFilter` | Filtros AJAX por cola sobre filas en cache (cédula, nombre, cargo, cargo_apo, estado, personal_tipo, `vigencia_apo` en `en_proceso_ya_acreditado`) |
 | `AcreditacionValidacionesDatatableService` | DT server-side por cola desde cache + RowFilter; tope length 100; sin `-1` |
 | `AcreditacionValidacionesExportService` | Export por cola (`BaseExport`) + consolidado (`AcreditacionValidacionesConsolidatedExport`, 4 hojas) |
 | `AcreditacionExportApoCandidateService` | Universo candidatos Export Apo (sin DT) |
@@ -322,7 +322,7 @@ Prioridad (`AcreditacionEstadoCalculator`):
 6. `cargo_apo` debe existir como valor **activo** en `acreditacion_cargos` (comparacion trim + case-insensitive via `forCargoApo`).
 7. `full_name` / `cargo`: si hay ficha se usan `full_name` / `position_name`; si no, los del form/Excel (obligatorios). Columna UI/export **EN PERFIL**.
 8. Filtros listado/export: `estado` (acreditacion), `en_perfil` (chips todos/1/0), `ficha_estado` (`todos` por defecto | `activo` | `desvinculado` via `employee_ficha_profiles.employment_status`; se ignora si `en_perfil=0`), `document_number` (parcial), **`document_numbers`** (lista exacta, max 500, UI modal multi-cédula sin historial), `cargo` (select cargos Ficha activos / parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
-9. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones` y/o `fecha_solicitud` (al menos un campo); con fecha → recalcula estado (EN PROCESO).
+9. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones`, `fecha_solicitud`, `vigencia_acr` (VIGEN.ACR) y/o `renovacion` (al menos un campo); campos vacíos no cambian; con fecha solicitud → EN PROCESO; con solo VIGEN.ACR → recalcula estado.
 10. Eliminar: confirmacion UI; DELETE fisico.
 
 ### Catalogo
@@ -374,7 +374,7 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 31. Granularidad: una fila por par cédula+cargo en colas 2–4; cola 1 una fila por cédula Ficha (con cargo Ficha + tipo personal).
 32. Acciones: Abrir Ficha (si manage Ficha + entry); Editar → modal existente por `acreditado_id`; Nuevo (solo `sin_acreditacion`) → modal crear con cédula precargada + lookup. Tras mutación: UX pide re-ejecutar (sin «marcar revisado»).
 33. Export por cola: `BaseExport` + `<x-export-excel>`. Consolidado: `AcreditacionValidacionesConsolidatedExport` (4 hojas). Sin histórico en BD; **sin migración**.
-33b. Filtros por cola (AJAX en DT, `AcreditacionValidacionesRowFilter`): cédula/nombre en todas; `sin_acreditacion` + cargo Ficha + personal_tipo; restantes + cargo/cargo_apo/estado según columnas.
+33b. Filtros por cola (AJAX en DT, `AcreditacionValidacionesRowFilter`): cédula/nombre en todas; `sin_acreditacion` + cargo Ficha + personal_tipo; `ausente_reporte` / `vencidas` + cargo_apo/estado; `en_proceso_ya_acreditado` + cargo_apo/estado + **VIGEN.ACR APO** (`vigencia_apo`, fecha exacta Y-m-d). Las 4 colas incluyen columna de selección de fila + «seleccionar todos del filtro» (`bulk-selectable`); con `acreditado_id` → Export Apo Automática; cola `sin_acreditacion` selecciona por cédula → Export Apo Manual (`mode=manual&document_numbers=`).
 
 ### Export Apo SuperVigilancia (FEAT-039)
 
@@ -548,7 +548,12 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.27 | 2026-10-16 | Dashboard charts: dataLabels visibles + títulos centrados (criterio Requisiciones / GH área). |
+| 1.26 | 2026-10-16 | Dashboard: KPIs clicables → Acreditados (estado + filtros contexto); listado admite `fecha_solicitud_desde/hasta`. |
+| 1.25 | 2026-10-16 | Validaciones cola `sin_acreditacion`: checkbox por cédula + select-all; Cargar en Export Apo abre Manual con precarga. |
+| 1.24 | 2026-10-16 | Validaciones: filtro `vigencia_apo` (VIGEN.ACR APO) en cola `en_proceso_ya_acreditado`; selección fila + todos-del-filtro en las 4 colas. |
 | 1.23 | 2026-10-16 | Export Apo Manual: toolbar compacta + chips en meta; panel/tabla flex a alto viewport (sin hueco abajo). |
+| 1.23 | 2026-10-16 | Acreditados: modal Actualizar seleccionados incluye VIGEN.ACR (`vigencia_acr`) y recalcula estado. |
 | 1.22 | 2026-10-16 | Export Apo Manual UI: fechas `type=date`; Género/Cargo/Código curso/NIT escuela searchable-select; chips params fijos; CSS grilla. |
 | 1.21 | 2026-10-16 | Export Apo **Manual**: subtabs Automática/Manual; prefill ficha/acreditado; grilla add/remove/multi-cédula; Acreditar/Retirar sin Valida; mismo seq/audit (`source=manual`). |
 | 1.20 | 2026-10-15 | Acreditados: columna EN PERFIL; chips En perfil/Sin perfil + estado ficha; default listado todos; alta/import sin ficha (nombre/cargo form/Excel). |

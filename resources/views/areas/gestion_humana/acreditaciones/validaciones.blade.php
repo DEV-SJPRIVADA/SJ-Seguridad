@@ -286,6 +286,41 @@
                                                             :allow-clear="true"
                                                         />
                                                     </div>
+                                                @elseif ($colaCode === 'en_proceso_ya_acreditado')
+                                                    {{-- Filtros cola EN PROCESO: cargo/estado + VIGEN.ACR APO --}}
+                                                    <div class="form-field">
+                                                        <label class="sr-only" for="filter_{{ $colaCode }}_cargo_apo">CARGO APO</label>
+                                                        <x-searchable-select
+                                                            id="filter_{{ $colaCode }}_cargo_apo"
+                                                            name="cargo_apo"
+                                                            :options="$filterCargoApoOptions"
+                                                            value=""
+                                                            placeholder="CARGO APO"
+                                                            :allow-clear="true"
+                                                        />
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <label class="sr-only" for="filter_{{ $colaCode }}_estado">Estado</label>
+                                                        <x-searchable-select
+                                                            id="filter_{{ $colaCode }}_estado"
+                                                            name="estado"
+                                                            :options="$filterEstadoOptions"
+                                                            value=""
+                                                            placeholder="Estado"
+                                                            :allow-clear="true"
+                                                        />
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <label class="sr-only" for="filter_{{ $colaCode }}_vigencia_apo">VIGEN.ACR APO</label>
+                                                        <input
+                                                            id="filter_{{ $colaCode }}_vigencia_apo"
+                                                            name="vigencia_apo"
+                                                            type="date"
+                                                            class="form-input"
+                                                            title="VIGEN.ACR APO"
+                                                            aria-label="VIGEN.ACR APO"
+                                                        >
+                                                    </div>
                                                 @else
                                                     <div class="form-field">
                                                         <label class="sr-only" for="filter_{{ $colaCode }}_cargo_apo">CARGO APO</label>
@@ -462,6 +497,7 @@
                     bulkSelectableByCola: {},
                     bulkSelectableLoading: false,
                     selectedMap: {},
+                    selectedDocs: {},
                     editOpen: false,
                     editIdentityLocked: true,
                     editForm: {
@@ -482,8 +518,16 @@
                             .filter((id) => this.selectedMap[id])
                             .map((id) => Number(id));
                     },
+                    get selectedDocuments() {
+                        return Object.keys(this.selectedDocs)
+                            .filter((doc) => this.selectedDocs[doc]);
+                    },
                     get selectedCount() {
-                        return this.selectedIds.length;
+                        return this.selectedIds.length + this.selectedDocuments.length;
+                    },
+                    rowIsDocumentKind(row) {
+                        return row
+                            && (row.select_kind === 'document' || ! row.id);
                     },
                     eligibleRowsFor(cola) {
                         return Array.isArray(this.bulkSelectableByCola[cola])
@@ -495,7 +539,12 @@
                         if (rows.length === 0) {
                             return false;
                         }
-                        return rows.every((row) => this.selectedMap[row.id]);
+                        return rows.every((row) => {
+                            if (this.rowIsDocumentKind(row)) {
+                                return !! this.selectedDocs[String(row.document_number || '')];
+                            }
+                            return !! this.selectedMap[row.id];
+                        });
                     },
                     isSelected(id) {
                         return !! this.selectedMap[id];
@@ -506,26 +555,57 @@
                             [id]: !! checked,
                         };
                     },
+                    toggleDoc(documentNumber, checked) {
+                        const doc = String(documentNumber || '').trim();
+                        if (! doc) {
+                            return;
+                        }
+                        const next = { ...this.selectedDocs };
+                        if (checked) {
+                            next[doc] = true;
+                        } else {
+                            delete next[doc];
+                        }
+                        this.selectedDocs = next;
+                    },
                     toggleSelectAll(cola, checked) {
                         const rows = this.eligibleRowsFor(cola);
-                        const next = { ...this.selectedMap };
+                        const nextIds = { ...this.selectedMap };
+                        const nextDocs = { ...this.selectedDocs };
                         rows.forEach((row) => {
+                            if (this.rowIsDocumentKind(row)) {
+                                const doc = String(row.document_number || '').trim();
+                                if (! doc) {
+                                    return;
+                                }
+                                if (checked) {
+                                    nextDocs[doc] = true;
+                                } else {
+                                    delete nextDocs[doc];
+                                }
+                                return;
+                            }
                             if (checked) {
-                                next[row.id] = true;
+                                nextIds[row.id] = true;
                             } else {
-                                delete next[row.id];
+                                delete nextIds[row.id];
                             }
                         });
-                        this.selectedMap = next;
+                        this.selectedMap = nextIds;
+                        this.selectedDocs = nextDocs;
                         this.syncPageCheckboxes(cola);
                     },
                     syncPageCheckboxes(cola) {
-                        const selector = cola
-                            ? '.js-validaciones-datatable[data-dt-cola="' + cola + '"] .js-validaciones-row-select'
-                            : '.js-validaciones-row-select';
-                        document.querySelectorAll(selector).forEach((input) => {
+                        const tableSel = cola
+                            ? '.js-validaciones-datatable[data-dt-cola="' + cola + '"]'
+                            : '';
+                        document.querySelectorAll(tableSel + ' .js-validaciones-row-select').forEach((input) => {
                             const id = Number(input.value);
                             input.checked = !! this.selectedMap[id];
+                        });
+                        document.querySelectorAll(tableSel + ' .js-validaciones-row-select-doc').forEach((input) => {
+                            const doc = String(input.value || '').trim();
+                            input.checked = !! this.selectedDocs[doc];
                         });
                     },
                     collectColaFilters(cola) {
@@ -587,14 +667,25 @@
                         }
                     },
                     cargarEnExportApo() {
-                        const ids = this.selectedIds;
-                        if (ids.length < 1 || ! this.exportApoUrl) {
+                        if (! this.exportApoUrl) {
                             return;
                         }
+                        const ids = this.selectedIds;
+                        const docs = this.selectedDocuments;
                         const url = new URL(this.exportApoUrl, window.location.origin);
-                        ids.forEach((id) => {
-                            url.searchParams.append('ids[]', String(id));
-                        });
+                        // Con IDs de acreditado → Automática; solo cédulas (sin acreditación) → Manual.
+                        if (ids.length > 0) {
+                            ids.forEach((id) => {
+                                url.searchParams.append('ids[]', String(id));
+                            });
+                            window.location.href = url.toString();
+                            return;
+                        }
+                        if (docs.length < 1) {
+                            return;
+                        }
+                        url.searchParams.set('mode', 'manual');
+                        url.searchParams.set('document_numbers', docs.join(','));
                         window.location.href = url.toString();
                     },
                     setCola(cola) {
@@ -722,7 +813,7 @@
                 function buildColaExportUrl(baseUrl, cola) {
                     const url = new URL(baseUrl, window.location.origin);
                     const filters = collectColaFilters(cola);
-                    ['document_number', 'document_numbers', 'full_name', 'cargo', 'cargo_apo', 'estado', 'personal_tipo'].forEach(function (key) {
+                    ['document_number', 'document_numbers', 'full_name', 'cargo', 'cargo_apo', 'estado', 'personal_tipo', 'vigencia_apo'].forEach(function (key) {
                         url.searchParams.delete(key);
                     });
                     Object.keys(filters).forEach(function (key) {
@@ -749,7 +840,7 @@
                 }
 
                 function clearColaFilters(form) {
-                    form.querySelectorAll('input[type="text"], input[type="search"]').forEach(function (input) {
+                    form.querySelectorAll('input[type="text"], input[type="search"], input[type="date"]').forEach(function (input) {
                         input.value = '';
                     });
                     form.querySelectorAll('[data-multi-cedula-hidden]').forEach(function (input) {
@@ -804,7 +895,15 @@
                     const reveal = function () {
                         wrap.removeClass('data-table-wrap--booting');
                     };
-                    const columns = $table.data('dt-columns') || [];
+                    // Sin `title`: DataTables no reescribe el thead y conserva el checkbox «seleccionar todos».
+                    const columns = ($table.data('dt-columns') || []).map(function (col) {
+                        return {
+                            data: col.data,
+                            orderable: col.orderable !== false && col.orderable !== 'false',
+                            searchable: col.searchable !== false && col.searchable !== 'false',
+                            className: col.className || '',
+                        };
+                    });
                     const updateMeta = function (count) {
                         const el = document.getElementById('validaciones-count-' + cola);
                         if (el) {
@@ -886,6 +985,14 @@
                         alpine.toggleRow(Number(this.value), this.checked);
                     });
 
+                    $table.on('change', '.js-validaciones-row-select-doc', function () {
+                        const alpine = getAlpineRoot();
+                        if (! alpine || typeof alpine.toggleDoc !== 'function') {
+                            return;
+                        }
+                        alpine.toggleDoc(String(this.value || ''), this.checked);
+                    });
+
                     $table.on('click', '.js-validaciones-edit', function () {
                         try {
                             const row = JSON.parse(this.getAttribute('data-validaciones-edit') || '{}');
@@ -960,6 +1067,11 @@
                     }
                     if (tables[cola]) {
                         tables[cola].columns.adjust();
+                        // Refresca elegibles del filtro para el checkbox «seleccionar todos».
+                        const alpine = getAlpineRoot();
+                        if (alpine && typeof alpine.loadBulkSelectable === 'function') {
+                            alpine.loadBulkSelectable(cola);
+                        }
                         return;
                     }
                     initTable($table);

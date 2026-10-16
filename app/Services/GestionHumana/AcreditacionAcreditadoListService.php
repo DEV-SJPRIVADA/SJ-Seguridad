@@ -24,6 +24,8 @@ class AcreditacionAcreditadoListService
      *     renovacion?: string|null,
      *     vigencia_desde?: string|null,
      *     vigencia_hasta?: string|null,
+     *     fecha_solicitud_desde?: string|null,
+     *     fecha_solicitud_hasta?: string|null,
      *     ficha_estado?: string|null,
      *     en_perfil?: string|null,
      * }  $filters
@@ -81,6 +83,17 @@ class AcreditacionAcreditadoListService
         $vigenciaHasta = trim((string) ($filters['vigencia_hasta'] ?? ''));
         if ($vigenciaHasta !== '') {
             $query->whereDate('vigencia_acr', '<=', $vigenciaHasta);
+        }
+
+        // Drill-down desde Dashboard (fecha solicitud).
+        $solicitudDesde = trim((string) ($filters['fecha_solicitud_desde'] ?? ''));
+        if ($solicitudDesde !== '') {
+            $query->whereDate('fecha_solicitud', '>=', $solicitudDesde);
+        }
+
+        $solicitudHasta = trim((string) ($filters['fecha_solicitud_hasta'] ?? ''));
+        if ($solicitudHasta !== '') {
+            $query->whereDate('fecha_solicitud', '<=', $solicitudHasta);
         }
 
         $this->applyFichaEstadoFilter($query, $filters);

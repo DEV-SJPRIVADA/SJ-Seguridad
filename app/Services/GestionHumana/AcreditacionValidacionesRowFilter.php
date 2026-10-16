@@ -35,6 +35,7 @@ final class AcreditacionValidacionesRowFilter
         $cargoApo = $filters['cargo_apo'] ?? '';
         $estado = $filters['estado'] ?? '';
         $personalTipo = $filters['personal_tipo'] ?? '';
+        $vigenciaApo = $filters['vigencia_apo'] ?? '';
 
         if (
             $documentNumber === ''
@@ -44,6 +45,7 @@ final class AcreditacionValidacionesRowFilter
             && $cargoApo === ''
             && $estado === ''
             && $personalTipo === ''
+            && $vigenciaApo === ''
         ) {
             return $rows;
         }
@@ -56,6 +58,7 @@ final class AcreditacionValidacionesRowFilter
             $cargoApo,
             $estado,
             $personalTipo,
+            $vigenciaApo,
             $cola,
         ): bool {
             if ($documentNumber !== '' && ! $this->contains((string) ($row['document_number'] ?? ''), $documentNumber)) {
@@ -101,6 +104,15 @@ final class AcreditacionValidacionesRowFilter
                 return false;
             }
 
+            // Solo cola EN PROCESO ya acreditado: VIGEN.ACR APO exacta (Y-m-d).
+            if (
+                $vigenciaApo !== ''
+                && $cola === AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO
+                && trim((string) ($row['vigencia_apo'] ?? '')) !== $vigenciaApo
+            ) {
+                return false;
+            }
+
             return true;
         })->values();
     }
@@ -114,6 +126,7 @@ final class AcreditacionValidacionesRowFilter
      *     cargo_apo: string,
      *     estado: string,
      *     personal_tipo: string,
+     *     vigencia_apo: string,
      * }
      */
     public function filtersFromRequest(Request $request): array
@@ -128,6 +141,11 @@ final class AcreditacionValidacionesRowFilter
             $personalTipo = '';
         }
 
+        $vigenciaApo = trim($request->string('vigencia_apo')->toString());
+        if ($vigenciaApo !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $vigenciaApo) !== 1) {
+            $vigenciaApo = '';
+        }
+
         return [
             'document_number' => trim($request->string('document_number')->toString()),
             'document_numbers' => $this->documentNumberListParser->fromInput(
@@ -138,6 +156,7 @@ final class AcreditacionValidacionesRowFilter
             'cargo_apo' => trim($request->string('cargo_apo')->toString()),
             'estado' => $estado,
             'personal_tipo' => $personalTipo,
+            'vigencia_apo' => $vigenciaApo,
         ];
     }
 

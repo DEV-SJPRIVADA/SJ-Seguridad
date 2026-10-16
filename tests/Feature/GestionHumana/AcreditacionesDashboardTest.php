@@ -76,6 +76,10 @@ class AcreditacionesDashboardTest extends TestCase
             ->assertSee('Por cargo APO', false)
             ->assertSee('Tendencia solicitudes', false)
             ->assertSee('Tendencia vencimientos', false)
+            ->assertSee('goToAcreditados', false)
+            ->assertSee('formacion-dashboard-page__kpi-link', false)
+            ->assertSee('acreditaciones-dashboard-page__charts', false)
+            ->assertSee(route('gestion-humana.acreditaciones.acreditados', [], false), false)
             ->assertDontSee('Candidatos exportables', false)
             ->assertDontSee('Con novedad blanda', false)
             ->assertDontSee('Últimas corridas Export Apo', false)
@@ -85,6 +89,21 @@ class AcreditacionesDashboardTest extends TestCase
 
         $html = $response->getContent();
         $this->assertStringNotContainsString('Select2', $html);
+
+        // Drill-down KPI → Acreditados aplica estado + ficha activa (default dashboard).
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.acreditaciones.acreditados', [
+                'estado' => AcreditacionAcreditado::ESTADO_EN_PROCESO,
+                'ficha_estado' => EmployeeFichaProfile::STATUS_ACTIVO,
+                'cargo_apo' => 'ESCOLTA',
+                'fecha_solicitud_desde' => '2026-03-01',
+                'fecha_solicitud_hasta' => '2026-03-31',
+            ]))
+            ->assertOk()
+            ->assertSee('filter_fecha_solicitud_desde', false)
+            ->assertSee('name="estado"', false)
+            ->assertSee('EN_PROCESO', false)
+            ->assertSee('ESCOLTA', false);
 
         $this->actingAs($viewer)
             ->getJson(route('gestion-humana.acreditaciones.dashboard.metrics', [

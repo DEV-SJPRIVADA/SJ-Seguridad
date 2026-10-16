@@ -72,7 +72,7 @@ class AcreditacionesValidacionesTest extends TestCase
             ->get(route('gestion-humana.acreditaciones.validaciones'))
             ->assertOk()
             ->assertSee('Validaciones', false)
-            ->assertSee('Fecha reporte', false)
+            ->assertSee('validaciones_fecha_reporte', false)
             ->assertSee($today, false)
             ->assertSee('Ejecutar validaciones', false);
     }
@@ -379,6 +379,54 @@ class AcreditacionesValidacionesTest extends TestCase
             ->assertJsonPath('data.0.document_number', '888002');
     }
 
+    public function test_sin_acreditacion_datatable_has_document_row_checkboxes_and_bulk_selectable(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-02';
+        $this->seedBothOriginsCarga($editor->id, $fecha);
+        $this->createFichaWithRequisitionArea('777101', 'Select Doc A', 'operaciones', 'Vigilante');
+        $this->createFichaWithRequisitionArea('777102', 'Select Doc B', 'gestion_humana', 'Auxiliar');
+
+        $payload = $this->runAndGetPayload($editor, $fecha);
+        $token = $payload['run_token'];
+
+        $data = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.validaciones.datatable', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $token,
+                'cola' => AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 50,
+                'document_number' => '777101',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->json('data');
+
+        $this->assertNotEmpty($data);
+        $this->assertStringContainsString('js-validaciones-row-select-doc', (string) ($data[0]['select'] ?? ''));
+        $this->assertStringContainsString('777101', (string) ($data[0]['select'] ?? ''));
+        $this->assertStringNotContainsString('js-validaciones-row-select"', (string) ($data[0]['select'] ?? ''));
+
+        $bulk = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.validaciones.bulk-selectable', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $token,
+                'cola' => AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION,
+                'document_number' => '7771',
+            ]))
+            ->assertOk()
+            ->json('data');
+
+        $docs = collect($bulk)->pluck('document_number')->all();
+        $this->assertContains('777101', $docs);
+        $this->assertContains('777102', $docs);
+        $this->assertTrue(collect($bulk)->every(
+            fn (array $row): bool => ($row['select_kind'] ?? '') === 'document' && empty($row['id'])
+        ));
+    }
+
     public function test_cola_ausente_reporte_when_pair_missing_from_any_origen(): void
     {
         $editor = $this->editorUser();
@@ -463,6 +511,81 @@ class AcreditacionesValidacionesTest extends TestCase
         $matchRow = $rows->firstWhere('acreditado_id', $match->id);
         $this->assertNotNull($matchRow);
         $this->assertSame('2027-06-01', $matchRow['vigencia_apo'] ?? null);
+    }
+
+    public function test_datatable_and_bulk_selectable_filter_en_proceso_by_vigencia_apo(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-03';
+        $carga = $this->seedBothOriginsCarga($editor->id, $fecha);
+
+        AcreditacionReporteDiarioFila::factory()->acreditado()->create([
+            'carga_id' => $carga->id,
+            'document_number' => '661001',
+            'cargo' => 'ESCOLTA',
+            'vigencia_acr' => '2027-06-01',
+        ]);
+        AcreditacionReporteDiarioFila::factory()->acreditado()->create([
+            'carga_id' => $carga->id,
+            'document_number' => '661002',
+            'cargo' => 'ESCOLTA',
+            'vigencia_acr' => '2027-07-15',
+        ]);
+
+        $matchA = AcreditacionAcreditado::factory()->enProceso()->create([
+            'document_number' => '661001',
+            'full_name' => 'Vigencia Apo A',
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+        $matchB = AcreditacionAcreditado::factory()->enProceso()->create([
+            'document_number' => '661002',
+            'full_name' => 'Vigencia Apo B',
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+
+        $payload = $this->runAndGetPayload($editor, $fecha);
+        $token = $payload['run_token'];
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.validaciones', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $token,
+            ]))
+            ->assertOk()
+            ->assertSee('filter_en_proceso_ya_acreditado_vigencia_apo', false)
+            ->assertSee('Seleccionar todos los del filtro actual', false);
+
+        $dt = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.validaciones.datatable', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $token,
+                'cola' => AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'vigencia_apo' => '2027-06-01',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->json('data');
+
+        $this->assertCount(1, $dt);
+        $this->assertStringContainsString('661001', html_entity_decode((string) ($dt[0]['document_number'] ?? '')));
+        $this->assertStringContainsString('js-validaciones-row-select', (string) ($dt[0]['select'] ?? ''));
+
+        $bulk = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.validaciones.bulk-selectable', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $token,
+                'cola' => AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO,
+                'vigencia_apo' => '2027-06-01',
+            ]))
+            ->assertOk()
+            ->json('data');
+
+        $bulkIds = collect($bulk)->pluck('id')->all();
+        $this->assertContains($matchA->id, $bulkIds);
+        $this->assertNotContains($matchB->id, $bulkIds);
     }
 
     public function test_cola_vencidas_includes_desacreditado_and_por_vencer(): void
@@ -999,6 +1122,9 @@ class AcreditacionesValidacionesTest extends TestCase
             ->assertSee('Vencidas / por vencer', false)
             ->assertSee('Cargo Ficha', false)
             ->assertSee('js-validaciones-cola-filters', false)
+            ->assertSee('cursos-registros-page__select-col', false)
+            ->assertSee('bulk-selectable', false)
+            ->assertSee('filter_en_proceso_ya_acreditado_vigencia_apo', false)
             ->assertSee('serverSide: true', false)
             ->assertSee('lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]', false)
             ->assertDontSee('select2', false)
@@ -1012,6 +1138,7 @@ class AcreditacionesValidacionesTest extends TestCase
 
         $this->assertStringNotContainsString('lengthMenu: [[10, 25, 50, -1]', $html);
         $this->assertStringNotContainsString('&amp;amp;', $html);
+        $this->assertSame(4, substr_count($html, 'Seleccionar todos los del filtro actual'));
         $this->assertMatchesRegularExpression(
             '/exportar-consolidado\?fecha_reporte=[^"&]+&amp;run_token=/',
             $html,

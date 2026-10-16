@@ -5,7 +5,7 @@
 
     <div
         class="page-section cursos-registros-page req-manage-page acreditaciones-export-apo-page"
-        x-data="{ workMode: 'automatica' }"
+        x-data="{ workMode: @js($initialWorkMode ?? 'automatica') }"
     >
         <div class="app-container">
             @if (session('status'))
@@ -471,6 +471,7 @@
                     bulkForm: {
                         observaciones: '',
                         fecha_solicitud: '',
+                        vigencia_acr: '',
                         renovacion: '',
                     },
                     editOpen: false,
@@ -612,6 +613,7 @@
                     get bulkHasPayload() {
                         return String(this.bulkForm.observaciones || '').trim() !== ''
                             || String(this.bulkForm.fecha_solicitud || '').trim() !== ''
+                            || String(this.bulkForm.vigencia_acr || '').trim() !== ''
                             || String(this.bulkForm.renovacion || '').trim() !== '';
                     },
 
@@ -687,7 +689,7 @@
                             return;
                         }
                         this.previewError = '';
-                        this.bulkForm = { observaciones: '', fecha_solicitud: '', renovacion: '' };
+                        this.bulkForm = { observaciones: '', fecha_solicitud: '', vigencia_acr: '', renovacion: '' };
                         this.bulkUpdateOpen = true;
                         this.submittingBulk = false;
                         this.syncBulkRenovacion('');
@@ -728,6 +730,7 @@
 
                         const observaciones = String(this.bulkForm.observaciones || '').trim();
                         const fecha = String(this.bulkForm.fecha_solicitud || '').trim();
+                        const vigencia = String(this.bulkForm.vigencia_acr || '').trim();
                         const renovacion = String(this.bulkForm.renovacion || '').trim();
 
                         if (observaciones !== '') {
@@ -735,6 +738,9 @@
                         }
                         if (fecha !== '') {
                             append('fecha_solicitud', fecha);
+                        }
+                        if (vigencia !== '') {
+                            append('vigencia_acr', vigencia);
                         }
                         if (renovacion !== '') {
                             append('renovacion', renovacion);

@@ -214,9 +214,6 @@
                                             accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                                             data-purchase-items-import-url="{{ route('purchase-requests.items.import', ['module' => $module]) }}"
                                         >
-                                        <button type="button" class="btn btn--secondary btn--sm" id="purchase-add-item-btn">
-                                            + Agregar producto
-                                        </button>
                                     </div>
                                 </div>
                                 <p id="purchase-items-import-status" class="form-hint" hidden></p>
@@ -234,6 +231,12 @@
                                             'item' => is_array($item) ? $item : [],
                                         ])
                                     @endforeach
+                                </div>
+                                {{-- Acción de alta de línea al pie de la sección, alineada a la derecha --}}
+                                <div class="pur-req-form__products-footer">
+                                    <button type="button" class="btn btn--secondary btn--sm" id="purchase-add-item-btn">
+                                        + Agregar producto
+                                    </button>
                                 </div>
                                 <p class="form-hint">La foto es opcional en cada línea. Formatos: JPG, PNG, WEBP o GIF (máx. 5 MB).</p>
                                 <x-input-error :messages="$errors->get('items')" />

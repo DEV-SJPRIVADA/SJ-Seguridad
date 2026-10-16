@@ -31,6 +31,7 @@ class BulkUpdateAcreditacionAcreditadoRequest extends FormRequest
             'ids.*' => ['integer', 'distinct', Rule::exists('acreditacion_acreditados', 'id')],
             'observaciones' => ['nullable', 'string', 'max:'.$obsMax],
             'fecha_solicitud' => ['nullable', 'date'],
+            'vigencia_acr' => ['nullable', 'date'],
             'renovacion' => ['nullable', 'string', Rule::in(AcreditacionAcreditado::RENOVACIONES)],
         ];
     }
@@ -62,12 +63,13 @@ class BulkUpdateAcreditacionAcreditadoRequest extends FormRequest
         $validator->after(function (Validator $validator): void {
             $observaciones = trim((string) $this->input('observaciones', ''));
             $fecha = trim((string) $this->input('fecha_solicitud', ''));
+            $vigencia = trim((string) $this->input('vigencia_acr', ''));
             $renovacion = trim((string) ($this->input('renovacion') ?? ''));
 
-            if ($observaciones === '' && $fecha === '' && $renovacion === '') {
+            if ($observaciones === '' && $fecha === '' && $vigencia === '' && $renovacion === '') {
                 $validator->errors()->add(
                     'observaciones',
-                    'Indique al menos observaciones, fecha de solicitud o renovaciones.',
+                    'Indique al menos observaciones, fecha de solicitud, VIGEN.ACR o renovaciones.',
                 );
             }
         });

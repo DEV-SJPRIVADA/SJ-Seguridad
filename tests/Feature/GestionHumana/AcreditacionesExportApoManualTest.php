@@ -48,6 +48,20 @@ class AcreditacionesExportApoManualTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_export_apo_opens_manual_with_document_numbers_from_validaciones(): void
+    {
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.export-apo', [
+                'mode' => 'manual',
+                'document_numbers' => '111,222',
+            ]))
+            ->assertOk()
+            ->assertViewHas('initialWorkMode', 'manual')
+            ->assertViewHas('initialManualDocuments', ['111', '222']);
+    }
+
     public function test_prefill_from_ficha_when_no_acreditado(): void
     {
         $editor = $this->editorUser();

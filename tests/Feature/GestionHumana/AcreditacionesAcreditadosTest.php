@@ -270,6 +270,18 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->assertSame(AcreditacionAcreditado::RENOVACION_SOLICITADO, $one->renovacion);
         $this->assertSame(AcreditacionAcreditado::RENOVACION_SOLICITADO, $two->renovacion);
 
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$one->id, $two->id],
+                'vigencia_acr' => '2028-06-15',
+            ])
+            ->assertRedirect();
+
+        $one->refresh();
+        $two->refresh();
+        $this->assertSame('2028-06-15', optional($one->vigencia_acr)?->format('Y-m-d'));
+        $this->assertSame('2028-06-15', optional($two->vigencia_acr)?->format('Y-m-d'));
+
         $selectable = $this->actingAs($editor)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.bulk-selectable'));
 
@@ -299,6 +311,7 @@ class AcreditacionesAcreditadosTest extends TestCase
                 'ids' => [$row->id],
                 'observaciones' => '',
                 'fecha_solicitud' => '',
+                'vigencia_acr' => '',
                 'renovacion' => '',
             ])
             ->assertSessionHasErrors('observaciones');
@@ -430,6 +443,48 @@ class AcreditacionesAcreditadosTest extends TestCase
         $json = $response->json();
         $this->assertSame(1, $json['recordsFiltered']);
         $this->assertStringContainsString('5005', $json['data'][0][0]);
+    }
+
+    public function test_datatable_filters_by_fecha_solicitud_range(): void
+    {
+        $viewer = $this->viewerUser();
+        $cargo = $this->activeCargo('ESCOLTA');
+        $this->createFicha('5025', 'Solicitud A');
+        $this->createFicha('5026', 'Solicitud B');
+
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5025',
+            'full_name' => 'Solicitud A',
+            'cargo_apo' => $cargo->cargo_apo,
+            'fecha_solicitud' => '2026-03-10',
+            'estado' => AcreditacionAcreditado::ESTADO_EN_PROCESO,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '5026',
+            'full_name' => 'Solicitud B',
+            'cargo_apo' => $cargo->cargo_apo,
+            'fecha_solicitud' => '2026-05-10',
+            'estado' => AcreditacionAcreditado::ESTADO_EN_PROCESO,
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'estado' => AcreditacionAcreditado::ESTADO_EN_PROCESO,
+                'fecha_solicitud_desde' => '2026-03-01',
+                'fecha_solicitud_hasta' => '2026-03-31',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]));
+
+        $response->assertOk();
+        $json = $response->json();
+        $this->assertSame(1, $json['recordsFiltered']);
+        $joined = collect($json['data'] ?? [])->map(
+            fn ($row): string => is_array($row) ? implode('|', $row) : (string) $row,
+        )->implode("\n");
+        $this->assertStringContainsString('5025', $joined);
+        $this->assertStringNotContainsString('5026', $joined);
     }
 
     public function test_datatable_filters_by_renovacion(): void

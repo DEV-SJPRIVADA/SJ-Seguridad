@@ -11811,6 +11811,51 @@ a.req-dashboard-kpi:focus-visible {
     gap: 0.5rem;
 }
 
+/* Dashboard Acreditaciones: títulos centrados + dataLabels (mismo criterio que Requisiciones). */
+.acreditaciones-dashboard-page__charts .panel__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0.35rem 0.5rem;
+    text-align: center;
+    gap: 0.15rem;
+}
+
+.acreditaciones-dashboard-page__charts .panel-title {
+    margin: 0;
+    text-align: center;
+    width: 100%;
+}
+
+.acreditaciones-dashboard-page__chart-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--brand-navy);
+    text-align: center;
+    width: 100%;
+}
+
+.acreditaciones-dashboard-page__charts .panel__body {
+    padding: 0.25rem 0.5rem 0.5rem;
+    overflow: visible;
+}
+
+.acreditaciones-dashboard-page .apexcharts-datalabels rect {
+    fill: transparent !important;
+    fill-opacity: 0 !important;
+    stroke: none !important;
+}
+
+.acreditaciones-dashboard-page .apexcharts-datalabels text {
+    fill: #0f172a !important;
+    paint-order: stroke fill;
+    stroke: #ffffff;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
 /* ââ Validaciones (acreditaciones) âââââââââââââââââââââââââââââââââââââââââ */
 .acreditaciones-validaciones-page .cursos-registros-panel {
     overflow: hidden;
@@ -15061,6 +15106,13 @@ a.req-dashboard-kpi:focus-visible {
 
 .pur-req-form__section--products .pur-req-form__toolbar {
     margin-bottom: 0.35rem;
+}
+
+.pur-req-form__products-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 0.65rem;
 }
 
 @media (max-width: 720px) {
