@@ -171,7 +171,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
    - Si no hay carga o falta Enproceso / Acreditado APO, verá el mensaje y un enlace a **Reporte Diario**. Complete la carga allí y vuelva.
    - Si ambos están cargados, podrá usar **Ejecutar validaciones**.
 4. Pulse **Ejecutar validaciones**. No se ejecuta solo al entrar ni al cambiar la fecha; al cambiar la fecha se limpian los resultados hasta una nueva ejecución.
-5. Tras ejecutar verá el resumen de conteos y las **cuatro colas**. En las colas de Acreditados **no** entran desvinculados; las cédulas **sin perfil sí** aparecen. La cola **Ficha activa sin acreditación** sigue siendo solo personal activo en Ficha. Cada cola tiene **filtros** propios (cédula, **varias cédulas**, nombre y campos de la cola); en **Ficha activa sin acreditación** el **Cargo Ficha** es un selector con los cargos activos del catálogo de Ficha; en **EN PROCESO en sistema / ACREDITADO en APO** puede filtrar también por **VIGEN.ACR APO** (fecha). Use la lupa para aplicar y la X para limpiar. Los resultados son de esa corrida en pantalla; si sale y vuelve, o la sesión de resultados expiró, debe ejecutar de nuevo.
+5. Tras ejecutar verá el resumen de conteos y las **cuatro colas**. En las colas de Acreditados **no** entran desvinculados; las cédulas **sin perfil sí** aparecen. La cola **Ficha activa sin acreditación** sigue siendo solo personal activo en Ficha. Si una **cédula** aparece más de una vez en la misma cola (por ejemplo varios CARGO APO), se muestra en **rojo** en la columna Cédula. Cada cola tiene **filtros** propios (cédula, **varias cédulas**, nombre y campos de la cola); en **Ficha activa sin acreditación** el **Cargo Ficha** es un selector con los cargos activos del catálogo de Ficha; en **EN PROCESO en sistema / ACREDITADO en APO** puede filtrar también por **VIGEN.ACR APO** (fecha). Use la lupa para aplicar y la X para limpiar. Los resultados son de esa corrida en pantalla; si sale y vuelve, o la sesión de resultados expiró, debe ejecutar de nuevo.
 6. Las **cuatro colas** tienen casilla por fila y «seleccionar todos» del filtro actual (todas las páginas del filtro). En colas con acreditado, **Cargar en Export Apo** abre Automática con esos IDs. En **Ficha activa sin acreditación** la selección es por cédula y **Cargar en Export Apo** abre el modo **Manual** precargando esas cédulas; también puede crear el registro con **Nuevo**.
 
 ### Interpretar las cuatro colas
@@ -224,6 +224,7 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.35 | 2026-10-16 | Feature | Validaciones: cédulas que se repiten en la misma cola se marcan en rojo. |
 | 1.34 | 2026-10-16 | Feature | Export Apo: acepta cursos familia E (p. ej. E.VIGILANCIA EDUCATIVA) además de F y R. |
 | 1.33 | 2026-10-16 | Feature | Acreditados: al poner/cambiar VIGEN.ACR se limpia la fecha de solicitud y se guarda en observaciones como «Última solicitud». |
 | 1.32 | 2026-10-16 | Feature | Validaciones: en colas de Acreditados solo se excluyen desvinculados (sin perfil sí entra). |

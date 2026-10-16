@@ -56,6 +56,8 @@ final class AcreditacionValidacionesDatatableService
         $recordsFiltered = $filtered->count();
 
         $ordered = $this->applyOrdering($filtered, $request, $cola, $canEdit);
+        // Duplicados sobre la cola filtrada completa (no solo la página DT).
+        $duplicateDocs = $this->duplicateDocumentNumbers($ordered);
 
         $start = max(0, (int) $request->input('start', 0));
         $length = (int) $request->input('length', 10);
@@ -68,7 +70,17 @@ final class AcreditacionValidacionesDatatableService
         $page = $ordered
             ->slice($start, min($maxLength, $length))
             ->values()
-            ->map(fn (array $row): array => $this->formatRow($row, $cola, $canOpenFicha, $canEdit))
+            ->map(function (array $row) use ($cola, $canOpenFicha, $canEdit, $duplicateDocs): array {
+                $document = trim((string) ($row['document_number'] ?? ''));
+
+                return $this->formatRow(
+                    $row,
+                    $cola,
+                    $canOpenFicha,
+                    $canEdit,
+                    $document !== '' && $duplicateDocs->has($document),
+                );
+            })
             ->all();
 
         return response()->json([
@@ -227,24 +239,70 @@ final class AcreditacionValidacionesDatatableService
     }
 
     /**
+     * Cédulas que aparecen más de una vez en la cola filtrada actual.
+     *
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @return Collection<string, true>
+     */
+    private function duplicateDocumentNumbers(Collection $rows): Collection
+    {
+        /** @var Collection<string, int> $counts */
+        $counts = $rows
+            ->map(fn (array $row): string => trim((string) ($row['document_number'] ?? '')))
+            ->filter(fn (string $doc): bool => $doc !== '')
+            ->countBy();
+
+        return $counts
+            ->filter(fn (int $count): bool => $count > 1)
+            ->mapWithKeys(fn (int $count, string $doc): array => [$doc => true]);
+    }
+
+    /**
+     * Cédula en rojo cuando hay más de un registro con el mismo documento en la cola.
+     */
+    private function formatDocumentNumberCell(string $documentNumber, bool $isDuplicate): string
+    {
+        $escaped = e($documentNumber);
+
+        if (! $isDuplicate) {
+            return $escaped;
+        }
+
+        return sprintf(
+            '<span class="gh-cedula-duplicate" title="%s">%s</span>',
+            e('Cédula con más de un registro'),
+            $escaped,
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
-    private function formatRow(array $row, string $cola, bool $canOpenFicha, bool $canEdit): array
-    {
+    private function formatRow(
+        array $row,
+        string $cola,
+        bool $canOpenFicha,
+        bool $canEdit,
+        bool $isDuplicateDocument = false,
+    ): array {
         $dash = '—';
         $actions = $this->formatActionsCell($row, $cola, $canOpenFicha);
+        $documentCell = $this->formatDocumentNumberCell(
+            (string) ($row['document_number'] ?? ''),
+            $isDuplicateDocument,
+        );
 
         $base = match ($cola) {
             AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION => [
-                'document_number' => e((string) ($row['document_number'] ?? '')),
+                'document_number' => $documentCell,
                 'full_name' => e((string) ($row['full_name'] ?? '')),
                 'cargo' => e((string) ($row['cargo'] ?? '') ?: $dash),
                 'personal_tipo' => e((string) ($row['personal_tipo'] ?? '') ?: $dash),
                 'actions' => $actions,
             ],
             AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE => [
-                'document_number' => e((string) ($row['document_number'] ?? '')),
+                'document_number' => $documentCell,
                 'full_name' => e((string) ($row['full_name'] ?? '')),
                 'cargo' => e((string) ($row['cargo'] ?? '')),
                 'cargo_apo' => e((string) ($row['cargo_apo'] ?? '')),
@@ -252,7 +310,7 @@ final class AcreditacionValidacionesDatatableService
                 'actions' => $actions,
             ],
             AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO => [
-                'document_number' => e((string) ($row['document_number'] ?? '')),
+                'document_number' => $documentCell,
                 'full_name' => e((string) ($row['full_name'] ?? '')),
                 'cargo_apo' => e((string) ($row['cargo_apo'] ?? '')),
                 'estado' => e((string) ($row['estado_label'] ?? $row['estado'] ?? '')),
@@ -261,7 +319,7 @@ final class AcreditacionValidacionesDatatableService
                 'actions' => $actions,
             ],
             AcreditacionValidacionesResultStore::COLA_VENCIDAS => [
-                'document_number' => e((string) ($row['document_number'] ?? '')),
+                'document_number' => $documentCell,
                 'full_name' => e((string) ($row['full_name'] ?? '')),
                 'cargo_apo' => e((string) ($row['cargo_apo'] ?? '')),
                 'estado' => e((string) ($row['estado_label'] ?? $row['estado'] ?? '')),

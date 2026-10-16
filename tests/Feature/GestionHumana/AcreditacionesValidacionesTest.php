@@ -1267,6 +1267,180 @@ class AcreditacionesValidacionesTest extends TestCase
         }
     }
 
+    public function test_datatable_marks_duplicate_document_numbers_in_all_colas(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-05';
+        $this->seedBothOriginsCarga($editor->id, $fecha);
+
+        $stored = app(AcreditacionValidacionesResultStore::class)->put($editor->id, $fecha, [
+            'fecha_reporte' => $fecha,
+            'counts' => [
+                AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION => 3,
+                AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE => 3,
+                AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO => 3,
+                AcreditacionValidacionesResultStore::COLA_VENCIDAS => 3,
+            ],
+            'colas' => [
+                AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION => [
+                    [
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo' => 'Vigilante',
+                        'personal_tipo' => 'OPERATIVO',
+                    ],
+                    [
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo' => 'Escolta',
+                        'personal_tipo' => 'OPERATIVO',
+                    ],
+                    [
+                        'document_number' => 'UNIQ-VAL',
+                        'full_name' => 'Unico',
+                        'cargo' => 'Vigilante',
+                        'personal_tipo' => 'OPERATIVO',
+                    ],
+                ],
+                AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE => [
+                    [
+                        'acreditado_id' => 1,
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo' => 'Vigilante',
+                        'cargo_apo' => 'VIGILANTE',
+                        'estado' => 'ACREDITADO',
+                        'estado_label' => 'ACREDITADO',
+                    ],
+                    [
+                        'acreditado_id' => 2,
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo' => 'Escolta',
+                        'cargo_apo' => 'ESCOLTA',
+                        'estado' => 'ACREDITADO',
+                        'estado_label' => 'ACREDITADO',
+                    ],
+                    [
+                        'acreditado_id' => 3,
+                        'document_number' => 'UNIQ-VAL',
+                        'full_name' => 'Unico',
+                        'cargo' => 'Vigilante',
+                        'cargo_apo' => 'VIGILANTE',
+                        'estado' => 'ACREDITADO',
+                        'estado_label' => 'ACREDITADO',
+                    ],
+                ],
+                AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO => [
+                    [
+                        'acreditado_id' => 4,
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo_apo' => 'VIGILANTE',
+                        'estado' => 'EN PROCESO',
+                        'estado_label' => 'EN PROCESO',
+                        'fecha_solicitud' => '01/01/26',
+                        'vigencia_apo' => '01/06/27',
+                    ],
+                    [
+                        'acreditado_id' => 5,
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo_apo' => 'ESCOLTA',
+                        'estado' => 'EN PROCESO',
+                        'estado_label' => 'EN PROCESO',
+                        'fecha_solicitud' => '01/01/26',
+                        'vigencia_apo' => '01/06/27',
+                    ],
+                    [
+                        'acreditado_id' => 6,
+                        'document_number' => 'UNIQ-VAL',
+                        'full_name' => 'Unico',
+                        'cargo_apo' => 'VIGILANTE',
+                        'estado' => 'EN PROCESO',
+                        'estado_label' => 'EN PROCESO',
+                        'fecha_solicitud' => '01/01/26',
+                        'vigencia_apo' => '01/06/27',
+                    ],
+                ],
+                AcreditacionValidacionesResultStore::COLA_VENCIDAS => [
+                    [
+                        'acreditado_id' => 7,
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo_apo' => 'VIGILANTE',
+                        'estado' => 'DESACREDITADO',
+                        'estado_label' => 'DESACREDITADO',
+                        'vigencia_acr' => '01/01/25',
+                    ],
+                    [
+                        'acreditado_id' => 8,
+                        'document_number' => 'DUP-VAL',
+                        'full_name' => 'Dup A',
+                        'cargo_apo' => 'ESCOLTA',
+                        'estado' => 'DESACREDITADO',
+                        'estado_label' => 'DESACREDITADO',
+                        'vigencia_acr' => '01/01/25',
+                    ],
+                    [
+                        'acreditado_id' => 9,
+                        'document_number' => 'UNIQ-VAL',
+                        'full_name' => 'Unico',
+                        'cargo_apo' => 'VIGILANTE',
+                        'estado' => 'DESACREDITADO',
+                        'estado_label' => 'DESACREDITADO',
+                        'vigencia_acr' => '01/01/25',
+                    ],
+                ],
+            ],
+        ]);
+
+        $token = $stored['run_token'];
+
+        foreach (AcreditacionValidacionesResultStore::COLAS as $cola) {
+            $rows = collect(
+                $this->actingAs($editor)
+                    ->getJson(route('gestion-humana.acreditaciones.validaciones.datatable', [
+                        'fecha_reporte' => $fecha,
+                        'run_token' => $token,
+                        'cola' => $cola,
+                        'draw' => 1,
+                        'start' => 0,
+                        'length' => 25,
+                    ]))
+                    ->assertOk()
+                    ->assertJsonPath('recordsFiltered', 3)
+                    ->json('data')
+            );
+
+            $dupRows = $rows->filter(
+                fn (array $row): bool => str_contains((string) ($row['document_number'] ?? ''), 'DUP-VAL'),
+            );
+            $uniqRows = $rows->filter(
+                fn (array $row): bool => str_contains((string) ($row['document_number'] ?? ''), 'UNIQ-VAL'),
+            );
+
+            $this->assertSame(2, $dupRows->count(), "Cola {$cola}: se esperaban 2 filas DUP-VAL");
+            $this->assertSame(1, $uniqRows->count(), "Cola {$cola}: se esperaba 1 fila UNIQ-VAL");
+
+            foreach ($dupRows as $row) {
+                $this->assertStringContainsString(
+                    'gh-cedula-duplicate',
+                    (string) ($row['document_number'] ?? ''),
+                    "Cola {$cola}: cédula duplicada sin marca roja",
+                );
+            }
+
+            foreach ($uniqRows as $row) {
+                $this->assertStringNotContainsString(
+                    'gh-cedula-duplicate',
+                    (string) ($row['document_number'] ?? ''),
+                    "Cola {$cola}: cédula única marcada como duplicada",
+                );
+            }
+        }
+    }
+
     /**
      * @return array{
      *     run_token: string,
