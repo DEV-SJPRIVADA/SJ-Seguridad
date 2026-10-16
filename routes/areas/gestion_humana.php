@@ -346,6 +346,8 @@ Route::middleware(['password.changed'])
         Route::get('/export-apo', [AcreditacionesController::class, 'exportApo'])->name('export-apo');
         Route::post('/export-apo/preview', [AcreditacionesController::class, 'exportApoPreview'])->name('export-apo.preview');
         Route::post('/export-apo/generar', [AcreditacionesController::class, 'exportApoGenerate'])->name('export-apo.generate');
+        Route::post('/export-apo/manual/prefill', [AcreditacionesController::class, 'exportApoPrefillManual'])->name('export-apo.manual.prefill');
+        Route::post('/export-apo/manual/generar', [AcreditacionesController::class, 'exportApoGenerateManual'])->name('export-apo.manual.generate');
         Route::get('/catalogo', [AcreditacionesController::class, 'catalogo'])->name('catalogo');
         Route::post('/catalogo', [AcreditacionesController::class, 'storeCatalogo'])->name('catalogo.store');
         Route::patch('/catalogo/export-apo-params', [AcreditacionesController::class, 'updateExportApoParams'])->name('catalogo.export-apo-params.update');

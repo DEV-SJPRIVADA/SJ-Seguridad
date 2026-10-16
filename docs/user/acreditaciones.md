@@ -14,7 +14,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 - **Acreditados** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel y carga masiva con plantilla. Con permiso de edición, el icono de cola **Nuevos sin acreditación** muestra personas que entraron a ficha y aún no tienen registro acreditado (acciones icon-only: **Nuevo acreditado** u **Omitir** si no aplica).
 - **Reporte Diario** — carga diaria de uno o dos Excel de la APO (En proceso y/o Acreditados APO), consulta por fecha, filtros, exportar e histórico de cargas. Es un **archivo histórico** de lo que envió la APO ese día; **no** actualiza por sí solo el listado de Acreditados ni Ficha.
 - **Validaciones** — solo con permiso de edición: elige una fecha de reporte, comprueba que ese día tenga **ambos** Excel APO cargados, ejecuta el cruce y obtiene **cuatro colas** para actuar (abrir Ficha, editar o crear acreditado) y exportar. Los resultados viven **solo en pantalla** de esa corrida (no hay histórico de validaciones guardado).
-- **Export Apo** — solo con permiso de edición: al entrar la pantalla está vacía; con **Validar** carga el preview SuperVigilancia (columnas del archivo + Valida/motivo), selecciona filas, puede **quitar** filas del preview, y genera con **Acreditar .xls** o **Retirar** (aviso de éxito; Retirar limpia la pantalla, Acreditar revalida el preview). También puede llegar desde Acreditados o Validaciones con filas marcadas (botón **Cargar en Export Apo**).
+- **Export Apo** — solo con permiso de edición. Tiene dos modos: **Automática** (Validar universo + preview Valida/motivo + Acreditar/Retirar) y **Manual** (grilla editable como Cartas: agregar/quitar filas, pegar varias cédulas, completar a mano o con prefill de ficha/acreditado). Los datos fijos de empresa se toman del Catálogo. También puede llegar desde Acreditados o Validaciones con **Cargar en Export Apo** (modo Automática).
 - **Catálogo** — solo con permiso de edición: administrar las filas de cargos (Manager / APO / Informe / Acreditación) y los **parámetros de empresa** usados en Export Apo (Nit, razón social, direcciones, etc.; una sola fila editable).
 
 **En esta versión (Acreditados):**
@@ -47,14 +47,11 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 **En esta versión (Export Apo):**
 
 - Solo con permiso de **edición**. Quien solo consulta **no** ve esta pestaña.
-- Candidatos: acreditados en **EN PROCESO**, **POR VENCER** o **DESACREDITADO** con Ficha **activa**. No incluye acreditados «frescos» (ACREDITADO fuera de ventana por vencer).
-- Una misma cédula con dos cargos candidatos aparece como **dos filas**; usted elige cuáles exportar.
-- Antes de descargar: **vista previa** con Valida / motivo. El archivo descargado **no** lleva esas columnas.
-- Puede elegir política de cursos: solo vigentes, o vigentes más los que están por actualizar.
-- Si hay novedades leves (curso faltante, código vacío, escuela no catalogada, etc.), un aviso pregunta si las **incluye** o no. Las filas con ficha incompleta **nunca** salen en el archivo, aunque diga que sí.
-- El nombre del archivo sigue el patrón `APO` + Nit de parámetros + fecha + número del día (001, 002…).
-- En el archivo, el género se envía como **1** (masculino) o **2** (femenino), según el sexo de la Ficha.
-- Los códigos de curso APO deben estar cargados en el catálogo de **Cursos** (campo CURSOS / CódigoCurso) y alineados al cargo.
+- Modos **Automática** y **Manual** (pills en la misma pestaña).
+- **Automática:** candidatos EN PROCESO / POR VENCER / DESACREDITADO con Ficha activa; Validar + preview Valida/motivo; modal de novedades leves; Acreditar/Retirar.
+- **Manual:** no usa el universo ni Valida; usted arma la grilla (filas + varias cédulas). Si la cédula está en acreditado o ficha, se precarga; si no, completa a mano. Los campos fijos de empresa (Nit, dirección, etc.) no se editan aquí.
+- El nombre del archivo sigue el patrón `APO` + Nit + fecha + correlativo del día (mismo contador en Automática y Manual).
+- Género en el archivo: **1** (masculino) o **2** (femenino).
 
 **En esta versión (Dashboard):**
 
@@ -195,14 +192,10 @@ Tras crear o editar desde una cola, conviene **volver a ejecutar** para refresca
 
 ### Generar Export Apo (SuperVigilancia)
 
-1. Con permiso de edición, abra la pestaña **Export Apo**. Al entrar **no** se muestra listado: la pantalla queda vacía a propósito. Si llegó desde Acreditados o Validaciones con el botón **Cargar en Export Apo**, el sistema valida automáticamente solo esos IDs.
-2. Elija la **política de vigencia** de cursos (solo vigentes, o vigentes + por actualizar).
-3. Pulse **Validar** (sin selección previa carga todo el universo; con IDs precargados solo esos). El sistema muestra columnas SuperVigilancia más **Estado curso**, **Valida** y **Motivo** (solo en pantalla; no van al Excel). Filas fuera del universo aparecen bloqueadas con motivo. Tras Validar puede acotar el preview con el icono **varias cédulas** (exacto, máximo 500, sin historial).
-4. Marque las filas a exportar. Puede **editar** un acreditado (lápiz), **quitar** una fila del preview (basura) o, con varias marcadas, usar **Actualizar** para cambiar observación/fecha/renovación en bloque. Tras guardar vuelve a Export Apo y revalida el mismo conjunto.
-5. Para acreditación pulse **Acreditar .xls**. Si entre las filas marcadas hay alguna con **Valida = No**, aparece un modal para decidir si incluye las novedades leves; si todas son válidas, descarga directo. Las filas con bloqueo duro no salen en ningún caso. Al terminar verá un aviso de éxito y el preview se **revalida** (no se borra la pantalla).
-6. Para retiros pulse **Retirar**: descarga el `.xls` con la hoja **Retiros** (FechaRetiro = día anterior). Al terminar verá un aviso de éxito y la pantalla se **limpia** (igual que el botón Limpiar).
-7. Confirme la descarga. El archivo es `.xls` (hojas ApoDatos + Retiros). En acreditación el género va como **1** o **2**. El nombre incluye el Nit de parámetros, la fecha y un número correlativo del día.
-8. Si el código de curso o el cargo de acreditación no están bien cargados en Catálogo Cursos, corrija allí y vuelva a **Validar**.
+1. Con permiso de edición, abra la pestaña **Export Apo**. Elija **Automática** o **Manual**.
+2. **Automática:** al entrar no hay listado hasta **Validar**. Si llegó con **Cargar en Export Apo**, valida solo esos IDs. Elija política de vigencia, pulse **Validar**, marque filas y use **Acreditar .xls** o **Retirar**. Si hay Valida=No, el modal pregunta por novedades leves. Retirar limpia; Acreditar revalida el preview.
+3. **Manual:** use **+** para agregar filas, la basura para quitar, o el icono de lista para **pegar varias cédulas**. Al salir de la cédula (o al pegar el lote) el sistema intenta precargar desde acreditado/ficha; si no hay datos, complete la grilla a mano. Luego **Acreditar .xls** o **Retirar** (sin Validar ni modal de novedades).
+4. Confirme la descarga `.xls` (hojas ApoDatos + Retiros). El correlativo del día es compartido entre ambos modos.
 
 ### Administrar Catálogo (solo edición)
 
@@ -231,6 +224,8 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.24 | 2026-10-16 | Feature | Export Apo Manual: fechas con selector de fecha; Género, Cargo, Código curso y NIT escuela con búsqueda; diseño de grilla mejorado. |
+| 1.23 | 2026-10-16 | Feature | Export Apo Manual: modo Automática/Manual, grilla editable, prefill ficha/acreditado, Acreditar/Retirar sin Valida. |
 | 1.22 | 2026-10-15 | Feature | Acreditados: columna EN PERFIL, chips En perfil/Sin perfil y estado ficha; alta e import sin ficha (nombre/cargo manual o Excel). |
 | 1.21 | 2026-10-14 | Feature | Export Apo: Acreditar/Retirar con aviso de éxito; Retirar limpia; Acreditar revalida sin borrar el preview. |
 | 1.20 | 2026-10-02 | Feature | Cola Nuevos sin acreditación: acciones de fila y volver pasan a iconos. |

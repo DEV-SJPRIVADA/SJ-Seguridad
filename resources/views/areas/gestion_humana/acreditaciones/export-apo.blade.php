@@ -5,31 +5,7 @@
 
     <div
         class="page-section cursos-registros-page req-manage-page acreditaciones-export-apo-page"
-        x-data="acreditacionesExportApo({
-            previewUrl: @js($previewUrl),
-            generateUrl: @js($generateUrl),
-            defaultVigenciaPolicy: @js($defaultVigenciaPolicy),
-            csrfToken: @js(csrf_token()),
-            autoValidateIds: @js($autoValidateIds ?? []),
-            lookupUrl: @js($lookupUrl ?? null),
-            bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
-            settings: @js([
-                'nit' => $exportApoSettings->nit,
-                'razon_social' => $exportApoSettings->razon_social,
-                'tipo_documento' => $exportApoSettings->tipo_documento,
-                'tipo_establecimiento' => $exportApoSettings->tipo_establecimiento,
-                'telefono_r' => $exportApoSettings->telefono_r,
-                'direccion_r' => $exportApoSettings->direccion_r,
-                'direccion_p' => $exportApoSettings->direccion_p,
-                'departamento' => $exportApoSettings->departamento,
-                'ciudad' => $exportApoSettings->ciudad,
-                'educacion_bm' => $exportApoSettings->educacion_bm,
-                'educacion_s' => $exportApoSettings->educacion_s,
-                'discapacidad' => $exportApoSettings->discapacidad,
-            ]),
-        })"
-        x-on:export-apo-generate.window="submitGenerate($event.detail.include, $event.detail.mode || pendingExportMode)"
-        @acreditaciones-open-edit.window="openEdit($event.detail)"
+        x-data="{ workMode: 'automatica' }"
     >
         <div class="app-container">
             @if (session('status'))
@@ -44,6 +20,73 @@
                 </div>
             @endif
 
+            {{-- Submodos Automática / Manual: mismo chrome .module-tab que tableros del área --}}
+            <div class="acreditaciones-export-apo-page__mode-tabs">
+                <div class="module-subnav__inner">
+                    <nav class="module-tabs" role="tablist" aria-label="Modo Export Apo">
+                        <button
+                            type="button"
+                            class="module-tab"
+                            role="tab"
+                            :class="{ 'module-tab--active': workMode === 'automatica' }"
+                            :aria-selected="workMode === 'automatica'"
+                            x-on:click="workMode = 'automatica'"
+                        >
+                            Automática
+                        </button>
+                        <button
+                            type="button"
+                            class="module-tab"
+                            role="tab"
+                            :class="{ 'module-tab--active': workMode === 'manual' }"
+                            :aria-selected="workMode === 'manual'"
+                            x-on:click="workMode = 'manual'"
+                        >
+                            Manual
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            {{-- Wrapper flex:1 para que el panel/tabla llenen el alto restante (sin hueco abajo). --}}
+            <div
+                class="acreditaciones-export-apo-page__mode"
+                x-show="workMode === 'manual'"
+                x-cloak
+            >
+                @include('areas.gestion_humana.acreditaciones.partials.export-apo-manual')
+            </div>
+
+            <div
+                class="acreditaciones-export-apo-page__mode"
+                x-show="workMode === 'automatica'"
+                x-cloak
+                x-data="acreditacionesExportApo({
+                    previewUrl: @js($previewUrl),
+                    generateUrl: @js($generateUrl),
+                    defaultVigenciaPolicy: @js($defaultVigenciaPolicy),
+                    csrfToken: @js(csrf_token()),
+                    autoValidateIds: @js($autoValidateIds ?? []),
+                    lookupUrl: @js($lookupUrl ?? null),
+                    bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
+                    settings: @js([
+                        'nit' => $exportApoSettings->nit,
+                        'razon_social' => $exportApoSettings->razon_social,
+                        'tipo_documento' => $exportApoSettings->tipo_documento,
+                        'tipo_establecimiento' => $exportApoSettings->tipo_establecimiento,
+                        'telefono_r' => $exportApoSettings->telefono_r,
+                        'direccion_r' => $exportApoSettings->direccion_r,
+                        'direccion_p' => $exportApoSettings->direccion_p,
+                        'departamento' => $exportApoSettings->departamento,
+                        'ciudad' => $exportApoSettings->ciudad,
+                        'educacion_bm' => $exportApoSettings->educacion_bm,
+                        'educacion_s' => $exportApoSettings->educacion_s,
+                        'discapacidad' => $exportApoSettings->discapacidad,
+                    ]),
+                })"
+                x-on:export-apo-generate.window="submitGenerate($event.detail.include, $event.detail.mode || pendingExportMode)"
+                @acreditaciones-open-edit.window="openEdit($event.detail)"
+            >
             <div class="panel cursos-registros-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-shell__filters">
@@ -311,7 +354,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
         <x-modal name="export-apo-novedades" maxWidth="lg" focusable>
             <div class="modal-card ficha-empleados-masivos-modal">
@@ -398,7 +440,9 @@
             'renovacionOptions' => $renovacionOptions,
             'exportApoReturn' => true,
         ])
-    </div>
+            </div>{{-- /automática --}}
+        </div>{{-- /app-container --}}
+    </div>{{-- /page --}}
 
     @push('scripts')
         <script>

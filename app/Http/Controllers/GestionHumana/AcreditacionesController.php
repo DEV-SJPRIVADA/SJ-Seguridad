@@ -8,10 +8,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesDatatableRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesExportRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcreditadoRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\GenerateAcreditacionExportApoManualRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\GenerateAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionReporteDiarioRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\OmitEmployeeAcreditacionPendingRequest;
+use App\Http\Requests\GestionHumana\Acreditaciones\PrefillAcreditacionExportApoManualRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\PreviewAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\RunAcreditacionValidacionesRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
@@ -23,6 +25,8 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionCargo;
 use App\Models\AcreditacionExportApoSetting;
 use App\Models\AcreditacionReporteDiarioFila;
+use App\Models\CursoEscuela;
+use App\Models\CursoTipo;
 use App\Models\EmployeeAcreditacionPending;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
@@ -35,6 +39,7 @@ use App\Services\GestionHumana\AcreditacionDashboardService;
 use App\Services\GestionHumana\AcreditacionesAuditLogService;
 use App\Services\GestionHumana\AcreditacionEstadoCalculator;
 use App\Services\GestionHumana\AcreditacionExportApoGenerateService;
+use App\Services\GestionHumana\AcreditacionExportApoManualPrefillService;
 use App\Services\GestionHumana\AcreditacionExportApoPreviewService;
 use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
 use App\Services\GestionHumana\AcreditacionImportService;
@@ -84,6 +89,7 @@ class AcreditacionesController extends Controller
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
         private readonly AcreditacionExportApoPreviewService $exportApoPreviewService,
         private readonly AcreditacionExportApoGenerateService $exportApoGenerateService,
+        private readonly AcreditacionExportApoManualPrefillService $exportApoManualPrefillService,
         private readonly AcreditacionDashboardService $dashboardService,
         private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
     ) {}
@@ -1377,18 +1383,91 @@ class AcreditacionesController extends Controller
             ->values()
             ->all();
 
+        // Opciones Manual: valor exportable = cargo_acreditación (1–6); label = «N — CARGO APO».
+        $manualCargoOptions = AcreditacionCargo::query()
+            ->active()
+            ->ordered()
+            ->get(['cargo_acreditacion', 'cargo_apo'])
+            ->map(function (AcreditacionCargo $row): array {
+                $code = trim((string) $row->cargo_acreditacion);
+                $apo = trim((string) $row->cargo_apo);
+
+                return [
+                    'value' => $code,
+                    'label' => $code !== ''
+                        ? ($apo !== '' ? $code.' — '.$apo : $code)
+                        : '',
+                ];
+            })
+            ->filter(fn (array $opt): bool => $opt['value'] !== '')
+            ->unique('value')
+            ->values()
+            ->all();
+
+        $manualCodigoCursoOptions = CursoTipo::query()
+            ->active()
+            ->ordered()
+            ->get(['cursos', 'tipo_curso'])
+            ->map(function (CursoTipo $row): array {
+                $code = trim((string) ($row->cursos ?? ''));
+
+                return [
+                    'value' => $code,
+                    'label' => $code !== ''
+                        ? $code.(trim((string) $row->tipo_curso) !== '' ? ' — '.trim((string) $row->tipo_curso) : '')
+                        : '',
+                ];
+            })
+            ->filter(fn (array $opt): bool => $opt['value'] !== '')
+            ->unique('value')
+            ->values()
+            ->all();
+
+        $manualNitEscuelaOptions = CursoEscuela::query()
+            ->active()
+            ->ordered()
+            ->get(['nit', 'nombre', 'codigo'])
+            ->map(function (CursoEscuela $row): array {
+                $nit = trim((string) ($row->nit ?? ''));
+                $nombre = trim((string) ($row->nombre ?? ''));
+                $codigo = trim((string) ($row->codigo ?? ''));
+
+                return [
+                    'value' => $nit,
+                    'label' => $nit !== ''
+                        ? $nit.($nombre !== '' ? ' — '.$nombre : ($codigo !== '' ? ' — '.$codigo : ''))
+                        : '',
+                ];
+            })
+            ->filter(fn (array $opt): bool => $opt['value'] !== '')
+            ->unique('value')
+            ->values()
+            ->all();
+
+        $manualGeneroOptions = [
+            ['value' => '1', 'label' => '1 — Masculino'],
+            ['value' => '2', 'label' => '2 — Femenino'],
+        ];
+
         return view('areas.gestion_humana.acreditaciones.export-apo', [
             'subTabs' => $this->getAcreditacionesSubTabs('export_apo'),
             'vigenciaPolicyOptions' => $vigenciaPolicies,
             'defaultVigenciaPolicy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
             'previewUrl' => route('gestion-humana.acreditaciones.export-apo.preview'),
             'generateUrl' => route('gestion-humana.acreditaciones.export-apo.generate'),
+            'manualPrefillUrl' => route('gestion-humana.acreditaciones.export-apo.manual.prefill'),
+            'manualGenerateUrl' => route('gestion-humana.acreditaciones.export-apo.manual.generate'),
             'exportApoSettings' => $settings,
             'autoValidateIds' => $autoValidateIds,
             'cargoApoOptions' => $cargoApoOptions,
             'renovacionOptions' => $renovacionOptions,
             'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
             'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
+            'manualMaxRows' => $maxIds,
+            'manualGeneroOptions' => $manualGeneroOptions,
+            'manualCargoOptions' => $manualCargoOptions,
+            'manualCodigoCursoOptions' => $manualCodigoCursoOptions,
+            'manualNitEscuelaOptions' => $manualNitEscuelaOptions,
         ]);
     }
 
@@ -1438,6 +1517,89 @@ class AcreditacionesController extends Controller
                 'export_date' => optional($run->export_date)?->format('Y-m-d'),
                 'seq' => $run->seq,
                 'export_mode' => $result['export_mode'] ?? 'acreditar',
+                'vigencia_policy' => $run->vigencia_policy,
+                'include_novedades' => $run->include_novedades,
+                'rows_selected' => $run->rows_selected,
+                'rows_ok' => $run->rows_ok,
+                'rows_novedad' => $run->rows_novedad,
+                'rows_blocked' => $run->rows_blocked,
+                'rows_exported' => $run->rows_exported,
+            ],
+            model: $run,
+            userId: (int) auth()->id(),
+        );
+
+        return $result['response'];
+    }
+
+    /**
+     * Prefill Manual: arma fila desde acreditado/ficha si existe; si no, fila vacía editable.
+     */
+    public function exportApoPrefillManual(PrefillAcreditacionExportApoManualRequest $request): JsonResponse
+    {
+        $documents = $request->documents();
+        $policy = $request->vigenciaPolicy();
+
+        if (count($documents) === 1) {
+            $result = $this->exportApoManualPrefillService->prefill($documents[0], $policy);
+
+            return response()->json([
+                'ok' => true,
+                'found' => $result['found'],
+                'source' => $result['source'],
+                'row' => $result['row'],
+                'results' => [[
+                    'document_number' => $documents[0],
+                    'found' => $result['found'],
+                    'source' => $result['source'],
+                    'row' => $result['row'],
+                ]],
+            ]);
+        }
+
+        $results = $this->exportApoManualPrefillService->prefillMany($documents, $policy);
+
+        return response()->json([
+            'ok' => true,
+            'results' => $results,
+        ]);
+    }
+
+    /**
+     * Generación Manual: filas editadas en UI → mismo .xls / seq / audit (source=manual).
+     */
+    public function exportApoGenerateManual(GenerateAcreditacionExportApoManualRequest $request): StreamedResponse|RedirectResponse|JsonResponse
+    {
+        try {
+            $result = $this->exportApoGenerateService->generateFromManualRows(
+                $request->rows(),
+                $request->exportMode(),
+                (int) auth()->id(),
+            );
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                throw $e;
+            }
+
+            return redirect()
+                ->route('gestion-humana.acreditaciones.export-apo')
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', collect($e->errors())->flatten()->first() ?: 'No se pudo generar el archivo Export Apo Manual.');
+        }
+
+        $run = $result['run'];
+
+        $this->auditLogService->logEvent(
+            eventType: 'export_apo_generate',
+            action: 'generate',
+            reason: null,
+            metadata: [
+                'file_name' => $run->file_name,
+                'export_date' => optional($run->export_date)?->format('Y-m-d'),
+                'seq' => $run->seq,
+                'export_mode' => $result['export_mode'] ?? 'acreditar',
+                'source' => $result['source'] ?? 'manual',
                 'vigencia_policy' => $run->vigencia_policy,
                 'include_novedades' => $run->include_novedades,
                 'rows_selected' => $run->rows_selected,

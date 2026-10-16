@@ -243,6 +243,15 @@ a {
     align-items: center;
 }
 
+/* <button class="module-tab">: hereda fuente del layout; size/weight vienen de .module-tab. */
+button.module-tab {
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .app-workspace {
     display: flex;
     flex-direction: column;
@@ -16413,4 +16422,203 @@ a.req-dashboard-kpi:focus-visible {
 
 .mt-st-04-dash-chart-span {
     grid-column: 1 / -1;
+}
+
+/* Export Apo: densidad como franja de tableros (padding/gap 0.2rem). */
+.acreditaciones-export-apo-page.page-section {
+    padding: 0.2rem 0;
+}
+
+.acreditaciones-export-apo-page.cursos-registros-page {
+    padding-bottom: 0.2rem;
+}
+
+.acreditaciones-export-apo-page > .app-container {
+    gap: 0.2rem;
+}
+
+.acreditaciones-export-apo-page__mode-tabs {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    margin-left: 1rem;
+}
+
+.acreditaciones-export-apo-page__mode-tabs .module-subnav__inner {
+    gap: 0;
+    padding: 0.2rem 0;
+    min-height: 0;
+}
+
+.acreditaciones-export-apo-page__mode-tabs .module-tabs {
+    gap: 0.45rem;
+}
+
+.acreditaciones-export-apo-page__mode {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+.acreditaciones-export-apo-manual {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+/* Export Apo Manual: grilla con fechas date + searchable-select */
+.acreditaciones-export-apo-manual__panel {
+    margin-top: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.acreditaciones-export-apo-manual__panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.acreditaciones-export-apo-manual__toolbar {
+    gap: 0.65rem 1rem;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 0.35rem;
+    padding: 0.15rem 0.1rem 0.45rem;
+    border-bottom: 1px solid var(--color-border, #dbe3ef);
+}
+
+.acreditaciones-export-apo-manual__settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.4rem 0 0;
+}
+
+.acreditaciones-export-apo-manual__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--brand-navy, #003366) 8%, #fff);
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 18%, transparent);
+    font-size: 0.78rem;
+    color: var(--color-text, #1e293b);
+    max-width: 100%;
+}
+
+.acreditaciones-export-apo-manual__chip strong {
+    color: var(--brand-navy, #003366);
+    font-weight: 650;
+}
+
+.acreditaciones-export-apo-manual__chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 14rem;
+}
+
+.acreditaciones-export-apo-manual__alert {
+    margin-top: 0.35rem;
+    flex-shrink: 0;
+}
+
+.acreditaciones-export-apo-manual__table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    /* El scroll vive en .req-manage-table-scroll; el wrap solo reparte alto. */
+    overflow: hidden;
+}
+
+.acreditaciones-export-apo-manual__table-wrap > .req-manage-table-scroll {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    height: 100%;
+}
+
+.acreditaciones-export-apo-manual__table {
+    width: 100%;
+    min-width: 78rem;
+}
+
+.acreditaciones-export-apo-manual__table th,
+.acreditaciones-export-apo-manual__table td {
+    vertical-align: top;
+}
+
+.acreditaciones-export-apo-manual__col-cedula {
+    min-width: 8.5rem;
+    width: 8.5rem;
+}
+
+.acreditaciones-export-apo-manual__col-name {
+    min-width: 7rem;
+}
+
+.acreditaciones-export-apo-manual__col-date {
+    min-width: 9.5rem;
+    width: 9.5rem;
+}
+
+.acreditaciones-export-apo-manual__col-select {
+    min-width: 9rem;
+    width: 9.5rem;
+}
+
+.acreditaciones-export-apo-manual__col-select-lg {
+    min-width: 11rem;
+    width: 12rem;
+}
+
+.acreditaciones-export-apo-manual__col-nro {
+    min-width: 7rem;
+}
+
+.acreditaciones-export-apo-manual__select {
+    min-width: 8.5rem;
+}
+
+.acreditaciones-export-apo-manual__select .searchable-select-wrap {
+    width: 100%;
+}
+
+.acreditaciones-export-apo-manual__select .searchable-select__trigger {
+    min-height: var(--control-height-chrome, 2rem);
+    height: var(--control-height-chrome, 2rem);
+}
+
+.acreditaciones-export-apo-manual__hint {
+    margin: 0.2rem 0 0;
+    font-size: 0.72rem;
+    color: var(--color-text-muted, #64748b);
+}
+
+.acreditaciones-export-apo-manual__footer {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--color-border, #dbe3ef);
+}
+
+.acreditaciones-export-apo-manual__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }

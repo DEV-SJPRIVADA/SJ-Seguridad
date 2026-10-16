@@ -17,7 +17,7 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
   - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
-  - **Export Apo** (FEAT-039) — candidatos (universo estados + Ficha activa); **Validar** carga preview con columnas SuperVigilancia A–X + Valida/motivo (sin DT ni filtros de listado); filtro **multi-cédula** solo sobre el preview (exacto, max 500, sin historial); selección manual; **quitar fila** solo en front (no sale al `.xls`); política vigencia; modal incluir novedades blandas; generación `.xls` (Writer Xls; **sin** Valida/motivo); seq diario persistido; audit generate. Desde **Acreditados** / **Validaciones**: selección (todas las páginas del filtro) + botón icono **Cargar en Export Apo** abre preview solo de esos IDs (fuera de universo → bloqueo duro/`motivo`).
+  - **Export Apo** (FEAT-039) — submodos **Automática** / **Manual** (mismo `acreditaciones.edit`; sin permiso nuevo). **Automática:** candidatos (universo estados + Ficha activa); **Validar** carga preview A–X + Valida/motivo; filtro multi-cédula; selección; modal novedades blandas; generar `.xls`. Desde **Acreditados** / **Validaciones**: **Cargar en Export Apo**. **Manual:** grilla editable estilo Cartas (add/remove/pegar varias cédulas); prefill desde acreditado o ficha si existe (si no, captura a mano); columnas A–X editables excepto params fijos de Catálogo; **Acreditar** / **Retirar** sin Valida/universo/novedades; mismo Writer Xls + seq + audit (`source=manual`).
   - **Dashboard** — KPIs por estado (Total + EN PROCESO / ACREDITADO / POR VENCER / DESACREDITADO), filtros (fecha solicitud, cargo APO, `ficha_estado` activo por defecto, año tendencia) y gráficos ApexCharts (estado, cargo APO, tendencia mensual). Los filtros afectan KPIs y gráficos. Sin corridas Export Apo ni KPIs de candidatos/novedad.
 - Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
@@ -78,9 +78,11 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/validaciones/bulk-selectable` | `validaciones.bulk-selectable` | JSON ids del filtro (todas las páginas) con `acreditado_id` para Export Apo. `acreditaciones.edit` |
 | GET | `/validaciones/exportar` | `validaciones.export` | Excel por cola (`run_token`, `cola`). `acreditaciones.edit` |
 | GET | `/validaciones/exportar-consolidado` | `validaciones.export-consolidated` | Excel 4 hojas (`run_token`). `acreditaciones.edit` |
-| GET | `/export-apo` | `export-apo` | Shell Validar + preview columnas SuperVigilancia. Query opcional `ids[]` → auto-Validar esos IDs. **`acreditaciones.edit`** |
+| GET | `/export-apo` | `export-apo` | Shell Automática/Manual. Automática: Validar + preview. Query opcional `ids[]` → auto-Validar. **`acreditaciones.edit`** |
 | POST | `/export-apo/preview` | `export-apo.preview` | Body: `vigencia_policy` (+ `ids` opcional) → filas APO + Valida/motivo. Sin `ids` = universo completo; con `ids` incluye fuera de universo como bloqueo duro. `acreditaciones.edit` |
-| POST | `/export-apo/generar` | `export-apo.generate` | Body: ids + policy + `include_novedades` → `.xls` + run. `acreditaciones.edit` |
+| POST | `/export-apo/generar` | `export-apo.generate` | Body: ids + policy + `include_novedades` + `export_mode` → `.xls` + run (Automática). `acreditaciones.edit` |
+| POST | `/export-apo/manual/prefill` | `export-apo.manual.prefill` | Body: `document_number` o `document_numbers[]` → filas prefill (acreditado → ficha → vacío). Sin bloqueo Valida. `acreditaciones.edit` |
+| POST | `/export-apo/manual/generar` | `export-apo.manual.generate` | Body: `rows[]` + `export_mode` → `.xls` + run (Manual; sin universo/novedades). `acreditaciones.edit` |
 
 > **Nota:** no existe ruta `validaciones.gate` JSON; el gate se evalúa en el GET shell (y al POST ejecutar).
 | GET | `/catalogo` | `catalogo` | Listado catalogo + sección params Export Apo. `acreditaciones.edit` |
@@ -95,7 +97,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | --- | --- |
 | `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
 | `acreditaciones.view` | Shell, **Dashboard** (lectura KPIs/metrics), Acreditados (lectura), Reporte Diario (ver/filtrar/export/listado cargas), export listados. **No** ve ni opera Validaciones, Export Apo ni edita parámetros Catálogo |
-| `acreditaciones.edit` | CRUD Acreditados, import Acreditados, Catálogo (cargos + params Export Apo), **cargar/reemplazar** Excel Reporte Diario, **Validaciones**, **Export Apo** (tab, DT, preview, generar, modal novedades) |
+| `acreditaciones.edit` | CRUD Acreditados, import Acreditados, Catálogo (cargos + params Export Apo), **cargar/reemplazar** Excel Reporte Diario, **Validaciones**, **Export Apo** (Automática + Manual: preview/generar/prefill) |
 | `ficha_empleados.manage` | Solo para habilitar acción **Abrir Ficha** en Validaciones (ruta destino `editFicha`); no abre la pestaña Validaciones |
 
 **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard (reutilizan view/edit). **No** tocar `config/access.php` en FEAT-039.  
@@ -132,7 +134,8 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | `areas/gestion_humana/acreditaciones/validaciones.blade.php` | Shell fecha + gate + Ejecutar + 4 colas DT + exports; reusa `nuevo-modal` / `edit-modal` |
 | `areas/gestion_humana/acreditaciones/catalogo.blade.php` | Listado + CRUD catalogo + sección params Export Apo (fila unica) |
 | `areas/gestion_humana/acreditaciones/dashboard.blade.php` | Filtros + KPIs por estado + gráficos ApexCharts |
-| `areas/gestion_humana/acreditaciones/export-apo.blade.php` | Vacío hasta **Validar**; preview columnas SuperVigilancia A–X + Sel/Valida/Motivo; modal novedades + generar `.xls` |
+| `areas/gestion_humana/acreditaciones/export-apo.blade.php` | Subtabs Automática/Manual; Automática: Validar + preview A–X + modal novedades; Manual: partial grilla |
+| `areas/gestion_humana/acreditaciones/partials/export-apo-manual.blade.php` | Grilla Manual (Cartas-like) + modal multi-cédula + Alpine `acreditacionesExportApoManual` |
 | `areas/gestion_humana/acreditaciones/partials/subnav.blade.php` | Pestanas `.module-tab` |
 | `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal crear acreditado (tambien desde Validaciones cola `sin_acreditacion`) |
 | `areas/gestion_humana/acreditaciones/partials/edit-modal.blade.php` | Modal editar (identidad bloqueable, CARGO APO searchable-select; tambien desde Validaciones) |
@@ -273,7 +276,8 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `AcreditacionExportApoCandidateService` | Universo candidatos Export Apo (sin DT) |
 | `AcreditacionExportApoRowResolver` | Ficha/cargo/curso/novedades; Genero 1/2; match F\|R |
 | `AcreditacionExportApoPreviewService` | Preview Valida/motivo por ids seleccionados |
-| `AcreditacionExportApoGenerateService` | Seq diario + writer `.xls` + persist run + audit |
+| `AcreditacionExportApoGenerateService` | Seq diario + writer `.xls` + persist run; `generate` (Automática) y `generateFromManualRows` (Manual) |
+| `AcreditacionExportApoManualPrefillService` | Prefill Manual por cédula (acreditado → ficha → vacío editable) |
 | `AcreditacionDashboardService` | KPIs + charts filtrados (fecha solicitud, cargo APO, ficha_estado, año) |
 | `SyncAcreditacionEstadosCommand` | `acreditaciones:sync-estados` (`--date`, `--dry-run`) |
 
@@ -400,6 +404,7 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 44. Filename: `APO` + `settings.nit` + `Ymd` (Bogotá) + `str_pad(seq, 2, '0')` + `.xls` (ej. `…01.xls`). Seq diario 1…99; unique `(export_date, seq)` + reintento. Clave config `filename_prefix` es legacy no usada (el prefijo real usa `settings.nit`).
 44b. El `.xls` siempre tiene 2 hojas: **ApoDatos** (headers A–X) y **Retiros** (`Nit`, `RazonSocial`, `TipoDocumento`, `NoDocumento`, `FechaRetiro`). Modo `acreditar`: llena ApoDatos (universo EN_PROCESO/POR_VENCER/DESACREDITADO); Retiros solo títulos. Modo `retirar`: carga por IDs **sin** filtro de universo (sirve para `ACREDITADO`); llena Retiros (`FechaRetiro` = **día anterior** Bogotá `d/m/Y`); ApoDatos solo títulos; UI no exige Valida=Sí.
 44c. Generación UI vía `fetch` + blob (no `form.submit`): toast de éxito; **Retirar** llama `clearAll()`; **Acreditar** revalida el mismo conjunto de IDs del preview (sin limpiar filtros). Errores de negocio en XHR → JSON 422.
+44d. **Manual** (mismo tab Export Apo): grilla Alpine estilo Cartas; prefill `AcreditacionExportApoManualPrefillService` (prioridad acreditado → ficha → vacío editable); generate `generateFromManualRows` (sin Valida/universo/novedades); params empresa siguen saliendo de settings (no editables en grilla); audit `export_apo_generate` con `source=manual`.
 45. Writer: `App\Exports\AcreditacionExportApoXlsExport` (PhpSpreadsheet `Writer\Xls`); **no** BaseExport / excelHtml5.
 46. Tab + rutas Export Apo: **`acreditaciones.edit`**. GET sin edit → 403.
 
@@ -543,6 +548,9 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.23 | 2026-10-16 | Export Apo Manual: toolbar compacta + chips en meta; panel/tabla flex a alto viewport (sin hueco abajo). |
+| 1.22 | 2026-10-16 | Export Apo Manual UI: fechas `type=date`; Género/Cargo/Código curso/NIT escuela searchable-select; chips params fijos; CSS grilla. |
+| 1.21 | 2026-10-16 | Export Apo **Manual**: subtabs Automática/Manual; prefill ficha/acreditado; grilla add/remove/multi-cédula; Acreditar/Retirar sin Valida; mismo seq/audit (`source=manual`). |
 | 1.20 | 2026-10-15 | Acreditados: columna EN PERFIL; chips En perfil/Sin perfil + estado ficha; default listado todos; alta/import sin ficha (nombre/cargo form/Excel). |
 | 1.19 | 2026-10-14 | Export Apo: generación por fetch+blob; toast éxito; Retirar limpia pantalla; Acreditar revalida preview; JSON 422 en XHR. |
 | 1.18 | 2026-10-14 | Export Apo **Retirar**: genera aunque el ID esté fuera de universo (p. ej. `ACREDITADO`); no exige Valida=Sí ni modal de novedades. |

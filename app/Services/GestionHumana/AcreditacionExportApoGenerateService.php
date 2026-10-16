@@ -111,6 +111,82 @@ final class AcreditacionExportApoGenerateService
     }
 
     /**
+     * Generación Manual: filas ya editadas en UI, sin Valida/universo/novedades.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return array{
+     *     response: StreamedResponse,
+     *     run: AcreditacionExportApoRun,
+     *     export_mode: string,
+     *     source: string,
+     * }
+     */
+    public function generateFromManualRows(
+        array $rows,
+        string $exportMode,
+        ?int $userId = null,
+    ): array {
+        $exportMode = $this->xlsExport->normalizeMode($exportMode);
+        $normalized = [];
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $document = trim((string) ($row['document_number'] ?? ''));
+            if ($document === '') {
+                continue;
+            }
+
+            if ($exportMode === AcreditacionExportApoXlsExport::MODE_RETIRAR) {
+                $normalized[] = [
+                    'document_number' => $document,
+                ];
+
+                continue;
+            }
+
+            $normalized[] = [
+                'document_number' => $document,
+                'nombre1' => trim((string) ($row['nombre1'] ?? '')),
+                'nombre2' => trim((string) ($row['nombre2'] ?? '')),
+                'apellido1' => trim((string) ($row['apellido1'] ?? '')),
+                'apellido2' => trim((string) ($row['apellido2'] ?? '')),
+                'fecha_nacimiento' => $this->normalizeManualApoDate((string) ($row['fecha_nacimiento'] ?? '')),
+                'genero' => trim((string) ($row['genero'] ?? '')),
+                'cargo' => trim((string) ($row['cargo'] ?? '')),
+                'fecha_vinculacion' => $this->normalizeManualApoDate((string) ($row['fecha_vinculacion'] ?? '')),
+                'codigo_curso' => trim((string) ($row['codigo_curso'] ?? '')),
+                'nit_escuela' => trim((string) ($row['nit_escuela'] ?? '')),
+                'nro' => trim((string) ($row['nro'] ?? '')),
+            ];
+        }
+
+        if ($normalized === []) {
+            throw ValidationException::withMessages([
+                'rows' => 'Agregue al menos una fila con cédula para generar el archivo.',
+            ]);
+        }
+
+        $result = $this->finishGenerate(
+            exportRows: $normalized,
+            exportMode: $exportMode,
+            userId: $userId,
+            vigenciaPolicy: AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+            includeNovedades: false,
+            rowsSelected: count($normalized),
+            rowsOk: count($normalized),
+            rowsNovedad: 0,
+            rowsBlocked: 0,
+        );
+
+        $result['source'] = 'manual';
+
+        return $result;
+    }
+
+    /**
      * Retiros: carga por IDs sin filtro de universo; no aplica bloqueos de curso/ficha Export Apo.
      *
      * @param  list<int>  $requestedIds
@@ -286,6 +362,27 @@ final class AcreditacionExportApoGenerateService
         throw ValidationException::withMessages([
             'ids' => 'No se pudo asignar la secuencia del archivo. Intente de nuevo.',
         ]);
+    }
+
+    /**
+     * Manual UI usa YYYY-MM-DD; el .xls APO exige dd/mm/yyyy.
+     */
+    private function normalizeManualApoDate(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value) === 1) {
+            return $value;
+        }
+
+        try {
+            return Carbon::parse($value)->format('d/m/Y');
+        } catch (Throwable) {
+            return $value;
+        }
     }
 
     private function isUniqueConstraintViolation(Throwable $e): bool
