@@ -36,6 +36,15 @@ final class AcreditacionExportApoRowResolver
     public const POLICY_VIGENTE_ACTUALIZAR = 'VIGENTE_ACTUALIZAR';
 
     /**
+     * Fecha vinc. Export Apo: siempre el día anterior (America/Bogota).
+     * Automática usa d/m/Y; Manual UI usa Y-m-d.
+     */
+    public static function defaultFechaVinculacion(string $format = 'd/m/Y'): string
+    {
+        return Carbon::now('America/Bogota')->startOfDay()->subDay()->format($format);
+    }
+
+    /**
      * @var list<string>
      */
     public const HARD_NOVEDADES = [
@@ -92,7 +101,8 @@ final class AcreditacionExportApoRowResolver
         $apellido2 = '';
         $fechaNacimiento = '';
         $genero = '';
-        $fechaVinculacion = '';
+        // Fechavinculacion APO: siempre ayer (no se toma hire_date de ficha).
+        $fechaVinculacion = self::defaultFechaVinculacion('d/m/Y');
 
         if ($ficha === null || $this->fichaIsIncomplete($ficha)) {
             $motivoCodes[] = self::NOVEDAD_FICHA_INCOMPLETA;
@@ -103,7 +113,6 @@ final class AcreditacionExportApoRowResolver
             $apellido2 = trim((string) ($ficha->second_surname ?? ''));
             $fechaNacimiento = $this->formatDate($ficha->birth_date);
             $genero = $this->mapGenero((string) $ficha->sex);
-            $fechaVinculacion = $this->formatDate($ficha->hire_date);
         }
 
         $cargoResult = $this->resolveCargoAcreditacion((string) $acreditado->cargo_apo);
@@ -459,15 +468,18 @@ final class AcreditacionExportApoRowResolver
         $tipoNorm = preg_replace('/\s+/u', '', $this->normalizer->normalizeCargo($tipo->tipo_curso)) ?? '';
         $expectedF = 'F.'.$apoNorm;
         $expectedR = 'R.'.$apoNorm;
-        $isFamiliaFR = (bool) preg_match('/^[FR]\./', $tipoNorm)
+        $expectedE = 'E.'.$apoNorm;
+        // Familia F (formación), R (reentrenamiento) y E (especialización / educativa).
+        $isFamiliaFRE = (bool) preg_match('/^[FRE]\./', $tipoNorm)
             || $tipoNorm === $expectedF
-            || $tipoNorm === $expectedR;
+            || $tipoNorm === $expectedR
+            || $tipoNorm === $expectedE;
 
-        if (! $isFamiliaFR) {
+        if (! $isFamiliaFRE) {
             return false;
         }
 
-        if ($tipoNorm === $expectedF || $tipoNorm === $expectedR) {
+        if ($tipoNorm === $expectedF || $tipoNorm === $expectedR || $tipoNorm === $expectedE) {
             return true;
         }
 

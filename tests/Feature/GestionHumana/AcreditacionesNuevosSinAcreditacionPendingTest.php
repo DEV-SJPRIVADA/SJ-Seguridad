@@ -85,7 +85,74 @@ class AcreditacionesNuevosSinAcreditacionPendingTest extends TestCase
             ->assertSee('Nuevo acreditado', false)
             ->assertSee('No aplica / omitir', false)
             ->assertSee('cursos-catalogo-page__icon-btn', false)
-            ->assertSee('Volver a acreditados', false);
+            ->assertSee('Volver a acreditados', false)
+            ->assertSee('Exportar cola a Excel', false)
+            ->assertSee(route('gestion-humana.acreditaciones.acreditados.export-pendientes'), false);
+    }
+
+    public function test_export_pendientes_sin_acreditacion_returns_excel(): void
+    {
+        $profile = EmployeeFichaProfile::query()->create([
+            'document_number' => '6201',
+            'full_name' => 'Export Cola Acr',
+            'position_name' => 'ESCOLTA',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+        EmployeeAcreditacionPending::factory()->pending()->create([
+            'document_number' => '6201',
+            'full_name' => 'Export Cola Acr',
+            'employee_ficha_profile_id' => $profile->id,
+            'enqueued_at' => now(),
+        ]);
+
+        $editor = $this->editorUser();
+        $viewer = $this->viewerUser();
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.acreditaciones.acreditados.export-pendientes'))
+            ->assertForbidden();
+
+        $response = $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados.export-pendientes'))
+            ->assertOk();
+
+        $this->assertStringContainsString(
+            'spreadsheetml',
+            (string) $response->headers->get('content-type'),
+        );
+
+        $temp = tempnam(sys_get_temp_dir(), 'acr-pending-export-');
+        file_put_contents($temp, $response->streamedContent());
+
+        $zip = new \ZipArchive;
+        $this->assertTrue($zip->open($temp));
+        $sharedStrings = (string) $zip->getFromName('xl/sharedStrings.xml');
+        $sheet = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+
+        if (is_file($temp)) {
+            unlink($temp);
+        }
+
+        $this->assertStringContainsString('Export Cola Acr', $sharedStrings);
+        $this->assertStringContainsString('ESCOLTA', $sharedStrings);
+        // Cédula puede ir como número en celdas (no siempre en sharedStrings).
+        $this->assertTrue(
+            str_contains($sharedStrings, '6201') || str_contains($sheet, '6201'),
+            'La cédula 6201 debe aparecer en el Excel exportado.',
+        );
+    }
+
+    public function test_export_pendientes_empty_redirects_with_message(): void
+    {
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados.export-pendientes'))
+            ->assertRedirect(route('gestion-humana.acreditaciones.acreditados', [
+                'cola' => 'nuevos-sin-acreditacion',
+            ]))
+            ->assertSessionHasErrors('export');
     }
 
     public function test_cola_nuevo_modal_prefill_includes_cargo_from_ficha_position_name(): void

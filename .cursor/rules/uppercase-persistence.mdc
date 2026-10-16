@@ -1,0 +1,39 @@
+---
+description: Textos de formularios e import masivo se persisten en MAYÚSCULAS (UTF-8), salvo claves/contraseñas y campos técnicos
+alwaysApply: true
+---
+
+# Persistencia en mayúsculas
+
+**Obligatorio:** todo texto libre que se guarde en BD desde **formularios** o **import masivo** debe normalizarse a **MAYÚSCULAS UTF-8** antes de persistir.
+
+## Cómo hacerlo
+
+- Form Requests: trait `App\Http\Requests\Concerns\UppercasesValidatedText`.
+- Imports / servicios / arrays ya validados: `App\Support\UppercaseFormText::apply($data, $except)`.
+- String suelto: `UppercaseFormText::uppercaseString($value)`.
+
+No reinventar `mb_strtoupper` ad hoc ni depender solo de `text-transform: uppercase` en CSS (eso no llega a BD).
+
+## Excepciones (no mayúsculas)
+
+Incluidas en `UppercaseFormText::DEFAULT_EXCEPT` y reglas del helper:
+
+- Contraseñas / confirmación: `password`, `password_confirmation`
+- Correos: `email` y cualquier clave que contenga `email`
+- Tokens / método HTTP: `_token`, `_method`
+- Códigos de catálogo / keys técnicas: claves que terminan en `_code`, enums cortos (`sex`, `document_type`, `status`, áreas `*_key`, etc.)
+- No-string (int, bool, file, null) y fechas ISO `Y-m-d…`
+
+Si un Form Request necesita exclusiones extra: override `uppercaseExceptKeys(): array`.
+
+## Checklist al tocar alta/edición/import
+
+1. El Form Request usa `UppercasesValidatedText` **o** el servicio de import llama `UppercaseFormText::apply` sobre las filas/columnas de texto.
+2. No se bypassea `validated()` con `$request->all()` / `input()` crudo para escribir en modelos.
+3. Tests: al menos un caso que aserte el valor persistido en mayúsculas (p. ej. nombre/observación).
+
+## Referencia
+
+- Código: `app/Support/UppercaseFormText.php`, `app/Http/Requests/Concerns/UppercasesValidatedText.php`
+- Tests: `tests/Unit/Support/UppercaseFormTextTest.php`

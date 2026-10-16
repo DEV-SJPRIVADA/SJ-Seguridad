@@ -1088,6 +1088,7 @@
                 </div>
             </div>
         </div>
+        <x-confirm-delete-modal />
         @stack('scripts')
     </body>
 </html>

@@ -7,6 +7,7 @@
         'csrfToken' => csrf_token(),
         'maxRows' => $manualMaxRows ?? 500,
         'defaultVigenciaPolicy' => $defaultVigenciaPolicy,
+        'defaultFechaVinculacion' => $defaultFechaVinculacion,
         'initialDocuments' => $initialManualDocuments ?? [],
         'generoOptions' => $manualGeneroOptions ?? [],
         'cargoOptions' => $manualCargoOptions ?? [],
@@ -400,6 +401,8 @@
         <script>
             document.addEventListener('alpine:init', () => {
                 Alpine.data('acreditacionesExportApoManual', (config) => {
+                    const defaultFechaVinculacion = String(config.defaultFechaVinculacion || '').trim();
+
                     const emptyFields = () => ({
                         document_number: '',
                         nombre1: '',
@@ -409,7 +412,8 @@
                         fecha_nacimiento: '',
                         genero: '',
                         cargo: '',
-                        fecha_vinculacion: '',
+                        // Fecha vinc.: ayer (America/Bogota) por defecto.
+                        fecha_vinculacion: defaultFechaVinculacion,
                         codigo_curso: '',
                         nit_escuela: '',
                         nro: '',
@@ -441,6 +445,7 @@
                         generateUrl: config.generateUrl,
                         csrfToken: config.csrfToken || '',
                         defaultVigenciaPolicy: config.defaultVigenciaPolicy || 'vigente',
+                        defaultFechaVinculacion,
                         settings: config.settings || {},
                         generoOptions: Array.isArray(config.generoOptions) ? config.generoOptions : [],
                         cargoOptions: Array.isArray(config.cargoOptions) ? config.cargoOptions : [],
@@ -626,7 +631,9 @@
                             row.fecha_nacimiento = this.toIsoDate(data.fecha_nacimiento);
                             row.genero = data.genero || '';
                             row.cargo = data.cargo || '';
-                            row.fecha_vinculacion = this.toIsoDate(data.fecha_vinculacion);
+                            row.fecha_vinculacion = this.toIsoDate(data.fecha_vinculacion)
+                                || this.defaultFechaVinculacion
+                                || '';
                             row.codigo_curso = data.codigo_curso || '';
                             row.nit_escuela = data.nit_escuela || '';
                             row.nro = data.nro || '';

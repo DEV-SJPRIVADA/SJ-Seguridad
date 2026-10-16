@@ -11,7 +11,7 @@ Llevar el control de cursos de las personas (vigencia, estado de tramite y docum
 Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 
 - **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo. Solo considera personal **activo en Ficha**. Clic en un KPI abre **Cursos** ya filtrado (vigencia, estado o sin documento, según el indicador).
-- **Cursos** — listado paginado (carga por paginas); por defecto muestra solo personal **activo en Ficha** (chip **Solo activos Ficha**, desactivable). Filtros (incluye **varias cédulas** con icono, exacto, sin historial), chips **En perfil / Sin perfil**, **Solo ACTUALIZAR**, **Sin documento**, columna **EN PERFIL**, alta/edicion/eliminacion, documento, export Excel e import masivo. Puede registrar cursos **aunque la cédula no esté en Ficha** (manual o Excel con nombre). En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
+- **Cursos** — listado paginado (carga por paginas); por defecto muestra solo personal **activo en Ficha** (chip **Solo activos Ficha**, desactivable). Filtros (incluye **varias cédulas** con icono, exacto, sin historial), chips **En perfil / Sin perfil**, **Solo ACTUALIZAR**, **Sin documento**, columna **EN PERFIL**, alta/edicion/eliminacion, documento, export Excel e import masivo. Si una **cédula** aparece en más de un curso, se muestra en **rojo** en la columna Cédula. Puede registrar cursos **aunque la cédula no esté en Ficha** (manual o Excel con nombre). En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
 - **Validaciones** — colas de hallazgo en vivo (sin gate de reporte):
   - **Activos sin curso**: personas activas en Ficha con **Requiere cursos** activo y sin ningún registro de curso. Con edición: **Agregar curso**.
   - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Con edición: editar y marcar SOLICITADO.
@@ -76,8 +76,10 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.17 | 2026-10-16 | Al eliminar un curso, documento o ítem de catálogo aparece un modal de confirmación. |
 | 1.16 | 2026-10-16 | Cursos (registros): por defecto solo personal activo en Ficha (igual que Dashboard). |
 | 1.15 | 2026-10-16 | Dashboard: KPIs clicables hacia Cursos con filtro; gráficos con etiquetas de valor; chips Sin documento y Solo activos Ficha. |
+| 1.15 | 2026-10-16 | Registros: cédulas con más de un curso se marcan en rojo. |
 | 1.14 | 2026-10-15 | Registros: columna EN PERFIL; chips En perfil/Sin perfil y Solo ACTUALIZAR; alta e import permiten cédulas sin ficha. |
 | 1.13 | 2026-10-02 | Cola Nuevos sin curso: acciones de fila y volver a registros pasan a iconos. |
 | 1.12 | 2026-09-29 | Nueva pestaña Validaciones: activos sin curso + por actualizar/vencidos (una fila por curso); reutiliza cursos.view/edit; coexiste con cola Nuevos sin curso. |

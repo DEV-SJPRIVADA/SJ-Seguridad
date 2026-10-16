@@ -175,7 +175,13 @@
                                                             </form>
                                                         </details>
                                                         @if ($tipo->employee_cursos_count === 0)
-                                                            <form method="POST" action="{{ route('gestion-humana.cursos.catalogo.destroy', $tipo) }}" class="cursos-catalogo-page__delete-form" onsubmit="return confirm('¿Eliminar este tipo de curso?')">
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('gestion-humana.cursos.catalogo.destroy', $tipo) }}"
+                                                                class="cursos-catalogo-page__delete-form js-confirm-delete"
+                                                                data-confirm-title="Eliminar tipo de curso"
+                                                                data-confirm-message="¿Eliminar este tipo de curso? Esta acción no se puede deshacer."
+                                                            >
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" title="Eliminar" aria-label="Eliminar">
@@ -298,7 +304,13 @@
                                                                 </div>
                                                             </form>
                                                         </details>
-                                                        <form method="POST" action="{{ route('gestion-humana.cursos.catalogo.escuelas.destroy', $escuela) }}" class="cursos-catalogo-page__delete-form" onsubmit="return confirm('¿Eliminar esta escuela?')">
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('gestion-humana.cursos.catalogo.escuelas.destroy', $escuela) }}"
+                                                            class="cursos-catalogo-page__delete-form js-confirm-delete"
+                                                            data-confirm-title="Eliminar escuela"
+                                                            data-confirm-message="¿Eliminar esta escuela? Esta acción no se puede deshacer."
+                                                        >
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" title="Eliminar" aria-label="Eliminar">

@@ -46,12 +46,14 @@ final class AcreditacionAcreditadoDatatableService
         $rows = $query->get();
 
         $inProfileDocs = $this->documentNumbersInProfile($rows);
+        $duplicateDocs = $this->duplicateDocumentNumbers($rows);
 
         $data = $rows
             ->map(fn (AcreditacionAcreditado $row): array => $this->formatRow(
                 $row,
                 $canEdit,
                 $inProfileDocs->has((string) $row->document_number),
+                $duplicateDocs->has((string) $row->document_number),
             ))
             ->values()
             ->all();
@@ -82,6 +84,33 @@ final class AcreditacionAcreditadoDatatableService
 
         return EmployeeFichaProfile::query()
             ->whereIn('document_number', $docs->all())
+            ->pluck('document_number')
+            ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
+    }
+
+    /**
+     * Cédulas de la página actual que tienen más de un registro en acreditacion_acreditados.
+     *
+     * @param  Collection<int, AcreditacionAcreditado>  $rows
+     * @return Collection<string, true>
+     */
+    private function duplicateDocumentNumbers(Collection $rows): Collection
+    {
+        $docs = $rows->pluck('document_number')
+            ->filter(fn ($doc): bool => filled($doc))
+            ->map(fn ($doc): string => (string) $doc)
+            ->unique()
+            ->values();
+
+        if ($docs->isEmpty()) {
+            return collect();
+        }
+
+        return AcreditacionAcreditado::query()
+            ->select('document_number')
+            ->whereIn('document_number', $docs->all())
+            ->groupBy('document_number')
+            ->havingRaw('COUNT(*) > 1')
             ->pluck('document_number')
             ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
     }
@@ -185,7 +214,7 @@ final class AcreditacionAcreditadoDatatableService
     /**
      * @return list<string>
      */
-    private function formatRow(AcreditacionAcreditado $row, bool $canEdit, bool $inProfile): array
+    private function formatRow(AcreditacionAcreditado $row, bool $canEdit, bool $inProfile, bool $isDuplicateCedula): array
     {
         $estadoLabel = $this->estadoCalculator->estadoLabel((string) $row->estado);
         $estadoClass = match ($row->estado) {
@@ -207,7 +236,7 @@ final class AcreditacionAcreditadoDatatableService
         }
 
         $cells = array_merge($cells, [
-            e((string) $row->document_number),
+            $this->formatDocumentNumberCell((string) $row->document_number, $isDuplicateCedula),
             e((string) $row->full_name),
             e((string) $row->cargo),
             e((string) $row->cargo_apo),
@@ -224,6 +253,24 @@ final class AcreditacionAcreditadoDatatableService
         }
 
         return $cells;
+    }
+
+    /**
+     * Cédula en rojo cuando hay más de un registro con el mismo documento.
+     */
+    private function formatDocumentNumberCell(string $documentNumber, bool $isDuplicate): string
+    {
+        $escaped = e($documentNumber);
+
+        if (! $isDuplicate) {
+            return $escaped;
+        }
+
+        return sprintf(
+            '<span class="gh-cedula-duplicate" title="%s">%s</span>',
+            e('Cédula con más de un registro'),
+            $escaped,
+        );
     }
 
     private function formatSelectCell(AcreditacionAcreditado $row): string
@@ -274,7 +321,8 @@ final class AcreditacionAcreditadoDatatableService
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
             '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>'.
             '</button>'.
-            '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form" onsubmit="return confirm(%s);">'.
+            '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form js-confirm-delete" '.
+            'data-confirm-title="%s" data-confirm-message="%s">'.
             '%s<input type="hidden" name="_method" value="DELETE">'.
             '<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" '.
             'title="Eliminar" aria-label="Eliminar">'.
@@ -285,7 +333,8 @@ final class AcreditacionAcreditadoDatatableService
             '</button></form></div>',
             $editPayload,
             e(route('gestion-humana.acreditaciones.acreditados.destroy', $row)),
-            e(json_encode('¿Eliminar este acreditado?', JSON_UNESCAPED_UNICODE)),
+            e('Eliminar acreditado'),
+            e('¿Eliminar este acreditado? Esta acción no se puede deshacer.'),
             $this->csrfField(),
         );
     }

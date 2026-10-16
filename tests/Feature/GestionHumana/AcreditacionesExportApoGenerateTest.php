@@ -99,7 +99,8 @@ class AcreditacionesExportApoGenerateTest extends TestCase
         $this->assertSame('9005767186', (string) $sheet->getCell('A2')->getValue());
         $this->assertSame($cedula, (string) $sheet->getCell('D2')->getValue());
         $this->assertSame('15/05/1990', (string) $sheet->getCell('I2')->getValue());
-        $this->assertSame('10/01/2020', (string) $sheet->getCell('L2')->getValue());
+        // Fecha vinc. = ayer (America/Bogota), no hire_date de ficha.
+        $this->assertSame('27/09/2026', (string) $sheet->getCell('L2')->getValue());
         $this->assertSame('2201', (string) $sheet->getCell('M2')->getValue());
 
         $this->assertSame(['Nit', 'RazonSocial', 'TipoDocumento', 'NoDocumento', 'FechaRetiro'], [
@@ -277,7 +278,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
             'is_active' => true,
         ]);
 
-        $acreditado = AcreditacionAcreditado::factory()->enProceso()->create([
+        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
             'cargo_apo' => 'ESCOLTA',
         ]);
@@ -430,7 +431,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
             'numero_curso' => 'NC-'.$cedula,
         ]);
 
-        return AcreditacionAcreditado::factory()->enProceso()->create([
+        return AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
             'cargo_apo' => $cargoApo,
         ]);
@@ -450,7 +451,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
             'sort_order' => 1,
         ]);
 
-        return AcreditacionAcreditado::factory()->enProceso()->create([
+        return AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
             'cargo_apo' => $cargoApo,
         ]);

@@ -8,6 +8,7 @@ use App\Models\AcreditacionExportApoRun;
 use App\Models\AcreditacionExportApoSetting;
 use App\Models\EmployeeFichaProfile;
 use App\Models\User;
+use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,6 +27,12 @@ class AcreditacionesExportApoManualTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
         AcreditacionExportApoSetting::singleton();
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     public function test_viewer_gets_403_on_manual_routes(): void
@@ -92,11 +99,17 @@ class AcreditacionesExportApoManualTest extends TestCase
             ->assertJsonPath('row.document_number', $cedula)
             ->assertJsonPath('row.nombre1', 'Ana')
             ->assertJsonPath('row.apellido1', 'Lopez')
-            ->assertJsonPath('row.genero', '2');
+            ->assertJsonPath('row.genero', '2')
+            ->assertJsonPath(
+                'row.fecha_vinculacion',
+                AcreditacionExportApoRowResolver::defaultFechaVinculacion('Y-m-d'),
+            );
     }
 
     public function test_prefill_empty_row_when_document_unknown(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-10-16 11:00:00', 'America/Bogota'));
+
         $editor = $this->editorUser();
 
         $this->actingAs($editor)
@@ -107,7 +120,8 @@ class AcreditacionesExportApoManualTest extends TestCase
             ->assertJsonPath('found', false)
             ->assertJsonPath('source', null)
             ->assertJsonPath('row.document_number', '9998887776')
-            ->assertJsonPath('row.nombre1', '');
+            ->assertJsonPath('row.nombre1', '')
+            ->assertJsonPath('row.fecha_vinculacion', '2026-10-15');
     }
 
     public function test_manual_generate_acreditar_skips_valida_and_uses_seq(): void

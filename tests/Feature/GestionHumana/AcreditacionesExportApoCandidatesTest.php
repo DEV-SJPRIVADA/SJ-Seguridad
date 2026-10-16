@@ -80,6 +80,11 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
             'cargo_apo' => 'SUPERVISOR',
             'full_name' => 'Candidato Uno',
         ]);
+        $desacreditado = AcreditacionAcreditado::factory()->desacreditado()->create([
+            'document_number' => $cedula,
+            'cargo_apo' => 'OPERADOR',
+            'full_name' => 'Candidato Uno',
+        ]);
         AcreditacionAcreditado::factory()->create([
             'document_number' => $cedula,
             'cargo_apo' => 'VIGILANTE',
@@ -93,7 +98,8 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
             ->assertSee('Export Apo', false)
             ->assertSee('Política vigencia curso', false)
             ->assertSee('NoDocumento', false)
-            ->assertSee('CodigoCurso', false);
+            ->assertSee('CodigoCurso', false)
+            ->assertSee('POR VENCER</strong>, <strong>DESACREDITADO</strong> con ficha activa', false);
 
         $json = $this->actingAs($editor)
             ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
@@ -104,8 +110,9 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
 
         $ids = collect($json['rows'] ?? [])->pluck('acreditado_id')->all();
         $this->assertCount(2, $ids);
-        $this->assertContains($enProceso->id, $ids);
+        $this->assertNotContains($enProceso->id, $ids);
         $this->assertContains($porVencer->id, $ids);
+        $this->assertContains($desacreditado->id, $ids);
         $this->assertSame(2, $json['summary']['found']);
         $this->assertArrayHasKey('nombre1', $json['rows'][0]);
         $this->assertArrayHasKey('codigo_curso', $json['rows'][0]);
@@ -257,6 +264,71 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_resolver_matches_e_familia_tipo_via_cargo_acredit_code(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-28'));
+
+        $cedula = '10188090';
+        $this->createCompleteFicha($cedula, ['sex' => 'M']);
+
+        AcreditacionCargo::factory()->create([
+            'cargo_apo' => 'VIGILANTE',
+            'cargo_acreditacion' => '1',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $escuela = CursoEscuela::factory()->create([
+            'nit' => '900111222',
+            'is_active' => true,
+        ]);
+
+        $tipoE = CursoTipo::factory()->create([
+            'tipo_curso' => 'E.VIGILANCIA EDUCATIVA',
+            'cargo_acredit' => '1',
+            'cursos' => '1304',
+            'is_active' => true,
+        ]);
+        // Curso F de otro cargo: no debe ganar el match de VIGILANTE.
+        $tipoOtro = CursoTipo::factory()->create([
+            'tipo_curso' => 'F.SUPERVISOR',
+            'cargo_acredit' => '4',
+            'cursos' => '3101',
+            'is_active' => true,
+        ]);
+
+        EmployeeCurso::factory()->withEscuela($escuela)->create([
+            'document_number' => $cedula,
+            'curso_tipo_id' => $tipoE->id,
+            'fecha_expedicion' => '2026-07-25',
+            'numero_curso' => 'ECSP0015-E130400',
+            'escuela_nit' => '900111222',
+        ]);
+        EmployeeCurso::factory()->withEscuela($escuela)->create([
+            'document_number' => $cedula,
+            'curso_tipo_id' => $tipoOtro->id,
+            'fecha_expedicion' => '2026-08-01',
+            'numero_curso' => 'NC-SUP-002',
+        ]);
+
+        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+
+        $resolved = app(AcreditacionExportApoRowResolver::class)->resolve(
+            $acreditado,
+            AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+        );
+
+        $this->assertTrue($resolved['valida']);
+        $this->assertSame('1304', $resolved['codigo_curso']);
+        $this->assertSame('E.VIGILANCIA EDUCATIVA', $resolved['tipo_curso']);
+        $this->assertSame('ECSP0015-E130400', $resolved['nro']);
+
+        Carbon::setTestNow();
+    }
+
     public function test_resolver_fills_nit_escuela_from_catalog_using_numero_curso_code(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-09-28'));
@@ -333,7 +405,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
             'is_active' => true,
         ]);
 
-        $acreditado = AcreditacionAcreditado::factory()->enProceso()->create([
+        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
             'cargo_apo' => 'ESCOLTA',
         ]);
@@ -362,7 +434,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         $cedula = '4005006007';
         $this->createCompleteFicha($cedula);
 
-        $acreditado = AcreditacionAcreditado::factory()->enProceso()->create([
+        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
             'cargo_apo' => 'ESCOLTA',
         ]);
@@ -385,9 +457,13 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         $cedula = '5006007008';
         $this->createCompleteFicha($cedula);
 
-        $candidato = AcreditacionAcreditado::factory()->enProceso()->create([
+        $candidato = AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
             'cargo_apo' => 'ESCOLTA',
+        ]);
+        $enProceso = AcreditacionAcreditado::factory()->enProceso()->create([
+            'document_number' => $cedula,
+            'cargo_apo' => 'SUPERVISOR',
         ]);
         $fresco = AcreditacionAcreditado::factory()->create([
             'document_number' => $cedula,
@@ -397,18 +473,25 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
 
         $response = $this->actingAs($editor)
             ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
-                'ids' => [$candidato->id, $fresco->id, 999999],
+                'ids' => [$candidato->id, $enProceso->id, $fresco->id, 999999],
                 'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
             ])
             ->assertOk()
             ->json();
 
         $byId = collect($response['rows'] ?? [])->keyBy('acreditado_id');
-        $this->assertCount(3, $response['rows']);
+        $this->assertCount(4, $response['rows']);
         $this->assertArrayHasKey($candidato->id, $byId->all());
+        $this->assertArrayHasKey($enProceso->id, $byId->all());
         $this->assertArrayHasKey($fresco->id, $byId->all());
         $this->assertArrayHasKey(999999, $byId->all());
 
+        $this->assertFalse($byId[$candidato->id]['hard_block'] ?? true);
+        $this->assertContains(
+            AcreditacionExportApoRowResolver::NOVEDAD_FUERA_UNIVERSO,
+            $byId[$enProceso->id]['motivo_codes'],
+        );
+        $this->assertTrue($byId[$enProceso->id]['hard_block']);
         $this->assertContains(
             AcreditacionExportApoRowResolver::NOVEDAD_FUERA_UNIVERSO,
             $byId[$fresco->id]['motivo_codes'],

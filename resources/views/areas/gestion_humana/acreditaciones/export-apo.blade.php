@@ -172,7 +172,7 @@
                                 </div>
                             </div>
                             <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;">
-                                Pulse <strong>Validar</strong> para cargar candidatos (<strong>EN PROCESO</strong>, <strong>POR VENCER</strong>, <strong>DESACREDITADO</strong> con ficha activa)
+                                Pulse <strong>Validar</strong> para cargar candidatos (<strong>POR VENCER</strong>, <strong>DESACREDITADO</strong> con ficha activa)
                                 en columnas SuperVigilancia. Marque filas y genere el <strong>.xls</strong>.
                             </p>
                             <div class="alert alert--danger" x-show="previewError" x-text="previewError" x-cloak style="margin-top:0.5rem;"></div>

@@ -51,6 +51,7 @@
 - **Dashboards (KPI + gráficos):** referencia canónica el dashboard de área Gestión Humana (`/gestion-humana/dashboard` + `gh-area-dashboard-charts.js`): títulos de charts centrados, etiquetas Apex visibles (horizontales si los números son pequeños; encima de barras). Regla: [`.cursor/rules/dashboard-ui.mdc`](.cursor/rules/dashboard-ui.mdc).
 - **Navegacion chrome:** areas (sidebar `.sidebar-link`), tableros y pestanas (`.module-tab`) comparten el mismo estilo pill; padding del contenedor a los botones `0.2rem`. Ver `.cursor/rules/nav-chrome-ui.mdc` y `docs/modules/branding.md`.
 - **Botones icon-only:** chrome/filtros usan `.req-manage-filters__icon-btn` (`--primary` / `--ghost` / `--danger`); acciones de fila usan `.cursos-catalogo-page__icon-btn`. No crear familias CSS por modulo. Ver `.cursor/rules/icon-buttons-ui.mdc` y `docs/modules/branding.md`.
+- **Persistencia en mayúsculas:** textos de formularios e import masivo se guardan en MAYÚSCULAS UTF-8 (excepto contraseñas, emails, códigos/keys técnicas). Usar `UppercasesValidatedText` / `UppercaseFormText`. Regla: [`.cursor/rules/uppercase-persistence.mdc`](.cursor/rules/uppercase-persistence.mdc).
 
 ## Estructura y Arquitectura Modular (Híbrida)
 - **Módulos Compartidos:** Funcionalidades usadas por múltiples áreas (ej. Requisiciones). Se ubican en:

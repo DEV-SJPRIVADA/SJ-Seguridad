@@ -50,6 +50,9 @@
             @if (session('error'))
                 <div class="alert alert--danger cursos-registros-page__alert">{{ session('error') }}</div>
             @endif
+            @if ($errors->has('export'))
+                <div class="alert alert--danger cursos-registros-page__alert">{{ $errors->first('export') }}</div>
+            @endif
 
             <x-import-result-modal download-route="gestion-humana.acreditaciones.acreditados.import-report" />
 
@@ -234,7 +237,7 @@
                             @endif
 
                             @if ($canEdit)
-                                <div class="cursos-registros-page__table-actions">
+                                <div class="cursos-registros-page__table-actions {{ ($colaMode ?? false) ? 'cursos-registros-page__table-actions--cola-stack' : '' }}">
                                     <a
                                         href="{{ ($colaMode ?? false) ? $colaExitUrl : $colaQueueUrl }}"
                                         class="ficha-empleados-filters__pending-link cursos-registros-page__nuevos-link {{ ($colaMode ?? false) ? 'is-active' : '' }}"
@@ -244,6 +247,18 @@
                                         <x-ri-pass-pending-fill width="24" height="24" aria-hidden="true" />
                                         <span class="ficha-empleados-filters__pending-count">{{ number_format($pendingCount ?? 0) }}</span>
                                     </a>
+
+                                    @if ($colaMode ?? false)
+                                        {{-- Export Excel de la cola: derecha, debajo del icono Nuevos sin acreditación --}}
+                                        <a
+                                            href="{{ $pendingExportUrl }}"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                            title="Exportar cola a Excel"
+                                            aria-label="Exportar cola a Excel"
+                                        >
+                                            <x-selfhst-microsoft-excel-2013 width="18" height="18" aria-hidden="true" />
+                                        </a>
+                                    @endif
 
                                     @unless ($colaMode ?? false)
                                         <button

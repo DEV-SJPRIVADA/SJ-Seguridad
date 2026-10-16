@@ -20,6 +20,10 @@ Leer y respetar [`AGENTS.md`](../../AGENTS.md) en todo cambio funcional.
 
 Al codear: corregir ortografía en textos de UI y comentar bloques funcionales. Ver [`.cursor/rules/orthography-and-comments.mdc`](orthography-and-comments.mdc).
 
+## Persistencia en mayúsculas
+
+Textos de formularios e import masivo → MAYÚSCULAS en BD (salvo contraseñas, emails, códigos/keys). Ver [`.cursor/rules/uppercase-persistence.mdc`](uppercase-persistence.mdc) y `App\Support\UppercaseFormText`.
+
 ## Documentacion doble (features completas)
 
 - Guia maestra: [`docs/DOCUMENTATION.md`](../../docs/DOCUMENTATION.md)

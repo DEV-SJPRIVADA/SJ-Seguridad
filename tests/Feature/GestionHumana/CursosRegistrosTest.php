@@ -380,6 +380,58 @@ class CursosRegistrosTest extends TestCase
             ->assertSee(route('gestion-humana.cursos.registros.export'), false);
     }
 
+    public function test_datatable_marks_duplicate_cedulas_in_red(): void
+    {
+        $viewer = $this->viewerUser();
+        $tipo = CursoTipo::factory()->create();
+
+        $this->createCursoWithActiveFicha([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'DUP-CED',
+            'full_name' => 'Persona Duplicada',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'DUP-1',
+        ]);
+        EmployeeCurso::factory()->create([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'DUP-CED',
+            'full_name' => 'Persona Duplicada',
+            'fecha_expedicion' => '2026-02-01',
+            'numero_curso' => 'DUP-2',
+        ]);
+        $this->createCursoWithActiveFicha([
+            'curso_tipo_id' => $tipo->id,
+            'document_number' => 'UNIQ-CED',
+            'full_name' => 'Persona Unica',
+            'fecha_expedicion' => '2026-01-01',
+            'numero_curso' => 'UNIQ-1',
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.cursos.registros.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]));
+
+        $response->assertOk();
+
+        $rows = collect($response->json('data'));
+        $dupRows = $rows->filter(fn (array $row): bool => str_contains(implode(' ', $row), 'DUP-CED'));
+        $uniqRows = $rows->filter(fn (array $row): bool => str_contains(implode(' ', $row), 'UNIQ-CED'));
+
+        $this->assertGreaterThanOrEqual(2, $dupRows->count());
+        $this->assertSame(1, $uniqRows->count());
+
+        foreach ($dupRows as $row) {
+            $this->assertStringContainsString('gh-cedula-duplicate', implode('', $row));
+        }
+
+        foreach ($uniqRows as $row) {
+            $this->assertStringNotContainsString('gh-cedula-duplicate', implode('', $row));
+        }
+    }
+
     public function test_filter_solo_actualizar(): void
     {
         $viewer = $this->viewerUser();

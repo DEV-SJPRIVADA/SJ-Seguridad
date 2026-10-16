@@ -323,6 +323,8 @@ Route::middleware(['password.changed'])
         Route::post('/acreditados/bulk-update', [AcreditacionesController::class, 'bulkUpdate'])->name('acreditados.bulk-update');
         Route::get('/acreditados/lookup', [AcreditacionesController::class, 'acreditadosLookup'])->name('acreditados.lookup');
         Route::get('/acreditados/exportar', [AcreditacionesController::class, 'exportAcreditados'])->name('acreditados.export');
+        Route::get('/acreditados/exportar-pendientes', [AcreditacionesController::class, 'exportPendientesSinAcreditacion'])
+            ->name('acreditados.export-pendientes');
         Route::get('/acreditados/plantilla-importacion', [AcreditacionesController::class, 'importTemplate'])->name('acreditados.import-template');
         Route::post('/acreditados/importar', [AcreditacionesController::class, 'importAcreditados'])->name('acreditados.import');
         Route::get('/acreditados/importar/reporte/{token}', [AcreditacionesController::class, 'downloadImportReport'])->name('acreditados.import-report');

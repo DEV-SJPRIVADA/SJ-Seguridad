@@ -224,7 +224,13 @@
                                                     </form>
                                                 </details>
                                                 @if ($catalogService->canDelete($cargo))
-                                                    <form method="POST" action="{{ route('gestion-humana.acreditaciones.catalogo.destroy', $cargo) }}" class="cursos-catalogo-page__delete-form" onsubmit="return confirm('¿Eliminar este cargo del catálogo?')">
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('gestion-humana.acreditaciones.catalogo.destroy', $cargo) }}"
+                                                        class="cursos-catalogo-page__delete-form js-confirm-delete"
+                                                        data-confirm-title="Eliminar cargo"
+                                                        data-confirm-message="¿Eliminar este cargo del catálogo? Esta acción no se puede deshacer."
+                                                    >
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" title="Eliminar" aria-label="Eliminar">

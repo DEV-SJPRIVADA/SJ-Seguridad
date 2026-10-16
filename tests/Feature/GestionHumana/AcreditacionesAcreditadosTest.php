@@ -206,6 +206,41 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->assertDatabaseMissing('acreditacion_acreditados', ['id' => $row->id]);
     }
 
+    public function test_update_changing_vigencia_archives_fecha_solicitud_in_observaciones(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('4005', 'Archivo Uno a Uno');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '4005',
+            'full_name' => 'Archivo Uno a Uno',
+            'cargo' => 'GUARDA',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'fecha_solicitud' => '2026-08-05',
+            'observaciones' => 'Obs form',
+            'estado' => AcreditacionAcreditado::ESTADO_EN_PROCESO,
+        ]);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.acreditaciones.acreditados.update', $row), $this->validPayload([
+                'document_number' => '4005',
+                'cargo_apo' => $cargo->cargo_apo,
+                'vigencia_acr' => '2028-12-01',
+                'fecha_solicitud' => '2026-08-05',
+                'observaciones' => 'Obs form',
+                'renovacion' => AcreditacionAcreditado::RENOVACION_RENOVADO,
+            ]))
+            ->assertRedirect();
+
+        $row->refresh();
+        $this->assertNull($row->fecha_solicitud);
+        $this->assertSame('2028-12-01', optional($row->vigencia_acr)?->format('Y-m-d'));
+        $this->assertSame("Obs form\nÚltima solicitud: 05/08/2026", $row->observaciones);
+        $this->assertSame(AcreditacionAcreditado::RENOVACION_RENOVADO, $row->renovacion);
+    }
+
     public function test_bulk_update_observaciones_and_fecha_solicitud(): void
     {
         $editor = $this->editorUser();
@@ -281,6 +316,11 @@ class AcreditacionesAcreditadosTest extends TestCase
         $two->refresh();
         $this->assertSame('2028-06-15', optional($one->vigencia_acr)?->format('Y-m-d'));
         $this->assertSame('2028-06-15', optional($two->vigencia_acr)?->format('Y-m-d'));
+        $this->assertNull($one->fecha_solicitud);
+        $this->assertNull($two->fecha_solicitud);
+        $this->assertSame("nueva obs\nÚltima solicitud: 20/09/2026", $one->observaciones);
+        $this->assertSame("nueva obs\nÚltima solicitud: 20/09/2026", $two->observaciones);
+        $this->assertNotSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $one->estado);
 
         $selectable = $this->actingAs($editor)
             ->getJson(route('gestion-humana.acreditaciones.acreditados.bulk-selectable'));
@@ -289,6 +329,67 @@ class AcreditacionesAcreditadosTest extends TestCase
         $ids = collect($selectable->json('data'))->pluck('id')->all();
         $this->assertContains($one->id, $ids);
         $this->assertContains($two->id, $ids);
+    }
+
+    public function test_bulk_update_vigencia_archives_solicitud_without_wiping_obs_when_empty_modal(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('7110', 'Bulk Archivo');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '7110',
+            'full_name' => 'Bulk Archivo',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'fecha_solicitud' => '2026-10-16',
+            'observaciones' => 'Nota previa',
+            'estado' => AcreditacionAcreditado::ESTADO_EN_PROCESO,
+            'renovacion' => AcreditacionAcreditado::RENOVACION_SOLICITADO,
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$row->id],
+                'renovacion' => AcreditacionAcreditado::RENOVACION_RENOVADO,
+                'vigencia_acr' => '2028-03-01',
+            ])
+            ->assertRedirect();
+
+        $row->refresh();
+        $this->assertSame(AcreditacionAcreditado::RENOVACION_RENOVADO, $row->renovacion);
+        $this->assertSame('2028-03-01', optional($row->vigencia_acr)?->format('Y-m-d'));
+        $this->assertNull($row->fecha_solicitud);
+        $this->assertSame("Nota previa\nÚltima solicitud: 16/10/2026", $row->observaciones);
+    }
+
+    public function test_bulk_update_vigencia_without_solicitud_does_not_touch_observaciones(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('ESCOLTA');
+        $this->createFicha('7111', 'Sin Solicitud');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '7111',
+            'full_name' => 'Sin Solicitud',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'fecha_solicitud' => null,
+            'observaciones' => 'Solo obs',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$row->id],
+                'vigencia_acr' => '2028-01-01',
+            ])
+            ->assertRedirect();
+
+        $row->refresh();
+        $this->assertNull($row->fecha_solicitud);
+        $this->assertSame('Solo obs', $row->observaciones);
+        $this->assertSame('2028-01-01', optional($row->vigencia_acr)?->format('Y-m-d'));
     }
 
     public function test_bulk_update_requires_at_least_one_field(): void
@@ -315,6 +416,62 @@ class AcreditacionesAcreditadosTest extends TestCase
                 'renovacion' => '',
             ])
             ->assertSessionHasErrors('observaciones');
+    }
+
+    public function test_datatable_marks_duplicate_cedulas_in_red(): void
+    {
+        $viewer = $this->viewerUser();
+        $cargoVigilante = $this->activeCargo('VIGILANTE');
+        $cargoEscolta = $this->activeCargo('ESCOLTA');
+
+        $this->createFicha('DUP-ACR', 'Persona Duplicada');
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => 'DUP-ACR',
+            'full_name' => 'Persona Duplicada',
+            'cargo_apo' => $cargoVigilante->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => 'DUP-ACR',
+            'full_name' => 'Persona Duplicada',
+            'cargo_apo' => $cargoEscolta->cargo_apo,
+            'vigencia_acr' => '2027-06-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->createFicha('UNIQ-ACR', 'Persona Unica');
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => 'UNIQ-ACR',
+            'full_name' => 'Persona Unica',
+            'cargo_apo' => $cargoVigilante->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]));
+
+        $response->assertOk();
+
+        $rows = collect($response->json('data'));
+        $dupRows = $rows->filter(fn (array $row): bool => str_contains(implode(' ', $row), 'DUP-ACR'));
+        $uniqRows = $rows->filter(fn (array $row): bool => str_contains(implode(' ', $row), 'UNIQ-ACR'));
+
+        $this->assertGreaterThanOrEqual(2, $dupRows->count());
+        $this->assertSame(1, $uniqRows->count());
+
+        foreach ($dupRows as $row) {
+            $this->assertStringContainsString('gh-cedula-duplicate', implode('', $row));
+        }
+
+        foreach ($uniqRows as $row) {
+            $this->assertStringNotContainsString('gh-cedula-duplicate', implode('', $row));
+        }
     }
 
     public function test_datatable_defaults_to_todos_and_filters_ficha_and_en_perfil(): void

@@ -13,13 +13,12 @@ final class AcreditacionExportApoCandidateService
      * @var list<string>
      */
     public const CANDIDATE_ESTADOS = [
-        AcreditacionAcreditado::ESTADO_EN_PROCESO,
         AcreditacionAcreditado::ESTADO_POR_VENCER,
         AcreditacionAcreditado::ESTADO_DESACREDITADO,
     ];
 
     /**
-     * Universo candidatos: estados ley 3 + Ficha activa (employment_status = activo).
+     * Universo candidatos: POR VENCER / DESACREDITADO + Ficha activa (employment_status = activo).
      *
      * @return Builder<AcreditacionAcreditado>
      */

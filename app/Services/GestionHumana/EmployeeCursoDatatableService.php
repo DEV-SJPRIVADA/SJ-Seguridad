@@ -62,12 +62,14 @@ final class EmployeeCursoDatatableService
         $this->escuelaCodigoIndex = null;
 
         $inProfileDocs = $this->documentNumbersInProfile($cursos);
+        $duplicateDocs = $this->duplicateDocumentNumbers($cursos);
 
         $rows = $cursos
             ->map(fn (EmployeeCurso $curso): array => $this->formatRow(
                 $curso,
                 $canEdit,
                 $inProfileDocs->has((string) $curso->document_number),
+                $duplicateDocs->has((string) $curso->document_number),
             ))
             ->values()
             ->all();
@@ -100,6 +102,33 @@ final class EmployeeCursoDatatableService
 
         return EmployeeFichaProfile::query()
             ->whereIn('document_number', $docs->all())
+            ->pluck('document_number')
+            ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
+    }
+
+    /**
+     * Cédulas de la página actual que tienen más de un registro en employee_cursos.
+     *
+     * @param  Collection<int, EmployeeCurso>  $cursos
+     * @return Collection<string, true>
+     */
+    private function duplicateDocumentNumbers(Collection $cursos): Collection
+    {
+        $docs = $cursos->pluck('document_number')
+            ->filter(fn ($doc): bool => filled($doc))
+            ->map(fn ($doc): string => (string) $doc)
+            ->unique()
+            ->values();
+
+        if ($docs->isEmpty()) {
+            return collect();
+        }
+
+        return EmployeeCurso::query()
+            ->select('document_number')
+            ->whereIn('document_number', $docs->all())
+            ->groupBy('document_number')
+            ->havingRaw('COUNT(*) > 1')
             ->pluck('document_number')
             ->mapWithKeys(fn ($doc): array => [(string) $doc => true]);
     }
@@ -205,7 +234,7 @@ final class EmployeeCursoDatatableService
     /**
      * @return list<string>
      */
-    private function formatRow(EmployeeCurso $curso, bool $canEdit, bool $inProfile): array
+    private function formatRow(EmployeeCurso $curso, bool $canEdit, bool $inProfile, bool $isDuplicateCedula): array
     {
         $vigencia = $curso->computeVigencia();
         $vigenciaClass = match ($vigencia) {
@@ -228,7 +257,7 @@ final class EmployeeCursoDatatableService
         }
 
         $cells = array_merge($cells, [
-            e((string) $curso->document_number),
+            $this->formatDocumentNumberCell((string) $curso->document_number, $isDuplicateCedula),
             e((string) $curso->full_name),
             e((string) ($curso->cursoTipo?->tipo_curso ?: '—')),
             e((string) ($escuelaDisplay['nombre'] ?: '—')),
@@ -319,6 +348,24 @@ final class EmployeeCursoDatatableService
         return $this->escuelaCodigoIndex[$codigo] ?? null;
     }
 
+    /**
+     * Cédula en rojo cuando hay más de un registro con el mismo documento.
+     */
+    private function formatDocumentNumberCell(string $documentNumber, bool $isDuplicate): string
+    {
+        $escaped = e($documentNumber);
+
+        if (! $isDuplicate) {
+            return $escaped;
+        }
+
+        return sprintf(
+            '<span class="gh-cedula-duplicate" title="%s">%s</span>',
+            e('Cédula con más de un registro'),
+            $escaped,
+        );
+    }
+
     private function formatSelectCell(EmployeeCurso $curso): string
     {
         $canSelect = $curso->estado !== EmployeeCurso::ESTADO_SOLICITADO;
@@ -365,7 +412,8 @@ final class EmployeeCursoDatatableService
 
             if ($canEdit) {
                 $parts[] = sprintf(
-                    '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form" onsubmit="return confirm(%s);">'.
+                    '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form js-confirm-delete" '.
+                    'data-confirm-title="%s" data-confirm-message="%s">'.
                     '%s<input type="hidden" name="_method" value="DELETE">'.
                     '<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" '.
                     'title="Quitar documento" aria-label="Quitar documento">'.
@@ -375,7 +423,8 @@ final class EmployeeCursoDatatableService
                     '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'.
                     '</button></form>',
                     e(route('gestion-humana.cursos.registros.document.destroy', $curso)),
-                    e(json_encode('¿Quitar el documento?', JSON_UNESCAPED_UNICODE)),
+                    e('Quitar documento'),
+                    e('¿Quitar el documento de este curso? Esta acción no se puede deshacer.'),
                     $this->csrfField(),
                 );
             }
@@ -443,7 +492,8 @@ final class EmployeeCursoDatatableService
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
             '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>'.
             '</button>'.
-            '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form" onsubmit="return confirm(%s);">'.
+            '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form js-confirm-delete" '.
+            'data-confirm-title="%s" data-confirm-message="%s">'.
             '%s<input type="hidden" name="_method" value="DELETE">'.
             '<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" '.
             'title="Eliminar" aria-label="Eliminar">'.
@@ -454,7 +504,8 @@ final class EmployeeCursoDatatableService
             '</button></form></div>',
             $editPayload,
             e(route('gestion-humana.cursos.registros.destroy', $curso)),
-            e(json_encode('¿Eliminar este registro y su documento?', JSON_UNESCAPED_UNICODE)),
+            e('Eliminar curso'),
+            e('¿Eliminar este registro y su documento? Esta acción no se puede deshacer.'),
             $this->csrfField(),
         );
     }

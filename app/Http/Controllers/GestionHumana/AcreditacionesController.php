@@ -34,6 +34,7 @@ use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\AcreditacionAcreditadoDatatableService;
 use App\Services\GestionHumana\AcreditacionAcreditadoListService;
+use App\Services\GestionHumana\AcreditacionAcreditadoSolicitudArchive;
 use App\Services\GestionHumana\AcreditacionCargoCatalogService;
 use App\Services\GestionHumana\AcreditacionDashboardService;
 use App\Services\GestionHumana\AcreditacionesAuditLogService;
@@ -75,6 +76,7 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionesAuditLogService $auditLogService,
         private readonly AcreditacionAcreditadoListService $acreditadoListService,
         private readonly AcreditacionAcreditadoDatatableService $acreditadoDatatableService,
+        private readonly AcreditacionAcreditadoSolicitudArchive $solicitudArchive,
         private readonly AcreditacionEstadoCalculator $estadoCalculator,
         private readonly AcreditacionImportService $importService,
         private readonly AcreditacionesImportTemplateExport $importTemplateExport,
@@ -263,6 +265,7 @@ class AcreditacionesController extends Controller
                 'gestion-humana.acreditaciones.acreditados.export',
                 $this->activeAcreditadoFilterQuery($filters),
             ),
+            'pendingExportUrl' => route('gestion-humana.acreditaciones.acreditados.export-pendientes'),
             'importTemplateUrl' => route('gestion-humana.acreditaciones.acreditados.import-template'),
             'importUrl' => route('gestion-humana.acreditaciones.acreditados.import'),
             'activeFilterQuery' => $this->activeAcreditadoFilterQuery($filters),
@@ -337,16 +340,21 @@ class AcreditacionesController extends Controller
                     $row->observaciones = $observaciones;
                 }
 
-                if ($applyFechaSolicitud) {
-                    $row->fecha_solicitud = $fechaSolicitud;
-                }
-
-                if ($applyVigenciaAcr) {
-                    $row->vigencia_acr = $vigenciaAcr;
-                }
-
                 if ($applyRenovacion) {
                     $row->renovacion = $renovacion;
+                }
+
+                // Al fijar VIGEN.ACR: archiva fecha_solicitud en observaciones y la limpia.
+                if ($applyVigenciaAcr) {
+                    $previousSolicitud = $row->fecha_solicitud;
+                    $row->vigencia_acr = $vigenciaAcr;
+                    $row->observaciones = $this->solicitudArchive->appendUltimaSolicitud(
+                        $row->observaciones,
+                        $previousSolicitud,
+                    );
+                    $row->fecha_solicitud = null;
+                } elseif ($applyFechaSolicitud) {
+                    $row->fecha_solicitud = $fechaSolicitud;
                 }
 
                 $row->estado = $this->estadoCalculator->calculate(
@@ -580,11 +588,32 @@ class AcreditacionesController extends Controller
             'observaciones',
         ]);
 
+        $validated = $request->validated();
         $payload = $this->acreditadoPayloadFromValidated(
-            $request->validated(),
+            $validated,
             $request->resolvedFullName(),
             $request->resolvedCargo(),
         );
+
+        $previousSolicitud = $acreditacionAcreditado->fecha_solicitud;
+        $oldVigencia = optional($acreditacionAcreditado->vigencia_acr)?->format('Y-m-d');
+        $newVigencia = isset($validated['vigencia_acr']) && filled($validated['vigencia_acr'])
+            ? Carbon::parse((string) $validated['vigencia_acr'])->toDateString()
+            : null;
+
+        // Misma regla que el masivo: al cambiar VIGEN.ACR se archiva y limpia la solicitud.
+        $vigenciaChanged = $newVigencia !== null && $newVigencia !== $oldVigencia;
+        if ($vigenciaChanged) {
+            $payload['fecha_solicitud'] = null;
+            $payload['observaciones'] = $this->solicitudArchive->appendUltimaSolicitud(
+                isset($payload['observaciones']) ? (string) $payload['observaciones'] : null,
+                $previousSolicitud,
+            );
+            $payload['estado'] = $this->estadoCalculator->calculate(
+                null,
+                Carbon::parse($newVigencia),
+            );
+        }
 
         $acreditacionAcreditado->update([
             ...$payload,
@@ -630,6 +659,48 @@ class AcreditacionesController extends Controller
         return redirect()
             ->route('gestion-humana.acreditaciones.acreditados')
             ->with('status', 'Acreditado eliminado.');
+    }
+
+    /**
+     * Excel de la cola operativa «Nuevos sin acreditación» (pending activos en Ficha).
+     */
+    public function exportPendientesSinAcreditacion(): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
+
+        $rows = $this->acreditacionPendingService->listPendingActivos();
+
+        if ($rows->isEmpty()) {
+            return redirect()
+                ->route('gestion-humana.acreditaciones.acreditados', ['cola' => 'nuevos-sin-acreditacion'])
+                ->withErrors(['export' => 'No hay nuevos sin acreditación para exportar.']);
+        }
+
+        $columns = [
+            ['key' => 'document_number', 'label' => 'CEDULA'],
+            ['key' => 'full_name', 'label' => 'NOMBRE COMPLETO'],
+            ['key' => 'cargo', 'label' => 'CARGO'],
+            ['key' => 'enqueued_at', 'label' => 'ENCOLADO'],
+        ];
+
+        $data = $rows->map(function (EmployeeAcreditacionPending $pending): array {
+            $profileName = trim((string) ($pending->employeeFichaProfile?->full_name ?? ''));
+            $cargo = trim((string) ($pending->employeeFichaProfile?->position_name ?? ''));
+
+            return [
+                'document_number' => $pending->document_number,
+                'full_name' => trim((string) ($pending->full_name ?: $profileName)) ?: null,
+                'cargo' => $cargo !== '' ? $cargo : null,
+                'enqueued_at' => optional($pending->enqueued_at)?->format('Y-m-d H:i'),
+            ];
+        });
+
+        return (new BaseExport(
+            $data,
+            $columns,
+            'nuevos_sin_acreditacion_'.now()->format('Y-m-d').'.xlsx',
+            'Nuevos sin acreditación — '.config('app.name'),
+        ))->download();
     }
 
     public function exportAcreditados(Request $request): StreamedResponse
@@ -1474,6 +1545,7 @@ class AcreditacionesController extends Controller
             'subTabs' => $this->getAcreditacionesSubTabs('export_apo'),
             'vigenciaPolicyOptions' => $vigenciaPolicies,
             'defaultVigenciaPolicy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+            'defaultFechaVinculacion' => AcreditacionExportApoRowResolver::defaultFechaVinculacion('Y-m-d'),
             'previewUrl' => route('gestion-humana.acreditaciones.export-apo.preview'),
             'generateUrl' => route('gestion-humana.acreditaciones.export-apo.generate'),
             'manualPrefillUrl' => route('gestion-humana.acreditaciones.export-apo.manual.prefill'),

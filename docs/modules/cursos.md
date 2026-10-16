@@ -22,7 +22,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
   - KPIs **clicables** → pestaña **Cursos** (`registros`) con el contexto del dashboard (`curso_tipo_id`, fechas, vigencia/estado si aplica) + dimensión del KPI (`vigencia`, `estado` o `sin_documento=1`) y `solo_activos_ficha=1` para alinear el universo del KPI.
   - Graficos con **dataLabels** visibles, títulos centrados y colores por vigencia/estado (mismo criterio que dashboards GH / Acreditaciones).
   - Grafico **Por actualizar / vencidos sin solicitar**: cursos con vigencia `ACTUALIZAR` o `VENCIDO` cuyo estado **no** es `SOLICITADO`, apilados por tipo de curso.
-- Registros / export / bulk-selectable: por defecto **solo personal activo en Ficha** (`solo_activos_ficha=1`; se puede desactivar con el chip). Columna **EN PERFIL** (Sí/No según exista fila en `employee_ficha_profiles`). Chips: Todos / En perfil / Sin perfil + **Solo ACTUALIZAR** / **Sin documento** / **Solo activos Ficha**. Acepta query `fecha_desde` / `fecha_hasta` (desde dashboard). Alta e import permiten cédulas sin perfil (nombre obligatorio en Excel/manual); si hay ficha se enlaza `employee_ficha_profile_id`.
+- Registros / export / bulk-selectable: por defecto **solo personal activo en Ficha** (`solo_activos_ficha=1`; se puede desactivar con el chip). Columna **EN PERFIL** (Sí/No según exista fila en `employee_ficha_profiles`). Columna **Cédula**: si la misma cédula tiene más de un registro en `employee_cursos`, se muestra en rojo (`.gh-cedula-duplicate`). Chips: Todos / En perfil / Sin perfil + **Solo ACTUALIZAR** / **Sin documento** / **Solo activos Ficha**. Acepta query `fecha_desde` / `fecha_hasta` (desde dashboard). Alta e import permiten cédulas sin perfil (nombre obligatorio en Excel/manual); si hay ficha se enlaza `employee_ficha_profile_id`.
 - Unicidad de registro: `(document_number, numero_curso)`.
 - Filtro multi-cédula: query `document_numbers` (exacto, max 500, modal compartido `<x-multi-cedula-filter>`; sin historial). Coexiste con `document_number` parcial.
 - Al crear/editar registro: seleccionar **escuela** del catalogo (solo nombre en el selector); se guardan snapshot `escuela_codigo`, `escuela_nit` y `escuela_nombre` (mas FK `curso_escuela_id`).
@@ -115,6 +115,8 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.19 | 2026-10-16 | Eliminar registro/documento/catálogo: modal de confirmación (`js-confirm-delete` + `<x-confirm-delete-modal>`). |
+| 1.18 | 2026-10-16 | Registros: cédulas con más de un registro se marcan en rojo en la columna Cédula (DT). |
 | 1.17 | 2026-10-16 | Registros: `solo_activos_ficha` activo por defecto (mismo universo que Dashboard); opt-out con chip (`0`). |
 | 1.16 | 2026-10-16 | Dashboard: KPIs clicables → Registros (vigencia/estado/sin_documento + `solo_activos_ficha`); charts con dataLabels; chips Sin documento / Solo activos Ficha. |
 | 1.15 | 2026-09-29 | Registros: filtro varias cédulas (`document_numbers`, exacto, max 500, sin historial); export respeta el filtro. |

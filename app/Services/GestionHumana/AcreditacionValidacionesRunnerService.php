@@ -256,7 +256,9 @@ final class AcreditacionValidacionesRunnerService
     }
 
     /**
-     * @return array<string, array{ficha_entry_id: int|null, cargo: string, requires_acreditacion: bool}>
+     * Contexto Ficha por cédula (incluye activos y desvinculados). Sin perfil = no aparece en el mapa.
+     *
+     * @return array<string, array{ficha_entry_id: int|null, cargo: string, requires_acreditacion: bool, employment_status: string}>
      */
     private function fichaContextByDocumentMap(): array
     {
@@ -276,6 +278,7 @@ final class AcreditacionValidacionesRunnerService
                         : null,
                     'cargo' => trim((string) ($profile->position_name ?? '')),
                     'requires_acreditacion' => (bool) ($profile->requires_acreditacion ?? true),
+                    'employment_status' => (string) ($profile->employment_status ?? EmployeeFichaProfile::STATUS_ACTIVO),
                 ];
             });
 
@@ -283,13 +286,25 @@ final class AcreditacionValidacionesRunnerService
     }
 
     /**
-     * @param  array<string, array{ficha_entry_id: int|null, cargo: string, requires_acreditacion?: bool}>  $fichaByDoc
+     * Filas de colas basadas en Acreditados: excluye desvinculados; cédulas sin perfil sí entran.
+     *
+     * @param  array<string, array{ficha_entry_id: int|null, cargo: string, requires_acreditacion?: bool, employment_status?: string}>  $fichaByDoc
      * @return array<string, mixed>|null
      */
     private function formatAcreditadoRow(AcreditacionAcreditado $acreditado, array $fichaByDoc = []): ?array
     {
         $doc = (string) $acreditado->document_number;
-        $ficha = $fichaByDoc[$doc] ?? ['ficha_entry_id' => null, 'cargo' => '', 'requires_acreditacion' => true];
+        $ficha = $fichaByDoc[$doc] ?? [
+            'ficha_entry_id' => null,
+            'cargo' => '',
+            'requires_acreditacion' => true,
+            'employment_status' => '',
+        ];
+
+        // Solo desvinculados quedan fuera; sin perfil se permite.
+        if (($ficha['employment_status'] ?? '') === EmployeeFichaProfile::STATUS_DESVINCULADO) {
+            return null;
+        }
 
         if (! ($ficha['requires_acreditacion'] ?? true)) {
             return null;

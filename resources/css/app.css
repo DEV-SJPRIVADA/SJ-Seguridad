@@ -1649,6 +1649,36 @@ button.module-tab {
     color: var(--brand-blue);
 }
 
+/* Modal confirmación eliminar (global) */
+.confirm-delete-modal__icon {
+    background: rgba(190, 18, 60, 0.12);
+    color: #be123c;
+}
+
+.confirm-delete-modal__body {
+    padding: 0 1.15rem 1.15rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.confirm-delete-modal__alert {
+    margin: 0;
+}
+
+.confirm-delete-modal__message {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #0f172a;
+}
+
+.confirm-delete-modal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
 .ficha-empleados-masivos-modal__card-title {
     margin: 0;
     font-size: 0.9rem;
@@ -11583,6 +11613,12 @@ a.req-dashboard-kpi:focus-visible {
     flex-shrink: 0;
 }
 
+/* Cédula duplicada (más de un registro) en listados Cursos / Acreditados */
+.gh-cedula-duplicate {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
 .cursos-registros-page .cursos-registros-panel {
     flex: 1 1 auto;
     display: flex;
@@ -12583,6 +12619,13 @@ a.req-dashboard-kpi:focus-visible {
     align-items: center;
     gap: 0.5rem;
     margin-left: auto;
+}
+
+/* Cola: icono Excel debajo de «Nuevos sin acreditación», alineado a la derecha */
+.cursos-registros-page__table-actions--cola-stack {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
 }
 
 .cursos-registros-page__nuevos-link {

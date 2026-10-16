@@ -12,12 +12,12 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
 - Tablero sidebar **Acreditaciones** (`board` key `acreditaciones`, hogar `gestion_humana`, `base_area_tab => false`).
 - Pestanas: **Dashboard**, **Acreditados**, **Reporte Diario**, **Validaciones**, **Export Apo**, **Catálogo**. **Catálogo**, **Validaciones** y **Export Apo** solo visibles/operativas con `acreditaciones.edit`. **Dashboard** con `acreditaciones.view`.
 - **Funcional:**
-  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Listado por defecto **todos** (con/sin ficha). Columna **EN PERFIL** (Sí/No) tras OBSERVACIONES. Chips: Todos / En perfil / Sin perfil + Todos (ficha) / Activos / Desvinculados. Alta e import permiten cédulas sin perfil (nombre y cargo obligatorios en form/Excel); si hay ficha se usan `full_name` / `position_name` de Ficha. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Nuevo acreditado (`plus`) / Omitir (`ban`); volver con `arrow-left`. Coexiste con Validaciones `sin_acreditacion`.
+  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Listado por defecto **todos** (con/sin ficha). Columna **EN PERFIL** (Sí/No) tras OBSERVACIONES. Columna **Cédula**: si la misma cédula tiene más de un registro (p. ej. varios CARGO APO), se muestra en rojo (`.gh-cedula-duplicate`). Chips: Todos / En perfil / Sin perfil + Todos (ficha) / Activos / Desvinculados. Alta e import permiten cédulas sin perfil (nombre y cargo obligatorios en form/Excel); si hay ficha se usan `full_name` / `position_name` de Ficha. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Nuevo acreditado (`plus`) / Omitir (`ban`); volver con `arrow-left`; **export Excel** de la cola (`acreditados.export-pendientes`). Coexiste con Validaciones `sin_acreditacion`.
   - Ficha: `requires_acreditacion` (default true). Modal «Nuevo acreditado»: check activo exige datos; desactivado solo actualiza ficha (cédula debe existir) y omite pending. Prefill desde cola carga `position_name` (cargo) + lookup forzado si falta. Layout: Identidad (check+Estado); sección **Datos de acreditación** (Cargo|Cargo APO|Vigen.ACR + observaciones); sección **Renovaciones** (Renovaciones|Fecha solicitud). Validaciones excluyen flag false. Editable en ficha con `ficha_empleados.manage` + `acreditaciones.edit`.
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
-  - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). **Sin** historico de corridas en BD; **sin** migracion.
-  - **Export Apo** (FEAT-039) — submodos **Automática** / **Manual** (mismo `acreditaciones.edit`; sin permiso nuevo). **Automática:** candidatos (universo estados + Ficha activa); **Validar** carga preview A–X + Valida/motivo; filtro multi-cédula; selección; modal novedades blandas; generar `.xls`. Desde **Acreditados** / **Validaciones**: **Cargar en Export Apo**. **Manual:** grilla editable estilo Cartas (add/remove/pegar varias cédulas); prefill desde acreditado o ficha si existe (si no, captura a mano); columnas A–X editables excepto params fijos de Catálogo; **Acreditar** / **Retirar** sin Valida/universo/novedades; mismo Writer Xls + seq + audit (`source=manual`).
+  - **Validaciones** (FEAT-038) — gate (ambos origenes APO del dia), **Ejecutar validaciones**, 4 colas operativas (DT server-side desde cache efimera), acciones (Abrir Ficha / Editar / Nuevo con cedula precargada), export por cola + consolidado (4 hojas). Colas basadas en Acreditados **excluyen desvinculados**; cédulas **sin perfil sí** entran. Cola `sin_acreditacion` sigue siendo solo Ficha activa. **Sin** historico de corridas en BD; **sin** migracion.
+  - **Export Apo** (FEAT-039) — submodos **Automática** / **Manual** (mismo `acreditaciones.edit`; sin permiso nuevo). **Automática:** candidatos (**POR VENCER** / **DESACREDITADO** + Ficha activa; sin EN PROCESO); **Validar** carga preview A–X + Valida/motivo; filtro multi-cédula; selección; modal novedades blandas; generar `.xls`. Desde **Acreditados** / **Validaciones**: **Cargar en Export Apo**. **Manual:** grilla editable estilo Cartas (add/remove/pegar varias cédulas); prefill desde acreditado o ficha si existe (si no, captura a mano); columnas A–X editables excepto params fijos de Catálogo; **Acreditar** / **Retirar** sin Valida/universo/novedades; mismo Writer Xls + seq + audit (`source=manual`).
   - **Dashboard** — KPIs por estado (Total + EN PROCESO / ACREDITADO / POR VENCER / DESACREDITADO), filtros (fecha solicitud, cargo APO, `ficha_estado` activo por defecto, año tendencia) y gráficos ApexCharts (estado, cargo APO, tendencia mensual). Los filtros afectan KPIs y gráficos. Clic en KPI → **Acreditados** con `estado` del KPI + `cargo_apo` / `ficha_estado` / `fecha_solicitud_*` del dashboard. Sin corridas Export Apo ni KPIs de candidatos/novedad.
 - Permisos: `view.board.gestion_humana.acreditaciones`, `acreditaciones.view`, `acreditaciones.edit`. **Sin permiso nuevo** para Reporte Diario, Validaciones ni Export Apo/Dashboard. Bypass runtime: `manage.users`. Roles `administrador` / `usuario` **sin** paquete por defecto; `super-admin` via `app:sync-permissions`.
 - Tipo de acreditacion (pestana Acreditados) = valor **CARGO APO** (texto); unicidad `(document_number, cargo_apo)`; re-import → upsert.
@@ -57,9 +57,10 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/acreditados` | `acreditados` | Shell listado. `acreditaciones.view` |
 | GET | `/acreditados/datatable` | `acreditados.datatable` | JSON DataTables. `acreditaciones.view` |
 | GET | `/acreditados/bulk-selectable` | `acreditados.bulk-selectable` | JSON ids del filtro para selección masiva. `acreditaciones.edit` |
-| POST | `/acreditados/bulk-update` | `acreditados.bulk-update` | Actualiza obs. y/o fecha solicitud de ids. `acreditaciones.edit` |
+| POST | `/acreditados/bulk-update` | `acreditados.bulk-update` | Actualiza obs. / fecha solicitud / VIGEN.ACR / renovación de ids. Si aplica VIGEN.ACR: limpia `fecha_solicitud` y archiva «Última solicitud: dd/mm/yyyy» en observaciones. `acreditaciones.edit` |
 | GET | `/acreditados/lookup` | `acreditados.lookup` | Lookup Ficha por cedula. `acreditaciones.edit` |
 | GET | `/acreditados/exportar` | `acreditados.export` | Excel filtrado. `acreditaciones.view` |
+| GET | `/acreditados/exportar-pendientes` | `acreditados.export-pendientes` | Excel cola «Nuevos sin acreditación». `acreditaciones.edit` |
 | GET | `/acreditados/plantilla-importacion` | `acreditados.import-template` | Plantilla vacia. `acreditaciones.edit` |
 | POST | `/acreditados/importar` | `acreditados.import` | Upsert masivo. `acreditaciones.edit` |
 | GET | `/acreditados/importar/reporte/{token}` | `acreditados.import-report` | Fallos (~1 h cache). `acreditaciones.edit` |
@@ -274,7 +275,7 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `AcreditacionValidacionesDatatableService` | DT server-side por cola desde cache + RowFilter; tope length 100; sin `-1` |
 | `AcreditacionValidacionesExportService` | Export por cola (`BaseExport`) + consolidado (`AcreditacionValidacionesConsolidatedExport`, 4 hojas) |
 | `AcreditacionExportApoCandidateService` | Universo candidatos Export Apo (sin DT) |
-| `AcreditacionExportApoRowResolver` | Ficha/cargo/curso/novedades; Genero 1/2; match F\|R |
+| `AcreditacionExportApoRowResolver` | Ficha/cargo/curso/novedades; Genero 1/2; match F\|R\|E |
 | `AcreditacionExportApoPreviewService` | Preview Valida/motivo por ids seleccionados |
 | `AcreditacionExportApoGenerateService` | Seq diario + writer `.xls` + persist run; `generate` (Automática) y `generateFromManualRows` (Manual) |
 | `AcreditacionExportApoManualPrefillService` | Prefill Manual por cédula (acreditado → ficha → vacío editable) |
@@ -361,9 +362,9 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 | Code | Label UI | Fuente |
 | --- | --- | --- |
 | `sin_acreditacion` | Ficha activa sin acreditación | `employee_ficha_profiles` activos con `requires_acreditacion=true` y sin ninguna fila en `acreditacion_acreditados`. Iteración con `lazyById` **sin** `orderBy(document_number)` (evita saltar filas); orden final en memoria. Filas incluyen `cargo` (`position_name`) y `personal_tipo` (`OPERATIVO` si `operating_area_key=operaciones` en la requisición vinculada; `ADMINISTRATIVO` si hay otra área; vacío sin requisición) |
-| `ausente_reporte` | Acreditado ausente del reporte del día | Acreditados cuyo par `(norm(doc), norm(cargo_apo))` ∉ unión de pares del reporte (cualquier origen). Columna `cargo` = `position_name` de Ficha (no el texto histórico del acreditado) |
-| `en_proceso_ya_acreditado` | EN PROCESO en sistema / ACREDITADO en APO | Acreditados `EN_PROCESO` cuyo par ∈ filas origen `ACREDITADO` del día. Incluye `vigencia_apo` = `vigencia_acr` de la fila APO del match cédula+cargo |
-| `vencidas` | Vencidas / por vencer | Acreditados `estado IN (DESACREDITADO, POR_VENCER)`; **independiente** del reporte |
+| `ausente_reporte` | Acreditado ausente del reporte del día | Acreditados cuyo par `(norm(doc), norm(cargo_apo))` ∉ unión de pares del reporte (cualquier origen). Columna `cargo` = `position_name` de Ficha si existe. Excluye **desvinculados**; cédulas sin perfil **sí** entran. |
+| `en_proceso_ya_acreditado` | EN PROCESO en sistema / ACREDITADO en APO | Acreditados `EN_PROCESO` cuyo par ∈ filas origen `ACREDITADO` del día. Incluye `vigencia_apo` = `vigencia_acr` de la fila APO del match cédula+cargo. Excluye **desvinculados**; sin perfil **sí** entra. |
+| `vencidas` | Vencidas / por vencer | Acreditados `estado IN (DESACREDITADO, POR_VENCER)`; **independiente** del reporte. Excluye **desvinculados**; sin perfil **sí** entra. |
 
 25. Pestaña / todos los endpoints `validaciones*`: `canEdit`. Usuario solo view → 403 y sin tab.
 26. Fecha default UI = hoy (`America/Bogota`); futuro → 422 al ejecutar. **No** auto-ejecutar al entrar ni al cambiar fecha (cambiar fecha limpia resultados en UI).
@@ -378,16 +379,16 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 
 ### Export Apo SuperVigilancia (FEAT-039)
 
-34. Universo candidatos: `acreditacion_acreditados` con `estado IN ('EN_PROCESO','POR_VENCER','DESACREDITADO')` y Ficha `employment_status = activo`. Excluye `ACREDITADO` «fresco». Sin Ficha activa → fuera del universo.
+34. Universo candidatos: `acreditacion_acreditados` con `estado IN ('POR_VENCER','DESACREDITADO')` y Ficha `employment_status = activo`. Excluye `EN_PROCESO` y `ACREDITADO` «fresco». Sin Ficha activa → fuera del universo.
 35. Una fila por par cédula + `cargo_apo` (multicargo = N filas). Export solo de IDs **seleccionados** (mínimo 1); IDs revalidados contra universo.
 36. Parámetros empresa (Nit, RazonSocial, TipoDocumento, …) desde settings; iguales en todas las filas.
-37. Identidad desde Ficha: `NoDocumento`, nombres/apellidos, `FechaNacimiento`, `Fechavinculacion`. Obligatorios sin bloqueo duro: `document_number`, `first_name`, `first_surname`, `birth_date`, `sex`, `hire_date`. `second_name` / `second_surname` pueden vacíos.
+37. Identidad desde Ficha: `NoDocumento`, nombres/apellidos, `FechaNacimiento`. `Fechavinculacion` = **siempre el día anterior** (America/Bogota), en Automática y Manual (no se usa `hire_date`). Obligatorios sin bloqueo duro: `document_number`, `first_name`, `first_surname`, `birth_date`, `sex`, `hire_date` (sigue exigido en ficha, pero no alimenta el campo APO). `second_name` / `second_surname` pueden vacíos.
 38. **Genero** (columna J): implementación mapea Ficha `sex` a códigos SuperVigilancia **`1`** (masculino: M/1/MASCULINO/…) y **`2`** (femenino: F/2/FEMENINO/…). Si no reconoce el valor, emite el raw. *(Review FEAT-039 obs. #1: brief S3 decía M/F tal cual; documentar como está implementado.)*
 39. `Cargo` Excel = `cargo_acreditacion` resuelto desde catálogo activo por `cargo_apo` (desempate `sort_order`, `id`). Sin activa → novedad blanda; activas con valores distintos → novedad blanda «cargo ambiguo».
-40. **Match curso F|R** (mismo cargo; no mezclar):
+40. **Match curso F|R|E** (mismo cargo; no mezclar):
     1. Cursos de la cédula con `cursoTipo`.
-    2. Familia F|R: `tipo_curso` normalizado (sin espacios) match `/^[FR]\./` o igual a `F.{apo}` / `R.{apo}`.
-    3. Mismo cargo si **cualquiera**: `tipo_curso` ∈ {`F.{apo}`, `R.{apo}`}; o `cargo_acredit` ≡ `cargo_apo`; o `cargo_acredit` ≡ `cargo_acreditacion` del catálogo APO (el catálogo Cursos real usa códigos `1,2,4,5,6`, no el nombre ESCOLTA).
+    2. Familia F|R|E: `tipo_curso` normalizado (sin espacios) match `/^[FRE]\./` o igual a `F.{apo}` / `R.{apo}` / `E.{apo}` (E = especialización / educativa, p. ej. `E.VIGILANCIA EDUCATIVA`).
+    3. Mismo cargo si **cualquiera**: `tipo_curso` ∈ {`F.{apo}`, `R.{apo}`, `E.{apo}`}; o `cargo_acredit` ≡ `cargo_apo`; o `cargo_acredit` ≡ `cargo_acreditacion` del catálogo APO (el catálogo Cursos real usa códigos `1,2,4,5,6`, no el nombre ESCOLTA).
     4. Política vigencia: `VIGENTE` solo vigencia VIGENTE; `VIGENTE_ACTUALIZAR` = VIGENTE ∪ ACTUALIZAR (`EmployeeCurso::computeVigencia()`).
     5. Elegir max `fecha_expedicion` (empate max `id`).
     6. `CodigoCurso` = `trim(curso_tipos.cursos)`; vacío → novedad blanda.
@@ -402,7 +403,7 @@ Codigos de cola (`AcreditacionValidacionesResultStore::COLAS` / `config('acredit
 
 43. Default export: solo `valida=true`. Modal Sí: limpia + blandas; **nunca** duras aunque `include_novedades=true`.
 44. Filename: `APO` + `settings.nit` + `Ymd` (Bogotá) + `str_pad(seq, 2, '0')` + `.xls` (ej. `…01.xls`). Seq diario 1…99; unique `(export_date, seq)` + reintento. Clave config `filename_prefix` es legacy no usada (el prefijo real usa `settings.nit`).
-44b. El `.xls` siempre tiene 2 hojas: **ApoDatos** (headers A–X) y **Retiros** (`Nit`, `RazonSocial`, `TipoDocumento`, `NoDocumento`, `FechaRetiro`). Modo `acreditar`: llena ApoDatos (universo EN_PROCESO/POR_VENCER/DESACREDITADO); Retiros solo títulos. Modo `retirar`: carga por IDs **sin** filtro de universo (sirve para `ACREDITADO`); llena Retiros (`FechaRetiro` = **día anterior** Bogotá `d/m/Y`); ApoDatos solo títulos; UI no exige Valida=Sí.
+44b. El `.xls` siempre tiene 2 hojas: **ApoDatos** (headers A–X) y **Retiros** (`Nit`, `RazonSocial`, `TipoDocumento`, `NoDocumento`, `FechaRetiro`). Modo `acreditar`: llena ApoDatos (universo POR_VENCER/DESACREDITADO); Retiros solo títulos. Modo `retirar`: carga por IDs **sin** filtro de universo (sirve para `ACREDITADO` / `EN_PROCESO`); llena Retiros (`FechaRetiro` = **día anterior** Bogotá `d/m/Y`); ApoDatos solo títulos; UI no exige Valida=Sí.
 44c. Generación UI vía `fetch` + blob (no `form.submit`): toast de éxito; **Retirar** llama `clearAll()`; **Acreditar** revalida el mismo conjunto de IDs del preview (sin limpiar filtros). Errores de negocio en XHR → JSON 422.
 44d. **Manual** (mismo tab Export Apo): grilla Alpine estilo Cartas; prefill `AcreditacionExportApoManualPrefillService` (prioridad acreditado → ficha → vacío editable); generate `generateFromManualRows` (sin Valida/universo/novedades); params empresa siguen saliendo de settings (no editables en grilla); audit `export_apo_generate` con `source=manual`.
 45. Writer: `App\Exports\AcreditacionExportApoXlsExport` (PhpSpreadsheet `Writer\Xls`); **no** BaseExport / excelHtml5.
@@ -481,7 +482,7 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 5. Casos estado: solicitud, vencido, por vencer (≤21), acreditado; ambas fechas vacias rechazado.
 6. Reporte Diario: carga 1 y 2 orígenes; replace parcial; fecha futura rechazada; headers invalidos sin mutar; ver cargas; export.
 7. Validaciones: día con ambos orígenes → Ejecutar → 4 colas; día parcial → gate falla; acciones Ficha/editar/nuevo; export cola + consolidado; usuario solo view sin tab.
-8. Export Apo: candidatos EN_PROCESO/POR_VENCER/DESACREDITADO; **Validar** carga preview A–X + Valida/motivo (sin DT/filtros); modal Sí/No; ambas políticas vigencia; ficha incompleta no sale; filename seq 001/002 mismo día; tipos curso con `cursos` (CodigoCurso) y `cargo_acredit`.
+8. Export Apo: candidatos POR_VENCER/DESACREDITADO (+ Ficha activa; sin EN_PROCESO); **Validar** carga preview A–X + Valida/motivo (sin DT/filtros); modal Sí/No; ambas políticas vigencia; ficha incompleta no sale; filename seq 001/002 mismo día; tipos curso con `cursos` (CodigoCurso) y `cargo_acredit`.
 9. Dashboard: KPIs + metrics + ultimas corridas; usuario solo view OK; GET export-apo → 403.
 10. `php artisan acreditaciones:sync-estados` (y `--dry-run` si aplica).
 11. `php artisan test --compact` filtros Export Apo / Dashboard / BoardAccess (o `--filter=Acreditacion`).
@@ -548,6 +549,14 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.33 | 2026-10-16 | Export Apo: match de curso incluye familia `E.` (p. ej. E.VIGILANCIA EDUCATIVA) además de F\|R. |
+| 1.32 | 2026-10-16 | Acreditados: al fijar/cambiar VIGEN.ACR (bulk o edición) se limpia fecha_solicitud y se agrega «Última solicitud: dd/mm/yyyy» a observaciones. |
+| 1.31 | 2026-10-16 | Validaciones (colas Acreditados): excluye solo desvinculados; cédulas sin perfil siguen entrando. |
+| 1.30 | 2026-10-16 | Validaciones: excluye desvinculados en colas Acreditados. Export Apo Automática: universo POR VENCER + DESACREDITADO (sin EN PROCESO). |
+| 1.29 | 2026-10-16 | Acreditados: cédulas con más de un registro se marcan en rojo en la columna Cédula (DT). |
+| 1.30 | 2026-10-16 | Eliminar acreditado/catálogo: modal de confirmación (`js-confirm-delete` + `<x-confirm-delete-modal>`). |
+| 1.29 | 2026-10-16 | Export Apo Automática/Manual: `Fechavinculacion` siempre ayer (America/Bogota). |
+| 1.28 | 2026-10-16 | Cola Nuevos sin acreditación: export Excel (`acreditados.export-pendientes`). |
 | 1.27 | 2026-10-16 | Dashboard charts: dataLabels visibles + títulos centrados (criterio Requisiciones / GH área). |
 | 1.26 | 2026-10-16 | Dashboard: KPIs clicables → Acreditados (estado + filtros contexto); listado admite `fecha_solicitud_desde/hasta`. |
 | 1.25 | 2026-10-16 | Validaciones cola `sin_acreditacion`: checkbox por cédula + select-all; Cargar en Export Apo abre Manual con precarga. |

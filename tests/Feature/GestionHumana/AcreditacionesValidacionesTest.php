@@ -489,6 +489,9 @@ class AcreditacionesValidacionesTest extends TestCase
             'cargo' => 'ESCOLTA',
         ]);
 
+        $this->createFicha('666666', 'Ya Acreditado APO', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('777777', 'Solo Proceso', EmployeeFichaProfile::STATUS_ACTIVO);
+
         $match = AcreditacionAcreditado::factory()->enProceso()->create([
             'document_number' => '666666',
             'full_name' => 'Ya Acreditado APO',
@@ -531,6 +534,9 @@ class AcreditacionesValidacionesTest extends TestCase
             'cargo' => 'ESCOLTA',
             'vigencia_acr' => '2027-07-15',
         ]);
+
+        $this->createFicha('661001', 'Vigencia Apo A', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('661002', 'Vigencia Apo B', EmployeeFichaProfile::STATUS_ACTIVO);
 
         $matchA = AcreditacionAcreditado::factory()->enProceso()->create([
             'document_number' => '661001',
@@ -594,6 +600,10 @@ class AcreditacionesValidacionesTest extends TestCase
         $fecha = '2026-09-13';
         $this->seedBothOriginsCarga($editor->id, $fecha);
 
+        $this->createFicha('888801', 'Desacreditado Activo', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('888802', 'Por Vencer Activo', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('888803', 'Acreditado Activo', EmployeeFichaProfile::STATUS_ACTIVO);
+
         $des = AcreditacionAcreditado::factory()->desacreditado()->create([
             'document_number' => '888801',
             'cargo_apo' => 'VIGILANTE',
@@ -618,6 +628,61 @@ class AcreditacionesValidacionesTest extends TestCase
         $this->assertNotContains($ok->id, $ids);
     }
 
+    public function test_colas_acreditado_exclude_desvinculados_but_keep_sin_perfil(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-01';
+        $this->seedBothOriginsCarga($editor->id, $fecha);
+
+        $this->createFicha('910001', 'Activo Ausente', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('910002', 'Desvinculado Ausente', EmployeeFichaProfile::STATUS_DESVINCULADO);
+        $this->createFicha('910004', 'Activo Vencido', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('910005', 'Desvinculado Vencido', EmployeeFichaProfile::STATUS_DESVINCULADO);
+
+        $activoAusente = AcreditacionAcreditado::factory()->create([
+            'document_number' => '910001',
+            'full_name' => 'Activo Ausente',
+            'cargo_apo' => 'VIGILANTE',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        $desvinculadoAusente = AcreditacionAcreditado::factory()->create([
+            'document_number' => '910002',
+            'full_name' => 'Desvinculado Ausente',
+            'cargo_apo' => 'VIGILANTE',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        $sinPerfilAusente = AcreditacionAcreditado::factory()->create([
+            'document_number' => '910003',
+            'full_name' => 'Sin Perfil Ausente',
+            'cargo_apo' => 'VIGILANTE',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        $activoVencido = AcreditacionAcreditado::factory()->desacreditado()->create([
+            'document_number' => '910004',
+            'full_name' => 'Activo Vencido',
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+        $desvinculadoVencido = AcreditacionAcreditado::factory()->desacreditado()->create([
+            'document_number' => '910005',
+            'full_name' => 'Desvinculado Vencido',
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+
+        $payload = $this->runAndGetPayload($editor, $fecha);
+        $ausenteIds = collect($payload['colas'][AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE])
+            ->pluck('acreditado_id')
+            ->all();
+        $vencidasIds = collect($payload['colas'][AcreditacionValidacionesResultStore::COLA_VENCIDAS])
+            ->pluck('acreditado_id')
+            ->all();
+
+        $this->assertContains($activoAusente->id, $ausenteIds);
+        $this->assertContains($sinPerfilAusente->id, $ausenteIds);
+        $this->assertNotContains($desvinculadoAusente->id, $ausenteIds);
+        $this->assertContains($activoVencido->id, $vencidasIds);
+        $this->assertNotContains($desvinculadoVencido->id, $vencidasIds);
+    }
+
     public function test_normalization_different_suffix_does_not_match(): void
     {
         $editor = $this->editorUser();
@@ -629,6 +694,8 @@ class AcreditacionesValidacionesTest extends TestCase
             'document_number' => '999901',
             'cargo' => 'Vigilante de seguridad',
         ]);
+
+        $this->createFicha('999901', 'Sufijo Distinto', EmployeeFichaProfile::STATUS_ACTIVO);
 
         $acreditado = AcreditacionAcreditado::factory()->create([
             'document_number' => '999901',
@@ -864,6 +931,7 @@ class AcreditacionesValidacionesTest extends TestCase
         $fecha = '2026-09-06';
         $this->seedBothOriginsCarga($editor->id, $fecha);
         $this->createFicha('131313', 'Acciones Sin', EmployeeFichaProfile::STATUS_ACTIVO);
+        $this->createFicha('141414', 'Acciones Ausente', EmployeeFichaProfile::STATUS_ACTIVO);
 
         $ausente = AcreditacionAcreditado::factory()->create([
             'document_number' => '141414',
