@@ -376,11 +376,11 @@ permisos para modificar Catálogos
 
 27. **El reclutador, Analista o asistente de Selección** inicia el
     proceso de selección, cuando tenga a la persona seleccionada busca
-    la requisición cambia el estado a Contratado, complete fecha de
-    contratación, valide campos de compensación obligatorios y, en la
-    sección Cierre, Cédula persona contratada y Nombre completo persona
-    contratada (no confundir con Cédula/Nombre a quien reemplaza del
-    motivo Reemplazo).
+    la requisición cambia el estado a **Contratado** (solo entonces aparece
+    la sección Datos de la persona contratada), complete fecha de
+    contratación, valide campos de compensación obligatorios y cédula /
+    nombres de la persona contratada (no confundir con Cédula/Nombre a quien
+    reemplaza del motivo Reemplazo). Puede usar **Imprimir RQ** junto a Guardar.
 
 - Si la cédula ya está registrada en otra requisición, aparece una
   alerta de confirmación con el código de esa requisición; confirme solo
@@ -457,6 +457,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.13        | 2026-10-16                 | Gestión/editar: Imprimir RQ al lado de Guardar; datos de persona contratada solo si el estado es Contratado |
 | 1.12        | 2026-10-16                 | Gestión/editar Contratado: Género (Masculino/Femenino) de la persona contratada; es el que va a ficha/APO |
 | 1.11        | 2026-10-15                 | Gestión/editar Contratado: Fecha de nacimiento obligatoria junto a la cédula (se refleja en ficha) |
 | 1.10        | 2026-10-15                 | Solicitar y Gestión/editar: textos se guardan en mayúsculas (excepto correo y códigos) |

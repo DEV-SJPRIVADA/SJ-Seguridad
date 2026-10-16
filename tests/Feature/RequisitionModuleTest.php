@@ -2056,26 +2056,42 @@ class RequisitionModuleTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_edit_form_shows_imprimir_rq_for_contratado_status(): void
+    public function test_edit_form_shows_imprimir_rq_next_to_save_and_hides_hired_until_contratado(): void
     {
         [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-HIRE-PRINT');
-
-        $this->actingAs($manager)
-            ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload())
-            ->assertRedirect();
 
         $printUrl = route('requisitions.print', [
             'module' => 'operaciones',
             'requisition' => $requisition,
         ]);
 
+        // Antes de Contratado: Imprimir RQ visible junto a Guardar; sección contratado oculta.
+        $beforeHired = $this->actingAs($manager)
+            ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
+            ->assertOk()
+            ->assertSee('Imprimir RQ', false)
+            ->assertSee($printUrl, false);
+
+        $this->assertMatchesRegularExpression(
+            '/id="js-hired-group"[^>]*\bhidden\b/',
+            $beforeHired->getContent(),
+        );
+
         $this->actingAs($manager)
+            ->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), $this->hiredPayload())
+            ->assertRedirect();
+
+        $afterHired = $this->actingAs($manager)
             ->get(route('requisitions.edit', ['module' => 'operaciones', 'requisition' => $requisition]))
             ->assertOk()
             ->assertSee('Imprimir RQ', false)
             ->assertSee($printUrl, false)
-            ->assertSee('target="_blank"', false)
             ->assertSee('name="hired_birth_date"', false);
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/id="js-hired-group"[^>]*\bhidden\b/',
+            $afterHired->getContent(),
+        );
     }
 
     public function test_update_requires_hired_document_and_name_when_status_contratado(): void

@@ -48,6 +48,17 @@
                                 >
                                     <x-lucide-save width="18" height="18" aria-hidden="true" />
                                 </button>
+                                {{-- Imprimir RQ: al lado de Guardar (fuera de la sección de contratado). --}}
+                                <a
+                                    href="{{ route('requisitions.print', ['module' => $moduleKey, 'requisition' => $requisition]) }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    title="Imprimir RQ"
+                                    aria-label="Imprimir RQ"
+                                >
+                                    <x-lucide-printer width="18" height="18" aria-hidden="true" />
+                                </a>
                             </div>
                         </div>
                     </form>

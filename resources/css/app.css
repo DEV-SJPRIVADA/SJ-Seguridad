@@ -5930,7 +5930,8 @@ button.module-tab {
 .req-form__replacement[hidden],
 #js-quantity-group[hidden],
 #js-client-group[hidden],
-#js-internal-client-notice[hidden] {
+#js-internal-client-notice[hidden],
+#js-hired-group[hidden] {
     display: none !important;
 }
 
