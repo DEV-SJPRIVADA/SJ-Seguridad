@@ -16917,3 +16917,90 @@ a.req-dashboard-kpi:focus-visible {
     flex: 1 1 auto;
     min-height: 0;
 }
+
+/* Órdenes de compra (FEAT-047 T4): tablero del área Compras y reparto de cantidades */
+.purchase-orders-page__filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem 1rem;
+}
+
+.purchase-orders-page__filter-grid .form-field {
+    flex: 0 1 14rem;
+    min-width: 11rem;
+}
+
+.purchase-orders-page__filter-actions {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.purchase-orders-page__filter-actions .req-manage-filters__icon-btn {
+    flex: 0 0 auto;
+}
+
+.purchase-orders-page__issued-list {
+    margin: 0.35rem 0 0;
+    padding-left: 1.15rem;
+    font-size: 0.85rem;
+}
+
+.purchase-order-lines__pending-value {
+    display: block;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.purchase-order-lines__pending-hint {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--color-text-muted, #64748b);
+    white-space: nowrap;
+}
+
+.purchase-order-lines__row--sin-saldo {
+    opacity: 0.6;
+}
+
+/* El listado de órdenes de compra ocupa todo el alto del main (sin espacio vacío abajo) */
+.app-main:has(.purchase-orders-page.req-manage-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.purchase-orders-page.req-manage-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.purchase-orders-page.req-manage-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.purchase-orders-page.req-manage-page .purchase-orders-page__panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.purchase-orders-page.req-manage-page .purchase-orders-page__panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+}

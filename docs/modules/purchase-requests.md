@@ -15,6 +15,7 @@ Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autori
 - Correo al director incluye boton **Autorizar por correo** (enlace firmado) y alternativa **Ver en la plataforma**
 - Bandeja Compras unificada: solicitudes de compra aprobadas + insumos `aprobada_calidad`, `en_compras` o `completada` (historico visible)
 - Export FO-AD-44: PDF y Excel por solicitud de compra; PDF/Excel por suministro en bandeja
+- Emision de **Orden de Compra FO-AD-07** desde la bandeja (compra y suministro): proveedor + precios por linea, snapshot de proveedor y PDF/Excel del documento
 - Import legacy desde BD gestion-compras (`purchase-requests:import-legacy`)
 
 ## Flujo de estados
@@ -51,6 +52,8 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
+| Ordenes de compra (FO-AD-07) | `purchase.tab.processing` (`PurchaseAccessService::canEmitOrder`) | `purchase-requests.orders.purchase.create` / `.store`, `orders.supply.create` / `.store`, `orders.show`, `orders.pdf`, `orders.excel` |
+| Ordenes de compra (tablero/listado) | `purchase.tab.processing` (`canViewOrdersBoard`) | `purchase-requests.orders.index` (`GET /ordenes-compra`), `purchase-requests.orders.datatable` |
 | Proveedores (tablero Compras) | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export`, `providers.template` |
 | Proveedores (mutaciones) | `purchase.providers.edit` | `providers.create`, `providers.store`, `providers.edit`, `providers.update`, `providers.import`, `providers.import-report` |
 | Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store` |
@@ -148,8 +151,65 @@ Catalogo FEAT-047 T2. Migracion `2026_10_19_064916_create_purchase_providers_tab
 
 Indices: `estado`. Modelo `App\Models\PurchaseProvider` (`dias_pago` int, `estadoLabels()`). La tabla **solo contiene proveedores**; no existen columnas de clasificacion (`es_cliente` / `es_proveedor`).
 
-### `purchase_requests.archivo_pedido_path` (deprecada)
+### `purchase_orders` (FEAT-047 T4)
 
+Ordenes de compra FO-AD-07. Migracion `2026_10_19_145000_create_purchase_orders_table.php` (multi-driver: `estado` string, sin `enum()`).
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | PK | **Es el numero de OC visible** (`numeroOc()`), sin prefijo ni pad |
+| `source_type` | string(255) | Morph: `purchase_request` / `supply_request` (`Relation::morphMap`) |
+| `source_id` | unsignedBigInteger | PK del origen (solicitud de compra o de suministro) |
+| `provider_id` | FK purchase_providers nullable | `nullOnDelete()`; el snapshot de la cabecera sobrevive al borrado del proveedor |
+| `provider_identificacion`, `provider_nombre` | string | **Snapshot** congelado al emitir |
+| `provider_telefono`, `provider_correo`, `provider_contacto`, `provider_direccion`, `provider_ciudad`, `provider_forma_pago` | string nullable | Snapshot del proveedor al emitir |
+| `provider_dias_pago` | unsignedSmallInteger nullable | Snapshot |
+| `fecha` | string(10) | Fecha de emision (YYYY-MM-DD) |
+| `ciudad` | string(120) nullable | Ciudad de entrega de la OC |
+| `asume_cliente` | string(20) nullable | `SI` / `NO`; solo si el origen de compra lo define |
+| `observaciones` | text nullable | |
+| `estado` | string(20) default `borrador` | `borrador` / `emitida`, indexado |
+| `total` | decimal(15,2) default 0 | Suma de `valor_total` de las lineas |
+| `created_by` | FK users nullable | `nullOnDelete()` |
+
+Indices: `estado`, `(source_type, source_id)`.
+
+### `purchase_order_items`
+
+Lineas de la OC. Migracion `2026_10_19_145100_create_purchase_order_items_table.php`.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `purchase_order_id` | FK | `cascadeOnDelete()` |
+| `orden` | unsignedSmallInteger default 1 | Numeracion visible |
+| `cantidad` | decimal(10,2) | |
+| `articulo` | string nullable | Referencia del origen |
+| `descripcion` | text nullable | Descripcion del origen |
+| `valor_unidad` | decimal(15,2) | Precio capturado por Compras |
+| `iva` | decimal(15,2) default 0 | **Importe** del IVA de la linea (no porcentaje) |
+| `valor_total` | decimal(15,2) | `cantidad * valor_unidad + iva` |
+| `source_item_type`, `source_item_id` | nullable | Vinculo con la linea de origen (`purchase_request_item` / `supply_request_item`); base del saldo pendiente por linea |
+
+### `purchase_order_evaluations`
+
+Evaluacion post-entrega **1:1** por OC. Migracion `2026_10_19_145200_create_purchase_order_evaluations_table.php` (unique en `purchase_order_id`).
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `purchase_order_id` | FK unique | `cascadeOnDelete()` |
+| `fecha_recibido` | date nullable | |
+| `calif_referencias_cantidades` | unsignedTinyInteger nullable | 1–5 (peso 25%) |
+| `calif_oportunidad_entrega` | unsignedTinyInteger nullable | 1–5 (peso 25%) |
+| `calif_calidad_producto` | unsignedTinyInteger nullable | 1–5 (peso 50%) |
+| `resultado_referencias`, `resultado_oportunidad`, `resultado_calidad` | decimal(5,2) nullable | Cache del calculo |
+| `puntaje_porcentaje` | decimal(5,2) nullable | 0–100 |
+| `umbral_codigo` | string(20) nullable | `satisfactoria` / `seguimiento` / `insatisfactoria` |
+| `observaciones` | text nullable | |
+| `evaluated_by` | FK users nullable | `nullOnDelete()` |
+
+Pesos y umbrales en `config/purchase-orders.php` (`evaluation.weights`, `evaluation.thresholds`). La evaluacion **no** se imprime en FO-AD-07; se implementa en FEAT-047 T5.
+
+### `purchase_requests.archivo_pedido_path` (deprecada)
 Columna **permanece** nullable. **No DROP.** Ya no esta en `$fillable`. Store, resubmit, import y UI **no** la leen ni escriben. Fuente de verdad: `purchase_request_attachments`. Valores previos se copiaron a 1:N (disco `public` → `local` si el fichero existia) y la columna quedo en `NULL`.
 
 Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_20_082215_drop_descripcion_justificacion_from_purchase_requests_table.php`, `2026_08_28_160752_create_purchase_request_attachments_table.php`.
@@ -172,6 +232,12 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 | `PurchaseProviderDatatableService` | Filtros (`q`, `estado`), query, respuesta DataTables y retorno de filtros |
 | `PurchaseProviderImportService` | Import masivo VINE01 (solo `PROVEEDOR=SI`, upsert por `identificacion`, `DIAS_PAGO` opcional, soporte `dry-run`/`limit`) |
 | `PurchaseProviderImportTemplateExport` | Plantilla Excel `VINE01` (hoja `VINE01` con encabezados + hoja `Instrucciones`) |
+| `PurchaseOrderController` | Emision de OC desde compra/suministro (create + store), detalle de la OC, export PDF/Excel FO-AD-07, audit `purchase_order`/`created` y `export`/`order_pdf`/`order_excel` |
+| `PurchaseOrderService` | Construye la OC: snapshot del proveedor, lineas desde el origen (precio capturado por Compras), `valor_total = cantidad * valor_unidad + iva`, total de la orden y estado `emitida`. Calcula el **saldo pendiente** por linea (`sourceLines()`, `orderedQuantities()`) y valida el reparto en la transaccion |
+| `PurchaseOrderDatatableService` | Listado server-side del tablero de OC: filtros (estado, origen, proveedor, fechas), busqueda DataTables, orden y filas con acciones |
+| `PurchaseOrderPdfExporter` | FO-AD-07 en PDF (`pdf/purchase-order.blade.php`, DomPDF, carta) |
+| `PurchaseOrderExcelExporter` | FO-AD-07 en Excel (PhpSpreadsheet: cabecera, bloque proveedor, detalle, totales, firmas) |
+| `StorePurchaseOrderRequest` | Autorizacion `canEmitOrder`, proveedor **activo** (`Rule::exists`), fecha, ciudad, observaciones y `items.*` (cantidad, articulo, descripcion, valor_unidad, iva) |
 | `Store/UpdatePurchaseProviderRequest` | Autorizacion `providers.edit`, validacion unique/`dias_pago`, telefono numerico, ciudad contra `requisition_cities`, uppercase de textos (excepto correo/identificacion/telefono/estado/ciudad) |
 | `ImportPurchaseProvidersRequest` | Autorizacion `providers.edit`, validacion de `import_file` (xlsx/xls/csv, tope `providers_import_max_kilobytes`) |
 | `PurchaseEmailApprovalController` | Autorizacion guest por enlace firmado (show/update/pdf). **No** lista adjuntos de pedido |
@@ -311,6 +377,27 @@ Alineado a formato oficial **Marzo 2026 Versión 01** (FEAT-047 Fase A / T1):
 - **No** embebe adjuntos de pedido (FEAT-030)
 - Tests: `tests/Feature/PurchaseRequests/FoAd44ExportAlignmentTest.php`
 
+## Ordenes de compra — FO-AD-07 (FEAT-047 T4)
+Emision de la OC (orden de compra) desde la **bandeja de Compras**, para origen **solicitud de compra** o **solicitud de suministro**.
+
+- **Permiso:** `purchase.tab.processing` (`PurchaseAccessService::canEmitOrder`; bypass admin). La compra exige ademas `Gate::authorize('process', $purchaseRequest)` (policy: `estado = aprobado`). El suministro exige `status` en `aprobada_calidad`, `en_compras` o `completada`.
+- **Rutas:** `GET|POST purchase-requests.orders.purchase.create|store` (`/bandeja-compras/solicitud/{purchase_request}/orden-compra[/crear]`), `GET|POST purchase-requests.orders.supply.create|store` (`/bandeja-compras/suministro/{supply_request}/orden-compra[/crear]`), `GET purchase-requests.orders.show|pdf|excel` (`/ordenes-compra/{purchase_order}[/pdf|/excel]`). Todas dentro del grupo `purchase.tab:processing`.
+- **Morph:** `source_type` guarda el alias (`purchase_request` / `supply_request`) declarado en `Relation::morphMap` (`AppServiceProvider`). `PurchaseOrder::source()` resuelve la origen; `sourceLabel()` y `sourceFolio()` exponen el texto visible.
+- **Numero OC:** el `id` de `purchase_orders` (`numeroOc()`), sin prefijo ni relleno.
+- **Snapshot de proveedor:** al emitir se congelan identificacion, nombre, telefono, correo, contacto, direccion, ciudad, forma de pago y dias de pago. El proveedor editable posterior **no** altera la OC emitida.
+- **Lineas:** se precargan desde el origen (cantidad y descripcion/referencia; para suministro, la **cantidad autorizada** y el costo unitario ya capturado en el procesamiento). Compras captura `valor_unidad` e `iva` por linea. `valor_total = cantidad * valor_unidad + iva`; `total` de la OC = suma de lineas. El `iva` es un **importe**, no un porcentaje.
+- **Formulario:** shell `pur-req-form` (`purchase-requests-page--form` + `purchase-orders-page`), dos secciones (proveedor/datos + lineas), selector de proveedor con `<x-searchable-select>` (solo proveedores **activos**), tabla de lineas con total por linea y total general calculados en JS (`js-line-qty` / `js-line-unit` / `js-line-iva`), textos en MAYUSCULAS (`UppercasesValidatedText`).
+- **Entrada:** boton icon-only **Emitir orden de compra** (`x-lucide-file-plus`) en la fila de la bandeja, en la cabecera de "Procesar solicitud" / "Procesar suministro" y en el formulario de la OC (enviar = `x-lucide-check`, cancelar = `x-lucide-x`; clase `.req-manage-filters__icon-btn`).
+- **Detalle:** `modules/purchase-requests/orders/show.blade.php` — cabecera con estado y origen, bloque de proveedor (snapshot), detalle con subtotal / IVA / TOTAL, observaciones, resumen y botones de descarga (PDF, Excel).
+- **Export:** PDF `PurchaseOrderPdfExporter` (`resources/views/pdf/purchase-order.blade.php`, carta, firmas Elaboro/Aprobo/Recibo, **sin** bloque de evaluacion) y Excel `PurchaseOrderExcelExporter`. Nombre de archivo `FO-AD-07-OC-{id}.pdf` / `.xlsx`. Metadatos del formato en `config/purchase-orders.php` (`FO-AD-07`, `Enero 2025`, version `04`).
+- **Auditoria:** `purchase_order` / `created` (metadata `numero_oc`, `total`) y `export` / `order_pdf` | `order_excel`, en modulo `purchase_requests` (area `compras`).
+- **Alcance T4:** emision + documentos. La **evaluacion post-entrega** (tabla `purchase_order_evaluations`) queda para FEAT-047 T5; no se imprime en FO-AD-07.
+- **Reparto entre varios proveedores:** una misma solicitud puede generar **varias OC**. Cada linea del origen tiene un **saldo pendiente** = `cantidad solicitada - cantidad ya ordenada` (suma de todas las OC de ese origen). La linea de OC guarda su vinculo con la linea de origen (`source_item_type` + `source_item_id`), de modo que el saldo se descuenta automaticamente. El formulario de emision muestra, por linea, `solicitadas / ordenadas / pendiente` y precarga la cantidad con el **pendiente**; el input tiene `max` = pendiente. La validacion (`StorePurchaseOrderRequest`, regla closure sobre `items.*.cantidad`) **rechaza** cualquier cantidad mayor al pendiente (mensaje: "La cantidad supera el saldo pendiente (X). Ya se ordenaron Y de Z unidades."), y el servicio vuelve a validarlo dentro de la transaccion (`InvalidArgumentException` -> redirect con error). Ademas se exige **al menos una linea con cantidad > 0**. Con esto una orden duplicada (mismas cantidades que una OC previa) queda bloqueada cuando no hay saldo.
+- **Tablero "Ordenes de compra"** (board del area Compras, `config/access.php` -> `boards.ordenes_compra`, `board_canonical_areas.ordenes_compra`; visible con `purchase.tab.processing` via `PurchaseAccessService::canViewOrdersBoard`): listado server-side (`PurchaseOrderDatatableService`) con busqueda DataTables (proveedor, identificacion, observaciones, ciudad, numero de OC) y filtros por **Estado** (todas/emitidas/borrador), **Origen** (compra/suministro), **Proveedor** y rango de **fechas**. Columnas: OC, fecha, proveedor, identificacion, origen (tipo + folio), ciudad de entrega, lineas, total, estado y acciones (ver, PDF). Rutas `purchase-requests.orders.index` (`GET /ordenes-compra`) y `purchase-requests.orders.datatable` (`GET /ordenes-compra/datatable`).
+- **Tests:** `tests/Feature/PurchaseRequests/PurchaseOrderEmissionTest.php` (form, emision compra/suministro, snapshot, totales, proveedor inactivo, 403 sin permiso, show + PDF + Excel) y `tests/Feature/PurchaseOrderMigrationTest.php` (morph, `numeroOc`, relacion 1:1 de evaluacion).
+
+Vistas: `resources/views/modules/purchase-requests/orders/{create,show}.blade.php` + `resources/views/pdf/purchase-order.blade.php`.
+
 ## Import legacy
 
 ```bash
@@ -345,6 +432,8 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - `tests/Feature/PurchaseRequests/PurchaseRequestAuditTest.php`
 - `tests/Feature/PurchaseRequests/PurchaseProviderAccessTest.php` (view vs edit, 403, guest)
 - `tests/Feature/PurchaseRequests/PurchaseProviderCatalogTest.php` (DT default, filtros, uppercase, unique, update conserva filtros)
+- `tests/Feature/PurchaseRequests/PurchaseOrderEmissionTest.php` (emision FO-AD-07 desde compra y suministro, snapshot, totales, 403, show/PDF/Excel)
+- `tests/Feature/PurchaseOrderMigrationTest.php` (estructura `purchase_orders`, morph, `numeroOc`, evaluacion 1:1)
 - `tests/Feature/ComprasDashboardTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
 - `tests/Feature/NavigationVisibilityTest.php`
@@ -353,6 +442,9 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-19 | FEAT-047 T4 (cierre): **reparto de una solicitud entre varios proveedores** — cada linea tiene saldo pendiente (`solicitada - ordenada`), la OC guarda el vinculo con su linea de origen, el formulario muestra/precarga el pendiente y la validacion **bloquea** ordenes duplicadas. Nuevo **tablero "Ordenes de compra"** (area Compras) con listado server-side, busqueda y filtros (estado, origen, proveedor, fechas) |
+| 2026-10-19 | FEAT-047 T4: emision de **Orden de Compra FO-AD-07** desde la bandeja (compra y suministro) — proveedor activo con snapshot congelado, precios por linea (`valor_total = cantidad * valor_unidad + iva`), numero OC = `id`, detalle + export PDF/Excel (`Enero 2025` v04) y audit `purchase_order`/`created` + `export` |
+| 2026-10-19 | FEAT-047 T4: tablas `purchase_orders`, `purchase_order_items` y `purchase_order_evaluations` (morph `purchase_request`/`supply_request` con `Relation::morphMap`); `provider_id` y `created_by` nullable para los FK `ON DELETE SET NULL` |
 | 2026-10-19 | FEAT-047 T3: rediseño del listado de proveedores al chrome canónico — sin título hero, panel de filtros plegable (`req-manage-filters__panel` + badge), barra de acciones siempre visible (exportar/plantilla/importar/nuevo) y encabezados en mayúsculas |
 | 2026-10-19 | FEAT-047 T3: `purchase_providers` solo almacena proveedores — se eliminan `es_cliente`/`es_proveedor` y sus indices (migracion recreada antes de produccion); plantilla/import VINE01 sin columna `CLIENTE` |
 | 2026-10-19 | FEAT-047 T3: carga VINE01 — el resultado sale en `<x-import-result-modal>` (icon-only) con descarga de reporte `.xlsx` por token; `PurchaseProviderImportService` devuelve `failures` estructuradas |

@@ -34,6 +34,16 @@
                         >
                             <x-lucide-eye width="18" height="18" aria-hidden="true" />
                         </a>
+                        @if (in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true))
+                            <a
+                                href="{{ route('purchase-requests.orders.supply.create', ['module' => $module, 'supply_request' => $supplyRequest->id]) }}"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                title="Emitir orden de compra"
+                                aria-label="Emitir orden de compra"
+                            >
+                                <x-lucide-file-plus width="18" height="18" aria-hidden="true" />
+                            </a>
+                        @endif
                         @if ($supplyRequest->isExportableForCompras())
                             <a
                                 href="{{ route('purchase-requests.processing.supply.pdf', ['module' => $module, 'supply_request' => $supplyRequest->id]) }}"

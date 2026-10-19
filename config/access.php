@@ -137,6 +137,7 @@ return [
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
         'proveedores' => 'Proveedores',
+        'ordenes_compra' => 'Órdenes de compra',
         'solicitudes_desarrollo' => 'Solicitudes desarrollo',
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
@@ -178,6 +179,10 @@ return [
             'base_area_tab' => false,
         ],
         'proveedores' => [
+            'home' => 'compras',
+            'base_area_tab' => false,
+        ],
+        'ordenes_compra' => [
             'home' => 'compras',
             'base_area_tab' => false,
         ],

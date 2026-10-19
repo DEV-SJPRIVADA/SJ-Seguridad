@@ -16,6 +16,7 @@ use App\Policies\SupplyRequestPolicy;
 use App\Services\Navigation\NavigationResolver;
 use App\Support\WordTempDirectory;
 use BladeUI\Icons\Factory;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -77,7 +78,8 @@ class AppServiceProvider extends ServiceProvider
 
             $routeName = (string) $route->getName();
             $isCrossAreaRoute = str_starts_with($routeName, 'supplies.approved.')
-                || str_starts_with($routeName, 'purchase-requests.processing.');
+                || str_starts_with($routeName, 'purchase-requests.processing.')
+                || str_starts_with($routeName, 'purchase-requests.orders.');
 
             if (! $isCrossAreaRoute) {
                 $query->where('area_key', (string) $route->parameter('module'));
@@ -85,6 +87,12 @@ class AppServiceProvider extends ServiceProvider
 
             return $query->firstOrFail();
         });
+
+        // Morph map explícito para source_type en PurchaseOrder (FEAT-047).
+        Relation::morphMap([
+            'purchase_request' => PurchaseRequest::class,
+            'supply_request' => SupplyRequest::class,
+        ]);
 
         View::composer(['layouts.app', 'layouts.navigation'], function ($view): void {
             $view->with(app(NavigationResolver::class)->resolve());

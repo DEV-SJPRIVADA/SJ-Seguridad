@@ -25,6 +25,16 @@
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
                     <div class="pur-req-detail__toolbar-actions">
+                        @if ($purchaseRequest->estaEnBandejaCompras())
+                            <a
+                                href="{{ route('purchase-requests.orders.purchase.create', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                title="Emitir orden de compra"
+                                aria-label="Emitir orden de compra"
+                            >
+                                <x-lucide-file-plus width="18" height="18" aria-hidden="true" />
+                            </a>
+                        @endif
                         <a
                             href="{{ route('purchase-requests.show', ['module' => $module, 'purchase_request' => $purchaseRequest->id, 'from' => 'processing']) }}"
                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"

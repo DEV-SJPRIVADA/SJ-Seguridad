@@ -1,0 +1,8 @@
+<?php
+
+// Archivos de migración nuevos T4 creados; proteger datos (database-safety.mdc):
+// - 2026_10_19_145000_create_purchase_orders_table.php
+// - 2026_10_19_145100_create_purchase_order_items_table.php
+// - 2026_10_19_145200_create_purchase_order_evaluations_table.php
+
+// El proyecto usa Laragon/MySQL local y SQLite para tests. No usar migrate:fresh.

@@ -114,6 +114,33 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 7. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
 8. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
 
+### Emitir orden de compra (FO-AD-07)
+
+1. En la **bandeja de Compras**, cada fila tiene un icono extra (**Emitir orden de compra**, un archivo con un +). También lo encuentra en la cabecera de **Procesar solicitud** y **Procesar suministro**.
+2. Se abre el formulario **Emitir orden de compra** con los datos del origen (solicitud de compra o de suministro). Las líneas ya vienen con la cantidad y la descripción; para suministros la cantidad es la **autorizada** y el costo unitario ya capturado.
+3. Elija el **proveedor** (solo activos; use el buscador por nombre o identificación). Al elegirlo, si el proveedor tiene ciudad, esta se completa en **Ciudad de entrega**.
+4. Complete por línea el **valor unidad** y el **IVA** (el IVA es un valor, no un porcentaje). El **valor total** de la línea y el **TOTAL** de la orden se calculan solos: `cantidad × valor unidad + IVA`. La columna **Pendiente** indica cuánto falta por pedir de esa línea (si ya se emitieron otras OC de la misma solicitud).
+5. Ajuste la **fecha**, la **ciudad de entrega** y las **observaciones** si aplica. Los textos se guardan en **MAYÚSCULAS**.
+6. Pulse el icono azul de **check** para emitir. La orden queda registrada como **Emitida** y se abre su detalle.
+7. El **número de OC** es automático (correlativo interno) y aparece en el encabezado del documento y en el PDF/Excel.
+8. En el detalle de la OC puede consultar el proveedor (datos congelados al emitir), el detalle con subtotal, IVA y total, y descargar el documento en **PDF** o **Excel** (FO-AD-07).
+9. Si edita luego el catálogo de proveedores, la OC emitida **no cambia**: conserva los datos del momento de la emisión.
+
+### Ver las órdenes de compra emitidas
+
+1. Entre a **Compras → Órdenes de compra** (tablero del área Compras). Ahí están **todas** las OC emitidas, con su número, fecha, proveedor, origen, ciudad de entrega, número de líneas, total y estado.
+2. Use el **buscador** de la tabla para filtrar por proveedor, identificación, observaciones o número de OC.
+3. El panel **Filtros** permite acotar por **Estado** (Todas / Emitidas / Borrador), **Origen** (Solicitud de compra / Solicitud de suministro), **Proveedor** y rango de **fechas**. El botón de **Aplicar** y el de **Limpiar** quedan uno al lado del otro.
+4. En la fila, el icono de **ojo** abre el detalle de la OC y el de **documento** descarga el PDF FO-AD-07.
+
+### Repartir una solicitud entre varios proveedores
+
+1. Desde la bandeja, abra la OC de la solicitud o suministro (icono de archivo con **+**).
+2. Cada línea muestra **solicitadas**, **ordenadas** y **pendiente**. La cantidad se precarga con el **pendiente** y no se puede escribir más de ese valor.
+3. Si quiere repartir, emita una OC con la cantidad de ese proveedor (por ejemplo 50) y luego abra de nuevo el formulario: el pendiente ya descuenta lo ordenado (50) y podrá emitir otra OC con el resto (por ejemplo 20) para otro proveedor.
+4. El sistema **no permite duplicar**: cuando ya no queda saldo, la línea aparece en gris con pendiente 0 y la emisión se rechaza con el aviso "La cantidad supera el saldo pendiente".
+5. En el detalle de cada OC, el panel **Otras órdenes de esta solicitud** muestra las OC hermanas del mismo reparto.
+
 ### Catálogo de proveedores
 
 1. Con el permiso **Proveedores: Ver** aparece el tablero **Proveedores** dentro del área **Compras** (no es una pestaña de Solicitudes de compra). El permiso **Proveedores: Editar** también permite verlo.
@@ -150,6 +177,8 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.26 | 2026-10-19 | Compras | Nuevo tablero **Órdenes de compra** con el listado de todas las OC emitidas (buscador y filtros). Una solicitud se puede **repartir entre varios proveedores**: cada línea muestra el saldo pendiente y el sistema bloquea las órdenes duplicadas. |
+| 1.25 | 2026-10-19 | Compras | Emisión de **Orden de Compra (FO-AD-07)** desde la bandeja: elegir proveedor activo, capturar valor unidad e IVA por línea, total automático, número de OC automático y descarga en PDF/Excel. |
 | 1.24 | 2026-10-19 | Compras | Ajuste del catálogo: los botones de filtro quedan en fila junto al selector Estado y la descarga de la plantilla VINE01 se mueve al interior de la ventana de importar. |
 | 1.23 | 2026-10-19 | Compras | Rediseño del catálogo de proveedores: filtros en un panel plegable y barra de acciones siempre visible (exportar, plantilla, importar, nuevo). |
 | 1.22 | 2026-10-19 | Compras | El catálogo solo almacena proveedores: se retira la clasificación cliente/proveedor y la columna CLIENTE de la plantilla VINE01. |

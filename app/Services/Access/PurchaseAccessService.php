@@ -144,6 +144,25 @@ class PurchaseAccessService
     }
 
     /**
+     * Las órdenes de compra (FO-AD-07) son un tablero del área Compras.
+     * Visible con el mismo permiso que la bandeja de procesamiento.
+     */
+    public function canViewOrdersBoard(User $user, string $areaKey): bool
+    {
+        return $areaKey === 'compras' && $this->canEmitOrder($user);
+    }
+
+    /**
+     * Autoriza la emisión de una Orden de Compra (FO-AD-07).
+     *
+     * Permiso: purchase.tab.processing (o bypass admin). No requiere permiso nuevo.
+     */
+    public function canEmitOrder(User $user): bool
+    {
+        return $this->isAdminBypass($user) || $user->can('purchase.tab.processing');
+    }
+
+    /**
      * @return Builder<User>
      */
     public function approversQuery(): Builder

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PurchaseRequests\PurchaseApprovalController;
+use App\Http\Controllers\PurchaseRequests\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProcessingController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProviderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseRequestController;
@@ -33,6 +34,19 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::patch('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'updateSupply'])->name('processing.supply.update');
         Route::get('/bandeja-compras/suministro/{supply_request}/pdf', [PurchaseProcessingController::class, 'exportSupplyPdf'])->name('processing.supply.pdf');
         Route::get('/bandeja-compras/suministro/{supply_request}/excel', [PurchaseProcessingController::class, 'exportSupplyExcel'])->name('processing.supply.excel');
+
+        // FO-AD-07: emisión de Orden de Compra desde la bandeja (compra y suministro).
+        Route::get('/bandeja-compras/solicitud/{purchase_request}/orden-compra/crear', [PurchaseOrderController::class, 'createFromPurchase'])->name('orders.purchase.create');
+        Route::post('/bandeja-compras/solicitud/{purchase_request}/orden-compra', [PurchaseOrderController::class, 'storeFromPurchase'])->name('orders.purchase.store');
+        Route::get('/bandeja-compras/suministro/{supply_request}/orden-compra/crear', [PurchaseOrderController::class, 'createFromSupply'])->name('orders.supply.create');
+        Route::post('/bandeja-compras/suministro/{supply_request}/orden-compra', [PurchaseOrderController::class, 'storeFromSupply'])->name('orders.supply.store');
+
+        // Listado de órdenes de compra (tablero del área Compras).
+        Route::get('/ordenes-compra', [PurchaseOrderController::class, 'index'])->name('orders.index');
+        Route::get('/ordenes-compra/datatable', [PurchaseOrderController::class, 'datatable'])->name('orders.datatable');
+        Route::get('/ordenes-compra/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('orders.show');
+        Route::get('/ordenes-compra/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('orders.pdf');
+        Route::get('/ordenes-compra/{purchase_order}/excel', [PurchaseOrderController::class, 'excel'])->name('orders.excel');
     });
 
     Route::middleware(['purchase.tab:providers'])->group(function (): void {

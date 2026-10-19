@@ -203,6 +203,16 @@
                                                     >
                                                         <x-lucide-cog width="16" height="16" aria-hidden="true" />
                                                     </a>
+                                                    @if ($queueItem['model']->estado === \App\Models\PurchaseRequest::ESTADO_APROBADO)
+                                                        <a
+                                                            href="{{ route('purchase-requests.orders.purchase.create', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}"
+                                                            class="cursos-catalogo-page__icon-btn"
+                                                            title="Emitir orden de compra"
+                                                            aria-label="Emitir orden de compra"
+                                                        >
+                                                            <x-lucide-file-plus width="16" height="16" aria-hidden="true" />
+                                                        </a>
+                                                    @endif
                                                 @else
                                                     <a
                                                         href="{{ route('supplies.show', ['module' => $queueItem['model']->area_key, 'supply_request' => $queueItem['id']]) }}"
@@ -220,6 +230,16 @@
                                                     >
                                                         <x-lucide-cog width="16" height="16" aria-hidden="true" />
                                                     </a>
+                                                    @if (in_array($queueItem['model']->status, ['aprobada_calidad', 'en_compras', 'completada'], true))
+                                                        <a
+                                                            href="{{ route('purchase-requests.orders.supply.create', ['module' => $module, 'supply_request' => $queueItem['id']]) }}"
+                                                            class="cursos-catalogo-page__icon-btn"
+                                                            title="Emitir orden de compra"
+                                                            aria-label="Emitir orden de compra"
+                                                        >
+                                                            <x-lucide-file-plus width="16" height="16" aria-hidden="true" />
+                                                        </a>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </td>
