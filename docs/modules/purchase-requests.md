@@ -247,10 +247,16 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 
 ## FO-AD-44
 
+Alineado a formato oficial **Marzo 2026 Versión 01** (FEAT-047 Fase A / T1):
+
+- Encabezado: código `FO-AD-44`, periodo `Marzo 2026`, `Versión 01`, `Página 1 de 1` (`config/purchase-requests.php` / `config/supplies.php`)
+- Columnas: Cantidad | Foto | Descripción | Referencia | Utilización | Ubicación
+- Foto de ítem embebida si existe en disco `public` (`foto_path`); si no, placeholder `S/A` (no `N/A` fijo sin intentar)
 - Compra: `PurchaseRequestPdfService` → `pdf/purchase-request-solicitud.blade.php`; Excel `PurchaseRequestExcelExporter`
-- Suministro: `SupplyPurchasePdfExporter` → `pdf/supply-request-solicitud.blade.php` (**mismo layout visual** que compra); Excel `SupplyPurchaseReportExporter`
+- Suministro: `SupplyPurchasePdfExporter` → `pdf/supply-request-solicitud.blade.php` (**mismo layout visual** que compra); Excel `SupplyPurchaseReportExporter` (catálogo de insumos aún sin foto por producto → `S/A`)
 - Botones: detalle compra, detalle suministro y bandeja compras (suministro)
 - **No** embebe adjuntos de pedido (FEAT-030)
+- Tests: `tests/Feature/PurchaseRequests/FoAd44ExportAlignmentTest.php`
 
 ## Import legacy
 
@@ -281,6 +287,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 ## Pruebas
 
 - `tests/Feature/PurchaseRequestModuleTest.php`
+- `tests/Feature/PurchaseRequests/FoAd44ExportAlignmentTest.php`
 - `tests/Feature/PurchaseRequests/PurchaseRequestAttachmentTest.php`
 - `tests/Feature/PurchaseRequests/PurchaseRequestAuditTest.php`
 - `tests/Feature/ComprasDashboardTest.php`
@@ -291,6 +298,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-19 | FEAT-047 T1: FO-AD-44 PDF/Excel (compra + suministro) alineado Marzo 2026 Versión 01; foto embebida o S/A |
 | 2026-10-02 | UI productos: foto antes de descripción; descripción alta; referencia ancha; utilización/ubicación/cantidad en fila; cliente radios en 3 cols; ortografía |
 | 2026-10-02 | UI procesar suministro: layout pur-req e iconos chrome (alineado a procesar compra) |
 | 2026-10-02 | UI procesar/reabrir: layout pur-req (secciones + aside) e iconos chrome; mismo patrón que Nueva solicitud |

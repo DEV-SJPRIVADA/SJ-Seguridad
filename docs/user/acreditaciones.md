@@ -215,7 +215,7 @@ Sin intervención manual:
 4. Si no hay solicitud y la vigencia vence en **21 días o menos** → **POR VENCER**.
 5. En cualquier otro caso con vigencia vigente → **ACREDITADO**.
 
-El sistema también recalcula estos estados de madrugada según el calendario.  
+El sistema también recalcula estos estados de madrugada según el calendario.
 En **Reporte Diario** el estado o la vigencia del Excel se muestran tal como vienen de la APO; no pasan por este cálculo.  
 En **Validaciones**, la cola de vencidas usa el estado ya calculado del acreditado; el resto de colas cruzan datos de Ficha, Acreditados y el snapshot del día.  
 En **Export Apo**, el estado del acreditado define quién entra al universo de candidatos; el estado del **curso** (vigente / actualizar / vencido) se aplica según la política elegida al Validar y generar.

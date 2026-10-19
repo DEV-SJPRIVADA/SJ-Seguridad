@@ -5,6 +5,7 @@ namespace App\Services\Supplies;
 use App\Models\SupplyRequest;
 use App\Models\SupplyRequestItem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -13,11 +14,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class SupplyPurchaseReportExporter
 {
     /**
-     * @return Collection<int, array{quantity: int, description: string, reference: string, utilization: string, location: string}>
+     * @return Collection<int, array{quantity: int, description: string, reference: string, utilization: string, location: string, foto_path: ?string}>
      */
     public function buildMergedRowsForRequest(SupplyRequest $request): Collection
     {
@@ -30,7 +32,7 @@ class SupplyPurchaseReportExporter
     }
 
     /**
-     * @param  Collection<int, array{quantity: int, description: string, reference: string, utilization: string, location: string}>  $rows
+     * @param  Collection<int, array{quantity: int, description: string, reference: string, utilization: string, location: string, foto_path: ?string}>  $rows
      */
     public function toDownloadResponseForRequest(SupplyRequest $request, Collection $rows): StreamedResponse
     {
@@ -41,9 +43,10 @@ class SupplyPurchaseReportExporter
         $this->buildHeaderForRequest($sheet, $request);
 
         $headerRow = 6;
+        // Columnas oficiales FO-AD-44 Marzo 2026 Versión 01
         $headers = [
             'Cantidad',
-            'Insertar Foto del Articulo S',
+            'Foto',
             'Descripción',
             'Referencia',
             'Utilización',
@@ -57,20 +60,25 @@ class SupplyPurchaseReportExporter
             $sheet->getStyle($cell)->getFont()->setBold(true);
             $sheet->getStyle($cell)->getFill()
                 ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFBDD7EE');
+                ->getStartColor()->setARGB('FF003366');
+            $sheet->getStyle($cell)->getFont()->getColor()->setARGB('FFFFFFFF');
             $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
 
-        $photoPlaceholder = (string) config('supplies.report.photo_placeholder', 'N/A');
+        $photoPlaceholder = (string) config('supplies.report.photo_placeholder', 'S/A');
         $dataRow = $headerRow + 1;
 
         foreach ($rows as $row) {
             $sheet->setCellValue('A'.$dataRow, $row['quantity']);
-            $sheet->setCellValue('B'.$dataRow, $photoPlaceholder);
+            $embedded = $this->embedItemPhoto($sheet, 'B'.$dataRow, $row['foto_path'] ?? null);
+            if (! $embedded) {
+                $sheet->setCellValue('B'.$dataRow, $photoPlaceholder);
+            }
             $sheet->setCellValue('C'.$dataRow, $row['description']);
             $sheet->setCellValue('D'.$dataRow, $row['reference']);
             $sheet->setCellValue('E'.$dataRow, $row['utilization']);
             $sheet->setCellValue('F'.$dataRow, $row['location']);
+            $sheet->getStyle('A'.$dataRow.':F'.$dataRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             $dataRow++;
         }
 
@@ -79,7 +87,9 @@ class SupplyPurchaseReportExporter
         $sheet->getStyle('A'.$headerRow.':F'.$lastRow)->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
-        foreach (range('A', 'F') as $column) {
+        $sheet->getColumnDimension('A')->setWidth(12);
+        $sheet->getColumnDimension('B')->setWidth(14);
+        foreach (range('C', 'F') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -100,7 +110,7 @@ class SupplyPurchaseReportExporter
 
     /**
      * @param  Collection<int, SupplyRequestItem>  $items
-     * @return Collection<int, array{quantity: int, description: string, reference: string, utilization: string, location: string}>
+     * @return Collection<int, array{quantity: int, description: string, reference: string, utilization: string, location: string, foto_path: ?string}>
      */
     private function mergeItems(Collection $items, SupplyRequest $request): Collection
     {
@@ -119,6 +129,8 @@ class SupplyPurchaseReportExporter
                 'reference' => $first->referenceLabel(),
                 'utilization' => (string) $request->site_utilization,
                 'location' => (string) $request->site_city,
+                // Catálogo de insumos aún no tiene foto por producto; se intenta embeber si llega path.
+                'foto_path' => null,
             ];
         })->values();
     }
@@ -128,12 +140,16 @@ class SupplyPurchaseReportExporter
         $logoPath = public_path('images/logoSj.png');
 
         if (is_file($logoPath)) {
-            $drawing = new Drawing;
-            $drawing->setName('Logo SJ');
-            $drawing->setPath($logoPath);
-            $drawing->setHeight(48);
-            $drawing->setCoordinates('A1');
-            $drawing->setWorksheet($sheet);
+            try {
+                $drawing = new Drawing;
+                $drawing->setName('Logo SJ');
+                $drawing->setPath($logoPath);
+                $drawing->setHeight(48);
+                $drawing->setCoordinates('A1');
+                $drawing->setWorksheet($sheet);
+            } catch (Throwable) {
+                // Sin logo si el archivo no es legible.
+            }
         }
 
         $sheet->mergeCells('B1:E1');
@@ -141,10 +157,13 @@ class SupplyPurchaseReportExporter
         $sheet->getStyle('B1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
+        $period = (string) config('supplies.report.period', 'Marzo 2026');
+        $version = (string) config('supplies.report.version', '01');
+
         $meta = [
             'F1' => config('supplies.report.form_code', 'FO-AD-44'),
-            'F2' => now()->translatedFormat('F \\d\\e Y'),
-            'F3' => 'Versión '.config('supplies.report.version', '01'),
+            'F2' => $period,
+            'F3' => 'Versión '.$version,
             'F4' => 'Página 1 de 1',
         ];
 
@@ -158,5 +177,39 @@ class SupplyPurchaseReportExporter
 
         $sheet->setCellValue('A5', 'Solicitud #'.$request->id.' | Sede: '.$utilization.' ('.$city.')');
         $sheet->getStyle('A5')->getFont()->setItalic(true);
+    }
+
+    private function embedItemPhoto(Worksheet $sheet, string $coordinate, ?string $fotoPath): bool
+    {
+        if ($fotoPath === null || $fotoPath === '') {
+            return false;
+        }
+
+        try {
+            if (! Storage::disk('public')->exists($fotoPath)) {
+                return false;
+            }
+
+            $absolute = Storage::disk('public')->path($fotoPath);
+            if (! is_file($absolute)) {
+                return false;
+            }
+
+            $drawing = new Drawing;
+            $drawing->setName('Foto ítem');
+            $drawing->setPath($absolute);
+            $drawing->setHeight(48);
+            $drawing->setCoordinates($coordinate);
+            $drawing->setWorksheet($sheet);
+
+            $row = (int) preg_replace('/\D+/', '', $coordinate);
+            if ($row > 0) {
+                $sheet->getRowDimension($row)->setRowHeight(52);
+            }
+
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
     }
 }

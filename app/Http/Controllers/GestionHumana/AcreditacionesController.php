@@ -2026,7 +2026,7 @@ class AcreditacionesController extends Controller
         }
 
         if ($filters['ficha_estado'] !== '' && $filters['ficha_estado'] !== 'todos') {
-            $query['ficha_estado'] = $filters['ficha_estado'];
+        $query['ficha_estado'] = $filters['ficha_estado'];
         }
 
         if (($filters['en_perfil'] ?? '') !== '') {

@@ -2,7 +2,7 @@
 
 > Salida del Agente Analista antes del Feature Brief final. Si quedan preguntas abiertas, el AgentSj **pausa** hasta respuesta del usuario.
 
-**Estado de este ciclo:** **Pendiente solo Q7 (numeración OC)** — resto de respuestas del usuario registradas 2026-10-16. No repreguntar lo cerrado.
+**Estado de este ciclo:** **Cerrado — listo para Arquitecto.** Todas las preguntas respondidas (2026-10-16). AgentSj en pausa hasta continuar.
 
 ---
 
@@ -62,6 +62,7 @@ Shared-files: `config/access.php`, rutas/nav Compras.
 | 22 | UI Proveedores | **Pestaña en Compras** (sin board sidebar propio). |
 | 23 | FO-AD-07 origen | Solicitudes de compra **y** suministros (bandeja). |
 | 24 | Nombre import | Siempre **VINE01** (no “BASE” en producto). |
+| 25 | Numeración OC | Autoincremental sin límite (como `id`), **sin prefijos**; único global. Ej.: `1`, `2`, `145`. |
 
 ### Columnas VINE01 conocidas (plan)
 
@@ -77,37 +78,25 @@ Shared-files: `config/access.php`, rutas/nav Compras.
 
 ## Preguntas abiertas
 
-Solo queda:
-
-7. **Numeración OC:** ¿Cómo se genera `numero_oc`? Ver ejemplos abajo para elegir (A–E u otro).
-
-*(Q1–Q6, Q8–Q9 respondidas — ver sección «Respuestas del usuario».)*
+Ninguna.
 
 ---
 
-## Supuestos temporales (si el usuario no responde aún)
+## Supuestos residuales (no bloquean; Arquitecto decide detalle)
 
 | # | Supuesto | Riesgo si es incorrecto |
 | --- | --- | --- |
-| S1 | Evaluación post-entrega **sí entra en v1** de FEAT-047 (UI + BD), porque el usuario la describió como opción de sistema; el plan semilla queda **superado** en ese punto. | Retrabajo si era solo “documentar criterios” / fase posterior. |
-| S2 | Quien genera/procesa OC (`purchase.tab.processing`) también puede **registrar la evaluación** (sin permiso nuevo). | Usuarios de solo `providers.edit` o solicitantes quedarían sin acceso (o viceversa). |
-| S3 | Evaluación se liga a la **OC emitida** (no a la solicitud suelta). | Modelo/datos incorrectos si el negocio evalúa a nivel solicitud o proveedor global. |
-| S4 | VINE01 = plantilla vacía con mismas columnas que BASE + `DIAS_PAGO` opcional (+ opcionales FO-AD-07 si se confirman en import). | Rechazo de import si el Excel oficial usa otros encabezados. |
-| S5 | Proveedores = **pestaña** (o subnav) bajo área/módulo Compras, con `purchase.providers.view/edit`; tablero sidebar opcional `view.board.compras.proveedores` solo si el patrón del área lo exige — **Arquitecto** propone tras respuesta Q5. | Sidebar/nav incorrecta o doble entrada. |
-| S6 | FO-AD-07 **solo** para solicitudes de compra (no suministros en v1). | Compras no podrá emitir OC desde suministros si lo necesitaban. |
-| S7 | `numero_oc` correlativo automático con lock (patrón `numero_solicitud`), formato a definir por Arquitecto (p. ej. año + secuencia). | Choque con numeración contable/legacy. |
-| S8 | Calif. evaluación = entero **1–5**; resultado y % según pesos fijos de la imagen. | Escala distinta invalidaría umbrales. |
-| S9 | Una evaluación por OC (upsert/edición), no historial múltiple en v1. | Pérdida de trazabilidad si el negocio re-evalúa. |
 | S10 | Listado operativo proveedores: por defecto `es_proveedor=true` + `estado=activo`; filtro para ver inactivos. | Ruido en listado ~9k. |
 | S11 | Import: upsert por `identificacion` (IDENTIFICA); dry-run / limit según database-safety. | Duplicados o sobrescritura no deseada. |
-| S12 | Forma de pago en FO-AD-07: texto editable `forma_pago` y/o derivado de `dias_pago` (Arquitecto detalla); no bloquea brief. | Cabecera OC incompleta vs plantilla oficial. |
+| S12 | Forma de pago en FO-AD-07: texto editable `forma_pago` y/o derivado de `dias_pago`. | Cabecera OC incompleta vs plantilla oficial. |
+| S13 | `numero_oc` entero autoincremental único global (puede coincidir con `id` de la fila o ser secuencia dedicada sin pad/prefijo); visible como `1`, `2`, `145`… | Si negocio pedía pad visual, solo cosmético. |
 
 ---
 
 ## Estado
 
-- [ ] Todas las preguntas respondidas — listo para Arquitecto
-- [x] Pendiente respuesta usuario (solo **Q7 numeración OC**)
+- [x] Todas las preguntas respondidas — listo para Arquitecto
+- [ ] Pendiente respuesta usuario
 
 ## Respuestas del usuario
 
@@ -119,23 +108,9 @@ Solo queda:
 | 4 | Misma estructura de columnas que el Excel de proveedores; **llamarlo VINE01** (no “BASE”) en plantilla, UI y docs. |
 | 5 | **Pestaña en Compras** (no tablero sidebar propio). |
 | 6 | FO-AD-07 desde bandeja: **los dos** (solicitudes de compra **y** suministros). |
-| 7 | *Pendiente — usuario pidió ejemplos.* |
+| 7 | **Autoincremental sin límite**, como el `id`, **sin prefijos** ni pad obligatorio. Ejemplos visibles: `1`, `2`, `145`, `10001`. Único global. |
 | 8 | Calif. entero **1–5** (sí). |
 | 9 | **Una evaluación por OC** (editable). |
-
-### Ejemplos para Q7 (numeración `numero_oc`) — elegir uno
-
-Referencia interna: las solicitudes de compra hoy usan correlativo numérico (`numero_solicitud`) y folio visual `0001`, `0002`…
-
-| Opción | Ejemplo visible | Cómo funciona | Notas |
-| --- | --- | --- | --- |
-| **A** | `0001`, `0002`, `0145` | Correlativo global automático (igual espíritu que solicitudes), pad 4 | Simple; único global |
-| **B** | `OC-2026-0001`, `OC-2026-0002` | Prefijo `OC-` + año + secuencia que **reinicia cada año** | Legible; único por año |
-| **C** | `OC-0001`, `OC-0002` | Prefijo `OC-` + correlativo global (no reinicia) | Legible; único global |
-| **D** | Manual al emitir | Usuario escribe el número (validar único) | Flexible vs legado contable; más error humano |
-| **E** | `2026-0001` | Año + secuencia anual **sin** prefijo OC | Compacto |
-
-También indicar si debe ser **único global** (recomendado en A/C) o **único por año** (B/E).
 
 ---
 
@@ -155,42 +130,39 @@ También indicar si debe ser **único global** (recomendado en A/C) o **único p
 
 ### Objetivo
 
-Completar Compras con catálogo de proveedores importable, emisión de Orden de Compra FO-AD-07 desde bandeja, y FO-AD-44 alineado al formato oficial; opcionalmente (pendiente Q1) evaluación post-entrega del proveedor en sistema sin imprimir el bloque en el documento.
+Completar Compras con catálogo de proveedores importable (VINE01), emisión de Orden de Compra FO-AD-07 desde bandeja (compras y suministros), FO-AD-44 alineado al formato oficial, y evaluación post-entrega del proveedor en sistema (sin imprimir el bloque en el documento).
 
 ### Alcance
 
 #### Incluye (cerrado)
 
 - **Fase A:** Alinear FO-AD-44 PDF/Excel (compra y suministro según exporters actuales) a Marzo 2026 v01: encabezado FO-AD-44 / versión / página; columnas Cantidad \| Foto \| Descripción \| Referencia \| Utilización \| Ubicación; embeber foto de ítem si existe.
-- **Fase B:** Tabla/catálogo `purchase_providers` (identificación unique, nombre, teléfono, correo, es_cliente/es_proveedor, estado, `dias_pago`, opcionales FO-AD-07); permisos `purchase.providers.view` / `.edit`; listado DataTables server-side; CRUD; import BASE solo `PROVEEDOR=SI`; plantilla **VINE01**; export; chrome UI módulo (`req-manage-*`, searchable-select, icon-btn canónicos).
-- **Fase C:** `purchase_orders` ligado a solicitud; elegir proveedor activo; precios/IVA por línea; generar FO-AD-07 PDF + Excel; auth `purchase.tab.processing`. **Sin** bloque evaluación en el documento.
-
-#### Incluye (condicionado a Q1 = sí)
-
-- UI + persistencia de evaluación post-entrega (3 criterios, pesos, umbrales, fecha recibido, observaciones, categoría calculada).
+- **Fase B:** Tabla/catálogo `purchase_providers`; permisos `purchase.providers.view` / `.edit`; listado DataTables server-side; CRUD; import **VINE01** solo `PROVEEDOR=SI`; export; chrome UI módulo; pestaña en Compras.
+- **Fase C:** `purchase_orders` desde bandeja (compra **y** suministro); `numero_oc` autoincremental sin prefijo; proveedor + precios; FO-AD-07 PDF + Excel (`purchase.tab.processing`); **sin** bloque evaluación en el documento.
+- **Evaluación post-entrega:** UI + persistencia; `purchase.providers.edit`; ligada a OC emitida; una por OC editable; Calif. 1–5; pesos/umbrales de la imagen; no impresa.
 
 #### Fuera de alcance
 
 - Reabrir Fases 0–7 del plan Compras viejo.
 - CRM / catálogo de solo-clientes.
-- Workflow de evaluación si Q1 = no / fase posterior.
 - Migración automática de permisos Spatie legacy (no aplica).
+- Tablero sidebar propio de Proveedores.
 
-### Reglas de negocio (cerradas + supuestos)
+### Reglas de negocio (cerradas)
 
-- Import proveedores: solo `PROVEEDOR=SI`; `DIAS_PAGO` opcional; upsert por identificación (S11).
+- Import VINE01: solo `PROVEEDOR=SI`; `DIAS_PAGO` opcional; upsert por identificación (S11).
 - Textos de formularios/import → MAYÚSCULAS UTF-8 (`UppercasesValidatedText` / `UppercaseFormText`), excepto email y keys técnicas.
-- FO-AD-07 documento: cabecera asociada de negocio desde proveedor (razón social, NIT/identificación, contacto, teléfono, correo, dirección, ciudad, forma de pago / días, asume cliente); líneas con valores; firmas según plantilla oficial Enero 2025 v04 — **sin** zona evaluación impresa.
-- Evaluación (si v1): pesos 25/25/50; umbrales 80–100 / 60–79 / &lt;60; post-entrega (S1–S3, S8–S9).
+- FO-AD-07 documento: cabecera asociada de negocio desde proveedor; líneas con valores; firmas según plantilla oficial — **sin** zona evaluación impresa.
+- `numero_oc`: entero autoincremental único global, sin prefijos (como `id`).
+- Evaluación: pesos 25/25/50; umbrales 80–100 / 60–79 / &lt;60; post-entrega; Calif. 1–5; una por OC.
 
 ### Permisos (`config/access.php`)
 
 | Permiso | Rol(es) | Descripción |
 | --- | --- | --- |
 | `purchase.providers.view` | Asignación manual | Ver, filtrar, export proveedores |
-| `purchase.providers.edit` | Asignación manual | CRUD + import; implica view |
-| `purchase.tab.processing` | (existente) | Generar/descargar FO-AD-07 (+ evaluación si Q2 confirma) |
-| `view.board.compras.…` | ¿? | Pendiente Q5 |
+| `purchase.providers.edit` | Asignación manual | CRUD + import + **evaluación post-entrega**; implica view |
+| `purchase.tab.processing` | (existente) | Generar/descargar FO-AD-07 |
 
 ### Base de datos (borrador)
 
@@ -198,7 +170,7 @@ Completar Compras con catálogo de proveedores importable, emisión de Orden de 
 | --- | --- | --- |
 | `purchase_providers` | migración nueva | Ver plan; `dias_pago` nullable |
 | `purchase_orders` (+ ítems) | migración nueva | Ligado a `purchase_request_id` + `provider_id` + snapshot |
-| Evaluación OC | ¿nueva tabla? | Solo si Q1 = sí; anclaje Q3 |
+| Evaluación OC | tabla / columnas en OC | Ligada a OC emitida; una por OC |
 
 ### Capas a implementar
 
@@ -220,21 +192,21 @@ Completar Compras con catálogo de proveedores importable, emisión de Orden de 
 ### Criterios de aceptación (borrador)
 
 1. FO-AD-44 export refleja metadatos Marzo 2026 v01 y foto embebida cuando exista.
-2. Usuario con solo `providers.view` consulta/exporta; sin `edit` no importa ni muta (403).
-3. Import BASE / VINE01: solo filas proveedor; ~9k manejable (server-side listado); dry-run disponible.
+2. Usuario con solo `providers.view` consulta/exporta; sin `edit` no importa ni muta ni evalúa (403).
+3. Import VINE01: solo filas proveedor; ~9k manejable (server-side listado); dry-run disponible.
 4. `dias_pago` editable y opcional en import.
-5. Con `purchase.tab.processing`, desde bandeja/detalle se elige proveedor, captura precios y descarga FO-AD-07 PDF/Excel **sin** bloque evaluación impreso.
-6. (Si Q1=sí) Tras entrega, se puede registrar evaluación con pesos/umbrales de la imagen y queda persistida.
+5. Con `purchase.tab.processing`, desde bandeja (compra y suministro) se elige proveedor, captura precios y descarga FO-AD-07 PDF/Excel **sin** bloque evaluación impreso; `numero_oc` autoincremental sin prefijo.
+6. Con `purchase.providers.edit`, tras entrega se registra/edita una evaluación por OC (pesos/umbrales de la imagen), no impresa.
 
 ### Riesgos y dependencias
 
-- Conflicto plan semilla vs usuario en evaluación → **bloqueante** hasta Q1.
 - Volumen ~9k en import (timeouts, memoria) — diseño comando/chunk.
 - Shared-files: coordinar con AgentSj flag en TASKS.
 - Plantilla oficial FO-AD-07 / FO-AD-44 / VINE01 deben estar disponibles al Feature para no inventar layout.
+- OC desde suministros: Arquitecto define polimorfismo / tablas.
 
 ### Aprobación
 
-- [ ] Analista — vacíos cerrados (pendiente Q1–Q9)
+- [x] Analista — vacíos cerrados (Q1–Q9)
 - [ ] Arquitecto — brief final
-- [ ] Usuario — confirmación
+- [ ] Usuario — OK para lanzar Arquitecto (AgentSj en pausa)

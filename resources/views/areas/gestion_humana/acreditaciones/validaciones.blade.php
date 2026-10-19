@@ -116,17 +116,17 @@
                         >
                             @csrf
                             <input type="hidden" name="fecha_reporte" value="{{ $fecha }}">
-                            <button
-                                type="submit"
+                                <button
+                                    type="submit"
                                 class="btn btn--primary btn--sm av-toolbar__run-btn"
-                                title="Ejecutar validaciones"
-                                @if (! $gateOk)
-                                    disabled
-                                @else
-                                    :disabled="submitting"
-                                    :aria-busy="submitting"
-                                @endif
-                            >
+                                    title="Ejecutar validaciones"
+                                    @if (! $gateOk)
+                                        disabled
+                                    @else
+                                        :disabled="submitting"
+                                        :aria-busy="submitting"
+                                    @endif
+                                >
                                 <span x-show="! submitting" class="av-toolbar__run-inner">
                                     <x-lucide-play width="16" height="16" aria-hidden="true" />
                                     Ejecutar
@@ -149,17 +149,17 @@
                         <div class="av-results">
                             <div class="module-subnav av-colas-nav" aria-label="Colas de validación">
                                 <div class="module-subnav__inner module-tabs" role="tablist">
-                                    @foreach ($colaDefs as $colaCode => $colaDef)
+                            @foreach ($colaDefs as $colaCode => $colaDef)
                                         @php
                                             $count = (int) ($runCounts[$colaCode] ?? 0);
                                             $icon = $colaIcons[$colaCode] ?? 'list';
                                         @endphp
-                                        <button
-                                            type="button"
+                                <button
+                                    type="button"
                                             class="module-tab av-cola-tab"
                                             :class="{ 'module-tab--active': activeCola === '{{ $colaCode }}' }"
-                                            @click="setCola('{{ $colaCode }}')"
-                                            role="tab"
+                                    @click="setCola('{{ $colaCode }}')"
+                                    role="tab"
                                             :aria-selected="(activeCola === '{{ $colaCode }}').toString()"
                                         >
                                             <span class="av-cola-tab__icon" aria-hidden="true">
@@ -179,24 +179,24 @@
                                                     @default
                                                         <x-lucide-list width="15" height="15" />
                                                 @endswitch
-                                            </span>
+                                    </span>
                                             <span class="av-cola-tab__label">{{ $colaDef['label'] }}</span>
                                             <span
                                                 class="av-cola-tab__count {{ $count > 0 ? 'av-cola-tab__count--hot' : '' }}"
                                                 id="validaciones-count-badge-{{ $colaCode }}"
                                             >{{ $count }}</span>
-                                        </button>
-                                    @endforeach
+                                </button>
+                            @endforeach
                                 </div>
-                            </div>
+                        </div>
 
-                            @foreach ($colaDefs as $colaCode => $colaDef)
-                                <div
+                        @foreach ($colaDefs as $colaCode => $colaDef)
+                            <div
                                     class="av-cola-panel"
-                                    x-show="activeCola === '{{ $colaCode }}'"
-                                    x-cloak
-                                    role="tabpanel"
-                                >
+                                x-show="activeCola === '{{ $colaCode }}'"
+                                x-cloak
+                                role="tabpanel"
+                            >
                                     <div class="av-cola-panel__toolbar">
                                         <details class="req-manage-filters req-manage-filters__panel">
                                             <summary class="req-manage-filters__panel-toggle">
@@ -347,7 +347,7 @@
                                                 @endif
                                                 <div class="form-field cursos-registros-page__filter-actions">
                                                     <span class="av-cola-filters__count" aria-live="polite">
-                                                        <strong id="validaciones-count-{{ $colaCode }}">{{ (int) ($runCounts[$colaCode] ?? 0) }}</strong>
+                                            <strong id="validaciones-count-{{ $colaCode }}">{{ (int) ($runCounts[$colaCode] ?? 0) }}</strong>
                                                     </span>
                                                     <button
                                                         type="submit"
@@ -382,10 +382,10 @@
                                                     >
                                                         <x-lucide-file-output width="18" height="18" aria-hidden="true" />
                                                     </button>
-                                                    @if (! empty($exportUrls[$colaCode]))
-                                                        <x-export-excel
+                                        @if (! empty($exportUrls[$colaCode]))
+                                                <x-export-excel
                                                             :route="$exportUrls[$colaCode]"
-                                                            label=""
+                                                    label=""
                                                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost js-validaciones-cola-export"
                                                             title="Exportar Excel de esta cola con filtros"
                                                             aria-label="Exportar Excel de esta cola con filtros"
@@ -427,7 +427,7 @@
                                                                 </label>
                                                             </th>
                                                         @else
-                                                            <th>{{ $column['title'] }}</th>
+                                                        <th>{{ $column['title'] }}</th>
                                                         @endif
                                                     @endforeach
                                                 </tr>
@@ -446,7 +446,7 @@
                             <p class="av-empty__text">
                                 El gate está completo para <strong>{{ $fecha }}</strong>. Ejecute las validaciones para ver las cuatro colas de trabajo.
                             </p>
-                        </div>
+                            </div>
                     @endif
                 </div>
             </div>

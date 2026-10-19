@@ -167,10 +167,15 @@
 
         .items-table td { font-size: 8.5px; }
 
-        .items-table .col-num { width: 20px; text-align: center; }
         .items-table .col-foto { width: 44px; text-align: center; }
-        .items-table .col-qty { width: 36px; text-align: center; }
+        .items-table .col-qty { width: 48px; text-align: center; }
         .items-table .col-desc { font-weight: bold; color: #003366; }
+
+        .item-photo {
+            max-width: 38px;
+            max-height: 30px;
+            object-fit: contain;
+        }
 
         .muted { color: #94a3b8; font-size: 7.5px; }
 
@@ -204,7 +209,10 @@
                     <p class="brand-subtitle">SJ Seguridad — Solicitud de suministro</p>
                 </td>
                 <td class="form-meta">
-                    <strong>{{ $formCode }}</strong> v{{ $formVersion }} · Generado {{ $generatedAt->format('d/m/Y H:i') }}
+                    <strong>{{ $formCode }}</strong><br>
+                    {{ $formPeriod ?? 'Marzo 2026' }} · Versión {{ $formVersion }}<br>
+                    {{ $pageLabel ?? 'Página 1 de 1' }}<br>
+                    Generado {{ $generatedAt->format('d/m/Y H:i') }}
                 </td>
             </tr>
         </table>
@@ -227,13 +235,13 @@
             <td class="value-strong">{{ $supplyRequest->user?->name ?? '—' }}</td>
         </tr>
         <tr>
-            <th>Area</th>
+            <th>Área</th>
             <td>{{ config("access.areas.{$supplyRequest->area_key}", $supplyRequest->area_key) }}</td>
-            <th>Sede / utilizacion</th>
+            <th>Sede / utilización</th>
             <td>{{ $supplyRequest->site_utilization ?? '—' }}</td>
         </tr>
         <tr>
-            <th>Ubicacion</th>
+            <th>Ubicación</th>
             <td>{{ $supplyRequest->site_city ?? '—' }}</td>
             <th>Revisor calidad</th>
             <td class="value-strong">{{ $supplyRequest->qualityReviewer?->name ?? '—' }}</td>
@@ -250,21 +258,26 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th class="col-num">#</th>
+                {{-- Orden oficial FO-AD-44: Cantidad | Foto | Descripción | Referencia | Utilización | Ubicación --}}
+                <th class="col-qty">Cantidad</th>
                 <th class="col-foto">Foto</th>
-                <th class="col-qty">Cant.</th>
-                <th>Descripcion</th>
+                <th>Descripción</th>
                 <th>Referencia</th>
-                <th>Utilizacion</th>
-                <th>Ubicacion</th>
+                <th>Utilización</th>
+                <th>Ubicación</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($lineItems as $item)
                 <tr>
-                    <td class="col-num">{{ $loop->iteration }}</td>
-                    <td class="col-foto"><span class="muted">—</span></td>
                     <td class="col-qty">{{ $item['quantity'] }}</td>
+                    <td class="col-foto">
+                        @if (! empty($item['photo_data_uri']))
+                            <img src="{{ $item['photo_data_uri'] }}" alt="Foto" class="item-photo">
+                        @else
+                            <span class="muted">{{ $photoPlaceholder ?? 'S/A' }}</span>
+                        @endif
+                    </td>
                     <td class="col-desc">{{ $item['description'] }}</td>
                     <td>{{ $item['reference'] }}</td>
                     <td>{{ $item['utilization'] }}</td>
@@ -272,7 +285,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="muted" style="text-align: center;">Sin productos autorizados</td>
+                    <td colspan="6" class="muted" style="text-align: center;">Sin productos autorizados</td>
                 </tr>
             @endforelse
         </tbody>
@@ -302,7 +315,7 @@
     @endif
 
     <div class="page-footer">
-        Documento generado automaticamente — {{ $formCode }} v{{ $formVersion }} — SJ Seguridad
+        Documento generado automáticamente — {{ $formCode }} · {{ $formPeriod ?? 'Marzo 2026' }} Versión {{ $formVersion }} — SJ Seguridad
     </div>
 </body>
 </html>

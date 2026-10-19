@@ -167,9 +167,8 @@
 
         .items-table td { font-size: 8.5px; }
 
-        .items-table .col-num { width: 20px; text-align: center; }
         .items-table .col-foto { width: 44px; text-align: center; }
-        .items-table .col-qty { width: 36px; text-align: center; }
+        .items-table .col-qty { width: 48px; text-align: center; }
         .items-table .col-desc { font-weight: bold; color: #003366; }
 
         .item-photo {
@@ -214,7 +213,10 @@
                     <p class="brand-subtitle">SJ Seguridad — Solicitud de compra</p>
                 </td>
                 <td class="form-meta">
-                    <strong>{{ $formCode }}</strong> v{{ $formVersion }} · Generado {{ $generatedAt->format('d/m/Y H:i') }}
+                    <strong>{{ $formCode }}</strong><br>
+                    {{ $formPeriod ?? 'Marzo 2026' }} · Versión {{ $formVersion }}<br>
+                    {{ $pageLabel ?? 'Página 1 de 1' }}<br>
+                    Generado {{ $generatedAt->format('d/m/Y H:i') }}
                 </td>
             </tr>
         </table>
@@ -240,7 +242,7 @@
             <td class="value-strong">{{ $purchaseRequest->user?->name ?? '—' }}</td>
         </tr>
         <tr>
-            <th>Area</th>
+            <th>Área</th>
             <td>{{ $purchaseRequest->areaLabel() ?? '—' }}</td>
             <th>Solicitud para</th>
             <td>{{ $purchaseRequest->solicitud_para }}</td>
@@ -248,7 +250,7 @@
         <tr>
             <th>Director aprobador</th>
             <td class="value-strong">{{ $purchaseRequest->aprobador?->name ?? '—' }}</td>
-            <th>Fecha aprobacion</th>
+            <th>Fecha aprobación</th>
             <td>{{ optional($purchaseRequest->fecha_aprobacion)->format('d/m/Y') ?? '—' }}</td>
         </tr>
         @if ($purchaseRequest->estado_compras)
@@ -259,10 +261,10 @@
         @endif
         @if ($purchaseRequest->solicitud_para === 'Cliente')
             <tr>
-                <th>Razon social</th>
+                <th>Razón social</th>
                 <td>{{ $purchaseRequest->razon_social ?? '—' }}</td>
                 <th>Proy. nuevo / Asume / Reinversión</th>
-                <td>{{ $purchaseRequest->proyecto_nuevo ? 'Si' : 'No' }} / {{ $purchaseRequest->asume_cliente ? 'Si' : 'No' }} / {{ $purchaseRequest->reinversion ? 'Si' : 'No' }}</td>
+                <td>{{ $purchaseRequest->proyecto_nuevo ? 'Sí' : 'No' }} / {{ $purchaseRequest->asume_cliente ? 'Sí' : 'No' }} / {{ $purchaseRequest->reinversion ? 'Sí' : 'No' }}</td>
             </tr>
         @endif
     </table>
@@ -271,27 +273,26 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th class="col-num">#</th>
+                {{-- Orden oficial FO-AD-44: Cantidad | Foto | Descripción | Referencia | Utilización | Ubicación --}}
+                <th class="col-qty">Cantidad</th>
                 <th class="col-foto">Foto</th>
-                <th class="col-qty">Cant.</th>
-                <th>Descripcion</th>
+                <th>Descripción</th>
                 <th>Referencia</th>
-                <th>Utilizacion</th>
-                <th>Ubicacion</th>
+                <th>Utilización</th>
+                <th>Ubicación</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($purchaseRequest->items as $item)
                 <tr>
-                    <td class="col-num">{{ $item->orden ?? $loop->iteration }}</td>
+                    <td class="col-qty">{{ $item->cantidad }}</td>
                     <td class="col-foto">
                         @if (! empty($itemPhotos[$item->id]))
                             <img src="{{ $itemPhotos[$item->id] }}" alt="Foto" class="item-photo">
                         @else
-                            <span class="muted">—</span>
+                            <span class="muted">{{ $photoPlaceholder ?? 'S/A' }}</span>
                         @endif
                     </td>
-                    <td class="col-qty">{{ $item->cantidad }}</td>
                     <td class="col-desc">{{ $item->descripcion }}</td>
                     <td>{{ $item->referencia }}</td>
                     <td>{{ $item->utilizacion }}</td>
@@ -323,7 +324,7 @@
     @endif
 
     <div class="page-footer">
-        Documento generado automaticamente — {{ $formCode }} v{{ $formVersion }} — SJ Seguridad
+        Documento generado automáticamente — {{ $formCode }} · {{ $formPeriod ?? 'Marzo 2026' }} Versión {{ $formVersion }} — SJ Seguridad
     </div>
 </body>
 </html>

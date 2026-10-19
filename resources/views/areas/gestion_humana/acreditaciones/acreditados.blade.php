@@ -230,10 +230,10 @@
                                     </a>
                                 </p>
                             @else
-                                <p class="req-manage-filters__meta">
-                                    <strong id="acreditados-count">…</strong>
-                                    <span id="acreditados-count-label">registro(s)</span>
-                                </p>
+                            <p class="req-manage-filters__meta">
+                                <strong id="acreditados-count">…</strong>
+                                <span id="acreditados-count-label">registro(s)</span>
+                            </p>
                             @endif
 
                             @if ($canEdit)
@@ -284,28 +284,28 @@
                                             <span>Actualizar</span>
                                             <span class="acreditaciones-bulk-trigger__count" x-text="selectedCount"></span>
                                         </button>
-                                        <button
-                                            type="button"
+                                    <button
+                                        type="button"
                                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                            title="Plantilla masivos — importar"
-                                            aria-label="Plantilla masivos — importar"
-                                            x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-masivos')"
-                                        >
+                                        title="Plantilla masivos — importar"
+                                        aria-label="Plantilla masivos — importar"
+                                        x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-masivos')"
+                                    >
                                             <x-lucide-upload width="18" height="18" aria-hidden="true" />
-                                        </button>
-                                        <button
-                                            type="button"
+                                    </button>
+                                    <button
+                                        type="button"
                                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                            title="Nuevo acreditado"
-                                            aria-label="Nuevo acreditado"
-                                            x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-nuevo')"
-                                        >
+                                        title="Nuevo acreditado"
+                                        aria-label="Nuevo acreditado"
+                                        x-on:click.prevent="$dispatch('open-modal', 'acreditaciones-nuevo')"
+                                    >
                                             <x-lucide-plus width="18" height="18" aria-hidden="true" />
-                                        </button>
+                                    </button>
                                     @endunless
                                 </div>
                             @endif
-                        </div>
+                    </div>
 
                     @if ($colaMode ?? false)
                         @include('areas.gestion_humana.acreditaciones.partials.nuevos-sin-acreditacion-table', [

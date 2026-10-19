@@ -337,12 +337,17 @@ class PurchaseRequestModuleTest extends TestCase
             'generatedAt' => now(),
             'formCode' => config('purchase-requests.form_code'),
             'formVersion' => config('purchase-requests.form_version'),
+            'formPeriod' => config('purchase-requests.form_period'),
+            'photoPlaceholder' => config('purchase-requests.photo_placeholder'),
             'reportTitle' => config('purchase-requests.report_title'),
+            'pageLabel' => 'Página 1 de 1',
         ])->render();
 
         $this->assertStringContainsString('Fecha solicitud', $html);
         $this->assertStringContainsString('Director aprobador', $html);
         $this->assertStringContainsString('Productos solicitados', $html);
+        $this->assertStringContainsString('Descripción', $html);
+        $this->assertStringContainsString('Marzo 2026', $html);
         $this->assertTrue(
             str_contains($html, $director->name)
             || str_contains($html, htmlspecialchars($director->name, ENT_QUOTES, 'UTF-8')),

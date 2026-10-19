@@ -11,8 +11,8 @@
 | Modo | orquestado |
 | Modulo | purchase-requests / compras (Proveedores + OC) |
 | Chat AgentSj | 2026-10-16 compras proveedores OC |
-| Brief | `docs/briefs/FEAT-047.md` (pendiente Arquitecto) |
-| Plan | `docs/briefs/FEAT-047-plan.md` (pendiente post-Brief); semilla Cursor: `compras_proveedores_oc_14f77b95.plan.md` |
+| Brief | [`docs/briefs/FEAT-047.md`](../briefs/FEAT-047.md) (Arquitecto OK) |
+| Plan | `docs/briefs/FEAT-047-plan.md` (pendiente AgentSj); semilla Cursor: `compras_proveedores_oc_14f77b95.plan.md` |
 | Inicio | 2026-10-16 |
 | Cierre | |
 
@@ -38,9 +38,15 @@ Decisiones previas del plan Cursor (a validar/cerrar con Analista):
 | 1 | 2026-10-16 | `@agent-sj` Plan Compras Proveedores+FO-AD-07+44 + eval no print + VINE01 | AgentSj | Creó FEAT-047 en TASKS + run log; capturó deltas usuario | `docs/TASKS.md`, `docs/runs/FEAT-047-run-log.md` | OK |
 | 2 | 2026-10-16 | Task automatico | Analista | Escribió analyst.md: 9 preguntas abiertas + supuestos + borrador brief; Pausa | `docs/briefs/FEAT-047-analyst.md` | Pausa |
 | 3 | 2026-10-16 | Respuestas usuario Q1–Q9 | AgentSj | Registró 1–6,8–9; Q7 pendiente con ejemplos A–E | `docs/briefs/FEAT-047-analyst.md` | Pausa (Q7) |
+| 4 | 2026-10-16 | Q7 + cierra analista y pausa | AgentSj | Q7=autoinc sin prefijo; Analista cerrado; pausa pre-Arquitecto | `docs/briefs/FEAT-047-analyst.md` | Pausa |
+| 5 | 2026-10-19 | `@agent-sj` inicia implementación | AgentSj | Retoma flujo; lanza Arquitecto | — | OK |
+| 6 | 2026-10-19 | Task Arquitecto | Arquitecto | Brief final: morph OC, numero_oc=id, esquema BD, permisos, slices T1–T5 | `docs/briefs/FEAT-047.md`, TASKS, run-log | OK |
+| 7 | 2026-10-19 | AgentSj | Plan T1–T5 + Task Cards | `docs/briefs/FEAT-047-plan.md` | OK |
+| 8 | 2026-10-19 | Task Card T1 | Feature | FO-AD-44 PDF/Excel compra+suministro → Marzo 2026 v01; foto embebida o S/A; tests verdes | exporters, config, PDF blades, `FoAd44ExportAlignmentTest`, docs | OK |
+| 9 | 2026-10-19 | Task Card T2 | Feature | En curso: Proveedores CRUD + permisos + pestaña + DT | `docs/briefs/FEAT-047-T2.md` | En curso |
 
 ## Notas
 
 - Plan semilla: `C:\Users\manuel.espinosa\.cursor\plans\compras_proveedores_oc_14f77b95.plan.md`
 - Imagen evaluación FO-AD-07 adjunta en el chat (criterios + pesos + umbrales).
-- No implementar código hasta Brief + Plan + Task Cards.
+- Brief + Plan + Task Cards activos; implementación en serie T1→T5.

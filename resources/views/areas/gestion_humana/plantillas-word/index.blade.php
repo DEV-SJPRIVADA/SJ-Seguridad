@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="module-subnav requisition-subtabs">
-            <div class="app-container">
+        <div class="app-container">
                 <div class="module-subnav__inner requisition-subtabs__inner">
                     <p class="text-caption module-subnav__label">Plantillas Word</p>
                 </div>
@@ -34,7 +34,7 @@
                         <h2 class="page-title">Tipos de documento</h2>
                         <p class="page-subtitle">Elija un tipo para ver y administrar sus plantillas Word.</p>
                     </div>
-                    @if ($canManage)
+                        @if ($canManage)
                         <button
                             type="button"
                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary btn-plantillas-word-type-create"
@@ -63,32 +63,32 @@
                                 </span>
                                 @if (! $type->is_active)
                                     <span class="status-pill status-pill--muted plantillas-word-page__card-status">Inactivo</span>
-                                @endif
+                        @endif
                             </a>
-                            @if ($canManage)
+                                        @if ($canManage)
                                 <div class="plantillas-word-page__card-actions">
-                                    <button
-                                        type="button"
+                                                    <button
+                                                        type="button"
                                         class="cursos-catalogo-page__icon-btn btn-plantillas-word-type-edit"
                                         title="Editar tipo"
                                         aria-label="Editar tipo"
-                                        data-code="{{ $type->code }}"
-                                        data-name="{{ $type->name }}"
-                                        data-active="{{ $type->is_active ? '1' : '0' }}"
-                                        data-sort="{{ $type->sort_order }}"
-                                        data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
+                                                        data-code="{{ $type->code }}"
+                                                        data-name="{{ $type->name }}"
+                                                        data-active="{{ $type->is_active ? '1' : '0' }}"
+                                                        data-sort="{{ $type->sort_order }}"
+                                                        data-update-url="{{ route('gestion-humana.plantillas-word.types.update', $type) }}"
                                     >
                                         <x-lucide-pencil width="16" height="16" aria-hidden="true" />
                                     </button>
-                                    @if ($type->templates_count === 0)
-                                        <form
-                                            method="POST"
-                                            action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
+                                                    @if ($type->templates_count === 0)
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ route('gestion-humana.plantillas-word.types.destroy', $type) }}"
                                             class="plantillas-word-page__icon-form"
                                             onsubmit="return confirm('¿Eliminar este tipo de documento?')"
-                                        >
-                                            @csrf
-                                            @method('DELETE')
+                                                        >
+                                                            @csrf
+                                                            @method('DELETE')
                                             <button
                                                 type="submit"
                                                 class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
@@ -97,10 +97,10 @@
                                             >
                                                 <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
                                             </button>
-                                        </form>
-                                    @endif
+                                                        </form>
+                                                    @endif
                                 </div>
-                            @endif
+                                            @endif
                         </div>
                     @empty
                         <p class="text-muted plantillas-word-page__empty-board">Sin tipos de documento.</p>
@@ -116,18 +116,18 @@
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                         Volver al tablero
                     </a>
-                    @if (! empty($placeholders))
-                        <button
-                            type="button"
+                        @if (! empty($placeholders))
+                            <button
+                                type="button"
                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                             title="Ver variables"
                             aria-label="Ver variables"
-                            x-data=""
-                            x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
+                                x-data=""
+                                x-on:click="$dispatch('open-modal', 'plantillas-word-variables')"
                         >
                             <x-lucide-braces width="16" height="16" aria-hidden="true" />
                         </button>
-                    @endif
+                        @endif
                 </div>
 
                 <div class="panel plantillas-word-page__panel">
@@ -139,7 +139,7 @@
                                     <span class="status-pill status-pill--muted">Inactivo</span>
                                 @endif
                             </div>
-                            @if ($canManage)
+                        @if ($canManage)
                                 <button
                                     type="button"
                                     class="cursos-catalogo-page__icon-btn btn-plantillas-word-type-edit"
@@ -173,53 +173,53 @@
                                     </div>
                                 </header>
 
-                                <form
-                                    method="POST"
-                                    action="{{ route('gestion-humana.plantillas-word.templates.store') }}"
-                                    enctype="multipart/form-data"
+                            <form
+                                method="POST"
+                                action="{{ route('gestion-humana.plantillas-word.templates.store') }}"
+                                enctype="multipart/form-data"
                                     class="plantillas-word-form__create"
-                                >
-                                    @csrf
+                            >
+                                @csrf
                                     <input type="hidden" name="word_document_type_id" value="{{ $selectedType->id }}">
                                     <div class="plantillas-word-form__create-grid">
                                         <div class="form-field plantillas-word-form__field--grow">
-                                            <label class="form-label" for="template_label_new">Etiqueta</label>
-                                            <input
-                                                id="template_label_new"
-                                                name="label"
-                                                type="text"
-                                                class="form-input"
-                                                maxlength="255"
-                                                required
-                                                value="{{ old('label') }}"
+                                        <label class="form-label" for="template_label_new">Etiqueta</label>
+                                        <input
+                                            id="template_label_new"
+                                            name="label"
+                                            type="text"
+                                            class="form-input"
+                                            maxlength="255"
+                                            required
+                                            value="{{ old('label') }}"
                                                 placeholder="Ej. Aceptación de renuncia"
-                                            >
-                                        </div>
+                                        >
+                                    </div>
                                         <div class="form-field plantillas-word-form__field--sort">
-                                            <label class="form-label" for="template_sort_new">Orden</label>
-                                            <input
-                                                id="template_sort_new"
-                                                name="sort_order"
-                                                type="number"
-                                                min="0"
-                                                max="9999"
-                                                class="form-input"
-                                                value="{{ old('sort_order', 0) }}"
-                                            >
-                                        </div>
+                                        <label class="form-label" for="template_sort_new">Orden</label>
+                                        <input
+                                            id="template_sort_new"
+                                            name="sort_order"
+                                            type="number"
+                                            min="0"
+                                            max="9999"
+                                            class="form-input"
+                                            value="{{ old('sort_order', 0) }}"
+                                        >
+                                    </div>
                                         <div class="form-field plantillas-word-form__field--file">
-                                            <span class="form-label" id="template_file_new_label">Archivo .docx</span>
-                                            <div class="plantillas-word-file-picker">
-                                                <input
-                                                    id="template_file_new"
-                                                    name="template"
-                                                    type="file"
-                                                    class="plantillas-word-file-picker__input"
-                                                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                                    required
-                                                    data-plantillas-word-file
-                                                    aria-labelledby="template_file_new_label"
-                                                >
+                                        <span class="form-label" id="template_file_new_label">Archivo .docx</span>
+                                        <div class="plantillas-word-file-picker">
+                                            <input
+                                                id="template_file_new"
+                                                name="template"
+                                                type="file"
+                                                class="plantillas-word-file-picker__input"
+                                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                required
+                                                data-plantillas-word-file
+                                                aria-labelledby="template_file_new_label"
+                                            >
                                                 <label for="template_file_new" class="plantillas-word-file-picker__zone">
                                                     <span class="plantillas-word-file-picker__icon" aria-hidden="true">
                                                         <x-lucide-file-up width="18" height="18" />
@@ -229,7 +229,7 @@
                                                         <span class="plantillas-word-file-picker__hint">Solo .docx · máximo 5 MB</span>
                                                     </span>
                                                 </label>
-                                                <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name>Sin archivo seleccionado</span>
+                                            <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name>Sin archivo seleccionado</span>
                                             </div>
                                         </div>
                                         <div class="plantillas-word-form__create-actions">
@@ -285,7 +285,7 @@
                                     searchPlaceholder="Buscar…"
                                     :allowClear="true"
                                 />
-                            </div>
+                                    </div>
 
                             <div class="plantillas-word-page__filters-actions">
                                 <button
@@ -306,8 +306,8 @@
                                         <x-lucide-x width="16" height="16" aria-hidden="true" />
                                     </a>
                                 @endif
-                            </div>
-                        </form>
+                                </div>
+                            </form>
 
                         @if ($hasActiveFilters)
                             <p class="plantillas-word-page__filters-meta text-caption text-muted">
@@ -347,17 +347,17 @@
                                             </td>
                                             <td class="table-actions">
                                                 <div class="plantillas-word-page__row-actions plantillas-word-page__row-actions--templates">
-                                                    @if ($template->hasTemplateFile())
-                                                        <a
-                                                            href="{{ route('gestion-humana.plantillas-word.templates.download', $template) }}"
+                                                @if ($template->hasTemplateFile())
+                                                    <a
+                                                        href="{{ route('gestion-humana.plantillas-word.templates.download', $template) }}"
                                                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                                             title="Descargar"
                                                             aria-label="Descargar"
                                                         >
                                                             <x-lucide-download width="16" height="16" aria-hidden="true" />
                                                         </a>
-                                                    @endif
-                                                    @if ($canManage)
+                                                @endif
+                                                @if ($canManage)
                                                         <button
                                                             type="button"
                                                             class="cursos-catalogo-page__icon-btn btn-plantillas-word-template-edit"
@@ -370,23 +370,23 @@
                                                         >
                                                             <x-lucide-pencil width="16" height="16" aria-hidden="true" />
                                                         </button>
-                                                        <form
-                                                            method="POST"
-                                                            action="{{ route('gestion-humana.plantillas-word.templates.replace', $template) }}"
-                                                            enctype="multipart/form-data"
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ route('gestion-humana.plantillas-word.templates.replace', $template) }}"
+                                                        enctype="multipart/form-data"
                                                             class="plantillas-word-page__replace-form"
-                                                        >
-                                                            @csrf
-                                                            <div class="plantillas-word-file-picker plantillas-word-file-picker--compact">
-                                                                <input
-                                                                    id="template_file_replace_{{ $template->id }}"
-                                                                    type="file"
-                                                                    name="template"
-                                                                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                                                    class="plantillas-word-file-picker__input"
-                                                                    required
-                                                                    data-plantillas-word-file
-                                                                >
+                                                    >
+                                                        @csrf
+                                                        <div class="plantillas-word-file-picker plantillas-word-file-picker--compact">
+                                                            <input
+                                                                id="template_file_replace_{{ $template->id }}"
+                                                                type="file"
+                                                                name="template"
+                                                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                                class="plantillas-word-file-picker__input"
+                                                                required
+                                                                data-plantillas-word-file
+                                                            >
                                                                 <label
                                                                     for="template_file_replace_{{ $template->id }}"
                                                                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost plantillas-word-file-picker__select-btn"
@@ -395,8 +395,8 @@
                                                                 >
                                                                     <x-lucide-file-up width="16" height="16" aria-hidden="true" />
                                                                 </label>
-                                                                <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name hidden>Sin archivo</span>
-                                                            </div>
+                                                            <span class="plantillas-word-file-picker__name" data-plantillas-word-file-name hidden>Sin archivo</span>
+                                                        </div>
                                                             <button
                                                                 type="submit"
                                                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -405,15 +405,15 @@
                                                             >
                                                                 <x-lucide-replace width="16" height="16" aria-hidden="true" />
                                                             </button>
-                                                        </form>
-                                                        <form
-                                                            method="POST"
+                                                    </form>
+                                                    <form
+                                                        method="POST"
                                                             action="{{ route('gestion-humana.plantillas-word.templates.destroy', $template) }"
                                                             class="plantillas-word-page__icon-form"
                                                             onsubmit="return confirm('¿Eliminar esta plantilla Word? Se borrará el archivo y el registro.');"
-                                                        >
-                                                            @csrf
-                                                            @method('DELETE')
+                                                    >
+                                                        @csrf
+                                                        @method('DELETE')
                                                             <button
                                                                 type="submit"
                                                                 class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
@@ -422,8 +422,8 @@
                                                             >
                                                                 <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
                                                             </button>
-                                                        </form>
-                                                    @endif
+                                                    </form>
+                                                @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -575,26 +575,26 @@
                     @csrf
                     <input type="hidden" name="_method" id="plantillas-word-type-method" value="PATCH">
                     <div class="ficha-empleados-catalogs-page__modal-fields">
-                        <div class="form-field">
+                    <div class="form-field">
                             <label class="form-label" for="plantillas-word-edit-code">Código</label>
-                            <input id="plantillas-word-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label" for="plantillas-word-edit-name">Nombre</label>
-                            <input id="plantillas-word-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
-                        </div>
+                        <input id="plantillas-word-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label" for="plantillas-word-edit-name">Nombre</label>
+                        <input id="plantillas-word-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
+                    </div>
                         <div class="ficha-empleados-catalogs-page__modal-meta">
-                            <div class="form-field">
-                                <label class="form-label" for="plantillas-word-edit-sort">Orden</label>
-                                <input id="plantillas-word-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
-                            </div>
+                    <div class="form-field">
+                        <label class="form-label" for="plantillas-word-edit-sort">Orden</label>
+                        <input id="plantillas-word-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
+                    </div>
                             <label class="ficha-empleados-catalogs-page__modal-active" for="plantillas-word-edit-active">
-                                <input type="checkbox" id="plantillas-word-edit-active" name="is_active" value="1" class="form-check">
+                        <input type="checkbox" id="plantillas-word-edit-active" name="is_active" value="1" class="form-check">
                                 <span>
                                     <span class="ficha-empleados-catalogs-page__modal-active-title">Activo</span>
                                     <span class="ficha-empleados-catalogs-page__modal-active-text">Si está inactivo no se ofrece al elegir plantilla.</span>
                                 </span>
-                            </label>
+                    </label>
                         </div>
                     </div>
                     <div class="ficha-empleados-catalogs-page__modal-actions">

@@ -46,20 +46,20 @@
                             <span class="req-manage-filters__panel-badge" x-show="hasActiveFilters" x-cloak>Activos</span>
                         </summary>
                         <div class="req-manage-filters__panel-body">
-                            <div class="req-manage-filters__toolbar desvinculaciones-seguimientos__toolbar">
-                                <div class="desvinculaciones-seguimientos__filters-main">
-                                    <div class="req-manage-filters__search-col desvinculaciones-seguimientos__search">
-                                        <label class="req-manage-filters__label" for="seguimientos-search-q">Buscar</label>
-                                        <div class="req-manage-filters__search-group">
-                                            <input
-                                                id="seguimientos-search-q"
-                                                type="search"
-                                                class="form-input"
+                        <div class="req-manage-filters__toolbar desvinculaciones-seguimientos__toolbar">
+                            <div class="desvinculaciones-seguimientos__filters-main">
+                                <div class="req-manage-filters__search-col desvinculaciones-seguimientos__search">
+                                    <label class="req-manage-filters__label" for="seguimientos-search-q">Buscar</label>
+                                    <div class="req-manage-filters__search-group">
+                                        <input
+                                            id="seguimientos-search-q"
+                                            type="search"
+                                            class="form-input"
                                                 placeholder="Cédula o nombre"
-                                                x-model="q"
-                                                x-on:keydown.enter.prevent="applyFilters()"
-                                                autocomplete="off"
-                                            >
+                                            x-model="q"
+                                            x-on:keydown.enter.prevent="applyFilters()"
+                                            autocomplete="off"
+                                        >
                                             <button
                                                 type="button"
                                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -68,9 +68,9 @@
                                                 x-on:click="applyFilters()"
                                             >
                                                 <x-lucide-search width="18" height="18" aria-hidden="true" />
-                                            </button>
-                                        </div>
+                                        </button>
                                     </div>
+                                </div>
 
                                     <div class="form-field desvinculaciones-seguimientos__fecha-campo">
                                         <label class="req-manage-filters__label" for="seguimientos-fecha-campo">Campo fecha</label>
@@ -101,29 +101,29 @@
                                     </div>
 
                                     <div class="desvinculaciones-seguimientos__date-range" role="group" aria-label="Rango de fechas">
-                                        <div class="desvinculaciones-seguimientos__date-fields">
-                                            <div class="desvinculaciones-seguimientos__date-field">
-                                                <label class="req-manage-filters__label" for="seguimientos-fecha-desde">Desde</label>
-                                                <input
-                                                    id="seguimientos-fecha-desde"
-                                                    type="date"
-                                                    class="form-input desvinculaciones-seguimientos__date-input"
-                                                    x-model="fechaDesde"
+                                    <div class="desvinculaciones-seguimientos__date-fields">
+                                        <div class="desvinculaciones-seguimientos__date-field">
+                                            <label class="req-manage-filters__label" for="seguimientos-fecha-desde">Desde</label>
+                                            <input
+                                                id="seguimientos-fecha-desde"
+                                                type="date"
+                                                class="form-input desvinculaciones-seguimientos__date-input"
+                                                x-model="fechaDesde"
                                                     x-on:change="onDateRangeChange()"
-                                                >
-                                            </div>
-                                            <div class="desvinculaciones-seguimientos__date-field">
-                                                <label class="req-manage-filters__label" for="seguimientos-fecha-hasta">Hasta</label>
-                                                <input
-                                                    id="seguimientos-fecha-hasta"
-                                                    type="date"
-                                                    class="form-input desvinculaciones-seguimientos__date-input"
-                                                    x-model="fechaHasta"
-                                                    x-on:change="onDateRangeChange()"
-                                                >
-                                            </div>
+                                            >
                                         </div>
+                                        <div class="desvinculaciones-seguimientos__date-field">
+                                            <label class="req-manage-filters__label" for="seguimientos-fecha-hasta">Hasta</label>
+                                            <input
+                                                id="seguimientos-fecha-hasta"
+                                                type="date"
+                                                class="form-input desvinculaciones-seguimientos__date-input"
+                                                x-model="fechaHasta"
+                                                    x-on:change="onDateRangeChange()"
+                                            >
                                     </div>
+                                </div>
+                            </div>
 
                                     <div class="desvinculaciones-seguimientos__filter-actions">
                                         <button
@@ -136,20 +136,20 @@
                                             <x-lucide-x width="18" height="18" aria-hidden="true" />
                                         </button>
                                     </div>
-                                </div>
                             </div>
+                        </div>
 
-                            <div class="desvinculaciones-seguimientos__status-chips" role="group" aria-label="Filtro de estado">
-                                <template x-for="opt in statusOptions" :key="opt.value">
-                                    <button
-                                        type="button"
-                                        class="module-tab"
-                                        x-bind:class="{ 'module-tab--active': status === opt.value }"
-                                        x-on:click="setStatus(opt.value)"
-                                        x-text="opt.label"
-                                    ></button>
-                                </template>
-                            </div>
+                        <div class="desvinculaciones-seguimientos__status-chips" role="group" aria-label="Filtro de estado">
+                            <template x-for="opt in statusOptions" :key="opt.value">
+                                <button
+                                    type="button"
+                                    class="module-tab"
+                                    x-bind:class="{ 'module-tab--active': status === opt.value }"
+                                    x-on:click="setStatus(opt.value)"
+                                    x-text="opt.label"
+                                ></button>
+                            </template>
+                        </div>
                         </div>
                     </details>
 
@@ -245,7 +245,7 @@
                             <div class="ficha-empleados-terminate-modal__body" style="padding: 1rem; display:grid; gap:0.75rem;">
                                 <div class="form-field">
                                     <label class="form-label" for="seguimientos-import-file">Archivo Excel</label>
-                                    <input
+                                                <input
                                         id="seguimientos-import-file"
                                         type="file"
                                         class="form-input"
@@ -258,7 +258,7 @@
                                 </div>
 
                                 <label class="form-field" style="display:flex; gap:0.5rem; align-items:flex-start;">
-                                    <input
+                                            <input
                                         type="checkbox"
                                         x-model="importModal.confirm"
                                         x-bind:disabled="importModal.busy"
@@ -290,37 +290,37 @@
                                         <ul class="form-hint text-danger" style="margin:0.5rem 0 0; padding-left:1.1rem; max-height:8rem; overflow:auto;">
                                             <template x-for="(err, idx) in importModal.stats.errors" :key="idx">
                                                 <li x-text="err"></li>
-                                            </template>
+                                </template>
                                         </ul>
                                     </template>
                                 </div>
-                            </div>
+                    </div>
 
                             <div class="ficha-empleados-terminate-modal__actions" style="display:flex; gap:0.5rem; justify-content:flex-end; flex-wrap:wrap; padding: 0 1rem 1rem;">
                                 <button type="button" class="btn btn--secondary" x-on:click="closeImportModal()" x-bind:disabled="importModal.busy">
                                     Cerrar
                                 </button>
-                                <button
-                                    type="button"
+                        <button
+                            type="button"
                                     class="btn btn--secondary"
                                     x-on:click="runImportHistorico(true)"
                                     x-bind:disabled="importModal.busy || ! importModal.hasFile"
                                 >
                                     <span x-show="! (importModal.busy && importModal.mode === 'dry')">Simular</span>
                                     <span x-show="importModal.busy && importModal.mode === 'dry'" x-cloak>Simulando…</span>
-                                </button>
-                                <button
-                                    type="button"
+                        </button>
+                        <button
+                            type="button"
                                     class="btn btn--primary"
                                     x-on:click="runImportHistorico(false)"
                                     x-bind:disabled="importModal.busy || ! importModal.hasFile || ! importModal.confirm"
                                 >
                                     <span x-show="! (importModal.busy && importModal.mode === 'import')">Cargar</span>
                                     <span x-show="importModal.busy && importModal.mode === 'import'" x-cloak>Cargando…</span>
-                                </button>
+                        </button>
                             </div>
-                        </div>
                     </div>
+                </div>
 
                     <div
                         class="desvinculaciones-seguimientos__revert-overlay"
@@ -337,7 +337,7 @@
                             <div class="ficha-empleados-terminate-modal__header" style="padding: 1rem 1rem 0;">
                                 <h3 id="seguimientos-revert-title" class="panel-title">Revertir desvinculación</h3>
                                 <p class="panel-text">
-                                    <span x-text="revertModal.full_name"></span>
+                                        <span x-text="revertModal.full_name"></span>
                                     ·
                                     <span x-text="revertModal.document_number"></span>
                                 </p>

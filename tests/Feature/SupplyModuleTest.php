@@ -670,11 +670,15 @@ class SupplyModuleTest extends TestCase
             'lineItems' => app(SupplyPurchaseReportExporter::class)
                 ->buildMergedRowsForRequest($supplyRequest)
                 ->values()
+                ->map(fn (array $row): array => $row + ['photo_data_uri' => null])
                 ->all(),
             'generatedAt' => now(),
             'formCode' => config('supplies.report.form_code'),
             'formVersion' => config('supplies.report.version'),
+            'formPeriod' => config('supplies.report.period'),
+            'photoPlaceholder' => config('supplies.report.photo_placeholder'),
             'reportTitle' => config('supplies.report.title'),
+            'pageLabel' => 'Página 1 de 1',
         ])->render();
 
         $this->assertStringContainsString('Fecha solicitud', $html);
@@ -682,5 +686,7 @@ class SupplyModuleTest extends TestCase
         $this->assertStringContainsString('Productos solicitados', $html);
         $this->assertStringContainsString($requester->name, $html);
         $this->assertStringContainsString('Solicitud de suministro', $html);
+        $this->assertStringContainsString('Descripción', $html);
+        $this->assertStringContainsString('Marzo 2026', $html);
     }
 }
