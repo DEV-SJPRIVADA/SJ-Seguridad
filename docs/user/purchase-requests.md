@@ -114,6 +114,15 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 7. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
 8. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
 
+### Catálogo de proveedores
+
+1. Con el permiso **Proveedores: Ver** aparece la pestaña **Proveedores** en Solicitudes de compra. El permiso **Proveedores: Editar** también permite verla.
+2. El listado muestra por defecto los **proveedores activos**. Use **Buscar** (identificación, nombre, correo, contacto o ciudad), **Estado** (Activos / Inactivos / Todos) y **Solo proveedores** (desmárquelo para incluir registros que solo son clientes).
+3. Con permiso de edición, **Nuevo proveedor** permite registrar identificación, nombre, teléfono, correo, contacto, dirección, ciudad, forma de pago, **días de pago** y estado. Los datos de contacto y pago alimentan la Orden de Compra FO-AD-07.
+4. Los textos se guardan en **MAYÚSCULAS**; el correo y la identificación se conservan tal cual.
+5. Use el icono de Excel para exportar el catálogo con los filtros actuales.
+6. Al editar y guardar, el listado conserva los filtros que tenía.
+
 ### Dashboard Compras
 
 1. Entre a **Compras → Dashboard** (tablero Dashboard Compras).
@@ -131,6 +140,7 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.18 | 2026-10-19 | Compras | Pestaña Proveedores: catálogo, alta/edición, filtros, export y permisos Ver/Editar. |
 | 1.16 | 2026-10-02 | Compras | Datos del cliente: campo **Reinversión** (Si/No) al lado de Asume el cliente. |
 | 1.17 | 2026-10-02 | UI | Productos: foto antes de descripción; layout de campos; radios de cliente en una fila; ortografía. |
 | 1.16 | 2026-10-02 | UI | Nueva/Reabrir solicitud: productos en tarjetas con más espacio para Descripción, Referencia, Utilización y Ubicación. |

@@ -53,6 +53,18 @@
             @if ($errors->has('export'))
                 <div class="alert alert--danger cursos-registros-page__alert">{{ $errors->first('export') }}</div>
             @endif
+            @if (($workingPinsCount ?? 0) > 0)
+                <div class="acreditaciones-working-set" role="status">
+                    <span>
+                        <strong>{{ $workingPinsCount }}</strong>
+                        {{ $workingPinsCount === 1 ? 'registro fijado' : 'registros fijados' }} por edición.
+                        Se mantienen visibles aunque ya no cumplan el filtro.
+                    </span>
+                    <a class="btn btn--secondary btn--sm" href="{{ $workingRefreshUrl }}">
+                        Actualizar vista
+                    </a>
+                </div>
+            @endif
 
             <x-import-result-modal download-route="gestion-humana.acreditaciones.acreditados.import-report" />
 
@@ -135,40 +147,9 @@
                                 </div>
                                 <input type="hidden" name="en_perfil" id="filter_en_perfil" value="{{ $enPerfilFilter }}">
                                 <input type="hidden" name="ficha_estado" id="filter_ficha_estado" value="{{ $fichaEstadoFilter }}">
-                                <div class="form-field cursos-registros-page__filter-actions">
-                                    <button
-                                        type="submit"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                        title="Filtrar"
-                                        aria-label="Filtrar"
-                                    >
-                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
-                                    </button>
-                                    <x-multi-cedula-filter
-                                        id="acreditados"
-                                        name="document_numbers"
-                                        :value="$filters['document_numbers'] ?? []"
-                                    />
-                                    <a
-                                        href="{{ route('gestion-humana.acreditaciones.acreditados') }}"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                        title="Limpiar filtros"
-                                        aria-label="Limpiar filtros"
-                                    >
-                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                    </a>
-                                    <a
-                                        href="{{ $exportUrl }}"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                        title="Exportar a Excel"
-                                        aria-label="Exportar a Excel"
-                                    >
-                                        <x-selfhst-microsoft-excel-2013 width="18" height="18" aria-hidden="true" />
-                                    </a>
-                                </div>
                             </div>
 
-                            {{-- Chips: En perfil + Estado en ficha (mismo estilo module-tab que Cursos) --}}
+                            {{-- Fila 2: chips de texto (izquierda) + botones de icono (derecha). --}}
                             <div class="cursos-registros-page__chip-filters">
                                 <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro en perfil">
                                     <button
@@ -203,6 +184,37 @@
                                         class="module-tab {{ $fichaEstadoFilter === 'desvinculado' ? 'module-tab--active' : '' }}"
                                         x-on:click="setChipFilter('ficha_estado', 'desvinculado')"
                                     >Desvinculados</button>
+                                </div>
+                                <div class="form-field cursos-registros-page__filter-actions">
+                                    <button
+                                        type="submit"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        title="Filtrar"
+                                        aria-label="Filtrar"
+                                    >
+                                        <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                    <x-multi-cedula-filter
+                                        id="acreditados"
+                                        name="document_numbers"
+                                        :value="$filters['document_numbers'] ?? []"
+                                    />
+                                    <a
+                                        href="{{ route('gestion-humana.acreditaciones.acreditados') }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Limpiar filtros"
+                                        aria-label="Limpiar filtros"
+                                    >
+                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                    </a>
+                                    <a
+                                        href="{{ $exportUrl }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Exportar a Excel"
+                                        aria-label="Exportar a Excel"
+                                    >
+                                        <x-selfhst-microsoft-excel-2013 width="18" height="18" aria-hidden="true" />
+                                    </a>
                                 </div>
                             </div>
                             <p class="panel-text" style="margin-top:0.35rem;font-size:0.85rem;">
@@ -441,6 +453,21 @@
 
     @push('scripts')
         <script>
+            (function stripWorkingSetOnReload() {
+                const navigation = performance.getEntriesByType('navigation')[0];
+                if (! navigation || navigation.type !== 'reload') {
+                    return;
+                }
+
+                const url = new URL(window.location.href);
+                if (! url.searchParams.has('working')) {
+                    return;
+                }
+
+                url.searchParams.delete('working');
+                window.location.replace(url.toString());
+            })();
+
             function acreditacionesAcreditados(config) {
                 return {
                     lookupUrl: config.lookupUrl,
@@ -733,6 +760,26 @@
                                 },
                             }));
                         });
+                    },
+                    editActionUrl() {
+                        const base = this.editForm.update_url || '';
+                        if (! base) {
+                            return base;
+                        }
+
+                        const params = new URLSearchParams();
+                        Object.entries(this.activeFilterQuery || {}).forEach(([key, value]) => {
+                            if (value !== undefined && value !== null && String(value) !== '') {
+                                params.set(key, String(value));
+                            }
+                        });
+
+                        const query = params.toString();
+                        if (! query) {
+                            return base;
+                        }
+
+                        return base + (base.includes('?') ? '&' : '?') + query;
                     },
                     openEdit(detail) {
                         this.editForm = {

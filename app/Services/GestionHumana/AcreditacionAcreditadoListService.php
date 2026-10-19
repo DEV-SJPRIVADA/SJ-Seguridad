@@ -29,9 +29,10 @@ class AcreditacionAcreditadoListService
      *     ficha_estado?: string|null,
      *     en_perfil?: string|null,
      * }  $filters
+     * @param  list<int>  $pinnedIds  IDs editados que deben seguir visibles aunque no cumplan el filtro.
      * @return Builder<AcreditacionAcreditado>
      */
-    public function filteredQuery(array $filters, bool $ordered = true): Builder
+    public function filteredQuery(array $filters, bool $ordered = true, array $pinnedIds = []): Builder
     {
         $query = AcreditacionAcreditado::query();
 
@@ -39,6 +40,26 @@ class AcreditacionAcreditadoListService
             $query->orderByDesc('id');
         }
 
+        if ($pinnedIds === []) {
+            $this->applyFilters($query, $filters);
+
+            return $query;
+        }
+
+        $query->where(function (Builder $inner) use ($filters, $pinnedIds): void {
+            $this->applyFilters($inner, $filters);
+            $inner->orWhereIn('id', $pinnedIds);
+        });
+
+        return $query;
+    }
+
+    /**
+     * @param  Builder<AcreditacionAcreditado>  $query
+     * @param  array<string, mixed>  $filters
+     */
+    private function applyFilters(Builder $query, array $filters): void
+    {
         // Listado: todos (con/sin perfil). Chips `en_perfil` + `ficha_estado` acotan.
         $this->applyEnPerfilFilter($query, (string) ($filters['en_perfil'] ?? ''));
 
@@ -97,8 +118,6 @@ class AcreditacionAcreditadoListService
         }
 
         $this->applyFichaEstadoFilter($query, $filters);
-
-        return $query;
     }
 
     /**
@@ -173,10 +192,11 @@ class AcreditacionAcreditadoListService
 
     /**
      * @param  array<string, mixed>  $filters
+     * @param  list<int>  $pinnedIds
      * @return Collection<int, AcreditacionAcreditado>
      */
-    public function all(array $filters): Collection
+    public function all(array $filters, array $pinnedIds = []): Collection
     {
-        return $this->filteredQuery($filters)->get();
+        return $this->filteredQuery($filters, pinnedIds: $pinnedIds)->get();
     }
 }

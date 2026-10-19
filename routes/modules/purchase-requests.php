@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PurchaseRequests\PurchaseApprovalController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProcessingController;
+use App\Http\Controllers\PurchaseRequests\PurchaseProviderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,19 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::patch('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'updateSupply'])->name('processing.supply.update');
         Route::get('/bandeja-compras/suministro/{supply_request}/pdf', [PurchaseProcessingController::class, 'exportSupplyPdf'])->name('processing.supply.pdf');
         Route::get('/bandeja-compras/suministro/{supply_request}/excel', [PurchaseProcessingController::class, 'exportSupplyExcel'])->name('processing.supply.excel');
+    });
+
+    Route::middleware(['purchase.tab:providers'])->group(function (): void {
+        Route::get('/proveedores', [PurchaseProviderController::class, 'index'])->name('providers.index');
+        Route::get('/proveedores/datatable', [PurchaseProviderController::class, 'datatable'])->name('providers.datatable');
+        Route::get('/proveedores/exportar', [PurchaseProviderController::class, 'export'])->name('providers.export');
+    });
+
+    Route::middleware(['purchase.tab:providers.edit'])->group(function (): void {
+        Route::get('/proveedores/crear', [PurchaseProviderController::class, 'create'])->name('providers.create');
+        Route::post('/proveedores', [PurchaseProviderController::class, 'store'])->name('providers.store');
+        Route::get('/proveedores/{purchase_provider}/editar', [PurchaseProviderController::class, 'edit'])->name('providers.edit');
+        Route::patch('/proveedores/{purchase_provider}', [PurchaseProviderController::class, 'update'])->name('providers.update');
     });
 
     Route::get('/solicitud/{purchase_request}/pdf', [PurchaseRequestController::class, 'exportPdf'])->name('export.pdf');

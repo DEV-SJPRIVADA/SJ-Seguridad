@@ -22,7 +22,7 @@
 | 2 | Arquitecto | Feature Brief final | 1 | OK |
 | 3 | AgentSj | Plan de orquestacion | 2 | OK |
 | 4 | Feature | **T1** Fase A: alinear FO-AD-44 Marzo 2026 v01 (PDF/Excel compra+suministro, foto) | 3 | OK |
-| 5 | Feature | **T2** Proveedores: migracion + permisos + AccessService + pestana + CRUD + DT server-side | 4 | Pendiente |
+| 5 | Feature | **T2** Proveedores: migracion + permisos + AccessService + pestana + CRUD + DT server-side | 4 | OK |
 | 6 | Feature | **T3** Import/export VINE01 (solo PROVEEDOR=SI, dry-run/limit, dias_pago) | 5 | Pendiente |
 | 7 | Feature | **T4** OC morph + emision bandeja (compra/suministro) + FO-AD-07 PDF/Excel | 6 | Pendiente |
 | 8 | Feature | **T5** Evaluacion post-entrega UI+BD (no impresa; providers.edit) | 7 | Pendiente |

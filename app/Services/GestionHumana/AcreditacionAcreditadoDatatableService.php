@@ -19,15 +19,22 @@ final class AcreditacionAcreditadoDatatableService
 
     /**
      * @param  array<string, mixed>  $filters
+     * @param  list<int>  $pinnedIds
+     * @param  array<string, string>  $actionQuery
      */
-    public function respond(Request $request, array $filters, bool $canEdit): JsonResponse
-    {
+    public function respond(
+        Request $request,
+        array $filters,
+        bool $canEdit,
+        array $pinnedIds = [],
+        array $actionQuery = [],
+    ): JsonResponse {
         $draw = (int) $request->input('draw', 1);
         $start = max(0, (int) $request->input('start', 0));
         $length = (int) $request->input('length', 10);
         $maxLength = (int) config('acreditaciones.limits.datatable_max_length', 100);
 
-        $baseQuery = $this->listService->filteredQuery($filters, ordered: false);
+        $baseQuery = $this->listService->filteredQuery($filters, ordered: false, pinnedIds: $pinnedIds);
         $recordsTotal = (clone $baseQuery)->count();
 
         $query = clone $baseQuery;
@@ -54,6 +61,7 @@ final class AcreditacionAcreditadoDatatableService
                 $canEdit,
                 $inProfileDocs->has((string) $row->document_number),
                 $duplicateDocs->has((string) $row->document_number),
+                $actionQuery,
             ))
             ->values()
             ->all();
@@ -119,6 +127,7 @@ final class AcreditacionAcreditadoDatatableService
      * Filas del filtro actual elegibles para acción masiva.
      *
      * @param  array<string, mixed>  $filters
+     * @param  list<int>  $pinnedIds
      * @return list<array{
      *     id: int,
      *     document_number: string,
@@ -129,10 +138,10 @@ final class AcreditacionAcreditadoDatatableService
      *     vigencia_acr: string
      * }>
      */
-    public function bulkSelectableRows(array $filters): array
+    public function bulkSelectableRows(array $filters, array $pinnedIds = []): array
     {
         return $this->listService
-            ->filteredQuery($filters, ordered: false)
+            ->filteredQuery($filters, ordered: false, pinnedIds: $pinnedIds)
             ->orderByDesc('id')
             ->get([
                 'id',
@@ -212,10 +221,16 @@ final class AcreditacionAcreditadoDatatableService
     }
 
     /**
+     * @param  array<string, string>  $actionQuery
      * @return list<string>
      */
-    private function formatRow(AcreditacionAcreditado $row, bool $canEdit, bool $inProfile, bool $isDuplicateCedula): array
-    {
+    private function formatRow(
+        AcreditacionAcreditado $row,
+        bool $canEdit,
+        bool $inProfile,
+        bool $isDuplicateCedula,
+        array $actionQuery = [],
+    ): array {
         $estadoLabel = $this->estadoCalculator->estadoLabel((string) $row->estado);
         $estadoClass = match ($row->estado) {
             AcreditacionAcreditado::ESTADO_ACREDITADO => 'status-pill status-pill--success',
@@ -249,7 +264,7 @@ final class AcreditacionAcreditadoDatatableService
         ]);
 
         if ($canEdit) {
-            $cells[] = $this->formatActionsCell($row);
+            $cells[] = $this->formatActionsCell($row, $actionQuery);
         }
 
         return $cells;
@@ -296,7 +311,10 @@ final class AcreditacionAcreditadoDatatableService
         );
     }
 
-    private function formatActionsCell(AcreditacionAcreditado $row): string
+    /**
+     * @param  array<string, string>  $actionQuery
+     */
+    private function formatActionsCell(AcreditacionAcreditado $row, array $actionQuery = []): string
     {
         $editPayload = e(json_encode([
             'id' => $row->id,
@@ -332,7 +350,10 @@ final class AcreditacionAcreditadoDatatableService
             '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'.
             '</button></form></div>',
             $editPayload,
-            e(route('gestion-humana.acreditaciones.acreditados.destroy', $row)),
+            e(route('gestion-humana.acreditaciones.acreditados.destroy', [
+                'acreditacionAcreditado' => $row,
+                ...$actionQuery,
+            ])),
             e('Eliminar acreditado'),
             e('¿Eliminar este acreditado? Esta acción no se puede deshacer.'),
             $this->csrfField(),

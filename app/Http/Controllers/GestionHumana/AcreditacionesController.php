@@ -35,6 +35,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\AcreditacionAcreditadoDatatableService;
 use App\Services\GestionHumana\AcreditacionAcreditadoListService;
 use App\Services\GestionHumana\AcreditacionAcreditadoSolicitudArchive;
+use App\Services\GestionHumana\AcreditacionAcreditadoWorkingSetService;
 use App\Services\GestionHumana\AcreditacionCargoCatalogService;
 use App\Services\GestionHumana\AcreditacionDashboardService;
 use App\Services\GestionHumana\AcreditacionesAuditLogService;
@@ -76,6 +77,7 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionesAuditLogService $auditLogService,
         private readonly AcreditacionAcreditadoListService $acreditadoListService,
         private readonly AcreditacionAcreditadoDatatableService $acreditadoDatatableService,
+        private readonly AcreditacionAcreditadoWorkingSetService $acreditadoWorkingSetService,
         private readonly AcreditacionAcreditadoSolicitudArchive $solicitudArchive,
         private readonly AcreditacionEstadoCalculator $estadoCalculator,
         private readonly AcreditacionImportService $importService,
@@ -159,6 +161,19 @@ class AcreditacionesController extends Controller
             : collect();
 
         $filters = $this->acreditadoFiltersFromRequest($request);
+        $activeFilterQuery = $this->activeAcreditadoFilterQuery($filters);
+        $workingQuery = $activeFilterQuery === [] ? [] : ['working' => '1'];
+        $workingPinsCount = 0;
+
+        if ($this->acreditadoWorkingSetService->isActive($request)) {
+            $workingPinsCount = count(
+                $this->acreditadoWorkingSetService->pinnedIds($request, $activeFilterQuery),
+            );
+        } else {
+            $this->acreditadoWorkingSetService->forget($request);
+        }
+
+        $queryWithWorking = array_merge($activeFilterQuery, $workingQuery);
 
         /** @var array<string, string> $estadoLabels */
         $estadoLabels = config('acreditaciones.estados', []);
@@ -253,22 +268,27 @@ class AcreditacionesController extends Controller
             'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
             'datatableUrl' => route(
                 'gestion-humana.acreditaciones.acreditados.datatable',
-                $this->activeAcreditadoFilterQuery($filters),
+                $queryWithWorking,
             ),
             'bulkSelectableUrl' => route(
                 'gestion-humana.acreditaciones.acreditados.bulk-selectable',
-                $this->activeAcreditadoFilterQuery($filters),
+                $queryWithWorking,
             ),
             'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
             'exportApoUrl' => route('gestion-humana.acreditaciones.export-apo'),
             'exportUrl' => route(
                 'gestion-humana.acreditaciones.acreditados.export',
-                $this->activeAcreditadoFilterQuery($filters),
+                $queryWithWorking,
             ),
             'pendingExportUrl' => route('gestion-humana.acreditaciones.acreditados.export-pendientes'),
             'importTemplateUrl' => route('gestion-humana.acreditaciones.acreditados.import-template'),
             'importUrl' => route('gestion-humana.acreditaciones.acreditados.import'),
-            'activeFilterQuery' => $this->activeAcreditadoFilterQuery($filters),
+            'activeFilterQuery' => $queryWithWorking,
+            'workingPinsCount' => $workingPinsCount,
+            'workingRefreshUrl' => route(
+                'gestion-humana.acreditaciones.acreditados',
+                $activeFilterQuery,
+            ),
         ]);
     }
 
@@ -276,10 +296,19 @@ class AcreditacionesController extends Controller
     {
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
+        $filters = $this->acreditadoFiltersFromRequest($request);
+        $filterQuery = $this->activeAcreditadoFilterQuery($filters);
+        $pinnedIds = $this->acreditadoWorkingSetService->pinnedIds($request, $filterQuery);
+        $actionQuery = $this->acreditadoWorkingSetService->isActive($request) && $filterQuery !== []
+            ? array_merge($filterQuery, ['working' => '1'])
+            : $filterQuery;
+
         return $this->acreditadoDatatableService->respond(
             $request,
-            $this->acreditadoFiltersFromRequest($request),
+            $filters,
             $this->acreditacionesAccess->canEdit(auth()->user()),
+            $pinnedIds,
+            $actionQuery,
         );
     }
 
@@ -287,9 +316,11 @@ class AcreditacionesController extends Controller
     {
         abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
 
-        $rows = $this->acreditadoDatatableService->bulkSelectableRows(
-            $this->acreditadoFiltersFromRequest($request),
-        );
+        $filters = $this->acreditadoFiltersFromRequest($request);
+        $filterQuery = $this->activeAcreditadoFilterQuery($filters);
+        $pinnedIds = $this->acreditadoWorkingSetService->pinnedIds($request, $filterQuery);
+
+        $rows = $this->acreditadoDatatableService->bulkSelectableRows($filters, $pinnedIds);
 
         return response()->json(['data' => $rows]);
     }
@@ -391,6 +422,12 @@ class AcreditacionesController extends Controller
             );
         }
 
+        $this->acreditadoWorkingSetService->pin(
+            $request,
+            $this->activeAcreditadoFilterQuery($filters),
+            $ids,
+        );
+
         $message = $updatedCount === 1
             ? '1 acreditado actualizado.'
             : "{$updatedCount} acreditados actualizados.";
@@ -435,9 +472,14 @@ class AcreditacionesController extends Controller
             );
         }
 
+        $redirectQuery = $this->activeAcreditadoFilterQuery($filters);
+        if ($this->acreditadoWorkingSetService->isActive($request) && $redirectQuery !== []) {
+            $redirectQuery['working'] = '1';
+        }
+
         $redirect = redirect()->route(
             'gestion-humana.acreditaciones.acreditados',
-            $this->activeAcreditadoFilterQuery($filters),
+            $redirectQuery,
         );
 
         if ($error !== null) {
@@ -629,15 +671,28 @@ class AcreditacionesController extends Controller
             userId: (int) auth()->id(),
         );
 
+        $filters = $this->acreditadoFiltersFromInput($request->query());
+        $filterQuery = $this->activeAcreditadoFilterQuery($filters);
+
+        $this->acreditadoWorkingSetService->pin(
+            $request,
+            $filterQuery,
+            $acreditacionAcreditado->id,
+        );
+
+        if ($this->acreditadoWorkingSetService->isActive($request) && $filterQuery !== []) {
+            $filterQuery['working'] = '1';
+        }
+
         return $this->redirectAfterAcreditadoMutation(
             $request,
             'Acreditado actualizado correctamente. Vuelva a ejecutar validaciones para actualizar las colas.',
             'Acreditado actualizado correctamente.',
-            $this->activeAcreditadoFilterQuery($this->acreditadoFiltersFromRequest($request)),
+            $filterQuery,
         );
     }
 
-    public function destroyAcreditado(AcreditacionAcreditado $acreditacionAcreditado): RedirectResponse
+    public function destroyAcreditado(Request $request, AcreditacionAcreditado $acreditacionAcreditado): RedirectResponse
     {
         abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
 
@@ -656,8 +711,19 @@ class AcreditacionesController extends Controller
             userId: (int) auth()->id(),
         );
 
+        $filters = $this->acreditadoFiltersFromInput($request->query());
+        $redirectQuery = $this->activeAcreditadoFilterQuery($filters);
+
+        if ($this->acreditadoWorkingSetService->isActive($request)) {
+            $this->acreditadoWorkingSetService->unpin($request, $acreditacionAcreditado->id);
+        }
+
+        if ($this->acreditadoWorkingSetService->isActive($request) && $redirectQuery !== []) {
+            $redirectQuery['working'] = '1';
+        }
+
         return redirect()
-            ->route('gestion-humana.acreditaciones.acreditados')
+            ->route('gestion-humana.acreditaciones.acreditados', $redirectQuery)
             ->with('status', 'Acreditado eliminado.');
     }
 
@@ -708,7 +774,9 @@ class AcreditacionesController extends Controller
         abort_unless($this->acreditacionesAccess->canView(auth()->user()), 403);
 
         $filters = $this->acreditadoFiltersFromRequest($request);
-        $rows = $this->acreditadoListService->all($filters);
+        $filterQuery = $this->activeAcreditadoFilterQuery($filters);
+        $pinnedIds = $this->acreditadoWorkingSetService->pinnedIds($request, $filterQuery);
+        $rows = $this->acreditadoListService->all($filters, $pinnedIds);
 
         $exportDocs = $rows->pluck('document_number')->unique()->filter()->values()->all();
         $inProfileDocs = $exportDocs === []
@@ -1930,8 +1998,32 @@ class AcreditacionesController extends Controller
      */
     private function acreditadoFiltersFromRequest(Request $request): array
     {
+        return $this->acreditadoFiltersFromInput($request->all());
+    }
+
+    /**
+     * Normaliza los filtros de acreditados desde un arreglo de entrada (body o query).
+     *
+     * @param  array<string, mixed>  $input
+     * @return array{
+     *     document_number: string,
+     *     document_numbers: list<string>,
+     *     cargo: string,
+     *     cargo_apo: string,
+     *     estado: string,
+     *     renovacion: string,
+     *     vigencia_desde: string,
+     *     vigencia_hasta: string,
+     *     fecha_solicitud_desde: string,
+     *     fecha_solicitud_hasta: string,
+     *     ficha_estado: string,
+     *     en_perfil: string,
+     * }
+     */
+    private function acreditadoFiltersFromInput(array $input): array
+    {
         // Por defecto todos (con/sin perfil); chips acotan activos/desvinculados/en perfil.
-        $fichaEstado = (string) $request->input('ficha_estado', 'todos');
+        $fichaEstado = (string) ($input['ficha_estado'] ?? 'todos');
         if (! in_array($fichaEstado, [
             EmployeeFichaProfile::STATUS_ACTIVO,
             EmployeeFichaProfile::STATUS_DESVINCULADO,
@@ -1940,24 +2032,24 @@ class AcreditacionesController extends Controller
             $fichaEstado = 'todos';
         }
 
-        $enPerfil = strtolower(trim((string) $request->input('en_perfil', '')));
+        $enPerfil = strtolower(trim((string) ($input['en_perfil'] ?? '')));
         if (! in_array($enPerfil, ['', '0', '1', 'si', 'sí', 'no', 'true', 'false'], true)) {
             $enPerfil = '';
         }
 
         return [
-            'document_number' => trim((string) $request->input('document_number', '')),
+            'document_number' => trim((string) ($input['document_number'] ?? '')),
             'document_numbers' => app(DocumentNumberListParser::class)->fromInput(
-                $request->input('document_numbers'),
+                $input['document_numbers'] ?? null,
             ),
-            'cargo' => trim((string) $request->input('cargo', '')),
-            'cargo_apo' => trim((string) $request->input('cargo_apo', '')),
-            'estado' => (string) $request->input('estado', 'todos'),
-            'renovacion' => (string) $request->input('renovacion', 'todos'),
-            'vigencia_desde' => trim((string) $request->input('vigencia_desde', '')),
-            'vigencia_hasta' => trim((string) $request->input('vigencia_hasta', '')),
-            'fecha_solicitud_desde' => trim((string) $request->input('fecha_solicitud_desde', '')),
-            'fecha_solicitud_hasta' => trim((string) $request->input('fecha_solicitud_hasta', '')),
+            'cargo' => trim((string) ($input['cargo'] ?? '')),
+            'cargo_apo' => trim((string) ($input['cargo_apo'] ?? '')),
+            'estado' => (string) ($input['estado'] ?? 'todos'),
+            'renovacion' => (string) ($input['renovacion'] ?? 'todos'),
+            'vigencia_desde' => trim((string) ($input['vigencia_desde'] ?? '')),
+            'vigencia_hasta' => trim((string) ($input['vigencia_hasta'] ?? '')),
+            'fecha_solicitud_desde' => trim((string) ($input['fecha_solicitud_desde'] ?? '')),
+            'fecha_solicitud_hasta' => trim((string) ($input['fecha_solicitud_hasta'] ?? '')),
             'ficha_estado' => $fichaEstado,
             'en_perfil' => $enPerfil,
         ];
@@ -2026,7 +2118,7 @@ class AcreditacionesController extends Controller
         }
 
         if ($filters['ficha_estado'] !== '' && $filters['ficha_estado'] !== 'todos') {
-        $query['ficha_estado'] = $filters['ficha_estado'];
+            $query['ficha_estado'] = $filters['ficha_estado'];
         }
 
         if (($filters['en_perfil'] ?? '') !== '') {

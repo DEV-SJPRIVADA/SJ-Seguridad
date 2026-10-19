@@ -45,7 +45,7 @@
                 </button>
             </div>
 
-            <form method="POST" :action="editForm.update_url" class="cursos-registros-page__form">
+            <form method="POST" :action="editActionUrl()" class="cursos-registros-page__form">
                 @csrf
                 @method('PATCH')
                 @if (! empty($validacionesReturn))

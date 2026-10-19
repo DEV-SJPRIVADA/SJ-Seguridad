@@ -82,6 +82,8 @@ return [
         'purchase.tab.my_requests' => 'Solicitudes compra: Mis solicitudes',
         'purchase.tab.approval' => 'Solicitudes compra: Autorizar (director)',
         'purchase.tab.processing' => 'Compras: Bandeja de procesamiento',
+        'purchase.providers.view' => 'Proveedores: Ver',
+        'purchase.providers.edit' => 'Proveedores: Editar',
 
         // Solicitudes de desarrollo (TIC)
         'devreq.tab.create' => 'Solicitudes desarrollo: Crear',
@@ -348,6 +350,7 @@ return [
         'mis_solicitudes' => 'Mis solicitudes',
         'pendientes_aprobacion' => 'Pendientes autorizacion',
         'bandeja_compras' => 'Bandeja compras',
+        'proveedores' => 'Proveedores',
     ],
 
     'devreq_tabs' => [
@@ -613,6 +616,13 @@ return [
                         'label' => 'Solicitudes de compra (funciones)',
                         'permissions' => [
                             'purchase.tab.processing',
+                        ],
+                    ],
+                    'providers' => [
+                        'label' => 'Proveedores (catálogo)',
+                        'permissions' => [
+                            'purchase.providers.view',
+                            'purchase.providers.edit',
                         ],
                     ],
                 ],

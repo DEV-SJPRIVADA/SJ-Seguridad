@@ -59,6 +59,14 @@ class PurchaseAccessService
             return true;
         }
 
+        if ($tab === 'providers') {
+            return $this->canViewProviders($user);
+        }
+
+        if ($tab === 'providers.edit') {
+            return $this->canEditProviders($user);
+        }
+
         if ($tab === 'approval') {
             return $user->can('purchase.tab.approval');
         }
@@ -72,6 +80,23 @@ class PurchaseAccessService
         }
 
         return false;
+    }
+
+    /**
+     * El permiso de edición implica ver el catálogo de proveedores.
+     */
+    public function canViewProviders(User $user): bool
+    {
+        return $this->canEditProviders($user) || $user->can('purchase.providers.view');
+    }
+
+    public function canEditProviders(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('purchase.providers.edit');
     }
 
     private function canAccessSolicitudTab(User $user, string $module, string $tab): bool
@@ -104,6 +129,10 @@ class PurchaseAccessService
 
         if ($this->canAccessTab($user, $moduleKey, 'processing')) {
             $tabs[] = 'bandeja_compras';
+        }
+
+        if ($this->canViewProviders($user)) {
+            $tabs[] = 'proveedores';
         }
 
         return $tabs;

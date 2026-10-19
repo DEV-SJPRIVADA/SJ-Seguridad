@@ -51,6 +51,8 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
+| Proveedores | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export` |
+| Proveedores (mutaciones) | `purchase.providers.edit` | `providers.create`, `providers.store`, `providers.edit`, `providers.update` |
 | Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store` |
 | Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
 
@@ -75,7 +77,9 @@ Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccess
 | `purchase.tab.create` | Crear solicitudes |
 | `purchase.tab.my_requests` | Listar propias + ver detalle (policy `view` como dueno) |
 | `purchase.tab.approval` | Pendientes + autorizar (policy `approve`) |
-| `purchase.tab.processing` | Bandeja y procesamiento (policy `process`) |
+| `purchase.tab.processing` | Bandeja y procesamiento (policy `process`); tambien FO-AD-07 (T4) |
+| `purchase.providers.view` | Ver, filtrar y exportar el catalogo Proveedores |
+| `purchase.providers.edit` | Crear/editar proveedores; **implica view** en `PurchaseAccessService` |
 | `view.board.{area}.solicitudes_compra` | Alcance sidebar (hogar canonico: area base o Compras) |
 | `view.board.compras.bandeja_compras` | Legacy sidebar; la bandeja se accede como pestaña en Solicitudes de compra |
 
@@ -127,6 +131,25 @@ Disco: `local` (`storage/app/private`). Path: `purchase-requests/{id}/{uuid}.{ex
 
 Migracion: `2026_08_28_160752_create_purchase_request_attachments_table.php` (tabla + backfill desde legado + `UPDATE archivo_pedido_path = NULL`). `down()` solo `dropIfExists` de la tabla nueva.
 
+### `purchase_providers`
+
+Catalogo FEAT-047 T2. Migracion `2026_10_19_064916_create_purchase_providers_table.php` (multi-driver: `estado` string, sin `enum()`).
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `identificacion` | string(50) unique | NIT / cedula / codigo; no se pasa a mayusculas |
+| `nombre` | string(255) | Razon social (se persiste en MAYUSCULAS) |
+| `telefono` | string(50) nullable | |
+| `correo` | string(255) nullable | Se conserva tal cual (sin uppercase) |
+| `es_cliente` | boolean default false | VINE01 `CLIENTE=SI` |
+| `es_proveedor` | boolean default true | Listado filtra `true` por defecto |
+| `estado` | string(20) default `activo` | `activo` / `inactivo`, indexado |
+| `dias_pago` | unsignedSmallInteger nullable | Editable en alta/edicion; import VINE01 opcional (T3) |
+| `contacto`, `direccion`, `ciudad`, `forma_pago` | strings nullable | Datos FO-AD-07; texto en MAYUSCULAS |
+| `created_by` | FK users nullable | `nullOnDelete()` |
+
+Indices: `estado`, `es_proveedor`, (`es_proveedor`, `estado`). Modelo `App\Models\PurchaseProvider` (casts boolean/int, `estadoLabels()`).
+
 ### `purchase_requests.archivo_pedido_path` (deprecada)
 
 Columna **permanece** nullable. **No DROP.** Ya no esta en `$fillable`. Store, resubmit, import y UI **no** la leen ni escriben. Fuente de verdad: `purchase_request_attachments`. Valores previos se copiaron a 1:N (disco `public` → `local` si el fichero existia) y la columna quedo en `NULL`.
@@ -146,7 +169,10 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 | `ComprasQueueFilterBag` | Parametros de filtro bandeja (fechas, area, tipo, estado compras) |
 | `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
-| `PurchaseAccessService` | Tabs visibles, directores (`approversQuery`) |
+| `PurchaseAccessService` | Tabs visibles (incluye `proveedores`), `canViewProviders` / `canEditProviders`, directores (`approversQuery`) |
+| `PurchaseProviderController` | CRUD proveedores, datatable server-side, export Excel, audit `provider_created` / `provider_updated` / `provider_export` |
+| `PurchaseProviderDatatableService` | Filtros (`q`, `estado`, `solo_proveedores`), query, respuesta DataTables y retorno de filtros |
+| `Store/UpdatePurchaseProviderRequest` | Autorizacion `providers.edit`, validacion unique/`dias_pago`, uppercase de textos (excepto correo/codigos) |
 | `PurchaseEmailApprovalController` | Autorizacion guest por enlace firmado (show/update/pdf). **No** lista adjuntos de pedido |
 | `PurchaseRequestAttachmentService` | Guardar en disco `local`, sincronizar en resubmit (keep/quitar/agregar), mapear legado |
 | `PurchaseRequestResubmitService` | Reenvio de rechazada (items + adjuntos via attachment service). No toca `archivo_pedido_path` |
@@ -245,6 +271,21 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 - Al abrir procesamiento desde bandeja, suministro `aprobada_calidad` pasa a `en_compras`.
 - Export FO-AD-44 suministro: `supplies.export.pdf` / `supplies.export.excel` (detalle) o `purchase-requests.processing.supply.pdf` (bandeja).
 
+## Proveedores (FEAT-047 T2)
+
+Pestana **Proveedores** dentro del subnav de Solicitudes de compra (no tiene board propio). Visible con `purchase.providers.view`; `purchase.providers.edit` implica view (`PurchaseAccessService::canViewProviders`).
+
+- **Rutas:** `GET /purchase-requests/{module}/proveedores` (index), `/proveedores/datatable`, `/proveedores/exportar`; mutaciones `/proveedores/crear` (GET), `/proveedores` (POST), `/proveedores/{purchase_provider}/editar` (GET), `/proveedores/{purchase_provider}` (PATCH). El grupo de mutaciones usa middleware `purchase.tab:providers.edit`.
+- **Listado server-side** (`PurchaseProviderDatatableService`): default `es_proveedor = true` y `estado = activo`. Filtros: `q` (identificacion, nombre, correo, contacto, ciudad), `estado` (`activo` / `inactivo` / `todos`) y `solo_proveedores` (checkbox; permite ver clientes). Pagina 10/25/50/100 y busqueda global de DataTables.
+- **Alta/edicion:** identificacion (unica), nombre, telefono, correo, contacto, direccion, ciudad, forma de pago, `dias_pago` (0–3650) y estado. Checkboxes `es_cliente` / `es_proveedor`. El formulario usa `<x-searchable-select>` para estado y shell `req-manage-*`; vista compartida `providers/partials/form.blade.php`.
+- **Mayusculas:** `Store/UpdatePurchaseProviderRequest` usa `UppercasesValidatedText`; se guardan en MAYUSCULAS nombre, contacto, direccion, ciudad y forma de pago. Se conservan sin cambios correo, identificacion, telefono y estado.
+- **Export Excel:** `BaseExport` (identificacion, nombre, telefono, correo, contacto, direccion, ciudad, forma de pago, dias de pago, cliente, proveedor, estado) con los filtros activos.
+- **Filtros conservados:** el enlace de editar y el redirect tras guardar llevan `q`, `estado` y `solo_proveedores` del query string, sin mezclarlos con los campos del formulario.
+- **Auditoria:** eventos `provider_created`, `provider_updated` y `provider_export` en modulo `purchase_requests` (area `compras`).
+- **Pendiente T3:** import/plantilla VINE01 (solo `PROVEEDOR=SI`, `DIAS_PAGO` opcional). No hay rutas de import en T2.
+
+Vistas: `resources/views/modules/purchase-requests/providers/{index,create,edit}.blade.php` + `providers/partials/form.blade.php`.
+
 ## FO-AD-44
 
 Alineado a formato oficial **Marzo 2026 Versión 01** (FEAT-047 Fase A / T1):
@@ -290,6 +331,8 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - `tests/Feature/PurchaseRequests/FoAd44ExportAlignmentTest.php`
 - `tests/Feature/PurchaseRequests/PurchaseRequestAttachmentTest.php`
 - `tests/Feature/PurchaseRequests/PurchaseRequestAuditTest.php`
+- `tests/Feature/PurchaseRequests/PurchaseProviderAccessTest.php` (view vs edit, 403, guest)
+- `tests/Feature/PurchaseRequests/PurchaseProviderCatalogTest.php` (DT default, filtros, uppercase, unique, update conserva filtros)
 - `tests/Feature/ComprasDashboardTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
 - `tests/Feature/NavigationVisibilityTest.php`
@@ -298,6 +341,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-19 | FEAT-047 T2: catalogo Proveedores (CRUD, permisos view/edit, pestaña, DT server-side, export Excel, uppercase, filtros conservados al editar) |
 | 2026-10-19 | FEAT-047 T1: FO-AD-44 PDF/Excel (compra + suministro) alineado Marzo 2026 Versión 01; foto embebida o S/A |
 | 2026-10-02 | UI productos: foto antes de descripción; descripción alta; referencia ancha; utilización/ubicación/cantidad en fila; cliente radios en 3 cols; ortografía |
 | 2026-10-02 | UI procesar suministro: layout pur-req e iconos chrome (alineado a procesar compra) |

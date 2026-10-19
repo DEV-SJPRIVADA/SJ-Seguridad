@@ -241,6 +241,212 @@ class AcreditacionesAcreditadosTest extends TestCase
         $this->assertSame(AcreditacionAcreditado::RENOVACION_RENOVADO, $row->renovacion);
     }
 
+    public function test_update_keeps_active_list_filters_in_redirect(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('4300', 'Filtro Persona');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '4300',
+            'full_name' => 'Filtro Persona',
+            'cargo' => 'GUARDA',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        // Los filtros viajan en la URL (como los arma la vista) y no en el cuerpo del formulario.
+        $updateUrl = route('gestion-humana.acreditaciones.acreditados.update', [
+            'acreditacionAcreditado' => $row,
+            'cargo_apo' => $cargo->cargo_apo,
+            'ficha_estado' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'en_perfil' => '1',
+        ]);
+
+        $this->actingAs($editor)
+            ->patch($updateUrl, $this->validPayload([
+                'document_number' => '4300',
+                'cargo_apo' => $cargo->cargo_apo,
+                'vigencia_acr' => '2027-06-01',
+            ]))
+            ->assertRedirect(route('gestion-humana.acreditaciones.acreditados', [
+                'cargo_apo' => $cargo->cargo_apo,
+                'ficha_estado' => EmployeeFichaProfile::STATUS_ACTIVO,
+                'en_perfil' => '1',
+            ]));
+    }
+
+    public function test_working_view_keeps_edited_record_after_it_leaves_filter(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('4400', 'Working Uno');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '4400',
+            'full_name' => 'Working Uno',
+            'cargo' => 'GUARDA',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            ]))
+            ->assertOk()
+            ->assertSee('working=1', false);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.acreditaciones.acreditados.update', [
+                'acreditacionAcreditado' => $row,
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]), $this->validPayload([
+                'document_number' => '4400',
+                'cargo_apo' => $cargo->cargo_apo,
+                'vigencia_acr' => '2026-09-28',
+            ]))
+            ->assertRedirect(route('gestion-humana.acreditaciones.acreditados', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]));
+
+        $row->refresh();
+        $this->assertSame(AcreditacionAcreditado::ESTADO_POR_VENCER, $row->estado);
+
+        $withWorking = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(1, $withWorking['recordsFiltered']);
+        $rowHtml = implode('|', $withWorking['data'][0]);
+        $this->assertStringContainsString('4400', $rowHtml);
+        $this->assertStringContainsString('working=1', $rowHtml);
+
+        $withoutWorking = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(0, $withoutWorking['recordsFiltered']);
+    }
+
+    public function test_filters_or_reload_clear_working_pins(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('4401', 'Working Dos');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '4401',
+            'full_name' => 'Working Dos',
+            'cargo' => 'GUARDA',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.acreditaciones.acreditados.update', [
+                'acreditacionAcreditado' => $row,
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]), $this->validPayload([
+                'document_number' => '4401',
+                'cargo_apo' => $cargo->cargo_apo,
+                'vigencia_acr' => '2026-09-28',
+            ]))
+            ->assertRedirect();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]))
+            ->assertOk()
+            ->assertSee('registro fijado');
+
+        // Cambiar o limpiar filtros vuelve a la vista normal y descarta los IDs fijados.
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            ]))
+            ->assertOk()
+            ->assertDontSee('registro fijado');
+
+        $afterClear = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.acreditaciones.acreditados.datatable', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(0, $afterClear['recordsFiltered']);
+    }
+
+    public function test_deleting_pinned_record_removes_it_from_working_banner(): void
+    {
+        $editor = $this->editorUser();
+        $cargo = $this->activeCargo('VIGILANTE');
+        $this->createFicha('4402', 'Working Tres');
+
+        $row = AcreditacionAcreditado::factory()->create([
+            'document_number' => '4402',
+            'full_name' => 'Working Tres',
+            'cargo' => 'GUARDA',
+            'cargo_apo' => $cargo->cargo_apo,
+            'vigencia_acr' => '2027-01-01',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.acreditaciones.acreditados.update', [
+                'acreditacionAcreditado' => $row,
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]), $this->validPayload([
+                'document_number' => '4402',
+                'cargo_apo' => $cargo->cargo_apo,
+                'vigencia_acr' => '2026-09-28',
+            ]))
+            ->assertRedirect();
+
+        $this->actingAs($editor)
+            ->delete(route('gestion-humana.acreditaciones.acreditados.destroy', [
+                'acreditacionAcreditado' => $row,
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]))
+            ->assertRedirect();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.acreditados', [
+                'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+                'working' => '1',
+            ]))
+            ->assertOk()
+            ->assertDontSee('registro fijado');
+    }
+
     public function test_bulk_update_observaciones_and_fecha_solicitud(): void
     {
         $editor = $this->editorUser();

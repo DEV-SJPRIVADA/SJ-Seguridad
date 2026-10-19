@@ -11815,7 +11815,28 @@ a.req-dashboard-kpi:focus-visible {
     flex: 0 0 auto;
 }
 
-/* Acreditados: con mÃ¡s filtros (Renovaciones) los botones suelen ir a 2.Âª fila â alineados a la derecha. */
+/* Acreditados: aviso de vista de trabajo cuando hay registros fijados por edición. */
+.acreditaciones-working-set {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem 1rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--brand-blue-soft);
+    border-radius: 12px;
+    background: #f4f9fd;
+    color: var(--brand-ink);
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.acreditaciones-working-set strong {
+    color: var(--brand-blue);
+}
+
+/* Acreditados: fila 1 = campos de filtro; fila 2 = chips de texto (izquierda) + botones de icono (derecha).
+   Desktop/laptop (>=1200px): los 9 campos en una sola fila para que todos los botones queden en la fila 2. */
 .acreditaciones-acreditados-page .cursos-registros-page__filters {
     display: flex;
     flex-wrap: wrap;
@@ -11823,14 +11844,65 @@ a.req-dashboard-kpi:focus-visible {
     align-items: end;
 }
 
-.acreditaciones-acreditados-page .cursos-registros-page__filters > .form-field:not(.cursos-registros-page__filter-actions) {
+.acreditaciones-acreditados-page .cursos-registros-page__filters > .form-field {
     flex: 1 1 11rem;
     min-width: min(11rem, 100%);
+}
+
+.acreditaciones-acreditados-page .cursos-registros-page__chip-filters {
+    align-items: center;
+}
+
+.acreditaciones-acreditados-page .cursos-registros-page__chip-filters .cursos-registros-page__status-chips {
+    flex-wrap: nowrap;
 }
 
 .acreditaciones-acreditados-page .cursos-registros-page__filter-actions {
     flex: 0 0 auto;
     margin-left: auto;
+}
+
+@media (min-width: 1200px) {
+    .acreditaciones-acreditados-page .cursos-registros-page__filters {
+        display: grid;
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        gap: 0.65rem 0.75rem;
+    }
+
+    .acreditaciones-acreditados-page .cursos-registros-page__filters > .form-field {
+        flex: initial;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 991px) {
+    .acreditaciones-acreditados-page .cursos-registros-page__chip-filters .cursos-registros-page__status-chips {
+        flex-wrap: wrap;
+    }
+
+    .acreditaciones-acreditados-page .cursos-registros-page__filter-actions {
+        margin-left: 0;
+    }
+}
+
+/* Acreditados: la columna Acciones queda fija a la derecha mientras se hace scroll horizontal,
+   para que el lápiz/eliminar sigan visibles en laptop sin cambiar el ancho del resto de la tabla. */
+.acreditaciones-acreditados-page #acreditados-datatable[data-dt-can-edit="1"] thead th:last-child,
+.acreditaciones-acreditados-page #acreditados-datatable[data-dt-can-edit="1"] tbody td:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    background-color: #fff;
+    box-shadow: -10px 0 12px -14px rgba(15, 23, 42, 0.65);
+}
+
+.acreditaciones-acreditados-page #acreditados-datatable[data-dt-can-edit="1"] thead th:last-child {
+    z-index: 3;
+    background-color: #003366 !important;
+}
+
+.acreditaciones-acreditados-page #acreditados-datatable[data-dt-can-edit="1"] tbody tr:hover td:last-child {
+    background-color: #f2f6fb;
 }
 
 .acreditaciones-acreditados-page .ficha-empleados-masivos-modal__import-actions {
@@ -16743,4 +16815,22 @@ a.req-dashboard-kpi:focus-visible {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+}
+
+/* Proveedores (FEAT-047 T2): filtros en una fila y acciones a la derecha */
+.purchase-providers-page .req-manage-filters__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(14rem, 1.2fr);
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.purchase-providers-page .req-manage-filters__actions {
+    justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+    .purchase-providers-page .req-manage-filters__row {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

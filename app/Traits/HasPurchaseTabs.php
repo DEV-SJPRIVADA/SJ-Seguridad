@@ -21,6 +21,7 @@ trait HasPurchaseTabs
                 'mis_solicitudes' => 'purchase-requests.index',
                 'pendientes_aprobacion' => 'purchase-requests.approval.index',
                 'bandeja_compras' => 'purchase-requests.processing.index',
+                'proveedores' => 'purchase-requests.providers.index',
                 default => 'purchase-requests.index',
             };
 
@@ -33,6 +34,7 @@ trait HasPurchaseTabs
                     || ($routeName === 'purchase-requests.show' && $showTabContext === 'approval'),
                 'bandeja_compras' => str_starts_with((string) $routeName, 'purchase-requests.processing.')
                     || ($routeName === 'purchase-requests.show' && $showTabContext === 'processing'),
+                'proveedores' => str_starts_with((string) $routeName, 'purchase-requests.providers.'),
                 default => false,
             };
 

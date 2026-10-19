@@ -12,7 +12,7 @@ Tablero de area **Gestion Humana** para controlar personal acreditado (vigencia,
 - Tablero sidebar **Acreditaciones** (`board` key `acreditaciones`, hogar `gestion_humana`, `base_area_tab => false`).
 - Pestanas: **Dashboard**, **Acreditados**, **Reporte Diario**, **Validaciones**, **Export Apo**, **Catálogo**. **Catálogo**, **Validaciones** y **Export Apo** solo visibles/operativas con `acreditaciones.edit`. **Dashboard** con `acreditaciones.view`.
 - **Funcional:**
-  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Listado por defecto **todos** (con/sin ficha). Columna **EN PERFIL** (Sí/No) tras OBSERVACIONES. Columna **Cédula**: si la misma cédula tiene más de un registro (p. ej. varios CARGO APO), se muestra en rojo (`.gh-cedula-duplicate`). Chips: Todos / En perfil / Sin perfil + Todos (ficha) / Activos / Desvinculados. Alta e import permiten cédulas sin perfil (nombre y cargo obligatorios en form/Excel); si hay ficha se usan `full_name` / `position_name` de Ficha. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Nuevo acreditado (`plus`) / Omitir (`ban`); volver con `arrow-left`; **export Excel** de la cola (`acreditados.export-pendientes`). Coexiste con Validaciones `sin_acreditacion`.
+  - **Acreditados** — CRUD, filtros, DataTables server-side, export Excel, plantilla/import upsert, estados calculados, sync diario. Listado por defecto **todos** (con/sin ficha). Columna **EN PERFIL** (Sí/No) tras OBSERVACIONES. Columna **Cédula**: si la misma cédula tiene más de un registro (p. ej. varios CARGO APO), se muestra en rojo (`.gh-cedula-duplicate`). Chips: Todos / En perfil / Sin perfil + Todos (ficha) / Activos / Desvinculados. Alta e import permiten cédulas sin perfil (nombre y cargo obligatorios en form/Excel); si hay ficha se usan `full_name` / `position_name` de Ficha. Cola operativa `?cola=nuevos-sin-acreditacion` (`employee_acreditacion_pending`; icono en toolbar; solo `acreditaciones.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Nuevo acreditado (`plus`) / Omitir (`ban`); volver con `arrow-left`; **export Excel** de la cola (`acreditados.export-pendientes`). Coexiste con Validaciones `sin_acreditacion`. En laptop, la columna **Acciones** del listado queda sticky a la derecha durante el scroll horizontal.
   - Ficha: `requires_acreditacion` (default true). Modal «Nuevo acreditado»: check activo exige datos; desactivado solo actualiza ficha (cédula debe existir) y omite pending. Prefill desde cola carga `position_name` (cargo) + lookup forzado si falta. Layout: Identidad (check+Estado); sección **Datos de acreditación** (Cargo|Cargo APO|Vigen.ACR + observaciones); sección **Renovaciones** (Renovaciones|Fecha solicitud). Validaciones excluyen flag false. Editable en ficha con `ficha_empleados.manage` + `acreditaciones.edit`.
   - **Catálogo** cargos — seed 17 + CRUD; **sección parámetros Export Apo** (fila única editable, FEAT-039).
   - **Reporte Diario** (FEAT-037) — carga 1–2 Excel APO (Enproceso / Acreditado APO), fecha de reporte ≤ hoy, replace parcial por origen, DT server-side, export filtrado, listado de cargas (metadata). Snapshot historico **independiente** de `acreditacion_acreditados`; **sin** cruce Ficha ni `AcreditacionEstadoCalculator` en esa pestana.
@@ -260,8 +260,9 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `HasAcreditacionesTabs` | Trait vistas (tab activa / subnav) |
 | `AcreditacionesAuditLogService` | Wrapper audit (`acreditacion_acreditado`, `acreditacion_cargo`, `acreditacion_import`, `acreditacion_reporte_diario_carga`) |
 | `AcreditacionEstadoCalculator` | Prioridad estados Acreditados + `syncAll` (chunk 200); **no** usado en Reporte Diario ni en el cruce de Validaciones |
-| `AcreditacionAcreditadoListService` | Query filtrada Acreditados (export / reuso) |
-| `AcreditacionAcreditadoDatatableService` | DT server-side Acreditados; tope length 100; sin `-1` |
+| `AcreditacionAcreditadoListService` | Query filtrada Acreditados (export / reuso); acepta `pinnedIds` para la vista de trabajo |
+| `AcreditacionAcreditadoDatatableService` | DT server-side Acreditados; tope length 100; sin `-1`; recibe `pinnedIds` y `actionQuery` |
+| `AcreditacionAcreditadoWorkingSetService` | Sesión de IDs editados desde un listado filtrado (`working=1`), hash por firma de filtros, TTL y tope en `config/acreditaciones.php` |
 | `AcreditacionImportService` | Upsert Excel Acreditados; reporte fallos |
 | `AcreditacionReporteDiarioImportService` | Parse 1–2 Excel APO; validar headers de todos antes de mutar; replace parcial; skip filas malas |
 | `AcreditacionReporteDiarioListService` | Query filtrada + listado cargas; export reusa `all(filters)` |
@@ -282,7 +283,7 @@ Modelo carga parcial: subir un origen solo reemplaza filas/metadata de ese orige
 | `AcreditacionDashboardService` | KPIs + charts filtrados (fecha solicitud, cargo APO, ficha_estado, año) |
 | `SyncAcreditacionEstadosCommand` | `acreditaciones:sync-estados` (`--date`, `--dry-run`) |
 
-Config: `config/acreditaciones.php` → `reporte_diario`, `validaciones`, **`export_apo`** (headers A–X, politicas vigencia, seq_pad, dashboard_last_n / dashboard_novedad_*).  
+Config: `config/acreditaciones.php` → `reporte_diario`, `validaciones`, **`export_apo`** (headers A–X, politicas vigencia, seq_pad, dashboard_last_n / dashboard_novedad_*), `limits` (`datatable_max_length`, `bulk_max_ids`, `working_set_ttl_seconds`, `working_set_max_ids`).  
 Nav: `NavigationResolver`, `SidebarVisibilityService`, `User`.  
 Schedule: `bootstrap/app.php` → diario **06:20** `America/Bogota`, `withoutOverlapping` (solo sync estados Acreditados; no aplica a Reporte Diario ni Validaciones).
 
@@ -324,7 +325,8 @@ Prioridad (`AcreditacionEstadoCalculator`):
 7. `full_name` / `cargo`: si hay ficha se usan `full_name` / `position_name`; si no, los del form/Excel (obligatorios). Columna UI/export **EN PERFIL**.
 8. Filtros listado/export: `estado` (acreditacion), `en_perfil` (chips todos/1/0), `ficha_estado` (`todos` por defecto | `activo` | `desvinculado` via `employee_ficha_profiles.employment_status`; se ignora si `en_perfil=0`), `document_number` (parcial), **`document_numbers`** (lista exacta, max 500, UI modal multi-cédula sin historial), `cargo` (select cargos Ficha activos / parcial), `cargo_apo`, rango `vigencia_desde` / `vigencia_hasta` sobre `vigencia_acr`.
 9. Acción masiva (edit): checkboxes + seleccionar todos del filtro (`bulk-selectable`); modal para sobrescribir `observaciones`, `fecha_solicitud`, `vigencia_acr` (VIGEN.ACR) y/o `renovacion` (al menos un campo); campos vacíos no cambian; con fecha solicitud → EN PROCESO; con solo VIGEN.ACR → recalcula estado.
-10. Eliminar: confirmacion UI; DELETE fisico.
+9b. **Vista de trabajo (edición filtrada):** con filtros activos, la vista agrega `working=1` a las URLs de DataTable, export, bulk-selectable y edición. Al guardar una edición o actualización masiva, el/los IDs se guardan en sesión (`AcreditacionAcreditadoWorkingSetService`) y el listado consulta `(filtros) OR id IN (IDs fijados)`, de modo que el registro editado sigue visible aunque su nuevo estado/cargo ya no cumpla el filtro. El hash de filtros evita reutilizar IDs con otra búsqueda; TTL `working_set_ttl_seconds` (28800 s) y tope `working_set_max_ids` (500). La sesión se descarta al cambiar/limpiar filtros (GET sin `working`), al recargar la página (JS quita `working` y recarga) o con **Actualizar vista**. El banner muestra el conteo de fijados; export y selección masiva respetan la misma unión.
+10. Eliminar: confirmacion UI; DELETE fisico; el redirect conserva filtros y `working` cuando vienen en la URL.
 
 ### Catalogo
 
@@ -470,6 +472,7 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 - DataTables `serverSide: true` en Acreditados, Reporte Diario, Validaciones (4 colas) y **Export Apo candidatos** (tope length 100; sin `-1`).
 - Filtros y forms con `<x-searchable-select>` + Alpine (origen Reporte Diario; política vigencia Export Apo). Fecha Validaciones: `input type="date"`.
 - Confirmacion UI borrado duro Acreditados; modal import masivo; confirm replace Reporte Diario; **modal Sí/No novedades blandas** antes de generar Export Apo.
+- Acreditados: `activeFilterQuery` incluye `working=1`; la URL de edición y la acción de borrado lo propagan. Al recargar una URL con `working=1`, un IIFE quita el parámetro y recarga una vez para limpiar la sesión de fijados.
 - Validaciones: botón Ejecutar (no auto); acciones delegadas Abrir Ficha / Editar / Nuevo; reuso modales Acreditados.
 - Dashboard Acreditaciones: filtros + KPIs + ApexCharts (`resources/js/acreditaciones-dashboard-charts.js`).
 
@@ -478,7 +481,7 @@ Fila 1 claves tecnicas (`config/acreditaciones.php` → `import.columns`), fila 
 1. `php artisan migrate` (aditivo) + `php artisan db:seed --class=AcreditacionCargoSeeder` (+ opcional `AcreditacionExportApoSettingSeeder`) + `php artisan app:sync-permissions`.
 2. Asignar manualmente board + view (+ edit) a usuario GH; verificar sidebar y pestanas (Validaciones / Export Apo / Catálogo solo con edit; Dashboard con view).
 3. Seed catalogo visible; CRUD una fila de prueba; probar bloqueo delete/rename APO con acreditados; editar params Export Apo en Catálogo.
-4. CRUD Acreditados con cedula real de Ficha; filtros, export, plantilla e import upsert.
+4. CRUD Acreditados con cedula real de Ficha; filtros, export, plantilla e import upsert. Probar vista de trabajo: filtrar por estado, editar un registro que cambie de estado, confirmar que sigue visible con banner, que se mantiene al editar otro y que se limpia al cambiar filtros, recargar o **Actualizar vista**.
 5. Casos estado: solicitud, vencido, por vencer (≤21), acreditado; ambas fechas vacias rechazado.
 6. Reporte Diario: carga 1 y 2 orígenes; replace parcial; fecha futura rechazada; headers invalidos sin mutar; ver cargas; export.
 7. Validaciones: día con ambos orígenes → Ejecutar → 4 colas; día parcial → gate falla; acciones Ficha/editar/nuevo; export cola + consolidado; usuario solo view sin tab.
@@ -549,6 +552,8 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.37 | 2026-10-19 | Acreditados: vista de trabajo con IDs fijados en sesión (`working=1`) para editar varios registros filtrados sin que desaparezcan; banner, limpieza por filtros/recarga y soporte en DT/export/bulk/delete. |
+| 1.36 | 2026-10-19 | Acreditados: columna Acciones sticky a la derecha con scroll horizontal (visible en laptop). |
 | 1.35 | 2026-10-16 | Validaciones: cédulas duplicadas en cada cola se marcan en rojo (`.gh-cedula-duplicate`). |
 | 1.34 | 2026-10-16 | Export Apo: match de curso incluye familia `E.` (p. ej. E.VIGILANCIA EDUCATIVA) además de F\|R. |
 | 1.32 | 2026-10-16 | Acreditados: al fijar/cambiar VIGEN.ACR (bulk o edición) se limpia fecha_solicitud y se agrega «Última solicitud: dd/mm/yyyy» a observaciones. |

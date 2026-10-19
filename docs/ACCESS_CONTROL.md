@@ -48,6 +48,8 @@ Permisos del modulo **Solicitudes de compra**:
 - `purchase.tab.my_requests`
 - `purchase.tab.approval`
 - `purchase.tab.processing`
+- `purchase.providers.view` (catalogo Proveedores; ver/filtrar/exportar)
+- `purchase.providers.edit` (CRUD Proveedores; **implica view** en `PurchaseAccessService`)
 
 Tableros: `view.board.{area}.solicitudes_compra`, `view.board.{area}.bandeja_compras`
 

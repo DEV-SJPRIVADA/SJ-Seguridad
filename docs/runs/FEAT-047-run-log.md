@@ -43,7 +43,8 @@ Decisiones previas del plan Cursor (a validar/cerrar con Analista):
 | 6 | 2026-10-19 | Task Arquitecto | Arquitecto | Brief final: morph OC, numero_oc=id, esquema BD, permisos, slices T1–T5 | `docs/briefs/FEAT-047.md`, TASKS, run-log | OK |
 | 7 | 2026-10-19 | AgentSj | Plan T1–T5 + Task Cards | `docs/briefs/FEAT-047-plan.md` | OK |
 | 8 | 2026-10-19 | Task Card T1 | Feature | FO-AD-44 PDF/Excel compra+suministro → Marzo 2026 v01; foto embebida o S/A; tests verdes | exporters, config, PDF blades, `FoAd44ExportAlignmentTest`, docs | OK |
-| 9 | 2026-10-19 | Task Card T2 | Feature | En curso: Proveedores CRUD + permisos + pestaña + DT | `docs/briefs/FEAT-047-T2.md` | En curso |
+| 9 | 2026-10-19 | Task Card T2 | Feature | Proveedores CRUD + permisos view/edit + pestaña + DT server-side + export + uppercase + filtros conservados; 49 tests purchase verdes. Smoke navegador: pestaña, filtros en una fila/acciones a la derecha, DT vacío, filtro `q`, export `proveedores_2026-10-19.xlsx` y consola sin errores. | migracion, modelo, factory, requests, `PurchaseAccessService`, rutas, `PurchaseProviderController`, `PurchaseProviderDatatableService`, vistas, tests, docs | OK |
+| 10 | 2026-10-19 | Task Card T3 | Feature | Pendiente: import/plantilla VINE01 (solo PROVEEDOR=SI, DIAS_PAGO opcional) | — | Pendiente |
 
 ## Notas
 
