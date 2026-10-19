@@ -59,7 +59,7 @@ Shared-files: `config/access.php`, rutas/nav Compras.
 | 19 | Permiso evaluación | `purchase.providers.edit`. |
 | 20 | Anclaje evaluación | OC emitida; **una por OC** editable. |
 | 21 | Escala Calif. | Entero **1–5**. |
-| 22 | UI Proveedores | **Pestaña en Compras** (sin board sidebar propio). |
+| 22 | UI Proveedores | **Tablero del área Compras** (`boards.proveedores`); ya no pestaña del subnav de Solicitudes (actualizado 2026-10-19). |
 | 23 | FO-AD-07 origen | Solicitudes de compra **y** suministros (bandeja). |
 | 24 | Nombre import | Siempre **VINE01** (no “BASE” en producto). |
 | 25 | Numeración OC | Autoincremental sin límite (como `id`), **sin prefijos**; único global. Ej.: `1`, `2`, `145`. |
@@ -106,7 +106,7 @@ Ninguna.
 | 2 | Quien registra evaluación: **`purchase.providers.edit`**. |
 | 3 | Evaluación **ligada a la OC emitida**. |
 | 4 | Misma estructura de columnas que el Excel de proveedores; **llamarlo VINE01** (no “BASE”) en plantilla, UI y docs. |
-| 5 | **Pestaña en Compras** (no tablero sidebar propio). |
+| 5 | **Tablero del área Compras** para Proveedores (actualizado 2026-10-19; antes se había cerrado como pestaña). |
 | 6 | FO-AD-07 desde bandeja: **los dos** (solicitudes de compra **y** suministros). |
 | 7 | **Autoincremental sin límite**, como el `id`, **sin prefijos** ni pad obligatorio. Ejemplos visibles: `1`, `2`, `145`, `10001`. Único global. |
 | 8 | Calif. entero **1–5** (sí). |
@@ -137,7 +137,7 @@ Completar Compras con catálogo de proveedores importable (VINE01), emisión de 
 #### Incluye (cerrado)
 
 - **Fase A:** Alinear FO-AD-44 PDF/Excel (compra y suministro según exporters actuales) a Marzo 2026 v01: encabezado FO-AD-44 / versión / página; columnas Cantidad \| Foto \| Descripción \| Referencia \| Utilización \| Ubicación; embeber foto de ítem si existe.
-- **Fase B:** Tabla/catálogo `purchase_providers`; permisos `purchase.providers.view` / `.edit`; listado DataTables server-side; CRUD; import **VINE01** solo `PROVEEDOR=SI`; export; chrome UI módulo; pestaña en Compras.
+- **Fase B:** Tabla/catálogo `purchase_providers`; permisos `purchase.providers.view` / `.edit`; listado DataTables server-side; CRUD; import **VINE01** solo `PROVEEDOR=SI`; export; chrome UI módulo; **tablero** Proveedores del área Compras.
 - **Fase C:** `purchase_orders` desde bandeja (compra **y** suministro); `numero_oc` autoincremental sin prefijo; proveedor + precios; FO-AD-07 PDF + Excel (`purchase.tab.processing`); **sin** bloque evaluación en el documento.
 - **Evaluación post-entrega:** UI + persistencia; `purchase.providers.edit`; ligada a OC emitida; una por OC editable; Calif. 1–5; pesos/umbrales de la imagen; no impresa.
 
@@ -146,7 +146,6 @@ Completar Compras con catálogo de proveedores importable (VINE01), emisión de 
 - Reabrir Fases 0–7 del plan Compras viejo.
 - CRM / catálogo de solo-clientes.
 - Migración automática de permisos Spatie legacy (no aplica).
-- Tablero sidebar propio de Proveedores.
 
 ### Reglas de negocio (cerradas)
 

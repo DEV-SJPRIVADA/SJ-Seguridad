@@ -210,7 +210,6 @@ class User extends Authenticatable
             'mis_solicitudes' => route('purchase-requests.index', ['module' => $moduleKey]),
             'pendientes_aprobacion' => route('purchase-requests.approval.index', ['module' => $moduleKey]),
             'bandeja_compras' => route('purchase-requests.processing.index', ['module' => $moduleKey]),
-            'proveedores' => route('purchase-requests.providers.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }

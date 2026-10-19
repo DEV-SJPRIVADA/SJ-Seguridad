@@ -51,8 +51,8 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
-| Proveedores | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export` |
-| Proveedores (mutaciones) | `purchase.providers.edit` | `providers.create`, `providers.store`, `providers.edit`, `providers.update` |
+| Proveedores (tablero Compras) | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export`, `providers.template` |
+| Proveedores (mutaciones) | `purchase.providers.edit` | `providers.create`, `providers.store`, `providers.edit`, `providers.update`, `providers.import`, `providers.import-report` |
 | Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store` |
 | Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
 
@@ -141,14 +141,12 @@ Catalogo FEAT-047 T2. Migracion `2026_10_19_064916_create_purchase_providers_tab
 | `nombre` | string(255) | Razon social (se persiste en MAYUSCULAS) |
 | `telefono` | string(50) nullable | |
 | `correo` | string(255) nullable | Se conserva tal cual (sin uppercase) |
-| `es_cliente` | boolean default false | VINE01 `CLIENTE=SI` |
-| `es_proveedor` | boolean default true | Listado filtra `true` por defecto |
 | `estado` | string(20) default `activo` | `activo` / `inactivo`, indexado |
-| `dias_pago` | unsignedSmallInteger nullable | Editable en alta/edicion; import VINE01 opcional (T3) |
+| `dias_pago` | unsignedSmallInteger nullable | Editable en alta/edicion; import VINE01 (`DIAS_PAGO`, opcional) |
 | `contacto`, `direccion`, `ciudad`, `forma_pago` | strings nullable | Datos FO-AD-07; texto en MAYUSCULAS |
 | `created_by` | FK users nullable | `nullOnDelete()` |
 
-Indices: `estado`, `es_proveedor`, (`es_proveedor`, `estado`). Modelo `App\Models\PurchaseProvider` (casts boolean/int, `estadoLabels()`).
+Indices: `estado`. Modelo `App\Models\PurchaseProvider` (`dias_pago` int, `estadoLabels()`). La tabla **solo contiene proveedores**; no existen columnas de clasificacion (`es_cliente` / `es_proveedor`).
 
 ### `purchase_requests.archivo_pedido_path` (deprecada)
 
@@ -169,10 +167,13 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 | `ComprasQueueFilterBag` | Parametros de filtro bandeja (fechas, area, tipo, estado compras) |
 | `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
-| `PurchaseAccessService` | Tabs visibles (incluye `proveedores`), `canViewProviders` / `canEditProviders`, directores (`approversQuery`) |
-| `PurchaseProviderController` | CRUD proveedores, datatable server-side, export Excel, audit `provider_created` / `provider_updated` / `provider_export` |
-| `PurchaseProviderDatatableService` | Filtros (`q`, `estado`, `solo_proveedores`), query, respuesta DataTables y retorno de filtros |
-| `Store/UpdatePurchaseProviderRequest` | Autorizacion `providers.edit`, validacion unique/`dias_pago`, uppercase de textos (excepto correo/codigos) |
+| `PurchaseAccessService` | Tabs visibles de Solicitudes de compra, `canViewProviders` / `canEditProviders`, `canViewProvidersBoard` (tablero Proveedores), directores (`approversQuery`) |
+| `PurchaseProviderController` | CRUD proveedores (tablero Compras), datatable server-side, export Excel, plantilla/import VINE01, audit `provider_created` / `provider_updated` / `provider_export` / `providers_imported` |
+| `PurchaseProviderDatatableService` | Filtros (`q`, `estado`), query, respuesta DataTables y retorno de filtros |
+| `PurchaseProviderImportService` | Import masivo VINE01 (solo `PROVEEDOR=SI`, upsert por `identificacion`, `DIAS_PAGO` opcional, soporte `dry-run`/`limit`) |
+| `PurchaseProviderImportTemplateExport` | Plantilla Excel `VINE01` (hoja `VINE01` con encabezados + hoja `Instrucciones`) |
+| `Store/UpdatePurchaseProviderRequest` | Autorizacion `providers.edit`, validacion unique/`dias_pago`, telefono numerico, ciudad contra `requisition_cities`, uppercase de textos (excepto correo/identificacion/telefono/estado/ciudad) |
+| `ImportPurchaseProvidersRequest` | Autorizacion `providers.edit`, validacion de `import_file` (xlsx/xls/csv, tope `providers_import_max_kilobytes`) |
 | `PurchaseEmailApprovalController` | Autorizacion guest por enlace firmado (show/update/pdf). **No** lista adjuntos de pedido |
 | `PurchaseRequestAttachmentService` | Guardar en disco `local`, sincronizar en resubmit (keep/quitar/agregar), mapear legado |
 | `PurchaseRequestResubmitService` | Reenvio de rechazada (items + adjuntos via attachment service). No toca `archivo_pedido_path` |
@@ -273,18 +274,29 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 
 ## Proveedores (FEAT-047 T2)
 
-Pestana **Proveedores** dentro del subnav de Solicitudes de compra (no tiene board propio). Visible con `purchase.providers.view`; `purchase.providers.edit` implica view (`PurchaseAccessService::canViewProviders`).
+**Tablero** del área Compras (no es pestaña del subnav de Solicitudes de compra). En `config/access.php` vive en `boards.proveedores` y `board_canonical_areas.proveedores` (home `compras`); ya **no** está en `purchase_tabs`. El sidebar lo resuelve `NavigationResolver` y la visibilidad `SidebarVisibilityService::shouldShowProvidersBoard` -> `PurchaseAccessService::canViewProvidersBoard`. Visible con `purchase.providers.view`; `purchase.providers.edit` implica view (`PurchaseAccessService::canViewProviders`).
 
-- **Rutas:** `GET /purchase-requests/{module}/proveedores` (index), `/proveedores/datatable`, `/proveedores/exportar`; mutaciones `/proveedores/crear` (GET), `/proveedores` (POST), `/proveedores/{purchase_provider}/editar` (GET), `/proveedores/{purchase_provider}` (PATCH). El grupo de mutaciones usa middleware `purchase.tab:providers.edit`.
-- **Listado server-side** (`PurchaseProviderDatatableService`): default `es_proveedor = true` y `estado = activo`. Filtros: `q` (identificacion, nombre, correo, contacto, ciudad), `estado` (`activo` / `inactivo` / `todos`) y `solo_proveedores` (checkbox; permite ver clientes). Pagina 10/25/50/100 y busqueda global de DataTables.
-- **Alta/edicion:** identificacion (unica), nombre, telefono, correo, contacto, direccion, ciudad, forma de pago, `dias_pago` (0–3650) y estado. Checkboxes `es_cliente` / `es_proveedor`. El formulario usa `<x-searchable-select>` para estado y shell `req-manage-*`; vista compartida `providers/partials/form.blade.php`.
-- **Mayusculas:** `Store/UpdatePurchaseProviderRequest` usa `UppercasesValidatedText`; se guardan en MAYUSCULAS nombre, contacto, direccion, ciudad y forma de pago. Se conservan sin cambios correo, identificacion, telefono y estado.
-- **Export Excel:** `BaseExport` (identificacion, nombre, telefono, correo, contacto, direccion, ciudad, forma de pago, dias de pago, cliente, proveedor, estado) con los filtros activos.
-- **Filtros conservados:** el enlace de editar y el redirect tras guardar llevan `q`, `estado` y `solo_proveedores` del query string, sin mezclarlos con los campos del formulario.
-- **Auditoria:** eventos `provider_created`, `provider_updated` y `provider_export` en modulo `purchase_requests` (area `compras`).
-- **Pendiente T3:** import/plantilla VINE01 (solo `PROVEEDOR=SI`, `DIAS_PAGO` opcional). No hay rutas de import en T2.
+- **Rutas:** `GET /purchase-requests/{module}/proveedores` (index), `/proveedores/datatable`, `/proveedores/exportar`, `/proveedores/plantilla` (descarga VINE01); mutaciones `/proveedores/crear` (GET), `/proveedores` (POST), `/proveedores/importar` (POST), `/proveedores/importar/reporte/{token}` (GET, reporte de fallos de la carga), `/proveedores/{purchase_provider}/editar` (GET), `/proveedores/{purchase_provider}` (PATCH). El grupo de mutaciones usa middleware `purchase.tab:providers.edit`; el listado/plantilla, `purchase.tab:providers`. El prefijo `purchase-requests` se conserva; el tablero se activa por el módulo `compras` de la ruta.
+- **Listado server-side** (`PurchaseProviderDatatableService`): la tabla solo contiene proveedores. Default `estado = activo`; el filtro `estado` (`activo` / `inactivo` / `todos`) es el único del panel. El **buscador** es el de DataTables (`search[value]`), que consulta identificacion, nombre, correo, contacto y ciudad. No hay clasificacion cliente/proveedor en pantalla (las filas que no son proveedor se omiten en la carga masiva). Pagina 10/25/50/100.
+- **Toolbar del listado:** el botón icon-only **Nuevo proveedor** vive arriba a la derecha de la tabla (`cursos-registros-page__table-toolbar` + `__table-actions`); el panel de filtros agrupa aplicar/limpiar, export y plantilla/import VINE01 (icon-only con `title`/`aria-label`).
+- **Modal de carga VINE01:** mismas acciones icon-only del chrome (`.req-manage-filters__icon-btn`): `--ghost` para descargar plantilla, elegir archivo y cerrar; `--primary` para importar. Todos con `title`/`aria-label`. La fila `.purchase-providers-page__import-toolbar` alinea plantilla + nombre del archivo + acciones (referencia: modal de import de Formación).
+- **Alta/edicion:** identificacion (unica), nombre, telefono, correo, contacto, direccion, ciudad, forma de pago, `dias_pago` (0–3650) y estado. **Sin** clasificacion cliente/proveedor. Botones de la cabecera y del formulario son **icon-only** con `title`/`aria-label` (`.req-manage-filters__icon-btn`); la accion de fila usa `.cursos-catalogo-page__icon-btn`. Shell visual `purchase-requests-page--form` + `pur-req-form` (meta + secciones); vista compartida `providers/partials/form.blade.php`.
+- **Validaciones:** `telefono` solo numerico (`digits_between:7,15`; input `type="tel"` `inputmode="numeric"` `pattern="[0-9]{7,15}"`); `correo` email; `ciudad` debe existir en el catálogo de Requisiciones (`requisition_cities` activas) y se elige con `<x-searchable-select>`.
+- **Mayusculas:** `Store/UpdatePurchaseProviderRequest` usa `UppercasesValidatedText`; se guardan en MAYUSCULAS nombre, contacto, direccion y forma de pago. Se conservan sin cambios correo, identificacion, telefono, estado y **ciudad** (valor del catálogo, ej. `Cali`).
+- **Export Excel:** `BaseExport` (identificacion, nombre, telefono, correo, contacto, direccion, ciudad, forma de pago, dias de pago, estado) con los filtros activos; el término del buscador se sincroniza a `q` en el enlace de export.
+- **Filtros conservados:** el enlace de editar y el redirect tras guardar llevan `q` y `estado` del query string, sin mezclarlos con los campos del formulario.
+- **Auditoria:** eventos `provider_created`, `provider_updated`, `provider_export` y `providers_imported` en modulo `purchase_requests` (area `compras`).
 
-Vistas: `resources/views/modules/purchase-requests/providers/{index,create,edit}.blade.php` + `providers/partials/form.blade.php`.
+### Carga masiva VINE01 (FEAT-047 T3)
+
+- **Plantilla:** `GET purchase-requests.providers.template` -> `PurchaseProviderImportTemplateExport` (`plantilla_proveedores_VINE01.xlsx`). Hoja `VINE01` (fila 1 = encabezados oficiales, datos desde fila 2) + hoja `Instrucciones`. Columnas (`config('purchase-requests.providers_import_columns')`): `IDENTIFICA`, `NOMBRE`, `TELEFONO`, `CORREO_ELE`, `PROVEEDOR`, `ESTADO`, `DIAS_PAGO` (opcional).
+- **Import:** `POST purchase-requests.providers.import` (multipart, `import_file` xlsx/xls/csv) -> `PurchaseProviderImportService`.
+- **Reglas:** solo se cargan filas con `PROVEEDOR = SI` (normaliza `SI/SÍ/1/X/TRUE`); upsert por `identificacion`; `TELEFONO` se guarda solo con digitos; `NOMBRE` en MAYUSCULAS; `ESTADO` `ACTIVO`/`INACTIVO` (default `activo`); `DIAS_PAGO` entero 0–3650 o vacio. Las columnas `CLIENTE` de archivos de origen se ignoran. Los campos FO-AD-07 extra (contacto, direccion, ciudad, forma de pago) no vienen en la plantilla y se editan en pantalla.
+- **Reporte:** el resultado **no** se muestra como alerta superior. El redirect al listado deja el resumen en el modal compartido `<x-import-result-modal>` (`download-route` `purchase-requests.providers.import-report`, `download-params` `['module' => $module]`): conteos (nuevos, actualizados, omitidos por no ser proveedor, vacias, con error) y, si hay filas invalidas, las primeras 50 con numero de fila y motivo. Si hay fallos, el modal ofrece la **descarga del reporte** `.xlsx` (`GET purchase-requests.providers.import-report` -> `/proveedores/importar/reporte/{token}`, token en cache 24 h, propiedad por usuario; otro usuario recibe 403). Un archivo sin encabezados obligatorios o sin filas de proveedor se rechaza con error en `import_file` (reapertura del modal de carga). El servicio devuelve `failures` estructuradas (`row`, `identifier`, `field`, `reason`, `raw`) ademas de `errors`.
+- **Soporte CLI/service:** `import(string $path, bool $dryRun = false, ?int $limit = null, ?int $userId = null)` permite simulacion (`dry_run`) y limite de filas para pruebas; tope `providers_import_max_rows` (default 20000).
+- **Comando Artisan:** `php artisan purchase-providers:import {path} [--dry-run] [--limit=N]` (mismo servicio; resumen por tabla).
+
+Vistas: `resources/views/modules/purchase-requests/providers/{index,create,edit}.blade.php` + `providers/partials/{form,import-modal}.blade.php`.
 
 ## FO-AD-44
 
@@ -341,6 +353,9 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-19 | FEAT-047 T3: `purchase_providers` solo almacena proveedores — se eliminan `es_cliente`/`es_proveedor` y sus indices (migracion recreada antes de produccion); plantilla/import VINE01 sin columna `CLIENTE` |
+| 2026-10-19 | FEAT-047 T3: carga VINE01 — el resultado sale en `<x-import-result-modal>` (icon-only) con descarga de reporte `.xlsx` por token; `PurchaseProviderImportService` devuelve `failures` estructuradas |
+| 2026-10-19 | FEAT-047 T2: Proveedores pasa a **tablero** del área Compras (board `proveedores`, fuera del subnav de Solicitudes); UI icon-only, validación teléfono numérico, correo email y ciudad contra `requisition_cities`; rediseño shell `pur-req-form` |
 | 2026-10-19 | FEAT-047 T2: catalogo Proveedores (CRUD, permisos view/edit, pestaña, DT server-side, export Excel, uppercase, filtros conservados al editar) |
 | 2026-10-19 | FEAT-047 T1: FO-AD-44 PDF/Excel (compra + suministro) alineado Marzo 2026 Versión 01; foto embebida o S/A |
 | 2026-10-02 | UI productos: foto antes de descripción; descripción alta; referencia ancha; utilización/ubicación/cantidad en fila; cliente radios en 3 cols; ortografía |

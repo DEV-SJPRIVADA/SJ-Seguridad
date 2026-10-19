@@ -1,34 +1,30 @@
 <x-app-layout>
-    <x-slot name="header">
-        @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
-    </x-slot>
-
     @php
         $hasFilters = $filters['q'] !== ''
-            || $filters['estado'] !== \App\Models\PurchaseProvider::ESTADO_ACTIVO
-            || ! $filters['solo_proveedores'];
+            || $filters['estado'] !== \App\Models\PurchaseProvider::ESTADO_ACTIVO;
+        $showImportModal = ($showImportModal ?? false) || $errors->has('import_file');
+        // El resultado de la carga masiva se muestra en modal (no como alerta superior).
+        $hasImportFlash = session()->has('import_done')
+            || session()->has('import_result')
+            || session()->has('import_failures')
+            || session()->has('import_report_token');
     @endphp
 
     <div class="page-section req-manage-page purchase-providers-page">
         <div class="app-container">
-            @if (session('status'))
+            @if (session('status') && ! $hasImportFlash)
                 <div class="alert alert--success" role="alert">{{ session('status') }}</div>
             @endif
 
+            <x-import-result-modal
+                download-route="purchase-requests.providers.import-report"
+                :download-params="['module' => $module]"
+            />
+
             <div class="page-header-inner purchase-requests-page__intro">
-                <div class="pur-req-list__toolbar">
-                    <div>
-                        <h2 class="page-title">Proveedores</h2>
-                        <p class="page-subtitle">Catálogo de proveedores para órdenes de compra y evaluación post-entrega.</p>
-                    </div>
-                    @if ($canEdit)
-                        <div class="pur-req-detail__toolbar-actions">
-                            <a href="{{ $createUrl }}" class="btn btn--primary btn--sm">
-                                <x-lucide-plus width="16" height="16" aria-hidden="true" />
-                                Nuevo proveedor
-                            </a>
-                        </div>
-                    @endif
+                <div>
+                    <h2 class="page-title">Proveedores</h2>
+                    <p class="page-subtitle">Catálogo de proveedores para órdenes de compra y evaluación post-entrega.</p>
                 </div>
             </div>
 
@@ -41,17 +37,6 @@
                         <form method="get" action="{{ $indexUrl }}" class="req-manage-filters__form">
                             <div class="req-manage-filters__row">
                                 <div class="form-field">
-                                    <label class="form-label" for="filter_q">Buscar</label>
-                                    <input
-                                        id="filter_q"
-                                        type="search"
-                                        name="q"
-                                        class="form-input"
-                                        value="{{ $filters['q'] }}"
-                                        placeholder="Identificación, nombre, correo…"
-                                    >
-                                </div>
-                                <div class="form-field">
                                     <label class="form-label" for="filter_estado">Estado</label>
                                     <x-searchable-select
                                         id="filter_estado"
@@ -61,20 +46,6 @@
                                         search-placeholder="Buscar estado…"
                                         :allow-clear="false"
                                     />
-                                </div>
-                                <div class="form-field">
-                                    <span class="form-label">Catálogo</span>
-                                    <label class="cursos-registros-page__checkbox-label" for="filter_solo_proveedores">
-                                        <input type="hidden" name="solo_proveedores" value="0">
-                                        <input
-                                            id="filter_solo_proveedores"
-                                            type="checkbox"
-                                            name="solo_proveedores"
-                                            value="1"
-                                            @checked($filters['solo_proveedores'])
-                                        >
-                                        Solo proveedores
-                                    </label>
                                 </div>
                             </div>
                             <div class="req-manage-filters__actions" role="group" aria-label="Acciones de filtro">
@@ -95,12 +66,33 @@
                                     <x-lucide-x width="18" height="18" aria-hidden="true" />
                                 </a>
                                 <x-export-excel
+                                    id="providers-export-link"
                                     route="{{ $exportUrl }}"
                                     label=""
                                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                     title="Exportar Excel"
                                     aria-label="Exportar el catálogo a Excel"
                                 />
+                                <a
+                                    href="{{ $importTemplateUrl }}"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    title="Descargar plantilla VINE01"
+                                    aria-label="Descargar plantilla VINE01"
+                                >
+                                    <x-lucide-download width="18" height="18" aria-hidden="true" />
+                                </a>
+                                @if ($canEdit)
+                                    <button
+                                        type="button"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Importar VINE01"
+                                        aria-label="Importar proveedores VINE01"
+                                        x-data
+                                        x-on:click.prevent="$dispatch('open-modal', 'provider-import')"
+                                    >
+                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
+                                    </button>
+                                @endif
                             </div>
                         </form>
                     </details>
@@ -110,6 +102,19 @@
                             <strong id="providers-count">…</strong>
                             <span id="providers-count-label">proveedor(es)</span>
                         </p>
+
+                        @if ($canEdit)
+                            <div class="cursos-registros-page__table-actions">
+                                <a
+                                    href="{{ $createUrl }}"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                    title="Nuevo proveedor"
+                                    aria-label="Nuevo proveedor"
+                                >
+                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="data-table-wrap req-manage-shell__table data-table-wrap--booting">
@@ -141,6 +146,12 @@
         </div>
     </div>
 
+    @include('modules.purchase-requests.providers.partials.import-modal', [
+        'show' => $showImportModal,
+        'importTemplateUrl' => $importTemplateUrl,
+        'importUrl' => $importUrl,
+    ])
+
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', () => {
@@ -170,18 +181,39 @@
                     labelEl.textContent = count === 1 ? 'proveedor' : 'proveedores';
                 }
 
+                // El buscador es el de DataTables; el export debe llevar el término.
+                function syncExport(searchValue) {
+                    const link = document.getElementById('providers-export-link');
+
+                    if (! link) {
+                        return;
+                    }
+
+                    const url = new URL(link.getAttribute('href'), window.location.origin);
+
+                    if (searchValue) {
+                        url.searchParams.set('q', searchValue);
+                    } else {
+                        url.searchParams.delete('q');
+                    }
+
+                    link.setAttribute('href', url.toString());
+                }
+
                 const api = $table.DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
                         url: $table.data('dt-url'),
                     },
+                    search: {
+                        search: @json($filters['q'] ?? ''),
+                    },
                     language: {
                         url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
                         emptyTable: 'No hay proveedores para este filtro.',
                     },
-                    dom: '<"req-manage-dt-top"l><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
-                    searching: false,
+                    dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     pageLength: 10,
                     responsive: false,
@@ -199,7 +231,50 @@
                     }
                 });
 
+                api.on('search.dt', function () {
+                    syncExport(api.search());
+                });
+
                 api.on('error.dt', revealTable);
+            });
+        </script>
+    @endpush
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const form = document.querySelector('[data-provider-import-form]');
+
+                if (! form) {
+                    return;
+                }
+
+                const fileInput = form.querySelector('[data-provider-import-file]');
+                const fileName = form.querySelector('[data-provider-import-name]');
+                const submitBtn = form.querySelector('[data-provider-import-submit]');
+                const loading = document.querySelector('[data-provider-import-loading]');
+
+                fileInput?.addEventListener('change', () => {
+                    const name = fileInput.files?.[0]?.name || 'Sin archivo seleccionado';
+
+                    if (fileName) {
+                        fileName.textContent = name;
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = !fileInput.files?.length;
+                    }
+                });
+
+                form.addEventListener('submit', () => {
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                    }
+
+                    if (loading) {
+                        loading.hidden = false;
+                    }
+                });
             });
         </script>
     @endpush

@@ -39,11 +39,14 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/proveedores', [PurchaseProviderController::class, 'index'])->name('providers.index');
         Route::get('/proveedores/datatable', [PurchaseProviderController::class, 'datatable'])->name('providers.datatable');
         Route::get('/proveedores/exportar', [PurchaseProviderController::class, 'export'])->name('providers.export');
+        Route::get('/proveedores/plantilla', [PurchaseProviderController::class, 'template'])->name('providers.template');
     });
 
     Route::middleware(['purchase.tab:providers.edit'])->group(function (): void {
         Route::get('/proveedores/crear', [PurchaseProviderController::class, 'create'])->name('providers.create');
         Route::post('/proveedores', [PurchaseProviderController::class, 'store'])->name('providers.store');
+        Route::post('/proveedores/importar', [PurchaseProviderController::class, 'import'])->name('providers.import');
+        Route::get('/proveedores/importar/reporte/{token}', [PurchaseProviderController::class, 'downloadImportReport'])->name('providers.import-report');
         Route::get('/proveedores/{purchase_provider}/editar', [PurchaseProviderController::class, 'edit'])->name('providers.edit');
         Route::patch('/proveedores/{purchase_provider}', [PurchaseProviderController::class, 'update'])->name('providers.update');
     });

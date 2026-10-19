@@ -131,11 +131,16 @@ class PurchaseAccessService
             $tabs[] = 'bandeja_compras';
         }
 
-        if ($this->canViewProviders($user)) {
-            $tabs[] = 'proveedores';
-        }
-
         return $tabs;
+    }
+
+    /**
+     * El catálogo de Proveedores es un tablero del área Compras, no una pestaña
+     * de Solicitudes de compra. Visible con `purchase.providers.view` (edit implica view).
+     */
+    public function canViewProvidersBoard(User $user, string $areaKey): bool
+    {
+        return $areaKey === 'compras' && $this->canViewProviders($user);
     }
 
     /**

@@ -91,7 +91,7 @@ class PurchaseProviderAccessTest extends TestCase
         $editor = User::factory()->create();
         $editor->givePermissionTo('purchase.providers.edit');
 
-        // edit implica view: la pestaña y el listado son accesibles.
+        // edit implica view: el tablero y el listado son accesibles.
         $this->actingAs($editor)
             ->get(route('purchase-requests.providers.index', ['module' => 'compras']))
             ->assertOk();
@@ -134,13 +134,11 @@ class PurchaseProviderAccessTest extends TestCase
             'nombre' => 'proveedor de prueba',
             'telefono' => '3001234567',
             'correo' => 'Contacto@Proveedor.com',
-            'es_cliente' => '0',
-            'es_proveedor' => '1',
             'estado' => 'activo',
             'dias_pago' => '30',
             'contacto' => 'juan perez',
             'direccion' => 'calle 1 # 2-3',
-            'ciudad' => 'medellín',
+            'ciudad' => 'Cali',
             'forma_pago' => 'transferencia',
         ], $overrides);
     }

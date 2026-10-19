@@ -40,7 +40,7 @@ Completar el pendiente de Compras tras Fases 0–7 ya en producción: alinear el
 | 14 | Migración permisos legacy | **No** — asignación Spatie manual. |
 | 15 | CRM clientes | Fuera (`CLIENTE=SI` y `PROVEEDOR≠SI`). |
 | 16 | Evaluación v1 | UI + BD en esta feature; permiso `purchase.providers.edit`; ligada a OC emitida; **una por OC** editable; Calif. 1–5. |
-| 17 | UI Proveedores | **Pestaña** en Solicitudes de compra / Compras (sin board sidebar propio). |
+| 17 | UI Proveedores | **Tablero** del área Compras (`boards.proveedores`), ya no pestaña del subnav de Solicitudes. Visible con `purchase.providers.view`. |
 | 18 | Origen FO-AD-07 | Compra **y** suministro desde bandeja. |
 | 19 | `numero_oc` | Autoincremental sin límite ni prefijos (como `id`); único global. |
 
@@ -48,11 +48,11 @@ Completar el pendiente de Compras tras Fases 0–7 ya en producción: alinear el
 
 | Tema | Decisión | Justificación |
 | --- | --- | --- |
-| Ownership | Módulo `purchase-requests` (área Compras); controladores bajo `App\Http\Controllers\PurchaseRequests\`; vistas `resources/views/modules/purchase-requests/` (+ subcarpeta `providers/`) | Misma familia que bandeja; pestaña en subnav existente |
-| Rutas | Extender `routes/modules/purchase-requests.php` (evitar tocar `routes/web.php` si el archivo ya está required) | Menos shared-files; coherente con processing |
-| Permisos | Keys en `system_permissions` junto a `purchase.tab.*`; grupo Admin UI `compras` → subgroup `providers` (o `purchases` ampliado) | Patrón Comercial labels legibles; sin board nuevo |
-| AccessService | Extender `PurchaseAccessService`: `canViewProviders` / `canEditProviders` (**edit ⇒ view**); `visibleTabsFor` incluye pestaña `proveedores` | Espejo `CommercialAccessService` |
-| Middleware pestaña | Ampliar `EnsurePurchaseTabAccess` / `purchase.tab:{tab}` **o** middleware/gates dedicados `providers` que no reutilicen el enum de tabs operativos — preferencia: tab key `providers` en el mismo helper de subnav | Un solo subnav |
+| Ownership | Módulo `purchase-requests` (área Compras); controladores bajo `App\Http\Controllers\PurchaseRequests\`; vistas `resources/views/modules/purchase-requests/` (+ subcarpeta `providers/`) | Misma familia que bandeja; **tablero** del área Compras (actualizado 2026-10-19) |
+| Rutas | Extender `routes/modules/purchase-requests.php` (evitar tocar `routes/web.php` si el archivo ya está required) | Menos shared-files; coherente con processing; el tablero se activa por el módulo `compras` |
+| Permisos | Keys en `system_permissions` junto a `purchase.tab.*`; grupo Admin UI `compras` → subgroup `providers`. La visibilidad del tablero usa `purchase.providers.view` (no requiere `view.board.compras.proveedores`) | Patrón Comercial labels legibles; board con permiso funcional |
+| AccessService | Extender `PurchaseAccessService`: `canViewProviders` / `canEditProviders` (**edit ⇒ view**) y `canViewProvidersBoard`; **no** se agrega a `visibleTabsFor` | Espejo `CommercialAccessService`; Proveedores deja de ser pestaña |
+| Middleware tablero | Se conserva `purchase.tab:providers` / `purchase.tab:providers.edit` (solo enforcement de rutas), sin mostrarlo en el subnav | Menos cambios en middleware; el chrome del tablero lo resuelve `NavigationResolver` |
 | Origen OC | **Polimórfico** `source_type` + `source_id` en `purchase_orders` (morph map) | Ver § Modelo origen OC |
 | `numero_oc` | **Usar el `id` autoincremental de `purchase_orders` como número de OC visible** (accessor `numeroOc()` / columna virtual en API; sin secuencia dedicada ni pad) | Cumple “como el id” sin doble contador ni carreras de secuencia |
 | Evaluación | Tabla `purchase_order_evaluations` 1:1 con `purchase_orders` (`unique purchase_order_id`) | Una por OC editable; no ensucia cabecera de emisión |
@@ -107,8 +107,8 @@ Fase C ──► purchase_orders (+ items) polimórfico + FO-AD-07 PDF/Excel
 #### Fase B — Catálogo Proveedores
 
 - Tabla `purchase_providers` (ver esquema).
-- Permisos + `PurchaseAccessService` + pestaña **Proveedores** en subnav (`.module-tab`).
-- Listado DataTables **server-side** (~9k); filtros; default `es_proveedor=true` + `estado=activo` (filtro para inactivos).
+- Permisos + `PurchaseAccessService` + tablero **Proveedores** del área Compras (`config/access.php` `boards.proveedores`, `.module-tab`).
+- Listado DataTables **server-side** (~9k); filtros; default `estado=activo` (filtro para inactivos).
 - CRUD (alta/edición); campos FO-AD-07 opcionales: `contacto`, `direccion`, `ciudad`, `forma_pago`, `dias_pago`.
 - Import **VINE01** (solo `PROVEEDOR=SI`); upsert por `identificacion`; columna opcional `DIAS_PAGO`; comando `--dry-run` / `--limit`.
 - Export Excel del catálogo (`BaseExport` + `<x-export-excel>`).
@@ -128,7 +128,6 @@ Fase C ──► purchase_orders (+ items) polimórfico + FO-AD-07 PDF/Excel
 
 - Reabrir Fases 0–7 del plan Compras viejo.
 - CRM / catálogo solo-clientes.
-- Board sidebar propio de Proveedores.
 - Migración automática de permisos Spatie.
 - Imprimir evaluación en FO-AD-07.
 - Prefijos / pad en `numero_oc`.
@@ -201,8 +200,6 @@ Rutas FO-AD-44 existentes se mantienen; solo cambia implementación de exporters
 | `nombre` | string(255) | |
 | `telefono` | string(50) nullable | |
 | `correo` | string(255) nullable | no uppercase |
-| `es_cliente` | boolean default false | ← CLIENTE |
-| `es_proveedor` | boolean default true | ← PROVEEDOR; listado filtra true |
 | `estado` | string(20) | `activo` / `inactivo` (o enum multi-driver) |
 | `dias_pago` | unsignedSmallInteger nullable | |
 | `contacto` | string(255) nullable | FO-AD-07 |
@@ -212,7 +209,9 @@ Rutas FO-AD-44 existentes se mantienen; solo cambia implementación de exporters
 | `created_by` | FK users nullable | |
 | `timestamps` | | |
 
-Índices: `estado`, `es_proveedor`, (`es_proveedor`, `estado`).
+Índices: `estado`.
+
+> Ajuste 2026-10-19 (pre-produccion): se eliminaron `es_cliente` y `es_proveedor`; la tabla solo almacena proveedores y el import VINE01 ignora `CLIENTE`.
 
 ### `purchase_orders`
 
@@ -275,8 +274,8 @@ Multi-driver: enums vía string + check en app; evitar `enum()`/`change()` rotos
 - [ ] Controladores: `PurchaseProviderController`, `PurchaseOrderController` (o métodos en Processing + Evaluation)
 - [ ] Form Requests + `UppercasesValidatedText`
 - [ ] `PurchaseAccessService` + config access + sync permissions
-- [ ] Datatable service proveedores
-- [ ] Import VINE01 service + comando Artisan + plantilla export
+- [x] Datatable service proveedores
+- [x] Import VINE01 service + comando Artisan + plantilla export
 - [ ] Exporters FO-AD-44 alineados (compra + suministro)
 - [ ] Exporters FO-AD-07 PDF + Excel (sin evaluación)
 - [ ] Vistas Blade (pestaña, listado, forms, modal import, UI OC, UI evaluación)
@@ -299,12 +298,12 @@ Multi-driver: enums vía string + check en app; evitar `enum()`/`change()` rotos
 | Pantalla | Clonar de |
 | --- | --- |
 | Listado Proveedores | **Cursos registros** / **Ficha empleados** (DataTables server-side + `req-manage-*` + searchable-select filtros) |
-| Subnav pestaña | Partial actual Solicitudes de compra (`.module-tab`) |
+| Subnav tablero | Tableros del área Compras (`NavigationResolver`, `.module-tab`) — Proveedores ya no usa el subnav de Solicitudes |
 | Modal import VINE01 | Formación / Cliente interno (modal opaco, icon-btn upload) |
 | Emisión OC / evaluación | Layout `pur-req-form-layout` / process-purchase (secciones FO + aside) |
 | Bandeja (acción OC) | Icon-btn fila canónico `.cursos-catalogo-page__icon-btn` |
 
-Primera entrega visual pulida; no prototipo genérico. Tras CSS/JS: `npm run build`. Smoke Chrome DevTools MCP en pestaña Proveedores + flujo OC.
+Primera entrega visual pulida; no prototipo genérico. Tras CSS/JS: `npm run build`. Smoke Chrome DevTools MCP en tablero Proveedores + flujo OC.
 
 ## Documentacion a actualizar
 
@@ -321,12 +320,12 @@ Primera entrega visual pulida; no prototipo genérico. Tras CSS/JS: `npm run bui
 | --- | --- |
 | `config/access.php` | Keys + labels Admin + grupo Compras |
 | `routes/modules/purchase-requests.php` | Rutas proveedores + OC + evaluación |
-| Subnav / builders de tabs en controladores purchase | Pestaña Proveedores |
+| Subnav / builders de tabs en controladores purchase | Tablero Proveedores (Compras) |
 | `database/seeders/RoleAndPermissionSeeder.php` (o sync) | Registrar permisos Spatie |
 | `resources/css/app.css` | Solo si hace falta ajuste menor chrome (evitar familia icon-btn nueva) |
 | `config/purchase-requests.php` / `config/supplies.php` | Metadatos FO-AD-44; opcional `purchase-orders.php` nuevo |
 
-**No** requiere `routes/web.php` si `purchase-requests.php` ya está en el require group. **No** board nuevo en `boards` sidebar.
+**No** requiere `routes/web.php` si `purchase-requests.php` ya está en el require group. **Sí** agrega el board `proveedores` en `config/access.php` + resolver/visibilidad (actualizado 2026-10-19: Proveedores es tablero de Compras).
 
 Flag TASKS: `shared-files: Si`.
 
@@ -349,7 +348,7 @@ Flag TASKS: `shared-files: Si`.
 3. `vendor/bin/pint --dirty --format agent` tras PHP.
 4. `php artisan test --compact` (filtros Feature purchase/providers/orders/FO-AD-44).
 5. `npm run build` si hubo CSS/JS Vite.
-6. Smoke Chrome DevTools: pestaña Proveedores, import dry-run acotado, emitir OC desde compra y desde suministro, evaluación.
+6. Smoke Chrome DevTools: tablero Proveedores, import dry-run acotado, emitir OC desde compra y desde suministro, evaluación.
 
 ## Riesgos y dependencias
 

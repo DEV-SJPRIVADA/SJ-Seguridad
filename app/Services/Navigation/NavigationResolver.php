@@ -436,6 +436,24 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'proveedores') {
+                            if ($key !== 'compras') {
+                                return null;
+                            }
+
+                            if (! $this->purchaseAccess->canViewProvidersBoard($user, $key)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'purchase-requests.providers.index',
+                                'url' => route('purchase-requests.providers.index', ['module' => $key]),
+                                'active' => str_starts_with((string) $routeName, 'purchase-requests.providers.')
+                                    && $requestModule === $key,
+                            ];
+                        }
+
                         if ($boardKey === 'solicitudes_compra') {
                             if (! $this->purchaseAccess->canViewPurchaseBoard($user, $key)) {
                                 return null;
@@ -446,6 +464,7 @@ class NavigationResolver
                                 'route' => 'purchase-requests.index',
                                 'url' => $user->defaultPurchaseBoardUrl($key),
                                 'active' => str_starts_with((string) $routeName, 'purchase-requests.')
+                                    && ! str_starts_with((string) $routeName, 'purchase-requests.providers.')
                                     && $requestModule === $key,
                             ];
                         }

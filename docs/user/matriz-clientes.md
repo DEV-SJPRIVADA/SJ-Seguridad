@@ -83,7 +83,7 @@ Los clientes registrados aqui alimentan el buscador de **Clientes** en Requisici
 1. En **Comercial → Clientes**, pulse el icono de **carga masiva** (requiere **Clientes: Editar**).
 2. **Descargar plantilla vacia** para conocer columnas y formato.
 3. Opcional: **Exportar datos para actualizar** (respeta filtros del listado), edite el Excel y vuelva a subirlo.
-4. **Elegir archivo** (.xlsx) y **Importar**. Revise el resumen en pantalla y, si hubo filas no cargadas, use **Descargar reporte de filas fallidas (.xlsx)**.
+4. **Elegir archivo** (.xlsx) y **Importar**. El resumen aparece en una ventana; si hubo filas no cargadas, use el icono de **descarga** (reporte de filas fallidas `.xlsx`) y cierre con el icono **Entendido** o la **X**.
 
 Una fila del Excel corresponde a **un servicio**. Incluye NIT, datos del cliente, portafolio (`seg_fisica`, `monitoreo`, `ocasionales`, `inactivos`), datos del contrato/servicio y columnas del checklist (P. economica, FO-CO-02, RUT, etc.) con valores OK, X, Pendiente, N/A o Incompleto.
 

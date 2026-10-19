@@ -1,6 +1,7 @@
 @props([
     'name' => 'import-result',
     'downloadRoute' => null,
+    'downloadParams' => [],
     'status' => null,
     'importResult' => null,
     'importFailures' => null,
@@ -75,9 +76,13 @@
     $shownErrors = count($errorRows);
     $tone = $failuresCount > 0 ? 'warning' : 'success';
 
+    // Cuando no hay errores pero sí filas omitidas, se muestra como conteo neutro.
+    $skippedLabel = $hasStructuredResult ? (string) ($importResult['skipped_label'] ?? 'Con error') : 'Con error';
+    $omittedOnly = $failuresCount <= 0 && (int) $skipped > 0;
+
     $downloadUrl = null;
     if (filled($token) && filled($downloadRoute)) {
-        $downloadUrl = route($downloadRoute, $token);
+        $downloadUrl = route($downloadRoute, array_merge((array) $downloadParams, ['token' => $token]));
     }
 @endphp
 
@@ -102,7 +107,8 @@
                 </div>
                 <button
                     type="button"
-                    class="ficha-empleados-masivos-modal__close"
+                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                    title="Cerrar"
                     aria-label="Cerrar"
                     x-on:click="$dispatch('close-modal', '{{ $name }}')"
                 >
@@ -152,9 +158,9 @@
                             </div>
                         @endif
                         @if ($failuresCount > 0 || (int) $skipped > 0)
-                            <div class="import-result-modal__stat import-result-modal__stat--danger" role="listitem">
+                            <div class="import-result-modal__stat {{ $omittedOnly ? 'import-result-modal__stat--muted' : 'import-result-modal__stat--danger' }}" role="listitem">
                                 <span class="import-result-modal__stat-value">{{ number_format($failuresCount > 0 ? $failuresCount : (int) $skipped) }}</span>
-                                <span class="import-result-modal__stat-label">Con error</span>
+                                <span class="import-result-modal__stat-label">{{ $failuresCount > 0 ? 'Con error' : $skippedLabel }}</span>
                             </div>
                         @endif
                     </div>
@@ -202,17 +208,23 @@
 
             <div class="import-result-modal__footer">
                 @if ($downloadUrl)
-                    <a href="{{ $downloadUrl }}" class="btn btn--secondary btn--sm">
-                        <x-lucide-download width="16" height="16" aria-hidden="true" />
-                        Descargar reporte (.xlsx)
+                    <a
+                        href="{{ $downloadUrl }}"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        title="Descargar reporte (.xlsx)"
+                        aria-label="Descargar reporte (.xlsx)"
+                    >
+                        <x-lucide-download width="18" height="18" aria-hidden="true" />
                     </a>
                 @endif
                 <button
                     type="button"
-                    class="btn btn--primary btn--sm"
+                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                    title="Entendido"
+                    aria-label="Entendido"
                     x-on:click="$dispatch('close-modal', '{{ $name }}')"
                 >
-                    Entendido
+                    <x-lucide-check width="18" height="18" aria-hidden="true" />
                 </button>
             </div>
         </div>

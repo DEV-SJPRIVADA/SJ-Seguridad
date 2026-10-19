@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\PurchaseRequests;
 
 use App\Exports\BaseExport;
+use App\Exports\PurchaseProviderImportTemplateExport;
+use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PurchaseRequests\ImportPurchaseProvidersRequest;
 use App\Http\Requests\PurchaseRequests\StorePurchaseProviderRequest;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseProviderRequest;
 use App\Models\PurchaseProvider;
+use App\Models\RequisitionCity;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Audit\SystemAuditService;
 use App\Services\PurchaseRequests\Providers\PurchaseProviderDatatableService;
-use App\Traits\HasPurchaseTabs;
+use App\Services\PurchaseRequests\Providers\PurchaseProviderImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +23,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PurchaseProviderController extends Controller
 {
-    use HasPurchaseTabs;
+    use HandlesImportFailureReports;
+
+    private const IMPORT_REPORT_MODULE = 'purchase_providers';
 
     /**
      * @var list<string>
@@ -29,8 +35,6 @@ class PurchaseProviderController extends Controller
         'nombre',
         'telefono',
         'correo',
-        'es_cliente',
-        'es_proveedor',
         'estado',
         'dias_pago',
         'contacto',
@@ -50,9 +54,13 @@ class PurchaseProviderController extends Controller
         $filters = $this->datatableService->filtersFromRequest($request);
         $returnQuery = $this->datatableService->filtersToQuery($filters);
 
+        // El buscador es el de DataTables (`search.value`): el término no viaja
+        // en la URL del listado para no duplicar el filtro.
+        $datatableQuery = $returnQuery;
+        unset($datatableQuery['q']);
+
         return view('modules.purchase-requests.providers.index', [
             'module' => $module,
-            'subTabs' => $this->getPurchaseSubTabs($module),
             'filters' => $filters,
             'returnQuery' => $returnQuery,
             'canEdit' => $this->accessService->canEditProviders($request->user()),
@@ -63,7 +71,7 @@ class PurchaseProviderController extends Controller
             ],
             'datatableUrl' => route('purchase-requests.providers.datatable', array_merge(
                 ['module' => $module],
-                $returnQuery,
+                $datatableQuery,
             )),
             'exportUrl' => route('purchase-requests.providers.export', array_merge(
                 ['module' => $module],
@@ -73,6 +81,12 @@ class PurchaseProviderController extends Controller
                 ['module' => $module],
                 $returnQuery,
             )),
+            'importTemplateUrl' => route('purchase-requests.providers.template', ['module' => $module]),
+            'importUrl' => route('purchase-requests.providers.import', array_merge(
+                ['module' => $module],
+                $returnQuery,
+            )),
+            'showImportModal' => (bool) session('import_modal_open', false),
             'indexUrl' => route('purchase-requests.providers.index', ['module' => $module]),
         ]);
     }
@@ -96,6 +110,7 @@ class PurchaseProviderController extends Controller
 
     public function store(StorePurchaseProviderRequest $request, string $module): RedirectResponse
     {
+        // El catálogo solo gestiona proveedores.
         $provider = PurchaseProvider::query()->create([
             ...$request->validated(),
             'created_by' => $request->user()?->id,
@@ -165,14 +180,6 @@ class PurchaseProviderController extends Controller
             ['key' => 'forma_pago', 'label' => 'Forma de pago'],
             ['key' => 'dias_pago', 'label' => 'Días de pago'],
             [
-                'key' => fn (PurchaseProvider $provider): string => $provider->es_cliente ? 'Sí' : 'No',
-                'label' => 'Cliente',
-            ],
-            [
-                'key' => fn (PurchaseProvider $provider): string => $provider->es_proveedor ? 'Sí' : 'No',
-                'label' => 'Proveedor',
-            ],
-            [
                 'key' => fn (PurchaseProvider $provider): string => PurchaseProvider::estadoLabels()[$provider->estado] ?? $provider->estado,
                 'label' => 'Estado',
             ],
@@ -194,6 +201,117 @@ class PurchaseProviderController extends Controller
         ))->download();
     }
 
+    public function template(string $module, PurchaseProviderImportTemplateExport $export): StreamedResponse
+    {
+        return $export->download('plantilla_proveedores_VINE01.xlsx');
+    }
+
+    /**
+     * Importa la plantilla VINE01. Solo carga filas con PROVEEDOR = SI y
+     * actualiza por `identificacion`.
+     */
+    public function import(
+        ImportPurchaseProvidersRequest $request,
+        string $module,
+        PurchaseProviderImportService $importService,
+    ): RedirectResponse {
+        $path = $request->file('import_file')?->getRealPath();
+
+        if ($path === false || $path === null) {
+            return back()->withErrors([
+                'import_file' => 'No se pudo leer el archivo subido.',
+            ]);
+        }
+
+        try {
+            $report = $importService->import($path, false, null, $request->user()?->id);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors([
+                'import_file' => $e->getMessage(),
+            ]);
+        }
+
+        $this->auditLogService->logEvent(
+            module: 'purchase_requests',
+            eventType: 'providers_imported',
+            action: 'import',
+            metadata: [
+                'created' => $report['created'],
+                'updated' => $report['updated'],
+                'skipped' => $report['skipped'],
+                'errors_count' => $report['errors_count'],
+            ],
+            area: 'compras',
+        );
+
+        $status = sprintf(
+            'Importación VINE01: %d creado(s), %d actualizado(s), %d omitido(s) (no proveedor).',
+            $report['created'],
+            $report['updated'],
+            $report['skipped'],
+        );
+
+        $importResult = $this->buildImportResultPayload(
+            $request->user(),
+            [
+                'imported' => $report['created'],
+                'created' => $report['created'],
+                'updated' => $report['updated'],
+                'skipped' => $report['skipped'],
+                'empty_rows' => $report['skipped_empty'],
+                'skipped_empty' => $report['skipped_empty'],
+                'processed' => $report['processed'],
+                'failures' => $report['failures'],
+                'errors_count' => $report['errors_count'],
+                'dry_run' => false,
+            ],
+            self::IMPORT_REPORT_MODULE,
+            'Proveedores (VINE01)',
+            [
+                'Proveedores nuevos' => $report['created'],
+                'Proveedores actualizados' => $report['updated'],
+                'Filas omitidas (no proveedor)' => $report['skipped'],
+                'Filas vacías' => $report['skipped_empty'],
+                'Filas con error' => $report['errors_count'],
+            ],
+            array_keys(config('purchase-requests.providers_import_columns', [])),
+            'reporte_importacion_proveedores',
+        );
+
+        $importResult['skipped_label'] = 'Omitidos';
+
+        // Tabla de errores del modal: primeras 50 filas; el reporte descargable
+        // conserva todas las filas fallidas.
+        $displayLimit = 50;
+        $displayFailures = array_slice($report['failures'], 0, $displayLimit);
+
+        $importResult['errors'] = array_map(static fn (array $failure): array => [
+            'row' => $failure['row'] ?? '—',
+            'identifier' => (string) ($failure['identifier'] ?? ''),
+            'reason' => (string) ($failure['reason'] ?? ''),
+        ], $displayFailures);
+        $importResult['failures_count'] = $report['errors_count'];
+        $importResult['errors_total'] = $report['errors_count'];
+        $importResult['errors_truncated'] = $report['errors_count'] > count($displayFailures);
+
+        return $this->redirectToIndex($module, $request)
+            ->with('status', $status)
+            ->with('import_done', true)
+            ->with('import_result', $importResult);
+    }
+
+    /**
+     * Descarga el reporte Excel de filas fallidas de la última carga masiva.
+     */
+    public function downloadImportReport(Request $request, string $module, string $token): StreamedResponse
+    {
+        abort_unless($this->accessService->canEditProviders($request->user()), 403);
+
+        return $this->downloadImportFailureReport($request->user(), $token, self::IMPORT_REPORT_MODULE);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -211,9 +329,9 @@ class PurchaseProviderController extends Controller
 
         return [
             'module' => $module,
-            'subTabs' => $this->getPurchaseSubTabs($module),
             'provider' => $provider,
             'estados' => PurchaseProvider::estadoLabels(),
+            'ciudades' => $this->cityOptions($provider),
             'returnQuery' => $returnQuery,
             'formAction' => $isEdit
                 ? route('purchase-requests.providers.update', array_merge($baseRouteParameters, [
@@ -235,5 +353,34 @@ class PurchaseProviderController extends Controller
             ['module' => $module],
             $returnQuery,
         ));
+    }
+
+    /**
+     * Ciudades activas del catálogo de Requisiciones (requisition_cities).
+     * Si el proveedor ya tiene una ciudad que no está en el catálogo, se conserva
+     * como opción para no perder el valor en edición.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function cityOptions(PurchaseProvider $provider): array
+    {
+        $names = RequisitionCity::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->filter(fn ($name): bool => is_string($name) && trim($name) !== '')
+            ->values();
+
+        $options = $names
+            ->map(fn (string $name): array => ['value' => $name, 'label' => $name])
+            ->all();
+
+        $current = trim((string) ($provider->ciudad ?? ''));
+
+        if ($current !== '' && ! $names->contains($current)) {
+            $options[] = ['value' => $current, 'label' => $current.' (actual)'];
+        }
+
+        return $options;
     }
 }

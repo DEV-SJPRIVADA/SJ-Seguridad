@@ -33,4 +33,25 @@ return [
     ],
 
     'items_import_max_rows' => 200,
+
+    /*
+    | Plantilla / carga masiva de proveedores VINE01.
+    | Fila 1 = encabezados oficiales; datos desde fila 2. Solo se importan filas
+    | con PROVEEDOR = SI.
+    */
+    'providers_import_columns' => [
+        'IDENTIFICA' => 'Identificación (obligatorio)',
+        'NOMBRE' => 'Nombre / razón social (obligatorio)',
+        'TELEFONO' => 'Teléfono (solo números)',
+        'CORREO_ELE' => 'Correo electrónico',
+        'PROVEEDOR' => 'Proveedor (SI/NO). Solo se importan filas con SI',
+        'ESTADO' => 'Estado (ACTIVO/INACTIVO)',
+        'DIAS_PAGO' => 'Días de pago (opcional, entero 0-3650)',
+    ],
+
+    'providers_import_required_columns' => ['IDENTIFICA', 'NOMBRE', 'PROVEEDOR'],
+
+    'providers_import_max_rows' => 20000,
+
+    'providers_import_max_kilobytes' => 20480,
 ];

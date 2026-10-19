@@ -136,6 +136,7 @@ return [
         'suministros' => 'Suministros',
         'solicitudes_compra' => 'Solicitudes de compra',
         'bandeja_compras' => 'Bandeja compras',
+        'proveedores' => 'Proveedores',
         'solicitudes_desarrollo' => 'Solicitudes desarrollo',
         'ficha_empleados' => 'Ficha empleados',
         'desvinculaciones' => 'Desvinculaciones',
@@ -173,6 +174,10 @@ return [
             'base_area_tab' => true,
         ],
         'bandeja_compras' => [
+            'home' => 'compras',
+            'base_area_tab' => false,
+        ],
+        'proveedores' => [
             'home' => 'compras',
             'base_area_tab' => false,
         ],
@@ -350,7 +355,6 @@ return [
         'mis_solicitudes' => 'Mis solicitudes',
         'pendientes_aprobacion' => 'Pendientes autorizacion',
         'bandeja_compras' => 'Bandeja compras',
-        'proveedores' => 'Proveedores',
     ],
 
     'devreq_tabs' => [

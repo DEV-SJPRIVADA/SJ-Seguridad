@@ -2225,6 +2225,15 @@ button.module-tab {
     color: #b91c1c;
 }
 
+.import-result-modal__stat--muted {
+    border-color: #e2e8f0;
+    background: #f1f5f9;
+}
+
+.import-result-modal__stat--muted .import-result-modal__stat-value {
+    color: #475569;
+}
+
 .import-result-modal__stat-label {
     display: block;
     margin-top: 0.2rem;
@@ -16817,10 +16826,10 @@ a.req-dashboard-kpi:focus-visible {
     gap: 0.5rem;
 }
 
-/* Proveedores (FEAT-047 T2): filtros en una fila y acciones a la derecha */
+/* Proveedores (FEAT-047 T2): filtro de estado y acciones a la derecha */
 .purchase-providers-page .req-manage-filters__row {
     display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(14rem, 1.2fr);
+    grid-template-columns: minmax(0, 18rem);
     gap: 0.75rem 1rem;
     align-items: end;
 }
@@ -16829,8 +16838,34 @@ a.req-dashboard-kpi:focus-visible {
     justify-content: flex-end;
 }
 
+.purchase-providers-page__import-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+.purchase-providers-page__import-file {
+    flex: 1 1 10rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.purchase-providers-page__import-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 @media (max-width: 900px) {
     .purchase-providers-page .req-manage-filters__row {
         grid-template-columns: minmax(0, 1fr);
     }
+}
+
+/* Proveedores: formulario de alta/edición con shell pur-req-form */
+.purchase-providers-page .pur-req-form {
+    margin-top: 0.35rem;
 }

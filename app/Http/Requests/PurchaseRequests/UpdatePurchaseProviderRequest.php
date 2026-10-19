@@ -39,34 +39,27 @@ class UpdatePurchaseProviderRequest extends FormRequest
                 Rule::unique('purchase_providers', 'identificacion')->ignore($provider),
             ],
             'nombre' => ['required', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:50'],
+            'telefono' => ['nullable', 'string', 'digits_between:7,15'],
             'correo' => ['nullable', 'email', 'max:255'],
-            'es_cliente' => ['boolean'],
-            'es_proveedor' => ['boolean'],
             'estado' => ['required', Rule::in(array_keys(PurchaseProvider::estadoLabels()))],
             'dias_pago' => ['nullable', 'integer', 'min:0', 'max:3650'],
             'contacto' => ['nullable', 'string', 'max:255'],
             'direccion' => ['nullable', 'string', 'max:500'],
-            'ciudad' => ['nullable', 'string', 'max:120'],
+            'ciudad' => [
+                'nullable',
+                'string',
+                'max:120',
+                Rule::exists('requisition_cities', 'name')->where('is_active', true),
+            ],
             'forma_pago' => ['nullable', 'string', 'max:120'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        $payload = [
+        $this->merge([
             'estado' => $this->input('estado', PurchaseProvider::ESTADO_ACTIVO),
-        ];
-
-        if ($this->has('es_cliente')) {
-            $payload['es_cliente'] = $this->boolean('es_cliente');
-        }
-
-        if ($this->has('es_proveedor')) {
-            $payload['es_proveedor'] = $this->boolean('es_proveedor');
-        }
-
-        $this->merge($payload);
+        ]);
     }
 
     /**
@@ -74,6 +67,6 @@ class UpdatePurchaseProviderRequest extends FormRequest
      */
     protected function uppercaseExceptKeys(): array
     {
-        return ['identificacion', 'correo', 'telefono', 'estado'];
+        return ['identificacion', 'correo', 'telefono', 'estado', 'ciudad'];
     }
 }

@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 /**
  * Listado server-side del catálogo de proveedores.
  *
- * Default operativo: solo registros `es_proveedor = true` y `estado = activo`.
+ * La tabla `purchase_providers` solo contiene proveedores; la carga masiva VINE01
+ * omite las filas que no son proveedor. Default operativo: `estado = activo`.
  * El filtro de estado permite ver inactivos o todos.
  */
 final class PurchaseProviderDatatableService
@@ -32,7 +33,7 @@ final class PurchaseProviderDatatableService
     ];
 
     /**
-     * @return array{q: string, estado: string, solo_proveedores: bool}
+     * @return array{q: string, estado: string}
      */
     public function filtersFromRequest(Request $request): array
     {
@@ -43,7 +44,7 @@ final class PurchaseProviderDatatableService
      * Lee solo el query string (para conservar filtros tras guardar, sin
      * confundirlos con campos del formulario como `estado`).
      *
-     * @return array{q: string, estado: string, solo_proveedores: bool}
+     * @return array{q: string, estado: string}
      */
     public function filtersFromQuery(Request $request): array
     {
@@ -51,7 +52,7 @@ final class PurchaseProviderDatatableService
     }
 
     /**
-     * @param  array{q: string, estado: string, solo_proveedores: bool}  $filters
+     * @param  array{q: string, estado: string}  $filters
      * @return array<string, string>
      */
     public function filtersToQuery(array $filters): array
@@ -66,16 +67,12 @@ final class PurchaseProviderDatatableService
             $query['estado'] = $filters['estado'];
         }
 
-        if (! $filters['solo_proveedores']) {
-            $query['solo_proveedores'] = '0';
-        }
-
         return $query;
     }
 
     /**
      * @param  array<string, mixed>  $input
-     * @return array{q: string, estado: string, solo_proveedores: bool}
+     * @return array{q: string, estado: string}
      */
     private function filtersFromInput(array $input): array
     {
@@ -92,22 +89,16 @@ final class PurchaseProviderDatatableService
         return [
             'q' => trim((string) ($input['q'] ?? '')),
             'estado' => $estado,
-            'solo_proveedores' => filter_var(
-                $input['solo_proveedores'] ?? true,
-                FILTER_VALIDATE_BOOLEAN,
-                FILTER_NULL_ON_FAILURE,
-            ) ?? true,
         ];
     }
 
     /**
-     * @param  array{q: string, estado: string, solo_proveedores: bool}  $filters
+     * @param  array{q: string, estado: string}  $filters
      * @return Builder<PurchaseProvider>
      */
     public function filteredQuery(array $filters): Builder
     {
         return PurchaseProvider::query()
-            ->when($filters['solo_proveedores'], fn (Builder $query): Builder => $query->where('es_proveedor', true))
             ->when(
                 $filters['estado'] !== self::ESTADO_TODOS,
                 fn (Builder $query): Builder => $query->where('estado', $filters['estado']),
@@ -126,7 +117,7 @@ final class PurchaseProviderDatatableService
     }
 
     /**
-     * @param  array{q: string, estado: string, solo_proveedores: bool}  $filters
+     * @param  array{q: string, estado: string}  $filters
      */
     public function respond(Request $request, array $filters, bool $canEdit): JsonResponse
     {

@@ -24,8 +24,6 @@ class PurchaseProvider extends Model
         'nombre',
         'telefono',
         'correo',
-        'es_cliente',
-        'es_proveedor',
         'estado',
         'dias_pago',
         'contacto',
@@ -39,8 +37,6 @@ class PurchaseProvider extends Model
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'es_cliente' => false,
-        'es_proveedor' => true,
         'estado' => self::ESTADO_ACTIVO,
     ];
 
@@ -50,8 +46,6 @@ class PurchaseProvider extends Model
     protected function casts(): array
     {
         return [
-            'es_cliente' => 'boolean',
-            'es_proveedor' => 'boolean',
             'dias_pago' => 'integer',
         ];
     }

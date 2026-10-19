@@ -121,9 +121,13 @@ Un solo look. Regla Cursor: [`.cursor/rules/icon-buttons-ui.mdc`](../../.cursor/
 | Editar (fila) | `cursos-catalogo-page__icon-btn` | pencil |
 | Ver solicitud / ver (fila) | `cursos-catalogo-page__icon-btn` | eye |
 | Ver formulario / Ver Rq (fila) | `cursos-catalogo-page__icon-btn` | file-text |
+| Descargar reporte de importacion | `--ghost` | `lucide-download` |
+| Confirmar / Entendido (modal) | `--primary` | `lucide-check` |
 | Eliminar (fila) | `…--danger` | trash-2 |
 
 Obligatorio: `title` + `aria-label`. Prohibido crear `*{modulo}*__icon-btn` o usar `ficha-empleados-filters__bulk-icon` en codigo nuevo.
+
+**Resultado de importacion:** el componente compartido `<x-import-result-modal>` muestra el resumen de toda carga masiva (conteos + filas fallidas) y ya usa icon-buttons canonicos (`--ghost` descargar reporte / cerrar, `--primary` entendido). Acepta `download-route` + `download-params` (array; util cuando la ruta lleva `{module}`) y `import_result.skipped_label` para renombrar el conteo de omitidos cuando no son errores. El resumen no debe mostrarse como alerta superior de la pagina.
 
 ## Calidad al crear tableros / pantallas nuevas
 
@@ -146,6 +150,7 @@ Regla Cursor (obligatoria para agentes): [`.cursor/rules/module-ui-quality.mdc`]
 | Listado + filtros + DT | `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` |
 | Listado cursos | `areas/gestion_humana/cursos/registros.blade.php` |
 | Import modal | `areas/gestion_humana/formacion/formaciones.blade.php` (+ partial import) |
+| Resultado de import (modal compartido) | `resources/views/components/import-result-modal.blade.php` |
 | Subnav tablero | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` |
 
 ## Regla de mantenimiento

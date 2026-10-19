@@ -7,14 +7,14 @@
 | Campo | Valor |
 | --- | --- |
 | Feature ID | FEAT-047 |
-| Tarea # | T2 — Catálogo Proveedores (CRUD + permisos + pestaña + DT) |
+| Tarea # | T2 — Catálogo Proveedores (CRUD + permisos + tablero + DT) |
 | Modulo / area | purchase-requests / Compras |
 | Brief | `docs/briefs/FEAT-047.md` (Fase B sin import VINE01) |
 | Plan | `docs/briefs/FEAT-047-plan.md` |
 
 ## Objetivo de esta tarea
 
-Entregar el catálogo **Proveedores** operable: migración `purchase_providers`, permisos `purchase.providers.view` / `.edit` (edit ⇒ view), `PurchaseAccessService`, pestaña en subnav Compras, listado DataTables **server-side**, CRUD alta/edición con `dias_pago` y campos opcionales FO-AD-07, export Excel del catálogo. **Sin** import VINE01 (eso es T3).
+Entregar el catálogo **Proveedores** operable: migración `purchase_providers`, permisos `purchase.providers.view` / `.edit` (edit ⇒ view), `PurchaseAccessService`, **tablero** del área Compras (`boards.proveedores`), listado DataTables **server-side**, CRUD alta/edición con `dias_pago` y campos opcionales FO-AD-07, export Excel del catálogo. **Sin** import VINE01 (eso es T3).
 
 ## Archivos permitidos (scope lock) — shared-files autorizados
 
@@ -25,7 +25,7 @@ Entregar el catálogo **Proveedores** operable: migración `purchase_providers`,
 - Seeder / sync permisos si el proyecto lo usa para nuevas keys
 - `routes/modules/purchase-requests.php` (**autorizado**)
 - Controllers / Form Requests / DatatableService bajo PurchaseRequests/Providers
-- Vistas `resources/views/modules/purchase-requests/providers/` + partial subnav Compras
+- Vistas `resources/views/modules/purchase-requests/providers/` + tablero Compras (sin partial subnav de Solicitudes)
 - CSS/JS Vite solo si hace falta para DT (preferir patrones existentes)
 - Export catálogo (`BaseExport` + `<x-export-excel>`)
 - Tests Feature view vs edit, uppercase nombre
@@ -41,14 +41,14 @@ Entregar el catálogo **Proveedores** operable: migración `purchase_providers`,
 ## UI (obligatorio calidad)
 
 - Clonar shell de listado GH referencia (Seguimientos / Cursos registros): `page-section`, `req-manage-*`, searchable-select, icon-btn canónicos, thead corporativo
-- Subnav: `.module-tab` pestaña Proveedores
+- Subnav: tablero del área Compras (`.module-tab`), no pestaña de Solicitudes (actualizado 2026-10-19)
 - Comentarios de bloques funcionales + ortografía UI
 - Tras UI: tests + smoke Chrome DevTools MCP si app local disponible; si no, documentar blocker de smoke
 
 ## Entregables
 
 - [ ] Migración multi-driver + modelo
-- [ ] Permisos + AccessService + pestaña visible solo con view/edit
+- [ ] Permisos + AccessService + tablero visible solo con view/edit
 - [ ] Index DT server-side + filtros (default proveedor activo)
 - [ ] Create/Edit con dias_pago + opcionales
 - [ ] Export Excel
@@ -58,7 +58,7 @@ Entregar el catálogo **Proveedores** operable: migración `purchase_providers`,
 ## Criterios de done
 
 1. Solo `providers.view` puede listar/exportar; sin `edit` → 403 en store/update.
-2. `edit` implica poder ver pestaña (AccessService).
+2. `edit` implica poder ver el tablero (AccessService).
 3. Listado server-side; default activos + es_proveedor.
 4. Textos libres persistidos en MAYÚSCULAS (excepto email).
 5. UI no es prototipo genérico (chrome módulo).

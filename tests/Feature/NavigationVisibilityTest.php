@@ -136,6 +136,30 @@ class NavigationVisibilityTest extends TestCase
         $this->assertNotContains(config('access.boards.bandeja_compras'), $comprasBoards);
     }
 
+    public function test_compras_provider_user_sees_proveedores_board_not_purchase_tabs(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'compras',
+            'must_change_password' => false,
+        ]);
+        $user->givePermissionTo('purchase.providers.view');
+
+        $nav = app(NavigationResolver::class)->resolve($user, 'purchase-requests.providers.index', 'compras');
+
+        $areaKeys = collect($nav['appNavigation'])->pluck('key')->values()->all();
+        $this->assertSame(['compras'], $areaKeys);
+
+        $comprasBoards = collect(collect($nav['appNavigation'])->firstWhere('key', 'compras')['items'] ?? [])
+            ->pluck('label')
+            ->all();
+
+        $this->assertContains(config('access.boards.proveedores'), $comprasBoards);
+        $this->assertNotContains(config('access.boards.solicitudes_compra'), $comprasBoards);
+
+        $activeTab = collect($nav['currentModuleTabs'])->firstWhere('active', true);
+        $this->assertSame(config('access.boards.proveedores'), $activeTab['label'] ?? null);
+    }
+
     public function test_compras_analyst_default_purchase_board_url_is_bandeja(): void
     {
         $user = User::factory()->create([

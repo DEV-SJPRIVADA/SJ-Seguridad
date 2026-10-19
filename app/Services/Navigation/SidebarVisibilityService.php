@@ -65,6 +65,7 @@ class SidebarVisibilityService
             'suministros' => $this->shouldShowSupplyBoard($user, $areaKey),
             'solicitudes_compra' => $this->shouldShowPurchaseBoard($user, $areaKey),
             'bandeja_compras' => $this->shouldShowBandejaComprasBoard($user, $areaKey),
+            'proveedores' => $this->shouldShowProvidersBoard($user, $areaKey),
             'solicitudes_desarrollo' => $this->shouldShowDevelopmentRequestBoard($user, $areaKey),
             'documentos' => $this->shouldShowDocumentsBoard($user, $areaKey),
             'ficha_empleados' => $this->shouldShowFichaEmpleadosBoard($user, $areaKey),
@@ -154,6 +155,11 @@ class SidebarVisibilityService
 
         return $user->can('purchase.tab.processing')
             || $user->can('view.board.compras.bandeja_compras');
+    }
+
+    private function shouldShowProvidersBoard(User $user, string $areaKey): bool
+    {
+        return $this->purchaseAccess->canViewProvidersBoard($user, $areaKey);
     }
 
     private function shouldShowDevelopmentRequestBoard(User $user, string $areaKey): bool

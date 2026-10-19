@@ -28,7 +28,6 @@ class PurchaseProviderCatalogTest extends TestCase
     {
         $activo = PurchaseProvider::factory()->create(['nombre' => 'PROVEEDOR ACTIVO']);
         PurchaseProvider::factory()->inactivo()->create(['nombre' => 'PROVEEDOR INACTIVO']);
-        PurchaseProvider::factory()->cliente()->create(['nombre' => 'CLIENTE SOLO']);
 
         $response = $this->actingAs($this->editor)
             ->getJson($this->datatableUrl())
@@ -39,21 +38,15 @@ class PurchaseProviderCatalogTest extends TestCase
         $this->assertSame((string) $activo->identificacion, $response->json('data.0.0'));
     }
 
-    public function test_datatable_filters_by_estado_and_catalog_scope(): void
+    public function test_datatable_filters_by_estado(): void
     {
         PurchaseProvider::factory()->create(['nombre' => 'PROVEEDOR ACTIVO']);
         PurchaseProvider::factory()->inactivo()->create(['nombre' => 'PROVEEDOR INACTIVO']);
-        PurchaseProvider::factory()->cliente()->create(['nombre' => 'CLIENTE SOLO']);
 
         $this->actingAs($this->editor)
             ->getJson($this->datatableUrl(['estado' => 'todos']))
             ->assertOk()
             ->assertJsonPath('recordsFiltered', 2);
-
-        $this->actingAs($this->editor)
-            ->getJson($this->datatableUrl(['estado' => 'todos', 'solo_proveedores' => '0']))
-            ->assertOk()
-            ->assertJsonPath('recordsFiltered', 3);
 
         $this->actingAs($this->editor)
             ->getJson($this->datatableUrl(['estado' => 'inactivo']))
@@ -73,17 +66,25 @@ class PurchaseProviderCatalogTest extends TestCase
             'nombre' => 'PROVEEDOR BUSCADO',
         ]);
 
+        // Buscador de DataTables (`search[value]`).
         $this->actingAs($this->editor)
-            ->getJson($this->datatableUrl(['q' => 'BUSCADO']))
+            ->getJson($this->datatableUrl(['search' => ['value' => 'BUSCADO']]))
             ->assertOk()
             ->assertJsonPath('recordsFiltered', 2);
+
+        // Compatibilidad con el término en `q` (export/URL).
+        $this->actingAs($this->editor)
+            ->getJson($this->datatableUrl(['q' => 'NIT-BUSCADO']))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
     }
 
-    public function test_store_persists_free_text_in_uppercase_except_email_and_codes(): void
+    public function test_store_persists_free_text_in_uppercase_except_catalog_and_codes(): void
     {
         $this->actingAs($this->editor)
             ->post(route('purchase-requests.providers.store', ['module' => 'compras']), $this->payload([
                 'identificacion' => 'nit-900123',
+                'ciudad' => 'Cali',
             ]))
             ->assertRedirect(route('purchase-requests.providers.index', ['module' => 'compras']));
 
@@ -92,15 +93,56 @@ class PurchaseProviderCatalogTest extends TestCase
         $this->assertSame('PROVEEDOR DE PRUEBA', $provider->nombre);
         $this->assertSame('JUAN PEREZ', $provider->contacto);
         $this->assertSame('CALLE 1 # 2-3', $provider->direccion);
-        $this->assertSame('MEDELLÍN', $provider->ciudad);
+        // La ciudad viene del catálogo de Requisiciones: conserva su forma.
+        $this->assertSame('Cali', $provider->ciudad);
         $this->assertSame('TRANSFERENCIA', $provider->forma_pago);
         // Email y códigos técnicos conservan el valor original.
         $this->assertSame('Contacto@Proveedor.com', $provider->correo);
         $this->assertSame('nit-900123', $provider->identificacion);
         $this->assertSame(PurchaseProvider::ESTADO_ACTIVO, $provider->estado);
-        $this->assertTrue($provider->es_proveedor);
-        $this->assertFalse($provider->es_cliente);
         $this->assertSame(30, $provider->dias_pago);
+    }
+
+    public function test_store_validates_phone_email_and_city_catalog(): void
+    {
+        $this->actingAs($this->editor)
+            ->from(route('purchase-requests.providers.create', ['module' => 'compras']))
+            ->post(route('purchase-requests.providers.store', ['module' => 'compras']), $this->payload([
+                'telefono' => 'ABC-123',
+                'correo' => 'no-es-correo',
+                'ciudad' => 'Ciudad Inexistente',
+            ]))
+            ->assertSessionHasErrors(['telefono', 'correo', 'ciudad']);
+    }
+
+    public function test_views_use_icon_only_actions_and_city_catalog(): void
+    {
+        $this->actingAs($this->editor)
+            ->get(route('purchase-requests.providers.index', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee('title="Nuevo proveedor"', false)
+            ->assertDontSee('>Nuevo proveedor<')
+            ->assertDontSee('Solicitudes de compra')
+            // La clasificación cliente/proveedor ya no se gestiona en el catálogo.
+            ->assertDontSee('Solo proveedores')
+            ->assertDontSee('Es cliente')
+            // El buscador es el de DataTables.
+            ->assertSee('providers-datatable', false)
+            ->assertSee('req-manage-dt-top', false)
+            // Importación / plantilla VINE01 (T3).
+            ->assertSee('title="Descargar plantilla VINE01"', false)
+            ->assertSee('title="Importar VINE01"', false)
+            ->assertSee('provider-import', false);
+
+        $this->actingAs($this->editor)
+            ->get(route('purchase-requests.providers.create', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee('name="ciudad"', false)
+            ->assertSee('type="tel"', false)
+            ->assertSee('Cali')
+            ->assertSee('aria-label="Crear proveedor"', false)
+            ->assertDontSee('Clasificación')
+            ->assertDontSee('name="es_proveedor"', false);
     }
 
     public function test_store_validates_unique_identificacion_and_required_name(): void
@@ -135,25 +177,23 @@ class PurchaseProviderCatalogTest extends TestCase
             'purchase_provider' => $provider,
             'estado' => 'inactivo',
             'q' => 'ACT',
-            'solo_proveedores' => '0',
         ]);
 
         $this->actingAs($this->editor)
             ->patch($updateUrl, $this->payload([
                 'identificacion' => 'ACT-100',
                 'nombre' => 'nombre editado',
-                'ciudad' => 'bogotá',
+                'ciudad' => 'Puerto Tejada',
             ]))
             ->assertRedirect(route('purchase-requests.providers.index', [
                 'module' => 'compras',
                 'q' => 'ACT',
                 'estado' => 'inactivo',
-                'solo_proveedores' => '0',
             ]));
 
         $provider->refresh();
         $this->assertSame('NOMBRE EDITADO', $provider->nombre);
-        $this->assertSame('BOGOTÁ', $provider->ciudad);
+        $this->assertSame('Puerto Tejada', $provider->ciudad);
     }
 
     /**
@@ -167,13 +207,11 @@ class PurchaseProviderCatalogTest extends TestCase
             'nombre' => 'proveedor de prueba',
             'telefono' => '3001234567',
             'correo' => 'Contacto@Proveedor.com',
-            'es_cliente' => '0',
-            'es_proveedor' => '1',
             'estado' => 'activo',
             'dias_pago' => '30',
             'contacto' => 'juan perez',
             'direccion' => 'calle 1 # 2-3',
-            'ciudad' => 'medellín',
+            'ciudad' => 'Cali',
             'forma_pago' => 'transferencia',
         ], $overrides);
     }

@@ -14,8 +14,6 @@ return new class extends Migration
             $table->string('nombre', 255);
             $table->string('telefono', 50)->nullable();
             $table->string('correo', 255)->nullable();
-            $table->boolean('es_cliente')->default(false);
-            $table->boolean('es_proveedor')->default(true);
             // activo | inactivo (string multi-driver; sin enum() MySQL)
             $table->string('estado', 20)->default('activo')->index();
             $table->unsignedSmallInteger('dias_pago')->nullable();
@@ -25,9 +23,6 @@ return new class extends Migration
             $table->string('forma_pago', 120)->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-
-            $table->index('es_proveedor');
-            $table->index(['es_proveedor', 'estado']);
         });
     }
 
