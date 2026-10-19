@@ -37,7 +37,7 @@
                     <div>
                         <h4 class="ficha-empleados-masivos-modal__card-title">Plantilla e importación</h4>
                         <p class="ficha-empleados-masivos-modal__card-note">
-                            Columnas: IDENTIFICA, NOMBRE, TELEFONO, CORREO_ELE, CLIENTE, PROVEEDOR, ESTADO y DIAS_PAGO (opcional).
+                            Columnas: IDENTIFICA, NOMBRE, TELEFONO, CORREO_ELE, PROVEEDOR, ESTADO y DIAS_PAGO (opcional).
                         </p>
                     </div>
                 </div>

@@ -16826,16 +16826,26 @@ a.req-dashboard-kpi:focus-visible {
     gap: 0.5rem;
 }
 
-/* Proveedores (FEAT-047 T2): filtro de estado y acciones a la derecha */
-.purchase-providers-page .req-manage-filters__row {
+/* Proveedores (FEAT-047): filtros del catálogo y acciones junto al filtro */
+.purchase-providers-page__filter-grid {
     display: grid;
-    grid-template-columns: minmax(0, 18rem);
+    grid-template-columns: minmax(0, 20rem) auto;
+    justify-content: start;
     gap: 0.75rem 1rem;
     align-items: end;
 }
 
-.purchase-providers-page .req-manage-filters__actions {
-    justify-content: flex-end;
+.purchase-providers-page__filter-actions {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.purchase-providers-page__filter-actions .req-manage-filters__icon-btn {
+    flex: 0 0 auto;
 }
 
 .purchase-providers-page__import-toolbar {
@@ -16860,7 +16870,7 @@ a.req-dashboard-kpi:focus-visible {
 }
 
 @media (max-width: 900px) {
-    .purchase-providers-page .req-manage-filters__row {
+    .purchase-providers-page__filter-grid {
         grid-template-columns: minmax(0, 1fr);
     }
 }
@@ -16868,4 +16878,42 @@ a.req-dashboard-kpi:focus-visible {
 /* Proveedores: formulario de alta/edición con shell pur-req-form */
 .purchase-providers-page .pur-req-form {
     margin-top: 0.35rem;
+}
+
+/* Proveedores (FEAT-047): el listado ocupa todo el alto del main (sin espacio vacío abajo) */
+.app-main:has(.purchase-providers-page.req-manage-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.purchase-providers-page.req-manage-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.purchase-providers-page.req-manage-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.purchase-providers-page.req-manage-page .purchase-providers-page__panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.purchase-providers-page.req-manage-page .purchase-providers-page__panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
 }

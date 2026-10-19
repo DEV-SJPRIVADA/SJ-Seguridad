@@ -21,90 +21,83 @@
                 :download-params="['module' => $module]"
             />
 
-            <div class="page-header-inner purchase-requests-page__intro">
-                <div>
-                    <h2 class="page-title">Proveedores</h2>
-                    <p class="page-subtitle">Catálogo de proveedores para órdenes de compra y evaluación post-entrega.</p>
-                </div>
-            </div>
-
-            <div class="panel req-manage-shell">
-                <div class="panel__body panel__body--compact">
-                    <details class="req-manage-filters" @if ($hasFilters) open @endif>
-                        <summary class="req-manage-filters__summary">
-                            <span>Filtros del catálogo</span>
+            <div class="panel purchase-providers-page__panel">
+                <div class="panel__body panel__body--compact req-manage-shell">
+                    {{-- Filtros del catálogo (colapsables). El buscador global vive en la tabla. --}}
+                    <details
+                        class="req-manage-filters req-manage-filters__panel purchase-providers-page__filters"
+                        @if ($hasFilters) open @endif
+                    >
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
                         </summary>
-                        <form method="get" action="{{ $indexUrl }}" class="req-manage-filters__form">
-                            <div class="req-manage-filters__row">
-                                <div class="form-field">
-                                    <label class="form-label" for="filter_estado">Estado</label>
-                                    <x-searchable-select
-                                        id="filter_estado"
-                                        name="estado"
-                                        :options="$estados"
-                                        :value="$filters['estado']"
-                                        search-placeholder="Buscar estado…"
-                                        :allow-clear="false"
-                                    />
+                        <div class="req-manage-filters__panel-body">
+                            <form method="get" action="{{ $indexUrl }}" class="req-manage-filters">
+                                <div class="purchase-providers-page__filter-grid">
+                                    <div class="form-field">
+                                        <label class="form-label" for="filter_estado">Estado</label>
+                                        <x-searchable-select
+                                            id="filter_estado"
+                                            name="estado"
+                                            :options="$estados"
+                                            :value="$filters['estado']"
+                                            search-placeholder="Buscar estado…"
+                                            :allow-clear="false"
+                                        />
+                                    </div>
+                                    <div class="form-field purchase-providers-page__filter-actions">
+                                        <button
+                                            type="submit"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                            title="Aplicar filtros"
+                                            aria-label="Aplicar filtros"
+                                        >
+                                            <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                        </button>
+                                        <a
+                                            href="{{ $indexUrl }}"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                            title="Limpiar filtros"
+                                            aria-label="Limpiar filtros"
+                                        >
+                                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="req-manage-filters__actions" role="group" aria-label="Acciones de filtro">
-                                <button
-                                    type="submit"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                    title="Aplicar filtros"
-                                    aria-label="Aplicar filtros"
-                                >
-                                    <x-lucide-search width="18" height="18" aria-hidden="true" />
-                                </button>
-                                <a
-                                    href="{{ $indexUrl }}"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Limpiar filtros"
-                                    aria-label="Limpiar filtros"
-                                >
-                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                </a>
-                                <x-export-excel
-                                    id="providers-export-link"
-                                    route="{{ $exportUrl }}"
-                                    label=""
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Exportar Excel"
-                                    aria-label="Exportar el catálogo a Excel"
-                                />
-                                <a
-                                    href="{{ $importTemplateUrl }}"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Descargar plantilla VINE01"
-                                    aria-label="Descargar plantilla VINE01"
-                                >
-                                    <x-lucide-download width="18" height="18" aria-hidden="true" />
-                                </a>
-                                @if ($canEdit)
-                                    <button
-                                        type="button"
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                        title="Importar VINE01"
-                                        aria-label="Importar proveedores VINE01"
-                                        x-data
-                                        x-on:click.prevent="$dispatch('open-modal', 'provider-import')"
-                                    >
-                                        <x-lucide-upload width="18" height="18" aria-hidden="true" />
-                                    </button>
-                                @endif
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </details>
 
-                    <div class="cursos-registros-page__table-toolbar">
+                    {{-- Barra de acciones siempre visible: conteo + exportar/plantilla/importar/nuevo. --}}
+                    <div class="cursos-registros-page__table-toolbar purchase-providers-page__table-toolbar">
                         <p class="req-manage-filters__meta">
                             <strong id="providers-count">…</strong>
                             <span id="providers-count-label">proveedor(es)</span>
                         </p>
 
-                        @if ($canEdit)
-                            <div class="cursos-registros-page__table-actions">
+                        <div class="cursos-registros-page__table-actions purchase-providers-page__table-actions">
+                            <x-export-excel
+                                id="providers-export-link"
+                                route="{{ $exportUrl }}"
+                                label=""
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar Excel"
+                                aria-label="Exportar el catálogo a Excel"
+                            />
+                            @if ($canEdit)
+                                <button
+                                    type="button"
+                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                    title="Importar VINE01"
+                                    aria-label="Importar proveedores VINE01"
+                                    x-data
+                                    x-on:click.prevent="$dispatch('open-modal', 'provider-import')"
+                                >
+                                    <x-lucide-upload width="18" height="18" aria-hidden="true" />
+                                </button>
                                 <a
                                     href="{{ $createUrl }}"
                                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -113,11 +106,11 @@
                                 >
                                     <x-lucide-plus width="18" height="18" aria-hidden="true" />
                                 </a>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
 
-                    <div class="data-table-wrap req-manage-shell__table data-table-wrap--booting">
+                    <div class="data-table-wrap req-manage-shell__table purchase-providers-page__table-wrap data-table-wrap--booting">
                         @include('partials.data-table-loader')
                         <table
                             id="providers-datatable"
@@ -127,15 +120,15 @@
                         >
                             <thead>
                                 <tr>
-                                    <th>Identificación</th>
-                                    <th>Nombre / razón social</th>
-                                    <th>Teléfono</th>
-                                    <th>Correo</th>
-                                    <th>Contacto</th>
-                                    <th>Ciudad</th>
-                                    <th>Días pago</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th>IDENTIFICACIÓN</th>
+                                    <th>NOMBRE / RAZÓN SOCIAL</th>
+                                    <th>TELÉFONO</th>
+                                    <th>CORREO</th>
+                                    <th>CONTACTO</th>
+                                    <th>CIUDAD</th>
+                                    <th>DÍAS PAGO</th>
+                                    <th>ESTADO</th>
+                                    <th>ACCIONES</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>

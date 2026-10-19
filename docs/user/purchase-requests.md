@@ -117,18 +117,18 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 ### Catálogo de proveedores
 
 1. Con el permiso **Proveedores: Ver** aparece el tablero **Proveedores** dentro del área **Compras** (no es una pestaña de Solicitudes de compra). El permiso **Proveedores: Editar** también permite verlo.
-2. El listado muestra **solo proveedores activos** por defecto. Use el **buscador** de la tabla (identificación, nombre, correo, contacto o ciudad) y el filtro **Estado** (Activos / Inactivos / Todos). El catálogo solo contiene proveedores.
-3. Con permiso de edición, el icono **+** (Nuevo proveedor), ubicado **arriba a la derecha de la tabla**, permite registrar identificación, nombre, teléfono, correo, contacto, dirección, ciudad, forma de pago, **días de pago** y estado. Las acciones se muestran como iconos con su descripción al pasar el mouse.
+2. El listado muestra **solo proveedores activos** por defecto. Use el **buscador** de la tabla (identificación, nombre, correo, contacto o ciudad) y, en el panel **Filtros**, el selector **Estado** (Activos / Inactivos / Todos). El catálogo solo contiene proveedores.
+3. Arriba a la derecha de la tabla está la barra de acciones (iconos con su descripción al pasar el mouse): **Exportar**, **Importar VINE01** (con permiso de edición) y **+ (Nuevo proveedor)**. El **+** permite registrar identificación, nombre, teléfono, correo, contacto, dirección, ciudad, forma de pago, **días de pago** y estado.
 4. El **teléfono** admite solo números (7 a 15 dígitos), el **correo** debe ser un correo válido y la **ciudad** se elige del catálogo de ciudades de Requisiciones.
 5. Los textos se guardan en **MAYÚSCULAS**; el correo, la identificación, el teléfono y la ciudad se conservan tal cual.
-6. Use el icono de Excel para exportar el catálogo con los filtros actuales.
+6. Use el icono de Excel (**Exportar**) de la barra de acciones para exportar el catálogo con los filtros actuales.
 7. Al editar y guardar, el listado conserva los filtros que tenía.
 
 #### Carga masiva VINE01
 
-1. En el panel de filtros del catálogo, el icono de **descarga** obtiene la plantilla `VINE01` (hoja **VINE01** con encabezados y hoja **Instrucciones**).
+1. Abra la ventana de carga (icono **importar** de la barra de acciones) y, dentro de ella, use el icono de Excel (**plantilla**) para obtener el archivo `VINE01` (hoja **VINE01** con encabezados y hoja **Instrucciones**).
 2. Complete las columnas: **IDENTIFICA**, **NOMBRE**, **TELEFONO**, **CORREO_ELE**, **PROVEEDOR**, **ESTADO** y **DIAS_PAGO** (opcional). Deje `DIAS_PAGO` vacío si no aplica.
-3. Con permiso de edición, el icono de **importar** abre la ventana de carga. Dentro de la ventana, todas las acciones son iconos con su descripción al pasar el mouse: **plantilla** (Excel), **elegir archivo** y **cerrar** (contorno) e **importar** (azul). Elija el archivo y pulse el icono azul de importar.
+3. Con permiso de edición, el icono de **importar** de la barra de acciones abre la ventana de carga. Dentro de la ventana, todas las acciones son iconos con su descripción al pasar el mouse: **plantilla** (Excel), **elegir archivo** y **cerrar** (contorno) e **importar** (azul). Elija el archivo y pulse el icono azul de importar.
 4. **Solo se cargan las filas con PROVEEDOR = SI.** Las filas que solo son cliente se omiten. Si el archivo no trae las columnas obligatorias (IDENTIFICA, NOMBRE, PROVEEDOR) o no tiene proveedores, se muestra el error y no se guarda nada.
 5. Los registros se actualizan por **identificación**: si ya existe, se actualiza; si no, se crea. Al terminar, el resultado aparece en una **ventana de resumen** (no arriba de la página) con los conteos: nuevos, actualizados, omitidos por no ser proveedor, filas vacías y con error. Ciérrela con el icono de **Entendido** (chulo azul) o la **X**.
 6. Si hubo filas con error, la ventana lista las primeras 50 (número de fila y motivo) y muestra el icono de **descarga** para bajar el **reporte `.xlsx`** completo con todas las filas fallidas.
@@ -150,6 +150,8 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.24 | 2026-10-19 | Compras | Ajuste del catálogo: los botones de filtro quedan en fila junto al selector Estado y la descarga de la plantilla VINE01 se mueve al interior de la ventana de importar. |
+| 1.23 | 2026-10-19 | Compras | Rediseño del catálogo de proveedores: filtros en un panel plegable y barra de acciones siempre visible (exportar, plantilla, importar, nuevo). |
 | 1.22 | 2026-10-19 | Compras | El catálogo solo almacena proveedores: se retira la clasificación cliente/proveedor y la columna CLIENTE de la plantilla VINE01. |
 | 1.21 | 2026-10-19 | Compras | Carga masiva VINE01: el resultado se muestra en una ventana de resumen (no como alerta superior) con opción de **descargar el reporte `.xlsx`** de filas fallidas. |
 | 1.20 | 2026-10-19 | Compras | Proveedores: buscador DataTables, botón **Nuevo proveedor** arriba a la derecha de la tabla, sin clasificación cliente/proveedor y carga masiva/plantilla **VINE01** (solo PROVEEDOR=SI). |
