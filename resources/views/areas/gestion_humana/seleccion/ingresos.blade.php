@@ -21,6 +21,7 @@
         class="page-section seleccion-ingresos-page req-manage-page"
         x-data="seleccionIngresos({
             lookupUrl: @js($lookupUrl),
+            lookupPerfilUrl: @js($lookupPerfilUrl ?? ''),
             canEdit: @js($canEdit),
             storeUrl: @js($storeUrl),
             oldConfirmDuplicate: @js(old('confirm_duplicate') ? true : false),
@@ -275,6 +276,7 @@
                                     'fecha_asistencia' => old('fecha_asistencia', ''),
                                     'estado_code' => old('estado_code', ''),
                                     'blood_type_code' => old('blood_type_code', ''),
+                                    'reemplaza_cedula' => old('reemplaza_cedula', ''),
                                     'reemplaza_a' => old('reemplaza_a', ''),
                                     'responsable_user_id' => old('responsable_user_id', ''),
                                     'referido' => old('referido', ''),
@@ -347,11 +349,17 @@
                     createConfirmDuplicate: Boolean(config.oldConfirmDuplicate),
                     editDuplicates: [],
                     editConfirmDuplicate: false,
+                    lookupPerfilUrl: config.lookupPerfilUrl || '',
+                    reemplazoLookup: {
+                        create: { loading: false, found: false, message: '' },
+                        edit: { loading: false, found: false, message: '' },
+                    },
 
                     openEdit(row) {
                         this.editForm = Object.assign({}, row);
                         this.editDuplicates = [];
                         this.editConfirmDuplicate = false;
+                        this.reemplazoLookup.edit = { loading: false, found: false, message: '' };
                         this.$dispatch('open-modal', 'seleccion-ingreso-editar');
                         this.$nextTick(() => {
                             setTimeout(() => {
@@ -378,6 +386,49 @@
                             return;
                         }
                         window.Alpine.$data(wrap).value = value !== undefined && value !== null ? String(value) : '';
+                    },
+
+                    // Cédula de reemplazo: busca el perfil en Ficha y, si existe, llena «Reemplaza a».
+                    // Sin coincidencia solo avisa; ambos campos siguen editables a mano.
+                    async lookupReemplazo(cedula, mode) {
+                        const value = String(cedula || '').trim();
+                        const state = this.reemplazoLookup[mode];
+                        if (! state) {
+                            return;
+                        }
+                        if (! value || ! this.lookupPerfilUrl) {
+                            this.reemplazoLookup[mode] = { loading: false, found: false, message: '' };
+                            return;
+                        }
+
+                        this.reemplazoLookup[mode] = { loading: true, found: false, message: 'Buscando en Ficha…' };
+
+                        try {
+                            const res = await fetch(this.lookupPerfilUrl + '?' + new URLSearchParams({ cedula: value }).toString(), {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            const data = res.ok ? await res.json() : {};
+
+                            if (data.found && data.full_name) {
+                                if (mode === 'edit') {
+                                    this.editForm.reemplaza_a = data.full_name;
+                                } else {
+                                    const input = document.getElementById('create_reemplaza_a');
+                                    if (input) {
+                                        input.value = data.full_name;
+                                    }
+                                }
+                                this.reemplazoLookup[mode] = { loading: false, found: true, message: 'Perfil encontrado: ' + data.full_name };
+                            } else {
+                                this.reemplazoLookup[mode] = {
+                                    loading: false,
+                                    found: false,
+                                    message: data.message || 'No se encontró un perfil con esa cédula. Escriba el nombre manualmente.',
+                                };
+                            }
+                        } catch (e) {
+                            this.reemplazoLookup[mode] = { loading: false, found: false, message: 'No se pudo consultar Ficha. Escriba el nombre manualmente.' };
+                        }
                     },
 
                     async lookupDuplicates(cedula, mode) {

@@ -76,6 +76,7 @@ final class SeleccionIngresoDatatableService
                 ->orWhere('position_name', 'like', $like)
                 ->orWhere('blood_type_name', 'like', $like)
                 ->orWhere('reemplaza_a', 'like', $like)
+                ->orWhere('reemplaza_cedula', 'like', $like)
                 ->orWhere('referido', 'like', $like)
                 ->orWhere('estado_name', 'like', $like)
                 ->orWhere('jefe_ope', 'like', $like)
@@ -190,6 +191,7 @@ final class SeleccionIngresoDatatableService
             'fecha_asistencia' => optional($ingreso->fecha_asistencia)?->format('Y-m-d'),
             'estado_code' => $ingreso->estado_code,
             'blood_type_code' => $ingreso->blood_type_code,
+            'reemplaza_cedula' => $ingreso->reemplaza_cedula,
             'reemplaza_a' => $ingreso->reemplaza_a,
             'responsable_user_id' => (string) $ingreso->responsable_user_id,
             'referido' => $ingreso->referido,

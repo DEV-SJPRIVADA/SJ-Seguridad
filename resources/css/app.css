@@ -17459,6 +17459,22 @@ a.req-dashboard-kpi:focus-visible {
     font-size: 0.78rem;
 }
 
+/* Ingreso: aviso de búsqueda de cédula de reemplazo en Ficha */
+.seleccion-ingresos-form__lookup-hint {
+    margin: 0.3rem 0 0;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+}
+
+.seleccion-ingresos-form__lookup-hint--ok {
+    color: #15803d;
+}
+
+.seleccion-ingresos-form__lookup-hint--warn {
+    color: #b45309;
+}
+
 .seleccion-ingresos-page__form-hint {
     margin: 0.3rem 0 0;
     font-size: 0.75rem;

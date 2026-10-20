@@ -75,6 +75,7 @@ class StoreSeleccionIngresoRequest extends FormRequest
                     fn ($q) => $q->where('catalog_type', 'blood_type')->where('is_active', true)
                 ),
             ],
+            'reemplaza_cedula' => ['nullable', 'string', 'max:50'],
             'reemplaza_a' => ['required', 'string', 'max:255'],
             'responsable_user_id' => ['required', 'integer', Rule::in($officerIds)],
             'referido' => ['nullable', 'string', 'max:255'],
@@ -119,6 +120,7 @@ class StoreSeleccionIngresoRequest extends FormRequest
             'estado_code.exists' => 'El estado no existe o no está activo.',
             'blood_type_code.required' => 'El RH es obligatorio.',
             'blood_type_code.exists' => 'El RH no existe o no está activo.',
+            'reemplaza_cedula.max' => 'La cédula de reemplazo no puede superar 50 caracteres.',
             'reemplaza_a.required' => 'El campo reemplaza a es obligatorio.',
             'responsable_user_id.required' => 'El responsable es obligatorio.',
             'responsable_user_id.in' => 'El responsable no es un reclutador activo válido.',
@@ -138,6 +140,7 @@ class StoreSeleccionIngresoRequest extends FormRequest
             'shirt_size' => trim((string) $this->input('shirt_size')),
             'pants_size' => trim((string) $this->input('pants_size')),
             'shoes_size' => trim((string) $this->input('shoes_size')),
+            'reemplaza_cedula' => trim((string) $this->input('reemplaza_cedula')) ?: null,
             'reemplaza_a' => trim((string) $this->input('reemplaza_a')),
             'referido' => trim((string) $this->input('referido')),
             'jefe_ope_code' => trim((string) $this->input('jefe_ope_code')),

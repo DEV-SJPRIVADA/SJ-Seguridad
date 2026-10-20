@@ -263,6 +263,7 @@ Route::middleware(['password.changed'])
         Route::get('/ingresos', [SeleccionController::class, 'ingresos'])->name('ingresos');
         Route::get('/ingresos/datatable', [SeleccionController::class, 'ingresosDatatable'])->name('ingresos.datatable');
         Route::get('/ingresos/lookup-cedula', [SeleccionController::class, 'ingresosLookupCedula'])->name('ingresos.lookup-cedula');
+        Route::get('/ingresos/lookup-perfil', [SeleccionController::class, 'ingresosLookupPerfil'])->name('ingresos.lookup-perfil');
         Route::get('/ingresos/exportar', [SeleccionController::class, 'ingresosExport'])->name('ingresos.export');
         Route::post('/ingresos', [SeleccionController::class, 'storeIngreso'])->name('ingresos.store');
         Route::patch('/ingresos/{seleccionIngreso}', [SeleccionController::class, 'updateIngreso'])->name('ingresos.update');

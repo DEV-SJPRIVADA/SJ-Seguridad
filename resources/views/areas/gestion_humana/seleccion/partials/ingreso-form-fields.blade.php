@@ -233,9 +233,39 @@
                 </label>
                 <input id="{{ $prefix }}_referido" name="referido" type="text" class="form-input" maxlength="255" value="{{ $v['referido'] ?? '' }}" {!! $bind('referido') !!}>
             </div>
-            <div class="form-field seleccion-ingresos-form__span-3">
+            {{-- Reemplazo: la cédula se busca en Ficha al salir del campo y llena «Reemplaza a»; ambos editables --}}
+            <div class="form-field">
+                <label class="form-label" for="{{ $prefix }}_reemplaza_cedula">
+                    CÉDULA REEMPLAZO <span class="seleccion-ingresos-form__optional">(opcional)</span>
+                </label>
+                <input
+                    id="{{ $prefix }}_reemplaza_cedula"
+                    name="reemplaza_cedula"
+                    type="text"
+                    class="form-input"
+                    maxlength="50"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="Buscar en Ficha…"
+                    value="{{ $v['reemplaza_cedula'] ?? '' }}"
+                    {!! $bind('reemplaza_cedula') !!}
+                    x-on:change="lookupReemplazo($event.target.value, '{{ $dupState }}')"
+                    x-on:keydown.enter.prevent="lookupReemplazo($event.target.value, '{{ $dupState }}')"
+                >
+                <p
+                    class="seleccion-ingresos-form__lookup-hint"
+                    x-show="reemplazoLookup.{{ $dupState }}.message"
+                    x-cloak
+                    x-bind:class="{
+                        'seleccion-ingresos-form__lookup-hint--ok': reemplazoLookup.{{ $dupState }}.found,
+                        'seleccion-ingresos-form__lookup-hint--warn': ! reemplazoLookup.{{ $dupState }}.found && ! reemplazoLookup.{{ $dupState }}.loading,
+                    }"
+                    x-text="reemplazoLookup.{{ $dupState }}.message"
+                ></p>
+            </div>
+            <div class="form-field seleccion-ingresos-form__span-2">
                 <label class="form-label" for="{{ $prefix }}_reemplaza_a">REEMPLAZA A</label>
-                <input id="{{ $prefix }}_reemplaza_a" name="reemplaza_a" type="text" class="form-input" maxlength="255" required value="{{ $v['reemplaza_a'] ?? '' }}" {!! $bind('reemplaza_a') !!}>
+                <input id="{{ $prefix }}_reemplaza_a" name="reemplaza_a" type="text" class="form-input" maxlength="255" required autocomplete="off" value="{{ $v['reemplaza_a'] ?? '' }}" {!! $bind('reemplaza_a') !!}>
             </div>
             <div class="form-field seleccion-ingresos-form__span-3">
                 <label class="form-label" for="{{ $prefix }}_observaciones">

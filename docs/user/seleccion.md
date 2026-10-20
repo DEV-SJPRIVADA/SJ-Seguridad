@@ -68,8 +68,9 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 3. Complete los campos obligatorios: cédula, nombre, correo, teléfono, ciudad, cargo, cliente, tallas, tipo de dotación, fecha de ingreso, **estado** del proceso, RH, a quién reemplaza, responsable y **jefe operativo**. Además puede registrar la **fecha de asistencia**, el **referido** y **observaciones** (opcionales).
 4. Elija el **Estado** y el **Jefe operativo** desde los catálogos: si el listado del jefe operativo está vacío, primero agregue jefes en la pestaña **Catálogos** (es requisito para guardar el ingreso).
 5. El formulario está dividido en tres bloques: **Datos del aspirante**, **Cliente y dotación** y **Proceso de selección**. Los campos opcionales dicen «(opcional)».
-6. Si la cédula ya existe en Ingreso, el sistema muestra un aviso con los casos encontrados (debajo de los datos del aspirante): confirme que desea continuar antes de guardar.
-7. Pulse **Guardar ingreso** (o **Actualizar ingreso** al editar) en la parte inferior del modal; **Cancelar** cierra sin guardar. El listado se actualizará.
+6. En **Cédula reemplazo** (opcional) escriba la cédula de la persona a la que reemplaza y salga del campo (o pulse Enter): si el sistema la encuentra en Ficha empleados, llena **Reemplaza a** con su nombre. Si no la encuentra, muestra un aviso y usted escribe el nombre a mano. Ambos campos se pueden corregir siempre.
+7. Si la cédula ya existe en Ingreso, el sistema muestra un aviso con los casos encontrados (debajo de los datos del aspirante): confirme que desea continuar antes de guardar.
+8. Pulse **Guardar ingreso** (o **Actualizar ingreso** al editar) en la parte inferior del modal; **Cancelar** cierra sin guardar. El listado se actualizará.
 
 ### Registrar o editar un Examen ocupacional
 
@@ -107,6 +108,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 | --- | --- | --- | --- |
 | 1.0 | 2026-09-22 | Documentador | Version inicial FEAT-035: tablero Selección (Dashboard, Ingreso, Examen ocupacional, Catálogos). |
 | 1.1 | 2026-09-23 | Desarrollo | Ingresos: campo obligatorio REFERIDO (formulario, listado y Excel) después de RESPONSABLE. |
+| 1.7 | 2026-10-20 | Desarrollo | Ingreso: campo **Cédula reemplazo** antes de «Reemplaza a»; al ingresarla busca el perfil en Ficha y trae el nombre (editable; si no existe, se escribe a mano). Export incluye la cédula de reemplazo. |
 | 1.6 | 2026-10-20 | Desarrollo | Examen ocupacional: nuevo **estado** (SOLICITADO, AGENDADO, APROBADO, NO APROBADO, CANCELADO), todas las columnas del formulario en la tabla (estado y correo tras fecha ARL), validación de formato de correo, historial de cambios por usuario y por registro, y modal Nuevo/Editar rediseñado por bloques. |
 | 1.5 | 2026-10-20 | Desarrollo | Ingreso: filtros en dos filas (búsqueda y fechas arriba con los íconos de filtrar/limpiar a la derecha; selectores abajo). El ícono Exportar Excel queda junto a Nuevo ingreso y exporta con los filtros aplicados. |
 | 1.4 | 2026-10-20 | Desarrollo | Catálogos con tabla más compacta; modal de Ingreso con botones en icono (cerrar / guardar) y sin saltos al abrir los selectores. |

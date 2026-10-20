@@ -150,6 +150,7 @@ class SeleccionIngresoService
             'estado_name' => $estado,
             'blood_type_code' => (string) $validated['blood_type_code'],
             'blood_type_name' => $blood,
+            'reemplaza_cedula' => ($validated['reemplaza_cedula'] ?? null) ? trim((string) $validated['reemplaza_cedula']) : null,
             'reemplaza_a' => trim((string) $validated['reemplaza_a']),
             'responsable_user_id' => (int) $validated['responsable_user_id'],
             // Opcional: la columna es NOT NULL con default '' (el listado muestra «—»).

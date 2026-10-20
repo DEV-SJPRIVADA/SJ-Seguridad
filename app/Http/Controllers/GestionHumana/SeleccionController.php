@@ -17,6 +17,7 @@ use App\Models\RequisitionUniform;
 use App\Models\SeleccionExamenOcupacional;
 use App\Models\SeleccionIngreso;
 use App\Services\Access\SeleccionAccessService;
+use App\Services\GestionHumana\ReportesNovedadesFichaLookupService;
 use App\Services\GestionHumana\SeleccionAuditLogService;
 use App\Services\GestionHumana\SeleccionCatalogService;
 use App\Services\GestionHumana\SeleccionDashboardService;
@@ -51,6 +52,7 @@ class SeleccionController extends Controller
         private readonly SeleccionIngresosExport $ingresosExport,
         private readonly SeleccionExamensExport $examensExport,
         private readonly SeleccionExamenHistorialService $examenHistorialService,
+        private readonly ReportesNovedadesFichaLookupService $fichaLookupService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -106,6 +108,7 @@ class SeleccionController extends Controller
             'datatableUrl' => route('gestion-humana.seleccion.ingresos.datatable', array_filter($filters)),
             'exportUrl' => route('gestion-humana.seleccion.ingresos.export', array_filter($filters)),
             'lookupUrl' => route('gestion-humana.seleccion.ingresos.lookup-cedula'),
+            'lookupPerfilUrl' => route('gestion-humana.seleccion.ingresos.lookup-perfil'),
             'storeUrl' => route('gestion-humana.seleccion.ingresos.store'),
             'cityOptions' => $this->catalogSelectOptions('city'),
             'positionOptions' => $this->catalogSelectOptions('position'),
@@ -151,6 +154,29 @@ class SeleccionController extends Controller
         return response()->json([
             'has_duplicates' => $matches->isNotEmpty(),
             'matches' => $this->ingresoService->duplicateSummaries($matches),
+        ]);
+    }
+
+    /**
+     * Busca la cédula de reemplazo en Ficha empleados y devuelve el nombre para «Reemplaza a».
+     */
+    public function ingresosLookupPerfil(Request $request): JsonResponse
+    {
+        abort_unless($this->seleccionAccess->canEdit(auth()->user()), 403);
+
+        $result = $this->fichaLookupService->lookupByDocument((string) $request->query('cedula', ''));
+
+        if (! ($result['found'] ?? false)) {
+            return response()->json([
+                'found' => false,
+                'message' => 'No se encontró un perfil con esa cédula. Puede escribir el nombre manualmente.',
+            ]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'document_number' => (string) ($result['document_number'] ?? ''),
+            'full_name' => (string) ($result['employee_name'] ?? ''),
         ]);
     }
 
@@ -226,6 +252,7 @@ class SeleccionController extends Controller
             'estado_name',
             'blood_type_code',
             'blood_type_name',
+            'reemplaza_cedula',
             'reemplaza_a',
             'responsable_user_id',
             'jefe_ope',

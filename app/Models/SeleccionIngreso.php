@@ -37,6 +37,7 @@ class SeleccionIngreso extends Model
         'estado_name',
         'blood_type_code',
         'blood_type_name',
+        'reemplaza_cedula',
         'reemplaza_a',
         'responsable_user_id',
         'referido',

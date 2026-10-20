@@ -3,6 +3,7 @@
 namespace Tests\Feature\GestionHumana;
 
 use App\Models\CommercialClient;
+use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\RequisitionUniform;
 use App\Models\SeleccionIngreso;
@@ -80,6 +81,53 @@ class SeleccionIngresoTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame('', $row->fresh()->referido);
+    }
+
+    public function test_lookup_perfil_returns_name_for_reemplazo_and_requires_edit(): void
+    {
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '70112233',
+            'full_name' => 'GOMEZ PEREZ CARLOS',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ]);
+
+        $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.seleccion.ingresos.lookup-perfil', ['cedula' => '70112233']))
+            ->assertForbidden();
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.ingresos.lookup-perfil', ['cedula' => '70112233']))
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('full_name', 'GOMEZ PEREZ CARLOS');
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.ingresos.lookup-perfil', ['cedula' => '000000']))
+            ->assertOk()
+            ->assertJsonPath('found', false)
+            ->assertJsonStructure(['message']);
+    }
+
+    public function test_store_persists_optional_reemplaza_cedula(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.ingresos.store'), [
+                ...$payload,
+                'reemplaza_cedula' => ' 70112233 ',
+                'reemplaza_a' => 'Nombre escrito a mano',
+            ])
+            ->assertRedirect(route('gestion-humana.seleccion.ingresos'));
+
+        $this->assertDatabaseHas('seleccion_ingresos', [
+            'document_number' => $payload['document_number'],
+            'reemplaza_cedula' => '70112233',
+            'reemplaza_a' => 'Nombre escrito a mano',
+        ]);
     }
 
     public function test_store_duplicate_requires_confirm_flag(): void
