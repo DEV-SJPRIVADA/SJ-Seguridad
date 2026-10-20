@@ -76,11 +76,13 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 1. Vaya a **Examen ocupacional**.
 2. Agregue o edite un registro completando todos los campos. El formulario tiene tres bloques: **Datos del aspirante** (cédula, nombres, fecha de nacimiento, estado civil, celular, correo, ciudad, dirección), **Cargo y afiliaciones** (cliente, cargo, servicio/sector, EPS, pensión) y **Proceso del examen** (fecha ARL, **estado**, solicitud y responsable).
-3. El **correo** debe tener un formato válido (por ejemplo nombre@dominio.com); si no, el sistema no deja guardar.
-4. El **estado** del examen puede ser SOLICITADO, AGENDADO, APROBADO, NO APROBADO o CANCELADO. Los exámenes nuevos inician en **SOLICITADO**; cámbielo al editar a medida que avance el trámite.
-5. Si la cédula ya existe **en Examen**, confirme el duplicado antes de guardar (el aviso no mira los ingresos).
-6. Pulse el icono de guardar; el icono ✕ cierra sin guardar.
-7. En el listado se ven todos los campos del formulario; el estado aparece como una etiqueta de color. En los filtros puede elegir un estado con los botones de **Estado** (como en Requisiciones).
+3. **Desde Ingreso:** en la columna **Acciones** de un ingreso, pulse el icono **Pasar a examen ocupacional** (estetoscopio): se abre Examen ocupacional con el formulario Nuevo ya lleno con cédula, nombre, correo, celular, ciudad, cargo, cliente y responsable. Complete el resto y guarde.
+   **Por cédula:** en Nuevo examen, al escribir la cédula y salir del campo, si el aspirante tiene un ingreso registrado el sistema llena esos mismos datos (puede corregirlos). Si no tiene ingreso, avisa y usted completa todo a mano.
+4. El **correo** debe tener un formato válido (por ejemplo nombre@dominio.com); si no, el sistema no deja guardar.
+5. El **estado** del examen puede ser SOLICITADO, AGENDADO, APROBADO, NO APROBADO o CANCELADO. Los exámenes nuevos inician en **SOLICITADO**; cámbielo al editar a medida que avance el trámite.
+6. Si la cédula ya existe **en Examen**, confirme el duplicado antes de guardar (el aviso no mira los ingresos).
+7. Pulse el icono de guardar; el icono ✕ cierra sin guardar.
+8. En el listado se ven todos los campos del formulario; el estado aparece como una etiqueta de color. En los filtros puede elegir un estado con los botones de **Estado** (como en Requisiciones).
 
 ### Consultar el historial de cambios del Examen (solo edición)
 
@@ -108,6 +110,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 | --- | --- | --- | --- |
 | 1.0 | 2026-09-22 | Documentador | Version inicial FEAT-035: tablero Selección (Dashboard, Ingreso, Examen ocupacional, Catálogos). |
 | 1.1 | 2026-09-23 | Desarrollo | Ingresos: campo obligatorio REFERIDO (formulario, listado y Excel) después de RESPONSABLE. |
+| 1.8 | 2026-10-20 | Desarrollo | Ingreso → Examen: icono **Pasar a examen ocupacional** en Acciones de Ingreso (abre Nuevo examen prellenado) y autollenado al digitar la cédula en Nuevo examen. |
 | 1.7 | 2026-10-20 | Desarrollo | Ingreso: campo **Cédula reemplazo** antes de «Reemplaza a»; al ingresarla busca el perfil en Ficha y trae el nombre (editable; si no existe, se escribe a mano). Export incluye la cédula de reemplazo. |
 | 1.6 | 2026-10-20 | Desarrollo | Examen ocupacional: nuevo **estado** (SOLICITADO, AGENDADO, APROBADO, NO APROBADO, CANCELADO), todas las columnas del formulario en la tabla (estado y correo tras fecha ARL), validación de formato de correo, historial de cambios por usuario y por registro, y modal Nuevo/Editar rediseñado por bloques. |
 | 1.5 | 2026-10-20 | Desarrollo | Ingreso: filtros en dos filas (búsqueda y fechas arriba con los íconos de filtrar/limpiar a la derecha; selectores abajo). El ícono Exportar Excel queda junto a Nuevo ingreso y exporta con los filtros aplicados. |

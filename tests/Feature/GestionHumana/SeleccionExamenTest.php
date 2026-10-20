@@ -132,6 +132,65 @@ class SeleccionExamenTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    public function test_lookup_ingreso_returns_matching_fields_and_requires_edit(): void
+    {
+        $editor = $this->editorUser();
+        $ingreso = SeleccionIngreso::factory()->create([
+            'document_number' => '55667788',
+            'full_name' => 'ASPIRANTE DESDE INGRESO',
+            'email' => 'aspirante@example.com',
+            'phone' => '3110000000',
+        ]);
+
+        $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.seleccion.examenes.lookup-ingreso', ['cedula' => '55667788']))
+            ->assertForbidden();
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.examenes.lookup-ingreso', ['cedula' => '55667788']))
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('ingreso_id', $ingreso->id)
+            ->assertJsonPath('data.full_name', 'ASPIRANTE DESDE INGRESO')
+            ->assertJsonPath('data.email', 'aspirante@example.com')
+            ->assertJsonPath('data.phone', '3110000000')
+            ->assertJsonPath('data.city_code', $ingreso->city_code)
+            ->assertJsonPath('data.position_code', $ingreso->position_code)
+            ->assertJsonPath('data.commercial_client_id', (string) $ingreso->commercial_client_id)
+            ->assertJsonPath('data.responsable_user_id', (string) $ingreso->responsable_user_id);
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.examenes.lookup-ingreso', ['cedula' => '000']))
+            ->assertOk()
+            ->assertJsonPath('found', false);
+    }
+
+    public function test_desde_ingreso_opens_create_modal_prefilled(): void
+    {
+        $editor = $this->editorUser();
+        $ingreso = SeleccionIngreso::factory()->create([
+            'document_number' => '99001122',
+            'full_name' => 'PRELLENADO DESDE INGRESO',
+            'email' => 'prellenado@example.com',
+        ]);
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.seleccion.examenes', ['desde_ingreso' => $ingreso->id]))
+            ->assertOk()
+            ->assertViewHas('showCreateModal', true)
+            ->assertViewHas('prefillIngresoId', $ingreso->id)
+            ->assertSee('value="99001122"', false)
+            ->assertSee('value="PRELLENADO DESDE INGRESO"', false)
+            ->assertSee('value="prellenado@example.com"', false)
+            ->assertSee('Datos traídos del ingreso #'.$ingreso->id, false);
+
+        // Solo consulta: no abre modal ni prellena.
+        $this->actingAs($this->viewerUser())
+            ->get(route('gestion-humana.seleccion.examenes', ['desde_ingreso' => $ingreso->id]))
+            ->assertOk()
+            ->assertViewHas('showCreateModal', false);
+    }
+
     public function test_examenes_view_renders_estado_pills_and_redesigned_modals(): void
     {
         $this->actingAs($this->editorUser())

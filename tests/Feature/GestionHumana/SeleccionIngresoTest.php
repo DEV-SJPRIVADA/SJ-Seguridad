@@ -110,6 +110,24 @@ class SeleccionIngresoTest extends TestCase
             ->assertJsonStructure(['message']);
     }
 
+    public function test_datatable_actions_include_pasar_a_examen_link(): void
+    {
+        $editor = $this->editorUser();
+        $ingreso = SeleccionIngreso::factory()->create();
+
+        $row = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.ingresos.datatable', ['draw' => 1]))
+            ->assertOk()
+            ->json('data.0');
+
+        $actions = (string) end($row);
+        $this->assertStringContainsString('Pasar a examen ocupacional', $actions);
+        $this->assertStringContainsString(
+            e(route('gestion-humana.seleccion.examenes', ['desde_ingreso' => $ingreso->id])),
+            $actions,
+        );
+    }
+
     public function test_store_persists_optional_reemplaza_cedula(): void
     {
         $editor = $this->editorUser();

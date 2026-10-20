@@ -315,6 +315,14 @@ class SeleccionController extends Controller
         $filters = $this->examenFiltersFromRequest($request);
         $canEdit = $this->seleccionAccess->canEdit(auth()->user());
 
+        // Acción «Pasar a examen» desde Ingreso: abre Nuevo examen con los datos coincidentes.
+        $prefillIngreso = null;
+        $desdeIngreso = $request->query('desde_ingreso');
+        if ($canEdit && $desdeIngreso !== null && $desdeIngreso !== '') {
+            $prefillIngreso = SeleccionIngreso::query()->find((int) $desdeIngreso);
+        }
+        $hasErrors = $request->session()->get('errors') !== null;
+
         return view('areas.gestion_humana.seleccion.examenes', [
             'subTabs' => $this->getSeleccionSubTabs('examenes'),
             'canEdit' => $canEdit,
@@ -338,8 +346,38 @@ class SeleccionController extends Controller
             'responsableOptions' => $this->responsableSelectOptions(),
             'historialUrl' => $canEdit ? route('gestion-humana.seleccion.examenes.historial') : null,
             'historialUserOptions' => $canEdit ? $this->examenHistorialService->userOptions() : [],
-            'showCreateModal' => $canEdit && $request->session()->get('errors') !== null
-                && ! $request->session()->hasOldInput('_method'),
+            'lookupIngresoUrl' => $canEdit ? route('gestion-humana.seleccion.examenes.lookup-ingreso') : null,
+            'createPrefill' => $prefillIngreso !== null && ! $hasErrors
+                ? $this->examenService->prefillFromIngreso($prefillIngreso)
+                : [],
+            'prefillIngresoId' => $prefillIngreso?->id,
+            'showCreateModal' => $canEdit && (
+                ($hasErrors && ! $request->session()->hasOldInput('_method'))
+                || $prefillIngreso !== null
+            ),
+        ]);
+    }
+
+    /**
+     * Busca el ingreso más reciente por cédula y devuelve los campos coincidentes para Nuevo examen.
+     */
+    public function examenesLookupIngreso(Request $request): JsonResponse
+    {
+        abort_unless($this->seleccionAccess->canEdit(auth()->user()), 403);
+
+        $ingreso = $this->examenService->latestIngresoByDocument((string) $request->query('cedula', ''));
+
+        if ($ingreso === null) {
+            return response()->json([
+                'found' => false,
+                'message' => 'No hay ingreso registrado con esa cédula. Complete los datos manualmente.',
+            ]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'ingreso_id' => $ingreso->id,
+            'data' => $this->examenService->prefillFromIngreso($ingreso),
         ]);
     }
 

@@ -30,6 +30,8 @@
             canEdit: @js($canEdit),
             storeUrl: @js($storeUrl),
             historialUrl: @js($historialUrl ?? ''),
+            lookupIngresoUrl: @js($lookupIngresoUrl ?? ''),
+            prefillDocument: @js($createPrefill['document_number'] ?? ''),
             oldConfirmDuplicate: @js(old('confirm_duplicate') ? true : false),
             oldDuplicates: @js([]),
         })"
@@ -242,6 +244,12 @@
                             </button>
                         </div>
 
+                        @if (! empty($createPrefill) && ($prefillIngresoId ?? null))
+                            <div class="alert alert--info ficha-empleados-masivos-modal__alert">
+                                Datos traídos del ingreso #{{ $prefillIngresoId }} (cédula, nombre, correo, celular, ciudad, cargo, cliente y responsable). Complete los demás campos.
+                            </div>
+                        @endif
+
                         @if ($errors->any() && $showCreateModal)
                             <div class="alert alert--danger ficha-empleados-masivos-modal__alert">
                                 <ul class="mb-0">
@@ -262,24 +270,25 @@
                             @include('areas.gestion_humana.seleccion.partials.examen-form-fields', [
                                 ...$formOptions,
                                 'prefix' => 'create',
+                                {{-- old() tras error de validación; si viene de «Pasar a examen», datos del ingreso --}}
                                 'values' => [
-                                    'document_number' => old('document_number', ''),
-                                    'full_name' => old('full_name', ''),
-                                    'position_code' => old('position_code', ''),
+                                    'document_number' => old('document_number', $createPrefill['document_number'] ?? ''),
+                                    'full_name' => old('full_name', $createPrefill['full_name'] ?? ''),
+                                    'position_code' => old('position_code', $createPrefill['position_code'] ?? ''),
                                     'servicio_sector' => old('servicio_sector', ''),
-                                    'commercial_client_id' => old('commercial_client_id', ''),
+                                    'commercial_client_id' => old('commercial_client_id', $createPrefill['commercial_client_id'] ?? ''),
                                     'eps_code' => old('eps_code', ''),
                                     'afp_code' => old('afp_code', ''),
                                     'birth_date' => old('birth_date', ''),
-                                    'city_code' => old('city_code', ''),
+                                    'city_code' => old('city_code', $createPrefill['city_code'] ?? ''),
                                     'address' => old('address', ''),
-                                    'email' => old('email', ''),
-                                    'phone' => old('phone', ''),
+                                    'email' => old('email', $createPrefill['email'] ?? ''),
+                                    'phone' => old('phone', $createPrefill['phone'] ?? ''),
                                     'marital_status_code' => old('marital_status_code', ''),
                                     'fecha_arl' => old('fecha_arl', ''),
                                     'estado' => old('estado', \App\Models\SeleccionExamenOcupacional::ESTADO_SOLICITADO),
                                     'solicitud_status_code' => old('solicitud_status_code', ''),
-                                    'responsable_user_id' => old('responsable_user_id', ''),
+                                    'responsable_user_id' => old('responsable_user_id', $createPrefill['responsable_user_id'] ?? ''),
                                 ],
                                 'mode' => 'create',
                             ])
@@ -354,6 +363,78 @@
                     historialFilterable: false,
                     historialBaseUrl: '',
                     historialFilters: emptyHistorialFilters(),
+                    lookupIngresoUrl: config.lookupIngresoUrl || '',
+                    ingresoLookup: { loading: false, found: false, message: '' },
+
+                    init() {
+                        // Llegada desde «Pasar a examen»: valida duplicados de la cédula prellenada.
+                        if (config.prefillDocument) {
+                            this.lookupDuplicates(config.prefillDocument, 'create');
+                        }
+                    },
+
+                    // Nuevo examen: busca la cédula en Ingreso y prellena los campos coincidentes.
+                    async lookupIngreso(cedula) {
+                        const value = String(cedula || '').trim();
+                        if (! value || ! this.lookupIngresoUrl) {
+                            this.ingresoLookup = { loading: false, found: false, message: '' };
+                            return;
+                        }
+
+                        this.ingresoLookup = { loading: true, found: false, message: 'Buscando en Ingreso…' };
+
+                        try {
+                            const res = await fetch(this.lookupIngresoUrl + '?' + new URLSearchParams({ cedula: value }).toString(), {
+                                headers: { 'Accept': 'application/json' },
+                            });
+                            const json = res.ok ? await res.json() : {};
+
+                            if (! json.found || ! json.data) {
+                                this.ingresoLookup = {
+                                    loading: false,
+                                    found: false,
+                                    message: json.message || 'No hay ingreso registrado con esa cédula. Complete los datos manualmente.',
+                                };
+                                return;
+                            }
+
+                            const data = json.data;
+                            ['full_name', 'email', 'phone'].forEach((field) => {
+                                const input = document.getElementById('create_' + field);
+                                if (input && data[field]) {
+                                    input.value = data[field];
+                                }
+                            });
+                            ['city_code', 'position_code', 'commercial_client_id', 'responsable_user_id'].forEach((field) => {
+                                this.setSearchableIfOption('create_' + field, data[field]);
+                            });
+
+                            this.ingresoLookup = {
+                                loading: false,
+                                found: true,
+                                message: 'Datos traídos del ingreso #' + json.ingreso_id + '. Revise y complete los demás campos.',
+                            };
+                        } catch (e) {
+                            this.ingresoLookup = { loading: false, found: false, message: 'No se pudo consultar Ingreso. Complete los datos manualmente.' };
+                        }
+                    },
+
+                    // Asigna valor a un searchable-select solo si la opción existe (catálogo activo).
+                    setSearchableIfOption(id, value) {
+                        if (value === undefined || value === null || value === '') {
+                            return;
+                        }
+                        const input = document.getElementById(id);
+                        const wrap = input ? input.closest('[x-data]') : null;
+                        if (! wrap || ! window.Alpine) {
+                            return;
+                        }
+                        const select = window.Alpine.$data(wrap);
+                        const exists = (select.options || []).some((opt) => String(opt.value) === String(value));
+                        if (exists) {
+                            select.value = String(value);
+                        }
+                    },
 
                     // Edición: abre el modal compartido y carga selects searchable con los valores de la fila.
                     openEdit(row) {

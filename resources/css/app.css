@@ -2136,6 +2136,16 @@ button.module-tab {
     color: #92400e;
 }
 
+.alert.alert--info {
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e3a8a;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
 .ficha-empleados-import-result__errors {
     margin: 0;
     padding-left: 1.2rem;

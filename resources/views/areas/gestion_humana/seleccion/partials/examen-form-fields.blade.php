@@ -46,7 +46,23 @@
                     value="{{ $v['document_number'] ?? '' }}"
                     {!! $bind('document_number') !!}
                     x-on:blur="lookupDuplicates($event.target.value, '{{ $dupState }}')"
+                    @unless ($isEdit)
+                        x-on:change="lookupIngreso($event.target.value)"
+                    @endunless
                 >
+                @unless ($isEdit)
+                    {{-- Alta: si la cédula tiene ingreso, se prellenan los campos coincidentes --}}
+                    <p
+                        class="seleccion-ingresos-form__lookup-hint"
+                        x-show="ingresoLookup.message"
+                        x-cloak
+                        x-bind:class="{
+                            'seleccion-ingresos-form__lookup-hint--ok': ingresoLookup.found,
+                            'seleccion-ingresos-form__lookup-hint--warn': ! ingresoLookup.found && ! ingresoLookup.loading,
+                        }"
+                        x-text="ingresoLookup.message"
+                    ></p>
+                @endunless
             </div>
             <div class="form-field seleccion-ingresos-form__span-2">
                 <label class="form-label" for="{{ $prefix }}_full_name">APELLIDOS Y NOMBRES</label>

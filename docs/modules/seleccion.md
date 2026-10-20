@@ -49,6 +49,8 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | PATCH | `/examenes/{seleccionExamenOcupacional}` | `examenes.update` | Editar. `seleccion.edit` |
 | DELETE | `/examenes/{seleccionExamenOcupacional}` | `examenes.destroy` | Borrado duro. `seleccion.edit` |
 | GET | `/ingresos/lookup-perfil` | `ingresos.lookup-perfil` | `?cedula=` → `{found, full_name}` desde Ficha (`ReportesNovedadesFichaLookupService`) para autollenar «Reemplaza a». `seleccion.edit` |
+| GET | `/examenes/lookup-ingreso` | `examenes.lookup-ingreso` | `?cedula=` → ingreso más reciente + campos coincidentes para Nuevo examen. `seleccion.edit` |
+| GET | `/examenes?desde_ingreso={id}` | `examenes` | Acción «Pasar a examen» (icono en filas de Ingreso): abre Nuevo examen prellenado (`createPrefill`). Solo `seleccion.edit` |
 | GET | `/examenes/historial` | `examenes.historial` | JSON auditoría Examen: global (`q`, `user_id`, `action`, `date_from`, `date_to`) o `?id=` por registro. `seleccion.edit` |
 | GET | `/catalogos` | `catalogos` | Tablero catalogos (`?catalog=`). `seleccion.edit` |
 | POST | `/catalogos/{type}` | `catalogos.store` | Crear item whitelist. `seleccion.edit` |
@@ -212,6 +214,7 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 | 1.4 | 2026-10-20 | Ingreso: REFERIDO pasa a opcional (`nullable` en Store/Update; sin migración). |
 | 1.3 | 2026-10-20 | Ingreso: rediseño del modal Nuevo/Editar (3 secciones en tarjeta + pie Cancelar/Guardar). Fix Alpine `x-on:submit` (sin `return`) en Ingreso y Examen. |
 | 1.0 | 2026-09-22 | FEAT-035: tablero Seleccion (Dashboard, Ingreso, Examen, Catalogos). |
+| 1.7 | 2026-10-20 | Ingreso → Examen: icono «Pasar a examen ocupacional» en Acciones de Ingreso (`?desde_ingreso=`) y autollenado al digitar cédula en Nuevo examen (`examenes.lookup-ingreso`). Campos coincidentes (`SeleccionExamenService::prefillFromIngreso`): cédula, nombre, correo, teléfono→celular, ciudad, cargo, cliente, responsable (selects solo si la opción existe). Sin vínculo persistido entre registros. |
 | 1.6 | 2026-10-20 | Ingreso: campo opcional `reemplaza_cedula` (migración `2026_10_20_000004`) antes de REEMPLAZA A; al cambiar la cédula se consulta `ingresos.lookup-perfil` y, si hay perfil en Ficha, se llena «Reemplaza a» (ambos campos siguen editables; sin coincidencia solo avisa). Export: columna CÉDULA REEMPLAZO. |
 | 1.5 | 2026-10-20 | Examen: campo ESTADO fijo (SOLICITADO/AGENDADO/APROBADO/NO APROBADO/CANCELADO, default SOLICITADO; migración `2026_10_20_000003`), tabla con todos los campos (ESTADO y CORREO tras FECHA ARL), pills de estado, correo `email:rfc,filter`, historial de auditoría por usuario/registro (`examenes.historial`, `seleccion.edit`), modales Nuevo/Editar rediseñados por secciones, filtros en 2 filas + export en toolbar. |
 | 1.4 | 2026-10-20 | Ingreso filtros: `.seleccion-ingresos-filters` en 2 filas (grande/portatil): fila 1 Buscar + 4 fechas + filtrar/limpiar a la derecha; fila 2 los 5 selectores; <1024px auto-fit. Export Excel movido a la toolbar de la tabla, a la izquierda de Nuevo ingreso (mismo `exportUrl` con filtros aplicados; visible tambien para solo consulta). |

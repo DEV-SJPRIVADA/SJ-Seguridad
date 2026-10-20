@@ -4,6 +4,7 @@ namespace App\Services\GestionHumana;
 
 use App\Models\PayrollCatalogItem;
 use App\Models\SeleccionExamenOcupacional;
+use App\Models\SeleccionIngreso;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -174,6 +175,44 @@ class SeleccionExamenService
             ->first();
 
         return $item?->name ?? $code;
+    }
+
+    /**
+     * Ingreso más reciente de una cédula (para prellenar Nuevo examen).
+     */
+    public function latestIngresoByDocument(string $documentNumber): ?SeleccionIngreso
+    {
+        $documentNumber = trim($documentNumber);
+
+        if ($documentNumber === '') {
+            return null;
+        }
+
+        return SeleccionIngreso::query()
+            ->where('document_number', $documentNumber)
+            ->orderByDesc('fecha_ingreso')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Campos coincidentes Ingreso → Examen (nombres de input del formulario Examen).
+     * Teléfono del ingreso = Celular del examen. El resto de campos del examen no existen en Ingreso.
+     *
+     * @return array{document_number: string, full_name: string, email: string, phone: string, city_code: string, position_code: string, commercial_client_id: string, responsable_user_id: string}
+     */
+    public function prefillFromIngreso(SeleccionIngreso $ingreso): array
+    {
+        return [
+            'document_number' => (string) $ingreso->document_number,
+            'full_name' => (string) $ingreso->full_name,
+            'email' => (string) $ingreso->email,
+            'phone' => (string) $ingreso->phone,
+            'city_code' => (string) $ingreso->city_code,
+            'position_code' => (string) $ingreso->position_code,
+            'commercial_client_id' => $ingreso->commercial_client_id ? (string) $ingreso->commercial_client_id : '',
+            'responsable_user_id' => $ingreso->responsable_user_id ? (string) $ingreso->responsable_user_id : '',
+        ];
     }
 
     /**

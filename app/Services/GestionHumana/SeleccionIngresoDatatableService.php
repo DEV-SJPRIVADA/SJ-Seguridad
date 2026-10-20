@@ -200,8 +200,17 @@ final class SeleccionIngresoDatatableService
             'update_url' => route('gestion-humana.seleccion.ingresos.update', $ingreso),
         ], JSON_UNESCAPED_UNICODE));
 
+        // «Pasar a examen»: abre Examen ocupacional con Nuevo examen prellenado desde este ingreso.
+        $toExamenUrl = e(route('gestion-humana.seleccion.examenes', ['desde_ingreso' => $ingreso->id]));
+
         return sprintf(
             '<div class="seleccion-ingresos-page__row-actions table-actions">'.
+            '<a href="%s" class="cursos-catalogo-page__icon-btn" title="Pasar a examen ocupacional" aria-label="Pasar a examen ocupacional">'.
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+            '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/>'.
+            '<path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></svg>'.
+            '</a>'.
             '<button type="button" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit js-seleccion-ingreso-edit" '.
             'data-ingreso-edit="%s" title="Editar" aria-label="Editar">'.
             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
@@ -217,6 +226,7 @@ final class SeleccionIngresoDatatableService
             '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>'.
             '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'.
             '</button></form></div>',
+            $toExamenUrl,
             $editPayload,
             e(route('gestion-humana.seleccion.ingresos.destroy', $ingreso)),
             e(json_encode('¿Eliminar este registro de ingreso?', JSON_UNESCAPED_UNICODE)),
