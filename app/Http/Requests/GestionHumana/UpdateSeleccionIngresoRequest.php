@@ -63,6 +63,15 @@ class UpdateSeleccionIngresoRequest extends FormRequest
                 Rule::exists('requisition_uniforms', 'id')->where(fn ($q) => $q->where('is_active', true)),
             ],
             'fecha_ingreso' => ['required', 'date'],
+            'fecha_asistencia' => ['nullable', 'date'],
+            'estado_code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::exists('payroll_catalog_items', 'code')->where(
+                    fn ($q) => $q->where('catalog_type', 'ingreso_estado')->where('is_active', true)
+                ),
+            ],
             'blood_type_code' => [
                 'required',
                 'string',
@@ -74,7 +83,15 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'reemplaza_a' => ['required', 'string', 'max:255'],
             'responsable_user_id' => ['required', 'integer', Rule::in($officerIds)],
             'referido' => ['required', 'string', 'max:255'],
-            'jefe_ope' => ['required', 'string', 'max:255'],
+            'jefe_ope_code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::exists('payroll_catalog_items', 'code')->where(
+                    fn ($q) => $q->where('catalog_type', 'jefe_operativo')->where('is_active', true)
+                ),
+            ],
+            'observaciones' => ['nullable', 'string', 'max:1000'],
             'confirm_duplicate' => ['nullable', 'boolean'],
         ];
     }
@@ -102,13 +119,18 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'requisition_uniform_id.required' => 'El tipo de dotación es obligatorio.',
             'requisition_uniform_id.exists' => 'El tipo de dotación no existe o no está activo.',
             'fecha_ingreso.required' => 'La fecha de ingreso es obligatoria.',
+            'fecha_asistencia.date' => 'La fecha de asistencia no es válida.',
+            'estado_code.required' => 'El estado es obligatorio.',
+            'estado_code.exists' => 'El estado no existe o no está activo.',
             'blood_type_code.required' => 'El RH es obligatorio.',
             'blood_type_code.exists' => 'El RH no existe o no está activo.',
             'reemplaza_a.required' => 'El campo reemplaza a es obligatorio.',
             'responsable_user_id.required' => 'El responsable es obligatorio.',
             'responsable_user_id.in' => 'El responsable no es un reclutador activo válido.',
             'referido.required' => 'El campo referido es obligatorio.',
-            'jefe_ope.required' => 'El jefe OPE asignado es obligatorio.',
+            'jefe_ope_code.required' => 'El jefe operativo es obligatorio.',
+            'jefe_ope_code.exists' => 'El jefe operativo no existe o no está activo.',
+            'observaciones.max' => 'Las observaciones no pueden superar 1000 caracteres.',
         ];
     }
 
@@ -124,7 +146,8 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'shoes_size' => trim((string) $this->input('shoes_size')),
             'reemplaza_a' => trim((string) $this->input('reemplaza_a')),
             'referido' => trim((string) $this->input('referido')),
-            'jefe_ope' => trim((string) $this->input('jefe_ope')),
+            'jefe_ope_code' => trim((string) $this->input('jefe_ope_code')),
+            'observaciones' => trim((string) $this->input('observaciones')),
             'confirm_duplicate' => $this->boolean('confirm_duplicate'),
         ]);
     }

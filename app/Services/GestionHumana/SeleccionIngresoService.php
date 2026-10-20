@@ -14,6 +14,9 @@ class SeleccionIngresoService
      *     q?: string|null,
      *     date_from?: string|null,
      *     date_to?: string|null,
+     *     asistencia_from?: string|null,
+     *     asistencia_to?: string|null,
+     *     estado_code?: string|null,
      *     commercial_client_id?: int|string|null,
      *     responsable_user_id?: int|string|null,
      *     city_code?: string|null,
@@ -33,7 +36,10 @@ class SeleccionIngresoService
                 $inner->where('document_number', 'like', $like)
                     ->orWhere('full_name', 'like', $like)
                     ->orWhere('email', 'like', $like)
-                    ->orWhere('phone', 'like', $like);
+                    ->orWhere('phone', 'like', $like)
+                    ->orWhere('estado_name', 'like', $like)
+                    ->orWhere('jefe_ope', 'like', $like)
+                    ->orWhere('observaciones', 'like', $like);
             });
         }
 
@@ -45,6 +51,21 @@ class SeleccionIngresoService
         $dateTo = trim((string) ($filters['date_to'] ?? ''));
         if ($dateTo !== '') {
             $query->whereDate('fecha_ingreso', '<=', $dateTo);
+        }
+
+        $asistenciaFrom = trim((string) ($filters['asistencia_from'] ?? ''));
+        if ($asistenciaFrom !== '') {
+            $query->whereDate('fecha_asistencia', '>=', $asistenciaFrom);
+        }
+
+        $asistenciaTo = trim((string) ($filters['asistencia_to'] ?? ''));
+        if ($asistenciaTo !== '') {
+            $query->whereDate('fecha_asistencia', '<=', $asistenciaTo);
+        }
+
+        $estadoCode = trim((string) ($filters['estado_code'] ?? ''));
+        if ($estadoCode !== '') {
+            $query->where('estado_code', $estadoCode);
         }
 
         $clientId = $filters['commercial_client_id'] ?? null;
@@ -106,6 +127,8 @@ class SeleccionIngresoService
         $city = $this->activeCatalogName('city', (string) $validated['city_code']);
         $position = $this->activeCatalogName('position', (string) $validated['position_code']);
         $blood = $this->activeCatalogName('blood_type', (string) $validated['blood_type_code']);
+        $estado = $this->activeCatalogName('ingreso_estado', (string) $validated['estado_code']);
+        $jefeOperativo = $this->activeCatalogName('jefe_operativo', (string) $validated['jefe_ope_code']);
 
         return [
             'document_number' => trim((string) $validated['document_number']),
@@ -122,12 +145,17 @@ class SeleccionIngresoService
             'shoes_size' => trim((string) $validated['shoes_size']),
             'requisition_uniform_id' => (int) $validated['requisition_uniform_id'],
             'fecha_ingreso' => $validated['fecha_ingreso'],
+            'fecha_asistencia' => $validated['fecha_asistencia'] ?: null,
+            'estado_code' => (string) $validated['estado_code'],
+            'estado_name' => $estado,
             'blood_type_code' => (string) $validated['blood_type_code'],
             'blood_type_name' => $blood,
             'reemplaza_a' => trim((string) $validated['reemplaza_a']),
             'responsable_user_id' => (int) $validated['responsable_user_id'],
             'referido' => trim((string) $validated['referido']),
-            'jefe_ope' => trim((string) $validated['jefe_ope']),
+            'jefe_ope_code' => (string) $validated['jefe_ope_code'],
+            'jefe_ope' => $jefeOperativo,
+            'observaciones' => $this->nullableText($validated['observaciones'] ?? null),
         ];
     }
 
@@ -155,5 +183,12 @@ class SeleccionIngresoService
             ->first();
 
         return $item?->name ?? $code;
+    }
+
+    private function nullableText(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }

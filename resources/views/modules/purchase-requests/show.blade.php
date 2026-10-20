@@ -177,6 +177,18 @@
                                 <h3 class="pur-req-form__section-title">Productos solicitados</h3>
                                 <p class="pur-req-form__section-desc">{{ $purchaseRequest->items->count() }} línea(s) en esta solicitud.</p>
                             </div>
+                            @if ($canProcess)
+                                <div class="pur-req-form__section-head-actions">
+                                    <a
+                                        href="{{ route('purchase-requests.orders.purchase.create', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                        title="Emitir orden de compra"
+                                        aria-label="Emitir orden de compra"
+                                    >
+                                        <x-lucide-file-plus width="18" height="18" aria-hidden="true" />
+                                    </a>
+                                </div>
+                            @endif
                         </header>
 
                         <div class="data-table-wrap">

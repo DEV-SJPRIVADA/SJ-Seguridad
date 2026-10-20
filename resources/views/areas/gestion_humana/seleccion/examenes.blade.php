@@ -222,7 +222,7 @@
                             method="POST"
                             action="{{ $storeUrl }}"
                             class="cursos-registros-page__form"
-                            x-on:submit="return guardSubmit($event, 'create')"
+                            x-on:submit="guardSubmit($event, 'create')"
                         >
                             @csrf
                             @include('areas.gestion_humana.seleccion.partials.examen-form-fields', [
@@ -276,7 +276,7 @@
                                 method="POST"
                                 :action="editForm.update_url"
                                 class="cursos-registros-page__form"
-                                x-on:submit="return guardSubmit($event, 'edit')"
+                                x-on:submit="guardSubmit($event, 'edit')"
                             >
                                 @csrf
                                 @method('PATCH')

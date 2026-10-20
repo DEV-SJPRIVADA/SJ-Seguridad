@@ -1,0 +1,16 @@
+tests/Feature/GestionHumana/AcreditacionesAcreditadosTest.php
+tests/Feature/GestionHumana/AcreditacionesBoardAccessTest.php
+tests/Feature/GestionHumana/AcreditacionesCatalogTest.php
+tests/Feature/GestionHumana/AcreditacionesDashboardTest.php
+tests/Feature/GestionHumana/AcreditacionesEstadoSyncTest.php
+tests/Feature/GestionHumana/AcreditacionesExportApoCandidatesTest.php
+tests/Feature/GestionHumana/AcreditacionesExportApoGenerateTest.php
+tests/Feature/GestionHumana/AcreditacionesExportApoManualTest.php
+tests/Feature/GestionHumana/AcreditacionesExportApoParamsTest.php
+tests/Feature/GestionHumana/AcreditacionesImportTest.php
+tests/Feature/GestionHumana/AcreditacionesNuevosSinAcreditacionPendingTest.php
+tests/Feature/GestionHumana/AcreditacionesReporteDiarioTest.php
+tests/Feature/GestionHumana/AcreditacionEstadoCalculatorTest.php
+tests/Feature/GestionHumana/AcreditacionesValidacionesTest.php
+tests/Feature/GestionHumana/CartasNotificacionAccessTest.php
+tests/Feature/GestionHumana/CartasNotificacionGenerateTest.php

@@ -12,6 +12,13 @@ use Illuminate\Validation\ValidationException;
 
 class EmployeeTerminationFollowupService
 {
+    /**
+     * Campos de retiro compartidos con el periodo laboral y Retiros.
+     *
+     * @var list<string>
+     */
+    private const RETIRO_FIELDS = ['is_rehireable', 'termination_notes'];
+
     public function __construct(
         private readonly DesvinculacionesAuditLogService $auditLogService,
         private readonly EmployeeFichaEmploymentPeriodService $periodService,
@@ -141,7 +148,9 @@ class EmployeeTerminationFollowupService
     }
 
     /**
-     * PATCH parcial: solo checks y/o payroll_delivered_at.
+     * PATCH parcial: checks, payroll_delivered_at y/o datos de retiro (recontratable, observaciones).
+     * Recontratable y observaciones se replican al periodo laboral (gate de reingreso, cartas)
+     * y a la fila de Retiros de Reportes Novedades.
      *
      * @param  array<string, mixed>  $payload
      */
@@ -150,7 +159,11 @@ class EmployeeTerminationFollowupService
         array $payload,
         ?User $user = null,
     ): EmployeeTerminationFollowup {
-        $allowed = array_merge(EmployeeTerminationFollowup::CHECK_FIELDS, ['payroll_delivered_at']);
+        $allowed = array_merge(
+            EmployeeTerminationFollowup::CHECK_FIELDS,
+            ['payroll_delivered_at'],
+            self::RETIRO_FIELDS,
+        );
         $changes = collect($payload)->only($allowed);
 
         if ($changes->isEmpty()) {
@@ -170,28 +183,61 @@ class EmployeeTerminationFollowupService
             return $followup;
         }
 
-        $followup->save();
+        $retiroChanged = collect(self::RETIRO_FIELDS)
+            ->contains(fn (string $field): bool => array_key_exists($field, $after) && $before[$field] !== $after[$field]);
 
-        $this->auditLogService->logModelChange(
-            eventType: 'termination_followup',
-            action: 'update',
-            model: $followup,
-            before: $before,
-            after: $after,
-            metadata: [
-                'followup_id' => $followup->id,
-                'document_number' => $followup->document_number,
-            ],
-            userId: $user?->id,
-        );
+        DB::transaction(function () use ($followup, $retiroChanged, $before, $after, $user): void {
+            $followup->save();
+
+            if ($retiroChanged) {
+                $this->syncRetiroFieldsFromFollowup($followup, $user?->id);
+            }
+
+            $this->auditLogService->logModelChange(
+                eventType: 'termination_followup',
+                action: 'update',
+                model: $followup,
+                before: $before,
+                after: $after,
+                metadata: [
+                    'followup_id' => $followup->id,
+                    'document_number' => $followup->document_number,
+                ],
+                userId: $user?->id,
+            );
+        });
 
         return $followup->fresh();
+    }
+
+    /**
+     * Replica recontratable/observaciones al periodo cerrado y a la fila Retiros vinculada.
+     */
+    private function syncRetiroFieldsFromFollowup(EmployeeTerminationFollowup $followup, ?int $userId): void
+    {
+        $period = $followup->employmentPeriod()->first();
+        if ($period !== null) {
+            $period->forceFill([
+                'is_rehireable' => $followup->is_rehireable,
+                'termination_notes' => $followup->termination_notes,
+            ])->save();
+        }
+
+        $this->retiroSyncService->syncObservacionesFromFollowup($followup, $userId);
     }
 
     private function snapshotEditableValue(EmployeeTerminationFollowup $followup, string $field): mixed
     {
         if ($field === 'payroll_delivered_at') {
             return $followup->payroll_delivered_at?->toDateString();
+        }
+
+        if ($field === 'is_rehireable') {
+            return $followup->is_rehireable === null ? null : (bool) $followup->is_rehireable;
+        }
+
+        if ($field === 'termination_notes') {
+            return $followup->termination_notes;
         }
 
         return (bool) $followup->{$field};

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GestionHumana;
 
+use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Models\EmployeeTerminationFollowup;
 use App\Services\Access\DesvinculacionesAccessService;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,15 @@ use Illuminate\Validation\Validator;
 
 class UpdateTerminationFollowupRequest extends FormRequest
 {
+    use UppercasesValidatedText;
+
+    /**
+     * Campos de retiro editables desde el modal de Acciones (sincronizan periodo y Retiros).
+     *
+     * @var list<string>
+     */
+    public const RETIRO_FIELDS = ['is_rehireable', 'termination_notes'];
+
     public function authorize(): bool
     {
         $user = $this->user();
@@ -23,6 +33,8 @@ class UpdateTerminationFollowupRequest extends FormRequest
     {
         $rules = [
             'payroll_delivered_at' => ['sometimes', 'nullable', 'date'],
+            'is_rehireable' => ['sometimes', 'nullable', 'boolean'],
+            'termination_notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
 
         foreach (EmployeeTerminationFollowup::CHECK_FIELDS as $field) {
@@ -39,6 +51,8 @@ class UpdateTerminationFollowupRequest extends FormRequest
     {
         return [
             'payroll_delivered_at' => 'fecha entregado nomina',
+            'is_rehireable' => 'recontratable',
+            'termination_notes' => 'observaciones',
             'check_orden_examenes' => 'orden examenes',
             'check_enviado' => 'enviado',
             'check_control_roll' => 'control roll',
@@ -51,8 +65,15 @@ class UpdateTerminationFollowupRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->exists('payroll_delivered_at') && $this->input('payroll_delivered_at') === '') {
-            $this->merge(['payroll_delivered_at' => null]);
+        foreach (['payroll_delivered_at', 'is_rehireable'] as $field) {
+            if ($this->exists($field) && $this->input($field) === '') {
+                $this->merge([$field => null]);
+            }
+        }
+
+        if ($this->exists('termination_notes')) {
+            $notes = trim((string) $this->input('termination_notes', ''));
+            $this->merge(['termination_notes' => $notes !== '' ? $notes : null]);
         }
     }
 
@@ -63,13 +84,12 @@ class UpdateTerminationFollowupRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                $allowed = array_merge(EmployeeTerminationFollowup::CHECK_FIELDS, ['payroll_delivered_at']);
-                $present = collect($allowed)->filter(fn (string $field): bool => $this->exists($field));
+                $present = collect($this->editableFields())->filter(fn (string $field): bool => $this->exists($field));
 
                 if ($present->isEmpty()) {
                     $validator->errors()->add(
                         'payload',
-                        'Debe enviar al menos un check o la fecha entregado nomina.',
+                        'Debe enviar al menos un campo editable del seguimiento.',
                     );
                 }
             },
@@ -83,10 +103,16 @@ class UpdateTerminationFollowupRequest extends FormRequest
      */
     public function editablePayload(): array
     {
-        $allowed = array_merge(EmployeeTerminationFollowup::CHECK_FIELDS, ['payroll_delivered_at']);
-
         return collect($this->validated())
-            ->only($allowed)
+            ->only($this->editableFields())
             ->all();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function editableFields(): array
+    {
+        return [...EmployeeTerminationFollowup::CHECK_FIELDS, 'payroll_delivered_at', ...self::RETIRO_FIELDS];
     }
 }

@@ -108,6 +108,8 @@ class SeleccionController extends Controller
             'cityOptions' => $this->catalogSelectOptions('city'),
             'positionOptions' => $this->catalogSelectOptions('position'),
             'bloodTypeOptions' => $this->catalogSelectOptions('blood_type'),
+            'estadoOptions' => $this->catalogSelectOptions('ingreso_estado'),
+            'jefeOperativoOptions' => $this->catalogSelectOptions('jefe_operativo'),
             'clientOptions' => $this->clientSelectOptions(),
             'uniformOptions' => $this->uniformSelectOptions(),
             'responsableOptions' => $this->responsableSelectOptions(),
@@ -217,11 +219,16 @@ class SeleccionController extends Controller
             'shoes_size',
             'requisition_uniform_id',
             'fecha_ingreso',
+            'fecha_asistencia',
+            'estado_code',
+            'estado_name',
             'blood_type_code',
             'blood_type_name',
             'reemplaza_a',
             'responsable_user_id',
             'jefe_ope',
+            'jefe_ope_code',
+            'observaciones',
         ]);
 
         $payload = $this->ingresoService->payloadWithSnapshots($validated);
@@ -474,12 +481,19 @@ class SeleccionController extends Controller
         abort_unless($this->seleccionAccess->canEdit(auth()->user()), 403);
         abort_unless($this->catalogService->isManagedType($type), 404);
 
+        $name = $request->string('name')->toString();
+        $codeless = $this->catalogService->isCodeless($type);
+
         $item = PayrollCatalogItem::query()->create([
             'catalog_type' => $type,
-            'code' => $request->string('code')->toString(),
-            'name' => $request->string('name')->toString(),
+            'code' => $codeless
+                ? $this->catalogService->makeUniqueCode($type, $name)
+                : $request->string('code')->toString(),
+            'name' => $name,
             'is_active' => $request->boolean('is_active', true),
-            'sort_order' => (int) ($request->input('sort_order') ?? 0),
+            'sort_order' => $codeless
+                ? $this->catalogService->nextSortOrder($type)
+                : (int) ($request->input('sort_order') ?? 0),
         ]);
 
         $this->auditLogService->logEvent(
@@ -507,11 +521,15 @@ class SeleccionController extends Controller
 
         $before = $item->only(['code', 'name', 'is_active', 'sort_order']);
 
+        $codeless = $this->catalogService->isCodeless($type);
+
         $item->update([
-            'code' => $request->string('code')->toString(),
+            'code' => $codeless ? $item->code : $request->string('code')->toString(),
             'name' => $request->string('name')->toString(),
             'is_active' => $request->boolean('is_active'),
-            'sort_order' => (int) ($request->input('sort_order') ?? $item->sort_order ?? 0),
+            'sort_order' => $codeless
+                ? ($item->sort_order ?? 0)
+                : (int) ($request->input('sort_order') ?? $item->sort_order ?? 0),
         ]);
 
         $this->auditLogService->logModelChange(
@@ -587,6 +605,9 @@ class SeleccionController extends Controller
      *     q: string,
      *     date_from: string,
      *     date_to: string,
+     *     asistencia_from: string,
+     *     asistencia_to: string,
+     *     estado_code: string,
      *     commercial_client_id: string,
      *     responsable_user_id: string,
      *     city_code: string,
@@ -599,6 +620,9 @@ class SeleccionController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'date_from' => trim((string) $request->query('date_from', '')),
             'date_to' => trim((string) $request->query('date_to', '')),
+            'asistencia_from' => trim((string) $request->query('asistencia_from', '')),
+            'asistencia_to' => trim((string) $request->query('asistencia_to', '')),
+            'estado_code' => trim((string) $request->query('estado_code', '')),
             'commercial_client_id' => trim((string) $request->query('commercial_client_id', '')),
             'responsable_user_id' => trim((string) $request->query('responsable_user_id', '')),
             'city_code' => trim((string) $request->query('city_code', '')),

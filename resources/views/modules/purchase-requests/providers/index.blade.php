@@ -1,7 +1,14 @@
 <x-app-layout>
     @php
-        $hasFilters = $filters['q'] !== ''
-            || $filters['estado'] !== \App\Models\PurchaseProvider::ESTADO_ACTIVO;
+        // Chips de estado: Activos es el default (sin parámetro en la URL).
+        $estadoChips = collect($estados)->map(fn (string $label, string $value): array => [
+            'label' => $label,
+            'url' => route('purchase-requests.providers.index', array_merge(
+                ['module' => $module],
+                $value === \App\Models\PurchaseProvider::ESTADO_ACTIVO ? [] : ['estado' => $value],
+            )),
+            'active' => $filters['estado'] === $value,
+        ]);
         $showImportModal = ($showImportModal ?? false) || $errors->has('import_file');
         // El resultado de la carga masiva se muestra en modal (no como alerta superior).
         $hasImportFlash = session()->has('import_done')
@@ -23,60 +30,24 @@
 
             <div class="panel purchase-providers-page__panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
-                    {{-- Filtros del catálogo (colapsables). El buscador global vive en la tabla. --}}
-                    <details
-                        class="req-manage-filters req-manage-filters__panel purchase-providers-page__filters"
-                        @if ($hasFilters) open @endif
-                    >
-                        <summary class="req-manage-filters__panel-toggle">
-                            <span>Filtros</span>
-                            @if ($hasFilters)
-                                <span class="req-manage-filters__panel-badge">Activos</span>
-                            @endif
-                        </summary>
-                        <div class="req-manage-filters__panel-body">
-                            <form method="get" action="{{ $indexUrl }}" class="req-manage-filters">
-                                <div class="purchase-providers-page__filter-grid">
-                                    <div class="form-field">
-                                        <label class="form-label" for="filter_estado">Estado</label>
-                                        <x-searchable-select
-                                            id="filter_estado"
-                                            name="estado"
-                                            :options="$estados"
-                                            :value="$filters['estado']"
-                                            search-placeholder="Buscar estado…"
-                                            :allow-clear="false"
-                                        />
-                                    </div>
-                                    <div class="form-field purchase-providers-page__filter-actions">
-                                        <button
-                                            type="submit"
-                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                            title="Aplicar filtros"
-                                            aria-label="Aplicar filtros"
-                                        >
-                                            <x-lucide-search width="18" height="18" aria-hidden="true" />
-                                        </button>
-                                        <a
-                                            href="{{ $indexUrl }}"
-                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                            title="Limpiar filtros"
-                                            aria-label="Limpiar filtros"
-                                        >
-                                            <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                        </a>
-                                    </div>
-                                </div>
-                            </form>
+                    {{-- Franja única: chips de estado + conteo (izquierda) y acciones icon-only (derecha).
+                         El buscador global vive en la tabla (DataTables). --}}
+                    <div class="purchase-providers-page__toolbar">
+                        <div class="purchase-providers-page__toolbar-start">
+                            <nav class="cursos-registros-page__status-chips" aria-label="Filtrar por estado">
+                                @foreach ($estadoChips as $chip)
+                                    <a
+                                        href="{{ $chip['url'] }}"
+                                        class="module-tab {{ $chip['active'] ? 'module-tab--active' : '' }}"
+                                        @if ($chip['active']) aria-current="page" @endif
+                                    >{{ $chip['label'] }}</a>
+                                @endforeach
+                            </nav>
+                            <p class="req-manage-filters__meta purchase-providers-page__count">
+                                <strong id="providers-count">…</strong>
+                                <span id="providers-count-label">proveedores</span>
+                            </p>
                         </div>
-                    </details>
-
-                    {{-- Barra de acciones siempre visible: conteo + exportar/plantilla/importar/nuevo. --}}
-                    <div class="cursos-registros-page__table-toolbar purchase-providers-page__table-toolbar">
-                        <p class="req-manage-filters__meta">
-                            <strong id="providers-count">…</strong>
-                            <span id="providers-count-label">proveedor(es)</span>
-                        </p>
 
                         <div class="cursos-registros-page__table-actions purchase-providers-page__table-actions">
                             <x-export-excel
@@ -126,9 +97,9 @@
                                     <th>CORREO</th>
                                     <th>CONTACTO</th>
                                     <th>CIUDAD</th>
-                                    <th>DÍAS PAGO</th>
-                                    <th>ESTADO</th>
-                                    <th>ACCIONES</th>
+                                    <th class="purchase-providers-page__col-center">DÍAS PAGO</th>
+                                    <th class="purchase-providers-page__col-center">ESTADO</th>
+                                    <th class="purchase-providers-page__col-actions">ACCIONES</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -211,8 +182,34 @@
                     pageLength: 10,
                     responsive: false,
                     order: [[1, 'asc']],
+                    // Presentación por columna: ID sin cortes, nombre destacado, correo enlazable, días y acciones centrados.
                     columnDefs: [
-                        { targets: [8], orderable: false, searchable: false },
+                        { targets: [0], className: 'purchase-providers-page__col-id' },
+                        { targets: [1], className: 'purchase-providers-page__col-name' },
+                        {
+                            targets: [3],
+                            render(data, type) {
+                                if (type !== 'display' || ! data || data === '—') {
+                                    return data;
+                                }
+
+                                const email = $('<textarea>').html(data).text();
+
+                                return $('<a>', {
+                                    href: `mailto:${email}`,
+                                    class: 'purchase-providers-page__email',
+                                    text: email,
+                                })[0].outerHTML;
+                            },
+                        },
+                        { targets: [6], className: 'purchase-providers-page__col-center' },
+                        { targets: [7], className: 'purchase-providers-page__col-center' },
+                        {
+                            targets: [8],
+                            orderable: false,
+                            searchable: false,
+                            className: 'purchase-providers-page__col-actions',
+                        },
                     ],
                 });
 

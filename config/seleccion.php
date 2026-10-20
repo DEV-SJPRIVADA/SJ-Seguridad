@@ -14,6 +14,24 @@ return [
         'blood_type',
         'marital_status',
         'seleccion_solicitud_status',
+        'ingreso_estado',
+        'jefe_operativo',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Catálogos sin Código ni Orden en la UI
+    |--------------------------------------------------------------------------
+    |
+    | El código técnico se genera desde el nombre al crear (y se conserva al
+    | editar, porque Ingreso / Examen lo referencian). Orden: al final.
+    */
+    'codeless_catalog_types' => [
+        'blood_type',
+        'marital_status',
+        'seleccion_solicitud_status',
+        'ingreso_estado',
+        'jefe_operativo',
     ],
 
     /*
@@ -60,6 +78,13 @@ return [
             ['code' => 'DXPOLIGRAFIA', 'name' => 'DXPOLIGRAFÍA', 'sort_order' => 9],
             ['code' => 'DXEMO', 'name' => 'DXEMO', 'sort_order' => 10],
             ['code' => 'EN_RESERVA', 'name' => 'EN RESERVA', 'sort_order' => 11],
+        ],
+        'ingreso_estado' => [
+            ['code' => 'EN_PROCESO', 'name' => 'EN PROCESO', 'sort_order' => 1],
+            ['code' => 'CONTRATADO', 'name' => 'CONTRATADO', 'sort_order' => 2],
+            ['code' => 'EN_RESERVA', 'name' => 'EN RESERVA', 'sort_order' => 3],
+            ['code' => 'DESISTE_DEL_PROCESO', 'name' => 'DESISTE DEL PROCESO', 'sort_order' => 4],
+            ['code' => 'NO_CONTRATADO', 'name' => 'NO CONTRATADO', 'sort_order' => 5],
         ],
     ],
 ];

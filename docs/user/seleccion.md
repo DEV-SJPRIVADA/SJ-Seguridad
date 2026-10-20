@@ -11,9 +11,9 @@ Apoyar a Gestión Humana en el seguimiento operativo de candidatos y trámites d
 Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 - **Dashboard** — totales, ingresos del mes, exámenes en proceso, gráficos por estado de solicitud y tendencias; al cambiar filtros (fechas, cliente, responsable) se actualizan solos.
-- **Ingreso** — listado paginado, filtros, alta/edición/eliminación y exportar a Excel. Registra datos de ingreso (cédula, contacto, ciudad, cargo, cliente, tallas, tipo de dotación, RH, responsable, etc.).
+- **Ingreso** — listado paginado, filtros (por fechas de ingreso/asistencia, estado, cliente, responsable, etc.), alta/edición/eliminación y exportar a Excel. Registra datos de ingreso (cédula, contacto, ciudad, cargo, cliente, tallas, tipo de dotación, RH, responsable, **fecha de asistencia**, **estado**, **jefe operativo**, **observaciones**, etc.).
 - **Examen ocupacional** — mismo tipo de listado para el trámite de examen (EPS, pensión, estado civil, fecha ARL, estado de solicitud, etc.).
-- **Catálogos** — solo con permiso de edición: administrar listas usadas en los formularios (ciudad, cargo, EPS, AFP, RH, estado civil, estado de solicitud).
+- **Catálogos** — solo con permiso de edición: administrar listas usadas en los formularios (ciudad, cargo, EPS, AFP, RH, estado civil, estado de solicitud, **estado de ingreso**, **jefe operativo**).
 
 **En esta versión:**
 
@@ -28,7 +28,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 | Término | Significado |
 | --- | --- |
-| Ingreso | Registro operativo de una persona en proceso de ingreso (datos de contacto, cliente, cargo, tallas, fecha de ingreso, etc.). |
+| Ingreso | Registro operativo de una persona en proceso de ingreso (datos de contacto, cliente, cargo, tallas, fecha de ingreso, estado del proceso, jefe operativo, etc.). |
 | Examen ocupacional | Registro del trámite de examen (ARL, EPS/AFP, estado de la solicitud, etc.). |
 | SOLICITUD | Estado del trámite de examen (por ejemplo CONTRATADO, EN PROCESO, DXEMO). |
 | EN PROCESO | Estado de solicitud usado en el Dashboard para el indicador de exámenes en curso. |
@@ -64,9 +64,11 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 1. Vaya a la pestaña **Ingreso**.
 2. Pulse el botón para agregar (o editar una fila existente).
-3. Complete **todos** los campos: cédula, nombre, correo, teléfono, ciudad, cargo, cliente, tallas, tipo de dotación, fecha de ingreso, RH, a quién reemplaza, responsable, referido y jefe OPE.
-4. Si la cédula ya existe en Ingreso, el sistema muestra un aviso con los casos encontrados: confirme que desea continuar antes de guardar.
-5. Guarde. El listado se actualizará.
+3. Complete los campos obligatorios: cédula, nombre, correo, teléfono, ciudad, cargo, cliente, tallas, tipo de dotación, fecha de ingreso, **estado** del proceso, RH, a quién reemplaza, responsable, referido y **jefe operativo**. Además puede registrar la **fecha de asistencia** y **observaciones** (opcionales).
+4. Elija el **Estado** y el **Jefe operativo** desde los catálogos: si el listado del jefe operativo está vacío, primero agregue jefes en la pestaña **Catálogos** (es requisito para guardar el ingreso).
+5. El formulario está dividido en tres bloques: **Datos del aspirante**, **Cliente y dotación** y **Proceso de selección**. Los campos opcionales dicen «(opcional)».
+6. Si la cédula ya existe en Ingreso, el sistema muestra un aviso con los casos encontrados (debajo de los datos del aspirante): confirme que desea continuar antes de guardar.
+7. Pulse **Guardar ingreso** (o **Actualizar ingreso** al editar) en la parte inferior del modal; **Cancelar** cierra sin guardar. El listado se actualizará.
 
 ### Registrar o editar un Examen ocupacional
 
@@ -77,14 +79,14 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 ### Filtrar, exportar y eliminar
 
-1. Use los filtros del listado (por ejemplo fechas, cliente, responsable u otros disponibles en pantalla).
+1. Use los filtros del listado (fechas de ingreso y de asistencia —desde/hasta—, estado, cliente, responsable, ciudad, cargo y búsqueda).
 2. Para Excel, use el botón de exportar: se descarga según los filtros actuales.
 3. Para eliminar, confirme en el aviso: el registro desaparece de forma permanente.
 
 ### Administrar Catálogos (solo edición)
 
-1. Abra la pestaña **Catálogos** y elija la tarjeta del tipo (ciudad, cargo, EPS, AFP, RH, estado civil o estado de solicitud).
-2. Cree o edite ítems (código, nombre, activo, orden).
+1. Abra la pestaña **Catálogos** y elija la tarjeta del tipo (ciudad, cargo, EPS, AFP, RH, estado civil, estado de solicitud, **estado de ingreso** o **jefe operativo**).
+2. Cree o edite ítems. En **ciudad, cargo, EPS y AFP** se indica código, nombre, orden y si está activo. En **RH, estado civil, estado de solicitud, estado de ingreso y jefe operativo** solo se escribe el **nombre** y si está activo: el sistema asigna el código y el orden (los nuevos quedan al final). No se permiten dos ítems con el mismo nombre en esos catálogos. Los estados de ingreso iniciales ya vienen cargados (Contratado, En proceso, En reserva, Desiste del proceso, No contratado).
 3. Si un ítem está en uso en registros de Selección, el sistema **no permite borrarlo**; puede desactivarlo para que deje de aparecer en formularios nuevos.
 4. Ciudad, cargo, EPS y AFP también se pueden editar desde Ficha empleados: los cambios se ven en ambos lados.
 
@@ -94,3 +96,8 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 | --- | --- | --- | --- |
 | 1.0 | 2026-09-22 | Documentador | Version inicial FEAT-035: tablero Selección (Dashboard, Ingreso, Examen ocupacional, Catálogos). |
 | 1.1 | 2026-09-23 | Desarrollo | Ingresos: campo obligatorio REFERIDO (formulario, listado y Excel) después de RESPONSABLE. |
+| 1.5 | 2026-10-20 | Desarrollo | Ingreso: filtros en dos filas (búsqueda y fechas arriba con los íconos de filtrar/limpiar a la derecha; selectores abajo). El ícono Exportar Excel queda junto a Nuevo ingreso y exporta con los filtros aplicados. |
+| 1.4 | 2026-10-20 | Desarrollo | Catálogos con tabla más compacta; modal de Ingreso con botones en icono (cerrar / guardar) y sin saltos al abrir los selectores. |
+| 1.3 | 2026-10-20 | Desarrollo | Catálogos RH, estado civil, estado de solicitud, estado de ingreso y jefe operativo: sin campos Código ni Orden (asignación automática; nombre único). |
+| 1.4 | 2026-10-20 | Desarrollo | Ingreso: modal Nuevo/Editar con tres bloques (aspirante, cliente y dotación, proceso), botones **Cancelar** y **Guardar ingreso**; se corrige el error que impedía validar el duplicado de cédula al guardar (también en Examen). |
+| 1.2 | 2026-10-20 | Desarrollo | Ingresos: nuevas columnas FECHA ASISTENCIA, ESTADO (con catálogo **Estado ingreso**), JEFE OPERATIVO (con catálogo **Jefe operativo**) y OBSERVACIONES; filtros de asistencia (rango) y estado; export ampliado; modal Nuevo/Editar rediseñado y botón Guardar/Actualizar en icono; los desplegables ya no se recortan dentro de los modales. |

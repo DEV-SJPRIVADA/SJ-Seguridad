@@ -3,7 +3,8 @@
         @include('areas.gestion_humana.seleccion.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section ficha-empleados-catalogs-page">
+    {{-- Shell compartido con Ficha catálogos + modificador Selección (gestión compacta) --}}
+    <div class="page-section ficha-empleados-catalogs-page seleccion-catalogs-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success ficha-empleados-catalogs-page__alert">{{ session('status') }}</div>
@@ -40,9 +41,19 @@
                 @foreach ($catalogs as $catalog)
                     <section id="section-{{ $catalog['key'] }}" class="ficha-empleados-catalogs-page__section" hidden>
                         <div class="panel">
-                            <div class="panel__header">
-                                <h3 class="panel-title">Gestionar: {{ $catalog['label'] }}</h3>
-                                <p class="panel-text">{{ $catalog['columnLabels']['code'] }} y {{ $catalog['columnLabels']['name'] }} usados en formularios de Selección.</p>
+                            {{-- Encabezado: título + contador de registros --}}
+                            <div class="panel__header seleccion-catalogs-page__header">
+                                <div>
+                                    <h3 class="panel-title">{{ $catalog['label'] }}</h3>
+                                    @if ($catalog['codeless'])
+                                        <p class="panel-text">Valores usados en los formularios de Selección.</p>
+                                    @else
+                                        <p class="panel-text">{{ $catalog['columnLabels']['code'] }} y {{ $catalog['columnLabels']['name'] }} usados en formularios de Selección.</p>
+                                    @endif
+                                </div>
+                                <span class="seleccion-catalogs-page__count">
+                                    {{ count($catalog['items']) }} {{ count($catalog['items']) === 1 ? 'registro' : 'registros' }}
+                                </span>
                             </div>
 
                             <div class="panel__body section-stack">
@@ -52,19 +63,22 @@
                                     class="ficha-empleados-catalogs-page__create-form"
                                 >
                                     @csrf
+                                    {{-- Alta: catálogos «codeless» solo piden nombre (código y orden automáticos) --}}
                                     <div class="ficha-empleados-catalogs-page__create-row">
-                                        <div class="form-field">
-                                            <label class="form-label" for="code_new_{{ $catalog['key'] }}">{{ $catalog['columnLabels']['code'] }}</label>
-                                            <input
-                                                id="code_new_{{ $catalog['key'] }}"
-                                                name="code"
-                                                type="text"
-                                                class="form-input"
-                                                maxlength="50"
-                                                required
-                                                placeholder="{{ $catalog['columnLabels']['code'] }}"
-                                            >
-                                        </div>
+                                        @unless ($catalog['codeless'])
+                                            <div class="form-field">
+                                                <label class="form-label" for="code_new_{{ $catalog['key'] }}">{{ $catalog['columnLabels']['code'] }}</label>
+                                                <input
+                                                    id="code_new_{{ $catalog['key'] }}"
+                                                    name="code"
+                                                    type="text"
+                                                    class="form-input"
+                                                    maxlength="50"
+                                                    required
+                                                    placeholder="{{ $catalog['columnLabels']['code'] }}"
+                                                >
+                                            </div>
+                                        @endunless
                                         <div class="form-field ficha-empleados-catalogs-page__name-field">
                                             <label class="form-label" for="name_new_{{ $catalog['key'] }}">{{ $catalog['columnLabels']['name'] }}</label>
                                             <input
@@ -77,18 +91,20 @@
                                                 placeholder="{{ $catalog['columnLabels']['name'] }}"
                                             >
                                         </div>
-                                        <div class="form-field ficha-empleados-catalogs-page__sort-field">
-                                            <label class="form-label" for="sort_new_{{ $catalog['key'] }}">Orden</label>
-                                            <input
-                                                id="sort_new_{{ $catalog['key'] }}"
-                                                name="sort_order"
-                                                type="number"
-                                                min="0"
-                                                max="9999"
-                                                class="form-input"
-                                                value="0"
-                                            >
-                                        </div>
+                                        @unless ($catalog['codeless'])
+                                            <div class="form-field ficha-empleados-catalogs-page__sort-field">
+                                                <label class="form-label" for="sort_new_{{ $catalog['key'] }}">Orden</label>
+                                                <input
+                                                    id="sort_new_{{ $catalog['key'] }}"
+                                                    name="sort_order"
+                                                    type="number"
+                                                    min="0"
+                                                    max="9999"
+                                                    class="form-input"
+                                                    value="0"
+                                                >
+                                            </div>
+                                        @endunless
                                         <div class="ficha-empleados-catalogs-page__create-actions">
                                             <label class="ficha-empleados-catalogs-page__active-check">
                                                 <input type="checkbox" name="is_active" value="1" class="form-check" checked>
@@ -106,29 +122,39 @@
                                     </div>
                                 </form>
 
-                                <div class="data-table-wrap">
-                                    <table class="data-table js-datatable" style="width:100%">
+                                {{-- Tabla compacta: solo Nombre es flexible; el resto con ancho fijo --}}
+                                <div class="data-table-wrap seleccion-catalogs-page__table-wrap">
+                                    <table class="data-table js-datatable seleccion-catalogs-page__table" data-dt-responsive="false" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>{{ $catalog['columnLabels']['code'] }}</th>
+                                                @unless ($catalog['codeless'])
+                                                    <th class="seleccion-catalogs-page__col-code" style="width:9rem;">{{ $catalog['columnLabels']['code'] }}</th>
+                                                @endunless
                                                 <th>{{ $catalog['columnLabels']['name'] }}</th>
-                                                <th style="width:80px;">Orden</th>
-                                                <th style="width:100px;">Estado</th>
-                                                <th style="width:180px;">Acciones</th>
+                                                @unless ($catalog['codeless'])
+                                                    <th class="seleccion-catalogs-page__col-center" style="width:4.5rem;">Orden</th>
+                                                @endunless
+                                                <th class="seleccion-catalogs-page__col-center" style="width:6.5rem;">Estado</th>
+                                                <th class="seleccion-catalogs-page__col-center" style="width:5.5rem;">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($catalog['items'] as $item)
+                                            {{-- Sin fila «vacío» con colspan: DataTables (errMode throw) la rechaza y muestra su propio mensaje --}}
+                                            @foreach ($catalog['items'] as $item)
                                                 <tr>
-                                                    <td><code>{{ $item->code }}</code></td>
+                                                    @unless ($catalog['codeless'])
+                                                        <td><code>{{ $item->code }}</code></td>
+                                                    @endunless
                                                     <td>{{ $item->name }}</td>
-                                                    <td>{{ $item->sort_order ?? 0 }}</td>
-                                                    <td>
+                                                    @unless ($catalog['codeless'])
+                                                        <td class="seleccion-catalogs-page__col-center">{{ $item->sort_order ?? 0 }}</td>
+                                                    @endunless
+                                                    <td class="seleccion-catalogs-page__col-center">
                                                         <span class="status-pill {{ $item->is_active ? 'status-pill--success' : 'status-pill--muted' }}">
                                                             {{ $item->is_active ? 'Activo' : 'Inactivo' }}
                                                         </span>
                                                     </td>
-                                                    <td class="table-actions">
+                                                    <td class="table-actions seleccion-catalogs-page__col-center">
                                                         <div class="cursos-catalogo-page__row-actions">
                                                             <button
                                                                 type="button"
@@ -136,6 +162,7 @@
                                                                 title="Editar"
                                                                 aria-label="Editar"
                                                                 data-label="{{ $catalog['label'] }}"
+                                                                data-codeless="{{ $catalog['codeless'] ? '1' : '0' }}"
                                                                 data-code="{{ $item->code }}"
                                                                 data-name="{{ $item->name }}"
                                                                 data-active="{{ $item->is_active ? '1' : '0' }}"
@@ -167,11 +194,7 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="text-muted">Sin registros en este catálogo.</td>
-                                                </tr>
-                                            @endforelse
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -199,7 +222,7 @@
                     <div>
                         <h3 class="ficha-empleados-catalogs-page__modal-title" id="seleccion-catalog-modal-title">Editar catálogo</h3>
                         <p class="ficha-empleados-catalogs-page__modal-lead">
-                            Actualice código, nombre, orden y si el valor permanece activo en los formularios.
+                            <span id="seleccion-catalog-modal-lead">Actualice código, nombre, orden y si el valor permanece activo en los formularios.</span>
                         </p>
                     </div>
                 </div>
@@ -217,7 +240,8 @@
                 @csrf
                 @method('PATCH')
                 <div class="ficha-empleados-catalogs-page__modal-fields">
-                    <div class="form-field">
+                    {{-- Código y Orden se ocultan/deshabilitan en catálogos «codeless» (ver JS) --}}
+                    <div class="form-field" id="seleccion-catalog-edit-code-field">
                         <label class="form-label" for="seleccion-catalog-edit-code"><span id="seleccion-modal-code-label">Código</span></label>
                         <input id="seleccion-catalog-edit-code" name="code" type="text" class="form-input" maxlength="50" required>
                     </div>
@@ -226,7 +250,7 @@
                         <input id="seleccion-catalog-edit-name" name="name" type="text" class="form-input" maxlength="255" required>
                     </div>
                     <div class="ficha-empleados-catalogs-page__modal-meta">
-                        <div class="form-field">
+                        <div class="form-field" id="seleccion-catalog-edit-sort-field">
                             <label class="form-label" for="seleccion-catalog-edit-sort">Orden</label>
                             <input id="seleccion-catalog-edit-sort" name="sort_order" type="number" min="0" max="9999" class="form-input">
                         </div>
@@ -345,6 +369,21 @@
                     editSort.value = button.getAttribute('data-sort') || '0';
                     editActive.checked = button.getAttribute('data-active') === '1';
                     editForm.action = button.getAttribute('data-update-url') || '';
+
+                    // Catálogos sin Código/Orden: ocultar y deshabilitar (no se envían).
+                    var codeless = button.getAttribute('data-codeless') === '1';
+                    var codeField = document.getElementById('seleccion-catalog-edit-code-field');
+                    var sortField = document.getElementById('seleccion-catalog-edit-sort-field');
+                    var lead = document.getElementById('seleccion-catalog-modal-lead');
+                    if (codeField) { codeField.style.display = codeless ? 'none' : ''; }
+                    if (sortField) { sortField.style.display = codeless ? 'none' : ''; }
+                    editCode.disabled = codeless;
+                    editSort.disabled = codeless;
+                    if (lead) {
+                        lead.textContent = codeless
+                            ? 'Actualice el nombre y si el valor permanece activo en los formularios.'
+                            : 'Actualice código, nombre, orden y si el valor permanece activo en los formularios.';
+                    }
                     var codeLabel = document.getElementById('seleccion-modal-code-label');
                     var nameLabel = document.getElementById('seleccion-modal-name-label');
                     if (codeLabel) { codeLabel.textContent = button.getAttribute('data-code-label') || 'Código'; }

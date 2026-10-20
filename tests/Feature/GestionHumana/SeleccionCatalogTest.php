@@ -22,7 +22,7 @@ class SeleccionCatalogTest extends TestCase
         PermissionCatalog::sync();
     }
 
-    public function test_managed_catalog_types_whitelist_has_seven_types(): void
+    public function test_managed_catalog_types_whitelist_has_nine_types(): void
     {
         $types = config('seleccion.managed_catalog_types');
 
@@ -34,7 +34,24 @@ class SeleccionCatalogTest extends TestCase
             'blood_type',
             'marital_status',
             'seleccion_solicitud_status',
+            'ingreso_estado',
+            'jefe_operativo',
         ], $types);
+    }
+
+    public function test_codeless_catalog_types_are_managed(): void
+    {
+        $this->assertSame([
+            'blood_type',
+            'marital_status',
+            'seleccion_solicitud_status',
+            'ingreso_estado',
+            'jefe_operativo',
+        ], config('seleccion.codeless_catalog_types'));
+
+        foreach (config('seleccion.codeless_catalog_types') as $type) {
+            $this->assertContains($type, config('seleccion.managed_catalog_types'));
+        }
     }
 
     public function test_seed_creates_blood_type_marital_and_solicitud_status_rows(): void
@@ -146,26 +163,99 @@ class SeleccionCatalogTest extends TestCase
         ]);
     }
 
-    public function test_store_creates_item_for_seed_catalog_type(): void
+    public function test_store_with_code_and_order_for_coded_catalog_type(): void
     {
         $editor = $this->editorUser();
 
         $this->actingAs($editor)
-            ->post(route('gestion-humana.seleccion.catalogos.store', ['type' => 'blood_type']), [
-                'code' => 'TEST+',
-                'name' => 'Test RH',
+            ->post(route('gestion-humana.seleccion.catalogos.store', ['type' => 'eps']), [
+                'code' => 'EPS_TEST',
+                'name' => 'EPS de prueba',
                 'is_active' => '1',
                 'sort_order' => 99,
+            ])
+            ->assertRedirect(route('gestion-humana.seleccion.catalogos', ['catalog' => 'eps']));
+
+        $this->assertDatabaseHas('payroll_catalog_items', [
+            'catalog_type' => 'eps',
+            'code' => 'EPS_TEST',
+            'name' => 'EPS de prueba',
+            'is_active' => true,
+            'sort_order' => 99,
+        ]);
+    }
+
+    public function test_store_codeless_catalog_generates_code_and_appends_order(): void
+    {
+        $editor = $this->editorUser();
+        $maxOrder = (int) PayrollCatalogItem::query()->ofType('blood_type')->max('sort_order');
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.catalogos.store', ['type' => 'blood_type']), [
+                'code' => 'IGNORADO',
+                'name' => 'Rh nulo+',
+                'is_active' => '1',
+                'sort_order' => 0,
             ])
             ->assertRedirect(route('gestion-humana.seleccion.catalogos', ['catalog' => 'blood_type']));
 
         $this->assertDatabaseHas('payroll_catalog_items', [
             'catalog_type' => 'blood_type',
-            'code' => 'TEST+',
-            'name' => 'Test RH',
-            'is_active' => true,
-            'sort_order' => 99,
+            'code' => 'RH_NULO+',
+            'name' => 'Rh nulo+',
+            'sort_order' => $maxOrder + 1,
         ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.catalogos.store', ['type' => 'marital_status']), [
+                'name' => 'Separado de hecho',
+                'is_active' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('payroll_catalog_items', [
+            'catalog_type' => 'marital_status',
+            'code' => 'SEPARADO_DE_HECHO',
+        ]);
+    }
+
+    public function test_store_codeless_catalog_rejects_duplicate_name(): void
+    {
+        $editor = $this->editorUser();
+
+        PayrollCatalogItem::query()->create([
+            'catalog_type' => 'jefe_operativo',
+            'code' => 'JUAN_PEREZ',
+            'name' => 'JUAN PEREZ',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.catalogos.store', ['type' => 'jefe_operativo']), [
+                'name' => 'JUAN PEREZ',
+                'is_active' => '1',
+            ])
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame(1, PayrollCatalogItem::query()->ofType('jefe_operativo')->where('name', 'JUAN PEREZ')->count());
+    }
+
+    public function test_codeless_catalog_ui_hides_code_and_order_fields(): void
+    {
+        $editor = $this->editorUser();
+
+        $html = $this->actingAs($editor)
+            ->get(route('gestion-humana.seleccion.catalogos'))
+            ->assertOk()
+            ->assertDontSee('id="code_new_ingreso_estado"', false)
+            ->assertDontSee('id="sort_new_ingreso_estado"', false)
+            ->assertDontSee('id="code_new_jefe_operativo"', false)
+            ->assertSee('id="code_new_eps"', false)
+            ->assertSee('id="sort_new_eps"', false)
+            ->getContent();
+
+        $this->assertStringContainsString('data-codeless="1"', $html);
     }
 
     public function test_update_and_destroy_managed_catalog_item(): void
@@ -182,18 +272,20 @@ class SeleccionCatalogTest extends TestCase
 
         $this->actingAs($editor)
             ->patch(route('gestion-humana.seleccion.catalogos.update', ['type' => 'marital_status', 'item' => $item->id]), [
-                'code' => 'TEMP_STATUS',
+                'code' => 'OTRO_CODIGO',
                 'name' => 'Temporal editado',
                 'is_active' => '0',
                 'sort_order' => 51,
             ])
             ->assertRedirect(route('gestion-humana.seleccion.catalogos', ['catalog' => 'marital_status']));
 
+        // Catálogo sin Código/Orden: se conservan los valores existentes.
         $this->assertDatabaseHas('payroll_catalog_items', [
             'id' => $item->id,
+            'code' => 'TEMP_STATUS',
             'name' => 'Temporal editado',
             'is_active' => false,
-            'sort_order' => 51,
+            'sort_order' => 50,
         ]);
 
         $this->actingAs($editor)

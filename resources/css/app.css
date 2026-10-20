@@ -4724,11 +4724,13 @@ button.module-tab {
     height: 0.75rem;
 }
 
+/* Dropdown teleportado a <body>: fixed desde el primer frame (JS fija top/left/width).
+   Con absolute aparecía bajo el viewport, mostraba la barra de scroll y el modal «vibraba». */
 .searchable-select__dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
+    position: fixed;
+    top: 0;
     left: 0;
-    right: 0;
+    width: 16rem;
     z-index: 10050;
     background-color: #ffffff;
     border: 1px solid var(--color-border-strong, #cbd5e1);
@@ -4847,6 +4849,16 @@ button.module-tab {
     text-align: center;
     color: #94a3b8;
     font-size: var(--control-font-size, 0.8125rem);
+}
+
+/* Dropdown teleportado a <body> con position:fixed (JS): evita que contenedores
+   con overflow (modales, tablas, paneles) recorten las opciones. */
+.searchable-select__dropdown--fixed {
+    position: fixed;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin: 0;
 }
 
 .ficha-empleados-catalogs-page__alert {
@@ -11559,7 +11571,8 @@ a.req-dashboard-kpi:focus-visible {
 .desvinculaciones-seguimientos__actions-th,
 .desvinculaciones-seguimientos__actions-td {
     text-align: center;
-    width: 3.5rem;
+    width: 6rem;
+    white-space: nowrap;
 }
 
 .desvinculaciones-seguimientos__revert-btn {
@@ -11858,17 +11871,33 @@ a.req-dashboard-kpi:focus-visible {
     min-width: min(11rem, 100%);
 }
 
+/* Fila 2 en una sola línea (pantalla grande y portátil): chips de texto a la izquierda, iconos a la derecha. */
 .acreditaciones-acreditados-page .cursos-registros-page__chip-filters {
+    flex-wrap: nowrap;
     align-items: center;
+    justify-content: space-between;
+}
+
+.acreditaciones-acreditados-page__chip-groups {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
 }
 
 .acreditaciones-acreditados-page .cursos-registros-page__chip-filters .cursos-registros-page__status-chips {
+    flex: 0 0 auto;
     flex-wrap: nowrap;
 }
 
 .acreditaciones-acreditados-page .cursos-registros-page__filter-actions {
     flex: 0 0 auto;
-    margin-left: auto;
+    flex-direction: row;
+    margin: 0 0 0 auto;
 }
 
 @media (min-width: 1200px) {
@@ -11884,13 +11913,26 @@ a.req-dashboard-kpi:focus-visible {
     }
 }
 
-@media (max-width: 991px) {
-    .acreditaciones-acreditados-page .cursos-registros-page__chip-filters .cursos-registros-page__status-chips {
+/* Portátil: chips más compactos para que la fila 2 no se parta. */
+@media (max-width: 1440px) {
+    .acreditaciones-acreditados-page .cursos-registros-page__chip-filters .module-tab {
+        padding: 0.38rem 0.65rem;
+    }
+}
+
+/* Tablet / móvil: se permite partir la fila 2 (chips arriba, iconos debajo a la derecha). */
+@media (max-width: 767px) {
+    .acreditaciones-acreditados-page .cursos-registros-page__chip-filters {
         flex-wrap: wrap;
     }
 
-    .acreditaciones-acreditados-page .cursos-registros-page__filter-actions {
-        margin-left: 0;
+    .acreditaciones-acreditados-page__chip-groups {
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+
+    .acreditaciones-acreditados-page .cursos-registros-page__chip-filters .cursos-registros-page__status-chips {
+        flex-wrap: wrap;
     }
 }
 
@@ -16826,26 +16868,79 @@ a.req-dashboard-kpi:focus-visible {
     gap: 0.5rem;
 }
 
-/* Proveedores (FEAT-047): filtros del catálogo y acciones junto al filtro */
-.purchase-providers-page__filter-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 20rem) auto;
-    justify-content: start;
-    gap: 0.75rem 1rem;
-    align-items: end;
+/* Proveedores (FEAT-047): franja única = chips de estado + conteo (izquierda) y acciones icon-only (derecha) */
+.purchase-providers-page__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1rem;
+    padding: 0.2rem 0 0.55rem;
+    border-bottom: 1px solid var(--color-border);
 }
 
-.purchase-providers-page__filter-actions {
-    display: inline-flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+.purchase-providers-page__toolbar-start {
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.5rem 1rem;
+    min-width: 0;
+}
+
+.purchase-providers-page__toolbar-start .cursos-registros-page__status-chips {
+    flex-wrap: nowrap;
+}
+
+.purchase-providers-page__count {
+    margin: 0;
     white-space: nowrap;
 }
 
-.purchase-providers-page__filter-actions .req-manage-filters__icon-btn {
-    flex: 0 0 auto;
+.purchase-providers-page__table-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+/* Proveedores: columnas de la tabla */
+.purchase-providers-page .data-table td.purchase-providers-page__col-id {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-soft);
+}
+
+.purchase-providers-page .data-table td.purchase-providers-page__col-name {
+    font-weight: 700;
+    color: var(--brand-ink, #0f172a);
+    min-width: 14rem;
+}
+
+.purchase-providers-page .data-table .purchase-providers-page__col-center {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.purchase-providers-page .data-table .purchase-providers-page__col-actions {
+    width: 1%;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.purchase-providers-page .data-table td.purchase-providers-page__col-actions .cursos-catalogo-page__icon-btn {
+    margin: 0 auto;
+}
+
+.purchase-providers-page__email {
+    color: var(--brand-blue);
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.purchase-providers-page__email:hover,
+.purchase-providers-page__email:focus-visible {
+    text-decoration: underline;
 }
 
 .purchase-providers-page__import-toolbar {
@@ -16869,9 +16964,9 @@ a.req-dashboard-kpi:focus-visible {
     gap: 0.35rem;
 }
 
-@media (max-width: 900px) {
-    .purchase-providers-page__filter-grid {
-        grid-template-columns: minmax(0, 1fr);
+@media (max-width: 640px) {
+    .purchase-providers-page__table-actions {
+        margin-left: 0;
     }
 }
 
@@ -16918,7 +17013,7 @@ a.req-dashboard-kpi:focus-visible {
     min-height: 0;
 }
 
-/* �rdenes de compra (FEAT-047 T4): tablero del �rea Compras y reparto de cantidades */
+/* �rdenes de compra (FEAT-047 T4): tablero del �rea Compras y reparto de cantidades */
 .purchase-orders-page__filter-grid {
     display: flex;
     flex-wrap: wrap;
@@ -16967,7 +17062,7 @@ a.req-dashboard-kpi:focus-visible {
     opacity: 0.6;
 }
 
-/* El listado de �rdenes de compra ocupa todo el alto del main (sin espacio vac�o abajo) */
+/* El listado de �rdenes de compra ocupa todo el alto del main (sin espacio vac�o abajo) */
 .app-main:has(.purchase-orders-page.req-manage-page) {
     display: flex;
     flex-direction: column;
@@ -17003,4 +17098,261 @@ a.req-dashboard-kpi:focus-visible {
 .purchase-orders-page.req-manage-page .purchase-orders-page__panel > .panel__body.req-manage-shell {
     flex: 1 1 auto;
     min-height: 0;
+}
+/* Acciones al final de la cabecera de secci�n (p. ej. Emitir OC en Productos solicitados) */
+.pur-req-form__section-head-actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+/* ================= Selección — Ingresos ================= */
+/* Estado del ingreso (badge en tabla) */
+.seleccion-ingresos-page__estado-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.seleccion-ingresos-page__estado-badge--ok {
+    background-color: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+}
+
+.seleccion-ingresos-page__estado-badge--info {
+    background-color: rgba(14, 116, 144, 0.12);
+    color: var(--color-sky, #0e7490);
+}
+
+.seleccion-ingresos-page__estado-badge--muted {
+    background-color: rgba(100, 116, 139, 0.14);
+    color: #475569;
+}
+
+.seleccion-ingresos-page__estado-badge--danger {
+    background-color: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+}
+
+/* Modal nuevo/editar ingreso: secciones en tarjeta (patrón Nuevo acreditado) + pie con acciones */
+.seleccion-ingresos-modal {
+    gap: 0.85rem;
+}
+
+.seleccion-ingresos-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.seleccion-ingresos-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.seleccion-ingresos-form__section {
+    margin: 0;
+    padding: 0.8rem 1rem 0.95rem;
+    border-radius: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--brand-primary, #003366) 12%, #e2e8f0);
+    background: color-mix(in srgb, var(--brand-primary, #003366) 3%, #fff);
+}
+
+.seleccion-ingresos-form__section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.7rem;
+}
+
+.seleccion-ingresos-form__section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    background: var(--brand-navy);
+    color: var(--brand-white, #fff);
+    flex-shrink: 0;
+}
+
+.seleccion-ingresos-form__section-title {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brand-primary, #003366);
+}
+
+.seleccion-ingresos-form__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem 0.9rem;
+    align-items: start;
+}
+
+.seleccion-ingresos-form__grid .form-field {
+    min-width: 0;
+}
+
+.seleccion-ingresos-form__span-2 {
+    grid-column: span 2;
+}
+
+.seleccion-ingresos-form__span-3 {
+    grid-column: 1 / -1;
+}
+
+.seleccion-ingresos-form__optional {
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-text-soft);
+}
+
+.seleccion-ingresos-form__duplicates {
+    margin: 0.75rem 0 0;
+}
+
+.seleccion-ingresos-form__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.seleccion-ingresos-form__submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+@media (max-width: 40rem) {
+    .seleccion-ingresos-form__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seleccion-ingresos-form__span-2,
+    .seleccion-ingresos-form__span-3 {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Selección › Ingreso: filtros en dos filas (grande y portátil).
+   Fila 1: Buscar + 4 fechas + filtrar/limpiar a la derecha. Fila 2: 5 selectores. */
+.seleccion-ingresos-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.seleccion-ingresos-filters__row {
+    display: grid;
+    gap: 0.65rem 0.75rem;
+    align-items: end;
+}
+
+.seleccion-ingresos-filters__row > .form-field {
+    min-width: 0;
+}
+
+.seleccion-ingresos-filters__row--primary {
+    grid-template-columns: minmax(12rem, 2fr) repeat(4, minmax(8.5rem, 1fr)) auto;
+}
+
+.seleccion-ingresos-filters__row--selects {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.seleccion-ingresos-filters__actions {
+    justify-self: end;
+    align-self: end;
+    min-height: var(--control-height-chrome);
+}
+
+@media (max-width: 1023px) {
+    .seleccion-ingresos-filters__row--primary,
+    .seleccion-ingresos-filters__row--selects {
+        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    }
+}
+
+/* Selección › Catálogos: gestión compacta (ancho acotado, filas densas, columnas fijas) */
+.seleccion-catalogs-page .ficha-empleados-catalogs-page__manage {
+    max-width: 58rem;
+}
+
+.seleccion-catalogs-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+}
+
+.seleccion-catalogs-page__count {
+    flex-shrink: 0;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--brand-blue-pale);
+    color: var(--brand-blue);
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.seleccion-catalogs-page .ficha-empleados-catalogs-page__create-form {
+    padding: 0.7rem 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.seleccion-catalogs-page .ficha-empleados-catalogs-page__name-field {
+    flex: 1 1 18rem;
+}
+
+.seleccion-catalogs-page .panel__body.section-stack {
+    gap: 0.5rem;
+}
+
+.seleccion-catalogs-page__table-wrap .dataTables_wrapper .dataTables_length,
+.seleccion-catalogs-page__table-wrap .dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0.5rem;
+}
+
+.seleccion-catalogs-page table.seleccion-catalogs-page__table thead th {
+    padding: 0.55rem 0.7rem !important;
+}
+
+.seleccion-catalogs-page table.seleccion-catalogs-page__table tbody td {
+    padding: 0.4rem 0.7rem;
+    vertical-align: middle;
+}
+
+.seleccion-catalogs-page .seleccion-catalogs-page__col-center {
+    text-align: center;
+}
+
+.seleccion-catalogs-page .seleccion-catalogs-page__col-center .cursos-catalogo-page__row-actions {
+    justify-content: center;
+}
+
+.seleccion-catalogs-page__table code {
+    font-size: 0.78rem;
+}
+
+.seleccion-ingresos-page__form-hint {
+    margin: 0.3rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: #b45309;
 }

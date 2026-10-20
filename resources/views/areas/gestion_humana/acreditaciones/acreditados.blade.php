@@ -149,8 +149,9 @@
                                 <input type="hidden" name="ficha_estado" id="filter_ficha_estado" value="{{ $fichaEstadoFilter }}">
                             </div>
 
-                            {{-- Fila 2: chips de texto (izquierda) + botones de icono (derecha). --}}
+                            {{-- Fila 2: todos los botones del filtro. Chips de texto agrupados a la izquierda y botones de icono a la derecha. --}}
                             <div class="cursos-registros-page__chip-filters">
+                                <div class="acreditaciones-acreditados-page__chip-groups">
                                 <div class="cursos-registros-page__status-chips" role="group" aria-label="Filtro en perfil">
                                     <button
                                         type="button"
@@ -184,6 +185,7 @@
                                         class="module-tab {{ $fichaEstadoFilter === 'desvinculado' ? 'module-tab--active' : '' }}"
                                         x-on:click="setChipFilter('ficha_estado', 'desvinculado')"
                                     >Desvinculados</button>
+                                </div>
                                 </div>
                                 <div class="form-field cursos-registros-page__filter-actions">
                                     <button

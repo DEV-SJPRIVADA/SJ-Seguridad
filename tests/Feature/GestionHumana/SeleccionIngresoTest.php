@@ -48,6 +48,10 @@ class SeleccionIngresoTest extends TestCase
         $this->assertSame('Cali', $row->city_name);
         $this->assertSame('Vigilante', $row->position_name);
         $this->assertSame('O+', $row->blood_type_name);
+        $this->assertSame('EN PROCESO', $row->estado_name);
+        $this->assertNotNull($row->fecha_asistencia);
+        $this->assertSame('Jefe Operativo Test', $row->jefe_ope);
+        $this->assertSame('Asistió a examen médico', $row->observaciones);
     }
 
     public function test_store_duplicate_requires_confirm_flag(): void
@@ -237,6 +241,44 @@ class SeleccionIngresoTest extends TestCase
         ]);
     }
 
+    public function test_catalog_destroy_blocked_when_ingreso_estado_referenced(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+
+        SeleccionIngreso::factory()->create([
+            'estado_code' => $payload['estado_code'],
+            'estado_name' => 'EN PROCESO',
+            'commercial_client_id' => $payload['commercial_client_id'],
+            'requisition_uniform_id' => $payload['requisition_uniform_id'],
+            'responsable_user_id' => $payload['responsable_user_id'],
+            'city_code' => $payload['city_code'],
+            'city_name' => 'Cali',
+            'position_code' => $payload['position_code'],
+            'position_name' => 'Vigilante',
+            'blood_type_code' => $payload['blood_type_code'],
+            'blood_type_name' => 'O+',
+        ]);
+
+        $item = PayrollCatalogItem::query()
+            ->ofType('ingreso_estado')
+            ->where('code', $payload['estado_code'])
+            ->firstOrFail();
+
+        $this->actingAs($editor)
+            ->delete(route('gestion-humana.seleccion.catalogos.destroy', [
+                'type' => 'ingreso_estado',
+                'item' => $item->id,
+            ]))
+            ->assertRedirect(route('gestion-humana.seleccion.catalogos', ['catalog' => 'ingreso_estado']))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('payroll_catalog_items', [
+            'id' => $item->id,
+            'code' => $payload['estado_code'],
+        ]);
+    }
+
     private function editorUser(): User
     {
         $user = User::factory()->create([
@@ -282,6 +324,14 @@ class SeleccionIngresoTest extends TestCase
             ['catalog_type' => 'blood_type', 'code' => 'O+'],
             ['name' => 'O+', 'is_active' => true, 'sort_order' => 1],
         );
+        $estado = PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'ingreso_estado', 'code' => 'EN_PROCESO'],
+            ['name' => 'EN PROCESO', 'is_active' => true, 'sort_order' => 1],
+        );
+        $jefeOperativo = PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'jefe_operativo', 'code' => 'JEFE_OPE_TEST'],
+            ['name' => 'Jefe Operativo Test', 'is_active' => true, 'sort_order' => 1],
+        );
 
         $client = CommercialClient::query()->firstOrCreate(
             ['nit' => '900555001-1'],
@@ -308,11 +358,14 @@ class SeleccionIngresoTest extends TestCase
             'shoes_size' => '40',
             'requisition_uniform_id' => $uniform->id,
             'fecha_ingreso' => '2026-09-22',
+            'fecha_asistencia' => '2026-09-24',
+            'estado_code' => $estado->code,
             'blood_type_code' => $blood->code,
             'reemplaza_a' => 'N/A',
             'responsable_user_id' => $responsable->id,
             'referido' => 'N/A',
-            'jefe_ope' => 'Jefe Operaciones',
+            'jefe_ope_code' => $jefeOperativo->code,
+            'observaciones' => 'Asistió a examen médico',
         ];
     }
 }

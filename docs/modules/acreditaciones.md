@@ -552,6 +552,7 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.38 | 2026-10-20 | Acreditados filtros: fila 2 en una sola línea en pantalla grande/portátil — chips de texto agrupados (`acreditaciones-acreditados-page__chip-groups`) a la izquierda e iconos (filtrar, multi-cédula, limpiar, exportar) a la derecha; solo se parte en <768px. |
 | 1.37 | 2026-10-19 | Acreditados: vista de trabajo con IDs fijados en sesión (`working=1`) para editar varios registros filtrados sin que desaparezcan; banner, limpieza por filtros/recarga y soporte en DT/export/bulk/delete. |
 | 1.36 | 2026-10-19 | Acreditados: columna Acciones sticky a la derecha con scroll horizontal (visible en laptop). |
 | 1.35 | 2026-10-16 | Validaciones: cédulas duplicadas en cada cola se marcan en rojo (`.gh-cedula-duplicate`). |

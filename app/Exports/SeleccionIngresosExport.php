@@ -26,11 +26,14 @@ class SeleccionIngresosExport
             ['key' => 'shoes_size', 'label' => 'TALLA ZAPATOS'],
             ['key' => 'dotacion', 'label' => 'TIPO DOTACION'],
             ['key' => 'fecha_ingreso', 'label' => 'FECHA DE INGRESO'],
+            ['key' => 'fecha_asistencia', 'label' => 'FECHA DE ASISTENCIA'],
+            ['key' => 'estado_name', 'label' => 'ESTADO'],
             ['key' => 'blood_type_name', 'label' => 'RH'],
             ['key' => 'reemplaza_a', 'label' => 'REEMPLAZA A'],
             ['key' => 'responsable', 'label' => 'RESPONSABLE'],
             ['key' => 'referido', 'label' => 'REFERIDO'],
-            ['key' => 'jefe_ope', 'label' => 'JEFE OPE ASIGNADO'],
+            ['key' => 'jefe_ope', 'label' => 'JEFE OPERATIVO'],
+            ['key' => 'observaciones', 'label' => 'OBSERVACIONES'],
         ];
 
         $data = $rows->map(fn (SeleccionIngreso $row): array => [
@@ -46,11 +49,14 @@ class SeleccionIngresosExport
             'shoes_size' => $row->shoes_size,
             'dotacion' => $row->uniform?->name,
             'fecha_ingreso' => optional($row->fecha_ingreso)?->format('Y-m-d'),
+            'fecha_asistencia' => optional($row->fecha_asistencia)?->format('Y-m-d'),
+            'estado_name' => $row->estado_name,
             'blood_type_name' => $row->blood_type_name,
             'reemplaza_a' => $row->reemplaza_a,
             'responsable' => $row->responsable?->name,
             'referido' => $row->referido,
             'jefe_ope' => $row->jefe_ope,
+            'observaciones' => $row->observaciones,
         ]);
 
         return (new BaseExport(

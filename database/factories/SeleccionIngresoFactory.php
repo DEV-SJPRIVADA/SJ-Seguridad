@@ -24,6 +24,8 @@ class SeleccionIngresoFactory extends Factory
         $city = $this->ensureCatalogItem('city', 'CALI', 'Cali');
         $position = $this->ensureCatalogItem('position', 'VIG', 'Vigilante');
         $blood = $this->ensureCatalogItem('blood_type', 'O+', 'O+');
+        $estado = $this->ensureCatalogItem('ingreso_estado', 'EN_PROCESO', 'EN PROCESO');
+        $jefeOperativo = $this->ensureCatalogItem('jefe_operativo', 'JEFE_OPE_TEST', 'Jefe Operativo Test');
 
         $client = CommercialClient::query()->firstOrCreate(
             ['nit' => '900999001-1'],
@@ -58,12 +60,17 @@ class SeleccionIngresoFactory extends Factory
             'shoes_size' => '40',
             'requisition_uniform_id' => $uniform->id,
             'fecha_ingreso' => fake()->date(),
+            'fecha_asistencia' => null,
+            'estado_code' => $estado->code,
+            'estado_name' => $estado->name,
             'blood_type_code' => $blood->code,
             'blood_type_name' => $blood->name,
             'reemplaza_a' => 'N/A',
             'responsable_user_id' => $responsable->id,
             'referido' => 'N/A',
-            'jefe_ope' => fake()->name(),
+            'jefe_ope' => $jefeOperativo->name,
+            'jefe_ope_code' => $jefeOperativo->code,
+            'observaciones' => null,
             'created_by' => null,
             'updated_by' => null,
         ];

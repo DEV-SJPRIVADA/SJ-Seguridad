@@ -24,6 +24,19 @@ class StoreSeleccionCatalogItemRequest extends FormRequest
     {
         $type = (string) $this->route('type');
 
+        // Catálogos sin Código/Orden: el código se autogenera; el nombre no puede repetirse.
+        if (app(SeleccionCatalogService::class)->isCodeless($type)) {
+            return [
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('payroll_catalog_items', 'name')->where('catalog_type', $type),
+                ],
+                'is_active' => ['nullable', 'boolean'],
+            ];
+        }
+
         return [
             'code' => [
                 'required',

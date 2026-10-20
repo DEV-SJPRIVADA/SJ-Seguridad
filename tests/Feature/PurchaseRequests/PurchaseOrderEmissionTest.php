@@ -420,6 +420,35 @@ class PurchaseOrderEmissionTest extends TestCase
             ->assertJsonPath('recordsFiltered', 0);
     }
 
+    public function test_the_request_detail_links_to_the_order_form_for_compras(): void
+    {
+        $request = $this->approvedPurchaseRequest();
+        $url = route('purchase-requests.orders.purchase.create', [
+            'module' => 'compras',
+            'purchase_request' => $request->getKey(),
+        ]);
+
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.show', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+                'from' => 'processing',
+            ]))
+            ->assertOk()
+            ->assertSee('Emitir orden de compra')
+            ->assertSee($url, false);
+
+        // El solicitante ve el detalle pero no puede emitir OC: no debe aparecer el botón.
+        $this->actingAs($request->user)
+            ->get(route('purchase-requests.show', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+                'from' => 'processing',
+            ]))
+            ->assertOk()
+            ->assertDontSee($url, false);
+    }
+
     /**
      * @return array<string, mixed>
      */

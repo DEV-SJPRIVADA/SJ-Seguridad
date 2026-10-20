@@ -226,6 +226,7 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.39 | 2026-10-20 | Feature | Acreditados: todos los botones del filtro quedan en la segunda fila (botones de texto a la izquierda, iconos a la derecha). |
 | 1.38 | 2026-10-19 | Feature | Acreditados: vista de trabajo al editar un listado filtrado; los registros editados quedan fijados y visibles, con aviso y botón **Actualizar vista**. |
 | 1.37 | 2026-10-19 | Feature | Acreditados: columna Acciones fija a la derecha al desplazar la tabla, visible en laptop. |
 | 1.36 | 2026-10-19 | Feature | Acreditados: botones de filtro en segunda fila (chips a la izquierda, iconos a la derecha) y la edición conserva los filtros activos al guardar. |

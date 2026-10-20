@@ -17,6 +17,7 @@ Tablero de area **Gestion Humana** para consultar y recargar el dataset operativ
 - **Sin** pestana parametros / `parameters.edit` / tablas de catalogo.
 - **Sin** CRUD fila a fila; unica mutacion = import (`all` replace-all o `period` replace por año/mes).
 - Dashboard v1: modos **Por curso** (registros) y **Por persona (ciclo)**; KPIs individuales por estado; KPIs ciclo (mejor nota por persona/curso; set = distinct del mes o del año); filtros ano, mes, estado, curso (curso scoped a ano/mes).
+- Gráficos (`resources/js/formacion-dashboard-charts.js`): etiquetas de datos visibles — barras por mes con el número encima de la columna, Top categorías con el número al final de la barra, donuts con porcentaje y total al centro; se ocultan si no hay datos. Halo blanco vía `.cursos-dashboard-page .apexcharts-datalabels` (criterio GH área).
 - Formaciones: DataTables `serverSide: true`; filtros ano, mes, categoria, curso, numero ID, nombre, estado; opciones de **curso** filtradas por ano/mes (igual que Dashboard, via `formaciones.options?anio=&mes=`); export Excel; plantilla + import.
 - Audit: `FormacionAuditLogService` → `SystemAuditService` (`module=formacion`, `area=gestion_humana`). Eventos: `import_replace`, `export`.
 - Selectores: `<x-searchable-select>`. Export: `BaseExport` + `<x-export-excel>` (prohibido Select2 / `excelHtml5`).
@@ -239,6 +240,7 @@ Boton `<x-export-excel>`. Auth: `formacion.view`.
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.10 | 2026-10-20 | Dashboard: dataLabels en barras (mes, categorías) con el criterio de GH área. |
 | 1.9 | 2026-10-08 | Import: modo `period` (borra solo año/mes; rechaza Excel con filas de otro mes) + modo `all`. |
 | 1.8 | 2026-10-02 | Dashboard: clic en KPI navega a Formaciones con filtros (estado o ciclo + ano/mes/curso). |
 | 1.7 | 2026-10-02 | Dashboard modo **Por persona (ciclo)** (mejor nota, set mes/año); Formaciones: filtro curso dinámico por ano/mes (`formaciones.options`). |

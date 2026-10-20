@@ -32,12 +32,17 @@ class SeleccionIngreso extends Model
         'shoes_size',
         'requisition_uniform_id',
         'fecha_ingreso',
+        'fecha_asistencia',
+        'estado_code',
+        'estado_name',
         'blood_type_code',
         'blood_type_name',
         'reemplaza_a',
         'responsable_user_id',
         'referido',
         'jefe_ope',
+        'jefe_ope_code',
+        'observaciones',
         'created_by',
         'updated_by',
     ];
@@ -46,6 +51,7 @@ class SeleccionIngreso extends Model
     {
         return [
             'fecha_ingreso' => 'date',
+            'fecha_asistencia' => 'date',
             'commercial_client_id' => 'integer',
             'requisition_uniform_id' => 'integer',
             'responsable_user_id' => 'integer',

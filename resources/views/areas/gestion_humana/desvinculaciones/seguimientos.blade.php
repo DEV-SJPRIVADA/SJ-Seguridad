@@ -322,6 +322,82 @@
                     </div>
                 </div>
 
+                    {{-- Modal editar recontratable y observaciones del seguimiento (sincroniza periodo laboral y Retiros) --}}
+                    <div
+                        class="desvinculaciones-seguimientos__revert-overlay"
+                        x-show="editModal.open"
+                        x-cloak
+                        x-on:keydown.escape.window="closeEditModal()"
+                    >
+                        <div
+                            class="modal-card desvinculaciones-seguimientos__revert-modal"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="seguimientos-edit-title"
+                        >
+                            <div class="ficha-empleados-terminate-modal__header" style="padding: 1rem 1rem 0;">
+                                <h3 id="seguimientos-edit-title" class="panel-title">Editar seguimiento</h3>
+                                <p class="panel-text">
+                                    <span x-text="editModal.full_name"></span>
+                                    ·
+                                    <span x-text="editModal.document_number"></span>
+                                </p>
+                            </div>
+
+                            <div class="ficha-empleados-terminate-modal__body" style="padding: 1rem; display:grid; gap:0.75rem;">
+                                <div class="form-field">
+                                    <label class="form-label" for="seguimientos-edit-rehireable">Recontratable</label>
+                                    <x-searchable-select
+                                        id="seguimientos-edit-rehireable"
+                                        name="edit_is_rehireable"
+                                        :options="[
+                                            ['value' => '1', 'label' => 'Sí'],
+                                            ['value' => '0', 'label' => 'No'],
+                                        ]"
+                                        value=""
+                                        placeholder="Sin definir"
+                                        :allow-clear="true"
+                                        :required="false"
+                                        x-on:change="onEditRehireableChange($event)"
+                                    />
+                                </div>
+
+                                <div class="form-field">
+                                    <label class="form-label" for="seguimientos-edit-notes">Observaciones</label>
+                                    <textarea
+                                        id="seguimientos-edit-notes"
+                                        class="form-input"
+                                        rows="4"
+                                        maxlength="1000"
+                                        x-model="editModal.termination_notes"
+                                        x-bind:disabled="editModal.busy"
+                                        placeholder="Observaciones del retiro…"
+                                    ></textarea>
+                                    <p class="form-hint">
+                                        Se actualiza también en la ficha del empleado y en Retiros (Reportes Novedades).
+                                    </p>
+                                </div>
+
+                                <p class="form-hint text-danger" x-show="editModal.error" x-text="editModal.error" x-cloak></p>
+                            </div>
+
+                            <div class="ficha-empleados-terminate-modal__actions" style="display:flex; gap:0.5rem; justify-content:flex-end; padding: 0 1rem 1rem;">
+                                <button type="button" class="btn btn--secondary" x-on:click="closeEditModal()" x-bind:disabled="editModal.busy">
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn--primary"
+                                    x-on:click="saveEditModal()"
+                                    x-bind:disabled="editModal.busy"
+                                >
+                                    <span x-show="! editModal.busy">Guardar</span>
+                                    <span x-show="editModal.busy" x-cloak>Guardando…</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div
                         class="desvinculaciones-seguimientos__revert-overlay"
                         x-show="revertModal.open"
@@ -465,6 +541,17 @@
                         error: '',
                         resultMessage: '',
                         stats: null,
+                    },
+                    editModal: {
+                        open: false,
+                        busy: false,
+                        id: null,
+                        document_number: '',
+                        full_name: '',
+                        update_url: '',
+                        is_rehireable: '',
+                        termination_notes: '',
+                        error: '',
                     },
 
                     get totalFormatted() {
@@ -713,6 +800,110 @@
                         } finally {
                             this.importModal.busy = false;
                             this.importModal.mode = '';
+                        }
+                    },
+
+                    // Modal edición de retiro: recontratable + observaciones (PATCH parcial al seguimiento).
+                    openEditModal(row) {
+                        if (! this.canEdit || ! row.update_url) {
+                            return;
+                        }
+
+                        const rehireable = ['0', '1'].includes(String(row.is_rehireable)) ? String(row.is_rehireable) : '';
+
+                        this.editModal = {
+                            open: true,
+                            busy: false,
+                            id: row.id,
+                            document_number: row.document_number || '',
+                            full_name: row.full_name || '',
+                            update_url: row.update_url,
+                            is_rehireable: rehireable,
+                            termination_notes: row.termination_notes || '',
+                            error: '',
+                        };
+
+                        this.$nextTick(() => this.setEditRehireableSelect(rehireable));
+                    },
+
+                    closeEditModal() {
+                        if (this.editModal.busy) {
+                            return;
+                        }
+
+                        this.editModal.open = false;
+                        this.editModal.error = '';
+                    },
+
+                    setEditRehireableSelect(value) {
+                        const sel = document.getElementById('seguimientos-edit-rehireable');
+                        if (! sel || ! window.Alpine) {
+                            return;
+                        }
+                        const wrap = sel.closest('[x-data]');
+                        if (wrap) {
+                            const data = window.Alpine.$data(wrap);
+                            data.value = value;
+                            const opt = (data.options || []).find((item) => String(item.value) === String(value));
+                            data.selectedLabel = opt ? opt.label : '';
+                        }
+                    },
+
+                    onEditRehireableChange(event) {
+                        let value = event?.detail?.value;
+                        if (value === undefined || value === null) {
+                            value = event?.target?.value ?? '';
+                        }
+                        value = String(value || '').trim();
+                        this.editModal.is_rehireable = ['0', '1'].includes(value) ? value : '';
+                    },
+
+                    async saveEditModal() {
+                        if (! this.canEdit || this.editModal.busy || ! this.editModal.update_url) {
+                            return;
+                        }
+
+                        this.editModal.busy = true;
+                        this.editModal.error = '';
+
+                        const rehireable = this.editModal.is_rehireable;
+
+                        try {
+                            const res = await fetch(this.editModal.update_url, {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': this.csrf,
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({
+                                    is_rehireable: rehireable === '' ? null : rehireable === '1',
+                                    termination_notes: String(this.editModal.termination_notes || ''),
+                                }),
+                            });
+
+                            const body = await res.json().catch(() => ({}));
+
+                            if (res.status === 403) {
+                                throw new Error('Sin permiso para editar seguimientos.');
+                            }
+
+                            if (! res.ok) {
+                                const msg = body.message
+                                    || (body.errors ? Object.values(body.errors).flat().join(' ') : null)
+                                    || 'No se pudo guardar.';
+                                throw new Error(msg);
+                            }
+
+                            this.editModal.busy = false;
+                            this.closeEditModal();
+                            reloadSeguimientosTable();
+                        } catch (e) {
+                            this.editModal.error = e.message || 'Error al guardar.';
+                        } finally {
+                            this.editModal.busy = false;
                         }
                     },
 
@@ -1013,13 +1204,30 @@
                 );
 
                 if (canEdit) {
+                    // Acciones de fila: editar datos de retiro (modal) + revertir desvinculación.
                     columns.push({
                         data: null,
                         orderable: false,
                         searchable: false,
                         className: 'desvinculaciones-seguimientos__actions-td',
                         render: (_data, _type, row) => (
-                            '<button type="button"'
+                            '<div class="cursos-catalogo-page__row-actions">'
+                            + '<button type="button"'
+                            + ' class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit js-seguimiento-edit"'
+                            + ' title="Editar recontratable y observaciones"'
+                            + ' aria-label="Editar recontratable y observaciones"'
+                            + ' data-id="' + row.id + '"'
+                            + ' data-document-number="' + escapeSeguimientosHtml(row.document_number || '') + '"'
+                            + ' data-full-name="' + escapeSeguimientosHtml(row.full_name || '') + '"'
+                            + ' data-update-url="' + escapeSeguimientosHtml(row.update_url || '') + '"'
+                            + ' data-rehireable="' + (row.is_rehireable === true ? '1' : (row.is_rehireable === false ? '0' : '')) + '"'
+                            + ' data-notes="' + escapeSeguimientosHtml(row.termination_notes || '') + '"'
+                            + '>'
+                            + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"'
+                            + ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                            + '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>'
+                            + '</button>'
+                            + '<button type="button"'
                             + ' class="btn btn--secondary btn--sm desvinculaciones-seguimientos__revert-btn js-seguimiento-revert"'
                             + ' title="Revertir desvinculación"'
                             + ' aria-label="Revertir desvinculación"'
@@ -1032,6 +1240,7 @@
                             + '<path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>'
                             + '</svg>'
                             + '</button>'
+                            + '</div>'
                         ),
                     });
                 }
@@ -1164,6 +1373,21 @@
                         return;
                     }
                     live.onPayrollChange(this);
+                });
+
+                $table.on('click', '.js-seguimiento-edit', function () {
+                    const live = getSeguimientosAlpine();
+                    if (! live) {
+                        return;
+                    }
+                    live.openEditModal({
+                        id: Number(this.getAttribute('data-id') || 0),
+                        document_number: this.getAttribute('data-document-number') || '',
+                        full_name: this.getAttribute('data-full-name') || '',
+                        update_url: this.getAttribute('data-update-url') || '',
+                        is_rehireable: this.getAttribute('data-rehireable') || '',
+                        termination_notes: this.getAttribute('data-notes') || '',
+                    });
                 });
 
                 $table.on('click', '.js-seguimiento-revert', function () {

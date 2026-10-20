@@ -328,6 +328,8 @@ return [
         'marital_status' => 'Estado civil',
         'seleccion_solicitud_status' => 'Estado solicitud',
         'firmas' => 'Firmas',
+        'ingreso_estado' => 'Estado ingreso',
+        'jefe_operativo' => 'Jefe operativo',
     ],
 
     /**
@@ -340,6 +342,8 @@ return [
         'blood_type',
         'marital_status',
         'seleccion_solicitud_status',
+        'ingreso_estado',
+        'jefe_operativo',
     ],
 
     /**

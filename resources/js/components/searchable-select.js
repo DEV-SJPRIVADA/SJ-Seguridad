@@ -12,6 +12,13 @@ export default function searchableSelect(config = {}) {
         allowClear: config.allowClear !== undefined ? Boolean(config.allowClear) : true,
         highlightedIndex: -1,
         formReadonly: false,
+        openUp: false,
+
+        // IDs usados para ubicar el dropdown teleotado a <body> (los $refs
+        // cruzan el límite de x-teleport, así que se resuelve por ID).
+        dropdownId: config.dropdownId ?? '',
+        searchInputId: config.searchInputId ?? '',
+        optionsListId: config.optionsListId ?? '',
 
         init() {
             if (this.$refs.hiddenInput && this.value !== undefined && this.value !== null) {
@@ -25,12 +32,117 @@ export default function searchableSelect(config = {}) {
                 }
                 this.syncLabel();
             });
+            this.$watch('open', (isOpen) => {
+                if (isOpen) {
+                    this.$nextTick(() => this.positionDropdown());
+                }
+            });
+
+            this._onReposition = () => this.scheduleReposition();
+            window.addEventListener('scroll', this._onReposition, true);
+            window.addEventListener('resize', this._onReposition);
 
             const form = this.$el.closest('.ficha-empleados-form');
             if (form) {
                 this._formClassObserver = new MutationObserver(() => this.syncFormReadonly());
                 this._formClassObserver.observe(form, { attributes: true, attributeFilter: ['class'] });
             }
+        },
+
+        destroy() {
+            window.removeEventListener('scroll', this._onReposition, true);
+            window.removeEventListener('resize', this._onReposition);
+            if (this._formClassObserver) {
+                this._formClassObserver.disconnect();
+            }
+        },
+
+        /**
+         * El dropdown vive teleportado en <body> con position: fixed, para que
+         * los contenedores (modales, tablas, paneles con overflow) no lo
+         * recorten. Se posiciona respecto al trigger con espacio suficiente
+         * arriba o abajo y se re-alinea al hacer scroll o resize.
+         */
+        positionDropdown() {
+            const dropdown = this.getDropdownEl();
+            const trigger = this.$refs.trigger;
+            if (!dropdown || !trigger || !this.open) {
+                return;
+            }
+
+            const rect = trigger.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) {
+                return;
+            }
+
+            const width = Math.max(200, Math.min(rect.width, window.innerWidth - 16));
+            let left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+            dropdown.style.width = `${width}px`;
+            dropdown.style.left = `${left}px`;
+
+            const height = dropdown.offsetHeight || 280;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            this.openUp = spaceBelow < height + 12 && spaceAbove > spaceBelow;
+
+            let top;
+            if (this.openUp) {
+                top = Math.max(8, rect.top - height - 4);
+            } else {
+                top = rect.bottom + 4;
+                // Si aún así desborda, se ancla al borde inferior disponible.
+                if (top + height > window.innerHeight - 8) {
+                    top = Math.max(8, window.innerHeight - 8 - height);
+                }
+            }
+            dropdown.style.top = `${top}px`;
+
+            dropdown.classList.add('searchable-select__dropdown--fixed');
+            dropdown.classList.toggle('searchable-select__dropdown--up', this.openUp);
+        },
+
+        scheduleReposition() {
+            if (this._repositionQueued || !this.open) {
+                return;
+            }
+            this._repositionQueued = true;
+            requestAnimationFrame(() => {
+                this._repositionQueued = false;
+                this.positionDropdown();
+            });
+        },
+
+        getDropdownEl() {
+            if (!this.dropdownId) {
+                return null;
+            }
+            return document.getElementById(this.dropdownId);
+        },
+
+        getSearchInputEl() {
+            if (!this.searchInputId) {
+                return null;
+            }
+            return document.getElementById(this.searchInputId);
+        },
+
+        getOptionsListEl() {
+            if (!this.optionsListId) {
+                return null;
+            }
+            return document.getElementById(this.optionsListId);
+        },
+
+        resetDropdownPosition() {
+            const dropdown = this.getDropdownEl();
+            if (dropdown) {
+                dropdown.classList.remove('searchable-select__dropdown--fixed');
+                dropdown.classList.remove('searchable-select__dropdown--up');
+                dropdown.style.removeProperty('top');
+                dropdown.style.removeProperty('left');
+                dropdown.style.removeProperty('width');
+            }
+            this.openUp = false;
         },
 
         syncFormReadonly() {
@@ -81,21 +193,46 @@ export default function searchableSelect(config = {}) {
 
         openDropdown() {
             if (this.isDisabled) return;
+            if (this._dropdownResetTimer) {
+                clearTimeout(this._dropdownResetTimer);
+                this._dropdownResetTimer = null;
+            }
             this.open = true;
             this.search = '';
             this.highlightedIndex = -1;
             this.$nextTick(() => {
-                if (this.$refs.searchInput) {
-                    this.$refs.searchInput.focus({ preventScroll: true });
+                this.positionDropdown();
+                const searchInput = this.getSearchInputEl();
+                if (searchInput) {
+                    searchInput.focus({ preventScroll: true });
                 }
                 this.scrollToSelected();
             });
         },
 
         close() {
+            if (!this.open) return;
             this.open = false;
             this.search = '';
             this.highlightedIndex = -1;
+            // Se conserva el posicionamiento fijo durante la transición de
+            // salida para evitar un "salto" visual del dropdown.
+            if (this._dropdownResetTimer) {
+                clearTimeout(this._dropdownResetTimer);
+            }
+            this._dropdownResetTimer = setTimeout(() => {
+                this._dropdownResetTimer = null;
+                if (!this.open) {
+                    this.resetDropdownPosition();
+                }
+            }, 160);
+        },
+
+        focusSearchInput() {
+            const searchInput = this.getSearchInputEl();
+            if (searchInput) {
+                searchInput.focus({ preventScroll: true });
+            }
         },
 
         selectOption(opt) {
@@ -149,25 +286,33 @@ export default function searchableSelect(config = {}) {
         },
 
         scrollHighlightedIntoView() {
-            this.$nextTick(() => {
-                const listEl = this.$refs.optionsList;
-                if (!listEl) return;
-                const activeEl = listEl.querySelector(`[data-index="${this.highlightedIndex}"]`);
-                if (activeEl) {
-                    activeEl.scrollIntoView({ block: 'nearest' });
-                }
-            });
+            const listEl = this.getOptionsListEl();
+            if (!listEl) {
+                this.$nextTick(() => {
+                    const list = this.getOptionsListEl();
+                    if (!list) return;
+                    const activeEl = list.querySelector(`[data-index="${this.highlightedIndex}"]`);
+                    if (activeEl) {
+                        activeEl.scrollIntoView({ block: 'nearest' });
+                    }
+                });
+                return;
+            }
+            const activeEl = listEl.querySelector(`[data-index="${this.highlightedIndex}"]`);
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: 'nearest' });
+            }
         },
 
         scrollToSelected() {
-            this.$nextTick(() => {
-                const listEl = this.$refs.optionsList;
-                if (!listEl) return;
-                const selectedEl = listEl.querySelector(`[data-selected="true"]`);
-                if (selectedEl) {
-                    selectedEl.scrollIntoView({ block: 'nearest' });
-                }
-            });
-        }
+            const listEl = this.getOptionsListEl();
+            if (!listEl || this.value === '' || this.value === null || this.value === undefined) {
+                return;
+            }
+            const selectedEl = listEl.querySelector('[data-selected="true"]');
+            if (selectedEl) {
+                selectedEl.scrollIntoView({ block: 'nearest' });
+            }
+        },
     };
 }

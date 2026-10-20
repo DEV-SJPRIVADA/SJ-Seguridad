@@ -75,6 +75,27 @@ class ReportesNovedadesRetiroSyncService
     }
 
     /**
+     * Actualiza observaciones de la fila Retiros vinculada cuando se editan en Seguimientos.
+     */
+    public function syncObservacionesFromFollowup(EmployeeTerminationFollowup $followup, ?int $userId = null): ?ReportesNovedadesRetiro
+    {
+        $row = ReportesNovedadesRetiro::query()
+            ->where('employee_termination_followup_id', $followup->id)
+            ->first();
+
+        if ($row === null || $row->observaciones === $followup->termination_notes) {
+            return $row;
+        }
+
+        $row->forceFill([
+            'observaciones' => $followup->termination_notes,
+            'updated_by' => $userId,
+        ])->save();
+
+        return $row;
+    }
+
+    /**
      * Soft-delete de la fila Retiros vinculada al followup (antes de borrar el followup).
      */
     public function annulFromFollowup(EmployeeTerminationFollowup $followup, ?int $userId = null): ?ReportesNovedadesRetiro

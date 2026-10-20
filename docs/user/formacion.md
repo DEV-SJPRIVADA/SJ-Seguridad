@@ -85,6 +85,7 @@ Aplica al tablero **Formación** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-10-20 | Agent | Dashboard: los gráficos de barras muestran el número de cada mes y categoría. |
 | 1.9 | 2026-10-08 | Agent | Import: opción **solo un mes** (borra ese año/mes; rechaza Excel con filas de otro mes). |
 | 1.8 | 2026-10-02 | Agent | Clic en un KPI del Dashboard abre Formaciones ya filtrado (estado o ciclo). |
 | 1.7 | 2026-10-02 | Agent | Dashboard: modo Por persona (ciclo). Formaciones: el filtro Curso se limita al año/mes como en el Dashboard. |

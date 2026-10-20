@@ -474,6 +474,80 @@ class DesvinculacionesSeguimientosTest extends TestCase
         $this->assertFalse($followup->check_enviado);
     }
 
+    public function test_patch_rehireable_and_notes_syncs_period_and_retiro_in_uppercase(): void
+    {
+        $editor = $this->editorUser();
+        $followup = $this->createFollowup();
+        $this->assertTrue($followup->is_rehireable);
+
+        $this->actingAs($editor)
+            ->patchJson(route('gestion-humana.desvinculaciones.seguimientos.update', $followup), [
+                'is_rehireable' => false,
+                'termination_notes' => '  abandono de puesto sin aviso  ',
+            ])
+            ->assertOk()
+            ->assertJsonPath('followup.is_rehireable', false)
+            ->assertJsonPath('followup.is_rehireable_label', 'No')
+            ->assertJsonPath('followup.termination_notes', 'ABANDONO DE PUESTO SIN AVISO');
+
+        $followup->refresh();
+        $this->assertFalse($followup->is_rehireable);
+        $this->assertSame('ABANDONO DE PUESTO SIN AVISO', $followup->termination_notes);
+
+        $period = EmployeeFichaEmploymentPeriod::query()->findOrFail($followup->employee_ficha_employment_period_id);
+        $this->assertFalse($period->is_rehireable);
+        $this->assertSame('ABANDONO DE PUESTO SIN AVISO', $period->termination_notes);
+
+        $this->assertDatabaseHas('reportes_novedades_retiros', [
+            'employee_termination_followup_id' => $followup->id,
+            'observaciones' => 'ABANDONO DE PUESTO SIN AVISO',
+        ]);
+
+        $audit = AuditLog::query()
+            ->where('event_type', 'termination_followup')
+            ->where('action', 'update')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($audit);
+        $this->assertSame(true, data_get($audit->old_values, 'is_rehireable'));
+        $this->assertSame(false, data_get($audit->new_values, 'is_rehireable'));
+    }
+
+    public function test_patch_allows_clearing_rehireable_and_notes(): void
+    {
+        $editor = $this->editorUser();
+        $followup = $this->createFollowup(['termination_notes' => 'NOTA PREVIA']);
+
+        $this->actingAs($editor)
+            ->patchJson(route('gestion-humana.desvinculaciones.seguimientos.update', $followup), [
+                'is_rehireable' => null,
+                'termination_notes' => '   ',
+            ])
+            ->assertOk()
+            ->assertJsonPath('followup.is_rehireable_label', '—');
+
+        $followup->refresh();
+        $this->assertNull($followup->is_rehireable);
+        $this->assertNull($followup->termination_notes);
+    }
+
+    public function test_patch_rehireable_without_edit_permission_is_forbidden(): void
+    {
+        $viewer = $this->viewerUser();
+        $followup = $this->createFollowup();
+
+        $this->actingAs($viewer)
+            ->patchJson(route('gestion-humana.desvinculaciones.seguimientos.update', $followup), [
+                'is_rehireable' => false,
+                'termination_notes' => 'INTENTO',
+            ])
+            ->assertForbidden();
+
+        $followup->refresh();
+        $this->assertTrue($followup->is_rehireable);
+    }
+
     public function test_seguimientos_view_is_readonly_without_edit_permission(): void
     {
         $viewer = $this->viewerUser();

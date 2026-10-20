@@ -27,6 +27,21 @@ class UpdateSeleccionCatalogItemRequest extends FormRequest
         $item = $this->route('item');
         $itemId = $item instanceof PayrollCatalogItem ? $item->id : (int) $item;
 
+        // Catálogos sin Código/Orden: se conservan código y orden existentes.
+        if (app(SeleccionCatalogService::class)->isCodeless($type)) {
+            return [
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('payroll_catalog_items', 'name')
+                        ->where('catalog_type', $type)
+                        ->ignore($itemId),
+                ],
+                'is_active' => ['nullable', 'boolean'],
+            ];
+        }
+
         return [
             'code' => [
                 'required',

@@ -46,7 +46,7 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | GET | `/seguimientos/datatable` | `seguimientos.datatable` | JSON filtrado (q, status, fecha_desde/hasta nomina). `desvinculaciones.view` |
 | GET | `/seguimientos/exportar` | `seguimientos.export` | Excel filtrado (`BaseExport`). `desvinculaciones.view` |
 | POST | `/seguimientos/importar-historico` | `seguimientos.import-historico` | Import histórico NOVEDADES (JSON; `dry_run` / carga). `desvinculaciones.seguimientos.edit` |
-| PATCH | `/seguimientos/{followup}` | `seguimientos.update` | Autosave parcial. `desvinculaciones.seguimientos.edit` |
+| PATCH | `/seguimientos/{followup}` | `seguimientos.update` | Autosave parcial (checks, `payroll_delivered_at`) + modal Editar (`is_rehireable` nullable bool, `termination_notes` ≤1000, MAYÚSCULAS). `desvinculaciones.seguimientos.edit` |
 | POST | `/seguimientos/{followup}/revertir` | `seguimientos.revert` | Revertir desvinculacion (reactiva empleado). `desvinculaciones.seguimientos.edit` |
 
 Hooks sin rutas nuevas (Ficha):
@@ -63,7 +63,7 @@ Hooks sin rutas nuevas (Ficha):
 | `view.board.gestion_humana.desvinculaciones` | Ver tablero en sidebar GH |
 | `desvinculaciones.view` | Acceder al tablero (Dashboard + UI Masivos + lectura Seguimientos) |
 | `desvinculaciones.masivos` | Lookup, plantillas/firmas JSON, procesar lote, descargar ZIP |
-| `desvinculaciones.seguimientos.edit` | PATCH checks / fecha entregado nomina; revertir desvinculacion |
+| `desvinculaciones.seguimientos.edit` | PATCH checks / fecha entregado nomina / recontratable + observaciones; revertir desvinculacion |
 
 **Paquete V1 (misma persona):** los 4 permisos juntos. Asignacion via Admin usuarios. `super-admin` recibe todos via catalogo. Rol `administrador` **no** recibe el paquete por defecto.
 
@@ -96,7 +96,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Vista | Descripcion |
 | --- | --- |
 | `areas/gestion_humana/desvinculaciones/masivos.blade.php` | Grilla Alpine: iconos superior derecha (multi-cedula / +fila), filas con trash, Desvincular/limpiar/ZIP icon-only; lookup blur/Enter; modal pegar hasta 500; reporte |
-| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | DataTables **server-side** (`.js-desvinculaciones-seguimientos-datatable`) + filtros Alpine (q, status, campo fecha + rango) + buscador nativo DT (`lf`); encabezados ordenables (server-side) salvo Acciones; checks con títulos horizontales cortos; altura de `.req-manage-table-scroll` al viewport; export Excel, checks/fecha nómina con autosave, OK TODO RO, icono revertir + modal import histórico / revertir |
+| `areas/gestion_humana/desvinculaciones/seguimientos.blade.php` | DataTables **server-side** (`.js-desvinculaciones-seguimientos-datatable`) + filtros Alpine (q, status, campo fecha + rango) + buscador nativo DT (`lf`); encabezados ordenables (server-side) salvo Acciones; checks con títulos horizontales cortos; altura de `.req-manage-table-scroll` al viewport; export Excel, checks/fecha nómina con autosave, OK TODO RO, Acciones (lápiz editar recontratable/observaciones + icono revertir) + modales editar / import histórico / revertir |
 | `areas/gestion_humana/desvinculaciones/dashboard.blade.php` | Informe mensual KPI + charts |
 | `DesvinculacionesDashboardService` | Métricas (periodos + ficha) |
 | `resources/js/desvinculaciones-dashboard-charts.js` | ApexCharts del Dashboard |
@@ -197,7 +197,7 @@ Nombre ZIP tipico: `desvinculaciones_{Ymd_His}.zip`.
 
 13. Un registro por periodo cerrado (unique).
 14. Orden default **desc** por id / mas reciente.
-15. Causal, rehire, notas, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo).
+15. Causal, cargo, cedula, nombre, fechas, carta: solo lectura (snapshots / periodo). **Recontratable** y **Observaciones** se editan con el icono lápiz de Acciones (modal; permiso edit): `EmployeeTerminationFollowupService::updatePartial` guarda en el followup y, en la misma transacción, replica a `employee_ficha_employment_periods` (`is_rehireable`, `termination_notes` → gate de reingreso `isRehireable`, variables de carta) y a `reportes_novedades_retiros.observaciones` (`ReportesNovedadesRetiroSyncService::syncObservacionesFromFollowup`). Recontratable admite vacío (sin definir). Audit `termination_followup` / `update` con before/after.
 16. 7 checks editables + `payroll_delivered_at`; autosave PATCH debounce ~400 ms. Sin columna RET. CESANT.
 17. OK TODO solo lectura, calculado.
 18. Filtros: `q` (cedula/nombre) + status `incompletos` / `ok_todo` / `sin_carta` / `motivados` (sin chip Todos; default incompletos) + `rehireable` (`1`/`0`, vacío = todos) + selector `fecha_campo` + rango Desde/Hasta. **Motivados** = recontratable No. Al usar rango de fechas se desactiva el chip de estado (`status=` vacío = sin filtro de estado); si el usuario vuelve a activar un chip, se combina con el rango. Limpiar restaura incompletos + campo fecha default + rangos/búsqueda/recontratable vacíos.

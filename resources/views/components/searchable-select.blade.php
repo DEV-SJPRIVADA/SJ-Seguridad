@@ -56,6 +56,9 @@
 
     $dataAttributes = $attributes->filter(fn ($val, $k) => str_starts_with($k, 'data-'));
     $formId = $attributes->get('form');
+    $dropdownId = $id.'__dropdown';
+    $searchInputId = $id.'__search';
+    $optionsListId = $id.'__options';
 @endphp
 
 <div
@@ -70,6 +73,9 @@
         required: @js($required),
         disabled: @js($disabled),
         allowClear: @js($allowClear),
+        dropdownId: @js($dropdownId),
+        searchInputId: @js($searchInputId),
+        optionsListId: @js($optionsListId),
     })"
     @click.outside="close()"
     @keydown.escape.stop="close()"
@@ -109,6 +115,7 @@
         }"
         @click="if (!isDisabled) { toggle() }"
         tabindex="0"
+        x-ref="trigger"
         @keydown.space.prevent="if (!isDisabled) { toggle() }"
         @keydown.enter.prevent="if (!isDisabled) { toggle() }"
         @keydown.down.prevent="if (!isDisabled) { openDropdown() }"
@@ -143,22 +150,27 @@
         </div>
     </div>
 
-    {{-- Panel Desplegable (Dropdown) --}}
-    <div
-        class="searchable-select__dropdown"
-        x-show="open"
-        x-cloak
-        x-transition:enter="searchable-select-enter"
-        x-transition:enter-start="searchable-select-enter-start"
-        x-transition:enter-end="searchable-select-enter-end"
-        x-transition:leave="searchable-select-leave"
-        x-transition:leave-start="searchable-select-leave-start"
-        x-transition:leave-end="searchable-select-leave-end"
-        @keydown.tab="close()"
-        @keydown.down.prevent="highlightNext()"
-        @keydown.up.prevent="highlightPrev()"
-        @keydown.enter.prevent="selectHighlighted()"
-    >
+    {{-- Panel Desplegable (Dropdown) — teleportado a <body> y posicionado con
+         position:fixed por JS para que ningún contenedor con overflow lo recorte --}}
+    <template x-teleport="body">
+        <div
+            id="{{ $dropdownId }}"
+            class="searchable-select__dropdown"
+            x-show="open"
+            x-cloak
+            :class="{ 'searchable-select__dropdown--up': openUp }"
+            x-transition:enter="searchable-select-enter"
+            x-transition:enter-start="searchable-select-enter-start"
+            x-transition:enter-end="searchable-select-enter-end"
+            x-transition:leave="searchable-select-leave"
+            x-transition:leave-start="searchable-select-leave-start"
+            x-transition:leave-end="searchable-select-leave-end"
+            @keydown.tab="close()"
+            @keydown.escape.stop="close()"
+            @keydown.down.prevent="highlightNext()"
+            @keydown.up.prevent="highlightPrev()"
+            @keydown.enter.prevent="selectHighlighted()"
+        >
         {{-- Buscador integrado --}}
         <div class="searchable-select__search-wrap">
             <svg class="searchable-select__search-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -166,6 +178,7 @@
             </svg>
             <input
                 type="text"
+                id="{{ $searchInputId }}"
                 class="searchable-select__search-input"
                 x-ref="searchInput"
                 x-model="search"
@@ -179,6 +192,7 @@
         {{-- Lista de Opciones --}}
         <ul
             class="searchable-select__options"
+            id="{{ $optionsListId }}"
             x-ref="optionsList"
             role="listbox"
         >
@@ -216,5 +230,6 @@
                 Sin resultados
             </li>
         </ul>
-    </div>
+        </div>
+    </template>
 </div>

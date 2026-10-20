@@ -23,6 +23,33 @@ function destroyChart(key) {
     }
 }
 
+/**
+ * Etiquetas numéricas sin caja (halo blanco vía CSS `.cursos-dashboard-page .apexcharts-datalabels`).
+ * Ocultas cuando no hay datos reales (placeholder «Sin datos»).
+ */
+function numericDataLabels(enabled = true) {
+    return {
+        enabled,
+        style: {
+            fontSize: '11px',
+            fontWeight: 700,
+            colors: ['#0f172a'],
+        },
+        background: {
+            enabled: false,
+        },
+        formatter(val) {
+            const n = Number(val);
+
+            if (!Number.isFinite(n)) {
+                return '';
+            }
+
+            return n.toLocaleString('es-CO');
+        },
+    };
+}
+
 function renderMes(data) {
     const el = document.querySelector('#formacion-chart-mes');
     if (!el) {
@@ -31,12 +58,27 @@ function renderMes(data) {
     destroyChart('mes');
     const labels = data?.labels?.length ? data.labels : ['Sin datos'];
     const series = data?.labels?.length ? data.data.map(Number) : [0];
+    const hasValues = Boolean(data?.labels?.length);
+    // Barras verticales: número horizontal encima de cada columna.
     chartInstances.mes = new ApexCharts(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'bar', height: '100%' },
         series: [{ name: 'Formaciones', data: series }],
         plotOptions: {
-            bar: { horizontal: false, borderRadius: 6, columnWidth: '45%' },
+            bar: {
+                horizontal: false,
+                borderRadius: 6,
+                columnWidth: '45%',
+                dataLabels: { position: 'top' },
+            },
+        },
+        dataLabels: {
+            ...numericDataLabels(hasValues),
+            offsetY: -18,
+        },
+        grid: {
+            ...sharedChart.grid,
+            padding: { top: 16, right: 6, left: 4, bottom: 0 },
         },
         colors: [BRAND_BLUE],
         xaxis: {
@@ -61,12 +103,27 @@ function renderCategoria(data) {
     destroyChart('categoria');
     const labels = data?.labels?.length ? data.labels : ['Sin datos'];
     const series = data?.labels?.length ? data.data.map(Number) : [0];
+    const hasValues = Boolean(data?.labels?.length);
+    // Barras horizontales: número al final de cada barra.
     chartInstances.categoria = new ApexCharts(el, {
         ...sharedChart,
         chart: { ...sharedChart.chart, type: 'bar', height: '100%' },
         series: [{ name: 'Formaciones', data: series }],
         plotOptions: {
-            bar: { horizontal: true, borderRadius: 6, barHeight: '55%' },
+            bar: {
+                horizontal: true,
+                borderRadius: 6,
+                barHeight: '55%',
+                dataLabels: { position: 'top' },
+            },
+        },
+        dataLabels: {
+            ...numericDataLabels(hasValues),
+            offsetX: 18,
+        },
+        grid: {
+            ...sharedChart.grid,
+            padding: { top: 0, right: 24, left: 0, bottom: 0 },
         },
         colors: [BRAND_NAVY],
         xaxis: {

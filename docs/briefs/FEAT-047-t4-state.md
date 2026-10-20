@@ -49,9 +49,9 @@ Feature: FEAT-047 T4 (OC morfismo + emisión + evaluación no impresa)
 - Rutas `purchase-requests.orders.index` (`GET /ordenes-compra`) y `purchase-requests.orders.datatable` (`GET /ordenes-compra/datatable`).
 - Vista `resources/views/modules/purchase-requests/orders/index.blade.php` con el chrome canonico (panel, filtros plegables con badge, toolbar con conteo, DataTables server-side, encabezados en mayusculas, alto completo).
 
-### Datos de prueba del usuario (NO se tocan sin OK)
+### Datos de prueba del usuario (NO se tocan)
 
-En la BD local de desarrollo hay 3 OC: N.º 1 (compra 0012, 2 de 2 uds), N.º 2 y N.º 3 (suministro 0012, **mismas cantidades** en ambas). OC 2 y 3 duplican el pedido: con el saldo pendiente ya en 0, no se puede emitir una nueva OC para esas lineas. Si el usuario quiere, se puede ajustar o eliminar la N.º 3 (requiere su autorizacion).
+En la BD local de desarrollo hay 4 OC: N.º 1 (compra 0012, 2 de 2 uds), N.º 2 y N.º 3 (suministro 0012, **mismas cantidades** en ambas) y N.º 4 (compra 0022). OC 2 y 3 duplican el pedido: con el saldo pendiente ya en 0, no se puede emitir una nueva OC para esas lineas. **Decision del usuario (2026-10-20): dejarlas quietas, son datos de prueba** → no se borra ni se modifica esa data.
 
 ## Ejecutado / verificado
 
@@ -64,7 +64,7 @@ En la BD local de desarrollo hay 3 OC: N.º 1 (compra 0012, 2 de 2 uds), N.º 2 
 
 - Evaluación post-entrega (tabla `purchase_order_evaluations` ya creada): captura de calificaciones 1–5 con pesos 25/25/50, umbrales 80/60, pantalla y reporte. **No** se imprime en FO-AD-07.
 - Revisar si la OC debe enlazarse al suministro (`supply_request` ya se guarda como `source_type`).
-- Decidir qué se hace con las OC duplicadas de prueba del usuario (N.º 2 y 3 del suministro 0012) en la BD local.
+- Decidir qué se hace con las OC duplicadas de prueba del usuario (N.º 2 y 3 del suministro 0012) en la BD local. **Resuelto 2026-10-20 por el usuario: dejarlas quietas, son datos de prueba** (no se modifica ni se borra esa data).
 
 ## Regla observada
 

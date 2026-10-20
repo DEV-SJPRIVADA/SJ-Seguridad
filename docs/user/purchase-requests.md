@@ -116,7 +116,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 ### Emitir orden de compra (FO-AD-07)
 
-1. En la **bandeja de Compras**, cada fila tiene un icono extra (**Emitir orden de compra**, un archivo con un +). También lo encuentra en la cabecera de **Procesar solicitud** y **Procesar suministro**.
+1. En la **bandeja de Compras**, cada fila tiene un icono extra (**Emitir orden de compra**, un archivo con un +). También lo encuentra en la cabecera de **Procesar solicitud** y **Procesar suministro**, y en el detalle de la solicitud, en la sección **Productos solicitados** (icono de archivo con **+** a la derecha del título).
 2. Se abre el formulario **Emitir orden de compra** con los datos del origen (solicitud de compra o de suministro). Las líneas ya vienen con la cantidad y la descripción; para suministros la cantidad es la **autorizada** y el costo unitario ya capturado.
 3. Elija el **proveedor** (solo activos; use el buscador por nombre o identificación). Al elegirlo, si el proveedor tiene ciudad, esta se completa en **Ciudad de entrega**.
 4. Complete por línea el **valor unidad** y el **IVA** (el IVA es un valor, no un porcentaje). El **valor total** de la línea y el **TOTAL** de la orden se calculan solos: `cantidad × valor unidad + IVA`. La columna **Pendiente** indica cuánto falta por pedir de esa línea (si ya se emitieron otras OC de la misma solicitud).
@@ -144,8 +144,8 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 ### Catálogo de proveedores
 
 1. Con el permiso **Proveedores: Ver** aparece el tablero **Proveedores** dentro del área **Compras** (no es una pestaña de Solicitudes de compra). El permiso **Proveedores: Editar** también permite verlo.
-2. El listado muestra **solo proveedores activos** por defecto. Use el **buscador** de la tabla (identificación, nombre, correo, contacto o ciudad) y, en el panel **Filtros**, el selector **Estado** (Activos / Inactivos / Todos). El catálogo solo contiene proveedores.
-3. Arriba a la derecha de la tabla está la barra de acciones (iconos con su descripción al pasar el mouse): **Exportar**, **Importar VINE01** (con permiso de edición) y **+ (Nuevo proveedor)**. El **+** permite registrar identificación, nombre, teléfono, correo, contacto, dirección, ciudad, forma de pago, **días de pago** y estado.
+2. El listado muestra **solo proveedores activos** por defecto. Use el **buscador** de la tabla (identificación, nombre, correo, contacto o ciudad) y los botones **Activos / Inactivos / Todos** de la franja superior para cambiar de estado. Al lado aparece el número de proveedores encontrados. El correo de cada proveedor es un enlace que abre su programa de correo. El catálogo solo contiene proveedores.
+3. A la derecha de esa misma franja está la barra de acciones (iconos con su descripción al pasar el mouse): **Exportar**, **Importar VINE01** (con permiso de edición) y **+ (Nuevo proveedor)**. El **+** permite registrar identificación, nombre, teléfono, correo, contacto, dirección, ciudad, forma de pago, **días de pago** y estado.
 4. El **teléfono** admite solo números (7 a 15 dígitos), el **correo** debe ser un correo válido y la **ciudad** se elige del catálogo de ciudades de Requisiciones.
 5. Los textos se guardan en **MAYÚSCULAS**; el correo, la identificación, el teléfono y la ciudad se conservan tal cual.
 6. Use el icono de Excel (**Exportar**) de la barra de acciones para exportar el catálogo con los filtros actuales.
@@ -177,6 +177,7 @@ Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) ap
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.27 | 2026-10-20 | Compras | Proveedores: listado rediseñado; el estado se elige con botones (Activos / Inactivos / Todos) en la misma franja que el conteo y las acciones; correo enlazable. |
 | 1.26 | 2026-10-19 | Compras | Nuevo tablero **Órdenes de compra** con el listado de todas las OC emitidas (buscador y filtros). Una solicitud se puede **repartir entre varios proveedores**: cada línea muestra el saldo pendiente y el sistema bloquea las órdenes duplicadas. |
 | 1.25 | 2026-10-19 | Compras | Emisión de **Orden de Compra (FO-AD-07)** desde la bandeja: elegir proveedor activo, capturar valor unidad e IVA por línea, total automático, número de OC automático y descarga en PDF/Excel. |
 | 1.24 | 2026-10-19 | Compras | Ajuste del catálogo: los botones de filtro quedan en fila junto al selector Estado y la descarga de la plantilla VINE01 se mueve al interior de la ventana de importar. |

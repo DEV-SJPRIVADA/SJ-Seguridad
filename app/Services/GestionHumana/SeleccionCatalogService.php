@@ -6,6 +6,7 @@ use App\Models\PayrollCatalogItem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class SeleccionCatalogService
 {
@@ -26,6 +27,48 @@ class SeleccionCatalogService
     }
 
     /**
+     * Catálogos que no exponen Código ni Orden en la UI (código autogenerado).
+     */
+    public function isCodeless(string $type): bool
+    {
+        /** @var list<string> $types */
+        $types = config('seleccion.codeless_catalog_types', []);
+
+        return in_array($type, $types, true);
+    }
+
+    /**
+     * Código técnico único dentro del tipo, derivado del nombre
+     * (ej. «Unión libre» → UNION_LIBRE; conserva + y - para RH).
+     */
+    public function makeUniqueCode(string $type, string $name): string
+    {
+        $normalized = Str::upper(Str::ascii(trim($name)));
+        $normalized = (string) preg_replace('/\s+/', '_', $normalized);
+        $normalized = (string) preg_replace('/[^A-Z0-9_+\-]/', '', $normalized);
+        $base = $normalized !== '' ? mb_substr($normalized, 0, 45) : 'ITEM';
+
+        $code = $base;
+        $i = 2;
+
+        while (PayrollCatalogItem::query()->ofType($type)->where('code', $code)->exists()) {
+            $suffix = '_'.$i;
+            $code = mb_substr($base, 0, 50 - strlen($suffix)).$suffix;
+            $i++;
+        }
+
+        return $code;
+    }
+
+    /**
+     * Orden siguiente al final del catálogo (para tipos sin campo Orden).
+     */
+    public function nextSortOrder(string $type): int
+    {
+        return ((int) PayrollCatalogItem::query()->ofType($type)->max('sort_order')) + 1;
+    }
+
+    /**
      * @return array<string, string>
      */
     public function typeLabels(): array
@@ -42,7 +85,7 @@ class SeleccionCatalogService
     }
 
     /**
-     * @return list<array{key: string, label: string, items: Collection<int, PayrollCatalogItem>, columnLabels: array{code: string, name: string}}>
+     * @return list<array{key: string, label: string, codeless: bool, items: Collection<int, PayrollCatalogItem>, columnLabels: array{code: string, name: string}}>
      */
     public function catalogsForAdmin(): array
     {
@@ -54,12 +97,13 @@ class SeleccionCatalogService
             $catalogs[] = [
                 'key' => $type,
                 'label' => $label,
+                'codeless' => $this->isCodeless($type),
                 'items' => PayrollCatalogItem::query()
                     ->ofType($type)
                     ->orderBy('sort_order')
                     ->orderBy('name')
                     ->get(),
-                'columnLabels' => $columnLabels[$type] ?? ['code' => 'Codigo', 'name' => 'Nombre'],
+                'columnLabels' => $columnLabels[$type] ?? ['code' => 'Código', 'name' => 'Nombre'],
             ];
         }
 
@@ -78,6 +122,8 @@ class SeleccionCatalogService
             'blood_type' => $this->codeExistsInTable('seleccion_ingresos', 'blood_type_code', $code),
             'marital_status' => $this->codeExistsInTable('seleccion_examenes_ocupacionales', 'marital_status_code', $code),
             'seleccion_solicitud_status' => $this->codeExistsInTable('seleccion_examenes_ocupacionales', 'solicitud_status_code', $code),
+            'ingreso_estado' => $this->codeExistsInTable('seleccion_ingresos', 'estado_code', $code),
+            'jefe_operativo' => $this->codeExistsInTable('seleccion_ingresos', 'jefe_ope_code', $code),
             'city' => $this->codeExistsInTable('seleccion_ingresos', 'city_code', $code)
                 || $this->codeExistsInTable('seleccion_examenes_ocupacionales', 'city_code', $code),
             'position' => $this->codeExistsInTable('seleccion_ingresos', 'position_code', $code)
