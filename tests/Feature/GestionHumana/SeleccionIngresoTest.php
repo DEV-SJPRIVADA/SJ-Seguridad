@@ -54,6 +54,34 @@ class SeleccionIngresoTest extends TestCase
         $this->assertSame('Asistió a examen médico', $row->observaciones);
     }
 
+    public function test_referido_is_optional_on_store_and_update(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+        unset($payload['referido']);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.ingresos.store'), $payload)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('gestion-humana.seleccion.ingresos'));
+
+        $row = SeleccionIngreso::query()->where('document_number', $payload['document_number'])->firstOrFail();
+        $this->assertSame('', $row->referido);
+
+        $row->update(['referido' => 'ANTERIOR']);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.seleccion.ingresos.update', $row), [
+                ...$payload,
+                'referido' => '',
+                'confirm_duplicate' => 1,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame('', $row->fresh()->referido);
+    }
+
     public function test_store_duplicate_requires_confirm_flag(): void
     {
         $editor = $this->editorUser();

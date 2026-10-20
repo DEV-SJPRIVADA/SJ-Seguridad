@@ -17281,6 +17281,115 @@ a.req-dashboard-kpi:focus-visible {
     min-height: var(--control-height-chrome);
 }
 
+/* Variante con 2 fechas (Examen: Fecha ARL desde/hasta) */
+.seleccion-ingresos-filters__row--dates-2 {
+    grid-template-columns: minmax(14rem, 2fr) repeat(2, minmax(9rem, 1fr)) auto;
+}
+
+/* Selección › Examen: estado operativo (pill tabla + pills filtro, familia Requisiciones) */
+.status-pill--examen-solicitado {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--examen-agendado {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.status-pill--examen-aprobado {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--examen-no-aprobado {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+.status-pill--examen-cancelado {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.req-manage-filters__pill.status-pill--examen-solicitado.is-active {
+    background: #0284c7;
+    border-color: #0284c7;
+}
+
+.req-manage-filters__pill.status-pill--examen-agendado.is-active {
+    background: #7e22ce;
+    border-color: #7e22ce;
+}
+
+.req-manage-filters__pill.status-pill--examen-aprobado.is-active {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.req-manage-filters__pill.status-pill--examen-no-aprobado.is-active {
+    background: #be123c;
+    border-color: #be123c;
+}
+
+.req-manage-filters__pill.status-pill--examen-cancelado.is-active {
+    background: #64748b;
+    border-color: #64748b;
+}
+
+/* Selección › Examen: historial — filtros en una franja y cambios antes → después */
+.seleccion-examen-historial__filters-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+    align-items: end;
+}
+
+.seleccion-examen-historial__changes {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0.45rem 0.6rem;
+    display: grid;
+    gap: 0.25rem;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--brand-primary, #003366) 4%, #fff);
+    border: 1px solid var(--color-border);
+}
+
+.seleccion-examen-historial__change {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.seleccion-examen-historial__field {
+    min-width: 8.5rem;
+    font-weight: 700;
+    color: var(--brand-primary, #003366);
+}
+
+.seleccion-examen-historial__before {
+    color: var(--color-text-soft);
+    text-decoration: line-through;
+}
+
+.seleccion-examen-historial__arrow {
+    color: var(--color-text-soft);
+}
+
+.seleccion-examen-historial__after {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+@media (max-width: 1023px) {
+    .seleccion-examen-historial__filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    }
+}
+
 @media (max-width: 1023px) {
     .seleccion-ingresos-filters__row--primary,
     .seleccion-ingresos-filters__row--selects {

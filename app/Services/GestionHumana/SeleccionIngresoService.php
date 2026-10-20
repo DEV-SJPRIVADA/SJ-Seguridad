@@ -152,7 +152,8 @@ class SeleccionIngresoService
             'blood_type_name' => $blood,
             'reemplaza_a' => trim((string) $validated['reemplaza_a']),
             'responsable_user_id' => (int) $validated['responsable_user_id'],
-            'referido' => trim((string) $validated['referido']),
+            // Opcional: la columna es NOT NULL con default '' (el listado muestra «—»).
+            'referido' => trim((string) ($validated['referido'] ?? '')),
             'jefe_ope_code' => (string) $validated['jefe_ope_code'],
             'jefe_ope' => $jefeOperativo,
             'observaciones' => $this->nullableText($validated['observaciones'] ?? null),

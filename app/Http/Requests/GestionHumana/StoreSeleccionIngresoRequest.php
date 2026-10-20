@@ -77,7 +77,7 @@ class StoreSeleccionIngresoRequest extends FormRequest
             ],
             'reemplaza_a' => ['required', 'string', 'max:255'],
             'responsable_user_id' => ['required', 'integer', Rule::in($officerIds)],
-            'referido' => ['required', 'string', 'max:255'],
+            'referido' => ['nullable', 'string', 'max:255'],
             'jefe_ope_code' => [
                 'required',
                 'string',
@@ -122,7 +122,6 @@ class StoreSeleccionIngresoRequest extends FormRequest
             'reemplaza_a.required' => 'El campo reemplaza a es obligatorio.',
             'responsable_user_id.required' => 'El responsable es obligatorio.',
             'responsable_user_id.in' => 'El responsable no es un reclutador activo válido.',
-            'referido.required' => 'El campo referido es obligatorio.',
             'jefe_ope_code.required' => 'El jefe operativo es obligatorio.',
             'jefe_ope_code.exists' => 'El jefe operativo no existe o no está activo.',
             'observaciones.max' => 'Las observaciones no pueden superar 1000 caracteres.',

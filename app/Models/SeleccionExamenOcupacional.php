@@ -14,6 +14,36 @@ class SeleccionExamenOcupacional extends Model
 
     protected $table = 'seleccion_examenes_ocupacionales';
 
+    public const ESTADO_SOLICITADO = 'solicitado';
+
+    public const ESTADO_AGENDADO = 'agendado';
+
+    public const ESTADO_APROBADO = 'aprobado';
+
+    public const ESTADO_NO_APROBADO = 'no_aprobado';
+
+    public const ESTADO_CANCELADO = 'cancelado';
+
+    /**
+     * Estados operativos del examen (orden = flujo) → label UI.
+     *
+     * @var array<string, string>
+     */
+    public const ESTADO_LABELS = [
+        self::ESTADO_SOLICITADO => 'SOLICITADO',
+        self::ESTADO_AGENDADO => 'AGENDADO',
+        self::ESTADO_APROBADO => 'APROBADO',
+        self::ESTADO_NO_APROBADO => 'NO APROBADO',
+        self::ESTADO_CANCELADO => 'CANCELADO',
+    ];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'estado' => self::ESTADO_SOLICITADO,
+    ];
+
     /**
      * @var list<string>
      */
@@ -37,6 +67,7 @@ class SeleccionExamenOcupacional extends Model
         'marital_status_code',
         'marital_status_name',
         'fecha_arl',
+        'estado',
         'solicitud_status_code',
         'solicitud_status_name',
         'responsable_user_id',
@@ -54,6 +85,11 @@ class SeleccionExamenOcupacional extends Model
             'created_by' => 'integer',
             'updated_by' => 'integer',
         ];
+    }
+
+    public function estadoLabel(): string
+    {
+        return self::ESTADO_LABELS[$this->estado] ?? mb_strtoupper((string) $this->estado);
     }
 
     public function commercialClient(): BelongsTo

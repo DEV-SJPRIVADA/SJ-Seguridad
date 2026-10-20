@@ -16,7 +16,7 @@ Tablero de area **Gestion Humana** para operar dos flujos independientes — **I
 - Duplicado cedula opcion **B**: aviso + `confirm_duplicate=1` obligatorio; scope **misma tabla** (no cruzado Ingreso↔Examen).
 - Todos los campos create/update **required**.
 - Catalogos: whitelist 9 tipos en `payroll_catalog_items`; tipos nuevos `blood_type`, `marital_status`, `seleccion_solicitud_status`, `ingreso_estado`, `jefe_operativo` excluidos de UI Ficha (`ficha_admin_excluded_catalog_types`).
-- Ingreso (v1.1): FECHA ASISTENCIA, ESTADO, JEFE OPERATIVO, OBSERVACIONES en tabla + filtros asistencia (rango) y estado; FECHA ASISTENCIA y OBSERVACIONES opcionales (marcadas «(opcional)» en el form), resto required.
+- Ingreso (v1.1): FECHA ASISTENCIA, ESTADO, JEFE OPERATIVO, OBSERVACIONES en tabla + filtros asistencia (rango) y estado; FECHA ASISTENCIA, OBSERVACIONES y REFERIDO opcionales (marcadas «(opcional)» en el form; `referido` vacío se guarda como `''`, columna NOT NULL default `''`), resto required.
 - Modal Nuevo/Editar ingreso (partial `seleccion/partials/ingreso-form-fields.blade.php`): 3 secciones en tarjeta (`seleccion-ingresos-form__section`, patrón Nuevo acreditado) — **Datos del aspirante** (cédula, nombre, correo, teléfono, RH, ciudad, cargo + aviso de duplicado), **Cliente y dotación** (cliente, tipo dotación, tallas), **Proceso de selección** (fechas, estado, responsable, jefe ope, referido, reemplaza a, observaciones); grid 3 columnas (1 en móvil); pie con **Cancelar** + **Guardar/Actualizar ingreso**. Nombres de campos sin cambios.
 - `x-on:submit` de Ingreso/Examen usa `guardSubmit($event, …)` **sin** `return` (Alpine no admite `return` en expresiones; `guardSubmit` ya llama `preventDefault()`).
 - Audit: `SeleccionAuditLogService` → `SystemAuditService` (`module=seleccion`, `area=gestion_humana`). Solo mutaciones.
@@ -48,6 +48,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | POST | `/examenes` | `examenes.store` | Crear. `seleccion.edit` |
 | PATCH | `/examenes/{seleccionExamenOcupacional}` | `examenes.update` | Editar. `seleccion.edit` |
 | DELETE | `/examenes/{seleccionExamenOcupacional}` | `examenes.destroy` | Borrado duro. `seleccion.edit` |
+| GET | `/examenes/historial` | `examenes.historial` | JSON auditoría Examen: global (`q`, `user_id`, `action`, `date_from`, `date_to`) o `?id=` por registro. `seleccion.edit` |
 | GET | `/catalogos` | `catalogos` | Tablero catalogos (`?catalog=`). `seleccion.edit` |
 | POST | `/catalogos/{type}` | `catalogos.store` | Crear item whitelist. `seleccion.edit` |
 | PATCH | `/catalogos/{type}/{item}` | `catalogos.update` | Editar. `seleccion.edit` |
@@ -133,7 +134,11 @@ Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultSeleccionBo
 
 1. Usuario solo `seleccion.view` (+ board): ve Dashboard/Ingreso/Examen y export; **sin** mutaciones ni pestana Catálogos.
 2. Ingreso campos required: CEDULA, NOMBRE, CORREO, TELEFONO, CIUDAD, CARGO, CLIENTE, tallas, TIPO DOTACION, FECHA INGRESO, ESTADO (`ingreso_estado` activo), RH, REEMPLAZA A, RESPONSABLE, REFERIDO, JEFE OPE (`jefe_operativo` activo). Opcionales: FECHA ASISTENCIA (date) y OBSERVACIONES (<=1000 char).
-3. Examen campos required: CEDULA, NOMBRE, CARGO, SERVICIO/SECTOR, CLIENTE, EPS, AFP, FECHA NACIMIENTO, CIUDAD, DIRECCION, CORREO, CELULAR, ESTADO CIVIL, FECHA ARL, SOLICITUD, RESPONSABLE.
+3. Examen campos required: CEDULA, NOMBRE, CARGO, SERVICIO/SECTOR, CLIENTE, EPS, AFP, FECHA NACIMIENTO, CIUDAD, DIRECCION, CORREO (`email:rfc,filter` + `type=email`/pattern en UI), CELULAR, ESTADO CIVIL, FECHA ARL, ESTADO, SOLICITUD, RESPONSABLE.
+   - **ESTADO** (columna `estado`, lista fija en `SeleccionExamenOcupacional::ESTADO_LABELS`, no catálogo): `solicitado` (default alta y registros previos), `agendado`, `aprobado`, `no_aprobado`, `cancelado`. Pill `status-pill--examen-{estado}` (guiones) en tabla y pills de filtro (`?estado=`) como Requisiciones.
+   - Tabla/export: todas las columnas del formulario; orden … ESTADO CIVIL, FECHA ARL, **ESTADO**, **CORREO**, SOLICITUD, RESPONSABLE (+ Acciones). Fechas con `DisplayDate`.
+   - **Historial** (`SeleccionExamenHistorialService`, solo `seleccion.edit`): lee `audit_logs` `module=seleccion`, `event_type=seleccion_examen`; alta guarda snapshot inicial (`logModelChange` before null), edición before/after (`SeleccionExamenService::auditSnapshot`, fechas Y-m-d); cambios campo a campo con labels, nombres de cliente/responsable y estado legible. Toolbar (global, filtro por usuario) + icono por fila.
+   - Modales Nuevo/Editar: mismo partial por secciones (Datos del aspirante · Cargo y afiliaciones · Proceso del examen) con clases `seleccion-ingresos-form*` y pie icon-only.
 4. Duplicado: misma tabla; sin `confirm_duplicate` → 422 con matches; con flag → persiste.
 5. Dashboard filtros: Ingreso por `fecha_ingreso`; Examen por `fecha_arl`; ambos + cliente + responsable. Sin mutaciones.
 6. KPIs: totales Ingreso/Examen; conteo por SOLICITUD; ingresos del mes calendario; examenes `EN_PROCESO`.
@@ -185,7 +190,7 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 
 - Config: `config/seleccion.php`, `config/access.php`, `config/employee_ficha.php`, `config/audit.php`
 - Componente transversal: `resources/views/components/searchable-select.blade.php` + `resources/js/components/searchable-select.js`
-- Migrations: `*_create_seleccion_ingresos_table`, `*_create_seleccion_examenes_ocupacionales_table`, `*_seed_seleccion_payroll_catalog_defaults`, `*_add_referido_to_seleccion_ingresos_table`, `2026_10_20_000001_add_asistencia_estado_observaciones_to_seleccion_ingresos_table`, `2026_10_20_000002_seed_seleccion_ingreso_estado_catalog`
+- Migrations: `*_create_seleccion_ingresos_table`, `*_create_seleccion_examenes_ocupacionales_table`, `*_seed_seleccion_payroll_catalog_defaults`, `*_add_referido_to_seleccion_ingresos_table`, `2026_10_20_000001_add_asistencia_estado_observaciones_to_seleccion_ingresos_table`, `2026_10_20_000002_seed_seleccion_ingreso_estado_catalog`, `2026_10_20_000003_add_estado_to_seleccion_examenes_ocupacionales_table`
 - Factories: `SeleccionIngresoFactory`, `SeleccionExamenOcupacionalFactory`
 - Tests: `tests/Feature/GestionHumana/Seleccion*.php`
 - Vistas: `resources/views/areas/gestion_humana/seleccion/`
@@ -202,8 +207,11 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.5 | 2026-10-20 | Ingreso: se quita la alerta verde de `session('status')` encima de filtros (queda solo el toast global del layout). |
+| 1.4 | 2026-10-20 | Ingreso: REFERIDO pasa a opcional (`nullable` en Store/Update; sin migración). |
 | 1.3 | 2026-10-20 | Ingreso: rediseño del modal Nuevo/Editar (3 secciones en tarjeta + pie Cancelar/Guardar). Fix Alpine `x-on:submit` (sin `return`) en Ingreso y Examen. |
 | 1.0 | 2026-09-22 | FEAT-035: tablero Seleccion (Dashboard, Ingreso, Examen, Catalogos). |
+| 1.5 | 2026-10-20 | Examen: campo ESTADO fijo (SOLICITADO/AGENDADO/APROBADO/NO APROBADO/CANCELADO, default SOLICITADO; migración `2026_10_20_000003`), tabla con todos los campos (ESTADO y CORREO tras FECHA ARL), pills de estado, correo `email:rfc,filter`, historial de auditoría por usuario/registro (`examenes.historial`, `seleccion.edit`), modales Nuevo/Editar rediseñados por secciones, filtros en 2 filas + export en toolbar. |
 | 1.4 | 2026-10-20 | Ingreso filtros: `.seleccion-ingresos-filters` en 2 filas (grande/portatil): fila 1 Buscar + 4 fechas + filtrar/limpiar a la derecha; fila 2 los 5 selectores; <1024px auto-fit. Export Excel movido a la toolbar de la tabla, a la izquierda de Nuevo ingreso (mismo `exportUrl` con filtros aplicados; visible tambien para solo consulta). |
 | 1.3 | 2026-10-20 | Catalogos: modificador `.seleccion-catalogs-page` (gestion max 58rem, filas densas, columnas fijas centradas, contador en header). Modal Ingreso: pie icon-only (`req-manage-filters__icon-btn` ghost/primary). Fix transversal searchable-select: `.searchable-select__dropdown` base `position: fixed` (antes `absolute` bajo el viewport mostraba un frame de scrollbar y el modal saltaba ~7px). |
 | 1.2 | 2026-10-20 | Catalogos codeless (RH, estado civil, estado solicitud, estado ingreso, jefe operativo): sin Codigo/Orden en UI; code autogenerado desde nombre, orden al final, nombre unico; fix fila vacia colspan en DataTables. |

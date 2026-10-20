@@ -21,6 +21,7 @@ use App\Services\GestionHumana\SeleccionAuditLogService;
 use App\Services\GestionHumana\SeleccionCatalogService;
 use App\Services\GestionHumana\SeleccionDashboardService;
 use App\Services\GestionHumana\SeleccionExamenDatatableService;
+use App\Services\GestionHumana\SeleccionExamenHistorialService;
 use App\Services\GestionHumana\SeleccionExamenService;
 use App\Services\GestionHumana\SeleccionIngresoDatatableService;
 use App\Services\GestionHumana\SeleccionIngresoService;
@@ -49,6 +50,7 @@ class SeleccionController extends Controller
         private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
         private readonly SeleccionIngresosExport $ingresosExport,
         private readonly SeleccionExamensExport $examensExport,
+        private readonly SeleccionExamenHistorialService $examenHistorialService,
     ) {}
 
     public function index(Request $request): RedirectResponse
@@ -300,10 +302,35 @@ class SeleccionController extends Controller
             'afpOptions' => $this->catalogSelectOptions('afp'),
             'maritalStatusOptions' => $this->catalogSelectOptions('marital_status'),
             'solicitudStatusOptions' => $this->catalogSelectOptions('seleccion_solicitud_status'),
+            'estadoLabels' => SeleccionExamenOcupacional::ESTADO_LABELS,
+            'estadoOptions' => collect(SeleccionExamenOcupacional::ESTADO_LABELS)
+                ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
+                ->values()
+                ->all(),
             'clientOptions' => $this->clientSelectOptions(),
             'responsableOptions' => $this->responsableSelectOptions(),
+            'historialUrl' => $canEdit ? route('gestion-humana.seleccion.examenes.historial') : null,
+            'historialUserOptions' => $canEdit ? $this->examenHistorialService->userOptions() : [],
             'showCreateModal' => $canEdit && $request->session()->get('errors') !== null
                 && ! $request->session()->hasOldInput('_method'),
+        ]);
+    }
+
+    /**
+     * Historial de auditoría de Exámenes (global con filtros o `?id=` por registro). Solo `seleccion.edit`.
+     */
+    public function examenesHistorial(Request $request): JsonResponse
+    {
+        abort_unless($this->seleccionAccess->canEdit(auth()->user()), 403);
+
+        $rowId = $request->query('id');
+        $rowId = $rowId !== null && $rowId !== '' ? (int) $rowId : null;
+
+        return response()->json([
+            'data' => $this->examenHistorialService->entries(
+                $rowId,
+                $rowId === null ? $this->examenHistorialService->filtersFromRequest($request) : [],
+            ),
         ]);
     }
 
@@ -368,14 +395,17 @@ class SeleccionController extends Controller
             'updated_by' => auth()->id(),
         ]);
 
-        $this->auditLogService->logEvent(
+        // Alta con valores iniciales para el historial (before vacío).
+        $this->auditLogService->logModelChange(
             eventType: 'seleccion_examen',
             action: 'create',
+            model: $examen,
+            before: null,
+            after: $this->examenService->auditSnapshot($examen->fresh()),
             metadata: [
                 'seleccion_examen_id' => $examen->id,
                 'document_number' => $examen->document_number,
             ],
-            model: $examen,
             userId: (int) auth()->id(),
         );
 
@@ -393,30 +423,7 @@ class SeleccionController extends Controller
             $seleccionExamenOcupacional->id,
         );
 
-        $before = $seleccionExamenOcupacional->only([
-            'document_number',
-            'full_name',
-            'position_code',
-            'position_name',
-            'servicio_sector',
-            'commercial_client_id',
-            'eps_code',
-            'eps_name',
-            'afp_code',
-            'afp_name',
-            'birth_date',
-            'city_code',
-            'city_name',
-            'address',
-            'email',
-            'phone',
-            'marital_status_code',
-            'marital_status_name',
-            'fecha_arl',
-            'solicitud_status_code',
-            'solicitud_status_name',
-            'responsable_user_id',
-        ]);
+        $before = $this->examenService->auditSnapshot($seleccionExamenOcupacional);
 
         $payload = $this->examenService->payloadWithSnapshots($validated);
 
@@ -430,7 +437,7 @@ class SeleccionController extends Controller
             action: 'update',
             model: $seleccionExamenOcupacional,
             before: $before,
-            after: $seleccionExamenOcupacional->only(array_keys($before)),
+            after: $this->examenService->auditSnapshot($seleccionExamenOcupacional->fresh()),
             metadata: [
                 'seleccion_examen_id' => $seleccionExamenOcupacional->id,
                 'document_number' => $seleccionExamenOcupacional->document_number,
@@ -653,6 +660,9 @@ class SeleccionController extends Controller
             'city_code' => trim((string) $request->query('city_code', '')),
             'position_code' => trim((string) $request->query('position_code', '')),
             'solicitud_status_code' => trim((string) $request->query('solicitud_status_code', '')),
+            'estado' => array_key_exists((string) $request->query('estado', ''), SeleccionExamenOcupacional::ESTADO_LABELS)
+                ? (string) $request->query('estado')
+                : '',
         ];
     }
 

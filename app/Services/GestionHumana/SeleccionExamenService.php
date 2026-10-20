@@ -19,6 +19,7 @@ class SeleccionExamenService
      *     city_code?: string|null,
      *     position_code?: string|null,
      *     solicitud_status_code?: string|null,
+     *     estado?: string|null,
      * }  $filters
      * @return Builder<SeleccionExamenOcupacional>
      */
@@ -72,6 +73,11 @@ class SeleccionExamenService
         $solicitudCode = trim((string) ($filters['solicitud_status_code'] ?? ''));
         if ($solicitudCode !== '') {
             $query->where('solicitud_status_code', $solicitudCode);
+        }
+
+        $estado = trim((string) ($filters['estado'] ?? ''));
+        if ($estado !== '' && array_key_exists($estado, SeleccionExamenOcupacional::ESTADO_LABELS)) {
+            $query->where('estado', $estado);
         }
 
         if ($ordered) {
@@ -137,6 +143,7 @@ class SeleccionExamenService
             'marital_status_code' => (string) $validated['marital_status_code'],
             'marital_status_name' => $marital,
             'fecha_arl' => $validated['fecha_arl'],
+            'estado' => (string) ($validated['estado'] ?? SeleccionExamenOcupacional::ESTADO_SOLICITADO),
             'solicitud_status_code' => (string) $validated['solicitud_status_code'],
             'solicitud_status_name' => $solicitud,
             'responsable_user_id' => (int) $validated['responsable_user_id'],
@@ -167,5 +174,33 @@ class SeleccionExamenService
             ->first();
 
         return $item?->name ?? $code;
+    }
+
+    /**
+     * Valores auditables del examen (fechas Y-m-d) para before/after del log.
+     *
+     * @return array<string, mixed>
+     */
+    public function auditSnapshot(SeleccionExamenOcupacional $examen): array
+    {
+        return [
+            'document_number' => $examen->document_number,
+            'full_name' => $examen->full_name,
+            'position_name' => $examen->position_name,
+            'servicio_sector' => $examen->servicio_sector,
+            'commercial_client_id' => $examen->commercial_client_id,
+            'eps_name' => $examen->eps_name,
+            'afp_name' => $examen->afp_name,
+            'birth_date' => optional($examen->birth_date)?->format('Y-m-d'),
+            'city_name' => $examen->city_name,
+            'address' => $examen->address,
+            'phone' => $examen->phone,
+            'marital_status_name' => $examen->marital_status_name,
+            'fecha_arl' => optional($examen->fecha_arl)?->format('Y-m-d'),
+            'estado' => $examen->estado,
+            'email' => $examen->email,
+            'solicitud_status_name' => $examen->solicitud_status_name,
+            'responsable_user_id' => $examen->responsable_user_id,
+        ];
     }
 }

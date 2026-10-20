@@ -228,8 +228,10 @@
                 @endif
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_referido">REFERIDO</label>
-                <input id="{{ $prefix }}_referido" name="referido" type="text" class="form-input" maxlength="255" required value="{{ $v['referido'] ?? '' }}" {!! $bind('referido') !!}>
+                <label class="form-label" for="{{ $prefix }}_referido">
+                    REFERIDO <span class="seleccion-ingresos-form__optional">(opcional)</span>
+                </label>
+                <input id="{{ $prefix }}_referido" name="referido" type="text" class="form-input" maxlength="255" value="{{ $v['referido'] ?? '' }}" {!! $bind('referido') !!}>
             </div>
             <div class="form-field seleccion-ingresos-form__span-3">
                 <label class="form-label" for="{{ $prefix }}_reemplaza_a">REEMPLAZA A</label>

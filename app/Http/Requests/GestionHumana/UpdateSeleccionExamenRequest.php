@@ -71,7 +71,7 @@ class UpdateSeleccionExamenRequest extends FormRequest
                 ),
             ],
             'address' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:150'],
+            'email' => ['required', 'email:rfc,filter', 'max:150'],
             'phone' => ['required', 'string', 'max:40'],
             'marital_status_code' => [
                 'required',
@@ -82,6 +82,7 @@ class UpdateSeleccionExamenRequest extends FormRequest
                 ),
             ],
             'fecha_arl' => ['required', 'date'],
+            'estado' => ['required', 'string', Rule::in(array_keys(SeleccionExamenOcupacional::ESTADO_LABELS))],
             'solicitud_status_code' => [
                 'required',
                 'string',
@@ -122,6 +123,8 @@ class UpdateSeleccionExamenRequest extends FormRequest
             'marital_status_code.required' => 'El estado civil es obligatorio.',
             'marital_status_code.exists' => 'El estado civil no existe o no está activo.',
             'fecha_arl.required' => 'La fecha de ARL es obligatoria.',
+            'estado.required' => 'El estado es obligatorio.',
+            'estado.in' => 'El estado seleccionado no es válido.',
             'solicitud_status_code.required' => 'El estado de solicitud es obligatorio.',
             'solicitud_status_code.exists' => 'El estado de solicitud no existe o no está activo.',
             'responsable_user_id.required' => 'El responsable es obligatorio.',
@@ -138,6 +141,7 @@ class UpdateSeleccionExamenRequest extends FormRequest
             'address' => trim((string) $this->input('address')),
             'email' => trim((string) $this->input('email')),
             'phone' => trim((string) $this->input('phone')),
+            'estado' => trim((string) $this->input('estado')),
             'confirm_duplicate' => $this->boolean('confirm_duplicate'),
         ]);
     }

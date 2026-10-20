@@ -272,6 +272,7 @@ Route::middleware(['password.changed'])
         Route::get('/examenes/datatable', [SeleccionController::class, 'examenesDatatable'])->name('examenes.datatable');
         Route::get('/examenes/lookup-cedula', [SeleccionController::class, 'examenesLookupCedula'])->name('examenes.lookup-cedula');
         Route::get('/examenes/exportar', [SeleccionController::class, 'examenesExport'])->name('examenes.export');
+        Route::get('/examenes/historial', [SeleccionController::class, 'examenesHistorial'])->name('examenes.historial');
         Route::post('/examenes', [SeleccionController::class, 'storeExamen'])->name('examenes.store');
         Route::patch('/examenes/{seleccionExamenOcupacional}', [SeleccionController::class, 'updateExamen'])->name('examenes.update');
         Route::delete('/examenes/{seleccionExamenOcupacional}', [SeleccionController::class, 'destroyExamen'])->name('examenes.destroy');

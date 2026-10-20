@@ -52,6 +52,97 @@ class SeleccionExamenTest extends TestCase
         $this->assertSame('Vigilante', $row->position_name);
         $this->assertNotEmpty($row->eps_name);
         $this->assertNotEmpty($row->solicitud_status_name);
+        // Sin estado en el request, el examen inicia en SOLICITADO.
+        $this->assertSame(SeleccionExamenOcupacional::ESTADO_SOLICITADO, $row->estado);
+    }
+
+    public function test_store_rejects_invalid_email_and_estado(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.seleccion.examenes.store'), [
+                ...$payload,
+                'email' => 'correo-sin-arroba',
+                'estado' => 'aprovado',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['email', 'estado']);
+
+        $this->assertSame(0, SeleccionExamenOcupacional::query()->count());
+    }
+
+    public function test_datatable_shows_estado_badge_and_email_after_fecha_arl(): void
+    {
+        $editor = $this->editorUser();
+        SeleccionExamenOcupacional::factory()->create([
+            'email' => 'visible@example.com',
+            'estado' => SeleccionExamenOcupacional::ESTADO_NO_APROBADO,
+        ]);
+
+        $row = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.examenes.datatable', ['draw' => 1]))
+            ->assertOk()
+            ->json('data.0');
+
+        $this->assertCount(18, $row);
+        $this->assertStringContainsString('status-pill--examen-no-aprobado', $row[13]);
+        $this->assertStringContainsString('NO APROBADO', $row[13]);
+        $this->assertSame('visible@example.com', $row[14]);
+        $this->assertStringContainsString('js-seleccion-examen-historial', $row[17]);
+    }
+
+    public function test_estado_filter_limits_rows(): void
+    {
+        $viewer = $this->viewerUser();
+        SeleccionExamenOcupacional::factory()->create(['estado' => SeleccionExamenOcupacional::ESTADO_APROBADO]);
+        SeleccionExamenOcupacional::factory()->create(['estado' => SeleccionExamenOcupacional::ESTADO_CANCELADO]);
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.seleccion.examenes.datatable', ['draw' => 1, 'estado' => 'aprobado']))
+            ->assertOk()
+            ->assertJsonPath('recordsTotal', 1);
+    }
+
+    public function test_historial_requires_edit_permission_and_filters_by_user(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.examenes.store'), $payload)
+            ->assertRedirect();
+
+        $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.seleccion.examenes.historial'))
+            ->assertForbidden();
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.examenes.historial', ['user_id' => $editor->id]))
+            ->assertOk()
+            ->assertJsonPath('data.0.action', 'create')
+            ->assertJsonPath('data.0.user_name', $editor->name);
+
+        $other = User::factory()->create(['must_change_password' => false]);
+
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.examenes.historial', ['user_id' => $other->id]))
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_examenes_view_renders_estado_pills_and_redesigned_modals(): void
+    {
+        $this->actingAs($this->editorUser())
+            ->get(route('gestion-humana.seleccion.examenes'))
+            ->assertOk()
+            ->assertSee('status-pill--examen-no-aprobado', false)
+            ->assertSee('Historial de cambios', false)
+            ->assertSee('Datos del aspirante', false)
+            ->assertSee('Proceso del examen', false)
+            ->assertSee("'seleccion-examen-editar'", false)
+            ->assertDontSee('cursos-registros-page__modal-panel', false);
     }
 
     public function test_store_duplicate_requires_confirm_flag(): void
@@ -143,6 +234,7 @@ class SeleccionExamenTest extends TestCase
                 ...$payload,
                 'document_number' => '111222333',
                 'full_name' => 'Nombre Actualizado',
+                'estado' => SeleccionExamenOcupacional::ESTADO_AGENDADO,
                 'confirm_duplicate' => 1,
             ])
             ->assertRedirect();
@@ -150,7 +242,21 @@ class SeleccionExamenTest extends TestCase
         $this->assertDatabaseHas('seleccion_examenes_ocupacionales', [
             'id' => $examen->id,
             'full_name' => 'Nombre Actualizado',
+            'estado' => SeleccionExamenOcupacional::ESTADO_AGENDADO,
         ]);
+
+        // Historial por registro: el cambio de estado aparece con antes → después y usuario.
+        $entries = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.examenes.historial', ['id' => $examen->id]))
+            ->assertOk()
+            ->json('data');
+
+        $update = collect($entries)->firstWhere('action', 'update');
+        $this->assertNotNull($update);
+        $this->assertSame($editor->name, $update['user_name']);
+        $estadoChange = collect($update['changes'])->firstWhere('field', 'estado');
+        $this->assertSame('SOLICITADO', $estadoChange['before']);
+        $this->assertSame('AGENDADO', $estadoChange['after']);
 
         $this->actingAs($editor)
             ->delete(route('gestion-humana.seleccion.examenes.destroy', $examen))

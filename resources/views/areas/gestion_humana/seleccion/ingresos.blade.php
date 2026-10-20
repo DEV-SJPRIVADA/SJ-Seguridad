@@ -29,9 +29,7 @@
         @seleccion-ingreso-open-edit.window="openEdit($event.detail)"
     >
         <div class="app-container">
-            @if (session('status'))
-                <div class="alert alert--success">{{ session('status') }}</div>
-            @endif
+            {{-- El éxito (session status) se muestra solo como toast global del layout. --}}
             @if (session('error'))
                 <div class="alert alert--danger">{{ session('error') }}</div>
             @endif
