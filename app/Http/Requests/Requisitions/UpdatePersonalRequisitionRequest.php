@@ -5,6 +5,7 @@ namespace App\Http\Requests\Requisitions;
 use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
+use App\Http\Requests\Requisitions\Concerns\ValidatesContractDuration;
 use App\Models\PersonalRequisition;
 use App\Rules\Requisitions\HiredDocumentNotDuplicated;
 use App\Rules\Requisitions\ValidRequisitionRecruiterUser;
@@ -18,6 +19,7 @@ class UpdatePersonalRequisitionRequest extends FormRequest
     use ResolvesCommercialClient;
     use ResolvesReplacementPersonFields;
     use UppercasesValidatedText;
+    use ValidatesContractDuration;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -149,6 +151,8 @@ class UpdatePersonalRequisitionRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator): void {
+            $this->validateContractDuration($validator);
+
             $requisition = $this->route('requisition');
 
             if (! $requisition instanceof PersonalRequisition) {

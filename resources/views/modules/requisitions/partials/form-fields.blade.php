@@ -285,24 +285,69 @@
                 </div>
             </header>
 
-            <div class="form-grid form-grid--two">
-                <div class="form-field">
-                    <x-input-label for="contract_type_id" value="Tipo de contrato *" />
-                    <x-searchable-select
-                        id="contract_type_id"
-                        name="contract_type_id"
-                        :options="$catalogs['contractTypes']"
-                        :value="old('contract_type_id', $requisition?->contract_type_id)"
-                        placeholder="Selecciona un tipo de contrato"
-                        searchPlaceholder="Buscar tipo de contrato…"
-                    />
-                    <x-input-error :messages="$errors->get('contract_type_id')" />
-                </div>
+            @php
+                // Metadatos de tipos de contrato para la duración: Fijo → selector 6/12 meses; otros → nombre del tipo.
+                $contractTypeMeta = collect($catalogs['contractTypes'])
+                    ->mapWithKeys(fn ($type) => [(string) $type->id => ['name' => (string) $type->name, 'fixed' => $type->isFixedTerm()]])
+                    ->all();
+                $fixedDurationOptions = collect(\App\Models\RequisitionContractType::FIXED_TERM_DURATIONS)
+                    ->map(fn (string $label, string $value): array => ['value' => $value, 'label' => $label])
+                    ->values()
+                    ->all();
+                $initialContractType = (string) old('contract_type_id', $requisition?->contract_type_id);
+                $initialContractDuration = (string) old('contract_duration', $requisition?->contract_duration);
+            @endphp
 
-                <div class="form-field">
-                    <x-input-label for="contract_duration" value="Duración del contrato *" />
-                    <input id="contract_duration" name="contract_duration" type="text" class="form-input" value="{{ old('contract_duration', $requisition?->contract_duration) }}">
-                    <x-input-error :messages="$errors->get('contract_duration')" />
+            <div class="form-grid form-grid--two">
+                {{-- Tipo + duración del contrato enlazados (display: contents conserva la grilla) --}}
+                <div
+                    class="req-form__contents"
+                    x-data="requisitionContractDuration(@js([
+                        'types' => $contractTypeMeta,
+                        'typeId' => $initialContractType,
+                        'duration' => $initialContractDuration,
+                        'fixedValues' => array_keys(\App\Models\RequisitionContractType::FIXED_TERM_DURATIONS),
+                    ]))"
+                    x-on:change="onFieldChange($event)"
+                >
+                    <div class="form-field">
+                        <x-input-label for="contract_type_id" value="Tipo de contrato *" />
+                        <x-searchable-select
+                            id="contract_type_id"
+                            name="contract_type_id"
+                            :options="$catalogs['contractTypes']"
+                            :value="old('contract_type_id', $requisition?->contract_type_id)"
+                            placeholder="Selecciona un tipo de contrato"
+                            searchPlaceholder="Buscar tipo de contrato…"
+                        />
+                        <x-input-error :messages="$errors->get('contract_type_id')" />
+                    </div>
+
+                    <div class="form-field">
+                        <x-input-label for="contract_duration" value="Duración del contrato *" />
+                        {{-- Valor enviado: selector (Fijo) o texto (otros tipos) escriben aquí --}}
+                        <input type="hidden" name="contract_duration" value="{{ $initialContractDuration }}" x-bind:value="duration">
+                        <div x-show="isFixed" x-cloak>
+                            <x-searchable-select
+                                id="contract_duration_fixed"
+                                name=""
+                                :options="$fixedDurationOptions"
+                                :value="array_key_exists($initialContractDuration, \App\Models\RequisitionContractType::FIXED_TERM_DURATIONS) ? $initialContractDuration : ''"
+                                placeholder="Selecciona 6 o 12 meses"
+                                :allow-clear="false"
+                            />
+                        </div>
+                        <input
+                            id="contract_duration"
+                            type="text"
+                            class="form-input"
+                            maxlength="255"
+                            x-show="! isFixed"
+                            x-model="duration"
+                            value="{{ $initialContractDuration }}"
+                        >
+                        <x-input-error :messages="$errors->get('contract_duration')" />
+                    </div>
                 </div>
 
                 <div class="form-field">
@@ -705,3 +750,62 @@
         });
     });
 </script>
+
+@once
+    @push('scripts')
+        <script>
+            // Duración del contrato: Fijo → selector 6/12 meses; otros tipos → se prellena con el nombre del tipo (editable).
+            function requisitionContractDuration(config) {
+                const types = config.types || {};
+                const fixedValues = (config.fixedValues || []).map(String);
+
+                return {
+                    typeId: String(config.typeId || ''),
+                    duration: String(config.duration || ''),
+
+                    get isFixed() {
+                        return !! (types[this.typeId] && types[this.typeId].fixed);
+                    },
+
+                    init() {
+                        // Fijo con duración fuera de 6/12 (dato legado): obliga a elegir en el selector.
+                        if (this.isFixed && ! fixedValues.includes(this.duration)) {
+                            this.duration = '';
+                        }
+                    },
+
+                    onFieldChange(event) {
+                        const target = event.target;
+                        const id = target && target.id ? target.id : '';
+
+                        if (id === 'contract_type_id') {
+                            this.typeId = String(target.value || '');
+                            this.applyType();
+                        } else if (id === 'contract_duration_fixed') {
+                            this.duration = String(target.value || '');
+                        }
+                    },
+
+                    applyType() {
+                        if (this.isFixed) {
+                            this.duration = fixedValues.includes(this.duration) ? this.duration : '';
+                            this.setFixedSelect(this.duration);
+
+                            return;
+                        }
+
+                        this.duration = types[this.typeId] ? types[this.typeId].name : '';
+                    },
+
+                    setFixedSelect(value) {
+                        const input = document.getElementById('contract_duration_fixed');
+                        const wrap = input ? input.closest('[x-data]') : null;
+                        if (wrap && window.Alpine) {
+                            window.Alpine.$data(wrap).value = value;
+                        }
+                    },
+                };
+            }
+        </script>
+    @endpush
+@endonce

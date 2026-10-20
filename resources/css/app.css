@@ -5897,6 +5897,11 @@ button.module-tab {
     word-break: break-word;
 }
 
+/* Envoltura Alpine sin caja: sus hijos (tipo + duración contrato) siguen en la grilla del formulario */
+.req-form__contents {
+    display: contents;
+}
+
 .req-form__section {
     display: flex;
     flex-direction: column;

@@ -341,8 +341,12 @@ permisos para modificar Catálogos
 
   - Obra o Labor
 
-- **Duración del contrato:** define a cuantos meses se contrata el
-  empleado.
+- **Duración del contrato:** define a cuántos meses se contrata el
+  empleado. Si el tipo de contrato es **Fijo**, se elige en un selector
+  entre **6 meses** o **12 meses** (no se aceptan otros valores). Con
+  cualquier otro tipo (Indefinido, Obra o Labor, Aprendizaje) la duración
+  se llena sola con el nombre del tipo y se puede modificar. Es
+  obligatoria cuando se elige un tipo de contrato.
 
 - **Valor salario base:** define el salario que recibirá mensualmente el
   empleado
@@ -457,6 +461,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.14        | 2026-10-20                 | Duración del contrato: con tipo Fijo se elige 6 o 12 meses; con otros tipos se prellena con el nombre del tipo (editable) |
 | 1.13        | 2026-10-16                 | Gestión/editar: Imprimir RQ al lado de Guardar; datos de persona contratada solo si el estado es Contratado |
 | 1.12        | 2026-10-16                 | Gestión/editar Contratado: Género (Masculino/Femenino) de la persona contratada; es el que va a ficha/APO |
 | 1.11        | 2026-10-15                 | Gestión/editar Contratado: Fecha de nacimiento obligatoria junto a la cédula (se refleja en ficha) |

@@ -254,6 +254,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-20 | Duracion del contrato: tipo Fijo (`RequisitionContractType::isFixedTerm()`, nombre «Fijo») → `<x-searchable-select>` 6/12 meses (guarda `6`/`12`, `FIXED_TERM_DURATIONS`); otros tipos → texto prellenado con el nombre del tipo (editable, MAYÚSCULAS al guardar). Alpine `requisitionContractDuration` en `partials/form-fields` (hidden `contract_duration`). Validacion `Concerns\ValidatesContractDuration` (Store/Update): obligatoria si hay tipo; Fijo solo 6/12. Datos legados no se migran. |
 | 2026-10-16 | Gestion/editar: Imprimir RQ junto a Guardar; sección contratado oculta si el estado no es Contratado (`#js-hired-group[hidden]`) |
 | 2026-09-29 | Impresión FO-GH-22: fila TIPO DE PROGRAMACION + CCOS CR (`cost_center`) en la misma línea |
 | 2026-09-24 | Impresión FO-GH-22: recepción GH = `created_at` del primer status log `solicitada` (`humanResourcesReceivedAt`) |

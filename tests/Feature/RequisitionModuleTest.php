@@ -1427,6 +1427,50 @@ class RequisitionModuleTest extends TestCase
         });
     }
 
+    public function test_fixed_contract_requires_duration_of_6_or_12_months(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-0601');
+        $url = route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]);
+        $fixed = $this->fixedContractType();
+
+        $this->actingAs($manager)->patch($url, array_merge($this->validPayload(), [
+            'status' => PersonalRequisition::STATUS_EN_GESTION,
+            'contract_type_id' => $fixed->id,
+            'contract_duration' => '9',
+        ]))->assertSessionHasErrors('contract_duration');
+
+        $this->actingAs($manager)->patch($url, array_merge($this->validPayload(), [
+            'status' => PersonalRequisition::STATUS_EN_GESTION,
+            'contract_type_id' => $fixed->id,
+            'contract_duration' => '',
+        ]))->assertSessionHasErrors('contract_duration');
+
+        $this->actingAs($manager)->patch($url, array_merge($this->validPayload(), [
+            'status' => PersonalRequisition::STATUS_EN_GESTION,
+            'contract_type_id' => $fixed->id,
+            'contract_duration' => '6',
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertSame('6', $requisition->fresh()->contract_duration);
+    }
+
+    public function test_non_fixed_contract_accepts_type_name_as_duration(): void
+    {
+        [$manager, $requisition] = $this->createManagerAndRequisition('REQ-2026-0602');
+        $indefinido = RequisitionContractType::query()->firstOrCreate(
+            ['name' => 'Indefinido'],
+            ['is_active' => true, 'sort_order' => 2],
+        );
+
+        $this->actingAs($manager)->patch(route('requisitions.update', ['module' => 'operaciones', 'requisition' => $requisition]), array_merge($this->validPayload(), [
+            'status' => PersonalRequisition::STATUS_EN_GESTION,
+            'contract_type_id' => $indefinido->id,
+            'contract_duration' => 'Indefinido',
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertSame('INDEFINIDO', $requisition->fresh()->contract_duration);
+    }
+
     public function test_update_without_status_change_does_not_queue_status_mail(): void
     {
         Mail::fake();
@@ -2484,8 +2528,8 @@ class RequisitionModuleTest extends TestCase
     {
         return array_merge($this->validPayload(), [
             'status' => PersonalRequisition::STATUS_CONTRATADO,
-            'contract_type_id' => RequisitionContractType::query()->firstOrFail()->id,
-            'contract_duration' => '12 meses',
+            'contract_type_id' => $this->fixedContractType()->id,
+            'contract_duration' => '12',
             'base_salary' => 1500000,
             'transport_allowance' => 162000,
             'statutory_bonus' => 50000,
@@ -2497,6 +2541,14 @@ class RequisitionModuleTest extends TestCase
             'hired_first_name' => 'Prueba',
             'hired_full_name' => 'Contratado Prueba',
         ], $overrides);
+    }
+
+    private function fixedContractType(): RequisitionContractType
+    {
+        return RequisitionContractType::query()->firstOrCreate(
+            ['name' => 'Fijo'],
+            ['is_active' => true, 'sort_order' => 1],
+        );
     }
 
     private function commercialClient(): CommercialClient

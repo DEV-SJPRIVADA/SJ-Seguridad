@@ -5,6 +5,7 @@ namespace App\Http\Requests\Requisitions;
 use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Http\Requests\Requisitions\Concerns\ResolvesCommercialClient;
 use App\Http\Requests\Requisitions\Concerns\ResolvesReplacementPersonFields;
+use App\Http\Requests\Requisitions\Concerns\ValidatesContractDuration;
 use App\Models\PersonalRequisition;
 use App\Rules\Requisitions\ValidRequisitionRecruiterUser;
 use App\Services\Access\RequisitionAccessService;
@@ -17,6 +18,7 @@ class StorePersonalRequisitionRequest extends FormRequest
     use ResolvesCommercialClient;
     use ResolvesReplacementPersonFields;
     use UppercasesValidatedText;
+    use ValidatesContractDuration;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -73,5 +75,10 @@ class StorePersonalRequisitionRequest extends FormRequest
             'hiring_date' => ['nullable', 'date'],
             'status' => ['nullable', 'string', Rule::in(array_keys(PersonalRequisition::statuses()))],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(fn ($validator) => $this->validateContractDuration($validator));
     }
 }
