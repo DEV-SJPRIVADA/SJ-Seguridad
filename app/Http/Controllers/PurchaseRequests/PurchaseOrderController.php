@@ -8,6 +8,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
+use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseOrderDatatableService;
 use App\Services\PurchaseRequests\PurchaseOrderExcelExporter;
@@ -159,11 +160,17 @@ class PurchaseOrderController extends Controller
         return $datatable->respond($request, $datatable->filtersFromRequest($request));
     }
 
-    public function show(string $module, PurchaseOrder $purchaseOrder): View
+    public function show(string $module, PurchaseOrder $purchaseOrder, PurchaseAccessService $access): View
     {
-        $purchaseOrder->load(['items', 'source', 'provider', 'evaluation']);
+        $purchaseOrder->load(['items', 'source', 'provider', 'evaluation', 'anulacionAprobador', 'anulacionSolicitadaPor']);
+        $canProcess = auth()->user() !== null && $access->canEmitOrder(auth()->user());
 
         return view('modules.purchase-requests.orders.show', [
+            'canRequestCancellation' => $canProcess && $purchaseOrder->puedeSolicitarAnulacion(),
+            'canWithdrawCancellation' => $canProcess && $purchaseOrder->tieneAnulacionPendiente(),
+            'approverOptions' => $access->approversQuery()->get(['id', 'name'])
+                ->map(fn ($user): array => ['value' => (string) $user->id, 'label' => $user->name])
+                ->all(),
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
             'order' => $purchaseOrder,

@@ -6,6 +6,7 @@ use App\Mail\PurchaseRequestApprovedForComprasMail;
 use App\Mail\PurchaseRequestCreatedMail;
 use App\Mail\PurchaseRequestProcessedMail;
 use App\Mail\PurchaseRequestResolvedMail;
+use App\Mail\PurchaseRequestReturnedMail;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestMailLog;
 use App\Models\User;
@@ -99,6 +100,23 @@ class PurchaseRequestNotificationService
             new PurchaseRequestProcessedMail($purchaseRequest),
             PurchaseRequestMailLog::TYPE_REQUESTER_PROCESSED,
             'Estado compras: '.($purchaseRequest->estado_compras ?? '—'),
+        );
+    }
+
+    public function notifyRequesterReturned(PurchaseRequest $purchaseRequest, string $motivo): void
+    {
+        $purchaseRequest->loadMissing('user');
+
+        if ($purchaseRequest->user === null) {
+            return;
+        }
+
+        $this->sendToRecipient(
+            $purchaseRequest,
+            $purchaseRequest->user->email,
+            new PurchaseRequestReturnedMail($purchaseRequest, $motivo),
+            PurchaseRequestMailLog::TYPE_REQUESTER_RETURNED,
+            'Devuelta por Compras',
         );
     }
 

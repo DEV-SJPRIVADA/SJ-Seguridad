@@ -39,7 +39,12 @@ TXT),
     'estados' => [
         'borrador' => 'Borrador',
         'emitida' => 'Emitida',
+        'anulacion_pendiente' => 'Anulación pendiente',
+        'anulada' => 'Anulada',
     ],
+
+    // Vigencia del enlace firmado para que el director apruebe la anulación por correo.
+    'cancellation_link_days' => (int) env('PURCHASE_ORDER_CANCELLATION_LINK_DAYS', 7),
 
     /*
     | Evaluación post-entrega (no se imprime en FO-AD-07).

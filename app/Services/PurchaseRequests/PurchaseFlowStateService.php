@@ -63,6 +63,44 @@ class PurchaseFlowStateService
         });
     }
 
+    /**
+     * Compras devuelve el pedido al solicitante (mal diligenciado). Queda Devuelta:
+     * al reenviarlo, la compra vuelve al director y el suministro vuelve a Calidad.
+     */
+    public function returnToRequester(PurchaseRequest|SupplyRequest $source, User $actor, string $motivo): void
+    {
+        $motivo = trim(UppercaseFormText::uppercaseString($motivo));
+
+        if ($motivo === '') {
+            throw new InvalidArgumentException('Indique el motivo de la devolución.');
+        }
+
+        if (! $source->puedeDevolverAlSolicitante()) {
+            throw new InvalidArgumentException('Solo se puede devolver un pedido en Por comprar y sin órdenes emitidas.');
+        }
+
+        DB::transaction(function () use ($source, $actor, $motivo): void {
+            $this->appendMotivo($source, $actor, 'DEVUELTA POR COMPRAS: '.$motivo);
+
+            if ($source instanceof PurchaseRequest) {
+                $source->update([
+                    'estado' => PurchaseRequest::ESTADO_RECHAZADO,
+                    'estado_compras' => null,
+                    'fecha_aprobacion' => null,
+                    'procesado_compras_at' => null,
+                    'procesado_compras_por' => null,
+                ]);
+
+                return;
+            }
+
+            $source->update([
+                'status' => 'rechazada_calidad',
+                'purchasing_manager_id' => $actor->id,
+            ]);
+        });
+    }
+
     private function syncPurchase(PurchaseRequest $source, ?User $actor): void
     {
         if ($source->estado_compras === PurchaseRequest::COMPRAS_RECHAZADO) {
@@ -160,6 +198,7 @@ class PurchaseFlowStateService
         $orders = PurchaseOrder::query()
             ->where('source_type', $sourceType)
             ->where('source_id', $sourceId)
+            ->where('estado', '!=', PurchaseOrder::ESTADO_ANULADA)
             ->with('evaluation')
             ->get();
 

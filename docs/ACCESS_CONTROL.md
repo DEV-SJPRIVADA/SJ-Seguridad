@@ -53,6 +53,10 @@ Permisos del modulo **Solicitudes de compra**:
 
 Tableros: `view.board.{area}.solicitudes_compra`, `view.board.compras.bandeja_compras`, `view.board.compras.ordenes_compra`, `view.board.compras.proveedores`.
 
+**Anulación de OC (2026-10-21):** sin claves nuevas. Solicitar o retirar usa `purchase.tab.processing`; aprobar o rechazar exige `purchase.tab.approval` y ser el director que Compras eligió en la solicitud (también por enlace firmado del correo).
+
+**Devolver al solicitante (2026-10-21):** usa `purchase.tab.processing` (sin clave nueva) y solo aplica en Por comprar sin órdenes.
+
 **FEAT-048 (2026-10-20):** no hay claves nuevas. **Pedidos**, **Órdenes** y **Catálogos** son los tableros `bandeja_compras`, `ordenes_compra` y `proveedores` reetiquetados. `view.board.compras.bandeja_compras` sigue existiendo; el rótulo del menú sale de `boards`. Pedidos y Órdenes se ven con `purchase.tab.processing`. Catálogos se ve con `purchase.providers.view` o `supply.tab.catalog` (pestaña Proveedores o Insumos). Solicitudes de compra ya no incluye la pestaña Bandeja. Calidad, con `supply.tab.quality`, solo muestra Por aprobar: ya no abre Insumos aprobados. El diccionario `purchase_tabs` / `supply_tabs` aún nombra «Bandeja compras», «Insumos aprobados» y «Catalogo»; `visibleTabsFor` no las devuelve y no son permisos nuevos.
 
 Permisos del modulo de documentos de Calidad:

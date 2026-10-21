@@ -89,7 +89,7 @@ final class PurchaseOrderDatatableService
     {
         $estado = (string) ($input['estado'] ?? self::ESTADO_TODOS);
 
-        if (! in_array($estado, ['emitida', 'borrador', self::ESTADO_TODOS], true)) {
+        if (! in_array($estado, [...array_keys((array) config('purchase-orders.estados', [])), self::ESTADO_TODOS], true)) {
             $estado = self::ESTADO_TODOS;
         }
 
@@ -251,11 +251,14 @@ final class PurchaseOrderDatatableService
 
     private function estadoPill(PurchaseOrder $order): string
     {
-        return sprintf(
-            '<span class="status-pill %s">%s</span>',
-            $order->estado === 'emitida' ? 'status-pill--success' : 'status-pill--muted',
-            e($order->estadoLabel()),
-        );
+        $pill = match ($order->estado) {
+            PurchaseOrder::ESTADO_EMITIDA => 'status-pill--success',
+            PurchaseOrder::ESTADO_ANULACION_PENDIENTE => 'status-pill--warning',
+            PurchaseOrder::ESTADO_ANULADA => 'status-pill--danger',
+            default => 'status-pill--muted',
+        };
+
+        return sprintf('<span class="status-pill %s">%s</span>', $pill, e($order->estadoLabel()));
     }
 
     /**
@@ -266,6 +269,8 @@ final class PurchaseOrderDatatableService
         return [
             ['value' => self::ESTADO_TODOS, 'label' => 'Todas'],
             ['value' => 'emitida', 'label' => 'Emitidas'],
+            ['value' => 'anulacion_pendiente', 'label' => 'Anulación pendiente'],
+            ['value' => 'anulada', 'label' => 'Anuladas'],
             ['value' => 'borrador', 'label' => 'Borrador'],
         ];
     }

@@ -71,7 +71,7 @@
                 <h2 class="page-title">Orden de compra N.º {{ $order->numeroOc }}</h2>
                 <p class="page-subtitle">FO-AD-07 · {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }} · {{ $order->fecha }}</p>
                 <div class="pur-req-detail__pills">
-                    <span class="status-pill status-pill--{{ $order->estado === 'emitida' ? 'success' : 'info' }}">{{ $order->estadoLabel() }}</span>
+                    <span class="status-pill status-pill--{{ match ($order->estado) { 'emitida' => 'success', 'anulada' => 'danger', 'anulacion_pendiente' => 'warning', default => 'info' } }}">{{ $order->estadoLabel() }}</span>
                     @if ($order->asume_cliente !== null)
                         <span class="status-pill status-pill--info">Asume cliente: {{ $order->asume_cliente }}</span>
                     @endif
@@ -209,6 +209,8 @@
                             </div>
                         @endif
                     </section>
+
+                    @include('modules.purchase-requests.orders.partials.cancellation')
                 </div>
 
                 <aside class="pur-req-form-aside">

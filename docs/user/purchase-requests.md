@@ -42,6 +42,8 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 | Con orden | Ya hay una orden y queda cantidad por pedir, o el saldo llegó a cero pero falta anotar la fecha de recibido en alguna orden. |
 | Historial / Cerrado | El pedido ya no admite otra orden. |
 | Cerrar saldo | Acción de Compras para dejar el pedido en Cerrado aunque todavía quede cantidad, escribiendo el motivo. |
+| Anulación de orden | Compras la pide eligiendo un director; si el director la aprueba, la orden queda Anulada y su cantidad vuelve al saldo del pedido. |
+| Devolver al solicitante | Acción de Compras para regresar un pedido mal diligenciado (Por comprar, sin órdenes). Queda Devuelta y, al reenviarse, se vuelve a autorizar. |
 | Solicitud Interno | Compra para uso interno. No pregunta Comodato ni Activo. |
 | Solicitud Cliente | Compra asociada a un cliente. Pregunta Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo. |
 | Comodato / Activo | Preguntas de Sí o No, solo en una solicitud Cliente. Por defecto quedan en No. |
@@ -135,7 +137,30 @@ El estado **no se elige**. Cambia solo:
 1. Abra **Procesar** de esa solicitud o de ese suministro.
 2. En la sección **Cerrar saldo** (está en el mismo formulario, no en una ventana aparte) escriba el **motivo**. Es obligatorio.
 3. Pulse **Cerrar saldo**. El motivo queda en los comentarios, en mayúsculas, y el pedido pasa a **Cerrado**.
-4. Después de eso no se puede emitir otra orden de ese pedido.
+4. Después de eso no se puede emitir otra orden de ese pedido. Si el problema es que el pedido está mal diligenciado, use **Devolver al solicitante** en lugar de cerrar el saldo.
+
+### Devolver al solicitante (Compras)
+
+Úselo cuando el pedido llegó mal diligenciado. Solo aparece en **Por comprar** y mientras no se haya emitido ninguna orden.
+
+1. Abra **Procesar** de esa solicitud o de ese suministro.
+2. En la sección **Devolver al solicitante** escriba qué debe corregir. Es obligatorio.
+3. Pulse **Devolver al solicitante**. El pedido sale de Pedidos y queda **Devuelta**. El motivo queda en los comentarios, en mayúsculas, y el solicitante recibe un correo.
+4. El solicitante lo corrige desde **Mis solicitudes** y lo reenvía. Una solicitud de compra vuelve a **Por autorizar** y el **director debe autorizarla de nuevo**. Un suministro vuelve a **Calidad** para aprobarlo de nuevo.
+
+### Anular una orden de compra mal emitida (Compras y director)
+
+Una orden emitida no se edita ni se borra. Si quedó mal (proveedor, precio, cantidad o pedido equivocado), pida su anulación. Solo se puede pedir mientras la orden no tenga fecha de recibido.
+
+1. **Compras:** abra la orden en **Órdenes** y, en **Solicitar anulación**, elija el **director que aprueba** y escriba el motivo. Pulse **Solicitar anulación**.
+2. La orden queda **Anulación pendiente**. Mientras tanto no se puede evaluar y su cantidad sigue apartada, para no emitir otra orden por lo mismo antes de la respuesta.
+3. Si se equivocó al pedirla, pulse **Retirar solicitud de anulación** y la orden vuelve a **Emitida**.
+4. **Director:** recibe un correo con el botón **Revisar anulación** (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Pendientes de autorización**, en **Anulaciones de órdenes por aprobar**. Solo el director elegido puede decidir.
+5. Al **aprobar**, la orden queda **Anulada**: no se borra, conserva su número y su PDF y Excel muestran **ANULADA**. Su cantidad vuelve al saldo del pedido, que pasa a **Con orden** o **Por comprar** según las otras órdenes. Desde ahí Compras puede emitir la orden correcta o, si no quedan órdenes, devolver el pedido al solicitante.
+6. Al **rechazar**, el director debe escribir el motivo y la orden sigue **Emitida**.
+7. Quien pidió la anulación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
+
+El sistema no envía las órdenes al proveedor; si ya se la había entregado, avísele por fuera.
 
 ### Emitir la orden impresa (FO-AD-07)
 
@@ -162,7 +187,7 @@ El estado **no se elige**. Cambia solo:
 ### Repartir una solicitud entre varios proveedores
 
 1. Desde Pedidos, abra la orden de la solicitud o del suministro.
-2. Cada línea muestra **solicitadas**, **ordenadas** y **pendiente**. La cantidad se precarga con el **pendiente** y no se puede escribir más de ese valor.
+2. Cada línea muestra **solicitadas**, **ordenadas** y **pendiente** (la columna **Pendiente** está justo antes de **Cantidad**). La cantidad se precarga con el **pendiente** y no se puede escribir más de ese valor.
 3. Si quiere repartir, emita una OC con la cantidad de ese proveedor (por ejemplo 50) y luego abra de nuevo el formulario: el pendiente ya descuenta lo ordenado (50) y podrá emitir otra OC con el resto (por ejemplo 20) para otro proveedor.
 4. El sistema **no permite duplicar**: cuando ya no queda saldo, la línea aparece en gris con pendiente 0 y la emisión se rechaza con el aviso "La cantidad supera el saldo pendiente".
 5. En el detalle de cada OC, el panel **Otras órdenes de esta solicitud** muestra las OC hermanas del mismo reparto.
@@ -213,6 +238,9 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
+| 1.37 | 2026-10-21 | Compras | **Anular orden de compra:** Compras la pide eligiendo el director que aprueba; el director decide por correo o en Pendientes de autorización; Compras puede retirar la solicitud. |
+| 1.36 | 2026-10-21 | Compras | Nueva acción **Devolver al solicitante** en Procesar (Por comprar, sin órdenes). Al reenviar, el director (o Calidad, en suministros) vuelve a autorizar. |
 | 1.35 | 2026-10-21 | Compras | Nueva y Reabrir: en Datos del cliente, Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo quedan en una sola fila en portátil y pantalla grande. |
 | 1.34 | 2026-10-21 | Compras | Un solo estado con el mismo nombre en compras y suministros (Por autorizar, Devuelta, Por comprar, Con orden, Cerrado). Mis solicitudes muestra una sola columna de estado. |
 | 1.33 | 2026-10-21 | Compras | Mis solicitudes: panel de filtros por fechas, estado, estado de compras, urgencia y área. |

@@ -135,6 +135,12 @@
                         </div>
                     </section>
 
+                    @include('modules.purchase-requests.processing.partials.return-to-requester', [
+                        'canReturn' => $supplyRequest->puedeDevolverAlSolicitante(),
+                        'returnUrl' => route('purchase-requests.processing.supply.return', ['module' => $module, 'supply_request' => $supplyRequest->id]),
+                        'returnHint' => 'Úsalo si el pedido está mal diligenciado. Al reenviarlo, Calidad debe volver a aprobarlo.',
+                    ])
+
                     @include('modules.purchase-requests.processing.partials.close-balance', [
                         'canClose' => $supplyRequest->puedeCerrarSaldo(),
                         'closeUrl' => route('purchase-requests.processing.supply.close', ['module' => $module, 'supply_request' => $supplyRequest->id]),

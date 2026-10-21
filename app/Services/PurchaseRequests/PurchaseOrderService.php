@@ -95,6 +95,7 @@ class PurchaseOrderService
             ->whereIn('purchase_order_id', PurchaseOrder::query()
                 ->where('source_type', $sourceType)
                 ->where('source_id', $sourceId)
+                ->where('estado', '!=', PurchaseOrder::ESTADO_ANULADA)
                 ->select('id'))
             ->whereNotNull('source_item_id')
             ->groupBy('source_item_id')

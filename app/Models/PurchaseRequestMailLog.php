@@ -19,6 +19,8 @@ class PurchaseRequestMailLog extends Model
 
     public const TYPE_REQUESTER_PROCESSED = 'requester_processed';
 
+    public const TYPE_REQUESTER_RETURNED = 'requester_returned';
+
     protected $fillable = [
         'purchase_request_id',
         'mail_type',
@@ -43,6 +45,7 @@ class PurchaseRequestMailLog extends Model
             self::TYPE_REQUESTER_RESOLVED => 'Resolucion al solicitante',
             self::TYPE_COMPRAS_APPROVED => 'Aviso a compras',
             self::TYPE_REQUESTER_PROCESSED => 'Procesamiento al solicitante',
+            self::TYPE_REQUESTER_RETURNED => 'Devolución de Compras al solicitante',
         ];
     }
 

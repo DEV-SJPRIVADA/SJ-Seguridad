@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PurchaseRequests;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseApprovalRequest;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Services\PurchaseRequests\PurchaseApprovalService;
 use App\Traits\HasPurchaseTabs;
@@ -36,10 +37,19 @@ class PurchaseApprovalController extends Controller
             ->latest('id')
             ->get();
 
+        // Anulaciones de OC que Compras envió a este director.
+        $pendingCancellations = PurchaseOrder::query()
+            ->with(['source', 'anulacionSolicitadaPor'])
+            ->where('estado', PurchaseOrder::ESTADO_ANULACION_PENDIENTE)
+            ->where('anulacion_aprobador_id', auth()->id())
+            ->orderBy('anulacion_solicitada_at')
+            ->get();
+
         return view('modules.purchase-requests.approval.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
             'purchaseRequests' => $purchaseRequests,
+            'pendingCancellations' => $pendingCancellations,
             'filters' => [
                 'estado' => $estado,
             ],

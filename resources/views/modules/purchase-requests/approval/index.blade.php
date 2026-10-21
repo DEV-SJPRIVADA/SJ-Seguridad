@@ -15,6 +15,55 @@
 
     <div class="page-section req-manage-page">
         <div class="app-container">
+            @if (session('status'))
+                <div class="alert alert--success" role="status">{{ session('status') }}</div>
+            @endif
+
+            {{-- Anulaciones de órdenes de compra que Compras envió a este director. Solo aparece si hay pendientes. --}}
+            @if ($pendingCancellations->isNotEmpty())
+                <div class="panel" style="margin-bottom: 1rem;">
+                    <div class="panel__header panel__header--compact">
+                        <h3 class="panel-title">Anulaciones de órdenes por aprobar</h3>
+                        <p class="panel-text panel-text--compact">Compras pidió anular estas órdenes de compra y lo eligió a usted para decidir.</p>
+                    </div>
+                    <div class="panel__body">
+                        <div class="data-table-wrap">
+                            <table class="supply-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>OC</th>
+                                        <th>Origen</th>
+                                        <th>Proveedor</th>
+                                        <th>Total</th>
+                                        <th>Solicitada por</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($pendingCancellations as $order)
+                                        <tr>
+                                            <td class="text-center">{{ $order->numeroOc }}</td>
+                                            <td>{{ $order->sourceFolio() }}</td>
+                                            <td>{{ $order->provider_nombre }}</td>
+                                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                                            <td>{{ $order->anulacionSolicitadaPor?->name ?? '—' }}</td>
+                                            <td class="text-center"><x-date-table :value="$order->anulacion_solicitada_at" datetime /></td>
+                                            <td class="table-actions">
+                                                <a
+                                                    href="{{ route('purchase-requests.approval.order-cancellation.show', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
+                                                    class="btn btn--primary btn--sm"
+                                                >Revisar anulación</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="panel">
                 <div class="panel__header panel__header--compact">
                     <h3 class="panel-title">Pendientes de autorización</h3>

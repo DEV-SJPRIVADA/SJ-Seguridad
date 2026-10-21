@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PurchaseRequests\PurchaseApprovalController;
+use App\Http\Controllers\PurchaseRequests\PurchaseOrderCancellationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderEvaluationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProcessingController;
@@ -25,6 +26,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
     Route::middleware(['purchase.tab:approval'])->group(function (): void {
         Route::get('/pendientes-autorizacion', [PurchaseApprovalController::class, 'index'])->name('approval.index');
         Route::patch('/solicitud/{purchase_request}/autorizar', [PurchaseApprovalController::class, 'update'])->name('approval.update');
+
+        // Anulación de OC: la decide el director que Compras eligió.
+        Route::get('/pendientes-autorizacion/anulaciones/{purchase_order}', [PurchaseOrderCancellationController::class, 'show'])->name('approval.order-cancellation.show');
+        Route::patch('/pendientes-autorizacion/anulaciones/{purchase_order}', [PurchaseOrderCancellationController::class, 'update'])->name('approval.order-cancellation.update');
     });
 
     Route::middleware(['purchase.tab:processing'])->group(function (): void {
@@ -32,9 +37,11 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/bandeja-compras/solicitud/{purchase_request}', [PurchaseProcessingController::class, 'editPurchase'])->name('processing.purchase');
         Route::patch('/bandeja-compras/solicitud/{purchase_request}', [PurchaseProcessingController::class, 'updatePurchase'])->name('processing.purchase.update');
         Route::post('/bandeja-compras/solicitud/{purchase_request}/cerrar-saldo', [PurchaseProcessingController::class, 'closePurchase'])->name('processing.purchase.close');
+        Route::post('/bandeja-compras/solicitud/{purchase_request}/devolver', [PurchaseProcessingController::class, 'returnPurchase'])->name('processing.purchase.return');
         Route::get('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'editSupply'])->name('processing.supply');
         Route::patch('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'updateSupply'])->name('processing.supply.update');
         Route::post('/bandeja-compras/suministro/{supply_request}/cerrar-saldo', [PurchaseProcessingController::class, 'closeSupply'])->name('processing.supply.close');
+        Route::post('/bandeja-compras/suministro/{supply_request}/devolver', [PurchaseProcessingController::class, 'returnSupply'])->name('processing.supply.return');
         Route::get('/bandeja-compras/suministro/{supply_request}/pdf', [PurchaseProcessingController::class, 'exportSupplyPdf'])->name('processing.supply.pdf');
         Route::get('/bandeja-compras/suministro/{supply_request}/excel', [PurchaseProcessingController::class, 'exportSupplyExcel'])->name('processing.supply.excel');
 
@@ -50,6 +57,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/ordenes-compra/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('orders.show');
         Route::get('/ordenes-compra/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('orders.pdf');
         Route::get('/ordenes-compra/{purchase_order}/excel', [PurchaseOrderController::class, 'excel'])->name('orders.excel');
+
+        // Compras solicita (eligiendo director) o retira la anulación de una OC.
+        Route::post('/ordenes-compra/{purchase_order}/anulacion', [PurchaseOrderCancellationController::class, 'request'])->name('orders.cancellation.request');
+        Route::delete('/ordenes-compra/{purchase_order}/anulacion', [PurchaseOrderCancellationController::class, 'withdraw'])->name('orders.cancellation.withdraw');
     });
 
     Route::middleware(['purchase.tab:providers'])->group(function (): void {

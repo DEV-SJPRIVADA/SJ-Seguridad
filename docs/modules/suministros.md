@@ -11,7 +11,7 @@ El ciclo de vida de una solicitud de suministros será el siguiente:
 1. **`borrador` (Opcional):** El solicitante está armando la lista.
 2. **`pendiente_calidad`:** Solicitud enviada. Esperando revisión de la Jefe de Calidad.
 3. **`aprobada_calidad`:** Calidad revisó, (opcionalmente) ajustó cantidades y aprobó el pedido. En Pedidos se ve como **Por comprar**. Abrir Procesar no cambia este estado.
-4. **`rechazada_calidad`:** Calidad denegó la solicitud. El solicitante dueño puede **reenviarla**: vuelve a `pendiente_calidad` y no borra `quality_observations`.
+4. **`rechazada_calidad`:** Calidad denegó la solicitud, o Compras la **devolvió** (solo desde `aprobada_calidad` sin OC, motivo en el hilo como `DEVUELTA POR COMPRAS: …`, correo `SupplyRequestReturnedMail`). El solicitante dueño puede **reenviarla**: vuelve a `pendiente_calidad` y no borra `quality_observations`.
 5. **`en_compras`:** Hay al menos una orden y queda saldo, o el saldo ya es cero pero falta la fecha de recibido en alguna OC. En Pedidos: **Con orden**.
 6. **`completada`:** Cerrado. Lo escribe la orden (saldo en cero y fecha de recibido en todas las OC) o **Cerrar saldo** con motivo. No lo cierra el costo unitario. Es terminal: no se emite otra OC y el hilo deja de aceptar notas.
 
@@ -210,6 +210,7 @@ El listado **Insumos aprobados** ya no está en el menú. El Excel FO-AD-44 se d
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-21 | Compras puede devolver un suministro Por comprar sin OC; al reenviarlo vuelve a Calidad |
 | 2026-10-21 | Etapa común `PedidoEtapa` en listados, detalle y PDF; Por aprobar de Calidad para todas las áreas con filtro por área |
 | 2026-10-21 | Alta en MAYÚSCULAS (observaciones y producto fuera de catálogo); aprobación de Calidad con `ResolveSupplyQualityRequest` y observaciones en MAYÚSCULAS |
 | 2026-10-20 | FEAT-048: reenvío si Calidad rechaza, hilo `supply_request_comments`, catálogo dentro de Catálogos, sin pestaña Insumos aprobados, folio `SU-`, cierre por la orden (no por costo unitario) |

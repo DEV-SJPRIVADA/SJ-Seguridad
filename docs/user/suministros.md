@@ -60,7 +60,9 @@ Según su perfil puede:
 4. Indique inventario actual si se solicita.
 5. Envíe la solicitud. Queda **Por autorizar** hasta que Calidad la revise. El folio se lee **SU-**.
 
-### Si Calidad devuelve el pedido
+### Si Calidad o Compras devuelven el pedido
+
+Compras también puede devolverlo si llegó mal diligenciado (solo antes de emitir una orden). En ambos casos recibe un correo y el motivo queda en el detalle.
 
 1. En **Mis solicitudes**, abra el pedido devuelto.
 2. Corrija las líneas o las notas y envíelo de nuevo.
@@ -100,6 +102,7 @@ Según su perfil puede:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-10-21 | Compras | Compras puede devolver un pedido Por comprar sin órdenes; al reenviarlo, Calidad lo vuelve a aprobar. |
 | 1.8 | 2026-10-21 | Calidad / Compras | Por aprobar muestra los pedidos de todas las áreas, con filtro por área. Los estados se llaman igual que en compras (Por autorizar, Devuelta, Por comprar, Con orden, Cerrado). Observaciones en mayúsculas. |
 | 1.7 | 2026-10-20 | Compras | Reenvío si Calidad devuelve el pedido; notas en el detalle; el catálogo pasa a Catálogos; ya no hay pestaña de insumos aprobados; el folio se lee SU-; el cierre lo hace la orden, no el costo unitario. |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |

@@ -162,10 +162,10 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Pendiente</th>
                                     <th>Cantidad</th>
                                     <th>Artículo</th>
                                     <th>Descripción</th>
-                                    <th>Pendiente</th>
                                     <th>Valor unidad</th>
                                     <th>IVA</th>
                                     <th>Valor total</th>
@@ -175,6 +175,18 @@
                                 @foreach ($lines as $index => $line)
                                     <tr data-order-line @if ($line['cantidad_pendiente'] <= 0) class="purchase-order-lines__row--sin-saldo" @endif>
                                         <td class="text-center">{{ $index + 1 }}</td>
+                                        {{-- Saldo pendiente antes de la cantidad: referencia para capturar lo que se ordena. --}}
+                                        <td class="js-line-pending">
+                                            <span class="purchase-order-lines__pending-value">
+                                                {{ number_format((float) $line['cantidad_pendiente'], 2) }}
+                                            </span>
+                                            <span class="purchase-order-lines__pending-hint">
+                                                de {{ number_format((float) $line['cantidad_solicitada'], 0) }} solicitadas
+                                                @if ($line['cantidad_ordenada'] > 0)
+                                                    · {{ number_format((float) $line['cantidad_ordenada'], 0) }} ordenadas
+                                                @endif
+                                            </span>
+                                        </td>
                                         <td>
                                             <input
                                                 type="number"
@@ -208,17 +220,6 @@
                                                 required
                                                 aria-label="Descripción de la línea {{ $index + 1 }}"
                                             >
-                                        </td>
-                                        <td class="js-line-pending">
-                                            <span class="purchase-order-lines__pending-value">
-                                                {{ number_format((float) $line['cantidad_pendiente'], 2) }}
-                                            </span>
-                                            <span class="purchase-order-lines__pending-hint">
-                                                de {{ number_format((float) $line['cantidad_solicitada'], 0) }} solicitadas
-                                                @if ($line['cantidad_ordenada'] > 0)
-                                                    · {{ number_format((float) $line['cantidad_ordenada'], 0) }} ordenadas
-                                                @endif
-                                            </span>
                                         </td>
                                         <td>
                                             <input

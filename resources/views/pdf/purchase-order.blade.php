@@ -44,6 +44,16 @@
             letter-spacing: 0.02em;
         }
 
+        .anulada-mark {
+            display: inline-block;
+            margin-top: 2px;
+            padding: 1px 8px;
+            border: 1.2pt solid #b91c1c;
+            color: #b91c1c;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+        }
+
         .meta-cell {
             width: 22%;
             text-align: center;
@@ -141,7 +151,13 @@
                     <img src="{{ $logoDataUri }}" alt="SJ Seguridad">
                 @endif
             </td>
-            <td class="title-cell" rowspan="4">{{ $reportTitle }}</td>
+            <td class="title-cell" rowspan="4">
+                {{ $reportTitle }}
+                {{-- Marca visible si la orden fue anulada con aprobación del director. --}}
+                @if ($order->isAnulada())
+                    <br><span class="anulada-mark">ANULADA</span>
+                @endif
+            </td>
             <td class="meta-cell">{{ $formCode }}</td>
         </tr>
         <tr>

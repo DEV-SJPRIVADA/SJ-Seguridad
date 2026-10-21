@@ -127,6 +127,12 @@
                         </section>
                     @endif
 
+                    @include('modules.purchase-requests.processing.partials.return-to-requester', [
+                        'canReturn' => $purchaseRequest->puedeDevolverAlSolicitante(),
+                        'returnUrl' => route('purchase-requests.processing.purchase.return', ['module' => $module, 'purchase_request' => $purchaseRequest->id]),
+                        'returnHint' => 'Úsalo si la solicitud está mal diligenciada. Al reenviarla, el director debe volver a autorizarla.',
+                    ])
+
                     @include('modules.purchase-requests.processing.partials.close-balance', [
                         'canClose' => $purchaseRequest->puedeCerrarSaldo(),
                         'closeUrl' => route('purchase-requests.processing.purchase.close', ['module' => $module, 'purchase_request' => $purchaseRequest->id]),

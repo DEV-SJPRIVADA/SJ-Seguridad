@@ -44,6 +44,8 @@ Usan la etapa: Mis solicitudes (compra y suministro), detalle, Pendientes del di
 3. Hay OC y queda saldo → Con orden.
 4. Saldo de todas las líneas en cero **y** cada OC del origen tiene `fecha_recibido` → Cerrado. Si el saldo ya es cero y falta una fecha, queda Con orden. El puntaje de la evaluación no cuenta.
 
+**Devolver al solicitante (2026-10-21):** `PurchaseFlowStateService::returnToRequester` lo usa Compras (`purchase.tab.processing`, sin permiso nuevo) cuando el pedido está mal diligenciado. Solo aplica en Por comprar y sin ninguna OC del origen (`puedeDevolverAlSolicitante()`). Motivo obligatorio (`ReturnToRequesterRequest`, campo `motivo_devolucion`, 3–5000) que va al hilo como `DEVUELTA POR COMPRAS: …` en mayúsculas. Compra: `estado=rechazado`, `estado_compras`, `fecha_aprobacion` y `procesado_compras_*` en null (etapa Devuelta); el solicitante la reabre y al reenviarla vuelve a `pendiente` con el director (correo de asignación). Suministro: `status=rechazada_calidad`; al reenviarlo vuelve a `pendiente_calidad` con Calidad. Rutas `POST purchase-requests.processing.purchase.return` / `.supply.return`; audit `compras_processing` / `supply_compras` acción `return_to_requester`; correo `PurchaseRequestReturnedMail` (log `requester_returned`) o `SupplyRequestReturnedMail`.
+
 `closeBalance` es la excepción: exige motivo (mínimo 3 caracteres; se guarda en el hilo en mayúsculas) y pone Cerrado aunque quede saldo o falte una fecha. Después `PurchaseOrderService` rechaza otra OC (`puedeEmitirOrden` es falso en Cerrado).
 
 Compras ya no elige ni rechaza el estado. El PATCH de procesar compra no persiste `estado_compras`. `comentarios_director` y `comentarios_compras` se siguen mostrando si el pedido viejo los tiene y dejan de escribirse: el motivo nuevo del director (pantalla y correo firmado) es una fila del hilo.
@@ -61,6 +63,9 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
 | Pedidos (clave `bandeja_compras`) | `purchase.tab.processing` | `purchase-requests.processing.index` con `vista=por_comprar\|con_orden\|historial`. Ya no es pestaña de Solicitudes de compra |
 | Cerrar saldo | `purchase.tab.processing` | `POST purchase-requests.processing.purchase.close` y `.supply.close` |
+| Solicitar / retirar anulación de OC | `purchase.tab.processing` | `POST|DELETE purchase-requests.orders.cancellation.request|withdraw` |
+| Aprobar / rechazar anulación de OC | `purchase.tab.approval` + ser el director elegido | `GET|PATCH purchase-requests.approval.order-cancellation.show|update`; correo firmado `purchase-requests.order-cancellation-email.*` |
+| Devolver al solicitante | `purchase.tab.processing` | `POST purchase-requests.processing.purchase.return` y `.supply.return` (solo Por comprar sin OC) |
 | Emitir OC (FO-AD-07) | `purchase.tab.processing` (`canEmitOrder`) | `purchase-requests.orders.purchase.create` / `.store`, `orders.supply.create` / `.store`, `orders.show`, `orders.pdf`, `orders.excel` |
 | Órdenes (clave `ordenes_compra`) | `purchase.tab.processing` (`canViewOrdersBoard`) | `purchase-requests.orders.index` (`GET /ordenes-compra`), `purchase-requests.orders.datatable` |
 | Evaluación y fecha de recibido | `purchase.providers.edit` (fuera del grupo `processing`) | `GET/PUT purchase-requests.orders.evaluation.edit` / `.update` (`/ordenes-compra/{purchase_order}/evaluacion`). OC debe estar `emitida`. Quien solo tiene `purchase.tab.processing` recibe 403 |
@@ -446,6 +451,27 @@ Emision desde Pedidos, para origen **solicitud de compra** o **solicitud de sumi
 
 Vistas: `resources/views/modules/purchase-requests/orders/{create,show}.blade.php` + `resources/views/pdf/purchase-order.blade.php`.
 
+### Anulación de OC con aprobación del director (2026-10-21)
+
+Una OC emitida no se edita ni se borra. Si quedó mal, Compras pide su anulación y un director la aprueba.
+
+| Estado (`purchase_orders.estado`) | Significado |
+| --- | --- |
+| `emitida` | OC vigente |
+| `anulacion_pendiente` | Compras pidió anularla; espera al director elegido. Su cantidad **sigue contando** en el saldo y no se puede evaluar (la evaluación exige `emitida`) |
+| `anulada` | El director aprobó. No se borra ni se reutiliza el número; deja de contar en el saldo (`orderedQuantities`), en el cierre automático (`allOrdersHaveReceiptDate`) y en `puedeDevolverAlSolicitante` |
+
+- **Migración aditiva** `2026_10_21_120000_add_cancellation_fields_to_purchase_orders_table.php`: `anulacion_aprobador_id`, `anulacion_solicitada_por` (FK `users` en MySQL; entero sin FK en sqlite), `anulacion_motivo`, `anulacion_solicitada_at`, `anulacion_respuesta`, `anulacion_resuelta_at`.
+- **Solicitar** (Compras, `purchase.tab.processing` vía `canEmitOrder`, sin permiso nuevo): `POST purchase-requests.orders.cancellation.request` (`/ordenes-compra/{id}/anulacion`). Solo `emitida` sin `fecha_recibido` (`puedeSolicitarAnulacion`). Compras **elige el director** que aprueba (`anulacion_aprobador_id`, validado con `PurchaseAccessService::isValidApprover`: activo, rol `director`, `purchase.tab.approval`), para compras y suministros. Motivo obligatorio (`motivo_anulacion`, 3–5000, mayúsculas).
+- **Retirar** (Compras): `DELETE purchase-requests.orders.cancellation.withdraw`. Vuelve a `emitida` y limpia los datos de la solicitud.
+- **Decidir** (solo el director elegido): en la plataforma, panel **Anulaciones de órdenes por aprobar** en Pendientes de autorización → `GET|PATCH purchase-requests.approval.order-cancellation.show|update` (grupo `purchase.tab:approval`); o por correo con enlace firmado `purchase-requests.order-cancellation-email.show|update` (`routes/modules/purchase-requests-email.php`, vigencia `purchase-orders.cancellation_link_days`, default 7). Aprobar: comentario opcional; rechazar: comentario obligatorio. `ResolvePurchaseOrderCancellationRequest` exige que el usuario (o el `director` del enlace firmado) sea `anulacion_aprobador_id`.
+- **Al aprobar:** `estado=anulada` y `PurchaseFlowStateService::sync` recalcula el origen (vuelve a Con orden o Por comprar; un Cerrado no se reabre). PDF con marca **ANULADA** en el título; Excel `ORDEN DE COMPRA O SERVICIO — ANULADA`.
+- **Trazabilidad:** cada paso deja una nota en el hilo del pedido de origen (`SOLICITUD DE ANULACIÓN OC N.º …`, `… RETIRADA POR COMPRAS.`, `ANULACIÓN OC N.º … APROBADA|RECHAZADA POR …`) y un evento `purchase_order` (`cancellation_requested`, `cancellation_withdrawn`, `cancellation_approved`, `cancellation_rejected`, con `channel` web/email).
+- **Correos:** `PurchaseOrderCancellationRequestedMail` al director (botón con el enlace firmado) y `PurchaseOrderCancellationResolvedMail` a quien la pidió. El sistema no envía la OC al proveedor.
+- **Servicio:** `PurchaseOrderCancellationService` (`request`, `withdraw`, `resolve`, `emailShowUrl`, `emailUpdateUrl`). Controlador `PurchaseOrderCancellationController`. Vistas `orders/partials/cancellation`, `approval/order-cancellation`, `order-cancellation-email`, parciales `partials/order-cancellation-{summary,decision}`.
+- **Listado Órdenes:** filtro de estado con Anulación pendiente y Anuladas; pastilla amarilla / roja.
+- **Tests:** `PurchaseOrderCancellationTest`.
+
 ## Import legacy
 
 ```bash
@@ -506,9 +532,12 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-21 | **Anulación de OC** con aprobación del director que elige Compras (plataforma o correo firmado); estados `anulacion_pendiente` / `anulada`; la OC anulada libera saldo; migración aditiva |
+| 2026-10-21 | Compras puede **devolver al solicitante** (Por comprar sin OC, motivo al hilo); al reenviar, el director o Calidad vuelven a autorizar |
 | 2026-10-21 | Etapa común `PedidoEtapa` (fases 1 y 2, sin migraciones): mismas etiquetas y colores en compras y suministros; scopes `whereEtapa`; Pedidos, dashboard y filtro de Mis solicitudes consultan por etapa |
 | 2026-10-21 | Ajustes de revisión: `aprobador_id` exige director activo; se borra `ProcessPurchaseComprasRequest`; `ProcessSupplyComprasRequest` solo observaciones en MAYÚSCULAS |
 | 2026-10-21 | Mis solicitudes: filtros GET (fechas, estado, estado compras, urgencia, área) con `PurchaseMyRequestsFilterBag` |
+| 2026-10-21 | Emitir OC (`orders/create`): en **Líneas y precios** la columna **Pendiente** va antes de **Cantidad** (orden: #, Pendiente, Cantidad, Artículo, Descripción, Valor unidad, IVA, Valor total) |
 | 2026-10-21 | VINE01: plantilla e import reciben `CONTACTO`, `CIUDAD` y `FORMA_PAGO` (ciudad contra `requisition_cities`); el alta manual ya tenia los mismos campos |
 | 2026-10-20 | FEAT-048: FO-AD-07 oficial (una hoja, condiciones, filas de cliente), máquina `PurchaseFlowStateService`, tableros Pedidos / Órdenes / Catálogos (sin claves nuevas), folio `SC-`, Cerrar saldo, precio solo en la OC, evaluación que no se imprime |
 | 2026-10-20 | Proveedores: rediseño del listado — chips de estado + conteo + acciones icon-only en una sola franja (sin panel de filtros), columnas con formato (nombre destacado, correo enlazable, días/estado/acciones centrados) |

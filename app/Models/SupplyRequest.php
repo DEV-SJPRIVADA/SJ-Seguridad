@@ -140,6 +140,19 @@ class SupplyRequest extends Model
         return $this->puedeCerrarSaldo();
     }
 
+    /**
+     * Compras puede devolverlo al solicitante solo en Por comprar y sin ninguna orden emitida.
+     */
+    public function puedeDevolverAlSolicitante(): bool
+    {
+        return $this->status === 'aprobada_calidad'
+            && ! PurchaseOrder::query()
+                ->where('source_type', 'supply_request')
+                ->where('source_id', $this->getKey())
+                ->where('estado', '!=', PurchaseOrder::ESTADO_ANULADA)
+                ->exists();
+    }
+
     public function puedeComentar(): bool
     {
         return $this->status !== 'completada';

@@ -49,6 +49,12 @@ class PurchaseOrder extends Model
     /** @use HasFactory<PurchaseOrderFactory> */
     use HasFactory;
 
+    public const ESTADO_EMITIDA = 'emitida';
+
+    public const ESTADO_ANULACION_PENDIENTE = 'anulacion_pendiente';
+
+    public const ESTADO_ANULADA = 'anulada';
+
     protected $table = 'purchase_orders';
 
     protected $fillable = [
@@ -75,12 +81,51 @@ class PurchaseOrder extends Model
         'estado',
         'total',
         'created_by',
+        'anulacion_aprobador_id',
+        'anulacion_solicitada_por',
+        'anulacion_motivo',
+        'anulacion_solicitada_at',
+        'anulacion_respuesta',
+        'anulacion_resuelta_at',
     ];
 
     protected $casts = [
         'provider_dias_pago' => 'integer',
         'total' => 'decimal:2',
+        'anulacion_solicitada_at' => 'datetime',
+        'anulacion_resuelta_at' => 'datetime',
     ];
+
+    public function anulacionAprobador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulacion_aprobador_id');
+    }
+
+    public function anulacionSolicitadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anulacion_solicitada_por');
+    }
+
+    public function isAnulada(): bool
+    {
+        return $this->estado === self::ESTADO_ANULADA;
+    }
+
+    public function tieneAnulacionPendiente(): bool
+    {
+        return $this->estado === self::ESTADO_ANULACION_PENDIENTE;
+    }
+
+    /**
+     * Compras puede pedir la anulación de una OC emitida que aún no tiene fecha de recibido.
+     */
+    public function puedeSolicitarAnulacion(): bool
+    {
+        $this->loadMissing('evaluation');
+
+        return $this->estado === self::ESTADO_EMITIDA
+            && $this->evaluation?->fecha_recibido === null;
+    }
 
     public function provider(): BelongsTo
     {

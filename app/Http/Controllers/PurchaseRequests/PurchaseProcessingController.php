@@ -5,12 +5,15 @@ namespace App\Http\Controllers\PurchaseRequests;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\ClosePurchaseBalanceRequest;
 use App\Http\Requests\PurchaseRequests\ProcessSupplyComprasRequest;
+use App\Http\Requests\PurchaseRequests\ReturnToRequesterRequest;
+use App\Mail\SupplyRequestReturnedMail;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use App\Services\Compras\ComprasQueueFilterBag;
 use App\Services\Compras\ComprasQueueService;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
+use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +22,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use InvalidArgumentException;
 
@@ -95,6 +100,47 @@ class PurchaseProcessingController extends Controller
         );
     }
 
+    /**
+     * Devuelve la compra al solicitante. Al reenviarla vuelve a Por autorizar con el director.
+     */
+    public function returnPurchase(
+        ReturnToRequesterRequest $request,
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseFlowStateService $flowState,
+        PurchaseRequestAuditLogService $auditLogService,
+        PurchaseRequestNotificationService $notifications,
+    ): RedirectResponse {
+        Gate::authorize('process', $purchaseRequest);
+
+        $motivo = (string) $request->validated('motivo_devolucion');
+        $previous = ['estado' => $purchaseRequest->estado, 'estado_compras' => $purchaseRequest->estado_compras];
+
+        try {
+            $flowState->returnToRequester($purchaseRequest, $request->user(), $motivo);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['motivo_devolucion' => $exception->getMessage()])->withInput();
+        }
+
+        $purchaseRequest->refresh();
+
+        $auditLogService->logModelChange(
+            eventType: 'compras_processing',
+            action: 'return_to_requester',
+            model: $purchaseRequest,
+            before: $previous,
+            after: ['estado' => $purchaseRequest->estado, 'estado_compras' => $purchaseRequest->estado_compras],
+            reason: $motivo,
+            metadata: ['folio' => $purchaseRequest->folio()],
+        );
+
+        $notifications->notifyRequesterReturned($purchaseRequest, $motivo);
+
+        return redirect()
+            ->route('purchase-requests.processing.index', ['module' => $module])
+            ->with('status', 'Solicitud N.º '.$purchaseRequest->folioVisible().' devuelta al solicitante.');
+    }
+
     public function editSupply(string $module, SupplyRequest $supplyRequest): View|RedirectResponse
     {
         abort_unless(in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true), 403);
@@ -160,6 +206,44 @@ class PurchaseProcessingController extends Controller
         );
     }
 
+    /**
+     * Devuelve el suministro al solicitante. Al reenviarlo vuelve a Por autorizar con Calidad.
+     */
+    public function returnSupply(
+        ReturnToRequesterRequest $request,
+        string $module,
+        SupplyRequest $supplyRequest,
+        PurchaseFlowStateService $flowState,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): RedirectResponse {
+        $motivo = (string) $request->validated('motivo_devolucion');
+        $previous = $supplyRequest->status;
+
+        try {
+            $flowState->returnToRequester($supplyRequest, $request->user(), $motivo);
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['motivo_devolucion' => $exception->getMessage()])->withInput();
+        }
+
+        $supplyRequest->refresh();
+
+        $auditLogService->logModelChange(
+            eventType: 'supply_compras',
+            action: 'return_to_requester',
+            model: $supplyRequest,
+            before: ['status' => $previous],
+            after: ['status' => $supplyRequest->status],
+            reason: $motivo,
+            metadata: ['folio' => $supplyRequest->folio()],
+        );
+
+        $this->notifySupplyRequesterReturned($supplyRequest, $motivo);
+
+        return redirect()
+            ->route('purchase-requests.processing.index', ['module' => $module])
+            ->with('status', 'Suministro '.$supplyRequest->folioVisible().' devuelto al solicitante.');
+    }
+
     public function exportSupplyPdf(
         string $module,
         SupplyRequest $supplyRequest,
@@ -208,6 +292,24 @@ class PurchaseProcessingController extends Controller
         );
 
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
+    }
+
+    private function notifySupplyRequesterReturned(SupplyRequest $supplyRequest, string $motivo): void
+    {
+        $email = $supplyRequest->user?->email;
+
+        if (! filled($email)) {
+            return;
+        }
+
+        try {
+            Mail::to($email)->send(new SupplyRequestReturnedMail($supplyRequest, $motivo));
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo enviar el aviso de devolución del suministro', [
+                'supply_request_id' => $supplyRequest->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**

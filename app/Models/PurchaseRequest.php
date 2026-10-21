@@ -213,6 +213,20 @@ class PurchaseRequest extends Model
         return $this->puedeCerrarSaldo();
     }
 
+    /**
+     * Compras puede devolverla al solicitante solo en Por comprar y sin ninguna orden emitida.
+     */
+    public function puedeDevolverAlSolicitante(): bool
+    {
+        return $this->estado === self::ESTADO_APROBADO
+            && $this->estado_compras === self::COMPRAS_PENDIENTE
+            && ! PurchaseOrder::query()
+                ->where('source_type', 'purchase_request')
+                ->where('source_id', $this->getKey())
+                ->where('estado', '!=', PurchaseOrder::ESTADO_ANULADA)
+                ->exists();
+    }
+
     public function puedeReabrir(): bool
     {
         return $this->estado === self::ESTADO_RECHAZADO;

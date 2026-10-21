@@ -74,7 +74,8 @@ class PurchaseOrderExcelExporter
 
         $sheet->mergeCells('A1:A4');
         $sheet->mergeCells('B1:F4');
-        $sheet->setCellValue('B1', (string) config('purchase-orders.report_title', 'ORDEN DE COMPRA O SERVICIO'));
+        $sheet->setCellValue('B1', (string) config('purchase-orders.report_title', 'ORDEN DE COMPRA O SERVICIO')
+            .($order->isAnulada() ? ' — ANULADA' : ''));
         $sheet->getStyle('B1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('B1')->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER)
