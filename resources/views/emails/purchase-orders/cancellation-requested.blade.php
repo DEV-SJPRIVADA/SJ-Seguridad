@@ -15,7 +15,7 @@
 Revisar anulación
 @endcomponent
 
-También puede gestionarla en la plataforma, en **Solicitudes de compra → Pendientes de autorización**.
+También puede gestionarla en la plataforma, en **Solicitudes de compra → Autorizaciones compras → Anulaciones de órdenes**.
 
 Gracias,<br>
 {{ config('app.name') }}

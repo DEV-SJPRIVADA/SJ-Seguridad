@@ -195,7 +195,7 @@ class PurchaseRequestCommentTest extends TestCase
         }
 
         $this->assertTrue($byLabel['Mis solicitudes'] ?? false, 'Mis solicitudes debe quedar activa');
-        $this->assertFalse($byLabel['Pendientes autorizacion'] ?? false, 'Pendientes autorizacion no debe quedar activa');
+        $this->assertFalse($byLabel['Autorizaciones compras'] ?? false, 'Autorizaciones compras no debe quedar activa');
     }
 
     public function test_comment_validation_requires_body(): void

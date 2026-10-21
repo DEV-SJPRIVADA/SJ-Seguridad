@@ -1,6 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
         @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
+
+        {{-- Subpestañas de Autorizaciones compras (misma franja que las vistas de Pedidos). --}}
+        <div class="module-strip module-subnav">
+            <div class="app-container">
+                <div class="module-strip__inner module-subnav__inner">
+                    <p class="text-caption module-subnav__label">Autorizaciones compras</p>
+                    <nav class="module-tabs" aria-label="Autorizaciones compras">
+                        @foreach ($approvalTabs as $tabKey => $tab)
+                            <a
+                                href="{{ $tab['url'] }}"
+                                class="module-tab {{ $vista === $tabKey ? 'module-tab--active' : '' }}"
+                                @if ($vista === $tabKey) aria-current="page" @endif
+                            >
+                                {{ $tab['label'] }}
+                                @if (($tab['count'] ?? 0) > 0)
+                                    ({{ $tab['count'] }})
+                                @endif
+                            </a>
+                        @endforeach
+                    </nav>
+                </div>
+            </div>
+        </div>
     </x-slot>
 
     @php
@@ -19,15 +42,15 @@
                 <div class="alert alert--success" role="status">{{ session('status') }}</div>
             @endif
 
-            {{-- Anulaciones de órdenes de compra que Compras envió a este director. Solo aparece si hay pendientes. --}}
-            @if ($pendingCancellations->isNotEmpty())
-                <div class="panel" style="margin-bottom: 1rem;">
+            {{-- Subpestaña Anulaciones de órdenes: OC que Compras pidió anular y envió a este director. --}}
+            @if ($vista === 'anulaciones')
+                <div class="panel">
                     <div class="panel__header panel__header--compact">
                         <h3 class="panel-title">Anulaciones de órdenes por aprobar</h3>
                         <p class="panel-text panel-text--compact">Compras pidió anular estas órdenes de compra y lo eligió a usted para decidir.</p>
                     </div>
-                    <div class="panel__body">
-                        <div class="data-table-wrap">
+                    <div class="panel__body req-manage-shell">
+                        <div class="data-table-wrap req-manage-shell__table">
                             <table class="supply-table" style="width:100%">
                                 <thead>
                                     <tr>
@@ -41,7 +64,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($pendingCancellations as $order)
+                                    @forelse ($pendingCancellations as $order)
                                         <tr>
                                             <td class="text-center">{{ $order->numeroOc }}</td>
                                             <td>{{ $order->sourceFolio() }}</td>
@@ -56,14 +79,19 @@
                                                 >Revisar anulación</a>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-muted">No hay anulaciones de órdenes pendientes.</td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-            @endif
+            @else
 
+            {{-- Subpestaña Pendientes de autorización: solicitudes de compra asignadas a este director. --}}
             <div class="panel">
                 <div class="panel__header panel__header--compact">
                     <h3 class="panel-title">Pendientes de autorización</h3>
@@ -171,6 +199,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 

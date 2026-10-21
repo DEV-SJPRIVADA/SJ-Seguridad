@@ -120,9 +120,10 @@ class PurchaseOrderCancellationTest extends TestCase
         $this->assertNull($order->anulacion_aprobador_id);
 
         $this->actingAs($this->director)
-            ->get(route('purchase-requests.approval.index', ['module' => 'compras']))
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones']))
             ->assertOk()
-            ->assertDontSee('Anulaciones de órdenes por aprobar');
+            ->assertSee('No hay anulaciones de órdenes pendientes.')
+            ->assertDontSee('Revisar anulación');
     }
 
     public function test_director_approves_in_app_and_the_balance_is_released(): void
@@ -131,10 +132,21 @@ class PurchaseOrderCancellationTest extends TestCase
         [$purchase, $order] = $this->purchaseWithOrder();
         app(PurchaseOrderCancellationService::class)->request($order, $this->compras, $this->director->id, 'proveedor equivocado');
 
+        // Por defecto se ve la subpestaña de solicitudes; la anulación vive en su propia subpestaña con contador.
         $this->actingAs($this->director)
             ->get(route('purchase-requests.approval.index', ['module' => 'compras']))
             ->assertOk()
-            ->assertSee('Anulaciones de órdenes por aprobar');
+            ->assertSee('Autorizaciones compras')
+            ->assertSee('Anulaciones de órdenes')
+            ->assertSee('(1)')
+            ->assertDontSee('Revisar anulación');
+
+        $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones']))
+            ->assertOk()
+            ->assertSee('Anulaciones de órdenes por aprobar')
+            ->assertSee('Revisar anulación')
+            ->assertDontSee('Fecha resolución');
 
         $this->actingAs($this->otherDirector)
             ->get(route('purchase-requests.approval.order-cancellation.show', ['module' => 'compras', 'purchase_order' => $order->id]))
@@ -155,7 +167,7 @@ class PurchaseOrderCancellationTest extends TestCase
             ->patch(route('purchase-requests.approval.order-cancellation.update', ['module' => 'compras', 'purchase_order' => $order->id]), [
                 'decision' => 'aprobar',
             ])
-            ->assertRedirect(route('purchase-requests.approval.index', ['module' => 'compras']));
+            ->assertRedirect(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones']));
 
         $order->refresh();
         $this->assertSame(PurchaseOrder::ESTADO_ANULADA, $order->estado);

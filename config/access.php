@@ -358,7 +358,7 @@ return [
     'purchase_tabs' => [
         'nueva' => 'Nueva solicitud',
         'mis_solicitudes' => 'Mis solicitudes',
-        'pendientes_aprobacion' => 'Pendientes autorizacion',
+        'pendientes_aprobacion' => 'Autorizaciones compras',
         'bandeja_compras' => 'Bandeja compras',
     ],
 

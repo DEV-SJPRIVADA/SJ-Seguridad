@@ -45,9 +45,24 @@ class PurchaseApprovalController extends Controller
             ->orderBy('anulacion_solicitada_at')
             ->get();
 
+        // Subpestañas de Autorizaciones compras: solicitudes de compra o anulaciones de órdenes.
+        $vista = $request->string('vista')->toString() === 'anulaciones' ? 'anulaciones' : 'solicitudes';
+
         return view('modules.purchase-requests.approval.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
+            'vista' => $vista,
+            'approvalTabs' => [
+                'solicitudes' => [
+                    'label' => 'Pendientes de autorización',
+                    'url' => route('purchase-requests.approval.index', ['module' => $module]),
+                ],
+                'anulaciones' => [
+                    'label' => 'Anulaciones de órdenes',
+                    'url' => route('purchase-requests.approval.index', ['module' => $module, 'vista' => 'anulaciones']),
+                    'count' => $pendingCancellations->count(),
+                ],
+            ],
             'purchaseRequests' => $purchaseRequests,
             'pendingCancellations' => $pendingCancellations,
             'filters' => [

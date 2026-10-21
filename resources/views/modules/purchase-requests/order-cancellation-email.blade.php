@@ -26,7 +26,7 @@
                 @endif
 
                 <p class="req-approval-letter__hint">
-                    Este enlace es personal y tiene vigencia limitada. También puede gestionarla en Solicitudes de compra → Pendientes de autorización.
+                    Este enlace es personal y tiene vigencia limitada. También puede gestionarla en Solicitudes de compra → Autorizaciones compras → Anulaciones de órdenes.
                 </p>
 
                 <p class="req-approval-letter__signoff">

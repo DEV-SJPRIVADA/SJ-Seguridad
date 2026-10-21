@@ -11,7 +11,7 @@ Aplica a **Solicitudes de compra** y, en el área Compras, a los tableros **Pedi
 | Perfil | Dónde entrar |
 | --- | --- |
 | Colaborador solicitante | Su área → Solicitudes de compra |
-| Director | Compras → Solicitudes de compra → Pendientes |
+| Director | Compras → Solicitudes de compra → Autorizaciones compras |
 | Equipo de Compras | Compras → **Pedidos** y **Órdenes**. El catálogo de proveedores está en **Catálogos** |
 | Dashboard | Compras → Dashboard |
 
@@ -106,7 +106,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 **Opcion B — Por plataforma**
 
-1. Ingrese a **Compras → Solicitudes de compra → Pendientes de autorizacion**.
+1. Ingrese a **Compras → Solicitudes de compra → Autorizaciones compras**, subpestaña **Pendientes de autorización**.
 2. Pulse **Autorizar** en la fila deseada (o abra el detalle desde el correo con **Ver en la plataforma**).
 3. Revise el detalle, lineas, datos del solicitante y, si existen, los **Adjuntos** (puede descargarlos).
 4. Opcionalmente escriba comentarios (obligatorios si rechaza).
@@ -155,7 +155,7 @@ Una orden emitida no se edita ni se borra. Si quedó mal (proveedor, precio, can
 1. **Compras:** abra la orden en **Órdenes** y, en **Solicitar anulación**, elija el **director que aprueba** y escriba el motivo. Pulse **Solicitar anulación**.
 2. La orden queda **Anulación pendiente**. Mientras tanto no se puede evaluar y su cantidad sigue apartada, para no emitir otra orden por lo mismo antes de la respuesta.
 3. Si se equivocó al pedirla, pulse **Retirar solicitud de anulación** y la orden vuelve a **Emitida**.
-4. **Director:** recibe un correo con el botón **Revisar anulación** (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Pendientes de autorización**, en **Anulaciones de órdenes por aprobar**. Solo el director elegido puede decidir.
+4. **Director:** recibe un correo con el botón **Revisar anulación** (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Anulaciones de órdenes** (muestra entre paréntesis cuántas tiene pendientes). Solo el director elegido puede decidir.
 5. Al **aprobar**, la orden queda **Anulada**: no se borra, conserva su número y su PDF y Excel muestran **ANULADA**. Su cantidad vuelve al saldo del pedido, que pasa a **Con orden** o **Por comprar** según las otras órdenes. Desde ahí Compras puede emitir la orden correcta o, si no quedan órdenes, devolver el pedido al solicitante.
 6. Al **rechazar**, el director debe escribir el motivo y la orden sigue **Emitida**.
 7. Quien pidió la anulación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
@@ -239,6 +239,7 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
+| 1.38 | 2026-10-21 | Compras | La pestaña del director pasa a llamarse **Autorizaciones compras**, con subpestañas **Pendientes de autorización** y **Anulaciones de órdenes**. |
 | 1.37 | 2026-10-21 | Compras | **Anular orden de compra:** Compras la pide eligiendo el director que aprueba; el director decide por correo o en Pendientes de autorización; Compras puede retirar la solicitud. |
 | 1.36 | 2026-10-21 | Compras | Nueva acción **Devolver al solicitante** en Procesar (Por comprar, sin órdenes). Al reenviar, el director (o Calidad, en suministros) vuelve a autorizar. |
 | 1.35 | 2026-10-21 | Compras | Nueva y Reabrir: en Datos del cliente, Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo quedan en una sola fila en portátil y pantalla grande. |

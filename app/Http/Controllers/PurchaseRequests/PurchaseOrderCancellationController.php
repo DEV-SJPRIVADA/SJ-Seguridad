@@ -66,7 +66,7 @@ class PurchaseOrderCancellationController extends Controller
     }
 
     /**
-     * Revisión del director en la plataforma (pestaña Pendientes de autorización).
+     * Revisión del director en la plataforma (Autorizaciones compras → Anulaciones de órdenes).
      */
     public function show(Request $request, string $module, PurchaseOrder $purchaseOrder): View
     {
@@ -80,7 +80,7 @@ class PurchaseOrderCancellationController extends Controller
                 'module' => $module,
                 'purchase_order' => $purchaseOrder->getKey(),
             ]),
-            'backUrl' => route('purchase-requests.approval.index', ['module' => $module]),
+            'backUrl' => route('purchase-requests.approval.index', ['module' => $module, 'vista' => 'anulaciones']),
         ]);
     }
 
@@ -105,7 +105,7 @@ class PurchaseOrderCancellationController extends Controller
         }
 
         return redirect()
-            ->route('purchase-requests.approval.index', ['module' => $module])
+            ->route('purchase-requests.approval.index', ['module' => $module, 'vista' => 'anulaciones'])
             ->with('status', 'Anulación de la orden N.º '.$purchaseOrder->numeroOc.' '.($approve ? 'aprobada' : 'rechazada').'.');
     }
 
