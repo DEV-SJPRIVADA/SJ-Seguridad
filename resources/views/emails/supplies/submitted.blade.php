@@ -11,7 +11,7 @@ Se registro una nueva solicitud de suministros en **{{ config('app.name') }}**. 
 **Fecha:** {{ $supplyRequest->created_at?->format('d/m/Y H:i') }}
 </x-mail::panel>
 
-<x-mail::button :url="route('supplies.approval.edit', ['module' => $supplyRequest->area_key, 'supply_request' => $supplyRequest->id])">
+<x-mail::button :url="route('supplies.approval.edit', ['module' => config('access.board_canonical_areas.suministros.alt_home', 'calidad'), 'supply_request' => $supplyRequest->id])">
 Revisar solicitud
 </x-mail::button>
 

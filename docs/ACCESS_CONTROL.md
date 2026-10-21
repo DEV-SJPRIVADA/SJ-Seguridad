@@ -51,7 +51,9 @@ Permisos del modulo **Solicitudes de compra**:
 - `purchase.providers.view` (catalogo Proveedores; ver/filtrar/exportar)
 - `purchase.providers.edit` (CRUD Proveedores; **implica view** en `PurchaseAccessService`)
 
-Tableros: `view.board.{area}.solicitudes_compra`, `view.board.{area}.bandeja_compras`
+Tableros: `view.board.{area}.solicitudes_compra`, `view.board.compras.bandeja_compras`, `view.board.compras.ordenes_compra`, `view.board.compras.proveedores`.
+
+**FEAT-048 (2026-10-20):** no hay claves nuevas. **Pedidos**, **Órdenes** y **Catálogos** son los tableros `bandeja_compras`, `ordenes_compra` y `proveedores` reetiquetados. `view.board.compras.bandeja_compras` sigue existiendo; el rótulo del menú sale de `boards`. Pedidos y Órdenes se ven con `purchase.tab.processing`. Catálogos se ve con `purchase.providers.view` o `supply.tab.catalog` (pestaña Proveedores o Insumos). Solicitudes de compra ya no incluye la pestaña Bandeja. Calidad, con `supply.tab.quality`, solo muestra Por aprobar: ya no abre Insumos aprobados. El diccionario `purchase_tabs` / `supply_tabs` aún nombra «Bandeja compras», «Insumos aprobados» y «Catalogo»; `visibleTabsFor` no las devuelve y no son permisos nuevos.
 
 Permisos del modulo de documentos de Calidad:
 
@@ -152,10 +154,11 @@ El sidebar usa [`SidebarVisibilityService`](../app/Services/Navigation/SidebarVi
 | --- | --- | --- |
 | Requisiciones (gestion GH, autorizacion gerencia) | `gestion_humana` | — |
 | Requisiciones (solicitar / mis req.) | `users.area_key` | Con permisos de solicitante |
-| Suministros (aprobacion Calidad) | `calidad` | — |
-| Suministros (catalogo / operacion Compras) | `compras` | — |
+| Suministros (aprobacion Calidad) | `calidad` | Solo Por aprobar, con pedidos de todas las áreas y filtro por área (2026-10-21, sin claves nuevas). El catálogo de insumos entra por Catálogos |
 | Suministros (mis solicitudes) | `users.area_key` | Con `supply.tab.my_requests` |
-| Solicitudes de compra (pendientes / bandeja) | `compras` | — |
+| Solicitudes de compra (pendientes del director) | `compras` | Crear y mis solicitudes siguen en el área base |
+| Pedidos y Órdenes (`bandeja_compras`, `ordenes_compra`) | `compras` | Misma clave de siempre; la etiqueta cambió |
+| Catálogos (`proveedores`) | `compras` | Proveedores o Insumos, según el permiso de siempre |
 | Solicitudes de compra (crear / mis) | `users.area_key` | Con permisos base |
 | Documentos (administrar) | `calidad` | — |
 | Documentos (consulta) | `users.area_key` o `view.area.*` explicito | Super-admin: solo Calidad + su area base |
@@ -470,7 +473,7 @@ Servicios centrales:
 
 ## Sede fisica del usuario (suministros)
 
-En **Administracion de usuarios** (`manage.users`) cada usuario puede tener `sede_id` (catalogo `supply_sites`). Es requerida para crear solicitudes de insumos y define el snapshot Utilizacion/Ubicacion del reporte FO-AD-44. Las sedes se administran desde el modal **Gestionar** en el formulario de usuario (rutas `admin.supply-sites.*`). El permiso `supply.tab.quality` habilita las pestañas **Aprobacion Insumos** e **Insumos aprobados**. Ver [`docs/modules/suministros.md`](modules/suministros.md).
+En **Administracion de usuarios** (`manage.users`) cada usuario puede tener `sede_id` (catalogo `supply_sites`). Es requerida para crear solicitudes de insumos y define el snapshot Utilizacion/Ubicacion del reporte FO-AD-44. Las sedes se administran desde el modal **Gestionar** en el formulario de usuario (rutas `admin.supply-sites.*`). El permiso `supply.tab.quality` habilita **Por aprobar**. Ya no abre la pestaña Insumos aprobados. Ver [`docs/modules/suministros.md`](modules/suministros.md).
 
 ## Reglas obligatorias
 

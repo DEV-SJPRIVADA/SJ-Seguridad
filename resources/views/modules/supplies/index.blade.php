@@ -69,13 +69,11 @@
                                 @forelse ($requests as $request)
                                     <tr>
                                         <td class="text-center">
-                                            <span class="pur-req-list__folio">{{ $request->folio() }}</span>
+                                            <span class="pur-req-list__folio">{{ $request->folioVisible() }}</span>
                                         </td>
                                         <td class="text-center"><x-date-table :value="$request->created_at" /></td>
                                         <td class="text-center">
-                                            <span class="status-pill status-pill--req-{{ $request->status }}">
-                                                {{ $request->statusLabel() }}
-                                            </span>
+                                            <x-pedido-etapa :etapa="$request->etapa()" />
                                         </td>
                                         <td class="text-center">{{ $request->items->count() }}</td>
                                         <td class="text-center purchase-request-actions-col">
@@ -88,6 +86,16 @@
                                                 >
                                                     <x-lucide-eye width="16" height="16" aria-hidden="true" />
                                                 </a>
+                                                @can('resubmit', $request)
+                                                    <a
+                                                        href="{{ route('supplies.edit', ['module' => $module, 'supply_request' => $request->id]) }}"
+                                                        class="cursos-catalogo-page__icon-btn"
+                                                        title="Reenviar"
+                                                        aria-label="Reenviar"
+                                                    >
+                                                        <x-lucide-send width="16" height="16" aria-hidden="true" />
+                                                    </a>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

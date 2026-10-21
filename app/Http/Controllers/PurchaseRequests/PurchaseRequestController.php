@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\PurchaseRequests;
 
+use App\Enums\PedidoEtapa;
 use App\Exports\PurchaseRequestItemsImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\ImportPurchaseRequestItemsRequest;
@@ -13,6 +14,7 @@ use App\Models\PurchaseRequestAttachment;
 use App\Models\PurchaseRequestComment;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\PurchaseRequests\PurchaseMyRequestsFilterBag;
 use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
@@ -23,6 +25,7 @@ use App\Services\PurchaseRequests\PurchaseRequestResubmitService;
 use App\Traits\HasPurchaseTabs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -34,18 +37,24 @@ class PurchaseRequestController extends Controller
 {
     use HasPurchaseTabs;
 
-    public function index(string $module): View
+    public function index(string $module, Request $request): View
     {
-        $purchaseRequests = PurchaseRequest::query()
+        $filters = PurchaseMyRequestsFilterBag::fromRequest($request);
+
+        $query = PurchaseRequest::query()
             ->with(['user', 'aprobador', 'items'])
-            ->where('user_id', auth()->id())
-            ->latest()
-            ->get();
+            ->where('user_id', auth()->id());
+
+        $filters->apply($query);
 
         return view('modules.purchase-requests.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
-            'purchaseRequests' => $purchaseRequests,
+            'purchaseRequests' => $query->latest()->get(),
+            'filters' => $filters->toViewArray(),
+            'hasActiveFilters' => $filters->hasActiveFilters(),
+            'areas' => config('access.areas', []),
+            'etapas' => PedidoEtapa::options(),
         ]);
     }
 
@@ -135,6 +144,8 @@ class PurchaseRequestController extends Controller
                 'razon_social' => $validated['solicitud_para'] === 'Cliente' ? ($validated['razon_social'] ?? null) : null,
                 'asume_cliente' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['asume_cliente'] ?? false) : null,
                 'reinversion' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['reinversion'] ?? false) : null,
+                'comodato' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['comodato'] ?? false) : null,
+                'activo' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['activo'] ?? false) : null,
                 'estado' => PurchaseRequest::ESTADO_PENDIENTE,
             ]);
 
@@ -183,7 +194,7 @@ class PurchaseRequestController extends Controller
             ->route('purchase-requests.index', ['module' => $module])
             ->with(
                 'status',
-                'Solicitud N.º '.$purchaseRequest->folio().' guardada correctamente. El director recibira un correo para autorizar.',
+                'Solicitud N.º '.$purchaseRequest->folioVisible().' guardada correctamente. El director recibirá un correo para autorizar.',
             );
     }
 
@@ -194,7 +205,7 @@ class PurchaseRequestController extends Controller
     ): View {
         Gate::authorize('resubmit', $purchaseRequest);
 
-        $purchaseRequest->load(['items', 'aprobador', 'attachments']);
+        $purchaseRequest->load(['items', 'aprobador', 'attachments', 'comments']);
 
         return view('modules.purchase-requests.edit', [
             'module' => $module,
@@ -253,7 +264,7 @@ class PurchaseRequestController extends Controller
             ->route('purchase-requests.index', ['module' => $module])
             ->with(
                 'status',
-                'Solicitud N.º '.$purchaseRequest->folio().' reenviada al director para autorizacion. El director recibira un correo para autorizar.',
+                'Solicitud N.º '.$purchaseRequest->folioVisible().' reenviada al director para autorización. El director recibirá un correo para autorizar.',
             );
     }
 

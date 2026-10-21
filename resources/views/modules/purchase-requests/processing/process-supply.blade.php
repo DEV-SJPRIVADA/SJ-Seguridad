@@ -1,12 +1,8 @@
 <x-app-layout>
-    <x-slot name="header">
-        @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
-    </x-slot>
 
     @php
         $backUrl = route('purchase-requests.processing.index', ['module' => $module]);
         $areaLabel = config("access.areas.{$supplyRequest->area_key}", $supplyRequest->area_key);
-        $estadoCompras = $supplyRequest->estado_compras;
     @endphp
 
     <div class="page-section purchase-requests-page purchase-requests-page--detail">
@@ -20,8 +16,8 @@
                     <a
                         href="{{ $backUrl }}"
                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                        title="Volver a bandeja de compras"
-                        aria-label="Volver a bandeja de compras"
+                        title="Volver a Pedidos"
+                        aria-label="Volver a Pedidos"
                     >
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
@@ -34,7 +30,7 @@
                         >
                             <x-lucide-eye width="18" height="18" aria-hidden="true" />
                         </a>
-                        @if (in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true))
+                        @if ($supplyRequest->puedeEmitirOrden())
                             <a
                                 href="{{ route('purchase-requests.orders.supply.create', ['module' => $module, 'supply_request' => $supplyRequest->id]) }}"
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -50,6 +46,8 @@
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                 title="Descargar PDF"
                                 aria-label="Descargar PDF"
+                                target="_blank"
+                                rel="noopener"
                             >
                                 <x-lucide-file-text width="18" height="18" aria-hidden="true" />
                             </a>
@@ -59,20 +57,17 @@
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                 title="Exportar Excel"
                                 aria-label="Exportar Excel"
+                                target="_blank"
+                                rel="noopener"
                             />
                         @endif
                     </div>
                 </div>
 
-                <h2 class="page-title">Procesar suministro {{ $supplyRequest->folio() }}</h2>
-                <p class="page-subtitle">Registra el costo unitario de cada línea autorizada y completa el procesamiento en bandeja.</p>
+                <h2 class="page-title">Procesar suministro {{ $supplyRequest->folioVisible() }}</h2>
+                <p class="page-subtitle">El precio se captura al emitir la orden de compra. El estado pasa a Con orden al emitir una orden, o a Cerrado al cubrir el saldo o cerrarlo con motivo.</p>
                 <div class="pur-req-detail__pills">
-                    <span class="status-pill status-pill--info">{{ $supplyRequest->statusLabel() }}</span>
-                    @if ($estadoCompras)
-                        <span class="status-pill status-pill--compras-{{ $estadoCompras }}">
-                            Compras: {{ $supplyRequest->estadoComprasLabel() }}
-                        </span>
-                    @endif
+                    <x-pedido-etapa :etapa="$supplyRequest->etapa()" />
                 </div>
             </div>
 
@@ -103,102 +98,58 @@
                         </div>
                     </div>
 
-                    <form
-                        action="{{ route('purchase-requests.processing.supply.update', ['module' => $module, 'supply_request' => $supplyRequest->id]) }}"
-                        method="POST"
-                        class="form-stack"
-                        id="supply-process-form"
-                    >
-                        @csrf
-                        @method('PATCH')
+                    {{-- Líneas autorizadas en solo consulta. El precio se pide al emitir la OC, no aquí. --}}
+                    <section class="pur-req-form__section">
+                        <header class="pur-req-form__section-head">
+                            <span class="pur-req-form__section-step">1</span>
+                            <div>
+                                <h3 class="pur-req-form__section-title">Productos del suministro</h3>
+                                <p class="pur-req-form__section-desc">Cantidades autorizadas por Calidad. El valor unidad y el IVA se capturan al emitir la orden de compra.</p>
+                            </div>
+                        </header>
 
-                        <section class="pur-req-form__section">
-                            <header class="pur-req-form__section-head">
-                                <span class="pur-req-form__section-step">1</span>
-                                <div>
-                                    <h3 class="pur-req-form__section-title">Costeo de productos</h3>
-                                    <p class="pur-req-form__section-desc">Ingresa el costo unitario de cada línea con cantidad autorizada.</p>
-                                </div>
-                            </header>
-
-                            <div class="data-table-wrap pur-req-form__table-wrap">
-                                <table class="supply-table">
-                                    <thead>
+                        <div class="data-table-wrap pur-req-form__table-wrap">
+                            <table class="supply-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Producto</th>
+                                        <th>Cantidad autorizada</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($supplyRequest->items as $item)
                                         <tr>
-                                            <th>#</th>
-                                            <th>Producto</th>
-                                            <th>Cant. autorizada</th>
-                                            <th style="width: 180px;">Costo unitario</th>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
+                                            <td class="pur-req-form__item-desc">
+                                                {{ $item->displayName() }}
+                                                @if ($item->is_not_in_catalog)
+                                                    <span class="status-pill status-pill--warning">Fuera de catálogo</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">{{ $item->approved_quantity ?? $item->requested_quantity }}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($supplyRequest->items as $item)
-                                            <tr>
-                                                <td class="text-center">{{ $loop->iteration }}</td>
-                                                <td class="pur-req-form__item-desc">
-                                                    {{ $item->displayName() }}
-                                                    @if ($item->is_not_in_catalog)
-                                                        <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Fuera de catálogo</span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">{{ $item->approved_quantity ?? $item->requested_quantity }}</td>
-                                                <td>
-                                                    <input
-                                                        type="number"
-                                                        name="items[{{ $item->id }}][unit_cost]"
-                                                        class="supply-input"
-                                                        step="0.01"
-                                                        min="0"
-                                                        value="{{ old('items.'.$item->id.'.unit_cost', $item->unit_cost) }}"
-                                                        required
-                                                        aria-label="Costo unitario de {{ $item->displayName() }}"
-                                                    >
-                                                    <x-input-error :messages="$errors->get('items.'.$item->id.'.unit_cost')" />
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </section>
-
-                        <div class="pur-req-form-actions">
-                            <p class="pur-req-form-actions__note">
-                                Al completar, la solicitud queda cerrada en bandeja con el costo total calculado.
-                            </p>
-                            <div class="pur-req-form-actions__group">
-                                <a
-                                    href="{{ $backUrl }}"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Cancelar y volver"
-                                    aria-label="Cancelar y volver"
-                                >
-                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                </a>
-                                <button
-                                    type="submit"
-                                    name="action"
-                                    value="complete"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                    title="Completar procesamiento"
-                                    aria-label="Completar procesamiento"
-                                >
-                                    <x-lucide-check width="18" height="18" aria-hidden="true" />
-                                </button>
-                            </div>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    </form>
+                    </section>
+
+                    @include('modules.purchase-requests.processing.partials.close-balance', [
+                        'canClose' => $supplyRequest->puedeCerrarSaldo(),
+                        'closeUrl' => route('purchase-requests.processing.supply.close', ['module' => $module, 'supply_request' => $supplyRequest->id]),
+                    ])
                 </div>
 
                 <aside class="pur-req-form-aside">
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Contexto rapido del suministro.</p>
+                            <p class="panel-text">Contexto rápido del suministro.</p>
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folio() }}</li>
+                                <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folioVisible() }}</li>
                                 <li class="pur-req-form-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
                                 <li class="pur-req-form-guide__item">Área: {{ $areaLabel }}</li>
                                 <li class="pur-req-form-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
@@ -209,14 +160,14 @@
 
                     <div class="panel">
                         <div class="panel__header">
-                            <h3 class="panel-title">Guía de costeo</h3>
+                            <h3 class="panel-title">Guía del pedido</h3>
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Usa la cantidad autorizada por Calidad.</li>
-                                <li class="pur-req-form-guide__item">El costo unitario es obligatorio en cada línea.</li>
-                                <li class="pur-req-form-guide__item">Al completar se calcula el costo total.</li>
-                                <li class="pur-req-form-guide__item">PDF/Excel FO-AD-44 siguen disponibles desde el detalle.</li>
+                                <li class="pur-req-form-guide__item">El precio se captura al emitir la orden: valor unidad e IVA.</li>
+                                <li class="pur-req-form-guide__item">Si la línea ya tenía costo, la orden lo trae como valor unidad.</li>
+                                <li class="pur-req-form-guide__item">Cerrar saldo exige un motivo y deja el pedido en Cerrado.</li>
+                                <li class="pur-req-form-guide__item">PDF y Excel FO-AD-44 siguen disponibles desde el detalle.</li>
                             </ul>
                         </div>
                     </div>

@@ -22,7 +22,7 @@ class SupplyRequestApprovedForComprasMail extends Mailable implements ShouldQueu
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Suministro aprobado #'.$this->supplyRequest->id.' — bandeja Compras',
+            subject: 'Suministro aprobado '.$this->supplyRequest->folioVisible().' — Pedidos',
         );
     }
 

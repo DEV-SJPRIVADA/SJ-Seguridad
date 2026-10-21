@@ -40,15 +40,19 @@
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
                 </div>
-                <h2 class="page-title">Reabrir solicitud {{ $purchaseRequest->folio() }}</h2>
+                <h2 class="page-title">Reabrir solicitud {{ $purchaseRequest->folioVisible() }}</h2>
                 <p class="page-subtitle">
                     Corrige lo necesario y reenvía al director para una nueva autorización.
                 </p>
             </div>
 
-            @if ($purchaseRequest->comentarios_director)
+            @php
+                $motivoRechazo = $purchaseRequest->comentarios_director
+                    ?: $purchaseRequest->comments->sortByDesc('id')->first()?->body;
+            @endphp
+            @if ($motivoRechazo)
                 <div class="alert alert--warning" role="alert">
-                    <strong>Motivo del rechazo:</strong> {{ $purchaseRequest->comentarios_director }}
+                    <strong>Motivo del rechazo:</strong> {{ $motivoRechazo }}
                 </div>
             @endif
 
@@ -76,7 +80,7 @@
                                 </div>
                                 <div class="pur-req-form__meta-item">
                                     <span class="pur-req-form__meta-label">Folio</span>
-                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->folio() }}</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->folioVisible() }}</span>
                                 </div>
                                 <div class="pur-req-form__meta-item">
                                     <span class="pur-req-form__meta-label">Estado</span>
@@ -173,7 +177,8 @@
                                     <x-input-error :messages="$errors->get('razon_social')" />
                                 </div>
 
-                                <div class="form-grid form-grid--three" style="margin-top: 1rem;">
+                                {{-- Fila de cliente: Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo. Si no elige, el control muestra No; Interna no persiste estos radios. --}}
+                                <div class="pur-req-form__client-flags">
                                     <div class="form-field">
                                         <label class="form-label">Proyecto nuevo</label>
                                         <div class="pur-req-form__radios">
@@ -211,6 +216,34 @@
                                             </label>
                                             <label class="pur-req-form__radio">
                                                 <input type="radio" name="reinversion" value="0" @checked(old('reinversion', $purchaseRequest->reinversion ? '1' : '0') === '0' || old('reinversion', $purchaseRequest->reinversion) === 0 || old('reinversion', $purchaseRequest->reinversion) === null)>
+                                                No
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field">
+                                        <label class="form-label">Comodato</label>
+                                        <div class="pur-req-form__radios">
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="comodato" value="1" @checked(old('comodato', $purchaseRequest->comodato ? '1' : '0') === '1' || old('comodato', $purchaseRequest->comodato) === 1)>
+                                                Sí
+                                            </label>
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="comodato" value="0" @checked(old('comodato', $purchaseRequest->comodato ? '1' : '0') === '0' || old('comodato', $purchaseRequest->comodato) === 0 || old('comodato', $purchaseRequest->comodato) === null)>
+                                                No
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field">
+                                        <label class="form-label">Activo</label>
+                                        <div class="pur-req-form__radios">
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="activo" value="1" @checked(old('activo', $purchaseRequest->activo ? '1' : '0') === '1' || old('activo', $purchaseRequest->activo) === 1)>
+                                                Sí
+                                            </label>
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="activo" value="0" @checked(old('activo', $purchaseRequest->activo ? '1' : '0') === '0' || old('activo', $purchaseRequest->activo) === 0 || old('activo', $purchaseRequest->activo) === null)>
                                                 No
                                             </label>
                                         </div>

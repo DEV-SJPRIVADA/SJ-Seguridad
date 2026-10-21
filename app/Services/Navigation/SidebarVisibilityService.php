@@ -108,6 +108,16 @@ class SidebarVisibilityService
 
     private function shouldShowSupplyBoard(User $user, string $areaKey): bool
     {
+        // Quien solo administra el catálogo entra por Catálogos, no por un Suministros sin pestañas.
+        if ($this->supplyAccess->visibleTabsFor($user, $areaKey) === []
+            && $this->supplyAccess->canViewInsumosCatalog($user)
+            && ! $user->can('purchase.tab.processing')
+            && ! $user->can('manage.users')
+            && ! $this->hasCalidadSupplyScope($user)
+        ) {
+            return false;
+        }
+
         if ($this->supplyAccess->baseAreaBoardVisible($user, $areaKey)) {
             return true;
         }
@@ -146,21 +156,20 @@ class SidebarVisibilityService
 
     private function shouldShowBandejaComprasBoard(User $user, string $areaKey): bool
     {
+        return $this->purchaseAccess->bandejaAccessibleViaPurchaseBoard($user, $areaKey);
+    }
+
+    /**
+     * Catálogos (clave proveedores): proveedores o catálogo de insumos.
+     */
+    private function shouldShowProvidersBoard(User $user, string $areaKey): bool
+    {
         if ($areaKey !== 'compras') {
             return false;
         }
 
-        if ($this->purchaseAccess->bandejaAccessibleViaPurchaseBoard($user, $areaKey)) {
-            return false;
-        }
-
-        return $user->can('purchase.tab.processing')
-            || $user->can('view.board.compras.bandeja_compras');
-    }
-
-    private function shouldShowProvidersBoard(User $user, string $areaKey): bool
-    {
-        return $this->purchaseAccess->canViewProvidersBoard($user, $areaKey);
+        return $this->purchaseAccess->canViewProviders($user)
+            || $this->supplyAccess->canViewInsumosCatalog($user);
     }
 
     private function shouldShowOrdersBoard(User $user, string $areaKey): bool

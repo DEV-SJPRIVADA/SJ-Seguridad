@@ -2,45 +2,53 @@
 
 ## Objetivo
 
-Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autorizacion por director seleccionado y procesamiento unificado en **Bandeja compras** junto con suministros aprobados por Calidad.
+Gestionar solicitudes de compra libres (multi-linea, fotos por item), con autorizacion por director seleccionado, y el trabajo diario de Compras en tres tableros ya existentes, solo reetiquetados: **Pedidos**, **Órdenes** y **Catálogos**. El estado del pedido lo escribe `PurchaseFlowStateService`. La orden impresa es el FO-AD-07 oficial (una hoja carta).
 
 ## Alcance actual
 
 - Creacion multi-linea con foto opcional por articulo (disco `public`; sin cambio en FEAT-030)
 - Adjuntos **opcionales** multiples a **nivel solicitud** (no por linea): cotizaciones, ordenes, evidencias. Solo visibles en el detalle autenticado
-- Solicitud **Interno** o **Cliente** (campos adicionales de cliente)
+- Solicitud **Interno** o **Cliente**. Solo Cliente muestra y guarda Proyecto nuevo, Asume el cliente, Reinversión, **Comodato** y **Activo** (radios Sí/No, default No). Interna deja esos campos en `null`. Al imprimir la OC, `PurchaseOrder::banderaImpresa()` lee la solicitud: Sí solo si el campo es verdadero; si no, imprime No.
 - Director aprobador seleccionado en el formulario (usuarios con rol `director` + `purchase.tab.approval`)
 - Autorizacion **in-app**: pestaña Pendientes + formulario Aprobar/Rechazar en detalle (`show`)
 - Autorizacion **por correo**: enlace firmado (sin login) a `aprobacion-correo/{id}` con formulario guest Aprobar/Rechazar; vigencia configurable (`PURCHASE_EMAIL_APPROVAL_LINK_DAYS`, default 7)
 - Correo al director incluye boton **Autorizar por correo** (enlace firmado) y alternativa **Ver en la plataforma**
-- Bandeja Compras unificada: solicitudes de compra aprobadas + insumos `aprobada_calidad`, `en_compras` o `completada` (historico visible)
-- Export FO-AD-44: PDF y Excel por solicitud de compra; PDF/Excel por suministro en bandeja
-- Emision de **Orden de Compra FO-AD-07** desde la bandeja (compra y suministro): proveedor + precios por linea, snapshot de proveedor y PDF/Excel del documento
+- Tablero **Pedidos** (clave `bandeja_compras`, etiqueta Pedidos): tres vistas del mismo listado (`vista=por_comprar|con_orden|historial`). Por comprar + Con orden son la bandeja; Historial es Cerrado. `estado_compras=rechazado` no entra en ninguna
+- Export FO-AD-44: PDF y Excel por solicitud de compra; PDF/Excel por suministro desde el detalle
+- Emision de **Orden de Compra FO-AD-07** (compra y suministro): el precio se captura solo ahí (`valor_unidad` e IVA importe). PDF y Excel oficiales, una hoja carta, texto legal de `config/purchase-orders.php` (`condiciones`) copiado tal cual
+- **Cerrar saldo** (sección del formulario de procesar, no un modal): motivo obligatorio en el hilo y paso a Cerrado aunque quede saldo o falte fecha de recibido
+- Evaluación post-entrega en pantalla (`purchase.providers.edit`). **No se imprime** en el FO-AD-07. La fecha de recibido puede guardarse sola; el cierre automático exige saldo cero y fecha en todas las OC
 - Import legacy desde BD gestion-compras (`purchase-requests:import-legacy`)
 
 ## Flujo de estados
 
-```mermaid
-stateDiagram-v2
-    direction LR
-    state Director {
-        pendiente --> aprobado: Director aprueba
-        pendiente --> rechazado: Director rechaza
-    }
-    state Compras {
-        aprobado --> compras_pendiente: Ingreso bandeja
-        compras_pendiente --> en_curso
-        en_curso --> completado
-        compras_pendiente --> rechazado_compras: Compras rechaza
-    }
-```
+La etiqueta de pantalla no renombra la columna. La escribe un solo servicio, `PurchaseFlowStateService::sync`, **después** de aprobar, rechazar, reenviar, emitir una OC o guardar `fecha_recibido`. No corre al abrir Procesar (GET). Un pedido ya `completado` / `completada` no se degrada.
 
-| Campo | Valores | Quien cambia |
+**Etapa común (`App\Enums\PedidoEtapa`, 2026-10-21):** compras y suministros muestran y filtran la misma etapa. No se guarda en BD: `PurchaseRequest::etapa()` / `SupplyRequest::etapa()` traducen las columnas y los scopes `whereEtapa()` hacen la consulta inversa. Pastilla `<x-pedido-etapa>` con clases `status-pill--etapa-*`. `SupplyRequest::statusLabel()`, `estadosComprasLabels()` y `etiquetaFlujo()` devuelven el nombre de la etapa; las claves guardadas y la auditoría no cambian.
+
+| Etapa (`value`) | Compra (columnas actuales) | Suministro |
 | --- | --- | --- |
-| `estado` | `pendiente`, `aprobado`, `rechazado` | Director asignado |
-| `estado_compras` | `pendiente`, `en_curso`, `completado`, `rechazado` | Equipo Compras (solo si `estado=aprobado`) |
+| Por autorizar (`por_autorizar`) | `estado=pendiente` | `pendiente_calidad` |
+| Devuelta (`devuelta`) | `estado=rechazado` | `rechazada_calidad` |
+| Por comprar (`por_comprar`) | `estado=aprobado`, `estado_compras=pendiente`, sin cantidades en OC | `aprobada_calidad`, sin cantidades en OC |
+| Con orden (`con_orden`) | `estado_compras=en_curso` | `en_compras` |
+| Cerrado (`cerrado`) | `estado_compras=completado` | `completada` |
+| Cerrado sin compra (`cerrado_sin_compra`) | `estado_compras=rechazado` (dato antiguo) | — |
 
-Al aprobar el director: `estado_compras` pasa a `pendiente` y se notifica a Compras (destinatarios configurables en tipos de notificacion).
+Usan la etapa: Mis solicitudes (compra y suministro), detalle, Pendientes del director, Pedidos (`ComprasQueueFilterBag::etapas()`), Procesar, Por aprobar de Calidad, PDF FO-AD-44 y dashboard. Quién autoriza (Director o Calidad) es un dato aparte. `aprobado` con `estado_compras` vacío se muestra Por comprar, pero el scope de Por comprar solo cuenta `estado_compras=pendiente` (mismos conteos que antes).
+
+`sync` de una compra solo actúa si `estado=aprobado` y `estado_compras` no es `rechazado` (si es `rechazado`, retorna sin escribir). Predicado:
+
+1. Si ya está Cerrado, no se toca.
+2. Sin cantidades en ninguna OC → Por comprar.
+3. Hay OC y queda saldo → Con orden.
+4. Saldo de todas las líneas en cero **y** cada OC del origen tiene `fecha_recibido` → Cerrado. Si el saldo ya es cero y falta una fecha, queda Con orden. El puntaje de la evaluación no cuenta.
+
+`closeBalance` es la excepción: exige motivo (mínimo 3 caracteres; se guarda en el hilo en mayúsculas) y pone Cerrado aunque quede saldo o falte una fecha. Después `PurchaseOrderService` rechaza otra OC (`puedeEmitirOrden` es falso en Cerrado).
+
+Compras ya no elige ni rechaza el estado. El PATCH de procesar compra no persiste `estado_compras`. `comentarios_director` y `comentarios_compras` se siguen mostrando si el pedido viejo los tiene y dejan de escribirse: el motivo nuevo del director (pantalla y correo firmado) es una fila del hilo.
+
+Al aprobar el director: `estado_compras` pasa a `pendiente` y se notifica a Compras. Pendiente de autorización y Devuelta no entran a Pedidos; siguen en Mis solicitudes y en la cola de quien autoriza.
 
 ## Rutas
 
@@ -51,10 +59,12 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store`; plantilla ítems `items.import-template`; precarga `items.import` |
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
 | Pendientes autorizacion | `purchase.tab.approval` | `purchase-requests.approval.index`, `approval.update` |
-| Bandeja compras | `purchase.tab.processing` | `purchase-requests.processing.*` |
-| Ordenes de compra (FO-AD-07) | `purchase.tab.processing` (`PurchaseAccessService::canEmitOrder`) | `purchase-requests.orders.purchase.create` / `.store`, `orders.supply.create` / `.store`, `orders.show`, `orders.pdf`, `orders.excel` |
-| Ordenes de compra (tablero/listado) | `purchase.tab.processing` (`canViewOrdersBoard`) | `purchase-requests.orders.index` (`GET /ordenes-compra`), `purchase-requests.orders.datatable` |
-| Proveedores (tablero Compras) | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export`, `providers.template` |
+| Pedidos (clave `bandeja_compras`) | `purchase.tab.processing` | `purchase-requests.processing.index` con `vista=por_comprar\|con_orden\|historial`. Ya no es pestaña de Solicitudes de compra |
+| Cerrar saldo | `purchase.tab.processing` | `POST purchase-requests.processing.purchase.close` y `.supply.close` |
+| Emitir OC (FO-AD-07) | `purchase.tab.processing` (`canEmitOrder`) | `purchase-requests.orders.purchase.create` / `.store`, `orders.supply.create` / `.store`, `orders.show`, `orders.pdf`, `orders.excel` |
+| Órdenes (clave `ordenes_compra`) | `purchase.tab.processing` (`canViewOrdersBoard`) | `purchase-requests.orders.index` (`GET /ordenes-compra`), `purchase-requests.orders.datatable` |
+| Evaluación y fecha de recibido | `purchase.providers.edit` (fuera del grupo `processing`) | `GET/PUT purchase-requests.orders.evaluation.edit` / `.update` (`/ordenes-compra/{purchase_order}/evaluacion`). OC debe estar `emitida`. Quien solo tiene `purchase.tab.processing` recibe 403 |
+| Catálogos → Proveedores (clave `proveedores`) | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export`, `providers.template` |
 | Proveedores (mutaciones) | `purchase.providers.edit` | `providers.create`, `providers.store`, `providers.edit`, `providers.update`, `providers.import`, `providers.import-report` |
 | Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store` |
 | Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
@@ -80,11 +90,13 @@ Middleware: `purchase.tab:{tab}` via `EnsurePurchaseTabAccess` + `PurchaseAccess
 | `purchase.tab.create` | Crear solicitudes |
 | `purchase.tab.my_requests` | Listar propias + ver detalle (policy `view` como dueno) |
 | `purchase.tab.approval` | Pendientes + autorizar (policy `approve`) |
-| `purchase.tab.processing` | Bandeja y procesamiento (policy `process`); tambien FO-AD-07 (T4) |
-| `purchase.providers.view` | Ver, filtrar y exportar el catalogo Proveedores |
-| `purchase.providers.edit` | Crear/editar proveedores; **implica view** en `PurchaseAccessService` |
-| `view.board.{area}.solicitudes_compra` | Alcance sidebar (hogar canonico: area base o Compras) |
-| `view.board.compras.bandeja_compras` | Legacy sidebar; la bandeja se accede como pestaña en Solicitudes de compra |
+| `purchase.tab.processing` | Pedidos, emitir OC, Órdenes, Cerrar saldo (policy `process` en la compra) |
+| `purchase.providers.view` | Pestaña Proveedores dentro de Catálogos |
+| `purchase.providers.edit` | CRUD de proveedores y la pantalla de evaluación / fecha de recibido; **implica view** |
+| `view.board.{area}.solicitudes_compra` | Tablero Solicitudes de compra (Nueva, Mis solicitudes, Pendientes). Sin pestaña Bandeja |
+| `view.board.compras.bandeja_compras` | La clave sigue. El sidebar dice **Pedidos** por la etiqueta de `boards`, no por una clave nueva |
+
+FEAT-048 no agregó claves en `boards` ni en `system_permissions`. `purchase_tabs` aún tiene la etiqueta muerta «Bandeja compras»; `visibleTabsFor` ya no la devuelve.
 
 `PurchaseRequestPolicy`:
 
@@ -99,19 +111,20 @@ Directores: rol `director` incluye `view.board.compras.solicitudes_compra` (comp
 
 | Perfil | Entrada en menu |
 | --- | --- |
-| Solicitante | Su `area_key` → Solicitudes de compra |
+| Solicitante | Su `area_key` → Solicitudes de compra (Nueva / Mis solicitudes) |
 | Director | Compras → Solicitudes de compra → Pendientes |
-| Compras (analista) | Compras → Solicitudes de compra → pestaña Bandeja compras (landing por defecto); Nueva solicitud / Mis solicitudes segun permisos |
+| Compras (`purchase.tab.processing`) | Compras → **Pedidos** y **Órdenes** |
+| Catálogos | Compras → **Catálogos** si `purchase.providers.view` o `supply.tab.catalog`. Pestaña Proveedores o Insumos según el permiso |
 
-La bandeja **no** aparece como tablero separado en sidebar cuando ya es pestaña del modulo Solicitudes de compra.
+`purchase-requests.processing.*` marca Pedidos, no Solicitudes de compra. `supplies.products.*` marca Catálogos, no Suministros. El tablero Dashboard se conserva (`view.board.compras.dashboard`).
 
-Config: `board_canonical_areas.solicitudes_compra` en `config/access.php`. Servicio: `SidebarVisibilityService`.
+Config: etiquetas en `boards` (`bandeja_compras` = Pedidos, `ordenes_compra` = Órdenes, `proveedores` = Catálogos). Visibilidad: `SidebarVisibilityService`, `NavigationResolver`, `PurchaseAccessService::visibleTabsFor` (ya no devuelve bandeja).
 
 ## Base de datos
 
 ### `purchase_requests`
 
-Folio visible: `numero_solicitud` (4 digitos, unico). Campos clave: `area_key`, `solicitud_para`, `urgente`, `aprobador_id`, `estado`, `estado_compras`, `fecha_aprobacion`, `comentarios_director`, `comentarios_compras`, `procesado_compras_at`, `procesado_compras_por`. Si `solicitud_para=Cliente`: `razon_social`, `proyecto_nuevo`, `asume_cliente`, `reinversion` (Si/No). Sin descripcion/justificacion de cabecera (retirados; el detalle vive en lineas).
+Folio de pantalla: `folioVisible()` = `SC-` + `folio()` (el correlativo se rellena a 4; por encima de 9999 no se recorta, p. ej. `SC-10000`). El número guardado en `numero_solicitud` no cambia. Campos clave: `area_key`, `solicitud_para`, `urgente`, `aprobador_id`, `estado`, `estado_compras`, `fecha_aprobacion`, `comentarios_director`, `comentarios_compras`, `procesado_compras_at`, `procesado_compras_por`. Si `solicitud_para=Cliente`: `razon_social`, `proyecto_nuevo`, `asume_cliente`, `reinversion`, `comodato`, `activo` (boolean nullable, sin default; el radio default No persiste `false`). Interna persiste `comodato` y `activo` en `null` aunque se posteen. En el detalle de una Cliente ya guardada, `null` se muestra como No y, si se reenvía, se persiste `false`; eso no rellena el snapshot de una OC ya emitida. Sin descripcion/justificacion de cabecera.
 
 ### `purchase_request_items`
 
@@ -146,7 +159,7 @@ Catalogo FEAT-047 T2. Migracion `2026_10_19_064916_create_purchase_providers_tab
 | `correo` | string(255) nullable | Se conserva tal cual (sin uppercase) |
 | `estado` | string(20) default `activo` | `activo` / `inactivo`, indexado |
 | `dias_pago` | unsignedSmallInteger nullable | Editable en alta/edicion; import VINE01 (`DIAS_PAGO`, opcional) |
-| `contacto`, `direccion`, `ciudad`, `forma_pago` | strings nullable | Datos FO-AD-07; texto en MAYUSCULAS |
+| `contacto`, `direccion`, `ciudad`, `forma_pago` | strings nullable | Datos FO-AD-07; `contacto`/`direccion`/`forma_pago` en MAYUSCULAS; `ciudad` conserva el nombre del catalogo. Import VINE01 cubre `CONTACTO`, `CIUDAD` y `FORMA_PAGO` (opcional; ciudad contra `requisition_cities` activas) |
 | `created_by` | FK users nullable | `nullOnDelete()` |
 
 Indices: `estado`. Modelo `App\Models\PurchaseProvider` (`dias_pago` int, `estadoLabels()`). La tabla **solo contiene proveedores**; no existen columnas de clasificacion (`es_cliente` / `es_proveedor`).
@@ -166,7 +179,8 @@ Ordenes de compra FO-AD-07. Migracion `2026_10_19_145000_create_purchase_orders_
 | `provider_dias_pago` | unsignedSmallInteger nullable | Snapshot |
 | `fecha` | string(10) | Fecha de emision (YYYY-MM-DD) |
 | `ciudad` | string(120) nullable | Ciudad de entrega de la OC |
-| `asume_cliente` | string(20) nullable | `SI` / `NO`; solo si el origen de compra lo define |
+| `asume_cliente` | string(20) nullable | Snapshot `SI` / `NO` o `null`. La impresión usa la solicitud: Sí o No |
+| `proyecto_nuevo`, `reinversion`, `comodato`, `activo` | string(20) nullable | Igual que `asume_cliente`. Migración aditiva `2026_10_20_144714_add_client_flag_snapshots_to_purchase_orders_table`. Sin backfill |
 | `observaciones` | text nullable | |
 | `estado` | string(20) default `borrador` | `borrador` / `emitida`, indexado |
 | `total` | decimal(15,2) default 0 | Suma de `valor_total` de las lineas |
@@ -207,7 +221,9 @@ Evaluacion post-entrega **1:1** por OC. Migracion `2026_10_19_145200_create_purc
 | `observaciones` | text nullable | |
 | `evaluated_by` | FK users nullable | `nullOnDelete()` |
 
-Pesos y umbrales en `config/purchase-orders.php` (`evaluation.weights`, `evaluation.thresholds`). La evaluacion **no** se imprime en FO-AD-07; se implementa en FEAT-047 T5.
+Pesos y umbrales en `config/purchase-orders.php` (`evaluation.weights` 25/25/50, `evaluation.thresholds` ≥ 80 `satisfactoria`, ≥ 60 `seguimiento`, si no `insatisfactoria`). No hardcodear los números en Blade. Resultado del criterio = Calif × (peso/100). Puntaje % = (suma de resultados / 5) × 100. Comprobación: 5/5/5 → 100; 4/4/4 → 80; 3/3/3 → 60; 1/1/1 → 20.
+
+FEAT-048 pone la UI (`PurchaseOrderEvaluationService`, `updateOrCreate`, una fila por OC). La fecha puede guardarse sola (las tres calificaciones quedan null). Si se envía una calificación, las tres son obligatorias (enteros 1–5). Observaciones de la evaluación pasan por mayúsculas. El cierre automático mira fecha + saldo en cero, no el puntaje. La evaluación **no** se imprime en el PDF ni en el Excel.
 
 ### `purchase_requests.archivo_pedido_path` (deprecada)
 Columna **permanece** nullable. **No DROP.** Ya no esta en `$fillable`. Store, resubmit, import y UI **no** la leen ni escriben. Fuente de verdad: `purchase_request_attachments`. Valores previos se copiaron a 1:N (disco `public` → `local` si el fichero existia) y la columna quedo en `NULL`.
@@ -218,25 +234,30 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 
 | Componente | Responsabilidad |
 | --- | --- |
-| `PurchaseRequestController` | CRUD solicitante, show, export PDF/Excel, `downloadAttachment` |
+| `PurchaseRequestController` | CRUD solicitante, show, export PDF/Excel, `downloadAttachment`. `index` aplica `PurchaseMyRequestsFilterBag` |
+| `PurchaseMyRequestsFilterBag` | Filtros GET de Mis solicitudes (fechas, estado, estado compras, urgencia, área) |
 | `PurchaseApprovalController` | Lista pendientes del director, PATCH autorizar |
-| `PurchaseProcessingController` | Bandeja unificada, procesar compra/suministro |
-| `PurchaseApprovalService` | Resolver aprobacion/rechazo director |
+| `PurchaseProcessingController` | Pedidos (tres vistas), procesar compra/suministro, Cerrar saldo. El GET no llama `sync`. El PATCH de compra no escribe estado |
+| `PurchaseFlowStateService` | Máquina única: `sync` y `closeBalance` |
+| `PurchaseOrderEvaluationController` / `PurchaseOrderEvaluationService` | Fecha de recibido y calificaciones; tras guardar llama `sync` |
+| `PurchaseApprovalService` | Resolver aprobacion/rechazo director. El motivo nuevo va al hilo (`UppercaseFormText`); `comentarios_director` solo queda en metadata de auditoría, acotado |
 | `PurchaseRequestNotificationService` | Correos director, solicitante, compras; persiste log en `purchase_request_mail_logs` |
 | `ComprasQueueService` | Mezcla purchase + supply en bandeja con filtros |
 | `ComprasQueueFilterBag` | Parametros de filtro bandeja (fechas, area, tipo, estado compras) |
 | `ComprasDashboardService` | KPIs y graficos del dashboard Compras; bandeja usa la misma logica que `ComprasQueueService` |
 | `ComprasDashboardController` | Vista `compras/dashboard` (ruta `compras.dashboard`) |
-| `PurchaseAccessService` | Tabs visibles de Solicitudes de compra, `canViewProviders` / `canEditProviders`, `canViewProvidersBoard` (tablero Proveedores), directores (`approversQuery`) |
+| `PurchaseAccessService` | Tabs de Solicitudes de compra (sin bandeja), `canViewProviders` / `canEditProviders`, tablero Catálogos (proveedores), Pedidos y Órdenes, directores (`approversQuery`) |
 | `PurchaseProviderController` | CRUD proveedores (tablero Compras), datatable server-side, export Excel, plantilla/import VINE01, audit `provider_created` / `provider_updated` / `provider_export` / `providers_imported` |
 | `PurchaseProviderDatatableService` | Filtros (`q`, `estado`), query, respuesta DataTables y retorno de filtros |
-| `PurchaseProviderImportService` | Import masivo VINE01 (solo `PROVEEDOR=SI`, upsert por `identificacion`, `DIAS_PAGO` opcional, soporte `dry-run`/`limit`) |
+| `PurchaseProviderImportService` | Import masivo VINE01 (solo `PROVEEDOR=SI`, upsert por `identificacion`, `CONTACTO`/`CIUDAD`/`FORMA_PAGO`/`DIAS_PAGO` opcionales, soporte `dry-run`/`limit`) |
 | `PurchaseProviderImportTemplateExport` | Plantilla Excel `VINE01` (hoja `VINE01` con encabezados + hoja `Instrucciones`) |
 | `PurchaseOrderController` | Emision de OC desde compra/suministro (create + store), detalle de la OC, export PDF/Excel FO-AD-07, audit `purchase_order`/`created` y `export`/`order_pdf`/`order_excel` |
-| `PurchaseOrderService` | Construye la OC: snapshot del proveedor, lineas desde el origen (precio capturado por Compras), `valor_total = cantidad * valor_unidad + iva`, total de la orden y estado `emitida`. Calcula el **saldo pendiente** por linea (`sourceLines()`, `orderedQuantities()`) y valida el reparto en la transaccion |
+| `PurchaseOrderService` | Construye la OC: snapshot del proveedor y de los cinco flags (`SI`/`NO` o `null`; suministro: los cinco `null`), lineas desde el origen, `valor_total = cantidad * valor_unidad + iva`, estado `emitida`. `supplyLines()` precarga `valor_unidad` desde `unit_cost` histórico y no lo borra. Rechaza emitir si el origen ya está Cerrado. Saldo por línea en `sourceLines()` |
 | `PurchaseOrderDatatableService` | Listado server-side del tablero de OC: filtros (estado, origen, proveedor, fechas), busqueda DataTables, orden y filas con acciones |
-| `PurchaseOrderPdfExporter` | FO-AD-07 en PDF (`pdf/purchase-order.blade.php`, DomPDF, carta) |
-| `PurchaseOrderExcelExporter` | FO-AD-07 en Excel (PhpSpreadsheet: cabecera, bloque proveedor, detalle, totales, firmas) |
+| `PurchaseOrderPdfExporter` | FO-AD-07 en PDF (`pdf/purchase-order.blade.php`, DomPDF, carta, una página). Título **ORDEN DE COMPRA O SERVICIO**, periodo **Enero de 2025**, versión 04, logo `public/images/logoSj.png`, condiciones desde config. No es un listado `BaseExport` |
+| `PurchaseOrderExcelExporter` | Mismo contenido del formulario, incluidas las condiciones. No pasa a `BaseExport` ni a `excelHtml5` |
+| `ClosePurchaseBalanceRequest` | Motivo obligatorio (mín. 3), mayúsculas (`UppercasesValidatedText`) |
+| `UpdatePurchaseOrderEvaluationRequest` | Fecha obligatoria; calificaciones 1–5 las tres o ninguna |
 | `StorePurchaseOrderRequest` | Autorizacion `canEmitOrder`, proveedor **activo** (`Rule::exists`), fecha, ciudad, observaciones y `items.*` (cantidad, articulo, descripcion, valor_unidad, iva) |
 | `Store/UpdatePurchaseProviderRequest` | Autorizacion `providers.edit`, validacion unique/`dias_pago`, telefono numerico, ciudad contra `requisition_cities`, uppercase de textos (excepto correo/identificacion/telefono/estado/ciudad) |
 | `ImportPurchaseProvidersRequest` | Autorizacion `providers.edit`, validacion de `import_file` (xlsx/xls/csv, tope `providers_import_max_kilobytes`) |
@@ -246,8 +267,8 @@ Migraciones: `2026_07_31_140100_create_purchase_requests_tables.php`, `2026_08_2
 
 Vistas: `resources/views/modules/purchase-requests/` (create, index, show, edit, approval/, processing/, partials/approval-form.blade.php). Dashboard: `resources/views/areas/compras/dashboard.blade.php`.
 
-UI create/show/edit/procesar (compra y suministro): layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*` en `resources/css/app.css`. Detalle y procesamiento: volver contextual e iconos chrome (`.req-manage-filters__icon-btn`). Reabrir (edit) alineado a Nueva solicitud. `process-supply`: costeo por linea + completar. **Productos (create/edit):** tarjetas `.purchase-item-card` (Descripcion a ancho completo + grilla Referencia/Utilizacion/Ubicacion/Cantidad+Foto); JS `purchase-request-form.js`.
-Listados Mis solicitudes / Bandeja: `purchase-requests-page--list` con intro, resumen de conteo (bandeja) y panel de listado operativo; filtros bandeja conservan IDs y auto-submit.
+UI create/show/edit/procesar (compra y suministro): layout `pur-req-form-layout` / `pur-req-detail-layout` (main + aside), secciones FO-AD-44, estilos `pur-req-*`. La fila Comodato/Activo solo se muestra si `solicitud_para=Cliente`. Procesar ya no ofrece selector de `estado_compras` ni captura `unit_cost`. **Cerrar saldo** es una sección `pur-req-form` (`processing/partials/close-balance.blade.php`), no un modal. **Productos (create/edit):** tarjetas `.purchase-item-card`. Evaluación: `orders/evaluation.blade.php` sobre `pur-req-form`, calificaciones con `<x-searchable-select>`, pesos desde config.
+Listado Pedidos: `processing/index` con pastillas Por comprar / Con orden / Historial (`.module-tab`), filtros y tope 200. Órdenes sigue en DataTables server-side. Catálogos usa `partials/catalogos-subnav.blade.php`.
 
 Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despues de la tabla de productos, antes de Enviar / Reenviar): `attachments[]` multiple, opcional. En edit: `keep_attachment_ids[]` para conservar; quitar en UI elimina el hidden. Detalle `show.blade.php`: bloque Adjuntos (nombre, tamano, enlace `attachments.download`) solo si hay filas. JS: `resources/js/purchase-request-form.js`. **No** en mail, PDF FO-AD-44 ni `email-approval`.
 
@@ -268,16 +289,25 @@ Control **Adjuntos** en cabecera de `create.blade.php` y `edit.blade.php` (despu
 - Audit: `purchase_request` / `comment` con `comment_id` y `body_length` (sin texto completo).
 - Subnav en `show`: query `from=mis_solicitudes|approval|processing`; si falta, dueño → Mis solicitudes; director asignado pendiente → Pendientes; resto con processing → Bandeja. No usar `Gate::can('approve')` (super-admin lo pasa siempre).
 - Mis solicitudes lista también `estado_compras` cuando existe.
-## Bandeja compras — filtros y listado
+## Pedidos — tres vistas y filtros
 
-`ComprasQueueFilterBag` + vista `processing/index` (estilo filtros GH):
+El listado sigue siendo `purchase-requests.processing.index` (`ComprasQueueFilterBag` + `ComprasQueueService`). Las pastillas son la vista, no un segundo escritorio:
+
+| Vista (`vista`) | Compra | Suministro |
+| --- | --- | --- |
+| `por_comprar` | `estado_compras=pendiente` | `aprobada_calidad` |
+| `con_orden` | `en_curso` | `en_compras` |
+| `historial` | `completado` | `completada` |
+| (sin vista) | pendiente + en curso | `aprobada_calidad` + `en_compras` |
+
+`estado_compras=rechazado` no lista filas (`whereRaw('1 = 0')` si alguien pide ese filtro). Los cerrados no entran en la bandeja vacía.
 
 | Filtro | Campo / efecto |
 | --- | --- |
 | Fecha inicio / fin | Compras y suministros: `created_at` (fecha de solicitud) |
 | Area solicitante | `area_key` |
 | Tipo | `purchase` \| `supply` |
-| Estado (pills) | `estado_compras`: pendiente, en_curso, completado, rechazado |
+| Vista | `por_comprar`, `con_orden`, `historial` (el dashboard manda `vista` y quita `estado_compras`) |
 
 Reglas de volumen (`ComprasQueueService`):
 
@@ -299,12 +329,12 @@ Filtros globales: **ano**, **mes** (opcional), **area solicitante**, **tipo**.
 | KPI | Logica | Filtro fecha |
 | --- | --- | --- |
 | Pendientes director | `estado=pendiente` (solo area) | No usa ano/mes |
-| En bandeja | Total en `ComprasQueueService` | Si: convierte ano/mes a `date_from`/`date_to` |
-| Bandeja pendiente | `estado_compras=pendiente` (+ suministro `aprobada_calidad`) | Igual que bandeja |
-| En curso | `estado_compras=en_curso` (+ suministro `en_compras`) | Igual que bandeja |
+| En bandeja | Por comprar + Con orden (`bandeja_total`). Los cerrados no entran | Si: convierte ano/mes a `date_from`/`date_to` |
+| Bandeja pendiente | Por comprar (`pendiente` / `aprobada_calidad`) | Igual que bandeja |
+| En curso | Con orden (`en_curso` / `en_compras`) | Igual que bandeja |
 | Completadas | Compras: `procesado_compras_at`; suministros: `updated_at` con `status=completada` | Ano/mes del dashboard |
 
-Los KPIs de bandeja enlazan a `purchase-requests.processing.index` con los mismos parametros de fecha/area/tipo. Graficos ApexCharts: tendencia anual, estado solicitudes (periodo), bandeja por estado (periodo), top areas, bandeja por tipo. JS: `resources/js/compras-dashboard-charts.js`.
+Los KPIs de bandeja enlazan a Pedidos (`purchase-requests.processing.index`) con `vista` (`por_comprar` o `con_orden`), no a un segundo listado. El KPI «En bandeja» abre Por comprar + Con orden. Graficos ApexCharts: tendencia anual, estado solicitudes (periodo), bandeja por estado (periodo), top areas, bandeja por tipo. JS: `resources/js/compras-dashboard-charts.js`.
 
 **Retirados:** KPIs "Solicitudes en periodo" y "Urgentes en bandeja" (2026-08-03).
 
@@ -329,18 +359,20 @@ Correo director: boton principal **Autorizar por correo** (URL firmada a `email-
 
 Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin filtrar por `area_key` del modulo en la URL (el area elegida al crear puede diferir del tablero desde el que navega).
 
+Filtros GET (`PurchaseMyRequestsFilterBag`): `date_from` / `date_to` sobre `fecha_solicitud`, `etapa` (`PedidoEtapa`, una sola lista: Por autorizar … Cerrado), `urgente` (`1`/`0`) y `area_key`. El listado muestra una sola columna **Estado** con la etapa. El panel usa el chrome de Pedidos (`req-manage-filters`) y se aplica al cambiar un campo. Sin filtros se listan todas las del usuario.
+
 ## Integracion Suministros
 
-`ComprasQueueService` incluye solicitudes de compra aprobadas (todos los `estado_compras`, incluido completado) y suministros con status `aprobada_calidad`, `en_compras` o `completada`. Sin filtro de fechas muestra hasta 200 registros mas recientes; con rango de fechas trae todos los del periodo.
+`ComprasQueueService` mezcla compras aprobadas y suministros según la vista de Pedidos. Sin filtro de fechas muestra hasta 200 registros mas recientes; con rango de fechas trae todos del periodo. Historial (`completado` / `completada`) solo entra con esa vista.
 
-- **Ver detalle** suministro: `supplies.show` — vista alineada a `purchase-requests.show` (metadatos en grid, tabla de lineas, export PDF/Excel FO-AD-44). Si el usuario tiene `purchase.tab.processing`, subnav de Solicitudes de compra y boton "Volver a bandeja".
-- **Procesar** suministro: `purchase-requests.processing.supply` (costos, completar).
-- Al abrir procesamiento desde bandeja, suministro `aprobada_calidad` pasa a `en_compras`.
-- Export FO-AD-44 suministro: `supplies.export.pdf` / `supplies.export.excel` (detalle) o `purchase-requests.processing.supply.pdf` (bandeja).
+- **Ver detalle** suministro: `supplies.show`. El folio de pantalla es `SU-`.
+- **Procesar** suministro: `purchase-requests.processing.supply`. No pide ni guarda `unit_cost`. Abrir la pantalla no pasa `aprobada_calidad` a `en_compras`. El precio se captura al emitir la OC; si el ítem ya tenía `unit_cost`, el formulario de la OC precarga `valor_unidad` y el costo histórico sigue en la línea.
+- El cierre del suministro lo escribe la máquina (saldo cero + fecha de recibido en todas las OC) o **Cerrar saldo**. `completada` es terminal.
+- Export FO-AD-44 suministro: `supplies.export.pdf` / `supplies.export.excel` (detalle) o `purchase-requests.processing.supply.pdf`.
 
 ## Proveedores (FEAT-047 T2)
 
-**Tablero** del área Compras (no es pestaña del subnav de Solicitudes de compra). En `config/access.php` vive en `boards.proveedores` y `board_canonical_areas.proveedores` (home `compras`); ya **no** está en `purchase_tabs`. El sidebar lo resuelve `NavigationResolver` y la visibilidad `SidebarVisibilityService::shouldShowProvidersBoard` -> `PurchaseAccessService::canViewProvidersBoard`. Visible con `purchase.providers.view`; `purchase.providers.edit` implica view (`PurchaseAccessService::canViewProviders`).
+Pestaña **Proveedores** del tablero **Catálogos** (clave de board que ya existía: `proveedores`; etiqueta nueva en `boards`). No es pestaña de Solicitudes de compra. El tablero se muestra si hay `purchase.providers.view` **o** `supply.tab.catalog` (`SidebarVisibilityService::shouldShowProvidersBoard`). La pestaña Proveedores solo con view (edit implica view). La pestaña Insumos vive en el mismo subnav (`catalogos-subnav`) y se documenta en [`suministros.md`](suministros.md).
 
 - **Rutas:** `GET /purchase-requests/{module}/proveedores` (index), `/proveedores/datatable`, `/proveedores/exportar`, `/proveedores/plantilla` (descarga VINE01); mutaciones `/proveedores/crear` (GET), `/proveedores` (POST), `/proveedores/importar` (POST), `/proveedores/importar/reporte/{token}` (GET, reporte de fallos de la carga), `/proveedores/{purchase_provider}/editar` (GET), `/proveedores/{purchase_provider}` (PATCH). El grupo de mutaciones usa middleware `purchase.tab:providers.edit`; el listado/plantilla, `purchase.tab:providers`. El prefijo `purchase-requests` se conserva; el tablero se activa por el módulo `compras` de la ruta.
 - **Listado server-side** (`PurchaseProviderDatatableService`): la tabla solo contiene proveedores. Default `estado = activo`; el filtro `estado` (`activo` / `inactivo` / `todos`) es el único filtro y se aplica con **chips** (enlaces GET; Activos = URL sin parámetro). El **buscador** es el de DataTables (`search[value]`), que consulta identificacion, nombre, correo, contacto y ciudad. No hay clasificacion cliente/proveedor en pantalla (las filas que no son proveedor se omiten en la carga masiva). Pagina 10/25/50/100.
@@ -355,9 +387,9 @@ Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin 
 
 ### Carga masiva VINE01 (FEAT-047 T3)
 
-- **Plantilla:** `GET purchase-requests.providers.template` -> `PurchaseProviderImportTemplateExport` (`plantilla_proveedores_VINE01.xlsx`). Hoja `VINE01` (fila 1 = encabezados oficiales, datos desde fila 2) + hoja `Instrucciones`. Columnas (`config('purchase-requests.providers_import_columns')`): `IDENTIFICA`, `NOMBRE`, `TELEFONO`, `CORREO_ELE`, `PROVEEDOR`, `ESTADO`, `DIAS_PAGO` (opcional).
+- **Plantilla:** `GET purchase-requests.providers.template` -> `PurchaseProviderImportTemplateExport` (`plantilla_proveedores_VINE01.xlsx`). Hoja `VINE01` (fila 1 = encabezados oficiales, datos desde fila 2) + hoja `Instrucciones`. Columnas (`config('purchase-requests.providers_import_columns')`): `IDENTIFICA`, `NOMBRE`, `TELEFONO`, `CORREO_ELE`, `CONTACTO`, `CIUDAD`, `FORMA_PAGO`, `PROVEEDOR`, `ESTADO`, `DIAS_PAGO` (opcional).
 - **Import:** `POST purchase-requests.providers.import` (multipart, `import_file` xlsx/xls/csv) -> `PurchaseProviderImportService`.
-- **Reglas:** solo se cargan filas con `PROVEEDOR = SI` (normaliza `SI/SÍ/1/X/TRUE`); upsert por `identificacion`; `TELEFONO` se guarda solo con digitos; `NOMBRE` en MAYUSCULAS; `ESTADO` `ACTIVO`/`INACTIVO` (default `activo`); `DIAS_PAGO` entero 0–3650 o vacio. Las columnas `CLIENTE` de archivos de origen se ignoran. Los campos FO-AD-07 extra (contacto, direccion, ciudad, forma de pago) no vienen en la plantilla y se editan en pantalla.
+- **Reglas:** solo se cargan filas con `PROVEEDOR = SI` (normaliza `SI/SÍ/1/X/TRUE`); upsert por `identificacion`; `TELEFONO` se guarda solo con digitos; `NOMBRE`, `CONTACTO` y `FORMA_PAGO` en MAYUSCULAS; `ESTADO` `ACTIVO`/`INACTIVO` (default `activo`); `DIAS_PAGO` entero 0–3650 o vacio; `CIUDAD` vacia o nombre de una ciudad activa de Requisiciones (se guarda con la forma del catalogo, ej. `Cali`). Si el archivo no trae las columnas `CONTACTO`/`CIUDAD`/`FORMA_PAGO`, no se pisan valores ya cargados a mano. `DIRECCION` no viene en VINE01 y se edita en pantalla. Las columnas `CLIENTE` de archivos de origen se ignoran.
 - **Reporte:** el resultado **no** se muestra como alerta superior. El redirect al listado deja el resumen en el modal compartido `<x-import-result-modal>` (`download-route` `purchase-requests.providers.import-report`, `download-params` `['module' => $module]`): conteos (nuevos, actualizados, omitidos por no ser proveedor, vacias, con error) y, si hay filas invalidas, las primeras 50 con numero de fila y motivo. Si hay fallos, el modal ofrece la **descarga del reporte** `.xlsx` (`GET purchase-requests.providers.import-report` -> `/proveedores/importar/reporte/{token}`, token en cache 24 h, propiedad por usuario; otro usuario recibe 403). Un archivo sin encabezados obligatorios o sin filas de proveedor se rechaza con error en `import_file` (reapertura del modal de carga). El servicio devuelve `failures` estructuradas (`row`, `identifier`, `field`, `reason`, `raw`) ademas de `errors`.
 - **Soporte CLI/service:** `import(string $path, bool $dryRun = false, ?int $limit = null, ?int $userId = null)` permite simulacion (`dry_run`) y limite de filas para pruebas; tope `providers_import_max_rows` (default 20000).
 - **Comando Artisan:** `php artisan purchase-providers:import {path} [--dry-run] [--limit=N]` (mismo servicio; resumen por tabla).
@@ -377,24 +409,40 @@ Alineado a formato oficial **Marzo 2026 Versión 01** (FEAT-047 Fase A / T1):
 - **No** embebe adjuntos de pedido (FEAT-030)
 - Tests: `tests/Feature/PurchaseRequests/FoAd44ExportAlignmentTest.php`
 
-## Ordenes de compra — FO-AD-07 (FEAT-047 T4)
-Emision de la OC (orden de compra) desde la **bandeja de Compras**, para origen **solicitud de compra** o **solicitud de suministro**.
+## Ordenes de compra — FO-AD-07 oficial (FEAT-048)
 
-- **Permiso:** `purchase.tab.processing` (`PurchaseAccessService::canEmitOrder`; bypass admin). La compra exige ademas `Gate::authorize('process', $purchaseRequest)` (policy: `estado = aprobado`). El suministro exige `status` en `aprobada_calidad`, `en_compras` o `completada`.
+Papel carta, **una página**. Reimprimir una OC ya emitida usa este layout: las celdas sin snapshot salen vacías y el `id` no cambia. La evaluación no aparece.
+
+Orden visual (`resources/views/pdf/purchase-order.blade.php` y el Excel):
+
+1. Logo `public/images/logoSj.png` | título **ORDEN DE COMPRA O SERVICIO** | recuadro **FO-AD-07** / **Enero de 2025** / **Versión 04** / **Página 1 de 1**. Metadatos en `config/purchase-orders.php` (`report_title`, `form_period`, `form_version`).
+2. Fecha `dd/mm/aaaa` (`purchase_orders.fecha`) y **OC No.** = `id` (`numeroOc()`).
+3. Ciudad = `purchase_orders.ciudad` (ciudad de entrega), no la ciudad del proveedor.
+4. Asociado de negocio, desde el snapshot: razón social, NIT, contacto, teléfono, correo, dirección, ciudad del proveedor, forma de pago. Si la forma de pago está vacía y hay `dias_pago`, se imprime `A {n} DÍAS`. Asume el cliente, Proyecto nuevo, Reinversión, Comodato y Activo salen en la celda de la derecha: Sí o No según la solicitud (`banderaImpresa`). Un suministro, o una OC sin solicitud, imprime No.
+5. Debajo, **siempre**, Proyecto nuevo, Reinversión, Comodato y Activo. `imprimirSiNo` pinta Sí o No solo con snapshot `SI`/`NO`. Solicitud interna, suministro y OC anteriores al cambio: celdas vacías.
+6. Tabla «Sírvase suministrar…»: Cantidad, Artículo (`articulo`, la referencia del origen), Descripción, Valor unidad, IVA (importe, no %), Valor total. Fila **TOTAL** dentro de la tabla.
+7. **OBSERVACIONES** siempre (`observaciones`; vacío si no hay texto).
+8. Firmas, con espacio para firma manuscrita: Elaborado por **Analista de Compras** (`created_by`); Revisado y aprobado por **Director(a) área solicitante** (aprobador de la compra, o `quality_reviewer_id` en suministro; si no hay persona, la línea queda en blanco con el cargo); Aprobado 2 por **Director Admon. y Financiero** y **Gerente (cuando aplique)** en blanco.
+9. Debajo, **siempre**, el texto de `condiciones`. Si hay muchas líneas, se reduce la letra de la tabla antes de pasar a página 2. Prueba: 1 línea y 12 líneas, ambas en una carta. El texto legal no pasa por `UppercaseFormText` y no se «corrige» (espacios dobles y tildes tal cual).
+
+Emision desde Pedidos, para origen **solicitud de compra** o **solicitud de suministro**.
+
+- **Permiso:** `purchase.tab.processing` (`canEmitOrder`). La compra exige `process` y no estar Cerrada (`puedeEmitirOrden`: Por comprar o Con orden). El suministro exige `aprobada_calidad` o `en_compras`. Un origen Cerrado no admite otra OC.
 - **Rutas:** `GET|POST purchase-requests.orders.purchase.create|store` (`/bandeja-compras/solicitud/{purchase_request}/orden-compra[/crear]`), `GET|POST purchase-requests.orders.supply.create|store` (`/bandeja-compras/suministro/{supply_request}/orden-compra[/crear]`), `GET purchase-requests.orders.show|pdf|excel` (`/ordenes-compra/{purchase_order}[/pdf|/excel]`). Todas dentro del grupo `purchase.tab:processing`.
 - **Morph:** `source_type` guarda el alias (`purchase_request` / `supply_request`) declarado en `Relation::morphMap` (`AppServiceProvider`). `PurchaseOrder::source()` resuelve la origen; `sourceLabel()` y `sourceFolio()` exponen el texto visible.
 - **Numero OC:** el `id` de `purchase_orders` (`numeroOc()`), sin prefijo ni relleno.
 - **Snapshot de proveedor:** al emitir se congelan identificacion, nombre, telefono, correo, contacto, direccion, ciudad, forma de pago y dias de pago. El proveedor editable posterior **no** altera la OC emitida.
-- **Lineas:** se precargan desde el origen (cantidad y descripcion/referencia; para suministro, la **cantidad autorizada** y el costo unitario ya capturado en el procesamiento). Compras captura `valor_unidad` e `iva` por linea. `valor_total = cantidad * valor_unidad + iva`; `total` de la OC = suma de lineas. El `iva` es un **importe**, no un porcentaje.
+- **Precio:** solo en la OC. `valor_unidad` e `iva` (importe) los captura Compras al emitir. `valor_total = cantidad * valor_unidad + iva`. Procesar un suministro no pide `unit_cost`. Si el ítem ya tenía costo, `supplyLines()` precarga `valor_unidad` y no borra el histórico.
 - **Formulario:** shell `pur-req-form` (`purchase-requests-page--form` + `purchase-orders-page`), dos secciones (proveedor/datos + lineas), selector de proveedor con `<x-searchable-select>` (solo proveedores **activos**), tabla de lineas con total por linea y total general calculados en JS (`js-line-qty` / `js-line-unit` / `js-line-iva`), textos en MAYUSCULAS (`UppercasesValidatedText`).
-- **Entrada:** boton icon-only **Emitir orden de compra** (`x-lucide-file-plus`) en la fila de la bandeja, en la cabecera de "Procesar solicitud" / "Procesar suministro", **dentro de la seccion "Productos solicitados" del detalle de la solicitud** (`purchase-requests.show`) y en el formulario de la OC (enviar = `x-lucide-check`, cancelar = `x-lucide-x`; clase `.req-manage-filters__icon-btn`). El boton del detalle solo aparece si el usuario puede procesar la solicitud (`@can('process')`): permiso `purchase.tab.processing` y solicitud **aprobada** (en bandeja).
+- **Entrada:** botón icon-only **Emitir orden de compra** en la fila de Pedidos, en Procesar (compra o suministro) y en **Productos solicitados** del detalle. Solo si se puede emitir: Por comprar o Con orden, no Cerrado.
 - **Detalle:** `modules/purchase-requests/orders/show.blade.php` — cabecera con estado y origen, bloque de proveedor (snapshot), detalle con subtotal / IVA / TOTAL, observaciones, resumen y botones de descarga (PDF, Excel).
-- **Export:** PDF `PurchaseOrderPdfExporter` (`resources/views/pdf/purchase-order.blade.php`, carta, firmas Elaboro/Aprobo/Recibo, **sin** bloque de evaluacion) y Excel `PurchaseOrderExcelExporter`. Nombre de archivo `FO-AD-07-OC-{id}.pdf` / `.xlsx`. Metadatos del formato en `config/purchase-orders.php` (`FO-AD-07`, `Enero 2025`, version `04`).
-- **Auditoria:** `purchase_order` / `created` (metadata `numero_oc`, `total`) y `export` / `order_pdf` | `order_excel`, en modulo `purchase_requests` (area `compras`).
-- **Alcance T4:** emision + documentos. La **evaluacion post-entrega** (tabla `purchase_order_evaluations`) queda para FEAT-047 T5; no se imprime en FO-AD-07.
+- **Export:** PDF y Excel con el layout de arriba. Nombre `FO-AD-07-OC-{id}.pdf` / `.xlsx`. La evaluación no va en el documento.
+- **Auditoria:** `purchase_order` / `created`, `export` / `order_pdf` | `order_excel`, y `purchase_order_evaluation` created/updated. Cerrar saldo también registra evento. Módulo `purchase_requests`, área `compras`.
+- **Evaluación:** pantalla `orders/evaluation`, permiso `purchase.providers.edit`, no el de Pedidos. Ver tabla `purchase_order_evaluations`.
 - **Reparto entre varios proveedores:** una misma solicitud puede generar **varias OC**. Cada linea del origen tiene un **saldo pendiente** = `cantidad solicitada - cantidad ya ordenada` (suma de todas las OC de ese origen). La linea de OC guarda su vinculo con la linea de origen (`source_item_type` + `source_item_id`), de modo que el saldo se descuenta automaticamente. El formulario de emision muestra, por linea, `solicitadas / ordenadas / pendiente` y precarga la cantidad con el **pendiente**; el input tiene `max` = pendiente. La validacion (`StorePurchaseOrderRequest`, regla closure sobre `items.*.cantidad`) **rechaza** cualquier cantidad mayor al pendiente (mensaje: "La cantidad supera el saldo pendiente (X). Ya se ordenaron Y de Z unidades."), y el servicio vuelve a validarlo dentro de la transaccion (`InvalidArgumentException` -> redirect con error). Ademas se exige **al menos una linea con cantidad > 0**. Con esto una orden duplicada (mismas cantidades que una OC previa) queda bloqueada cuando no hay saldo.
-- **Tablero "Ordenes de compra"** (board del area Compras, `config/access.php` -> `boards.ordenes_compra`, `board_canonical_areas.ordenes_compra`; visible con `purchase.tab.processing` via `PurchaseAccessService::canViewOrdersBoard`): listado server-side (`PurchaseOrderDatatableService`) con busqueda DataTables (proveedor, identificacion, observaciones, ciudad, numero de OC) y filtros por **Estado** (todas/emitidas/borrador), **Origen** (compra/suministro), **Proveedor** y rango de **fechas**. Columnas: OC, fecha, proveedor, identificacion, origen (tipo + folio), ciudad de entrega, lineas, total, estado y acciones (ver, PDF). Rutas `purchase-requests.orders.index` (`GET /ordenes-compra`) y `purchase-requests.orders.datatable` (`GET /ordenes-compra/datatable`).
-- **Tests:** `tests/Feature/PurchaseRequests/PurchaseOrderEmissionTest.php` (form, emision compra/suministro, snapshot, totales, proveedor inactivo, 403 sin permiso, show + PDF + Excel) y `tests/Feature/PurchaseOrderMigrationTest.php` (morph, `numeroOc`, relacion 1:1 de evaluacion).
+- **Tablero Órdenes** (clave `ordenes_compra`, etiqueta Órdenes; visible con `purchase.tab.processing` vía `canViewOrdersBoard`): listado server-side (`PurchaseOrderDatatableService`). El folio del origen se muestra `SC-` / `SU-`. El número de OC sigue siendo el `id`.
+- **Folio de pantalla:** accessor `PurchaseRequest::folioVisible()` / `SupplyRequest::folioVisible()`. Sin columna nueva.
+- **Tests:** `PurchaseOrderEmissionTest`, `PurchaseOrderFoAd07Test` (Cliente vs interna vs suministro, texto legal, una página con 1 y con 12 líneas), `PurchaseFlowStateTest`, `PurchaseSupplyPriceTest`, `PurchaseMenuFolioTest`, `PurchaseOrderEvaluationTest`, `PurchaseOrderMigrationTest`.
 
 Vistas: `resources/views/modules/purchase-requests/orders/{create,show}.blade.php` + `resources/views/pdf/purchase-order.blade.php`.
 
@@ -411,7 +459,11 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - Folio correlativo con lock en transaccion al crear
 - Director debe estar en `approversQuery()` (rol director, activo, `purchase.tab.approval`)
 - Rechazo director: comentarios obligatorios (`UpdatePurchaseApprovalRequest`)
-- Solo solicitudes `aprobado` entran en bandeja Compras
+- Solo solicitudes `aprobado` con `estado_compras` pendiente o en curso entran en Por comprar / Con orden. Historial = Cerrado. `estado_compras=rechazado` no se reescribe y no sale en Pedidos
+- El estado de Compras no se elige en el formulario. Abrir Procesar no mueve el suministro
+- Después de Cerrado no hay otra OC. Cerrar saldo cierra con motivo en el hilo aunque falten fechas o quede saldo
+- El precio vive en la OC. El FO-AD-44 sigue siendo el pedido; el FO-AD-07 es la orden
+- Alta y reenvío de la solicitud no usan `UppercasesValidatedText` (observación de revisión): razón social y textos de ítem se guardan como llegan. Sí van a mayúsculas el motivo de Cerrar saldo, las observaciones de la OC, las de la evaluación y el hilo
 - `show` muestra formulario de autorizacion si `@can('approve', $purchaseRequest)`
 - Adjuntos de solicitud **opcionales** (0–5; 10 MB c/u; tipos en config). No alteran estados ni el flujo de autorizacion
 - Al **reenviar rechazada**: `keep_attachment_ids[]` + `attachments[]` nuevos; tope combinado 5; quitar todos es valido
@@ -423,6 +475,13 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - **Tope PHP:** 5 × 10 MB mas fotos de linea puede superar `post_max_size` / `upload_max_filesize` (el POST se descarta antes de Laravel). No se bajo el tope de producto; si falla el envio, revisar php.ini.
 - **Huerfanos en disco:** el hook `deleting` borra el fichero si Eloquent elimina el adjunto. Un cascade SQL al borrar la solicitud padre no dispara el evento (aceptable en v1).
 - **Tope keep + nuevos en UI:** el servidor rechaza si se supera 5; no hay aviso en cliente (observacion de revision, no bloqueante).
+- **Form Requests de procesar (2026-10-21):** se eliminó `ProcessPurchaseComprasRequest` (aceptaba `estado_compras` y nadie lo usaba). El PATCH de procesar compra solo redirige con aviso. `ProcessSupplyComprasRequest` solo acepta `purchasing_observations` (MAYÚSCULAS, máx. 1000 por línea); ya no exige `action` ni `items`. No volver a cablear el cambio manual de estado.
+- **Aprobador:** `Store/UpdatePurchaseRequestRequest` validan `aprobador_id` con `PurchaseAccessService::isValidApprover` (activo + rol `director` + `purchase.tab.approval`), el mismo criterio de la lista del formulario.
+- **Etiquetas muertas en `purchase_tabs` / `supply_tabs`:** «Bandeja compras», «Insumos aprobados» y «Catalogo» siguen en el diccionario. No son permisos nuevos y `visibleTabsFor` ya no las devuelve.
+- **Hilo de suministro:** `SupplyRequestPolicy::comment` deja comentar a Compras, al dueño y a quien tiene `supply.tab.quality`, también si el suministro es de otra área. El hilo se cierra en `completada`.
+- **Mayúsculas del alta de compra:** ver reglas de negocio. Al volver a tocar `StorePurchaseRequestRequest` / `UpdatePurchaseRequestRequest`, aplicar el trait y dejar fuera radios, fechas y archivos.
+- **Cerrar saldo** es una sección del formulario, no el modal opaco del brief. El chrome es el del módulo.
+- `NavigationVisibilityTest` del director puede fallar por causas previas a FEAT-048 (área TIC del rol `director` y `area_key` aleatorio de la factory). No lo introduce este corte.
 
 ## Pruebas
 
@@ -433,6 +492,11 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - `tests/Feature/PurchaseRequests/PurchaseProviderAccessTest.php` (view vs edit, 403, guest)
 - `tests/Feature/PurchaseRequests/PurchaseProviderCatalogTest.php` (DT default, filtros, uppercase, unique, update conserva filtros)
 - `tests/Feature/PurchaseRequests/PurchaseOrderEmissionTest.php` (emision FO-AD-07 desde compra y suministro, snapshot, totales, 403, show/PDF/Excel)
+- `tests/Feature/PurchaseRequests/PurchaseOrderFoAd07Test.php` (layout oficial, texto legal, una página)
+- `tests/Feature/PurchaseRequests/PurchaseFlowStateTest.php` (máquina, Cerrar saldo, exclusión de rechazado, dashboard)
+- `tests/Feature/PurchaseRequests/PurchaseSupplyPriceTest.php` (precio solo en la OC)
+- `tests/Feature/PurchaseRequests/PurchaseMenuFolioTest.php` (Pedidos / Órdenes / Catálogos, folio `SC-`/`SU-`)
+- `tests/Feature/PurchaseRequests/PurchaseOrderEvaluationTest.php` (fórmula, fecha sola, 403, PDF sin evaluación, cierre con y sin fechas)
 - `tests/Feature/PurchaseOrderMigrationTest.php` (estructura `purchase_orders`, morph, `numeroOc`, evaluacion 1:1)
 - `tests/Feature/ComprasDashboardTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
@@ -442,6 +506,11 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-21 | Etapa común `PedidoEtapa` (fases 1 y 2, sin migraciones): mismas etiquetas y colores en compras y suministros; scopes `whereEtapa`; Pedidos, dashboard y filtro de Mis solicitudes consultan por etapa |
+| 2026-10-21 | Ajustes de revisión: `aprobador_id` exige director activo; se borra `ProcessPurchaseComprasRequest`; `ProcessSupplyComprasRequest` solo observaciones en MAYÚSCULAS |
+| 2026-10-21 | Mis solicitudes: filtros GET (fechas, estado, estado compras, urgencia, área) con `PurchaseMyRequestsFilterBag` |
+| 2026-10-21 | VINE01: plantilla e import reciben `CONTACTO`, `CIUDAD` y `FORMA_PAGO` (ciudad contra `requisition_cities`); el alta manual ya tenia los mismos campos |
+| 2026-10-20 | FEAT-048: FO-AD-07 oficial (una hoja, condiciones, filas de cliente), máquina `PurchaseFlowStateService`, tableros Pedidos / Órdenes / Catálogos (sin claves nuevas), folio `SC-`, Cerrar saldo, precio solo en la OC, evaluación que no se imprime |
 | 2026-10-20 | Proveedores: rediseño del listado — chips de estado + conteo + acciones icon-only en una sola franja (sin panel de filtros), columnas con formato (nombre destacado, correo enlazable, días/estado/acciones centrados) |
 | 2026-10-19 | Boton icon-only **Emitir orden de compra** dentro de la seccion **Productos solicitados** del detalle de la solicitud (solo si el usuario puede procesar la solicitud) |
 | 2026-10-19 | FEAT-047 T4 (cierre): **reparto de una solicitud entre varios proveedores** — cada linea tiene saldo pendiente (`solicitada - ordenada`), la OC guarda el vinculo con su linea de origen, el formulario muestra/precarga el pendiente y la validacion **bloquea** ordenes duplicadas. Nuevo **tablero "Ordenes de compra"** (area Compras) con listado server-side, busqueda y filtros (estado, origen, proveedor, fechas) |
@@ -480,6 +549,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 ## Referencias
 
 - Guia usuario: [`docs/user/purchase-requests.md`](../user/purchase-requests.md)
-- Feature Brief: [`docs/briefs/FEAT-030.md`](../briefs/FEAT-030.md)
+- Feature Brief: [`docs/briefs/FEAT-048.md`](../briefs/FEAT-048.md), [`docs/briefs/FEAT-030.md`](../briefs/FEAT-030.md)
+- Revisión: [`docs/reviews/FEAT-048.md`](../reviews/FEAT-048.md)
 - Acceso: [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md)
 - Suministros: [`docs/modules/suministros.md`](suministros.md)

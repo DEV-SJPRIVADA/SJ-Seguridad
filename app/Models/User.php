@@ -171,8 +171,35 @@ class User extends Authenticatable
         return match ($firstTab) {
             'mis_solicitudes' => route('supplies.index', ['module' => $moduleKey]),
             'aprobacion_insumos' => route('supplies.approval.index', ['module' => $moduleKey]),
-            'insumos_aprobados' => route('supplies.approved.index', ['module' => $moduleKey]),
-            'catalogo' => route('supplies.products.index', ['module' => $moduleKey]),
+            default => route('dashboard', ['module' => $moduleKey]),
+        };
+    }
+
+    /**
+     * Pestañas del tablero Catálogos: Proveedores e Insumos, según el permiso de cada una.
+     *
+     * @return Collection<int, string>
+     */
+    public function catalogBoardTabs(): Collection
+    {
+        $tabs = collect();
+
+        if (app(PurchaseAccessService::class)->canViewProviders($this)) {
+            $tabs->push('proveedores');
+        }
+
+        if (app(SupplyAccessService::class)->canViewInsumosCatalog($this)) {
+            $tabs->push('insumos');
+        }
+
+        return $tabs;
+    }
+
+    public function defaultCatalogBoardUrl(string $moduleKey): string
+    {
+        return match ($this->catalogBoardTabs()->first()) {
+            'proveedores' => route('purchase-requests.providers.index', ['module' => $moduleKey]),
+            'insumos' => route('supplies.products.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }
@@ -197,19 +224,12 @@ class User extends Authenticatable
 
     public function defaultPurchaseBoardUrl(string $moduleKey): string
     {
-        $tabs = $this->purchaseBoardTabsFor($moduleKey);
-
-        if ($moduleKey === 'compras' && $tabs->contains('bandeja_compras')) {
-            return route('purchase-requests.processing.index', ['module' => $moduleKey]);
-        }
-
-        $firstTab = $tabs->first();
+        $firstTab = $this->purchaseBoardTabsFor($moduleKey)->first();
 
         return match ($firstTab) {
             'nueva' => route('purchase-requests.create', ['module' => $moduleKey]),
             'mis_solicitudes' => route('purchase-requests.index', ['module' => $moduleKey]),
             'pendientes_aprobacion' => route('purchase-requests.approval.index', ['module' => $moduleKey]),
-            'bandeja_compras' => route('purchase-requests.processing.index', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }

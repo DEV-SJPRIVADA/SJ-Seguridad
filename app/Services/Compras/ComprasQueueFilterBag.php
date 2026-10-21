@@ -2,6 +2,7 @@
 
 namespace App\Services\Compras;
 
+use App\Enums\PedidoEtapa;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,10 +47,38 @@ class ComprasQueueFilterBag
     {
         $bag = self::fromDashboardFilters($filters, $estadoCompras ?? '');
 
-        return collect($bag->toViewArray())
+        $query = collect($bag->toViewArray())
             ->filter(fn (mixed $value): bool => $value !== null && $value !== '')
             ->map(fn (mixed $value): string => (string) $value)
             ->all();
+
+        // Un solo escritorio: el dashboard abre la vista de Pedidos, no otro listado.
+        if ($bag->vista() !== '') {
+            $query['vista'] = $bag->vista();
+            unset($query['estado_compras']);
+        }
+
+        return $query;
+    }
+
+    public static function estadoForVista(?string $vista): ?string
+    {
+        return match ($vista) {
+            'por_comprar' => PurchaseRequest::COMPRAS_PENDIENTE,
+            'con_orden' => PurchaseRequest::COMPRAS_EN_CURSO,
+            'historial' => PurchaseRequest::COMPRAS_COMPLETADO,
+            default => null,
+        };
+    }
+
+    public function vista(): string
+    {
+        return match ($this->estadoCompras) {
+            PurchaseRequest::COMPRAS_PENDIENTE => 'por_comprar',
+            PurchaseRequest::COMPRAS_EN_CURSO => 'con_orden',
+            PurchaseRequest::COMPRAS_COMPLETADO => 'historial',
+            default => '',
+        };
     }
 
     /**
@@ -76,6 +105,7 @@ class ComprasQueueFilterBag
     public static function fromRequest(Request $request): self
     {
         $validated = $request->validate([
+            'vista' => ['nullable', Rule::in(['por_comprar', 'con_orden', 'historial'])],
             'estado_compras' => ['nullable', Rule::in(array_keys(PurchaseRequest::estadosComprasLabels()))],
             'tipo' => ['nullable', 'in:purchase,supply'],
             'area_key' => ['nullable', Rule::in(array_keys(config('access.areas', [])))],
@@ -83,8 +113,10 @@ class ComprasQueueFilterBag
             'date_to' => ['nullable', 'date'],
         ]);
 
+        $estadoDesdeVista = self::estadoForVista($validated['vista'] ?? null);
+
         return new self(
-            estadoCompras: (string) ($validated['estado_compras'] ?? ''),
+            estadoCompras: $estadoDesdeVista ?? (string) ($validated['estado_compras'] ?? ''),
             tipo: $validated['tipo'] ?? null,
             areaKey: $validated['area_key'] ?? null,
             dateFrom: self::normalizeDate($validated['date_from'] ?? null),
@@ -98,6 +130,7 @@ class ComprasQueueFilterBag
     public function toViewArray(): array
     {
         return [
+            'vista' => $this->vista(),
             'estado_compras' => $this->estadoCompras,
             'tipo' => $this->tipo,
             'area_key' => $this->areaKey,
@@ -120,6 +153,37 @@ class ComprasQueueFilterBag
     }
 
     /**
+     * Etapas que entran en la vista actual. Sin vista: la bandeja (Por comprar + Con orden).
+     * El filtro legado «rechazado» no muestra filas.
+     *
+     * @return list<PedidoEtapa>
+     */
+    public function etapas(): array
+    {
+        return match ($this->estadoCompras) {
+            '' => [PedidoEtapa::PorComprar, PedidoEtapa::ConOrden],
+            PurchaseRequest::COMPRAS_RECHAZADO => [],
+            default => array_values(array_filter([PedidoEtapa::fromComprasKey($this->estadoCompras)])),
+        };
+    }
+
+    /**
+     * Estados de suministro que entran en la vista actual.
+     *
+     * @return list<string>
+     */
+    public function supplyQueueStatuses(): array
+    {
+        $statuses = [];
+
+        foreach ($this->etapas() as $etapa) {
+            array_push($statuses, ...$etapa->supplyStatuses());
+        }
+
+        return $statuses;
+    }
+
+    /**
      * @param  Builder<PurchaseRequest>  $query
      */
     public function applyPurchaseFilters(Builder $query): void
@@ -128,9 +192,7 @@ class ComprasQueueFilterBag
             $query->where('area_key', $this->areaKey);
         }
 
-        if ($this->estadoCompras !== '') {
-            $query->where('estado_compras', $this->estadoCompras);
-        }
+        $query->whereEtapa($this->etapas());
 
         if ($this->dateFrom !== null) {
             $query->whereDate('created_at', '>=', $this->dateFrom);
@@ -148,16 +210,6 @@ class ComprasQueueFilterBag
     {
         if ($this->areaKey) {
             $query->where('area_key', $this->areaKey);
-        }
-
-        if ($this->estadoCompras === PurchaseRequest::COMPRAS_PENDIENTE) {
-            $query->where('status', 'aprobada_calidad');
-        } elseif ($this->estadoCompras === PurchaseRequest::COMPRAS_EN_CURSO) {
-            $query->where('status', 'en_compras');
-        } elseif ($this->estadoCompras === PurchaseRequest::COMPRAS_COMPLETADO) {
-            $query->where('status', 'completada');
-        } elseif ($this->estadoCompras === PurchaseRequest::COMPRAS_RECHAZADO) {
-            $query->whereRaw('1 = 0');
         }
 
         if ($this->dateFrom !== null) {

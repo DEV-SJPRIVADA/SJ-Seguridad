@@ -1,4 +1,7 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('modules.purchase-requests.partials.catalogos-subnav', ['subTabs' => $subTabs])
+    </x-slot>
     <div class="page-section purchase-requests-page purchase-requests-page--form purchase-providers-page">
         <div class="app-container">
             <div class="page-header-inner purchase-requests-page__intro">
@@ -134,6 +137,7 @@
                                 value="{{ old('contacto', $provider->contacto) }}"
                                 maxlength="255"
                             >
+                            <x-input-error :messages="$errors->get('contacto')" />
                         </div>
 
                         <div class="form-field">
@@ -184,6 +188,7 @@
                                 maxlength="120"
                                 placeholder="Ej: TRANSFERENCIA"
                             >
+                            <x-input-error :messages="$errors->get('forma_pago')" />
                         </div>
 
                         <div class="form-field">

@@ -27,6 +27,81 @@
                 </div>
 
                 <div class="panel__body req-manage-shell">
+                    {{-- Filtros GET de Mis solicitudes: se aplican al cambiar un campo. --}}
+                    <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel req-manage-filters--bandeja pur-req-list__filters" @if ($hasActiveFilters) open @endif>
+                        <summary class="req-manage-filters__panel-toggle">
+                            <span>Filtros</span>
+                            @if ($hasActiveFilters)
+                                <span class="req-manage-filters__panel-badge">Activos</span>
+                            @endif
+                        </summary>
+
+                        <div class="req-manage-filters__panel-body">
+                            <div class="req-manage-filters__head">
+                                <div class="req-manage-filters__actions">
+                                    @if ($hasActiveFilters)
+                                        <a
+                                            href="{{ route('purchase-requests.index', ['module' => $module]) }}"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                            title="Limpiar filtros"
+                                            aria-label="Limpiar filtros"
+                                        >
+                                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="req-manage-filters__toolbar req-manage-filters__toolbar--bandeja">
+                                <form method="GET" id="mis-solicitudes-filters-form" class="req-manage-filters__fields-col">
+                                    <div class="req-manage-filters__query-row req-manage-filters__row--bandeja">
+                                        <div class="req-manage-filters__query-field req-manage-filters__field--date">
+                                            <label class="req-manage-filters__label" for="mis-solicitudes-date-from">Desde</label>
+                                            <input type="date" id="mis-solicitudes-date-from" name="date_from" class="form-input" value="{{ $filters['date_from'] ?? '' }}">
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__field--date">
+                                            <label class="req-manage-filters__label" for="mis-solicitudes-date-to">Hasta</label>
+                                            <input type="date" id="mis-solicitudes-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__field--compact">
+                                            <label class="req-manage-filters__label" for="mis-solicitudes-filter-etapa">Estado</label>
+                                            <x-searchable-select
+                                                id="mis-solicitudes-filter-etapa"
+                                                name="etapa"
+                                                :options="$etapas"
+                                                :value="$filters['etapa'] ?? ''"
+                                                placeholder="Todos los estados"
+                                                searchPlaceholder="Buscar estado…"
+                                            />
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__field--compact">
+                                            <label class="req-manage-filters__label" for="mis-solicitudes-filter-urgente">Urgencia</label>
+                                            <x-searchable-select
+                                                id="mis-solicitudes-filter-urgente"
+                                                name="urgente"
+                                                :options="['1' => 'Urgente', '0' => 'No urgente']"
+                                                :value="$filters['urgente'] ?? ''"
+                                                placeholder="Todas"
+                                                searchPlaceholder="Buscar…"
+                                            />
+                                        </div>
+                                        <div class="req-manage-filters__query-field req-manage-filters__field--compact">
+                                            <label class="req-manage-filters__label" for="mis-solicitudes-filter-area">Área</label>
+                                            <x-searchable-select
+                                                id="mis-solicitudes-filter-area"
+                                                name="area_key"
+                                                :options="$areas"
+                                                :value="$filters['area_key'] ?? ''"
+                                                placeholder="Todas las áreas"
+                                                searchPlaceholder="Buscar área…"
+                                            />
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </details>
+
                     <div class="data-table-wrap req-manage-shell__table">
                         <table
                             class="supply-table js-datatable"
@@ -43,7 +118,6 @@
                                     <th>Fecha de aprobación</th>
                                     <th>Productos</th>
                                     <th>Estado</th>
-                                    <th>Estado compras</th>
                                     <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
                             </thead>
@@ -51,7 +125,7 @@
                                 @forelse ($purchaseRequests as $purchaseRequest)
                                     <tr>
                                         <td class="text-center">
-                                            <span class="pur-req-list__folio">{{ $purchaseRequest->folio() }}</span>
+                                            <span class="pur-req-list__folio">{{ $purchaseRequest->folioVisible() }}</span>
                                         </td>
                                         <td class="text-center"><x-date-table :value="$purchaseRequest->fecha_solicitud ?? $purchaseRequest->created_at" /></td>
                                         <td>{{ $purchaseRequest->user?->name ?? '—' }}</td>
@@ -65,33 +139,13 @@
                                         </td>
                                         <td class="text-center">{{ $purchaseRequest->items->count() }}</td>
                                         <td class="text-center">
-                                            @php
-                                                $estadoPill = match ($purchaseRequest->estado) {
-                                                    'aprobado' => 'status-pill--success',
-                                                    'rechazado' => 'status-pill--danger',
-                                                    default => 'status-pill--info',
-                                                };
-                                                $estadoLabel = match ($purchaseRequest->estado) {
-                                                    'aprobado' => 'Aprobado',
-                                                    'rechazado' => 'Rechazado',
-                                                    default => 'Pendiente',
-                                                };
-                                            @endphp
+                                            {{-- Etapa común: decisión del director y avance de Compras en una sola pastilla. --}}
                                             <div class="pur-req-list__pills">
-                                                <span class="status-pill {{ $estadoPill }}">{{ $estadoLabel }}</span>
+                                                <x-pedido-etapa :etapa="$purchaseRequest->etapa()" />
                                                 @if ($purchaseRequest->urgente)
                                                     <span class="status-pill status-pill--warning">Urgente</span>
                                                 @endif
                                             </div>
-                                        </td>
-                                        <td class="text-center">
-                                            @if ($purchaseRequest->estado_compras)
-                                                <span class="status-pill status-pill--compras-{{ $purchaseRequest->estado_compras }}">
-                                                    {{ $purchaseRequest->estadoComprasLabel() }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
                                         </td>
                                         <td class="text-center purchase-request-actions-col">
                                             <div class="purchase-request-row-actions">
@@ -114,7 +168,13 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-muted">No tienes solicitudes de compra registradas.</td>
+                                        <td colspan="8" class="text-muted">
+                                            @if ($hasActiveFilters)
+                                                No hay solicitudes con los filtros seleccionados.
+                                            @else
+                                                No tienes solicitudes de compra registradas.
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -124,4 +184,25 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const filterForm = document.getElementById('mis-solicitudes-filters-form');
+                if (!filterForm) {
+                    return;
+                }
+
+                let submitTimer = null;
+                filterForm.addEventListener('change', () => {
+                    if (submitTimer) {
+                        clearTimeout(submitTimer);
+                    }
+                    submitTimer = setTimeout(() => {
+                        filterForm.submit();
+                    }, 20);
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

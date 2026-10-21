@@ -1,24 +1,17 @@
 @php
-    $estadoPill = match ($supplyRequest->status) {
-        'aprobada_calidad', 'completada' => 'status-pill--success',
-        'rechazada_calidad' => 'status-pill--danger',
-        'en_compras' => 'status-pill--info',
-        default => 'status-pill--info',
-    };
+    $etapa = $supplyRequest->etapa();
     $areaLabel = config("access.areas.{$supplyRequest->area_key}", $supplyRequest->area_key);
     $backUrl = $fromComprasBandeja
         ? route('purchase-requests.processing.index', ['module' => $purchaseModule])
         : route('supplies.index', ['module' => $module]);
-    $backLabel = $fromComprasBandeja ? 'Volver a bandeja' : 'Volver al listado';
+    $backLabel = $fromComprasBandeja ? 'Volver a Pedidos' : 'Volver al listado';
 @endphp
 
 <x-app-layout>
     <x-slot name="header">
-        @if ($fromComprasBandeja)
-            @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
-        @else
+        @unless ($fromComprasBandeja)
             @include('modules.supplies.partials.subnav', ['subTabs' => $subTabs])
-        @endif
+        @endunless
     </x-slot>
 
     <div class="page-section purchase-requests-page purchase-requests-page--detail">
@@ -44,6 +37,8 @@
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                 title="Descargar PDF"
                                 aria-label="Descargar PDF"
+                                target="_blank"
+                                rel="noopener"
                             >
                                 <x-lucide-file-text width="18" height="18" aria-hidden="true" />
                             </a>
@@ -53,9 +48,21 @@
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                 title="Exportar Excel"
                                 aria-label="Exportar Excel"
+                                target="_blank"
+                                rel="noopener"
                             />
                         @endif
-                        @if ($fromComprasBandeja && in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras'], true))
+                        @can('resubmit', $supplyRequest)
+                            <a
+                                href="{{ route('supplies.edit', ['module' => $module, 'supply_request' => $supplyRequest->id]) }}"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                title="Reenviar a Calidad"
+                                aria-label="Reenviar a Calidad"
+                            >
+                                <x-lucide-send width="18" height="18" aria-hidden="true" />
+                            </a>
+                        @endcan
+                        @if ($fromComprasBandeja && $supplyRequest->puedeCerrarSaldo())
                             <a
                                 href="{{ route('purchase-requests.processing.supply', ['module' => $purchaseModule, 'supply_request' => $supplyRequest->id]) }}"
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -68,15 +75,10 @@
                     </div>
                 </div>
 
-                <h2 class="page-title">Solicitud de suministro {{ $supplyRequest->folio() }}</h2>
+                <h2 class="page-title">Solicitud de suministro {{ $supplyRequest->folioVisible() }}</h2>
                 <p class="page-subtitle">Detalle FO-AD-44 · seguimiento de calidad y compras.</p>
                 <div class="pur-req-detail__pills">
-                    <span class="status-pill {{ $estadoPill }}">{{ $supplyRequest->statusLabel() }}</span>
-                    @if ($supplyRequest->estadoComprasLabel())
-                        <span class="status-pill status-pill--compras-{{ $supplyRequest->estado_compras }}">
-                            Compras: {{ $supplyRequest->estadoComprasLabel() }}
-                        </span>
-                    @endif
+                    <x-pedido-etapa :etapa="$etapa" />
                 </div>
             </div>
 
@@ -109,12 +111,10 @@
                             <span class="pur-req-form__meta-label">Revisor calidad</span>
                             <span class="pur-req-form__meta-value">{{ $supplyRequest->qualityReviewer?->name ?? '—' }}</span>
                         </div>
-                        @if ($supplyRequest->estadoComprasLabel())
-                            <div class="pur-req-form__meta-item">
-                                <span class="pur-req-form__meta-label">Estado compras</span>
-                                <span class="pur-req-form__meta-value">{{ $supplyRequest->estadoComprasLabel() }}</span>
-                            </div>
-                        @endif
+                        <div class="pur-req-form__meta-item">
+                            <span class="pur-req-form__meta-label">Estado</span>
+                            <span class="pur-req-form__meta-value">{{ $etapa->label() }}</span>
+                        </div>
                     </div>
 
                     @if ($supplyRequest->quality_observations)
@@ -131,6 +131,67 @@
                             <p class="pur-req-detail__block-body">{{ $supplyRequest->quality_observations }}</p>
                         </section>
                     @endif
+
+                    {{-- Hilo aditivo: notas nuevas y el motivo de Cerrar saldo. Las observaciones viejas siguen arriba. --}}
+                    <section class="pur-req-form__section" id="supply-request-comments">
+                        <header class="pur-req-form__section-head">
+                            <span class="pur-req-form__section-step" aria-hidden="true">
+                                <x-lucide-messages-square width="16" height="16" />
+                            </span>
+                            <div>
+                                <h3 class="pur-req-form__section-title">Comentarios de la solicitud</h3>
+                                <p class="pur-req-form__section-desc">
+                                    Notas nuevas del pedido. El motivo de Cerrar saldo también queda aquí.
+                                    @if (! $supplyRequest->puedeComentar())
+                                        El hilo queda cerrado cuando el suministro está en Cerrado.
+                                    @endif
+                                </p>
+                            </div>
+                        </header>
+
+                        <div class="pur-req-chat">
+                            @forelse ($supplyRequest->comments as $comment)
+                                <article class="pur-req-chat__message">
+                                    <div class="pur-req-chat__avatar" aria-hidden="true">
+                                        {{ strtoupper(substr($comment->user?->name ?? '?', 0, 1)) }}
+                                    </div>
+                                    <div class="pur-req-chat__bubble">
+                                        <div class="pur-req-chat__head">
+                                            <strong>{{ $comment->user?->name ?? 'Usuario' }}</strong>
+                                            <span class="text-caption"><x-date-table :value="$comment->created_at" datetime /></span>
+                                        </div>
+                                        <p class="pur-req-chat__body">{{ $comment->body }}</p>
+                                    </div>
+                                </article>
+                            @empty
+                                <p class="pur-req-form__section-desc">Aún no hay comentarios.</p>
+                            @endforelse
+                        </div>
+
+                        @if ($supplyRequest->puedeComentar() && auth()->user()?->can('comment', $supplyRequest))
+                            <form
+                                method="POST"
+                                action="{{ route('supplies.comments.store', ['module' => $module, 'supply_request' => $supplyRequest->id]) }}"
+                                class="pur-req-chat__composer"
+                            >
+                                @csrf
+                                <div class="form-field">
+                                    <label class="form-label" for="supply-request-comment-body">Nuevo comentario</label>
+                                    <textarea
+                                        id="supply-request-comment-body"
+                                        name="body"
+                                        class="form-textarea"
+                                        rows="3"
+                                        maxlength="5000"
+                                        required
+                                        placeholder="Ej. Falta confirmar la sede de entrega."
+                                    >{{ old('body') }}</textarea>
+                                    <x-input-error :messages="$errors->get('body')" />
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--sm">Agregar comentario</button>
+                            </form>
+                        @endif
+                    </section>
 
                     @if ($supplyRequest->observations)
                         <section class="pur-req-form__section">
@@ -252,14 +313,11 @@
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folio() }}</li>
-                                <li class="pur-req-form-guide__item">Estado: {{ $supplyRequest->statusLabel() }}</li>
+                                <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folioVisible() }}</li>
+                                <li class="pur-req-form-guide__item">Estado: {{ $etapa->label() }}</li>
                                 <li class="pur-req-form-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
                                 <li class="pur-req-form-guide__item">Área: {{ $areaLabel }}</li>
                                 <li class="pur-req-form-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
-                                @if ($supplyRequest->estadoComprasLabel())
-                                    <li class="pur-req-form-guide__item">Compras: {{ $supplyRequest->estadoComprasLabel() }}</li>
-                                @endif
                             </ul>
                         </div>
                     </div>

@@ -21,7 +21,7 @@ class PurchaseRequestResolvedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Solicitud de compra N.º '.$this->purchaseRequest->folio().' — '.$this->purchaseRequest->estadoLabel(),
+            subject: 'Solicitud de compra N.º '.$this->purchaseRequest->folioVisible().' — '.$this->purchaseRequest->estadoLabel(),
         );
     }
 

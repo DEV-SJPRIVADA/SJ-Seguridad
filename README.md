@@ -22,7 +22,7 @@ Este repositorio sirve como base incremental para una plataforma empresarial con
 - Gestion inicial de usuarios en `admin/users`
 - Roles y permisos sembrados desde configuracion
 - Modulo de requisiciones de personal con dashboard, solicitud, seguimiento, gestion y parametros
-- Modulo compartido de suministros con flujo solicitante, aprobacion Calidad, insumos aprobados y catalogo
+- Modulo compartido de suministros con flujo solicitante, aprobacion Calidad y catalogo de insumos (en Compras, tablero Catálogos)
 - Modulo de documentos de Calidad con publicacion de archivos/enlaces y biblioteca por area
 - Indicadores de Operaciones (captura, dashboard, ajustes, consolidado, exportaciones)
 - Matriz comercial (dashboard, clientes, servicios)

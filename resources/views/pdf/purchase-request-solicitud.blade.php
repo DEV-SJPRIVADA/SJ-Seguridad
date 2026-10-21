@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Solicitud {{ $purchaseRequest->folio() }}</title>
+    <title>Solicitud {{ $purchaseRequest->folioVisible() }}</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -193,14 +193,13 @@
 </head>
 <body>
     @php
-        $estadoLabel = match ($purchaseRequest->estado) {
-            'aprobado' => 'Aprobado',
-            'rechazado' => 'Rechazado',
-            default => 'Pendiente',
-        };
-        $estadoBadge = match ($purchaseRequest->estado) {
-            'aprobado' => 'badge--success',
-            'rechazado' => 'badge--danger',
+        // Etapa común del pedido (mismo texto que en pantalla).
+        $etapa = $purchaseRequest->etapa();
+        $estadoLabel = $etapa->label();
+        $estadoBadge = match ($etapa) {
+            \App\Enums\PedidoEtapa::Cerrado => 'badge--success',
+            \App\Enums\PedidoEtapa::Devuelta => 'badge--danger',
+            \App\Enums\PedidoEtapa::PorComprar => 'badge--warning',
             default => 'badge--info',
         };
     @endphp
@@ -224,7 +223,7 @@
 
     <table class="folio-row">
         <tr>
-            <td><span class="folio-number">Solicitud N.º {{ $purchaseRequest->folio() }}</span></td>
+            <td><span class="folio-number">Solicitud N.º {{ $purchaseRequest->folioVisible() }}</span></td>
             <td style="text-align: right;">
                 <span class="badge {{ $estadoBadge }}">{{ $estadoLabel }}</span>
                 @if ($purchaseRequest->urgente)
@@ -253,12 +252,6 @@
             <th>Fecha aprobación</th>
             <td>{{ optional($purchaseRequest->fecha_aprobacion)->format('d/m/Y') ?? '—' }}</td>
         </tr>
-        @if ($purchaseRequest->estado_compras)
-            <tr>
-                <th>Estado compras</th>
-                <td colspan="3">{{ $purchaseRequest->estadoComprasLabel() }}</td>
-            </tr>
-        @endif
         @if ($purchaseRequest->solicitud_para === 'Cliente')
             <tr>
                 <th>Razón social</th>

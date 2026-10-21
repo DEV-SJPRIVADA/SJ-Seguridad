@@ -268,14 +268,16 @@ class PurchaseOrderEmissionTest extends TestCase
         $sheet = $spreadsheet->getActiveSheet();
 
         $this->assertSame('Orden de compra', $sheet->getTitle());
-        $this->assertSame('ORDEN DE COMPRA', $sheet->getCell('B1')->getValue());
+        $this->assertSame('ORDEN DE COMPRA O SERVICIO', $sheet->getCell('B1')->getValue());
         $this->assertSame('FO-AD-07', $sheet->getCell('G1')->getValue());
-        $this->assertSame('Orden de compra N.º: '.$order->numeroOc, $sheet->getCell('A5')->getValue());
+        $this->assertSame('Enero de 2025', $sheet->getCell('G2')->getValue());
+        $this->assertSame('OC No.', $sheet->getCell('F5')->getValue());
+        $this->assertSame($order->numeroOc, $sheet->getCell('G5')->getValue());
+        $this->assertSame($order->provider_nombre, $sheet->getCell('B8')->getValue());
         $this->assertSame($order->provider_identificacion, $sheet->getCell('B9')->getValue());
-        $this->assertSame($order->provider_nombre, $sheet->getCell('E9')->getValue());
-        $this->assertSame('Detalle', $sheet->getCell('A15')->getValue());
-        $this->assertSame('Valor total', $sheet->getCell('G17')->getValue());
-        $this->assertSame(210.0, (float) $sheet->getCell('G21')->getValue());
+        $this->assertSame('Forma de pago', $sheet->getCell('A15')->getValue());
+        $this->assertSame('Valor total', $sheet->getCell('G22')->getValue());
+        $this->assertSame(210.0, (float) $sheet->getCell('G24')->getValue());
     }
 
     public function test_the_same_request_can_be_split_between_several_providers(): void

@@ -6,20 +6,11 @@
         default => route('purchase-requests.index', ['module' => $module]),
     };
     $backLabel = match ($fromKey) {
-        'processing' => 'Volver a bandeja de compras',
+        'processing' => 'Volver a Pedidos',
         'approval' => 'Volver a pendientes',
         default => 'Volver a mis solicitudes',
     };
-    $estadoPill = match ($purchaseRequest->estado) {
-        'aprobado' => 'status-pill--success',
-        'rechazado' => 'status-pill--danger',
-        default => 'status-pill--info',
-    };
-    $estadoLabel = match ($purchaseRequest->estado) {
-        'aprobado' => 'Aprobado',
-        'rechazado' => 'Rechazado',
-        default => 'Pendiente',
-    };
+    $etapa = $purchaseRequest->etapa();
     $canProcess = auth()->user()?->can('process', $purchaseRequest) ?? false;
 @endphp
 
@@ -44,11 +35,15 @@
                         <a
                             href="{{ route('purchase-requests.export.pdf', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
                             class="btn btn--secondary btn--sm"
+                            target="_blank"
+                            rel="noopener"
                         >Descargar PDF</a>
                         <x-export-excel
                             route="{{ route('purchase-requests.export.excel', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
                             label="Exportar Excel"
                             class="btn btn--secondary btn--sm"
+                            target="_blank"
+                            rel="noopener"
                         />
                         @can('resubmit', $purchaseRequest)
                             <a
@@ -63,17 +58,12 @@
                     </div>
                 </div>
 
-                <h2 class="page-title">Solicitud de compra {{ $purchaseRequest->folio() }}</h2>
+                <h2 class="page-title">Solicitud de compra {{ $purchaseRequest->folioVisible() }}</h2>
                 <p class="page-subtitle">Detalle FO-AD-44 · seguimiento de autorización y compras.</p>
                 <div class="pur-req-detail__pills">
-                    <span class="status-pill {{ $estadoPill }}">{{ $estadoLabel }}</span>
+                    <x-pedido-etapa :etapa="$etapa" />
                     @if ($purchaseRequest->urgente)
                         <span class="status-pill status-pill--warning">Urgente</span>
-                    @endif
-                    @if ($purchaseRequest->estado_compras)
-                        <span class="status-pill status-pill--compras-{{ $purchaseRequest->estado_compras }}">
-                            Compras: {{ $purchaseRequest->estadoComprasLabel() }}
-                        </span>
                     @endif
                 </div>
             </div>
@@ -113,12 +103,10 @@
                                 @endif
                             </span>
                         </div>
-                        @if ($purchaseRequest->estado_compras)
-                            <div class="pur-req-form__meta-item">
-                                <span class="pur-req-form__meta-label">Estado compras</span>
-                                <span class="pur-req-form__meta-value">{{ $purchaseRequest->estadoComprasLabel() }}</span>
-                            </div>
-                        @endif
+                        <div class="pur-req-form__meta-item">
+                            <span class="pur-req-form__meta-label">Estado</span>
+                            <span class="pur-req-form__meta-value">{{ $etapa->label() }}</span>
+                        </div>
                     </div>
 
                     @if ($purchaseRequest->solicitud_para === 'Cliente')
@@ -132,22 +120,31 @@
                                     <p class="pur-req-form__section-desc">Información asociada a la solicitud para cliente.</p>
                                 </div>
                             </header>
+                            {{-- Misma fila que el formulario: null en Comodato o Activo se muestra como No. --}}
                             <div class="pur-req-form__meta">
                                 <div class="pur-req-form__meta-item">
-                                    <span class="pur-req-form__meta-label">Razon social</span>
+                                    <span class="pur-req-form__meta-label">Razón social</span>
                                     <span class="pur-req-form__meta-value">{{ $purchaseRequest->razon_social ?? '—' }}</span>
                                 </div>
                                 <div class="pur-req-form__meta-item">
                                     <span class="pur-req-form__meta-label">Proyecto nuevo</span>
-                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->proyecto_nuevo ? 'Si' : 'No' }}</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->proyecto_nuevo ? 'Sí' : 'No' }}</span>
                                 </div>
                                 <div class="pur-req-form__meta-item">
                                     <span class="pur-req-form__meta-label">Asume el cliente</span>
-                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->asume_cliente ? 'Si' : 'No' }}</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->asume_cliente ? 'Sí' : 'No' }}</span>
                                 </div>
                                 <div class="pur-req-form__meta-item">
                                     <span class="pur-req-form__meta-label">Reinversión</span>
-                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->reinversion ? 'Si' : 'No' }}</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->reinversion ? 'Sí' : 'No' }}</span>
+                                </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Comodato</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->comodato ? 'Sí' : 'No' }}</span>
+                                </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Activo</span>
+                                    <span class="pur-req-form__meta-value">{{ $purchaseRequest->activo ? 'Sí' : 'No' }}</span>
                                 </div>
                             </div>
                         </section>
@@ -423,13 +420,10 @@
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Estado: {{ $estadoLabel }}</li>
+                                <li class="pur-req-form-guide__item">Estado: {{ $etapa->label() }}</li>
                                 <li class="pur-req-form-guide__item">Solicitante: {{ $purchaseRequest->user?->name ?? '—' }}</li>
                                 <li class="pur-req-form-guide__item">Director: {{ $purchaseRequest->aprobador?->name ?? '—' }}</li>
                                 <li class="pur-req-form-guide__item">Productos: {{ $purchaseRequest->items->count() }}</li>
-                                @if ($purchaseRequest->estado_compras)
-                                    <li class="pur-req-form-guide__item">Compras: {{ $purchaseRequest->estadoComprasLabel() }}</li>
-                                @endif
                             </ul>
                         </div>
                     </div>

@@ -47,10 +47,13 @@ class PurchaseAccessService
         return $this->baseAreaBoardVisible($user, $areaKey);
     }
 
+    /**
+     * El tablero Pedidos (clave bandeja_compras) se muestra en Compras
+     * para quien procesa. Ya no se oculta por entrar también a Solicitudes de compra.
+     */
     public function bandejaAccessibleViaPurchaseBoard(User $user, string $areaKey): bool
     {
-        return $user->can('purchase.tab.processing')
-            && $this->canViewPurchaseBoard($user, $areaKey);
+        return $areaKey === 'compras' && $user->can('purchase.tab.processing');
     }
 
     public function canAccessTab(User $user, string $module, string $tab): bool
@@ -127,10 +130,6 @@ class PurchaseAccessService
             $tabs[] = 'pendientes_aprobacion';
         }
 
-        if ($this->canAccessTab($user, $moduleKey, 'processing')) {
-            $tabs[] = 'bandeja_compras';
-        }
-
         return $tabs;
     }
 
@@ -160,6 +159,18 @@ class PurchaseAccessService
     public function canEmitOrder(User $user): bool
     {
         return $this->isAdminBypass($user) || $user->can('purchase.tab.processing');
+    }
+
+    /**
+     * Mismo criterio que la lista de directores del formulario: activo, rol director y permiso de autorizar.
+     */
+    public function isValidApprover(mixed $userId): bool
+    {
+        if (! is_numeric($userId)) {
+            return false;
+        }
+
+        return $this->approversQuery()->whereKey((int) $userId)->exists();
     }
 
     /**

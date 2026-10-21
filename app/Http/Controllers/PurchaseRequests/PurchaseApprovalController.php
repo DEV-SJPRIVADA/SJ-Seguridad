@@ -67,6 +67,6 @@ class PurchaseApprovalController extends Controller
 
         return redirect()
             ->route('purchase-requests.approval.index', ['module' => $module])
-            ->with('status', 'Solicitud N.º '.$purchaseRequest->folio().' actualizada.');
+            ->with('status', 'Solicitud N.º '.$purchaseRequest->folioVisible().' actualizada.');
     }
 }

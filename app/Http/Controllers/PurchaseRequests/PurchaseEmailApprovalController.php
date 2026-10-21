@@ -87,7 +87,7 @@ class PurchaseEmailApprovalController extends Controller
         }
 
         $purchaseRequest->refresh();
-        $purchaseRequest->load(['user', 'items']);
+        $purchaseRequest->load(['user', 'items', 'comments']);
 
         return view('modules.purchase-requests.email-approval-result', [
             'purchaseRequest' => $purchaseRequest,

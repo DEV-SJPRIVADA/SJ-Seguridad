@@ -2,21 +2,26 @@
 
 namespace App\Http\Controllers\Supplies;
 
+use App\Enums\PedidoEtapa;
 use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Supplies\ResolveSupplyQualityRequest;
+use App\Http\Requests\Supplies\StoreSupplyRequestCommentRequest;
 use App\Mail\SupplyRequestApprovedForComprasMail;
 use App\Mail\SupplyRequestNotification;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
-use App\Models\SupplySite;
+use App\Models\SupplyRequestComment;
 use App\Models\User;
 use App\Services\Notifications\NotificationConfigService;
+use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\Supplies\SupplyAuditLogService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
 use App\Support\DisplayDate;
-use App\Traits\HasPurchaseTabs;
+use App\Support\UppercaseFormText;
 use App\Traits\HasSupplyTabs;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -24,12 +29,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupplyRequestController extends Controller
 {
-    use HasPurchaseTabs;
     use HasSupplyTabs;
 
     public function __construct(
@@ -84,21 +90,17 @@ class SupplyRequestController extends Controller
     {
         $this->authorizeSupplyView($supplyRequest);
 
-        $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'purchasingManager', 'site']);
+        $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'purchasingManager', 'site', 'comments.user']);
 
         $fromComprasBandeja = auth()->user()?->can('purchase.tab.processing')
             && $this->supplyVisibleInComprasBandeja($supplyRequest);
-
-        $subTabs = $fromComprasBandeja
-            ? $this->purchaseSubTabsForSupplyDetail()
-            : $this->getSupplySubTabs($module);
 
         return view('modules.supplies.show', [
             'module' => $module,
             'supplyRequest' => $supplyRequest,
             'fromComprasBandeja' => $fromComprasBandeja,
             'canExportFoAd44' => $supplyRequest->isExportableForCompras(),
-            'subTabs' => $subTabs,
+            'subTabs' => $this->getSupplySubTabs($module),
             'purchaseModule' => $fromComprasBandeja ? 'compras' : $module,
         ]);
     }
@@ -184,13 +186,15 @@ class SupplyRequestController extends Controller
                 'site_utilization' => $site->utilization,
                 'site_city' => $site->city,
                 'status' => 'pendiente_calidad',
-                'observations' => $validated['observations'] ?? null,
+                'observations' => filled($validated['observations'] ?? null)
+                    ? UppercaseFormText::uppercaseString((string) $validated['observations'])
+                    : null,
             ]);
 
             foreach ($validated['items'] as $item) {
                 if (($item['type'] ?? '') === 'custom') {
                     $supplyRequest->items()->create([
-                        'custom_product_name' => $item['custom_name'],
+                        'custom_product_name' => UppercaseFormText::uppercaseString((string) $item['custom_name']),
                         'is_not_in_catalog' => true,
                         'current_inventory' => 0,
                         'requested_quantity' => $item['quantity'],
@@ -227,31 +231,143 @@ class SupplyRequestController extends Controller
         $this->notifyApprovalReviewers($supplyRequest);
 
         return redirect()->route('supplies.index', ['module' => $module])
-            ->with('success', 'Solicitud enviada correctamente a aprobacion de insumos.');
+            ->with('success', 'Solicitud enviada correctamente a aprobación de insumos.');
     }
 
-    public function approvalIndex(string $module)
+    public function edit(string $module, SupplyRequest $supplyRequest): View
     {
-        $requests = SupplyRequest::where('area_key', $module)
-            ->where('status', 'pendiente_calidad')
-            ->latest()
-            ->with(['user', 'items.product'])
+        $this->authorize('resubmit', $supplyRequest);
+        abort_unless($supplyRequest->area_key === $module, 404);
+
+        $supplyRequest->load(['items.product', 'comments.user']);
+
+        $products = SupplyProduct::where('is_active', true)
+            ->orderBy('category')
+            ->orderBy('name')
             ->get();
 
-        return view('modules.supplies.approval.index', [
+        return view('modules.supplies.create', [
             'module' => $module,
-            'requests' => $requests,
+            'products' => $products->groupBy('category'),
+            'productNames' => $products->pluck('name', 'id'),
+            'canRequestSupplies' => true,
             'subTabs' => $this->getSupplySubTabs($module),
+            'isResubmit' => true,
+            'supplyRequest' => $supplyRequest,
+            'cartItems' => $this->cartItemsFromSupply($supplyRequest),
         ]);
     }
 
-    public function approvalExport(string $module): StreamedResponse
+    public function update(
+        Request $request,
+        string $module,
+        SupplyRequest $supplyRequest,
+        PurchaseFlowStateService $flowState,
+    ): RedirectResponse {
+        $this->authorize('resubmit', $supplyRequest);
+        abort_unless($supplyRequest->area_key === $module, 404);
+
+        $validated = $this->validateStoreItems($request);
+        $observations = filled($validated['observations'] ?? null)
+            ? UppercaseFormText::uppercaseString((string) $validated['observations'])
+            : null;
+
+        DB::transaction(function () use ($supplyRequest, $validated, $observations): void {
+            $supplyRequest->items()->delete();
+
+            $supplyRequest->update([
+                'status' => 'pendiente_calidad',
+                'observations' => $observations,
+            ]);
+
+            foreach ($validated['items'] as $item) {
+                if (($item['type'] ?? '') === 'custom') {
+                    $supplyRequest->items()->create([
+                        'custom_product_name' => UppercaseFormText::uppercaseString((string) $item['custom_name']),
+                        'is_not_in_catalog' => true,
+                        'current_inventory' => 0,
+                        'requested_quantity' => $item['quantity'],
+                    ]);
+                } else {
+                    $supplyRequest->items()->create([
+                        'supply_product_id' => $item['product_id'],
+                        'is_not_in_catalog' => false,
+                        'current_inventory' => $item['current_inventory'],
+                        'requested_quantity' => $item['quantity'],
+                    ]);
+                }
+            }
+        });
+
+        $supplyRequest->refresh();
+        $flowState->sync($supplyRequest);
+
+        $this->auditLogService->logModelChange(
+            eventType: 'supply_request',
+            action: 'resubmit',
+            model: $supplyRequest,
+            before: ['status' => 'rechazada_calidad'],
+            after: ['status' => 'pendiente_calidad'],
+            metadata: ['area_key' => $module],
+            area: $module,
+        );
+
+        $this->notifyApprovalReviewers($supplyRequest);
+
+        return redirect()->route('supplies.index', ['module' => $module])
+            ->with('status', 'Solicitud '.$supplyRequest->folioVisible().' reenviada a Calidad.');
+    }
+
+    public function storeComment(
+        StoreSupplyRequestCommentRequest $request,
+        string $module,
+        SupplyRequest $supplyRequest,
+    ): RedirectResponse {
+        abort_unless($supplyRequest->area_key === $module, 404);
+
+        $comment = SupplyRequestComment::query()->create([
+            'supply_request_id' => $supplyRequest->id,
+            'user_id' => $request->user()->id,
+            'body' => $request->validated('body'),
+        ]);
+
+        $this->auditLogService->logEvent(
+            eventType: 'supply_request',
+            action: 'comment',
+            metadata: [
+                'comment_id' => $comment->id,
+                'body_length' => mb_strlen((string) $comment->body),
+            ],
+            model: $supplyRequest,
+            area: $module,
+        );
+
+        return redirect()
+            ->route('supplies.show', ['module' => $module, 'supply_request' => $supplyRequest->id])
+            ->with('status', 'Comentario agregado a la solicitud.')
+            ->withFragment('supply-request-comments');
+    }
+
+    /**
+     * Por aprobar: suministros pendientes de todas las áreas, con filtro opcional por área.
+     */
+    public function approvalIndex(Request $request, string $module)
     {
-        $requests = SupplyRequest::where('area_key', $module)
-            ->where('status', 'pendiente_calidad')
-            ->latest()
-            ->with(['user', 'items.product'])
-            ->get();
+        $areaFilter = $this->approvalAreaFilter($request);
+
+        return view('modules.supplies.approval.index', [
+            'module' => $module,
+            'requests' => $this->approvalQueue($areaFilter),
+            'subTabs' => $this->getSupplySubTabs($module),
+            'areas' => config('access.areas', []),
+            'areaFilter' => $areaFilter,
+        ]);
+    }
+
+    public function approvalExport(Request $request, string $module): StreamedResponse
+    {
+        $areaFilter = $this->approvalAreaFilter($request);
+        $requests = $this->approvalQueue($areaFilter);
 
         $columns = [
             ['key' => 'id', 'label' => 'ID'],
@@ -269,6 +385,7 @@ class SupplyRequestController extends Controller
             metadata: [
                 'row_count' => $requests->count(),
                 'area_key' => $module,
+                'area_filter' => $areaFilter,
             ],
             area: $module,
         );
@@ -278,7 +395,6 @@ class SupplyRequestController extends Controller
 
     public function approvalEdit(string $module, SupplyRequest $supplyRequest)
     {
-        abort_unless($supplyRequest->area_key === $module, 404);
         abort_if($supplyRequest->status !== 'pendiente_calidad', 403, 'Esta solicitud ya fue procesada.');
 
         $supplyRequest->load(['user', 'items.product']);
@@ -290,14 +406,13 @@ class SupplyRequestController extends Controller
         ]);
     }
 
-    public function approvalUpdate(Request $request, string $module, SupplyRequest $supplyRequest)
-    {
-        $request->validate([
-            'action' => 'required|in:approve,reject',
-            'quality_observations' => 'nullable|string',
-            'items' => 'required_if:action,approve|array',
-            'items.*.approved_quantity' => 'required_if:action,approve|integer|min:0',
-        ]);
+    public function approvalUpdate(
+        ResolveSupplyQualityRequest $request,
+        string $module,
+        SupplyRequest $supplyRequest,
+        PurchaseFlowStateService $flowState,
+    ) {
+        $validated = $request->validated();
 
         abort_if(
             $supplyRequest->status !== 'pendiente_calidad',
@@ -305,22 +420,20 @@ class SupplyRequestController extends Controller
             'Esta solicitud ya fue procesada.'
         );
 
-        abort_unless($supplyRequest->area_key === $module, 404);
-
         $previousStatus = $supplyRequest->status;
         $itemsApprovedCount = 0;
 
-        DB::transaction(function () use ($request, $supplyRequest, &$itemsApprovedCount) {
-            $isApprove = $request->action === 'approve';
+        DB::transaction(function () use ($validated, $supplyRequest, &$itemsApprovedCount) {
+            $isApprove = $validated['action'] === 'approve';
 
             $supplyRequest->update([
                 'status' => $isApprove ? 'aprobada_calidad' : 'rechazada_calidad',
                 'quality_reviewer_id' => auth()->id(),
-                'quality_observations' => $request->quality_observations,
+                'quality_observations' => $validated['quality_observations'] ?? null,
             ]);
 
             if ($isApprove) {
-                foreach ($request->items as $itemId => $data) {
+                foreach ($validated['items'] ?? [] as $itemId => $data) {
                     $approvedQuantity = (int) ($data['approved_quantity'] ?? 0);
                     $itemsApprovedCount += $approvedQuantity > 0 ? 1 : 0;
 
@@ -333,73 +446,32 @@ class SupplyRequestController extends Controller
             }
         });
 
-        $newStatus = $request->action === 'approve' ? 'aprobada_calidad' : 'rechazada_calidad';
+        $supplyRequest->refresh();
+        $flowState->sync($supplyRequest);
+        $newStatus = $supplyRequest->status;
 
         $this->auditLogService->logModelChange(
             eventType: 'supply_request',
-            action: $request->action === 'approve' ? 'quality_approve' : 'quality_reject',
+            action: $validated['action'] === 'approve' ? 'quality_approve' : 'quality_reject',
             model: $supplyRequest,
             before: ['status' => $previousStatus],
             after: ['status' => $newStatus],
-            metadata: $request->action === 'approve'
-                ? ['items_approved_count' => $itemsApprovedCount]
-                : [],
-            area: $module,
+            metadata: $validated['action'] === 'approve'
+                ? ['items_approved_count' => $itemsApprovedCount, 'reviewed_from_module' => $module]
+                : ['reviewed_from_module' => $module],
+            area: $supplyRequest->area_key,
         );
 
         return redirect()->route('supplies.approval.index', ['module' => $module])
             ->with('success', 'Solicitud procesada correctamente.');
     }
 
-    public function approvedIndex(Request $request, string $module)
+    /**
+     * La URL vieja deja de ser otro escritorio. Calidad trabaja en Por aprobar.
+     */
+    public function approvedIndex(string $module): RedirectResponse
     {
-        $filters = $request->validate([
-            'sede_id' => ['nullable', 'integer', 'exists:supply_sites,id'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
-            'export_status' => ['nullable', 'in:pending,exported,all'],
-            'requester' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $exportStatus = $filters['export_status'] ?? 'all';
-
-        $requests = SupplyRequest::query()
-            ->where('status', 'aprobada_calidad')
-            ->with(['user'])
-            ->withCount(['items as approved_items_count' => function ($query): void {
-                $query->where('approved_quantity', '>', 0);
-            }])
-            ->when(filled($filters['sede_id'] ?? null), fn ($query) => $query->where('sede_id', $filters['sede_id']))
-            ->when(filled($filters['date_from'] ?? null), fn ($query) => $query->whereDate('created_at', '>=', $filters['date_from']))
-            ->when(filled($filters['date_to'] ?? null), fn ($query) => $query->whereDate('created_at', '<=', $filters['date_to']))
-            ->when($exportStatus === 'pending', fn ($query) => $query->whereNull('exported_at'))
-            ->when($exportStatus === 'exported', fn ($query) => $query->whereNotNull('exported_at'))
-            ->when(filled($filters['requester'] ?? null), function ($query) use ($filters): void {
-                $term = '%'.$filters['requester'].'%';
-                $query->whereHas('user', function ($userQuery) use ($term): void {
-                    $userQuery->where('name', 'like', $term)
-                        ->orWhere('email', 'like', $term);
-                });
-            })
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
-
-        $sites = SupplySite::query()->active()->ordered()->get();
-
-        return view('modules.supplies.approved.index', [
-            'module' => $module,
-            'requests' => $requests,
-            'sites' => $sites,
-            'filters' => array_merge([
-                'sede_id' => null,
-                'date_from' => null,
-                'date_to' => null,
-                'export_status' => 'all',
-                'requester' => null,
-            ], $filters),
-            'subTabs' => $this->getSupplySubTabs($module),
-        ]);
+        return redirect()->route('supplies.approval.index', ['module' => $module]);
     }
 
     public function approvedExportAll(Request $request, string $module): StreamedResponse
@@ -522,21 +594,34 @@ class SupplyRequestController extends Controller
         abort_unless((int) $supplyRequest->user_id === (int) $user->id || $canReview, 403);
     }
 
-    private function supplyVisibleInComprasBandeja(SupplyRequest $supplyRequest): bool
+    /**
+     * Área elegida en el filtro de Por aprobar (null = todas).
+     */
+    private function approvalAreaFilter(Request $request): ?string
     {
-        return $supplyRequest->isExportableForCompras();
+        $validated = $request->validate([
+            'area_key' => ['nullable', Rule::in(array_keys(config('access.areas', [])))],
+        ]);
+
+        return filled($validated['area_key'] ?? null) ? (string) $validated['area_key'] : null;
     }
 
     /**
-     * @return Collection<int, array{label: string, url: string, active: bool}>
+     * @return Collection<int, SupplyRequest>
      */
-    private function purchaseSubTabsForSupplyDetail(): Collection
+    private function approvalQueue(?string $areaFilter): Collection
     {
-        return $this->getPurchaseSubTabs('compras')->map(function (array $tab): array {
-            $tab['active'] = str_contains($tab['url'], 'bandeja-compras');
+        return SupplyRequest::query()
+            ->whereEtapa(PedidoEtapa::PorAutorizar)
+            ->when($areaFilter !== null, fn ($query) => $query->where('area_key', $areaFilter))
+            ->latest()
+            ->with(['user', 'items.product'])
+            ->get();
+    }
 
-            return $tab;
-        });
+    private function supplyVisibleInComprasBandeja(SupplyRequest $supplyRequest): bool
+    {
+        return $supplyRequest->isExportableForCompras();
     }
 
     /**
@@ -584,6 +669,32 @@ class SupplyRequestController extends Controller
             'observations' => $request->input('observations'),
             'items' => $items,
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function cartItemsFromSupply(SupplyRequest $supplyRequest): array
+    {
+        return $supplyRequest->items
+            ->map(function ($item): array {
+                if ($item->is_not_in_catalog) {
+                    return [
+                        'type' => 'custom',
+                        'custom_name' => $item->custom_product_name,
+                        'quantity' => $item->requested_quantity,
+                    ];
+                }
+
+                return [
+                    'type' => 'catalog',
+                    'product_id' => $item->supply_product_id,
+                    'current_inventory' => $item->current_inventory,
+                    'quantity' => $item->requested_quantity,
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function notifyApprovalReviewers(SupplyRequest $supplyRequest): void

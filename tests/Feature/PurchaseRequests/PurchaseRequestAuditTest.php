@@ -159,7 +159,7 @@ class PurchaseRequestAuditTest extends TestCase
         $this->assertSame('No cumple politica de compras.', $log->metadata['comentarios_director']);
     }
 
-    public function test_update_purchase_status_change_writes_audit_event(): void
+    public function test_manual_purchase_status_patch_does_not_move_estado_compras(): void
     {
         $director = $this->director();
         $requester = $this->purchaseRequester('operaciones');
@@ -184,19 +184,17 @@ class PurchaseRequestAuditTest extends TestCase
             'comentarios_compras' => 'Cotizacion en curso.',
         ])->assertRedirect();
 
-        $log = AuditLog::query()
+        $purchaseRequest->refresh();
+        $this->assertSame(PurchaseRequest::COMPRAS_PENDIENTE, $purchaseRequest->estado_compras);
+        $this->assertNull($purchaseRequest->comentarios_compras);
+        $this->assertNull(AuditLog::query()
             ->where('module', 'purchase_requests')
             ->where('event_type', 'compras_processing')
             ->where('action', 'status_change')
-            ->firstOrFail();
-
-        $this->assertSame(['estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE], $log->old_values);
-        $this->assertSame(['estado_compras' => PurchaseRequest::COMPRAS_EN_CURSO], $log->new_values);
-        $this->assertSame($purchaseRequest->folio(), $log->metadata['folio']);
-        $this->assertSame($compras->id, $log->user_id);
+            ->first());
     }
 
-    public function test_update_supply_complete_writes_status_change_audit_event(): void
+    public function test_saving_supply_processing_does_not_change_status_or_write_unit_cost(): void
     {
         $qualityUser = $this->qualityReviewer('operaciones');
         $compras = $this->comprasUser();
@@ -236,16 +234,15 @@ class PurchaseRequestAuditTest extends TestCase
             ],
         ])->assertRedirect();
 
-        $log = AuditLog::query()
+        $supplyRequest->refresh();
+        $this->assertSame('aprobada_calidad', $supplyRequest->status);
+        // T3: procesar el suministro ignora unit_cost; no lo persiste ni lo borra.
+        $this->assertNull($item->fresh()->unit_cost);
+        $this->assertNull(AuditLog::query()
             ->where('module', 'purchase_requests')
             ->where('event_type', 'supply_compras')
             ->where('action', 'status_change')
-            ->firstOrFail();
-
-        $this->assertSame(['status' => 'aprobada_calidad'], $log->old_values);
-        $this->assertSame(['status' => 'completada'], $log->new_values);
-        $this->assertSame('complete', $log->metadata['action']);
-        $this->assertSame('4000.00', (string) $log->metadata['total_cost']);
+            ->first());
     }
 
     private function purchaseRequester(string $area): User

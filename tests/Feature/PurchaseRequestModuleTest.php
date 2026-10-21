@@ -269,7 +269,134 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertSee($purchaseRequest->folio())
             ->assertSee('Director aprobador')
             ->assertSee($director->name)
-            ->assertSee($requester->name);
+            ->assertSee($requester->name)
+            ->assertSee('Filtros')
+            ->assertSee('name="etapa"', false)
+            ->assertSee('Por autorizar')
+            ->assertSee('name="urgente"', false)
+            ->assertSee('name="area_key"', false)
+            ->assertSee('name="date_from"', false);
+    }
+
+    public function test_mis_solicitudes_filters_by_estado_area_and_date(): void
+    {
+        $requester = $this->purchaseRequester('compras');
+        $director = $this->director();
+
+        $pendiente = PurchaseRequest::query()->create([
+            'numero_solicitud' => 11,
+            'user_id' => $requester->id,
+            'area_key' => 'compras',
+            'fecha_solicitud' => '2026-01-10',
+            'cantidad' => 1,
+            'solicitud_para' => 'Interno',
+            'urgente' => false,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_PENDIENTE,
+        ]);
+
+        $aprobada = PurchaseRequest::query()->create([
+            'numero_solicitud' => 12,
+            'user_id' => $requester->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => '2026-03-15',
+            'cantidad' => 1,
+            'solicitud_para' => 'Interno',
+            'urgente' => true,
+            'aprobador_id' => $director->id,
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+        ]);
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'etapa' => 'por_comprar',
+            ]))
+            ->assertOk()
+            ->assertSee($aprobada->folioVisible())
+            ->assertDontSee($pendiente->folioVisible());
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'etapa' => 'por_autorizar',
+            ]))
+            ->assertOk()
+            ->assertSee($pendiente->folioVisible())
+            ->assertDontSee($aprobada->folioVisible());
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'area_key' => 'compras',
+            ]))
+            ->assertOk()
+            ->assertSee($pendiente->folioVisible())
+            ->assertDontSee($aprobada->folioVisible());
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'date_from' => '2026-03-01',
+                'date_to' => '2026-03-31',
+            ]))
+            ->assertOk()
+            ->assertSee($aprobada->folioVisible())
+            ->assertDontSee($pendiente->folioVisible());
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'urgente' => '1',
+            ]))
+            ->assertOk()
+            ->assertSee($aprobada->folioVisible())
+            ->assertDontSee($pendiente->folioVisible());
+    }
+
+    public function test_store_rejects_approver_that_is_not_an_active_director(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('compras');
+        $notDirector = User::factory()->create(['must_change_password' => false]);
+        $inactiveDirector = $this->director('inactivo@test.local');
+        $inactiveDirector->update(['is_active' => false]);
+
+        foreach ([$notDirector, $inactiveDirector] as $aprobador) {
+            $this->actingAs($requester)
+                ->from(route('purchase-requests.create', ['module' => 'compras']))
+                ->post(route('purchase-requests.store', ['module' => 'compras']), [
+                    'area_key' => 'compras',
+                    'fecha_solicitud' => now()->toDateString(),
+                    'solicitud_para' => 'Interno',
+                    'aprobador_id' => $aprobador->id,
+                    'items' => [[
+                        'cantidad' => 1,
+                        'descripcion' => 'Prueba',
+                        'referencia' => 'N/A',
+                        'utilizacion' => 'Test',
+                        'ubicacion' => 'Cali',
+                    ]],
+                ])
+                ->assertSessionHasErrors('aprobador_id');
+        }
+
+        $this->assertSame(0, PurchaseRequest::query()->count());
+        Mail::assertNothingSent();
+    }
+
+    public function test_mis_solicitudes_rejects_invalid_filter_values(): void
+    {
+        $requester = $this->purchaseRequester('compras');
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'etapa' => 'inexistente',
+            ]))
+            ->assertSessionHasErrors('etapa');
     }
 
     public function test_show_displays_mail_log_registry(): void
@@ -535,7 +662,7 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertSee('mostrad', false);
     }
 
-    public function test_completed_purchase_remains_in_bandeja_queue(): void
+    public function test_completed_purchase_stays_out_of_bandeja_and_in_historial(): void
     {
         $director = $this->director();
         $requester = $this->purchaseRequester('operaciones');
@@ -563,11 +690,21 @@ class PurchaseRequestModuleTest extends TestCase
             dateTo: null,
         ));
 
-        $this->assertTrue($result['items']->contains(fn (array $item): bool => $item['folio'] === '8801'));
-        $this->assertSame('Completado', $result['items']->firstWhere('folio', '8801')['estado_label']);
+        $this->assertFalse($result['items']->contains(fn (array $item): bool => $item['folio'] === 'SC-8801'));
+
+        $historial = app(ComprasQueueService::class)->resolve(new ComprasQueueFilterBag(
+            estadoCompras: PurchaseRequest::COMPRAS_COMPLETADO,
+            tipo: null,
+            areaKey: null,
+            dateFrom: null,
+            dateTo: null,
+        ));
+
+        $this->assertTrue($historial['items']->contains(fn (array $item): bool => $item['folio'] === 'SC-8801'));
+        $this->assertSame('Cerrado', $historial['items']->firstWhere('folio', 'SC-8801')['estado_label']);
     }
 
-    public function test_completed_supply_remains_in_bandeja_queue_with_completado_label(): void
+    public function test_completed_supply_stays_out_of_bandeja_and_in_historial(): void
     {
         $requester = $this->supplyRequester('operaciones');
 
@@ -587,12 +724,22 @@ class PurchaseRequestModuleTest extends TestCase
             dateTo: null,
         ));
 
-        $item = $result['items']->firstWhere('tipo', 'supply');
+        $this->assertNull($result['items']->firstWhere('tipo', 'supply'));
+
+        $historial = app(ComprasQueueService::class)->resolve(new ComprasQueueFilterBag(
+            estadoCompras: PurchaseRequest::COMPRAS_COMPLETADO,
+            tipo: 'supply',
+            areaKey: null,
+            dateFrom: null,
+            dateTo: null,
+        ));
+
+        $item = $historial['items']->firstWhere('tipo', 'supply');
 
         $this->assertNotNull($item);
-        $this->assertSame($supplyRequest->folio(), $item['folio']);
+        $this->assertSame($supplyRequest->folioVisible(), $item['folio']);
         $this->assertSame(PurchaseRequest::COMPRAS_COMPLETADO, $item['estado']);
-        $this->assertSame('Completado', $item['estado_label']);
+        $this->assertSame('Cerrado', $item['estado_label']);
     }
 
     public function test_bandeja_queue_truncates_to_two_hundred_without_date_filter(): void
@@ -710,7 +857,7 @@ class PurchaseRequestModuleTest extends TestCase
         );
 
         $this->assertCount(1, $items);
-        $this->assertSame('9101', $items->first()['folio']);
+        $this->assertSame('SC-9101', $items->first()['folio']);
     }
 
     public function test_bandeja_queue_uses_created_at_as_fecha_solicitud_for_both_tipos(): void
@@ -758,8 +905,8 @@ class PurchaseRequestModuleTest extends TestCase
             dateTo: null,
         ));
 
-        $purchaseItem = $items->firstWhere('folio', '9301');
-        $supplyItem = $items->firstWhere('folio', $supplyRequest->folio());
+        $purchaseItem = $items->firstWhere('folio', 'SC-9301');
+        $supplyItem = $items->firstWhere('folio', $supplyRequest->folioVisible());
 
         $this->assertNotNull($purchaseItem);
         $this->assertSame($submittedAt->timestamp, $purchaseItem['fecha']->getTimestamp());
@@ -793,7 +940,7 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertSee($purchaseRequest->folio())
             ->assertSee('Descargar PDF')
             ->assertSee('Registro de correos de esta solicitud')
-            ->assertSee('Volver a bandeja de compras', false)
+            ->assertSee('Volver a Pedidos', false)
             ->assertSee('Procesar solicitud', false);
     }
 
@@ -834,7 +981,7 @@ class PurchaseRequestModuleTest extends TestCase
         Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester, $purchaseRequest): bool {
             return $mail->hasTo($requester->email)
                 && $mail->purchaseRequest->is($purchaseRequest->fresh())
-                && $mail->purchaseRequest->comentarios_director === 'Autorizado. Proceder con cotizacion.';
+                && $mail->purchaseRequest->comments()->where('body', 'AUTORIZADO. PROCEDER CON COTIZACION.')->exists();
         });
     }
 
@@ -859,7 +1006,7 @@ class PurchaseRequestModuleTest extends TestCase
         Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester): bool {
             return $mail->hasTo($requester->email)
                 && $mail->purchaseRequest->estado === PurchaseRequest::ESTADO_RECHAZADO
-                && $mail->purchaseRequest->comentarios_director === 'Presupuesto no disponible este trimestre.';
+                && $mail->purchaseRequest->comments()->where('body', 'PRESUPUESTO NO DISPONIBLE ESTE TRIMESTRE.')->exists();
         });
     }
 
@@ -951,7 +1098,7 @@ class PurchaseRequestModuleTest extends TestCase
         $this->assertSame(PurchaseRequest::ESTADO_APROBADO, $purchaseRequest->fresh()->estado);
         Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester): bool {
             return $mail->hasTo($requester->email)
-                && $mail->purchaseRequest->comentarios_director === 'Aprobado por correo';
+                && $mail->purchaseRequest->comments()->where('body', 'APROBADO POR CORREO')->exists();
         });
     }
 
@@ -971,7 +1118,7 @@ class PurchaseRequestModuleTest extends TestCase
         Mail::assertSent(PurchaseRequestResolvedMail::class, function (PurchaseRequestResolvedMail $mail) use ($requester): bool {
             return $mail->hasTo($requester->email)
                 && $mail->purchaseRequest->estado === PurchaseRequest::ESTADO_RECHAZADO
-                && $mail->purchaseRequest->comentarios_director === 'No cumple politica de compras.';
+                && $mail->purchaseRequest->comments()->where('body', 'NO CUMPLE POLITICA DE COMPRAS.')->exists();
         });
     }
 
@@ -1055,7 +1202,7 @@ class PurchaseRequestModuleTest extends TestCase
         $response->assertSee('Suministro');
         $response->assertSee('data-order=\'[[2, "desc"]]\'', false);
         $response->assertViewHas('queueItems', function ($items) use ($supplyRequest): bool {
-            $item = $items->firstWhere('folio', $supplyRequest->folio());
+            $item = $items->firstWhere('folio', $supplyRequest->folioVisible());
 
             return $item !== null && $item['tipo'] === 'supply';
         });
@@ -1094,7 +1241,7 @@ class PurchaseRequestModuleTest extends TestCase
         });
     }
 
-    public function test_navigation_processing_bandeja_activates_solicitudes_compra_board(): void
+    public function test_navigation_processing_routes_activate_pedidos_board(): void
     {
         $user = $this->comprasUser();
 
@@ -1119,15 +1266,14 @@ class PurchaseRequestModuleTest extends TestCase
             ->values()
             ->all();
 
-        $this->assertSame(['Solicitudes de compra'], $activeBoardLabels);
-        $this->assertFalse(
-            $comprasBoards->pluck('label')->contains('Bandeja compras')
-        );
+        $this->assertSame([config('access.boards.bandeja_compras')], $activeBoardLabels);
+        $this->assertTrue($comprasBoards->pluck('label')->contains(config('access.boards.bandeja_compras')));
+        $this->assertFalse($user->purchaseBoardTabsFor('compras')->contains('bandeja_compras'));
 
         $gestionHumana = collect($nav['appNavigation'])->firstWhere('key', 'gestion_humana');
         if ($gestionHumana !== null) {
             $this->assertFalse(
-                collect($gestionHumana['items'] ?? [])->pluck('label')->contains('Bandeja compras')
+                collect($gestionHumana['items'] ?? [])->pluck('label')->contains(config('access.boards.bandeja_compras'))
             );
         }
     }

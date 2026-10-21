@@ -126,7 +126,7 @@ class PurchaseRequestExcelExporter
             $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         }
 
-        $sheet->setCellValue('A5', 'Solicitud N.º: '.$purchaseRequest->folio());
+        $sheet->setCellValue('A5', 'Solicitud N.º: '.$purchaseRequest->folioVisible());
         $sheet->getStyle('A5')->getFont()->setItalic(true);
     }
 

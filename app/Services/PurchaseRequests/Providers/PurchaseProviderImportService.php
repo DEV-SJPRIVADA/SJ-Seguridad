@@ -3,6 +3,7 @@
 namespace App\Services\PurchaseRequests\Providers;
 
 use App\Models\PurchaseProvider;
+use App\Models\RequisitionCity;
 use App\Support\SpreadsheetCellReader;
 use App\Support\UppercaseFormText;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +19,9 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * Reglas:
  * - Solo se cargan filas con PROVEEDOR = SI (normaliza SI/SÍ/1/TRUE/X).
  * - Upsert por `identificacion` (la actualiza si ya existe).
- * - Columnas: IDENTIFICA, NOMBRE, TELEFONO, CORREO_ELE, PROVEEDOR,
- *   ESTADO, DIAS_PAGO (opcional). Los campos FO-AD-07 extra se editan en pantalla.
+ * - Columnas: IDENTIFICA, NOMBRE, TELEFONO, CORREO_ELE, CONTACTO, CIUDAD,
+ *   FORMA_PAGO, PROVEEDOR, ESTADO, DIAS_PAGO (opcional). CIUDAD debe existir
+ *   en el catálogo de Requisiciones si viene llena.
  */
 final class PurchaseProviderImportService
 {
@@ -74,6 +76,7 @@ final class PurchaseProviderImportService
         $failures = [];
         $errorsCount = 0;
         $rows = [];
+        $ciudades = $this->ciudadesCatalogo();
 
         for ($row = 2; $row <= $maxRow; $row++) {
             if ($processed >= $rowLimit) {
@@ -123,7 +126,7 @@ final class PurchaseProviderImportService
                 continue;
             }
 
-            $rows[] = [
+            $attrs = [
                 'identificacion' => mb_substr($identificacion, 0, 50),
                 'nombre' => mb_substr(UppercaseFormText::uppercaseString($nombre), 0, 255),
                 'telefono' => $this->normalizeTelefono($data['TELEFONO'] ?? null),
@@ -131,6 +134,30 @@ final class PurchaseProviderImportService
                 'estado' => $this->normalizeEstado($data['ESTADO'] ?? null),
                 'dias_pago' => $diasPago,
             ];
+
+            // CONTACTO / CIUDAD / FORMA_PAGO: solo se aplican si el archivo trae la columna.
+            if (isset($headers['CONTACTO'])) {
+                $attrs['contacto'] = $this->normalizeUpperText($data['CONTACTO'] ?? null, 255);
+            }
+
+            if (isset($headers['CIUDAD'])) {
+                $ciudad = $this->resolveCiudad($data['CIUDAD'] ?? null, $ciudades);
+
+                if ($ciudad === false) {
+                    $this->addFailure($errors, $failures, $row, $identificacion, 'CIUDAD', 'la ciudad no existe en el catálogo de Requisiciones.', $data);
+                    $errorsCount++;
+
+                    continue;
+                }
+
+                $attrs['ciudad'] = $ciudad;
+            }
+
+            if (isset($headers['FORMA_PAGO'])) {
+                $attrs['forma_pago'] = $this->normalizeUpperText($data['FORMA_PAGO'] ?? null, 120);
+            }
+
+            $rows[] = $attrs;
         }
 
         $this->releaseSpreadsheet($spreadsheet);
@@ -355,6 +382,48 @@ final class PurchaseProviderImportService
         }
 
         return PurchaseProvider::ESTADO_ACTIVO;
+    }
+
+    /**
+     * Catálogo activo: clave en mayúsculas → nombre oficial (ej. CALI => Cali).
+     *
+     * @return array<string, string>
+     */
+    private function ciudadesCatalogo(): array
+    {
+        $map = [];
+
+        foreach (RequisitionCity::query()->where('is_active', true)->orderBy('name')->get(['name']) as $city) {
+            $map[mb_strtoupper((string) $city->name, 'UTF-8')] = (string) $city->name;
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param  array<string, string>  $ciudades
+     * @return string|null|false null = vacío; false = no está en el catálogo
+     */
+    private function resolveCiudad(mixed $value, array $ciudades): string|null|false
+    {
+        $raw = trim((string) ($value ?? ''));
+
+        if ($raw === '') {
+            return null;
+        }
+
+        return $ciudades[mb_strtoupper($raw, 'UTF-8')] ?? false;
+    }
+
+    private function normalizeUpperText(mixed $value, int $max): ?string
+    {
+        $raw = trim((string) ($value ?? ''));
+
+        if ($raw === '') {
+            return null;
+        }
+
+        return mb_substr(UppercaseFormText::uppercaseString($raw), 0, $max);
     }
 
     /**

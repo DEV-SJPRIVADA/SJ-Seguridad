@@ -133,7 +133,8 @@ class NavigationVisibilityTest extends TestCase
 
         $this->assertContains(config('access.boards.suministros'), $comprasBoards);
         $this->assertContains(config('access.boards.solicitudes_compra'), $comprasBoards);
-        $this->assertNotContains(config('access.boards.bandeja_compras'), $comprasBoards);
+        $this->assertContains(config('access.boards.bandeja_compras'), $comprasBoards);
+        $this->assertContains(config('access.boards.ordenes_compra'), $comprasBoards);
     }
 
     public function test_compras_provider_user_sees_proveedores_board_not_purchase_tabs(): void
@@ -160,7 +161,7 @@ class NavigationVisibilityTest extends TestCase
         $this->assertSame(config('access.boards.proveedores'), $activeTab['label'] ?? null);
     }
 
-    public function test_compras_analyst_default_purchase_board_url_is_bandeja(): void
+    public function test_compras_analyst_default_purchase_board_url_is_first_solicitud_tab(): void
     {
         $user = User::factory()->create([
             'area_key' => 'compras',
@@ -173,8 +174,9 @@ class NavigationVisibilityTest extends TestCase
             'view.board.compras.solicitudes_compra',
         ]);
 
+        $this->assertFalse($user->purchaseBoardTabsFor('compras')->contains('bandeja_compras'));
         $this->assertSame(
-            route('purchase-requests.processing.index', ['module' => 'compras']),
+            route('purchase-requests.create', ['module' => 'compras']),
             $user->defaultPurchaseBoardUrl('compras'),
         );
     }

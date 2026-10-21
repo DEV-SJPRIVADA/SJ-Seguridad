@@ -2,49 +2,52 @@
 
 ## Objetivo
 
-Permitir solicitar insumos (aseo, cafeteria, papeleria, etc.), someterlos a aprobacion de Calidad, procesarlos en Compras cuando corresponda y obtener reportes FO-AD-44 en PDF o Excel.
+Permitir solicitar insumos (aseo, cafetería, papelería, etc.), someterlos a la revisión de Calidad y que Compras los compre con una orden. Si Calidad devuelve el pedido, el solicitante puede corregirlo y enviarlo de nuevo.
 
 ## Alcance
 
-Aplica al tablero **Suministros**. Segun su rol, el menu lo muestra en un solo lugar:
+Aplica al tablero **Suministros** y, para Compras, a **Pedidos** y a la pestaña **Insumos** de **Catálogos**.
 
-| Rol | Donde entrar |
+| Rol | Dónde entrar |
 | --- | --- |
-| Solicitante | Su area asignada → Suministros → Mis solicitudes |
-| Calidad (aprobacion) | **Calidad** → Suministros |
-| Compras (catalogo / bandeja) | **Compras** → Suministros (catalogo) o **Solicitudes de compra → Bandeja compras** |
+| Solicitante | Su área → Suministros → Mis solicitudes |
+| Calidad | **Calidad** → Suministros → Por aprobar |
+| Compras (comprar el pedido) | **Compras** → **Pedidos** |
+| Quien administra el catálogo | **Compras** → **Catálogos** → Insumos |
 
-Segun permisos, el usuario puede:
+Según su perfil puede:
 
-- Crear y consultar **Mis solicitudes**
-- Revisar y aprobar en **Aprobacion insumos** (Calidad)
-- Consultar **Insumos aprobados** y descargar reporte FO-AD-44 (Calidad)
-- Administrar el **Catalogo** de productos (Compras)
-- Ver detalle y exportar FO-AD-44 desde la **Bandeja compras** (Compras), con la misma presentacion que una solicitud de compra
+- Crear y consultar **Mis solicitudes**, y reenviar una que Calidad haya devuelto
+- Revisar y aprobar o devolver en **Por aprobar** (Calidad). Ya no hay una pestaña de insumos aprobados
+- Dejar notas en el pedido mientras no esté cerrado
+- Administrar el catálogo de productos dentro de **Catálogos**
+- Ver el detalle y descargar el FO-AD-44 cuando Calidad ya aprobó
+- Comprar el insumo emitiendo la orden. El cierre lo hace la orden, no un costo unitario
 
 ## Definiciones
 
-| Termino | Significado |
+| Término | Significado |
 | --- | --- |
-| Solicitud de suministro | Pedido de uno o varios productos del catalogo o fuera de catalogo. |
-| Folio | Numero de cuatro digitos que identifica la solicitud (ej. 0042). |
-| Pendiente calidad | Solicitud enviada, esperando revision de Calidad. |
-| Aprobada calidad | Calidad autorizo cantidades; pasa a bandeja de Compras. |
-| Rechazada calidad | Solicitud denegada con observaciones de Calidad. |
-| En compras | Compras esta gestionando la adquisicion del insumo. |
-| Completada | Compras cerro el pedido con costos registrados. |
-| Producto fuera de catalogo | Item que el solicitante agrega manualmente porque no existe en el catalogo. |
-| Sede | Ubicacion fisica del solicitante; debe estar asignada en su usuario para poder pedir. |
-| FO-AD-44 | Formato estandar de reporte (PDF y Excel) por solicitud aprobada. |
+| Solicitud de suministro | Pedido de uno o varios productos del catálogo, o de un producto que no está en el catálogo. |
+| Folio | Número visible del pedido. Empieza por **SU-** (por ejemplo SU-0042). El número de adentro no cambia. |
+| Estado | El mismo que en las solicitudes de compra: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. |
+| Por autorizar | Solicitud enviada, esperando la revisión de Calidad. |
+| Por comprar | Calidad ya autorizó las cantidades y todavía no hay una orden. |
+| Devuelta | Calidad no autorizó. El solicitante puede corregirla y enviarla de nuevo. El motivo de Calidad se conserva. |
+| Con orden | Ya hay una orden y queda cantidad, o falta anotar la fecha de recibido. |
+| Cerrado | El pedido ya no admite otra orden. Lo cierra la orden (cuando no queda cantidad y todas tienen fecha de recibido) o la acción Cerrar saldo. No lo cierra un costo unitario. |
+| Producto fuera de catálogo | Ítem que el solicitante agrega a mano porque no existe en el catálogo. |
+| Sede | Ubicación física del solicitante. Debe estar asignada en su usuario para poder pedir. |
+| FO-AD-44 | Formato del pedido (PDF y Excel) cuando Calidad ya lo aprobó. |
 
 ## Responsabilidades
 
 | Rol / perfil | Responsabilidad |
 | --- | --- |
-| Solicitante | Armar pedido desde catalogo o items custom; enviar a Calidad; consultar estado en Mis solicitudes. |
-| Jefe / area Calidad | Revisar cantidades, aprobar o rechazar; consultar insumos aprobados. |
-| Compras | Gestionar bandeja unificada, ver detalle, exportar FO-AD-44, ingresar costos y completar pedidos. |
-| Administrador catalogo | Crear, editar y activar/inactivar productos. |
+| Solicitante | Armar el pedido desde el catálogo o con ítems que no estén en él; enviarlo a Calidad; consultar el estado. Si Calidad lo devuelve, corregirlo y reenviarlo. |
+| Calidad | Revisar cantidades, aprobar o devolver, y dejar notas mientras el pedido no esté cerrado. Trabaja solo en Por aprobar. |
+| Compras | Ver el pedido en Pedidos, emitir la orden (ahí va el precio) y, si hace falta, cerrar el saldo con un motivo. |
+| Quien administra el catálogo | Crear, editar y activar o inactivar productos en Catálogos → Insumos. |
 | Admin usuarios | Asignar sede al usuario; gestionar catalogo de sedes. |
 
 ## Desarrollo
@@ -55,46 +58,50 @@ Segun permisos, el usuario puede:
 2. Entre a **Mis solicitudes** → **Solicitar**.
 3. Agregue productos del catalogo al carrito o use **Agregar fuera de catalogo** si aplica.
 4. Indique inventario actual si se solicita.
-5. Envie la solicitud; queda en estado pendiente de Calidad.
+5. Envíe la solicitud. Queda **Por autorizar** hasta que Calidad la revise. El folio se lee **SU-**.
 
-### Aprobar o rechazar (Calidad)
+### Si Calidad devuelve el pedido
 
-1. Abra **Aprobacion insumos**.
+1. En **Mis solicitudes**, abra el pedido devuelto.
+2. Corrija las líneas o las notas y envíelo de nuevo.
+3. Vuelve a quedar pendiente de Calidad. El motivo que escribió Calidad se conserva.
+4. Mientras el pedido no esté cerrado, usted, Calidad y Compras pueden agregar notas en el detalle. Esas notas se guardan en mayúsculas.
+
+### Aprobar o devolver (Calidad)
+
+1. Abra **Calidad → Suministros → Por aprobar**. Ahí están las solicitudes pendientes de **todas las áreas**. Use **Filtros → Área solicitante** para ver solo un área; el icono de **X** quita el filtro. El Excel exporta lo que está filtrado. No hay una lista aparte de insumos ya aprobados.
 2. Seleccione una solicitud pendiente.
-3. Ajuste cantidades aprobadas si es necesario.
-4. Apruebe o rechace con observaciones.
+3. Ajuste las cantidades si hace falta.
+4. Apruebe o devuelva, con observaciones. Al aprobar, el pedido pasa a Compras como **Por comprar**.
 
-### Consultar detalle y descargar FO-AD-44 (solicitante o Calidad)
+### Consultar el detalle y descargar el FO-AD-44
 
-1. Abra **Mis solicitudes** o **Insumos aprobados** y entre al detalle de la solicitud.
-2. Revise datos del pedido, lineas e observaciones.
-3. Si la solicitud ya fue aprobada por Calidad, use **Descargar PDF** o **Exportar Excel** (formato FO-AD-44).
+1. Abra **Mis solicitudes** y entre al detalle. Calidad lo abre desde Por aprobar antes de decidir; después, quien compra lo abre desde Pedidos.
+2. Revise los datos, las líneas y las observaciones.
+3. Si Calidad ya aprobó, use **Descargar PDF** o **Exportar Excel** (FO-AD-44).
 
-### Descargar FO-AD-44 desde Insumos aprobados (Calidad)
+### Comprar el insumo (Compras)
 
-1. Abra **Insumos aprobados**.
-2. Filtre por sede, fechas o estado de exportacion.
-3. Use **Descargar FO-AD-44** en la fila deseada.
-4. La primera descarga marca la solicitud como exportada; puede volver a descargar.
+1. Entre a **Compras → Pedidos**.
+2. En **Por comprar** están los que Calidad ya aprobó y todavía no tienen orden. En **Con orden** están los que ya tienen una orden y les falta cantidad o la fecha de recibido. En **Historial** están los cerrados.
+3. Filtre por tipo **Suministro** si el listado mezcla compras e insumos. Los más recientes salen primero. El folio se lee **SU-**.
+4. **Ver detalle** muestra el pedido y permite descargar el FO-AD-44.
+5. **Procesar** no pide el costo unitario y no cambia el estado solo por abrirlo. El precio se escribe al **emitir la orden**. Si el producto ya tenía un costo antiguo, la orden lo trae cargado y ese costo no se borra.
+6. El pedido pasa a **Cerrado** cuando ya no queda cantidad por pedir y todas las órdenes tienen fecha de recibido. Si falta una fecha, sigue en Con orden.
+7. Si hay que cerrarlo antes, use la sección **Cerrar saldo** dentro de Procesar, con un motivo. El motivo queda en las notas. Después no se emite otra orden.
 
-### Gestionar desde Bandeja compras (Compras)
+### Administrar el catálogo
 
-1. Entre a **Compras → Solicitudes de compra → Bandeja compras**.
-2. Filtre por fechas, area, tipo **Suministro** o estado si lo necesita. Los insumos aprobados salen mezclados con solicitudes de compra, **los mas recientes primero**; si no los ve en la primera pagina, filtre por tipo **Suministro**.
-3. Pulse **Ver detalle** para ver el pedido con el mismo formato visual que una solicitud de compra.
-4. Desde el detalle descargue **PDF** o **Excel** (FO-AD-44).
-5. Para registrar costos y cerrar, use el flujo **Procesar** desde la bandeja.
-
-### Administrar catalogo
-
-1. Abra la pestaña **Catalogo** (Compras).
-2. Cree o edite productos (nombre, descripcion, categoria).
-3. Inactive productos que ya no deben pedirse.
+1. Abra **Compras → Catálogos → Insumos**. Ya no está dentro de Suministros.
+2. Cree o edite productos (nombre, descripción, categoría).
+3. Inactive los productos que ya no deben pedirse.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-10-21 | Calidad / Compras | Por aprobar muestra los pedidos de todas las áreas, con filtro por área. Los estados se llaman igual que en compras (Por autorizar, Devuelta, Por comprar, Con orden, Cerrado). Observaciones en mayúsculas. |
+| 1.7 | 2026-10-20 | Compras | Reenvío si Calidad devuelve el pedido; notas en el detalle; el catálogo pasa a Catálogos; ya no hay pestaña de insumos aprobados; el folio se lee SU-; el cierre lo hace la orden, no el costo unitario. |
 | 1.0 | 2026-07-22 | Alineacion documental | Version inicial guia de usuario |
 | 1.1 | 2026-08-03 | Navegacion canonica | Entrada al menu por area base vs Calidad vs Compras |
 | 1.2 | 2026-08-03 | Detalle y export | Vista detalle unificada con solicitud compra; PDF/Excel FO-AD-44 desde detalle; flujo Compras en bandeja |

@@ -244,7 +244,7 @@ final class PurchaseOrderDatatableService
             return $order->sourceLabel().' N.º '.$order->source_id;
         }
 
-        $folio = method_exists($source, 'folio') ? $source->folio() : $source->getKey();
+        $folio = method_exists($source, 'folioVisible') ? $source->folioVisible() : $source->getKey();
 
         return $order->sourceLabel().' N.º '.$folio;
     }
@@ -311,7 +311,7 @@ final class PurchaseOrderDatatableService
         );
 
         $pdf = sprintf(
-            '<a href="%s" class="cursos-catalogo-page__icon-btn" title="Descargar PDF" aria-label="Descargar PDF">'.
+            '<a href="%s" class="cursos-catalogo-page__icon-btn" title="Descargar PDF" aria-label="Descargar PDF" target="_blank" rel="noopener">'.
             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
             '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>'.

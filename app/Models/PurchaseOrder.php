@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Throwable;
 
 /**
  * @property int $id
@@ -27,7 +28,11 @@ use Illuminate\Support\Carbon;
  * @property int|null $provider_dias_pago
  * @property string $fecha // fecha de emisión
  * @property string|null $ciudad // cabecera OC (ciudad de entrega)
- * @property string|null $asume_cliente // desde origen compra si aplica
+ * @property string|null $asume_cliente // snapshot SI/NO o null
+ * @property string|null $proyecto_nuevo // snapshot SI/NO o null
+ * @property string|null $reinversion // snapshot SI/NO o null
+ * @property string|null $comodato // snapshot SI/NO o null
+ * @property string|null $activo // snapshot SI/NO o null
  * @property string|null $observaciones
  * @property string $estado // borrador | emitida
  * @property float $total
@@ -62,6 +67,10 @@ class PurchaseOrder extends Model
         'fecha',
         'ciudad',
         'asume_cliente',
+        'proyecto_nuevo',
+        'reinversion',
+        'comodato',
+        'activo',
         'observaciones',
         'estado',
         'total',
@@ -76,6 +85,11 @@ class PurchaseOrder extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(PurchaseProvider::class, 'provider_id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function items(): HasMany
@@ -118,11 +132,112 @@ class PurchaseOrder extends Model
         };
     }
 
+    /**
+     * Relaciones que usan el PDF y el Excel del FO-AD-07.
+     */
+    public function loadDocumentRelations(): self
+    {
+        $this->loadMissing(['items', 'createdBy', 'source']);
+
+        $source = $this->source;
+
+        if ($source instanceof PurchaseRequest) {
+            $source->loadMissing('aprobador');
+        } elseif ($source instanceof SupplyRequest) {
+            $source->loadMissing('qualityReviewer');
+        }
+
+        return $this;
+    }
+
+    public function fechaImpresa(): string
+    {
+        $fecha = trim((string) $this->fecha);
+
+        if ($fecha === '') {
+            return '';
+        }
+
+        try {
+            return Carbon::parse($fecha)->format('d/m/Y');
+        } catch (Throwable) {
+            return $fecha;
+        }
+    }
+
+    /**
+     * Sí o No del snapshot (SI/NO). Null no imprime texto.
+     */
+    public function imprimirSiNo(?string $snapshot): string
+    {
+        return match ($snapshot) {
+            'SI' => 'Sí',
+            'NO' => 'No',
+            default => '',
+        };
+    }
+
+    /**
+     * Asume el cliente, Proyecto nuevo, Reinversión, Comodato y Activo
+     * se leen de la solicitud de compra. Sí solo si está marcado; si no, No.
+     */
+    public function banderaImpresa(string $campo): string
+    {
+        $this->loadMissing('source');
+        $source = $this->source;
+
+        if ($source instanceof PurchaseRequest) {
+            return $source->{$campo} === true ? 'Sí' : 'No';
+        }
+
+        $desdeSnapshot = $this->imprimirSiNo($this->{$campo});
+
+        return $desdeSnapshot !== '' ? $desdeSnapshot : 'No';
+    }
+
+    public function formaPagoImpresa(): string
+    {
+        $forma = trim((string) $this->provider_forma_pago);
+
+        if ($forma !== '') {
+            return $forma;
+        }
+
+        if ($this->provider_dias_pago === null) {
+            return '';
+        }
+
+        return 'A '.$this->provider_dias_pago.' DÍAS';
+    }
+
+    public function elaboradoNombre(): string
+    {
+        return trim((string) ($this->createdBy?->name ?? ''));
+    }
+
+    /**
+     * Director que autorizó la compra, o revisor de Calidad en un suministro.
+     */
+    public function revisorNombre(): string
+    {
+        $source = $this->source;
+
+        if ($source instanceof PurchaseRequest) {
+            return trim((string) ($source->aprobador?->name ?? ''));
+        }
+
+        if ($source instanceof SupplyRequest) {
+            return trim((string) ($source->qualityReviewer?->name ?? ''));
+        }
+
+        return '';
+    }
+
     public function sourceFolio(): string
     {
         return match (true) {
-            $this->source instanceof PurchaseRequest => $this->source->folio(),
-            $this->source instanceof SupplyRequest => $this->source->folio(),
+            $this->source instanceof PurchaseRequest => $this->source->folioVisible(),
+            $this->source instanceof SupplyRequest => $this->source->folioVisible(),
             default => (string) $this->source_id,
         };
     }

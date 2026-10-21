@@ -10,11 +10,14 @@ class ComprasQueueService
 {
     public const DEFAULT_LIMIT = 200;
 
-    /** @var array<int, string> */
+    /**
+     * Por comprar y Con orden. El historial (completada) entra solo con el filtro Cerrado.
+     *
+     * @var array<int, string>
+     */
     public const SUPPLY_BANDEJA_STATUSES = [
         'aprobada_calidad',
         'en_compras',
-        'completada',
     ];
 
     /**
@@ -76,12 +79,14 @@ class ComprasQueueService
             ->get()
             ->map(fn (PurchaseRequest $request): array => $this->mapPurchaseItem($request));
 
-        $supplyItems = SupplyRequest::query()
-            ->with(['user', 'items.product'])
-            ->whereIn('status', self::SUPPLY_BANDEJA_STATUSES)
-            ->tap(fn ($query) => $filters->applySupplyFilters($query))
-            ->get()
-            ->map(fn (SupplyRequest $request): array => $this->mapSupplyItem($request));
+        $supplyItems = $filters->supplyQueueStatuses() === []
+            ? collect()
+            : SupplyRequest::query()
+                ->with(['user', 'items.product'])
+                ->whereEtapa($filters->etapas())
+                ->tap(fn ($query) => $filters->applySupplyFilters($query))
+                ->get()
+                ->map(fn (SupplyRequest $request): array => $this->mapSupplyItem($request));
 
         $all = $purchaseItems
             ->concat($supplyItems)
@@ -112,18 +117,20 @@ class ComprasQueueService
      */
     private function mapPurchaseItem(PurchaseRequest $request): array
     {
-        $estadoCompras = $request->estado_compras ?? PurchaseRequest::COMPRAS_PENDIENTE;
+        $etapa = $request->etapa();
+        $estadoCompras = $etapa->comprasKey() ?? PurchaseRequest::COMPRAS_PENDIENTE;
 
         return [
             'tipo' => 'purchase',
             'tipo_label' => 'Solicitud compra',
             'id' => $request->id,
-            'folio' => $request->folio(),
+            'folio' => $request->folioVisible(),
             'fecha' => $request->created_at,
             'solicitante' => $request->user?->name,
             'area' => $request->areaLabel(),
             'estado' => $estadoCompras,
-            'estado_label' => PurchaseRequest::estadosComprasLabels()[$estadoCompras] ?? '—',
+            'etapa' => $etapa,
+            'estado_label' => $etapa->label(),
             'model' => $request,
         ];
     }
@@ -133,22 +140,20 @@ class ComprasQueueService
      */
     private function mapSupplyItem(SupplyRequest $request): array
     {
-        $estadoCompras = match ($request->status) {
-            'en_compras' => PurchaseRequest::COMPRAS_EN_CURSO,
-            'completada' => PurchaseRequest::COMPRAS_COMPLETADO,
-            default => PurchaseRequest::COMPRAS_PENDIENTE,
-        };
+        $etapa = $request->etapa();
+        $estadoCompras = $etapa->comprasKey() ?? PurchaseRequest::COMPRAS_PENDIENTE;
 
         return [
             'tipo' => 'supply',
             'tipo_label' => 'Suministro',
             'id' => $request->id,
-            'folio' => $request->folio(),
+            'folio' => $request->folioVisible(),
             'fecha' => $request->created_at,
             'solicitante' => $request->user?->name,
             'area' => config("access.areas.{$request->area_key}", $request->area_key),
             'estado' => $estadoCompras,
-            'estado_label' => PurchaseRequest::estadosComprasLabels()[$estadoCompras] ?? '—',
+            'etapa' => $etapa,
+            'estado_label' => $etapa->label(),
             'model' => $request,
         ];
     }

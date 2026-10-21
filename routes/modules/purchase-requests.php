@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PurchaseRequests\PurchaseApprovalController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderController;
+use App\Http\Controllers\PurchaseRequests\PurchaseOrderEvaluationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProcessingController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProviderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseRequestController;
@@ -30,8 +31,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/bandeja-compras', [PurchaseProcessingController::class, 'index'])->name('processing.index');
         Route::get('/bandeja-compras/solicitud/{purchase_request}', [PurchaseProcessingController::class, 'editPurchase'])->name('processing.purchase');
         Route::patch('/bandeja-compras/solicitud/{purchase_request}', [PurchaseProcessingController::class, 'updatePurchase'])->name('processing.purchase.update');
+        Route::post('/bandeja-compras/solicitud/{purchase_request}/cerrar-saldo', [PurchaseProcessingController::class, 'closePurchase'])->name('processing.purchase.close');
         Route::get('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'editSupply'])->name('processing.supply');
         Route::patch('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'updateSupply'])->name('processing.supply.update');
+        Route::post('/bandeja-compras/suministro/{supply_request}/cerrar-saldo', [PurchaseProcessingController::class, 'closeSupply'])->name('processing.supply.close');
         Route::get('/bandeja-compras/suministro/{supply_request}/pdf', [PurchaseProcessingController::class, 'exportSupplyPdf'])->name('processing.supply.pdf');
         Route::get('/bandeja-compras/suministro/{supply_request}/excel', [PurchaseProcessingController::class, 'exportSupplyExcel'])->name('processing.supply.excel');
 
@@ -63,6 +66,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/proveedores/importar/reporte/{token}', [PurchaseProviderController::class, 'downloadImportReport'])->name('providers.import-report');
         Route::get('/proveedores/{purchase_provider}/editar', [PurchaseProviderController::class, 'edit'])->name('providers.edit');
         Route::patch('/proveedores/{purchase_provider}', [PurchaseProviderController::class, 'update'])->name('providers.update');
+
+        // Evaluación post-entrega: fuera del grupo processing. Quien solo procesa no marca recibido.
+        Route::get('/ordenes-compra/{purchase_order}/evaluacion', [PurchaseOrderEvaluationController::class, 'edit'])->name('orders.evaluation.edit');
+        Route::put('/ordenes-compra/{purchase_order}/evaluacion', [PurchaseOrderEvaluationController::class, 'update'])->name('orders.evaluation.update');
     });
 
     Route::get('/solicitud/{purchase_request}/pdf', [PurchaseRequestController::class, 'exportPdf'])->name('export.pdf');

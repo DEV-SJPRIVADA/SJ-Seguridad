@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\PurchaseRequests;
 
+use App\Services\Access\PurchaseAccessService;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,11 +42,13 @@ class StorePurchaseRequestRequest extends FormRequest
             'fecha_solicitud' => ['required', 'date', 'before_or_equal:today'],
             'solicitud_para' => ['required', 'in:Interno,Cliente'],
             'urgente' => ['boolean'],
-            'aprobador_id' => ['required', 'exists:users,id'],
+            'aprobador_id' => ['required', 'integer', $this->activeApproverRule()],
             'proyecto_nuevo' => ['nullable', 'boolean'],
             'razon_social' => ['nullable', 'string', 'max:255', 'required_if:solicitud_para,Cliente'],
             'asume_cliente' => ['nullable', 'boolean'],
             'reinversion' => ['nullable', 'boolean'],
+            'comodato' => ['nullable', 'boolean'],
+            'activo' => ['nullable', 'boolean'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
             'items.*.descripcion' => ['required', 'string', 'max:5000'],
@@ -55,6 +59,18 @@ class StorePurchaseRequestRequest extends FormRequest
             'attachments' => ['nullable', 'array', 'max:'.$maxFiles],
             'attachments.*' => ['file', 'max:'.$maxKilobytes, 'mimes:'.$mimes],
         ];
+    }
+
+    /**
+     * El aprobador debe ser un director activo con permiso de autorizar.
+     */
+    protected function activeApproverRule(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail): void {
+            if (! app(PurchaseAccessService::class)->isValidApprover($value)) {
+                $fail('Seleccione un director activo con permiso para autorizar.');
+            }
+        };
     }
 
     /**

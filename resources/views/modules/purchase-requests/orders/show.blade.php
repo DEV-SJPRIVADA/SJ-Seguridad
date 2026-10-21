@@ -25,6 +25,16 @@
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
                     <div class="pur-req-detail__toolbar-actions">
+                        @if (! empty($evaluationUrl))
+                            <a
+                                href="{{ $evaluationUrl }}"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                title="Evaluar entrega"
+                                aria-label="Evaluar entrega"
+                            >
+                                <x-lucide-clipboard-check width="18" height="18" aria-hidden="true" />
+                            </a>
+                        @endif
                         @if ($sourceUrl)
                             <a
                                 href="{{ $sourceUrl }}"
@@ -40,6 +50,8 @@
                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                             title="Descargar PDF"
                             aria-label="Descargar PDF"
+                            target="_blank"
+                            rel="noopener"
                         >
                             <x-lucide-file-text width="18" height="18" aria-hidden="true" />
                         </a>
@@ -50,6 +62,8 @@
                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                             title="Exportar Excel"
                             aria-label="Exportar Excel FO-AD-07"
+                            target="_blank"
+                            rel="noopener"
                         />
                     </div>
                 </div>
@@ -211,6 +225,10 @@
                                 <li class="pur-req-form-guide__item">Líneas: {{ $order->items->count() }}</li>
                                 <li class="pur-req-form-guide__item">Total: {{ number_format((float) $order->total, 2) }}</li>
                                 <li class="pur-req-form-guide__item">Estado: {{ $order->estadoLabel() }}</li>
+                                <li class="pur-req-form-guide__item">
+                                    Recibido:
+                                    {{ $order->evaluation?->fecha_recibido?->format('d/m/Y') ?? 'pendiente' }}
+                                </li>
                                 <li class="pur-req-form-guide__item">
                                     <a href="{{ route('purchase-requests.orders.index', ['module' => $module]) }}">
                                         Ver todas las órdenes de compra

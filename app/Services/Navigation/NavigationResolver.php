@@ -432,7 +432,9 @@ class NavigationResolver
                                 'label' => $boardLabel,
                                 'route' => 'supplies.index',
                                 'url' => $url,
-                                'active' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                                'active' => str_starts_with((string) $routeName, 'supplies.')
+                                    && ! str_starts_with((string) $routeName, 'supplies.products.')
+                                    && $requestModule === $key,
                             ];
                         }
 
@@ -441,16 +443,23 @@ class NavigationResolver
                                 return null;
                             }
 
-                            if (! $this->purchaseAccess->canViewProvidersBoard($user, $key)) {
+                            $canProviders = $this->purchaseAccess->canViewProviders($user);
+                            $canInsumos = $this->supplyAccess->canViewInsumosCatalog($user);
+
+                            if (! $canProviders && ! $canInsumos) {
                                 return null;
                             }
 
                             return [
                                 'label' => $boardLabel,
-                                'route' => 'purchase-requests.providers.index',
-                                'url' => route('purchase-requests.providers.index', ['module' => $key]),
-                                'active' => str_starts_with((string) $routeName, 'purchase-requests.providers.')
-                                    && $requestModule === $key,
+                                'route' => $canProviders
+                                    ? 'purchase-requests.providers.index'
+                                    : 'supplies.products.index',
+                                'url' => $user->defaultCatalogBoardUrl($key),
+                                'active' => (
+                                    str_starts_with((string) $routeName, 'purchase-requests.providers.')
+                                    || str_starts_with((string) $routeName, 'supplies.products.')
+                                ) && $requestModule === $key,
                             ];
                         }
 
@@ -484,6 +493,7 @@ class NavigationResolver
                                 'active' => str_starts_with((string) $routeName, 'purchase-requests.')
                                     && ! str_starts_with((string) $routeName, 'purchase-requests.providers.')
                                     && ! str_starts_with((string) $routeName, 'purchase-requests.orders.')
+                                    && ! str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                     && $requestModule === $key,
                             ];
                         }
@@ -503,15 +513,7 @@ class NavigationResolver
                         }
 
                         if ($boardKey === 'bandeja_compras') {
-                            if ($key !== 'compras') {
-                                return null;
-                            }
-
-                            if (! $user->can('purchase.tab.processing') && ! $user->can('view.board.compras.bandeja_compras')) {
-                                return null;
-                            }
-
-                            if (! $user->can('purchase.tab.processing')) {
+                            if ($key !== 'compras' || ! $user->can('purchase.tab.processing')) {
                                 return null;
                             }
 
@@ -539,8 +541,13 @@ class NavigationResolver
 
                         $active = match (true) {
                             $boardKey === 'requisiciones' => str_starts_with((string) $routeName, 'requisitions.') && $requestModule === $key,
-                            $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.') && $requestModule === $key,
+                            $boardKey === 'suministros' => str_starts_with((string) $routeName, 'supplies.')
+                                && ! str_starts_with((string) $routeName, 'supplies.products.')
+                                && $requestModule === $key,
                             $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.')
+                                && ! str_starts_with((string) $routeName, 'purchase-requests.processing.')
+                                && ! str_starts_with((string) $routeName, 'purchase-requests.providers.')
+                                && ! str_starts_with((string) $routeName, 'purchase-requests.orders.')
                                 && $requestModule === $key,
                             $boardKey === 'solicitudes_desarrollo' => str_starts_with((string) $routeName, 'development-requests.')
                                 && $requestModule === $key,

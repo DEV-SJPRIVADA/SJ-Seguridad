@@ -8,6 +8,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
+use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseOrderDatatableService;
 use App\Services\PurchaseRequests\PurchaseOrderExcelExporter;
 use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
@@ -34,6 +35,7 @@ class PurchaseOrderController extends Controller
         PurchaseOrderService $service,
     ): View {
         Gate::authorize('process', $purchaseRequest);
+        abort_unless($purchaseRequest->puedeEmitirOrden(), 403);
 
         $purchaseRequest->load(['items', 'user']);
 
@@ -41,7 +43,7 @@ class PurchaseOrderController extends Controller
             module: $module,
             sourceType: 'purchase',
             source: $purchaseRequest,
-            sourceLabel: 'Solicitud de compra N.º '.$purchaseRequest->folio(),
+            sourceLabel: 'Solicitud de compra N.º '.$purchaseRequest->folioVisible(),
             lines: $service->buildLinesFromPurchase($purchaseRequest),
             storeUrl: route('purchase-requests.orders.purchase.store', [
                 'module' => $module,
@@ -68,7 +70,7 @@ class PurchaseOrderController extends Controller
             module: $module,
             sourceType: 'supply',
             source: $supplyRequest,
-            sourceLabel: 'Solicitud de suministro N.º '.$supplyRequest->folio(),
+            sourceLabel: 'Solicitud de suministro N.º '.$supplyRequest->folioVisible(),
             lines: $service->buildLinesFromSupply($supplyRequest),
             storeUrl: route('purchase-requests.orders.supply.store', [
                 'module' => $module,
@@ -88,11 +90,13 @@ class PurchaseOrderController extends Controller
         PurchaseRequest $purchaseRequest,
         PurchaseOrderService $service,
         PurchaseRequestAuditLogService $audit,
+        PurchaseFlowStateService $flowState,
     ): RedirectResponse {
         Gate::authorize('process', $purchaseRequest);
 
         try {
             $order = $service->createFromPurchase($purchaseRequest, $request->validated(), $request->user());
+            $flowState->sync($purchaseRequest->fresh(), $request->user());
         } catch (InvalidArgumentException $exception) {
             return back()
                 ->withInput()
@@ -112,11 +116,13 @@ class PurchaseOrderController extends Controller
         SupplyRequest $supplyRequest,
         PurchaseOrderService $service,
         PurchaseRequestAuditLogService $audit,
+        PurchaseFlowStateService $flowState,
     ): RedirectResponse {
         $this->assertSupplyIsProcessable($supplyRequest);
 
         try {
             $order = $service->createFromSupply($supplyRequest, $request->validated(), $request->user());
+            $flowState->sync($supplyRequest->fresh(), $request->user());
         } catch (InvalidArgumentException $exception) {
             return back()
                 ->withInput()
@@ -167,6 +173,7 @@ class PurchaseOrderController extends Controller
             'sourceUrl' => $this->sourceUrlFor($module, $purchaseOrder),
             'siblings' => $this->siblingOrders($purchaseOrder),
             'sourceLines' => $this->sourceLinesFor($purchaseOrder),
+            'evaluationUrl' => $this->evaluationUrlFor($module, $purchaseOrder),
         ]);
     }
 
@@ -274,7 +281,7 @@ class PurchaseOrderController extends Controller
     private function assertSupplyIsProcessable(SupplyRequest $supplyRequest): void
     {
         abort_unless(
-            in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true),
+            $supplyRequest->puedeEmitirOrden(),
             403,
         );
     }
@@ -356,6 +363,23 @@ class PurchaseOrderController extends Controller
             ]),
             default => route('purchase-requests.processing.index', ['module' => $module]),
         };
+    }
+
+    /**
+     * Enlace a la evaluación. Solo quien edita proveedores (el permiso de procesamiento no alcanza).
+     */
+    private function evaluationUrlFor(string $module, PurchaseOrder $order): ?string
+    {
+        $user = auth()->user();
+
+        if ($order->estado !== 'emitida' || $user === null || ! $user->canAccessPurchaseTab($module, 'providers.edit')) {
+            return null;
+        }
+
+        return route('purchase-requests.orders.evaluation.edit', [
+            'module' => $module,
+            'purchase_order' => $order->getKey(),
+        ]);
     }
 
     private function sourceUrlFor(string $module, PurchaseOrder $order): ?string

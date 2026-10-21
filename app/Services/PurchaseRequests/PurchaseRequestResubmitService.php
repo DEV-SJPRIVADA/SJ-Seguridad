@@ -12,6 +12,7 @@ class PurchaseRequestResubmitService
 {
     public function __construct(
         private readonly PurchaseRequestAttachmentService $attachmentService,
+        private readonly PurchaseFlowStateService $flowState,
     ) {}
 
     public function resubmit(
@@ -39,6 +40,8 @@ class PurchaseRequestResubmitService
                 'razon_social' => $validated['solicitud_para'] === 'Cliente' ? ($validated['razon_social'] ?? null) : null,
                 'asume_cliente' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['asume_cliente'] ?? false) : null,
                 'reinversion' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['reinversion'] ?? false) : null,
+                'comodato' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['comodato'] ?? false) : null,
+                'activo' => $validated['solicitud_para'] === 'Cliente' ? (bool) ($validated['activo'] ?? false) : null,
                 'estado' => PurchaseRequest::ESTADO_PENDIENTE,
                 'estado_compras' => null,
                 'fecha_aprobacion' => null,
@@ -70,7 +73,10 @@ class PurchaseRequestResubmitService
             );
         });
 
-        return $purchaseRequest->fresh(['user', 'aprobador', 'items', 'attachments']);
+        $fresh = $purchaseRequest->fresh(['user', 'aprobador', 'items', 'attachments']);
+        $this->flowState->sync($fresh);
+
+        return $fresh->fresh(['user', 'aprobador', 'items', 'attachments']);
     }
 
     /**

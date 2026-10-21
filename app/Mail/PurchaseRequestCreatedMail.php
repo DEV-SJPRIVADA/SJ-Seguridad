@@ -28,7 +28,7 @@ class PurchaseRequestCreatedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Solicitud de compra N.º '.$this->purchaseRequest->folio().' pendiente de autorizacion',
+            subject: 'Solicitud de compra N.º '.$this->purchaseRequest->folioVisible().' pendiente de autorización',
         );
     }
 

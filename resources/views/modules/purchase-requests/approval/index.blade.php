@@ -81,21 +81,14 @@
                             </thead>
                             <tbody>
                                 @forelse ($purchaseRequests as $purchaseRequest)
-                                    @php
-                                        $estadoPill = match ($purchaseRequest->estado) {
-                                            \App\Models\PurchaseRequest::ESTADO_APROBADO => 'status-pill--success',
-                                            \App\Models\PurchaseRequest::ESTADO_RECHAZADO => 'status-pill--danger',
-                                            default => 'status-pill--info',
-                                        };
-                                    @endphp
                                     <tr>
-                                        <td>{{ $purchaseRequest->folio() }}</td>
+                                        <td>{{ $purchaseRequest->folioVisible() }}</td>
                                         <td><x-date-table :value="$purchaseRequest->fecha_solicitud ?? $purchaseRequest->created_at" /></td>
                                         <td>{{ $purchaseRequest->user?->name ?? '—' }}</td>
                                         <td>{{ $purchaseRequest->areaLabel() ?? '—' }}</td>
                                         <td>{{ $purchaseRequest->items->count() }} productos</td>
                                         <td>
-                                            <span class="status-pill {{ $estadoPill }}">{{ $purchaseRequest->estadoLabel() }}</span>
+                                            <x-pedido-etapa :etapa="$purchaseRequest->etapa()" />
                                             @if ($purchaseRequest->urgente)
                                                 <span class="status-pill status-pill--warning" style="margin-left: 0.35rem;">Urgente</span>
                                             @endif

@@ -3,28 +3,27 @@
 namespace App\Http\Controllers\PurchaseRequests;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PurchaseRequests\ProcessPurchaseComprasRequest;
+use App\Http\Requests\PurchaseRequests\ClosePurchaseBalanceRequest;
 use App\Http\Requests\PurchaseRequests\ProcessSupplyComprasRequest;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use App\Services\Compras\ComprasQueueFilterBag;
 use App\Services\Compras\ComprasQueueService;
+use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
-use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
-use App\Traits\HasPurchaseTabs;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use InvalidArgumentException;
 
 class PurchaseProcessingController extends Controller
 {
-    use HasPurchaseTabs;
-
     public function index(string $module, Request $request, ComprasQueueService $queueService): View
     {
         $filters = ComprasQueueFilterBag::fromRequest($request);
@@ -32,13 +31,16 @@ class PurchaseProcessingController extends Controller
 
         return view('modules.purchase-requests.processing.index', [
             'module' => $module,
-            'subTabs' => $this->getPurchaseSubTabs($module),
             'queueItems' => $queueResult['items'],
             'queueTruncated' => $queueResult['truncated'],
             'queueTotalMatching' => $queueResult['total_matching'],
             'filters' => $filters->toViewArray(),
             'areas' => config('access.areas', []),
-            'estadosCompras' => PurchaseRequest::estadosComprasLabels(),
+            'pedidosVistas' => [
+                'por_comprar' => 'Por comprar',
+                'con_orden' => 'Con orden',
+                'historial' => 'Historial',
+            ],
             'queueCount' => $queueResult['items']->count(),
         ]);
     }
@@ -51,67 +53,56 @@ class PurchaseProcessingController extends Controller
 
         return view('modules.purchase-requests.processing.process-purchase', [
             'module' => $module,
-            'subTabs' => $this->getPurchaseSubTabs($module),
             'purchaseRequest' => $purchaseRequest,
             'estadosCompras' => PurchaseRequest::estadosComprasLabels(),
         ]);
     }
 
-    public function updatePurchase(
-        ProcessPurchaseComprasRequest $request,
+    public function updatePurchase(string $module, PurchaseRequest $purchaseRequest): RedirectResponse
+    {
+        Gate::authorize('process', $purchaseRequest);
+
+        return redirect()
+            ->route('purchase-requests.processing.purchase', [
+                'module' => $module,
+                'purchase_request' => $purchaseRequest->id,
+            ])
+            ->with('status', 'El estado lo calcula el sistema al emitir órdenes o al cerrar el saldo.');
+    }
+
+    public function closePurchase(
+        ClosePurchaseBalanceRequest $request,
         string $module,
         PurchaseRequest $purchaseRequest,
-        PurchaseRequestNotificationService $notifications,
+        PurchaseFlowStateService $flowState,
         PurchaseRequestAuditLogService $auditLogService,
     ): RedirectResponse {
         Gate::authorize('process', $purchaseRequest);
 
-        $estadoCompras = $request->validated('estado_compras');
-        $previousEstadoCompras = $purchaseRequest->estado_compras;
-
-        $purchaseRequest->update([
-            'estado_compras' => $estadoCompras,
-            'comentarios_compras' => $request->validated('comentarios_compras'),
-            'procesado_compras_at' => $estadoCompras === PurchaseRequest::COMPRAS_COMPLETADO ? now() : $purchaseRequest->procesado_compras_at,
-            'procesado_compras_por' => auth()->id(),
-        ]);
-
-        if ($previousEstadoCompras !== $estadoCompras) {
-            $auditLogService->logModelChange(
-                eventType: 'compras_processing',
-                action: 'status_change',
-                model: $purchaseRequest->fresh(),
-                before: ['estado_compras' => $previousEstadoCompras],
-                after: ['estado_compras' => $estadoCompras],
-                metadata: [
-                    'folio' => $purchaseRequest->folio(),
-                ],
-            );
-        }
-
-        $notifications->notifyRequesterProcessed($purchaseRequest->fresh());
-
-        return redirect()
-            ->route('purchase-requests.processing.index', ['module' => $module, 'estado_compras' => $request->input('redirect_estado_compras')])
-            ->with('status', 'Solicitud N.º '.$purchaseRequest->folio().' actualizada.');
+        return $this->closeBalance(
+            $request,
+            $flowState,
+            $auditLogService,
+            $purchaseRequest,
+            'estado_compras',
+            $purchaseRequest->estado_compras,
+            PurchaseRequest::COMPRAS_COMPLETADO,
+            route('purchase-requests.processing.purchase', [
+                'module' => $module,
+                'purchase_request' => $purchaseRequest->id,
+            ]),
+            'Solicitud N.º '.$purchaseRequest->folioVisible().' cerrada.',
+        );
     }
 
     public function editSupply(string $module, SupplyRequest $supplyRequest): View|RedirectResponse
     {
-        abort_unless(in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras'], true), 403);
-
-        if ($supplyRequest->status === 'aprobada_calidad') {
-            $supplyRequest->update([
-                'status' => 'en_compras',
-                'purchasing_manager_id' => auth()->id(),
-            ]);
-        }
+        abort_unless(in_array($supplyRequest->status, ['aprobada_calidad', 'en_compras', 'completada'], true), 403);
 
         $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'site']);
 
         return view('modules.purchase-requests.processing.process-supply', [
             'module' => $module,
-            'subTabs' => $this->getPurchaseSubTabs($module),
             'supplyRequest' => $supplyRequest,
         ]);
     }
@@ -120,65 +111,53 @@ class PurchaseProcessingController extends Controller
         ProcessSupplyComprasRequest $request,
         string $module,
         SupplyRequest $supplyRequest,
-        PurchaseRequestAuditLogService $auditLogService,
     ): RedirectResponse {
-        abort_unless(in_array($supplyRequest->status, ['en_compras', 'aprobada_calidad'], true), 403);
+        abort_unless($supplyRequest->puedeCerrarSaldo(), 403);
 
-        $previousStatus = $supplyRequest->status;
-        $action = $request->input('action') === 'complete' ? 'complete' : 'save';
+        // No se escribe unit_cost: un costo histórico se conserva y la OC lo precarga como valor_unidad.
+        $observations = $request->validated()['purchasing_observations'] ?? null;
 
-        DB::transaction(function () use ($request, $supplyRequest): void {
-            foreach ($request->input('items', []) as $itemId => $data) {
-                $supplyRequest->items()->whereKey($itemId)->update([
-                    'unit_cost' => $data['unit_cost'] ?? null,
-                    'purchasing_observations' => $request->input("purchasing_observations.{$itemId}"),
-                ]);
-            }
-
-            if ($request->input('action') === 'complete') {
-                $totalCost = $supplyRequest->items()
-                    ->where('approved_quantity', '>', 0)
-                    ->get()
-                    ->sum(fn ($item) => ((float) ($item->unit_cost ?? 0)) * (int) ($item->approved_quantity ?? 0));
-
-                $supplyRequest->update([
-                    'status' => 'completada',
-                    'purchasing_manager_id' => auth()->id(),
-                    'total_cost' => $totalCost,
-                ]);
-            } else {
-                $supplyRequest->update([
-                    'status' => 'en_compras',
-                    'purchasing_manager_id' => auth()->id(),
-                ]);
-            }
-        });
-
-        $supplyRequest->refresh();
-
-        if ($previousStatus !== $supplyRequest->status) {
-            $metadata = [
-                'action' => $action,
-                'folio' => $supplyRequest->folio(),
-            ];
-
-            if ($action === 'complete') {
-                $metadata['total_cost'] = $supplyRequest->total_cost;
-            }
-
-            $auditLogService->logModelChange(
-                eventType: 'supply_compras',
-                action: 'status_change',
-                model: $supplyRequest,
-                before: ['status' => $previousStatus],
-                after: ['status' => $supplyRequest->status],
-                metadata: $metadata,
-            );
+        if (is_array($observations) && $observations !== []) {
+            DB::transaction(function () use ($observations, $supplyRequest): void {
+                foreach ($observations as $itemId => $text) {
+                    $supplyRequest->items()->whereKey($itemId)->update([
+                        'purchasing_observations' => $text,
+                    ]);
+                }
+            });
         }
 
         return redirect()
-            ->route('purchase-requests.processing.index', ['module' => $module])
-            ->with('status', 'Suministro #'.$supplyRequest->id.' actualizado.');
+            ->route('purchase-requests.processing.supply', [
+                'module' => $module,
+                'supply_request' => $supplyRequest->id,
+            ])
+            ->with('status', 'El precio del suministro '.$supplyRequest->folioVisible().' se registra al emitir la orden de compra. El estado no cambia hasta emitir una orden o cerrar el saldo.');
+    }
+
+    public function closeSupply(
+        ClosePurchaseBalanceRequest $request,
+        string $module,
+        SupplyRequest $supplyRequest,
+        PurchaseFlowStateService $flowState,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): RedirectResponse {
+        abort_unless($supplyRequest->puedeCerrarSaldo(), 403);
+
+        return $this->closeBalance(
+            $request,
+            $flowState,
+            $auditLogService,
+            $supplyRequest,
+            'status',
+            $supplyRequest->status,
+            'completada',
+            route('purchase-requests.processing.supply', [
+                'module' => $module,
+                'supply_request' => $supplyRequest->id,
+            ]),
+            'Suministro '.$supplyRequest->folioVisible().' cerrado.',
+        );
     }
 
     public function exportSupplyPdf(
@@ -229,5 +208,40 @@ class PurchaseProcessingController extends Controller
         );
 
         return $exporter->toDownloadResponseForRequest($supplyRequest, $rows);
+    }
+
+    /**
+     * Cerrar saldo: el motivo va al hilo y el pedido queda Cerrado en la misma acción.
+     */
+    private function closeBalance(
+        ClosePurchaseBalanceRequest $request,
+        PurchaseFlowStateService $flowState,
+        PurchaseRequestAuditLogService $auditLogService,
+        Model $source,
+        string $field,
+        ?string $previous,
+        string $closedValue,
+        string $redirect,
+        string $message,
+    ): RedirectResponse {
+        try {
+            $flowState->closeBalance($source, $request->user(), (string) $request->validated('motivo'));
+        } catch (InvalidArgumentException $exception) {
+            return back()->withErrors(['motivo' => $exception->getMessage()])->withInput();
+        }
+
+        $auditLogService->logModelChange(
+            eventType: $source instanceof PurchaseRequest ? 'compras_processing' : 'supply_compras',
+            action: 'close_balance',
+            model: $source->fresh(),
+            before: [$field => $previous],
+            after: [$field => $closedValue],
+            reason: (string) $request->validated('motivo'),
+            metadata: [
+                'folio' => $source->folio(),
+            ],
+        );
+
+        return redirect($redirect)->with('status', $message);
     }
 }

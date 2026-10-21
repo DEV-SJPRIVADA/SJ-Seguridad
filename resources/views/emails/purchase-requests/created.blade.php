@@ -1,7 +1,7 @@
 @component('mail::message')
 # Nueva solicitud de compra
 
-Solicitud **N.º {{ $purchaseRequest->folio() }}** creada por **{{ $purchaseRequest->user?->name }}** y asignada a usted para autorizacion.
+Solicitud **N.º {{ $purchaseRequest->folioVisible() }}** creada por **{{ $purchaseRequest->user?->name }}** y asignada a usted para autorización.
 
 Puede revisar el detalle y registrar su decision directamente desde este correo (enlace personal con vigencia limitada) o ingresar a la plataforma.
 

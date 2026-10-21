@@ -73,14 +73,19 @@ class SupplyAccessService
 
         if ($this->canAccessTab($user, $moduleKey, 'quality')) {
             $tabs[] = 'aprobacion_insumos';
-            $tabs[] = 'insumos_aprobados';
-        }
-
-        if ($this->canAccessTab($user, $moduleKey, 'catalog')) {
-            $tabs[] = 'catalogo';
         }
 
         return array_values(array_unique($tabs));
+    }
+
+    /**
+     * Pestaña Insumos del tablero Catálogos. El permiso legado de catálogo cuenta igual.
+     */
+    public function canViewInsumosCatalog(User $user): bool
+    {
+        return $this->isAdminBypass($user)
+            || $user->can('supply.tab.catalog')
+            || $user->can('manage.supply.catalog');
     }
 
     private function canAccessBaseAreaTab(User $user, string $module): bool

@@ -1,17 +1,19 @@
 # Módulo Compartido: Gestión de Suministros
 
 ## 1. Objetivo del Módulo
-Permitir a los usuarios autorizados realizar solicitudes de suministros (aseo, cafetería, papelería, etc.), estableciendo un flujo de aprobación que involucra validación por parte de Calidad y ejecución de compra y costeo por parte del área de Compras.
+Permitir a los usuarios autorizados solicitar insumos (aseo, cafetería, papelería, etc.), con revisión de Calidad y compra en el tablero **Pedidos**. El precio se captura al emitir la orden de compra. El catálogo de productos vive en **Catálogos**, no en el tablero Suministros.
 
 ## 2. Flujo del Proceso (Estados de Solicitud)
+En pantalla, `status` se muestra con la **etapa común** (`App\Enums\PedidoEtapa`), igual que compras: `pendiente_calidad` = Por autorizar, `rechazada_calidad` = Devuelta, `aprobada_calidad` = Por comprar, `en_compras` = Con orden, `completada` = Cerrado. Los valores guardados no cambian. Detalle en [`purchase-requests.md`](purchase-requests.md#flujo-de-estados).
+
 El ciclo de vida de una solicitud de suministros será el siguiente:
 
 1. **`borrador` (Opcional):** El solicitante está armando la lista.
 2. **`pendiente_calidad`:** Solicitud enviada. Esperando revisión de la Jefe de Calidad.
-3. **`aprobada_calidad`:** Calidad revisó, (opcionalmente) ajustó cantidades y aprobó el pedido. Pasa a la bandeja de Compras.
-4. **`rechazada_calidad`:** Calidad denegó la solicitud (se requiere justificación).
-5. **`en_compras`:** Compras está cotizando o adquiriendo los productos.
-6. **`completada`:** Compras adquirió los productos, ingresó los costos unitarios y cerró la solicitud.
+3. **`aprobada_calidad`:** Calidad revisó, (opcionalmente) ajustó cantidades y aprobó el pedido. En Pedidos se ve como **Por comprar**. Abrir Procesar no cambia este estado.
+4. **`rechazada_calidad`:** Calidad denegó la solicitud. El solicitante dueño puede **reenviarla**: vuelve a `pendiente_calidad` y no borra `quality_observations`.
+5. **`en_compras`:** Hay al menos una orden y queda saldo, o el saldo ya es cero pero falta la fecha de recibido en alguna OC. En Pedidos: **Con orden**.
+6. **`completada`:** Cerrado. Lo escribe la orden (saldo en cero y fecha de recibido en todas las OC) o **Cerrar saldo** con motivo. No lo cierra el costo unitario. Es terminal: no se emite otra OC y el hilo deja de aceptar notas.
 
 ## 3. Estructura de Base de Datos
 
@@ -51,17 +53,19 @@ Siguiendo la arquitectura actual, los accesos se controlan con permisos funciona
 
 | Funcion | Donde aparece en el menu |
 | --- | --- |
-| Mis solicitudes (solicitante) | Area base del usuario |
-| Aprobacion insumos / Insumos aprobados | **Calidad** |
-| Catalogo | **Compras** |
-| Bandeja compras (insumos aprobados) | **Compras** (modulo purchase-requests) |
+| Mis solicitudes (solicitante) | Area base del usuario → Suministros |
+| Por aprobar (`supply.tab.quality`) | **Calidad** → Suministros. Solo esa pestaña. La URL vieja `supplies.approved.index` redirige a Por aprobar |
+| Catálogo de insumos (`supply.tab.catalog`) | **Compras** → **Catálogos** → pestaña Insumos |
+| Compra del pedido | **Compras** → **Pedidos** (clave `bandeja_compras`) |
 
 Ver [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md) y `SidebarVisibilityService`.
 
-## 5. Requerimiento Específico: Integración de Costos
-* El área de **Compras** tendrá un formulario donde, por cada ítem aprobado por calidad, podrán ingresar el **Costo Unitario**.
-* El sistema calculará `approved_quantity * unit_cost` para cada línea y un "Gran Total" para la solicitud.
-* La **Jefe de Calidad** y **Compras** tendrán acceso visual a estos costos totales y unitarios en la vista de detalle de las solicitudes completadas.
+## 5. Precio y cierre (FEAT-048)
+
+* Procesar un suministro **no** pide ni guarda `unit_cost`. Un costo ya guardado se conserva.
+* Al emitir la OC, `PurchaseOrderService::supplyLines()` precarga `valor_unidad` desde ese `unit_cost`. El precio vigente es el de la orden.
+* El cierre no depende del costo. `PurchaseFlowStateService` pasa a `completada` solo si el saldo de todas las líneas es cero y cada OC tiene `fecha_recibido`. **Cerrar saldo** cierra igual, con motivo en el hilo, aunque falte una fecha o quede cantidad.
+* `total_cost` y `unit_cost` siguen en el esquema. No se usan para cerrar el pedido.
 
 ## 6. Plan de Ejecución (Sprints/Pasos)
 
@@ -71,27 +75,27 @@ Ver [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md) y `SidebarVisibilityService
 4. **Paso 4: Vistas - Catálogo.** CRUD básico para el administrador del catálogo.
 5. **Paso 5: Vistas - Solicitante.** Interfaz para crear un pedido seleccionando productos.
 6. **Paso 6: Vistas - Calidad.** Bandeja de entrada para revisar, modificar cantidades y aprobar.
-7. **Paso 7: Vistas - Compras.** Bandeja para procesar pedidos, ingresar precios y cerrar.
+7. **Paso 7: Vistas - Compras.** El pedido se compra en Pedidos. El precio va en la orden, no en un costo unitario de cierre.
 
 ---
 
 ## 7. Estado real implementado (actualizado)
 
 ### Permisos vigentes (`config/access.php`)
-El modulo tiene **4 pestañas** activas. El control es granular por pestaña mas el tablero por area:
+El tablero Suministros muestra solo las pestañas que `SupplyAccessService::visibleTabsFor` devuelve. FEAT-048 no creó claves nuevas. `supply_tabs` todavía nombra «Insumos aprobados» y «Catalogo»; esas entradas ya no salen en el menú.
 
-- `supply.tab.my_requests`: ver y crear solicitudes propias (area base del usuario).
-- `supply.tab.quality`: bandejas de **Aprobacion Insumos** e **Insumos aprobados**; sidebar en area **Calidad** (hogar canonico).
-- `supply.tab.catalog`: administrar el catalogo; sidebar en area **Compras**.
-- `manage.supply.catalog`, `approve.supply.quality`: variantes "full" (con tablero visible en su hogar).
-- `view.board.{area}.suministros`: solo visualiza el tablero en sidebar cuando aplica regla canonica; no sustituye permisos funcionales.
+- `supply.tab.my_requests`: ver, crear y **reenviar** solicitudes propias (area base del usuario).
+- `supply.tab.quality`: solo **Por aprobar** (`aprobacion_insumos`). Sidebar en **Calidad**. Ya no abre Insumos aprobados.
+- `supply.tab.catalog` (y `manage.supply.catalog`): pestaña **Insumos** dentro del tablero **Catálogos** (`canViewInsumosCatalog`). Quien solo administra el catálogo entra por Catálogos, no por un Suministros vacío.
+- `approve.supply.quality`: variante de revisión de Calidad.
+- `view.board.{area}.suministros`: solo visualiza el tablero cuando aplica la regla canónica.
 
-El acceso se resuelve en `SupplyAccessService`, `User::supplyBoardTabsFor()` y middleware `supply.tab:{tab}`.
+`User::defaultSupplyBoardUrl()` abre la primera pestaña que quede: Mis solicitudes o Por aprobar. Ya no prioriza `insumos_aprobados` ni `catalogo`.
 
 ### Flujo de estados
-`pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad` → (bandeja Compras) `en_compras` → `completada`.
+`pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad`. El rechazo se reenvía a `pendiente_calidad` (policy `resubmit`: dueño, `supply.tab.my_requests`, área de la URL). `aprobada_calidad` → `en_compras` → `completada` lo escribe `PurchaseFlowStateService` al emitir, al registrar la fecha de recibido o al cerrar saldo. Ver [`purchase-requests.md`](purchase-requests.md).
 
-Los estados `en_compras` y `completada` se gestionan desde el modulo **Solicitudes de compra** (bandeja Compras). Ver [`purchase-requests.md`](purchase-requests.md).
+Folio de pantalla: `SupplyRequest::folioVisible()` = `SU-` + `folio()` (el `id` relleno a 4; por encima de 9999 no se recorta). El id guardado no cambia.
 
 ### Rutas reales (`routes/modules/supplies.php`)
 Prefijo `supplies/{module}`:
@@ -104,10 +108,11 @@ Prefijo `supplies/{module}`:
 - `GET /mis-solicitudes` (`supplies.index`) — listado `purchase-requests-page--list` con toolbar Excel/Nueva y Ver detalle icon-only.
 - `GET /aprobacion-insumos` (`supplies.approval.index`) — listado `purchase-requests-page--list` + Revisar icon-only
 - `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)
-- `PATCH /aprobacion-insumos/{supply_request}` (`supplies.approval.update`)
-- `GET /insumos-aprobados` (`supplies.approved.index`) — listado con filtros chrome (sede/fechas/export/solicitante) y descarga FO-AD-44 icon-only
-- `GET /insumos-aprobados/{supply_request}/exportar` (`supplies.approved.export`) — Excel FO-AD-44 por solicitud
-- `GET|POST /catalogo` y `PATCH /catalogo/{product}` (catalogo) — listado pur-req + modal crear/editar; Nuevo/Editar/Excel icon-only
+- `PATCH /aprobacion-insumos/{supply_request}` (`supplies.approval.update`) — Form Request `ResolveSupplyQualityRequest` (`action` approve/reject, `quality_observations` máx. 5000 en MAYÚSCULAS, `approved_quantity` entero ≥ 0 al aprobar; sin tope frente a lo solicitado)
+- `GET /mis-solicitudes/{supply_request}/editar` y `PATCH /mis-solicitudes/{supply_request}` (`supplies.edit` / `supplies.update`) — reenvío si `rechazada_calidad`
+- `POST /solicitud/{supply_request}/comentarios` (`supplies.comments.store`) — hilo; policy `comment`
+- `GET /insumos-aprobados` (`supplies.approved.index`) — **redirige** a `supplies.approval.index`. Ya no es un escritorio. Las rutas de export de ese listado no tienen entrada de menú
+- `GET|POST /catalogo` y `PATCH /catalogo/{product}` (`supplies.products.*`) — pestaña Insumos de **Catálogos**; el nav activo es Catálogos, no Suministros
 
 ### Items fuera de catalogo
 En `supply_request_items`:
@@ -118,7 +123,7 @@ En `supply_request_items`:
 
 ### Campos adicionales en base de datos
 - `current_inventory` (integer, default 0): inventario actual reportado por el solicitante.
-- `purchasing_observations`, `unit_cost`, `total_cost`: reservados para el proceso de compra futuro.
+- `purchasing_observations`, `unit_cost`, `total_cost`: el costo histórico se conserva. Procesar el suministro ya no lo pide ni lo usa para cerrar. El precio se captura en la orden de compra.
 
 ### Sedes (`supply_sites`) y snapshot en solicitudes
 Catálogo de sedes físicas con `name`, `utilization` (columna Utilización del Excel), `city` (columna Ubicación) e `is_active`.
@@ -135,17 +140,27 @@ Vista: `resources/views/modules/supplies/show.blade.php`. Misma estructura que `
 
 - Layout `purchase-requests-page--detail` + `pur-req-detail-layout` (main + aside), meta `pur-req-form__meta`, secciones `pur-req-form__section`.
 - Toolbar icon-only (`.req-manage-filters__icon-btn`): volver contextual, PDF/Excel FO-AD-44 (si exportable), Procesar si viene de bandeja.
-- Cabecera con folio (`SupplyRequest::folio()`), pills de estado / compras.
+- Cabecera con folio visible `SU-` (`folioVisible()`), pills de estado.
 - Tabla de lineas (#, foto placeholder, cantidades, descripcion, referencia, inventario, cant. autorizada).
 - Observaciones de calidad y notas del solicitante; bloque procesamiento compras si aplica.
 - Aside: resumen + guia de flujo.
 
-**Subnav:** solicitante/Calidad → pestañas Suministros; analista Compras (`purchase.tab.processing`) → pestañas Solicitudes de compra + "Volver a bandeja".
+**Subnav:** solicitante y Calidad ven las pestañas que queden en Suministros (Mis solicitudes o Por aprobar). Compras vuelve a Pedidos. El catálogo no está en este subnav.
 
 **Export FO-AD-44 desde detalle:** disponible cuando `status` ∈ `aprobada_calidad`, `en_compras`, `completada` (`SupplyRequest::isExportableForCompras()`). PDF usa filas autorizadas (`approved_quantity > 0`) agrupadas como en Excel.
 
+### Hilo de notas (`supply_request_comments`)
+
+Tabla nueva (FEAT-048), espejo de `purchase_request_comments`: `supply_request_id`, `user_id`, `body`, timestamps, índice `(supply_request_id, created_at)`. Sin backfill. Modelo `SupplyRequestComment`; relación `SupplyRequest::comments()`.
+
+- El motivo de **Cerrar saldo** se guarda aquí, en mayúsculas (`UppercasesValidatedText` / `UppercaseFormText`).
+- `observations` y `quality_observations` se siguen mostrando. El rechazo de Calidad puede seguir en `quality_observations`.
+- Policy `comment`: cerrado si `status=completada`. Pueden comentar Compras (`purchase.tab.processing`), el dueño y quien tiene `supply.tab.quality` o `approve.supply.quality`. No exige que Calidad vea la solicitud en su área (observación de revisión: puede comentar un suministro de otra área). Ruta dentro de `auth`.
+- El alta y el reenvío pasan `observations` y `custom_product_name` por `UppercaseFormText`. El reenvío no borra `quality_observations`.
+
 ### Reporte Excel FO-AD-44 (por solicitud)
-Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
+
+El listado **Insumos aprobados** ya no está en el menú. El Excel FO-AD-44 se descarga desde el detalle de una solicitud exportable (`aprobada_calidad`, `en_compras`, `completada`). La ruta histórica `supplies.approved.export` sigue en el archivo de rutas, sin entrada de menú. Comportamiento que esa ruta conservaba:
 
 1. Listado cross-área de solicitudes `aprobada_calidad` con filtros (sede, fechas, estado de exportación, solicitante).
 2. Cada fila permite **Descargar FO-AD-44** para esa solicitud.
@@ -165,34 +180,39 @@ Desde el tablero **Insumos aprobados** (`supplies.approved.*`):
 ### Reglas de autorizacion aplicadas
 - `supplies.show`: solicitante dueno; revisores Calidad (`supply.tab.quality`, `approve.supply.quality`); analista Compras con `purchase.tab.processing` si el suministro esta en bandeja (`aprobada_calidad`, `en_compras`, `completada`); `manage.users`.
 - `supplies.export.pdf` / `supplies.export.excel`: misma visibilidad que show + estado exportable.
-- `supplies.approval.*`: solo solicitudes `pendiente_calidad` del modulo activo.
-- Bandejas Calidad filtran por `area_key` del modulo en la URL; bandeja Compras es cross-area via `ComprasQueueService`.
+- `supplies.approval.*`: solicitudes `pendiente_calidad` de **todas las áreas** (2026-10-21). El binding `supply_request` (`AppServiceProvider`) trata `supplies.approval.*` como ruta cross-área; el acceso sigue exigiendo la pestaña Por aprobar en el módulo de la URL (`supply.tab:quality`).
+- Por aprobar tiene filtro GET `area_key` (área solicitante) y el export respeta ese filtro. La auditoría de aprobar/rechazar guarda el área del suministro y `reviewed_from_module`.
+- El correo a Calidad enlaza a Por aprobar en el hogar `calidad` (`board_canonical_areas.suministros.alt_home`). Bandeja Compras es cross-area via `ComprasQueueService`.
 
 ### Navegacion
-- `User::defaultSupplyBoardUrl()` redirige a la primera pestaña autorizada (mis solicitudes, aprobacion insumos o catalogo).
-- Pestañas internas: `mis_solicitudes`, `aprobacion_insumos`, `insumos_aprobados`, `catalogo`.
+- `User::defaultSupplyBoardUrl()` abre Mis solicitudes o Por aprobar.
+- Pestañas visibles del tablero Suministros: `mis_solicitudes`, `aprobacion_insumos`.
+- Pestaña Insumos del tablero Catálogos: `User::catalogBoardTabs()` (`insumos`) si `canViewInsumosCatalog`. Subnav `catalogos-subnav`.
 
 ### Notificaciones
 - Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios con `supply.tab.quality` o `approve.supply.quality`.
 
 ### Pruebas
-- `tests/Feature/SupplyModuleTest.php`: catalogo, creacion (catalogo y custom), snapshot de sede, bloqueo sin sede, aprobacion, tablero Insumos aprobados (filtros, export por solicitud, `exported_at`), detalle alineado Compras, export PDF desde show, rutas purchasing, filtros por modulo, redireccion y correo.
+- `tests/Feature/SupplyModuleTest.php` y los de FEAT-048 en compras (`PurchaseFlowStateTest`, `PurchaseMenuFolioTest`, `PurchaseSupplyPriceTest`): reenvío, hilo, redirección de la URL vieja de insumos aprobados, folio `SU-` y precio solo en la orden.
 
 ### Pendientes conocidos
 - Estado `borrador` documentado pero no implementado.
 
-### Integración bandeja Compras
-- Solicitudes `aprobada_calidad`, `en_compras` y `completada` aparecen en **Bandeja compras** (`purchase.tab.processing`). El listado ordena por fecha mas reciente para que los insumos recien aprobados no queden detras de las solicitudes de compra.
-- **Ver detalle** desde bandeja abre `supplies.show` con experiencia unificada y export PDF/Excel.
-- **Procesar** abre `purchase-requests.processing.supply` (costos unitarios, completar).
-- Al iniciar procesamiento, `aprobada_calidad` → `en_compras`.
-- Notificacion a Compras al aprobar Calidad (`supply_request_approved_for_compras`).
-- Ver [`purchase-requests.md`](purchase-requests.md) (dashboard, filtros bandeja, KPIs).
+### Integración con Pedidos
+- **Por comprar:** `aprobada_calidad`. **Con orden:** `en_compras`. **Historial:** `completada`. El listado ordena por fecha más reciente.
+- **Ver detalle** abre `supplies.show` (folio `SU-`) y permite PDF/Excel FO-AD-44 si el estado es exportable.
+- **Procesar** abre `purchase-requests.processing.supply`. No pide costo unitario y no cambia el estado al abrirlo.
+- El paso a `en_compras` o `completada` lo hace la orden (o Cerrar saldo), no un selector.
+- Notificación a Compras al aprobar Calidad (`supply_request_approved_for_compras`).
+- Ver [`purchase-requests.md`](purchase-requests.md).
 
 ### Control de cambios (modulo)
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-21 | Etapa común `PedidoEtapa` en listados, detalle y PDF; Por aprobar de Calidad para todas las áreas con filtro por área |
+| 2026-10-21 | Alta en MAYÚSCULAS (observaciones y producto fuera de catálogo); aprobación de Calidad con `ResolveSupplyQualityRequest` y observaciones en MAYÚSCULAS |
+| 2026-10-20 | FEAT-048: reenvío si Calidad rechaza, hilo `supply_request_comments`, catálogo dentro de Catálogos, sin pestaña Insumos aprobados, folio `SU-`, cierre por la orden (no por costo unitario) |
 | 2026-10-02 | UI aprobacion/insumos-aprobados/catalogo: layout pur-req list + filtros chrome e iconos |
 | 2026-10-02 | UI mis-solicitudes/solicitar: layout pur-req (list + form) e iconos chrome; carrito de catalogo conservado |
 | 2026-10-02 | UI detalle suministro: layout pur-req (secciones + aside) e iconos chrome; mismo patron que solicitud compra |

@@ -6,13 +6,13 @@ use App\Exports\BaseExport;
 use App\Http\Controllers\Controller;
 use App\Models\SupplyProduct;
 use App\Services\Supplies\SupplyAuditLogService;
-use App\Traits\HasSupplyTabs;
+use App\Traits\HasCatalogTabs;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupplyProductController extends Controller
 {
-    use HasSupplyTabs;
+    use HasCatalogTabs;
 
     public function __construct(
         private readonly SupplyAuditLogService $auditLogService,
@@ -25,7 +25,7 @@ class SupplyProductController extends Controller
         return view('modules.supplies.products.index', [
             'module' => $module,
             'products' => $products,
-            'subTabs' => $this->getSupplySubTabs($module),
+            'subTabs' => $this->getCatalogSubTabs($module),
         ]);
     }
 

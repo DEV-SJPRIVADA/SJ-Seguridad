@@ -21,7 +21,7 @@ class PurchaseRequestApprovedForComprasMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nueva solicitud de compra aprobada N.º '.$this->purchaseRequest->folio(),
+            subject: 'Nueva solicitud de compra aprobada N.º '.$this->purchaseRequest->folioVisible(),
         );
     }
 

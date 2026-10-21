@@ -6,6 +6,13 @@
     @php
         $areaLabel = config("access.areas.{$module}", $module);
         $backUrl = route('supplies.index', ['module' => $module]);
+        $isResubmit = $isResubmit ?? false;
+        $cartItems = old('items') !== null
+            ? array_values(old('items'))
+            : ($cartItems ?? []);
+        $motivoCalidad = $isResubmit
+            ? ($supplyRequest->quality_observations ?: $supplyRequest->comments->sortByDesc('id')->first()?->body)
+            : null;
     @endphp
 
     <div class="page-section purchase-requests-page purchase-requests-page--form">
@@ -21,9 +28,13 @@
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
                 </div>
-                <h2 class="page-title">Nueva solicitud de insumos</h2>
+                <h2 class="page-title">{{ $isResubmit ? 'Reenviar solicitud '.$supplyRequest->folioVisible() : 'Nueva solicitud de insumos' }}</h2>
                 <p class="page-subtitle">
-                    Selecciona productos del catálogo o agrega items no listados. La solicitud pasa a aprobación de Calidad.
+                    @if ($isResubmit)
+                        Corrige el pedido y vuelve a enviarlo a Calidad. Las observaciones de la devolución se conservan.
+                    @else
+                        Selecciona productos del catálogo o agrega items no listados. La solicitud pasa a aprobación de Calidad.
+                    @endif
                 </p>
             </div>
 
@@ -36,7 +47,15 @@
                         @endforeach
                     </ul>
                 </div>
-            @elseif (! ($canRequestSupplies ?? false))
+            @endif
+
+            @if ($motivoCalidad)
+                <div class="alert alert--warning" role="alert">
+                    <strong>Motivo de Calidad:</strong> {{ $motivoCalidad }}
+                </div>
+            @endif
+
+            @if (! $isResubmit && ! ($canRequestSupplies ?? false))
                 <div class="alert alert--warning" role="alert">
                     Debes tener una sede asignada y activa para enviar solicitudes de insumos. Contacta al administrador.
                 </div>
@@ -45,12 +64,15 @@
             <div class="pur-req-form-layout">
                 <div class="pur-req-form-layout__main">
                     <form
-                        action="{{ route('supplies.store', ['module' => $module]) }}"
+                        action="{{ $isResubmit ? route('supplies.update', ['module' => $module, 'supply_request' => $supplyRequest->id]) : route('supplies.store', ['module' => $module]) }}"
                         method="POST"
                         id="supply-request-form"
                         class="form-stack"
                     >
                         @csrf
+                        @if ($isResubmit)
+                            @method('PATCH')
+                        @endif
 
                         <div class="pur-req-form__meta">
                             <div class="pur-req-form__meta-item">
@@ -146,13 +168,17 @@
                                     class="form-textarea"
                                     rows="3"
                                     placeholder="Explica brevemente el motivo del pedido si es necesario…"
-                                >{{ old('observations') }}</textarea>
+                                >{{ old('observations', $isResubmit ? $supplyRequest->observations : '') }}</textarea>
                             </div>
                         </section>
 
                         <div class="pur-req-form-actions">
                             <p class="pur-req-form-actions__note">
-                                Revisa cantidades e inventario antes de enviar. La solicitud irá a aprobación de Calidad.
+                                @if ($isResubmit)
+                                    Al reenviar, la solicitud vuelve a pendiente de Calidad. No se borra el comentario de la devolución.
+                                @else
+                                    Revisa cantidades e inventario antes de enviar. La solicitud irá a aprobación de Calidad.
+                                @endif
                             </p>
                             <div class="pur-req-form-actions__group">
                                 <a
@@ -167,8 +193,8 @@
                                     type="submit"
                                     class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                     id="submit-request-btn"
-                                    title="Enviar solicitud"
-                                    aria-label="Enviar solicitud"
+                                    title="{{ $isResubmit ? 'Reenviar solicitud' : 'Enviar solicitud' }}"
+                                    aria-label="{{ $isResubmit ? 'Reenviar solicitud' : 'Enviar solicitud' }}"
                                     disabled
                                 >
                                     <x-lucide-send width="18" height="18" aria-hidden="true" />
@@ -230,7 +256,7 @@
             const searchInput = document.getElementById('catalog-search');
             const catalogItems = Array.from(document.querySelectorAll('.supply-catalog-item'));
             const productNames = @json($productNames ?? []);
-            const oldItems = @json(array_values(old('items', [])));
+            const oldItems = @json(array_values($cartItems));
             let itemIndex = 0;
 
             function escapeHtml(value) {

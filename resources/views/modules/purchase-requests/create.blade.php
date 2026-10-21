@@ -140,7 +140,8 @@
                                     <x-input-error :messages="$errors->get('razon_social')" />
                                 </div>
 
-                                <div class="form-grid form-grid--three" style="margin-top: 1rem;">
+                                {{-- Fila de cliente: Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo. Si no elige, el control muestra No; Interna no persiste estos radios. --}}
+                                <div class="pur-req-form__client-flags">
                                     <div class="form-field">
                                         <label class="form-label">Proyecto nuevo</label>
                                         <div class="pur-req-form__radios">
@@ -178,6 +179,34 @@
                                             </label>
                                             <label class="pur-req-form__radio">
                                                 <input type="radio" name="reinversion" value="0" @checked(old('reinversion', '0') === '0' || old('reinversion') === 0 || old('reinversion') === null)>
+                                                No
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field">
+                                        <label class="form-label">Comodato</label>
+                                        <div class="pur-req-form__radios">
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="comodato" value="1" @checked(old('comodato') === '1' || old('comodato') === 1)>
+                                                Sí
+                                            </label>
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="comodato" value="0" @checked(old('comodato', '0') === '0' || old('comodato') === 0 || old('comodato') === null)>
+                                                No
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field">
+                                        <label class="form-label">Activo</label>
+                                        <div class="pur-req-form__radios">
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="activo" value="1" @checked(old('activo') === '1' || old('activo') === 1)>
+                                                Sí
+                                            </label>
+                                            <label class="pur-req-form__radio">
+                                                <input type="radio" name="activo" value="0" @checked(old('activo', '0') === '0' || old('activo') === 0 || old('activo') === null)>
                                                 No
                                             </label>
                                         </div>

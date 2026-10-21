@@ -1,12 +1,16 @@
 @component('mail::message')
 # Decisión sobre su solicitud de compra
 
-Su solicitud **N.º {{ $purchaseRequest->folio() }}** fue **{{ $purchaseRequest->estadoLabel() }}** por **{{ $purchaseRequest->aprobador?->name ?? 'el director asignado' }}**.
+Su solicitud **N.º {{ $purchaseRequest->folioVisible() }}** fue **{{ $purchaseRequest->estadoLabel() }}** por **{{ $purchaseRequest->aprobador?->name ?? 'el director asignado' }}**.
 
-@if (filled($purchaseRequest->comentarios_director))
+@php
+    $observacionDirector = $purchaseRequest->comentarios_director
+        ?: $purchaseRequest->comments->sortByDesc('id')->first()?->body;
+@endphp
+@if (filled($observacionDirector))
 **Observaciones del director:**
 
-{{ $purchaseRequest->comentarios_director }}
+{{ $observacionDirector }}
 @else
 No se registraron observaciones adicionales del director.
 @endif

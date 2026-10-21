@@ -1,4 +1,7 @@
 <x-app-layout>
+    <x-slot name="header">
+        @include('modules.purchase-requests.partials.catalogos-subnav', ['subTabs' => $subTabs])
+    </x-slot>
     @php
         // Chips de estado: Activos es el default (sin parámetro en la URL).
         $estadoChips = collect($estados)->map(fn (string $label, string $value): array => [

@@ -3,7 +3,9 @@
 namespace App\Services\PurchaseRequests;
 
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestComment;
 use App\Services\Notifications\NotificationConfigService;
+use App\Support\UppercaseFormText;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -13,6 +15,7 @@ class PurchaseApprovalService
         private readonly PurchaseRequestNotificationService $notifications,
         private readonly NotificationConfigService $notificationConfig,
         private readonly PurchaseRequestAuditLogService $auditLogService,
+        private readonly PurchaseFlowStateService $flowState,
     ) {}
 
     public function resolve(
@@ -37,7 +40,6 @@ class PurchaseApprovalService
         $data = [
             'estado' => $estado,
             'aprobador_id' => $aprobadorId,
-            'comentarios_director' => $comentariosDirector,
             'fecha_aprobacion' => $estado === PurchaseRequest::ESTADO_APROBADO ? now()->toDateString() : null,
         ];
 
@@ -51,8 +53,19 @@ class PurchaseApprovalService
         }
 
         $purchaseRequest->update($data);
+
+        if (filled($comentariosDirector)) {
+            PurchaseRequestComment::query()->create([
+                'purchase_request_id' => $purchaseRequest->id,
+                'user_id' => $aprobadorId,
+                'body' => UppercaseFormText::uppercaseString((string) $comentariosDirector),
+            ]);
+        }
+
         $purchaseRequest->refresh();
-        $purchaseRequest->load(['user', 'aprobador', 'items']);
+        $this->flowState->sync($purchaseRequest);
+        $purchaseRequest->refresh();
+        $purchaseRequest->load(['user', 'aprobador', 'items', 'comments']);
 
         $this->notifications->notifyRequesterResolved($purchaseRequest);
 

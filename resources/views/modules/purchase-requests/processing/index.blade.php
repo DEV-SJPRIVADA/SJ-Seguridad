@@ -1,25 +1,39 @@
+@php
+    $hasActiveFilters = ($filters['tipo'] ?? null)
+        || ($filters['area_key'] ?? null)
+        || ($filters['date_from'] ?? null)
+        || ($filters['date_to'] ?? null);
+
+    $hasDateFilters = ($filters['date_from'] ?? null) || ($filters['date_to'] ?? null);
+
+    $pedidosQuery = fn (array $overrides = []) => array_filter([
+        'vista' => array_key_exists('vista', $overrides) ? $overrides['vista'] : (($filters['vista'] ?? '') !== '' ? $filters['vista'] : null),
+        'tipo' => array_key_exists('tipo', $overrides) ? $overrides['tipo'] : ($filters['tipo'] ?: null),
+        'area_key' => array_key_exists('area_key', $overrides) ? $overrides['area_key'] : ($filters['area_key'] ?: null),
+        'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
+        'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
+    ], fn ($value) => $value !== null && $value !== '');
+@endphp
+
 <x-app-layout>
+    {{-- Tres vistas del mismo listado. No es un segundo escritorio ni una pestaña de Solicitudes. --}}
     <x-slot name="header">
-        @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
+        <div class="module-strip module-subnav">
+            <div class="app-container">
+                <div class="module-strip__inner module-subnav__inner">
+                    <p class="text-caption module-subnav__label">Pedidos</p>
+                    <nav class="module-tabs" aria-label="Vistas de pedidos">
+                        @foreach ($pedidosVistas as $vistaKey => $vistaLabel)
+                            <a
+                                href="{{ route('purchase-requests.processing.index', ['module' => $module, ...$pedidosQuery(['vista' => $vistaKey])]) }}"
+                                class="module-tab {{ ($filters['vista'] ?? '') === $vistaKey ? 'module-tab--active' : '' }}"
+                            >{{ $vistaLabel }}</a>
+                        @endforeach
+                    </nav>
+                </div>
+            </div>
+        </div>
     </x-slot>
-
-    @php
-        $hasActiveFilters = ($filters['estado_compras'] ?? '') !== ''
-            || ($filters['tipo'] ?? null)
-            || ($filters['area_key'] ?? null)
-            || ($filters['date_from'] ?? null)
-            || ($filters['date_to'] ?? null);
-
-        $hasDateFilters = ($filters['date_from'] ?? null) || ($filters['date_to'] ?? null);
-
-        $bandejaQuery = fn (array $overrides = []) => array_filter([
-            'estado_compras' => array_key_exists('estado_compras', $overrides) ? $overrides['estado_compras'] : ($filters['estado_compras'] ?: null),
-            'tipo' => array_key_exists('tipo', $overrides) ? $overrides['tipo'] : ($filters['tipo'] ?: null),
-            'area_key' => array_key_exists('area_key', $overrides) ? $overrides['area_key'] : ($filters['area_key'] ?: null),
-            'date_from' => array_key_exists('date_from', $overrides) ? $overrides['date_from'] : ($filters['date_from'] ?: null),
-            'date_to' => array_key_exists('date_to', $overrides) ? $overrides['date_to'] : ($filters['date_to'] ?: null),
-        ], fn ($value) => $value !== null && $value !== '');
-    @endphp
 
     <div class="page-section purchase-requests-page purchase-requests-page--list req-manage-page">
         <div class="app-container">
@@ -28,7 +42,7 @@
                     <div class="pur-req-list__header-row">
                         <div>
                             <h3 class="panel-title">Listado operativo</h3>
-                            <p class="panel-text panel-text--compact">Resultados segun filtros aplicados. Mas reciente primero.</p>
+                            <p class="panel-text panel-text--compact">Por comprar y Con orden son la bandeja. Historial muestra los cerrados.</p>
                         </div>
                     </div>
                 </div>
@@ -47,7 +61,7 @@
                                 <div class="req-manage-filters__actions">
                                     @if ($hasActiveFilters)
                                         <a
-                                            href="{{ route('purchase-requests.processing.index', ['module' => $module]) }}"
+                                            href="{{ route('purchase-requests.processing.index', array_filter(['module' => $module, 'vista' => ($filters['vista'] ?? '') !== '' ? $filters['vista'] : null])) }}"
                                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
                                             title="Limpiar filtros"
                                             aria-label="Limpiar filtros"
@@ -60,8 +74,8 @@
 
                             <div class="req-manage-filters__toolbar req-manage-filters__toolbar--bandeja">
                                 <form method="GET" id="bandeja-filters-form" class="req-manage-filters__fields-col">
-                                    @if ($filters['estado_compras'] ?? '')
-                                        <input type="hidden" name="estado_compras" value="{{ $filters['estado_compras'] }}">
+                                    @if (($filters['vista'] ?? '') !== '')
+                                        <input type="hidden" name="vista" value="{{ $filters['vista'] }}">
                                     @endif
 
                                     <div class="req-manage-filters__query-row req-manage-filters__row--bandeja">
@@ -81,7 +95,7 @@
                                                 :options="$areas"
                                                 :value="$filters['area_key'] ?? ''"
                                                 placeholder="Todas las áreas"
-                                                searchPlaceholder="Buscar area…"
+                                                searchPlaceholder="Buscar área…"
                                             />
                                         </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__field--compact">
@@ -101,21 +115,6 @@
                                     </div>
                                 </form>
 
-                                <div class="req-manage-filters__status-row req-manage-filters__status-col--right">
-                                    <p class="req-manage-filters__status-label">Estado</p>
-                                    <div class="req-manage-filters__pills req-manage-filters__pills--scroll">
-                                        <a
-                                            href="{{ route('purchase-requests.processing.index', ['module' => $module, ...$bandejaQuery(['estado_compras' => null])]) }}"
-                                            class="req-manage-filters__pill {{ ($filters['estado_compras'] ?? '') === '' ? 'is-active' : '' }}"
-                                        >Todos</a>
-                                        @foreach ($estadosCompras as $estadoKey => $estadoLabel)
-                                            <a
-                                                href="{{ route('purchase-requests.processing.index', ['module' => $module, ...$bandejaQuery(['estado_compras' => $estadoKey])]) }}"
-                                                class="req-manage-filters__pill status-pill--compras-{{ $estadoKey }} {{ ($filters['estado_compras'] ?? '') === $estadoKey ? 'is-active' : '' }}"
-                                            >{{ $estadoLabel }}</a>
-                                        @endforeach
-                                    </div>
-                                </div>
                             </div>
 
                             <p class="req-manage-filters__meta req-manage-filters__meta--compact" title="{{ number_format($queueCount) }} {{ $queueCount === 1 ? 'elemento mostrado' : 'elementos mostrados' }}">
@@ -123,10 +122,10 @@
                                 {{ $queueCount === 1 ? 'elemento mostrado' : 'elementos mostrados' }}
                                 @if ($queueTruncated ?? false)
                                     · de <strong>{{ number_format($queueTotalMatching) }}</strong> en total
-                                    · Mostrando los {{ \App\Services\Compras\ComprasQueueService::DEFAULT_LIMIT }} mas recientes; use filtro de fechas para ver todos en un rango
+                                    · Mostrando los {{ \App\Services\Compras\ComprasQueueService::DEFAULT_LIMIT }} más recientes; use filtro de fechas para ver todos en un rango
                                 @endif
-                                @if ($filters['estado_compras'] ?? '')
-                                    · Estado: <strong>{{ $estadosCompras[$filters['estado_compras']] ?? $filters['estado_compras'] }}</strong>
+                                @if (($filters['vista'] ?? '') !== '')
+                                    · Vista: <strong>{{ $pedidosVistas[$filters['vista']] ?? $filters['vista'] }}</strong>
                                 @endif
                                 @if ($filters['tipo'] ?? null)
                                     · Tipo: <strong>{{ $filters['tipo'] === 'purchase' ? 'Solicitud compra' : 'Suministro' }}</strong>
@@ -180,9 +179,7 @@
                                         <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
                                         <td>{{ $queueItem['area'] ?? '—' }}</td>
                                         <td>
-                                            <span class="status-pill status-pill--compras-{{ $queueItem['estado'] ?? 'pendiente' }}">
-                                                {{ $queueItem['estado_label'] ?? '—' }}
-                                            </span>
+                                            <x-pedido-etapa :etapa="$queueItem['etapa']" />
                                         </td>
                                         <td class="table-actions">
                                             <div class="purchase-request-row-actions">
@@ -203,7 +200,7 @@
                                                     >
                                                         <x-lucide-cog width="16" height="16" aria-hidden="true" />
                                                     </a>
-                                                    @if ($queueItem['model']->estado === \App\Models\PurchaseRequest::ESTADO_APROBADO)
+                                                    @if ($queueItem['model']->puedeEmitirOrden())
                                                         <a
                                                             href="{{ route('purchase-requests.orders.purchase.create', ['module' => $module, 'purchase_request' => $queueItem['id']]) }}"
                                                             class="cursos-catalogo-page__icon-btn"
@@ -230,7 +227,7 @@
                                                     >
                                                         <x-lucide-cog width="16" height="16" aria-hidden="true" />
                                                     </a>
-                                                    @if (in_array($queueItem['model']->status, ['aprobada_calidad', 'en_compras', 'completada'], true))
+                                                    @if ($queueItem['model']->puedeEmitirOrden())
                                                         <a
                                                             href="{{ route('purchase-requests.orders.supply.create', ['module' => $module, 'supply_request' => $queueItem['id']]) }}"
                                                             class="cursos-catalogo-page__icon-btn"
@@ -246,7 +243,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-muted">No hay elementos en la bandeja con los filtros seleccionados.</td>
+                                        <td colspan="7" class="text-muted">No hay elementos en Pedidos con los filtros seleccionados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

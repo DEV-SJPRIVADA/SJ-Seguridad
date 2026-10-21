@@ -25,7 +25,7 @@ class SupplyRequestNotification extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nueva solicitud de suministros #'.$this->supplyRequest->id,
+            subject: 'Nueva solicitud de suministros '.$this->supplyRequest->folioVisible(),
         );
     }
 

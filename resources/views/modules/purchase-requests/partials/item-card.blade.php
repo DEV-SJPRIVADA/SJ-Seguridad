@@ -1,4 +1,4 @@
-{{-- Tarjeta de producto FO-AD-44: foto + descripción, referencia ancha, luego utilización/ubicación/cantidad. --}}
+{{-- Tarjeta de producto FO-AD-44: foto + descripción, referencia ancha, luego cantidad/utilización/ubicación. --}}
 @php
     $index = (int) ($index ?? 0);
     $item = $item ?? [];
@@ -64,8 +64,22 @@
         <x-input-error :messages="$errors->get('items.'.$index.'.referencia')" />
     </div>
 
-    {{-- Fila 2: utilización, ubicación y cantidad --}}
+    {{-- Fila 2: cantidad, utilización y ubicación --}}
     <div class="purchase-item-card__bottom">
+        <div class="form-field purchase-item-card__cantidad">
+            <label class="form-label" for="item-cantidad-{{ $index }}">Cantidad</label>
+            <input
+                type="number"
+                id="item-cantidad-{{ $index }}"
+                name="items[{{ $index }}][cantidad]"
+                class="form-input"
+                min="1"
+                value="{{ $cantidad }}"
+                required
+            >
+            <x-input-error :messages="$errors->get('items.'.$index.'.cantidad')" />
+        </div>
+
         <div class="form-field">
             <label class="form-label" for="item-utilizacion-{{ $index }}">Utilización</label>
             <input
@@ -92,20 +106,6 @@
                 required
             >
             <x-input-error :messages="$errors->get('items.'.$index.'.ubicacion')" />
-        </div>
-
-        <div class="form-field purchase-item-card__cantidad">
-            <label class="form-label" for="item-cantidad-{{ $index }}">Cantidad</label>
-            <input
-                type="number"
-                id="item-cantidad-{{ $index }}"
-                name="items[{{ $index }}][cantidad]"
-                class="form-input"
-                min="1"
-                value="{{ $cantidad }}"
-                required
-            >
-            <x-input-error :messages="$errors->get('items.'.$index.'.cantidad')" />
         </div>
     </div>
 </article>

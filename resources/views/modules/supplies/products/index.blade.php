@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        @include('modules.supplies.partials.subnav', ['subTabs' => $subTabs])
+        @include('modules.purchase-requests.partials.catalogos-subnav', ['subTabs' => $subTabs])
     </x-slot>
 
     <div class="page-section purchase-requests-page purchase-requests-page--list req-manage-page">

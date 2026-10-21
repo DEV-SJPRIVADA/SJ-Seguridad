@@ -15,6 +15,7 @@ use App\Services\Access\PurchaseAccessService;
 use App\Services\Audit\SystemAuditService;
 use App\Services\PurchaseRequests\Providers\PurchaseProviderDatatableService;
 use App\Services\PurchaseRequests\Providers\PurchaseProviderImportService;
+use App\Traits\HasCatalogTabs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class PurchaseProviderController extends Controller
 {
     use HandlesImportFailureReports;
+    use HasCatalogTabs;
 
     private const IMPORT_REPORT_MODULE = 'purchase_providers';
 
@@ -61,6 +63,7 @@ class PurchaseProviderController extends Controller
 
         return view('modules.purchase-requests.providers.index', [
             'module' => $module,
+            'subTabs' => $this->getCatalogSubTabs($module),
             'filters' => $filters,
             'returnQuery' => $returnQuery,
             'canEdit' => $this->accessService->canEditProviders($request->user()),
@@ -329,6 +332,7 @@ class PurchaseProviderController extends Controller
 
         return [
             'module' => $module,
+            'subTabs' => $this->getCatalogSubTabs($module),
             'provider' => $provider,
             'estados' => PurchaseProvider::estadoLabels(),
             'ciudades' => $this->cityOptions($provider),

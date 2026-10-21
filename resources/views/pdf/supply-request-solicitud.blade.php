@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Suministro {{ $supplyRequest->folio() }}</title>
+    <title>Suministro {{ $supplyRequest->folioVisible() }}</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -193,10 +193,11 @@
 </head>
 <body>
     @php
-        $estadoBadge = match ($supplyRequest->status) {
-            'aprobada_calidad', 'completada' => 'badge--success',
-            'rechazada_calidad' => 'badge--danger',
-            'en_compras' => 'badge--info',
+        // Etapa común del pedido (mismo texto que en pantalla).
+        $estadoBadge = match ($supplyRequest->etapa()) {
+            \App\Enums\PedidoEtapa::Cerrado => 'badge--success',
+            \App\Enums\PedidoEtapa::Devuelta => 'badge--danger',
+            \App\Enums\PedidoEtapa::PorComprar => 'badge--warning',
             default => 'badge--info',
         };
     @endphp
@@ -220,7 +221,7 @@
 
     <table class="folio-row">
         <tr>
-            <td><span class="folio-number">Solicitud N.º {{ $supplyRequest->folio() }}</span></td>
+            <td><span class="folio-number">Solicitud N.º {{ $supplyRequest->folioVisible() }}</span></td>
             <td style="text-align: right;">
                 <span class="badge {{ $estadoBadge }}">{{ $supplyRequest->statusLabel() }}</span>
             </td>
@@ -246,12 +247,6 @@
             <th>Revisor calidad</th>
             <td class="value-strong">{{ $supplyRequest->qualityReviewer?->name ?? '—' }}</td>
         </tr>
-        @if ($supplyRequest->estadoComprasLabel())
-            <tr>
-                <th>Estado compras</th>
-                <td colspan="3">{{ $supplyRequest->estadoComprasLabel() }}</td>
-            </tr>
-        @endif
     </table>
 
     <div class="section-title">Productos solicitados</div>

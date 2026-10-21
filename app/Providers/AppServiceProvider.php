@@ -77,7 +77,9 @@ class AppServiceProvider extends ServiceProvider
             $query = SupplyRequest::query()->whereKey($value);
 
             $routeName = (string) $route->getName();
+            // Calidad (Por aprobar) y Compras trabajan suministros de todas las áreas.
             $isCrossAreaRoute = str_starts_with($routeName, 'supplies.approved.')
+                || str_starts_with($routeName, 'supplies.approval.')
                 || str_starts_with($routeName, 'purchase-requests.processing.')
                 || str_starts_with($routeName, 'purchase-requests.orders.');
 

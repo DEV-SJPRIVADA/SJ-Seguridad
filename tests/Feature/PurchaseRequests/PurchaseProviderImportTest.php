@@ -9,6 +9,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
@@ -321,14 +322,113 @@ class PurchaseProviderImportTest extends TestCase
             'plantilla_proveedores_VINE01.xlsx',
             (string) $response->headers->get('content-disposition'),
         );
+
+        $path = tempnam(sys_get_temp_dir(), 'vine01-tpl-').'.xlsx';
+        file_put_contents($path, $response->streamedContent());
+
+        $sheet = IOFactory::load($path)->getActiveSheet();
+        $headers = [];
+        $maxCol = Coordinate::columnIndexFromString($sheet->getHighestDataColumn());
+
+        for ($col = 1; $col <= $maxCol; $col++) {
+            $headers[] = (string) $sheet->getCell(Coordinate::stringFromColumnIndex($col).'1')->getValue();
+        }
+
+        $this->assertContains('CONTACTO', $headers);
+        $this->assertContains('CIUDAD', $headers);
+        $this->assertContains('FORMA_PAGO', $headers);
+        $this->assertContains('DIAS_PAGO', $headers);
+    }
+
+    public function test_imports_contacto_ciudad_and_forma_pago(): void
+    {
+        $path = $this->makeSpreadsheet([
+            [
+                'IDENTIFICA' => 'FOAD-1',
+                'NOMBRE' => 'proveedor foad',
+                'PROVEEDOR' => 'SI',
+                'CONTACTO' => 'juan perez',
+                'CIUDAD' => 'cali',
+                'FORMA_PAGO' => 'transferencia',
+                'DIAS_PAGO' => 45,
+            ],
+        ]);
+
+        $report = app(PurchaseProviderImportService::class)
+            ->import($path, false, null, $this->editor->id);
+
+        $this->assertSame(1, $report['created']);
+        $this->assertSame(0, $report['errors_count']);
+
+        $provider = PurchaseProvider::query()->where('identificacion', 'FOAD-1')->firstOrFail();
+        $this->assertSame('JUAN PEREZ', $provider->contacto);
+        $this->assertSame('Cali', $provider->ciudad);
+        $this->assertSame('TRANSFERENCIA', $provider->forma_pago);
+        $this->assertSame(45, (int) $provider->dias_pago);
+    }
+
+    public function test_rejects_ciudad_outside_catalog(): void
+    {
+        $path = $this->makeSpreadsheet([
+            [
+                'IDENTIFICA' => 'FOAD-OK',
+                'NOMBRE' => 'proveedor ciudad valida',
+                'PROVEEDOR' => 'SI',
+                'CIUDAD' => 'Cali',
+            ],
+            [
+                'IDENTIFICA' => 'FOAD-BAD',
+                'NOMBRE' => 'proveedor ciudad invalida',
+                'PROVEEDOR' => 'SI',
+                'CIUDAD' => 'Ciudad Inexistente',
+            ],
+        ]);
+
+        $report = app(PurchaseProviderImportService::class)->import($path, true);
+
+        $this->assertSame(1, $report['created']);
+        $this->assertSame(1, $report['errors_count']);
+        $this->assertStringContainsString('catálogo de Requisiciones', $report['errors'][0] ?? '');
+    }
+
+    public function test_legacy_file_without_new_columns_does_not_wipe_existing_values(): void
+    {
+        PurchaseProvider::factory()->create([
+            'identificacion' => 'LEGACY-1',
+            'nombre' => 'VIEJO',
+            'contacto' => 'ANA LOPEZ',
+            'ciudad' => 'Cali',
+            'forma_pago' => 'EFECTIVO',
+        ]);
+
+        $path = $this->makeSpreadsheet([
+            [
+                'IDENTIFICA' => 'LEGACY-1',
+                'NOMBRE' => 'nombre actualizado',
+                'PROVEEDOR' => 'SI',
+                'ESTADO' => 'ACTIVO',
+            ],
+        ], ['IDENTIFICA', 'NOMBRE', 'TELEFONO', 'CORREO_ELE', 'PROVEEDOR', 'ESTADO', 'DIAS_PAGO']);
+
+        $report = app(PurchaseProviderImportService::class)->import($path);
+
+        $this->assertSame(1, $report['updated']);
+        $this->assertSame(0, $report['errors_count']);
+
+        $provider = PurchaseProvider::query()->where('identificacion', 'LEGACY-1')->firstOrFail();
+        $this->assertSame('NOMBRE ACTUALIZADO', $provider->nombre);
+        $this->assertSame('ANA LOPEZ', $provider->contacto);
+        $this->assertSame('Cali', $provider->ciudad);
+        $this->assertSame('EFECTIVO', $provider->forma_pago);
     }
 
     /**
      * @param  list<array<string, mixed>>  $rows
+     * @param  list<string>|null  $columns
      */
-    private function makeSpreadsheet(array $rows): string
+    private function makeSpreadsheet(array $rows, ?array $columns = null): string
     {
-        $columns = array_keys(config('purchase-requests.providers_import_columns'));
+        $columns ??= array_keys(config('purchase-requests.providers_import_columns'));
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 

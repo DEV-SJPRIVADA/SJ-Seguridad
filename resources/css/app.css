@@ -7882,6 +7882,37 @@ a.sj-pagination__item:hover {
     color: var(--color-danger);
 }
 
+/* Etapa común del pedido (PedidoEtapa): mismo color en compras y suministros. */
+.status-pill--etapa-por_autorizar {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--etapa-devuelta {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.status-pill--etapa-por_comprar {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.status-pill--etapa-con_orden {
+    background: #eff6ff;
+    color: #1984c7;
+}
+
+.status-pill--etapa-cerrado {
+    background: var(--color-success-soft);
+    color: #15803d;
+}
+
+.status-pill--etapa-cerrado_sin_compra {
+    background: #e2e8f0;
+    color: #475569;
+}
+
 .req-manage-filters__pill.is-active.status-pill--compras-pendiente,
 .req-manage-filters__pill.status-pill--compras-pendiente.is-active {
     background: #ea580c;
@@ -15206,6 +15237,40 @@ a.req-dashboard-kpi:focus-visible {
     align-items: center;
 }
 
+/* Datos del cliente: Proyecto nuevo … Activo. En portátil y pantalla grande van en una sola fila. */
+.pur-req-form__client-flags {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    margin-top: 1rem;
+}
+
+.pur-req-form__client-flags > .form-field {
+    min-width: 0;
+}
+
+.pur-req-form__client-flags .form-label {
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .pur-req-form__client-flags {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 992px) {
+    .pur-req-form__client-flags {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .pur-req-form__client-flags .pur-req-form__radios {
+        gap: 0.75rem;
+        flex-wrap: nowrap;
+    }
+}
+
 .pur-req-form__toolbar {
     display: flex;
     justify-content: flex-end;
@@ -15303,7 +15368,7 @@ a.req-dashboard-kpi:focus-visible {
 /* Utilización | Ubicación | Cantidad */
 .purchase-item-card__bottom {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(6.5rem, 8.5rem);
+    grid-template-columns: minmax(6.5rem, 8.5rem) minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.85rem 1rem;
     align-items: start;
 }
@@ -15655,6 +15720,11 @@ a.req-dashboard-kpi:focus-visible {
     margin-top: 0.35rem;
     padding-top: 0.85rem;
     border-top: 1px solid var(--color-border);
+}
+
+.pur-req-chat__composer > .btn {
+    align-self: center;
+    width: auto;
 }
 
 .purchase-request-items-table .col-num {

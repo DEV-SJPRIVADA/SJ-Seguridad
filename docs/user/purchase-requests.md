@@ -2,56 +2,64 @@
 
 ## Objetivo
 
-Permitir a colaboradores solicitar compras de bienes o servicios, que un director autorice la solicitud, y que el area de Compras procese el pedido junto con los insumos que Calidad ya haya aprobado.
+Permitir a colaboradores solicitar compras de bienes o servicios, que un director autorice la solicitud, y que Compras compre, emita la orden impresa y cierre el pedido. El estado del pedido cambia solo, según lo que ya ocurrió.
 
 ## Alcance
 
-Aplica al tablero **Solicitudes de compra** y a la **Bandeja compras** (area Compras).
+Aplica a **Solicitudes de compra** y, en el área Compras, a los tableros **Pedidos**, **Órdenes** y **Catálogos**. El tablero Dashboard se conserva.
 
-Segun su perfil puede:
+| Perfil | Dónde entrar |
+| --- | --- |
+| Colaborador solicitante | Su área → Solicitudes de compra |
+| Director | Compras → Solicitudes de compra → Pendientes |
+| Equipo de Compras | Compras → **Pedidos** y **Órdenes**. El catálogo de proveedores está en **Catálogos** |
+| Dashboard | Compras → Dashboard |
 
-- Crear solicitudes con una o varias lineas de productos (con foto opcional por linea)
-- Adjuntar, si lo desea, varios documentos de soporte a **toda** la solicitud (cotizacion, orden, evidencia)
-- Consultar el estado de sus propias solicitudes, agregar **varios comentarios** al detalle (ej. un producto ya no es necesario) y descargar esos adjuntos desde el detalle
-- Autorizar o rechazar solicitudes asignadas a usted como director
-- Procesar solicitudes aprobadas e insumos aprobados desde la bandeja unificada de Compras
-- Descargar el formato FO-AD-44 (PDF y Excel) desde el detalle
+Según su perfil puede:
 
-El director puede autorizar desde el **correo** (enlace personal firmado, sin login) o desde la **plataforma** (Pendientes de autorizacion o detalle). Los documentos de soporte **no** viajan en el correo ni en el FO-AD-44: para verlos hay que entrar al detalle en la plataforma.
+- Crear solicitudes con una o varias líneas de productos (con foto opcional por línea)
+- Adjuntar, si lo desea, varios documentos de soporte a **toda** la solicitud (cotización, orden, evidencia)
+- Consultar el estado de sus propias solicitudes, agregar **varios comentarios** al detalle y descargar esos adjuntos
+- Autorizar o devolver solicitudes asignadas a usted como director
+- En Pedidos: ver lo que falta por comprar, lo que ya tiene orden y el historial de lo cerrado; emitir la orden; cerrar el saldo
+- Descargar el pedido (FO-AD-44) y la orden impresa (FO-AD-07)
+- Registrar la fecha de recibido y calificar al proveedor, si administra el catálogo de proveedores
+
+El director puede autorizar desde el **correo** (enlace personal firmado, sin login) o desde la **plataforma**. Los documentos de soporte **no** viajan en el correo ni en el FO-AD-44: para verlos hay que entrar al detalle en la plataforma. Compras ya no rechaza un pedido desde Pedidos. Un pedido que Compras hubiera rechazado antes no aparece en Por comprar, Con orden ni Historial: sigue en Mis solicitudes.
 
 ## Definiciones
 
 | Termino | Significado |
 | --- | --- |
 | Solicitud de compra | Pedido formal de bienes o servicios con lineas de detalle (cantidad, descripcion, referencia, etc.). |
-| Folio / N.º solicitud | Numero correlativo de cuatro digitos (ej. 0042) que identifica la solicitud. |
-| Director aprobador | Usuario con rol de director seleccionado al crear la solicitud; unico que puede autorizarla. |
-| Pendiente (director) | Esperando decision del director asignado. |
-| Aprobado / Rechazado (director) | Decision del director; si aprueba, pasa a Compras. |
-| Bandeja compras | Listado unificado de solicitudes de compra aprobadas e insumos aprobados por Calidad. |
-| Estado Compras | Pendiente, En curso, Completado o Rechazado — lo gestiona el equipo de Compras. |
-| Solicitud Interno | Compra para uso interno de la empresa. |
-| Solicitud Cliente | Compra asociada a un cliente (requiere razon social y datos adicionales). |
-| Urgente | Marca de prioridad visible para director y Compras. |
-| FO-AD-44 | Formato estandar de reporte/exportacion de la solicitud. No incluye los documentos de soporte adjuntos. |
-| Adjuntos | Archivos opcionales de la solicitud completa (no de cada producto). Se consultan y descargan solo en el detalle de la plataforma. |
+| Folio | Número visible de la solicitud. Empieza por **SC-** (por ejemplo SC-0042). El número de adentro no cambia. |
+| Director aprobador | Persona con rol de director elegida al crear la solicitud; es quien puede autorizarla. |
+| Estado | Una sola etapa para compras y suministros, con el mismo nombre y color: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. |
+| Por autorizar | Esperando la decisión del director (o de Calidad, si es un insumo). |
+| Devuelta | El director no autorizó. El solicitante puede corregirla y enviarla de nuevo. |
+| Pedidos | Tablero de Compras con tres vistas: Por comprar, Con orden e Historial. |
+| Por comprar | El director ya autorizó (o Calidad, si es un insumo) y todavía no hay cantidades en una orden. |
+| Con orden | Ya hay una orden y queda cantidad por pedir, o el saldo llegó a cero pero falta anotar la fecha de recibido en alguna orden. |
+| Historial / Cerrado | El pedido ya no admite otra orden. |
+| Cerrar saldo | Acción de Compras para dejar el pedido en Cerrado aunque todavía quede cantidad, escribiendo el motivo. |
+| Solicitud Interno | Compra para uso interno. No pregunta Comodato ni Activo. |
+| Solicitud Cliente | Compra asociada a un cliente. Pregunta Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo. |
+| Comodato / Activo | Preguntas de Sí o No, solo en una solicitud Cliente. Por defecto quedan en No. |
+| Urgente | Marca de prioridad visible para el director y para Compras. |
+| FO-AD-44 | Formato del **pedido**. No incluye los documentos de soporte. |
+| FO-AD-07 | Formato de la **orden** impresa o en Excel. Una hoja. No incluye la evaluación del proveedor. |
+| Orden de compra | Documento que se emite a un proveedor. Su número es el correlativo de la orden (no lleva SC-). |
+| Adjuntos | Archivos opcionales de la solicitud completa. Se consultan solo en el detalle de la plataforma. |
 
 ## Responsabilidades
 
 | Rol / perfil | Responsabilidad |
 | --- | --- |
-| Colaborador solicitante | Crear solicitudes en su area, elegir director, adjuntar documentos de soporte si aplica, consultar mis solicitudes. Si una solicitud es rechazada, puede reenviarla: conservar, agregar o quitar adjuntos. |
-| Director | Revisar y aprobar o rechazar solo las solicitudes asignadas a el. Los adjuntos se revisan en el detalle de la plataforma (no llegan por correo). |
-| Compras | Gestionar bandeja, actualizar estados, procesar insumos aprobados, exportar reportes y descargar adjuntos desde el detalle. |
-| Super-admin / Admin usuarios | Asignar permisos (`purchase.tab.*`) y rol director. |
-
-## Donde encontrar el modulo en el menu
-
-| Perfil | Ruta en el menu |
-| --- | --- |
-| Colaborador solicitante | Su area → Solicitudes de compra |
-| Director | Compras → Solicitudes de compra → Pendientes |
-| Equipo Compras | Compras → Solicitudes de compra → Bandeja compras (landing por defecto); Dashboard Compras en tablero del area |
+| Colaborador solicitante | Crear solicitudes en su área, elegir director, adjuntar documentos si aplica y consultar Mis solicitudes. Si el director la devuelve, puede reenviarla. |
+| Director | Autorizar o devolver solo las solicitudes asignadas. El motivo queda en los comentarios de la solicitud. Los adjuntos se revisan en el detalle de la plataforma. |
+| Compras | Trabajar en Pedidos y Órdenes: emitir la orden, cerrar el saldo cuando haga falta y descargar el FO-AD-07. No elige el estado a mano. |
+| Quien administra proveedores | Mantener el catálogo y, en cada orden emitida, anotar la fecha de recibido y la calificación. |
+| Administración de usuarios | Asignar quién puede solicitar, autorizar, comprar o administrar catálogos, y el rol de director. |
 
 ## Desarrollo
 
@@ -60,8 +68,8 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 1. Entre a **Solicitudes de compra** en su area → pestaña **Nueva solicitud**. El formulario esta en secciones (datos generales, cliente si aplica, productos y adjuntos); use la guia lateral como checklist.
 2. Complete **Area**, **Fecha**, **Solicitud para** (Interno o Cliente) y seleccione el **Director aprobador**.
 3. Marque **Urgente** si aplica.
-4. Si eligio **Cliente**, complete razon social, proyecto nuevo, si asume el cliente y **Reinversión** (Si/No).
-5. Agregue una o mas lineas de producto: cantidad, descripcion, referencia, utilizacion, ubicacion y foto opcional de esa linea.
+4. Si eligió **Cliente**, complete razón social y responda **Sí** o **No** en Proyecto nuevo, Asume el cliente, Reinversión, **Comodato** y **Activo**. Comodato y Activo vienen en No. Si la solicitud es **Interno**, esas preguntas no aparecen y la orden impresa muestra **No** en esas casillas. El PDF y el Excel de la solicitud y de la orden se abren en otra pestaña.
+5. Agregue una o mas lineas de producto: foto, descripcion, referencia, cantidad, utilizacion, ubicacion.
    - Opcional **carga masiva**: **Descargar plantilla** (Excel en blanco), llenela desde la fila 3 y use **Cargar Excel** para precargar la tabla. Luego puede editar filas, agregar fotos y enviar. La foto no va en el Excel.
 6. En **Adjuntos** (despues de los productos) puede, si lo desea, seleccionar **varios archivos a la vez** para toda la solicitud: cotizacion, orden de compra, evidencia u otro soporte. Es opcional: puede enviar la solicitud sin ningun archivo. Hasta 5 archivos, 10 MB cada uno. Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
 7. Envie el formulario. Recibira confirmacion con el numero de folio.
@@ -70,10 +78,10 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 ### Consultar mis solicitudes
 
 1. Abra **Mis solicitudes**.
-2. Revise el listado con estado (Pendiente, Aprobado, Rechazado).
-3. Pulse el folio o **Ver detalle** para consultar lineas, comentarios del director o de Compras. Si hay documentos de soporte, aparecen en **Adjuntos** con su nombre y tamano; pulse **Descargar** para guardarlos.
-4. En **Comentarios de la solicitud** puede agregar varias notas (ej. un producto ya no es necesario), mientras Compras **no** haya marcado la solicitud como completada. El director y Compras tambien las ven y pueden responder.
-5. En el listado vera el **estado del director** (Pendiente/Aprobado/Rechazado) y, si aplica, el **estado compras** (Pendiente/En curso/Completado/Rechazado).
+2. Revise el listado. El folio se lee **SC-** seguido del número. La columna **Estado** muestra en qué va el pedido: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. Use **Filtros** para acotar por fechas, estado, urgencia o área; el listado se actualiza al elegir. El icono de **X** limpia los filtros.
+3. Pulse el folio o **Ver detalle** para consultar líneas y comentarios. Si hay documentos de soporte, aparecen en **Adjuntos**; pulse **Descargar** para guardarlos.
+4. En **Comentarios de la solicitud** puede agregar varias notas mientras el pedido no esté **Cerrado**. El director y Compras también las ven. El motivo nuevo del director queda en ese hilo. Si un pedido antiguo trae un comentario suelto del director o de Compras, se sigue mostrando, pero los nuevos no se escriben aparte.
+5. Los textos de la solicitud se guardan como se escriben. El motivo de cerrar saldo, las observaciones de la orden, las de la evaluación y los comentarios del hilo se guardan en mayúsculas.
 6. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44). Esos formatos no llevan los adjuntos ni el hilo de comentarios.
 
 ### Reenviar una solicitud rechazada
@@ -90,9 +98,9 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 1. Abra el correo de nueva solicitud de compra.
 2. Pulse **Autorizar por correo** (enlace personal con vigencia limitada).
 3. Revise folio, lineas y datos del solicitante; opcionalmente abra el PDF. Esta pantalla **no** muestra los documentos de Adjuntos; para verlos use **Ver en la plataforma**.
-4. Escriba comentarios si rechaza (obligatorio al rechazar).
+4. Escriba el motivo si devuelve la solicitud (obligatorio al devolver). Ese texto queda en los comentarios.
 5. Pulse **Aprobar solicitud** o **Rechazar**.
-6. Confirme en la pantalla de resultado; el solicitante recibe correo con el outcome.
+6. Confirme en la pantalla de resultado. El solicitante recibe un correo con la decisión.
 
 **Opcion B — Por plataforma**
 
@@ -103,39 +111,57 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 5. Pulse **Aprobar solicitud** o **Rechazar**.
 6. La solicitud sale del listado de pendientes; el solicitante recibe correo con el resultado.
 
-### Procesar en bandeja Compras
+### Trabajar en Pedidos
 
-1. Entre a **Compras → Solicitudes de compra → Bandeja compras**.
-2. Use **Filtros**: rango de fechas, area solicitante, tipo (Solicitud compra / Suministro) y pills de estado (Pendiente, En curso, Completado, Rechazado). Al elegir area o tipo, el listado se actualiza solo.
-3. El listado sale **mas reciente primero**. Sin filtro de fechas muestra hasta 200 registros recientes; con fechas ve el historico completo del periodo. Si no ve un suministro, revise que Tipo no este en "Solicitud compra" y que no haya un rango de fechas que lo excluya.
-4. Pulse el icono de ojo (**Ver detalle**) para consultar la solicitud o el suministro sin salir del flujo de lectura.
-5. Pulse el icono de engranaje (**Procesar**) para actualizar estado o completar el trámite.
-6. Para **procesar** una solicitud de compra: abra el flujo de procesamiento y actualice estado y comentarios de Compras.
-7. Para **procesar suministros**: ingrese costos unitarios y marque como completado cuando corresponda.
-8. El solicitante puede recibir correo cuando Compras actualiza la solicitud.
+El estado **no se elige**. Cambia solo:
 
-### Emitir orden de compra (FO-AD-07)
+- **Por comprar:** autorizado y todavía sin cantidades en una orden.
+- **Con orden:** ya hay una orden y queda saldo, o el saldo llegó a cero pero falta la fecha de recibido en alguna orden.
+- **Cerrado** (vista **Historial**): ya no se puede emitir otra orden. Un pedido cerrado no vuelve atrás.
 
-1. En la **bandeja de Compras**, cada fila tiene un icono extra (**Emitir orden de compra**, un archivo con un +). También lo encuentra en la cabecera de **Procesar solicitud** y **Procesar suministro**, y en el detalle de la solicitud, en la sección **Productos solicitados** (icono de archivo con **+** a la derecha del título).
-2. Se abre el formulario **Emitir orden de compra** con los datos del origen (solicitud de compra o de suministro). Las líneas ya vienen con la cantidad y la descripción; para suministros la cantidad es la **autorizada** y el costo unitario ya capturado.
+1. Entre a **Compras → Pedidos**.
+2. Elija la vista **Por comprar**, **Con orden** o **Historial**. Por comprar y Con orden son el trabajo del día. Historial muestra lo cerrado.
+3. Use **Filtros**: rango de fechas, área solicitante y tipo (solicitud de compra o suministro). Al elegir área o tipo, el listado se actualiza solo.
+4. El listado sale **más reciente primero**. Sin filtro de fechas muestra hasta 200 registros recientes; con fechas ve el periodo completo. Si no ve un suministro, revise que el tipo no esté en «Solicitud compra».
+5. El folio de una compra se lee **SC-** y el de un insumo **SU-**.
+6. Pulse el icono de ojo (**Ver detalle**) para consultar sin cambiar el estado. Abrir **Procesar** tampoco cambia el estado.
+7. En Procesar no hay lista para marcar Pendiente, En curso o Completado. El pedido avanza al emitir la orden, al anotar todas las fechas de recibido o al usar **Cerrar saldo**.
+8. En un suministro, Procesar **no pide el costo unitario**. El precio se escribe al emitir la orden. Si el insumo ya tenía un costo antiguo, la orden lo trae cargado y ese costo viejo no se borra.
+
+### Cerrar saldo
+
+Úselo en Por comprar o Con orden cuando el pedido debe quedar cerrado aunque todavía falte cantidad o falte anotar una fecha de recibido.
+
+1. Abra **Procesar** de esa solicitud o de ese suministro.
+2. En la sección **Cerrar saldo** (está en el mismo formulario, no en una ventana aparte) escriba el **motivo**. Es obligatorio.
+3. Pulse **Cerrar saldo**. El motivo queda en los comentarios, en mayúsculas, y el pedido pasa a **Cerrado**.
+4. Después de eso no se puede emitir otra orden de ese pedido.
+
+### Emitir la orden impresa (FO-AD-07)
+
+1. En **Pedidos**, cada fila tiene un icono (**Emitir orden de compra**). También está en **Procesar** y, en el detalle de la solicitud, en **Productos solicitados**. No aparece si el pedido ya está Cerrado.
+2. Se abre el formulario con los datos del origen. Las líneas ya vienen con la cantidad y la descripción. En un suministro la cantidad es la autorizada. El **precio se escribe aquí**: valor unidad e IVA. Si el insumo ya tenía un costo, el valor unidad viene precargado.
 3. Elija el **proveedor** (solo activos; use el buscador por nombre o identificación). Al elegirlo, si el proveedor tiene ciudad, esta se completa en **Ciudad de entrega**.
 4. Complete por línea el **valor unidad** y el **IVA** (el IVA es un valor, no un porcentaje). El **valor total** de la línea y el **TOTAL** de la orden se calculan solos: `cantidad × valor unidad + IVA`. La columna **Pendiente** indica cuánto falta por pedir de esa línea (si ya se emitieron otras OC de la misma solicitud).
 5. Ajuste la **fecha**, la **ciudad de entrega** y las **observaciones** si aplica. Los textos se guardan en **MAYÚSCULAS**.
 6. Pulse el icono azul de **check** para emitir. La orden queda registrada como **Emitida** y se abre su detalle.
-7. El **número de OC** es automático (correlativo interno) y aparece en el encabezado del documento y en el PDF/Excel.
-8. En el detalle de la OC puede consultar el proveedor (datos congelados al emitir), el detalle con subtotal, IVA y total, y descargar el documento en **PDF** o **Excel** (FO-AD-07).
-9. Si edita luego el catálogo de proveedores, la OC emitida **no cambia**: conserva los datos del momento de la emisión.
+7. El **número de la orden** es automático y aparece en el encabezado del PDF y del Excel. No es el folio SC- ni SU-.
+8. La orden impresa es una sola hoja: título **ORDEN DE COMPRA O SERVICIO**, código **FO-AD-07**, periodo **Enero de 2025**, versión 04, logo de la empresa, datos del proveedor, las casillas Proyecto nuevo, Reinversión, Comodato y Activo, el detalle con el total, las observaciones, las firmas y las condiciones legales al pie. Esas condiciones salen tal cual el formato oficial.
+9. En una solicitud **Cliente**, Comodato y Activo se imprimen Sí o No. En una solicitud interna, en un suministro y en una orden emitida antes de este cambio, esas casillas salen **en blanco** (no dicen No).
+10. Las firmas traen el nombre de quien elaboró la orden (Analista de Compras) y el del director del área, o de quien revisó en Calidad si el origen es un insumo. Director administrativo y financiero, y Gerente, quedan en blanco para firma manuscrita.
+11. La **evaluación del proveedor no sale** en el PDF ni en el Excel.
+12. Si más tarde edita el catálogo de proveedores, la orden ya emitida **no cambia**. Al volver a imprimirla se usa el formato nuevo; lo que no se había guardado en su momento sigue en blanco y el número de la orden es el mismo.
 
 ### Ver las órdenes de compra emitidas
 
-1. Entre a **Compras → Órdenes de compra** (tablero del área Compras). Ahí están **todas** las OC emitidas, con su número, fecha, proveedor, origen, ciudad de entrega, número de líneas, total y estado.
+1. Entre a **Compras → Órdenes**. Ahí están las órdenes emitidas, con su número, fecha, proveedor, origen (folio SC- o SU-), ciudad de entrega, número de líneas, total y estado.
 2. Use el **buscador** de la tabla para filtrar por proveedor, identificación, observaciones o número de OC.
 3. El panel **Filtros** permite acotar por **Estado** (Todas / Emitidas / Borrador), **Origen** (Solicitud de compra / Solicitud de suministro), **Proveedor** y rango de **fechas**. El botón de **Aplicar** y el de **Limpiar** quedan uno al lado del otro.
 4. En la fila, el icono de **ojo** abre el detalle de la OC y el de **documento** descarga el PDF FO-AD-07.
 
 ### Repartir una solicitud entre varios proveedores
 
-1. Desde la bandeja, abra la OC de la solicitud o suministro (icono de archivo con **+**).
+1. Desde Pedidos, abra la orden de la solicitud o del suministro.
 2. Cada línea muestra **solicitadas**, **ordenadas** y **pendiente**. La cantidad se precarga con el **pendiente** y no se puede escribir más de ese valor.
 3. Si quiere repartir, emita una OC con la cantidad de ese proveedor (por ejemplo 50) y luego abra de nuevo el formulario: el pendiente ya descuenta lo ordenado (50) y podrá emitir otra OC con el resto (por ejemplo 20) para otro proveedor.
 4. El sistema **no permite duplicar**: cuando ya no queda saldo, la línea aparece en gris con pendiente 0 y la emisión se rechaza con el aviso "La cantidad supera el saldo pendiente".
@@ -143,7 +169,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 ### Catálogo de proveedores
 
-1. Con el permiso **Proveedores: Ver** aparece el tablero **Proveedores** dentro del área **Compras** (no es una pestaña de Solicitudes de compra). El permiso **Proveedores: Editar** también permite verlo.
+1. El catálogo está en **Compras → Catálogos**, pestaña **Proveedores** (no es una pestaña de Solicitudes de compra). Quien puede editar proveedores también lo ve. En el mismo tablero, quien administra insumos ve la pestaña **Insumos**.
 2. El listado muestra **solo proveedores activos** por defecto. Use el **buscador** de la tabla (identificación, nombre, correo, contacto o ciudad) y los botones **Activos / Inactivos / Todos** de la franja superior para cambiar de estado. Al lado aparece el número de proveedores encontrados. El correo de cada proveedor es un enlace que abre su programa de correo. El catálogo solo contiene proveedores.
 3. A la derecha de esa misma franja está la barra de acciones (iconos con su descripción al pasar el mouse): **Exportar**, **Importar VINE01** (con permiso de edición) y **+ (Nuevo proveedor)**. El **+** permite registrar identificación, nombre, teléfono, correo, contacto, dirección, ciudad, forma de pago, **días de pago** y estado.
 4. El **teléfono** admite solo números (7 a 15 dígitos), el **correo** debe ser un correo válido y la **ciudad** se elige del catálogo de ciudades de Requisiciones.
@@ -154,7 +180,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 #### Carga masiva VINE01
 
 1. Abra la ventana de carga (icono **importar** de la barra de acciones) y, dentro de ella, use el icono de Excel (**plantilla**) para obtener el archivo `VINE01` (hoja **VINE01** con encabezados y hoja **Instrucciones**).
-2. Complete las columnas: **IDENTIFICA**, **NOMBRE**, **TELEFONO**, **CORREO_ELE**, **PROVEEDOR**, **ESTADO** y **DIAS_PAGO** (opcional). Deje `DIAS_PAGO` vacío si no aplica.
+2. Complete las columnas: **IDENTIFICA**, **NOMBRE**, **TELEFONO**, **CORREO_ELE**, **CONTACTO**, **CIUDAD**, **FORMA_PAGO**, **PROVEEDOR**, **ESTADO** y **DIAS_PAGO** (opcional). `CONTACTO`, `CIUDAD`, `FORMA_PAGO` y `DIAS_PAGO` pueden quedar vacíos. Si llena `CIUDAD`, el nombre debe existir en el catálogo de ciudades de Requisiciones (se acepta mayúsculas o minúsculas; se guarda como en el catálogo).
 3. Con permiso de edición, el icono de **importar** de la barra de acciones abre la ventana de carga. Dentro de la ventana, todas las acciones son iconos con su descripción al pasar el mouse: **plantilla** (Excel), **elegir archivo** y **cerrar** (contorno) e **importar** (azul). Elija el archivo y pulse el icono azul de importar.
 4. **Solo se cargan las filas con PROVEEDOR = SI.** Las filas que solo son cliente se omiten. Si el archivo no trae las columnas obligatorias (IDENTIFICA, NOMBRE, PROVEEDOR) o no tiene proveedores, se muestra el error y no se guarda nada.
 5. Los registros se actualizan por **identificación**: si ya existe, se actualiza; si no, se crea. Al terminar, el resultado aparece en una **ventana de resumen** (no arriba de la página) con los conteos: nuevos, actualizados, omitidos por no ser proveedor, filas vacías y con error. Ciérrela con el icono de **Entendido** (chulo azul) o la **X**.
@@ -164,19 +190,37 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 1. Entre a **Compras → Dashboard** (tablero Dashboard Compras).
 2. Filtre por ano, mes (opcional), area y tipo si necesita acotar el periodo.
-3. Revise los indicadores: pendientes del director, en bandeja, bandeja pendiente, en curso y completadas en el periodo.
-4. Los numeros de bandeja coinciden con la bandeja cuando usa el mismo mes o rango de fechas.
-5. Pulse un indicador de bandeja para abrir la bandeja con esos filtros ya aplicados.
+3. Revise los indicadores: pendientes del director, en bandeja, bandeja pendiente, en curso y completadas en el periodo. **En bandeja** suma Por comprar y Con orden. Lo cerrado no entra en ese número.
+4. Esos números coinciden con Pedidos cuando usa el mismo mes o rango de fechas.
+5. Pulse un indicador de bandeja para abrir **Pedidos** en la vista que corresponde (Por comprar o Con orden), no un listado aparte.
 6. Consulte los graficos de tendencia, estados y distribucion por area o tipo.
 
-### Suministros en la misma bandeja
+### Recepción y evaluación
 
-Los pedidos de insumos que Calidad aprobo (y los ya en compras o completados) aparecen junto con las solicitudes de compra. Desde **Ver detalle** puede consultar el pedido con el mismo formato que una solicitud de compra y descargar **PDF** o **Excel** (FO-AD-44).
+Esto no se imprime en la orden. Lo hace quien administra el catálogo de proveedores, no quien solo trabaja en Pedidos.
+
+1. Abra la orden en **Órdenes** y entre a la evaluación.
+2. Puede guardar solo la **fecha de recibido**, sin calificar.
+3. Si califica, complete las tres notas de 1 a 5: referencias y cantidades, oportunidad de entrega y calidad del producto. El resultado se calcula solo (compra satisfactoria, requiere seguimiento o compra insatisfactoria).
+4. Cuando **todas** las órdenes de ese pedido tienen fecha de recibido y ya no queda cantidad por pedir, el pedido pasa solo a **Cerrado**. Si falta una fecha, sigue en **Con orden**. La calificación no cierra el pedido.
+5. **Cerrar saldo** lo cierra igual aunque falten fechas.
+
+### Suministros en Pedidos
+
+Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, con folio **SU-**. Desde **Ver detalle** puede consultar el pedido y descargar **PDF** o **Excel** (FO-AD-44). El precio y el cierre se hacen con la orden, no con un costo unitario en Procesar.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.35 | 2026-10-21 | Compras | Nueva y Reabrir: en Datos del cliente, Proyecto nuevo, Asume el cliente, Reinversión, Comodato y Activo quedan en una sola fila en portátil y pantalla grande. |
+| 1.34 | 2026-10-21 | Compras | Un solo estado con el mismo nombre en compras y suministros (Por autorizar, Devuelta, Por comprar, Con orden, Cerrado). Mis solicitudes muestra una sola columna de estado. |
+| 1.33 | 2026-10-21 | Compras | Mis solicitudes: panel de filtros por fechas, estado, estado de compras, urgencia y área. |
+| 1.32 | 2026-10-21 | Compras | Carga masiva VINE01: se importan también Contacto, Ciudad y Forma de pago. La ciudad se valida contra el catálogo de Requisiciones, igual que en el alta manual. |
+| 1.31 | 2026-10-21 | Compras | Nueva solicitud: en Productos solicitados, Cantidad queda antes de Utilización. |
+| 1.30 | 2026-10-21 | Compras | En la orden impresa, Forma de pago hasta Activo muestran la respuesta junto a la etiqueta. Las condiciones dejan más espacio entre párrafos. |
+| 1.29 | 2026-10-20 | Compras | El PDF y el Excel de la solicitud y de la orden se abren en otra pestaña. En la orden, Asume el cliente, Proyecto nuevo, Reinversión, Comodato y Activo muestran Sí o No según la solicitud. |
+| 1.28 | 2026-10-20 | Compras | Orden impresa FO-AD-07 en una hoja; radios Comodato y Activo; el estado cambia solo; Pedidos (Por comprar, Con orden, Historial), Órdenes y Catálogos; Cerrar saldo; recepción y evaluación que no se imprime; el precio solo en la orden. |
 | 1.27 | 2026-10-20 | Compras | Proveedores: listado rediseñado; el estado se elige con botones (Activos / Inactivos / Todos) en la misma franja que el conteo y las acciones; correo enlazable. |
 | 1.26 | 2026-10-19 | Compras | Nuevo tablero **Órdenes de compra** con el listado de todas las OC emitidas (buscador y filtros). Una solicitud se puede **repartir entre varios proveedores**: cada línea muestra el saldo pendiente y el sistema bloquea las órdenes duplicadas. |
 | 1.25 | 2026-10-19 | Compras | Emisión de **Orden de Compra (FO-AD-07)** desde la bandeja: elegir proveedor activo, capturar valor unidad e IVA por línea, total automático, número de OC automático y descarga en PDF/Excel. |

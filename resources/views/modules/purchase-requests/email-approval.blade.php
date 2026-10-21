@@ -16,7 +16,7 @@
                 @endif
 
                 <div class="req-approval-letter__panel">
-                    <p><strong>Folio:</strong> {{ $purchaseRequest->folio() }}</p>
+                    <p><strong>Folio:</strong> {{ $purchaseRequest->folioVisible() }}</p>
                     <p><strong>Solicitante:</strong> {{ $purchaseRequest->user?->name ?? '—' }}</p>
                     <p><strong>Área:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
                     <p><strong>Fecha:</strong> {{ optional($purchaseRequest->fecha_solicitud)->format('d/m/Y') ?? '—' }}</p>

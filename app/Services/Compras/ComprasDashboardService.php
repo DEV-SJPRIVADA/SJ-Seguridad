@@ -2,6 +2,7 @@
 
 namespace App\Services\Compras;
 
+use App\Enums\PedidoEtapa;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use Illuminate\Database\Eloquent\Builder;
@@ -54,16 +55,17 @@ class ComprasDashboardService
         $tipoCounts = $bandejaStats['by_tipo']->filter(fn (int $count): bool => $count > 0);
 
         $estadoLabels = PurchaseRequest::estadosComprasLabels();
+        // Decisión del director con el nombre de la etapa común.
         $purchaseEstadoLabels = [
-            PurchaseRequest::ESTADO_PENDIENTE => 'Pendiente director',
+            PurchaseRequest::ESTADO_PENDIENTE => PedidoEtapa::PorAutorizar->label(),
             PurchaseRequest::ESTADO_APROBADO => 'Aprobado',
-            PurchaseRequest::ESTADO_RECHAZADO => 'Rechazado',
+            PurchaseRequest::ESTADO_RECHAZADO => PedidoEtapa::Devuelta->label(),
         ];
 
         $supplyTrend = SupplyRequest::query()
             ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
             ->when($filters['year'] > 0, fn (Builder $query) => $query->whereYear('created_at', $filters['year']))
-            ->whereIn('status', ['aprobada_calidad', 'en_compras', 'completada'])
+            ->whereEtapa([PedidoEtapa::PorComprar, PedidoEtapa::ConOrden, PedidoEtapa::Cerrado])
             ->get()
             ->groupBy(fn (SupplyRequest $request) => (int) $request->created_at?->format('n'))
             ->map->count();
@@ -78,9 +80,9 @@ class ComprasDashboardService
             'stats' => [
                 'pendiente_director' => PurchaseRequest::query()
                     ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
-                    ->where('estado', PurchaseRequest::ESTADO_PENDIENTE)
+                    ->whereEtapa(PedidoEtapa::PorAutorizar)
                     ->count(),
-                'bandeja_total' => $bandejaStats['total'],
+                'bandeja_total' => $bandejaStats['pendiente'] + $bandejaStats['en_curso'],
                 'bandeja_pendiente' => $bandejaStats['pendiente'],
                 'bandeja_en_curso' => $bandejaStats['en_curso'],
                 'completadas_periodo' => $this->completedInPeriodCount($filters),
@@ -134,8 +136,7 @@ class ComprasDashboardService
     private function completedInPeriodCount(array $filters): int
     {
         $purchaseCompleted = PurchaseRequest::query()
-            ->where('estado', PurchaseRequest::ESTADO_APROBADO)
-            ->where('estado_compras', PurchaseRequest::COMPRAS_COMPLETADO)
+            ->whereEtapa(PedidoEtapa::Cerrado)
             ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
             ->when($filters['year'] > 0, fn (Builder $query) => $query->whereYear('procesado_compras_at', $filters['year']))
             ->when($filters['month'] !== null, fn (Builder $query) => $query->whereMonth('procesado_compras_at', $filters['month']))
@@ -143,7 +144,7 @@ class ComprasDashboardService
             ->count();
 
         $supplyCompleted = SupplyRequest::query()
-            ->where('status', 'completada')
+            ->whereEtapa(PedidoEtapa::Cerrado)
             ->when($filters['area_key'] !== '', fn (Builder $query) => $query->where('area_key', $filters['area_key']))
             ->when($filters['year'] > 0, fn (Builder $query) => $query->whereYear('updated_at', $filters['year']))
             ->when($filters['month'] !== null, fn (Builder $query) => $query->whereMonth('updated_at', $filters['month']))

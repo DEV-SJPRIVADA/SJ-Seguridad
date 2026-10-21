@@ -36,11 +36,7 @@ class PurchaseOrderService
      */
     public function createFromPurchase(PurchaseRequest $purchaseRequest, array $data, User $user): PurchaseOrder
     {
-        return $this->create(self::SOURCE_PURCHASE, $purchaseRequest, $data, $user, [
-            'asume_cliente' => $purchaseRequest->asume_cliente === null
-                ? null
-                : ($purchaseRequest->asume_cliente ? 'SI' : 'NO'),
-        ]);
+        return $this->create(self::SOURCE_PURCHASE, $purchaseRequest, $data, $user, $this->clientFlagSnapshots($purchaseRequest));
     }
 
     /**
@@ -48,9 +44,7 @@ class PurchaseOrderService
      */
     public function createFromSupply(SupplyRequest $supplyRequest, array $data, User $user): PurchaseOrder
     {
-        return $this->create(self::SOURCE_SUPPLY, $supplyRequest, $data, $user, [
-            'asume_cliente' => null,
-        ]);
+        return $this->create(self::SOURCE_SUPPLY, $supplyRequest, $data, $user, $this->emptyFlagSnapshots());
     }
 
     /**
@@ -112,10 +106,15 @@ class PurchaseOrderService
 
     /**
      * @param  array{provider_id: int|string, fecha?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
-     * @param  array{asume_cliente: string|null}  $extra
+     * @param  array{asume_cliente: string|null, proyecto_nuevo: string|null, reinversion: string|null, comodato: string|null, activo: string|null}  $extra
      */
     private function create(string $sourceType, PurchaseRequest|SupplyRequest $source, array $data, User $user, array $extra): PurchaseOrder
     {
+        // Cerrado es terminal: no se emite otra orden aunque todavía quede saldo.
+        if (! $source->puedeEmitirOrden()) {
+            throw new InvalidArgumentException('No se puede emitir otra orden: el pedido está cerrado.');
+        }
+
         $provider = PurchaseProvider::query()->findOrFail($data['provider_id']);
 
         if (! $provider->isActivo()) {
@@ -148,6 +147,10 @@ class PurchaseOrderService
                 'fecha' => $data['fecha'] ?? now()->toDateString(),
                 'ciudad' => $data['ciudad'] ?? $provider->ciudad,
                 'asume_cliente' => $extra['asume_cliente'],
+                'proyecto_nuevo' => $extra['proyecto_nuevo'],
+                'reinversion' => $extra['reinversion'],
+                'comodato' => $extra['comodato'],
+                'activo' => $extra['activo'],
                 'observaciones' => $data['observaciones'] ?? null,
                 'estado' => 'emitida',
                 'total' => 0,
@@ -264,6 +267,7 @@ class PurchaseOrderService
                     'cantidad_solicitada' => $solicitada,
                     'cantidad_ordenada' => $ordenada,
                     'cantidad_pendiente' => max(0.0, round($solicitada - $ordenada, 2)),
+                    // Costo histórico del ítem: solo precarga la OC. Procesar el suministro no lo borra.
                     'valor_unidad' => (float) ($item->unit_cost ?? 0),
                     'iva' => 0.0,
                 ];
@@ -285,6 +289,43 @@ class PurchaseOrderService
     private function formatQuantity(float $quantity): string
     {
         return rtrim(rtrim(number_format($quantity, 2, '.', ''), '0'), '.');
+    }
+
+    /**
+     * @return array{asume_cliente: string|null, proyecto_nuevo: string|null, reinversion: string|null, comodato: string|null, activo: string|null}
+     */
+    private function clientFlagSnapshots(PurchaseRequest $purchaseRequest): array
+    {
+        return [
+            'asume_cliente' => $this->snapshotSiNo($purchaseRequest->asume_cliente),
+            'proyecto_nuevo' => $this->snapshotSiNo($purchaseRequest->proyecto_nuevo),
+            'reinversion' => $this->snapshotSiNo($purchaseRequest->reinversion),
+            'comodato' => $this->snapshotSiNo($purchaseRequest->comodato),
+            'activo' => $this->snapshotSiNo($purchaseRequest->activo),
+        ];
+    }
+
+    /**
+     * @return array{asume_cliente: null, proyecto_nuevo: null, reinversion: null, comodato: null, activo: null}
+     */
+    private function emptyFlagSnapshots(): array
+    {
+        return [
+            'asume_cliente' => null,
+            'proyecto_nuevo' => null,
+            'reinversion' => null,
+            'comodato' => null,
+            'activo' => null,
+        ];
+    }
+
+    private function snapshotSiNo(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return $value ? 'SI' : 'NO';
     }
 
     private function nullableString(mixed $value): ?string

@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Crea una tarjeta de producto (foto + descripción, referencia, utilización/ubicación/cantidad).
+    // Crea una tarjeta de producto (foto + descripción, referencia, cantidad/utilización/ubicación).
     function createItemRow(index) {
         const row = document.createElement('article');
         row.className = 'purchase-item-card';
@@ -237,6 +237,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="text" id="item-referencia-${index}" name="items[${index}][referencia]" class="form-input" placeholder="Marca-Modelo / código" required>
             </div>
             <div class="purchase-item-card__bottom">
+                <div class="form-field purchase-item-card__cantidad">
+                    <label class="form-label" for="item-cantidad-${index}">Cantidad</label>
+                    <input type="number" id="item-cantidad-${index}" name="items[${index}][cantidad]" class="form-input" min="1" value="1" required>
+                </div>
                 <div class="form-field">
                     <label class="form-label" for="item-utilizacion-${index}">Utilización</label>
                     <input type="text" id="item-utilizacion-${index}" name="items[${index}][utilizacion]" class="form-input" placeholder="Para quién / qué uso" required>
@@ -244,10 +248,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="form-field">
                     <label class="form-label" for="item-ubicacion-${index}">Ubicación</label>
                     <input type="text" id="item-ubicacion-${index}" name="items[${index}][ubicacion]" class="form-input" placeholder="Ubicación / sede" required>
-                </div>
-                <div class="form-field purchase-item-card__cantidad">
-                    <label class="form-label" for="item-cantidad-${index}">Cantidad</label>
-                    <input type="number" id="item-cantidad-${index}" name="items[${index}][cantidad]" class="form-input" min="1" value="1" required>
                 </div>
             </div>
         `;

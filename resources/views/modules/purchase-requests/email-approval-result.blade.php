@@ -6,21 +6,25 @@
 
                 <div class="alert {{ $estado === \App\Models\PurchaseRequest::ESTADO_APROBADO ? 'alert--success' : 'alert--warning' }} ficha-empleados-page__alert">
                     @if ($estado === \App\Models\PurchaseRequest::ESTADO_APROBADO)
-                        La solicitud de compra <strong>N.º {{ $purchaseRequest->folio() }}</strong> fue <strong>aprobada</strong> correctamente.
+                        La solicitud de compra <strong>N.º {{ $purchaseRequest->folioVisible() }}</strong> fue <strong>aprobada</strong> correctamente.
                     @else
-                        La solicitud de compra <strong>N.º {{ $purchaseRequest->folio() }}</strong> fue <strong>rechazada</strong>.
+                        La solicitud de compra <strong>N.º {{ $purchaseRequest->folioVisible() }}</strong> fue <strong>rechazada</strong>.
                     @endif
                 </div>
 
                 <div class="req-approval-letter__panel">
-                    <p><strong>Folio:</strong> {{ $purchaseRequest->folio() }}</p>
+                    <p><strong>Folio:</strong> {{ $purchaseRequest->folioVisible() }}</p>
                     <p><strong>Solicitante:</strong> {{ $purchaseRequest->user?->name ?? '—' }}</p>
                     <p><strong>Área:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
                 </div>
 
-                @if ($purchaseRequest->comentarios_director)
+                @php
+                    $observacionDirector = $purchaseRequest->comentarios_director
+                        ?: $purchaseRequest->comments->sortByDesc('id')->first()?->body;
+                @endphp
+                @if ($observacionDirector)
                     <div class="req-approval-letter__panel req-approval-letter__panel--muted">
-                        <p><strong>Comentarios del director:</strong> {{ $purchaseRequest->comentarios_director }}</p>
+                        <p><strong>Comentarios del director:</strong> {{ $observacionDirector }}</p>
                     </div>
                 @endif
 

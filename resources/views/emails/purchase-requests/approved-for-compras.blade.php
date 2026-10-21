@@ -1,7 +1,7 @@
 @component('mail::message')
 # Solicitud aprobada para Compras
 
-La solicitud **N.º {{ $purchaseRequest->folio() }}** fue aprobada y esta disponible en la bandeja de Compras.
+La solicitud **N.º {{ $purchaseRequest->folioVisible() }}** fue aprobada y está disponible en Pedidos.
 
 **Solicitante:** {{ $purchaseRequest->user?->name }}  
 **Area:** {{ $purchaseRequest->areaLabel() }}

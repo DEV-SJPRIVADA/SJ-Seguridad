@@ -1,7 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
-    </x-slot>
 
     @php
         $backUrl = route('purchase-requests.processing.index', ['module' => $module]);
@@ -19,13 +16,13 @@
                     <a
                         href="{{ $backUrl }}"
                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                        title="Volver a bandeja de compras"
-                        aria-label="Volver a bandeja de compras"
+                        title="Volver a Pedidos"
+                        aria-label="Volver a Pedidos"
                     >
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
                     <div class="pur-req-detail__toolbar-actions">
-                        @if ($purchaseRequest->estaEnBandejaCompras())
+                        @if ($purchaseRequest->puedeEmitirOrden())
                             <a
                                 href="{{ route('purchase-requests.orders.purchase.create', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -46,14 +43,10 @@
                     </div>
                 </div>
 
-                <h2 class="page-title">Procesar solicitud {{ $purchaseRequest->folio() }}</h2>
-                <p class="page-subtitle">Actualiza el estado operativo de Compras y deja comentarios visibles para el solicitante.</p>
+                <h2 class="page-title">Procesar solicitud {{ $purchaseRequest->folioVisible() }}</h2>
+                <p class="page-subtitle">El estado lo calcula el sistema según las órdenes emitidas. Puedes cerrar el saldo con un motivo.</p>
                 <div class="pur-req-detail__pills">
-                    @if ($estadoCompras)
-                        <span class="status-pill status-pill--compras-{{ $estadoCompras }}">
-                            Compras: {{ $purchaseRequest->estadoComprasLabel() }}
-                        </span>
-                    @endif
+                    <x-pedido-etapa :etapa="$purchaseRequest->etapa()" />
                     @if ($purchaseRequest->urgente)
                         <span class="status-pill status-pill--warning">Urgente</span>
                     @endif
@@ -120,94 +113,40 @@
                         </div>
                     </section>
 
-                    <form
-                        action="{{ route('purchase-requests.processing.purchase.update', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
-                        method="POST"
-                        class="form-stack"
-                        id="purchase-process-form"
-                    >
-                        @csrf
-                        @method('PATCH')
-
+                    {{-- El estado ya no se elige a mano: lo escribe la máquina al emitir OC o al cerrar saldo. --}}
+                    @if ($purchaseRequest->comentarios_compras)
                         <section class="pur-req-form__section">
                             <header class="pur-req-form__section-head">
                                 <span class="pur-req-form__section-step">2</span>
                                 <div>
-                                    <h3 class="pur-req-form__section-title">Estado y comentarios</h3>
-                                    <p class="pur-req-form__section-desc">Define el avance en bandeja y deja observaciones para el solicitante.</p>
+                                    <h3 class="pur-req-form__section-title">Comentarios de compras</h3>
+                                    <p class="pur-req-form__section-desc">Nota guardada en un pedido anterior. Los motivos nuevos van al hilo.</p>
                                 </div>
                             </header>
-
-                            <div class="form-grid form-grid--two">
-                                <div class="form-field">
-                                    <label class="form-label" for="estado_compras">Estado de compras</label>
-                                    <x-searchable-select
-                                        id="estado_compras"
-                                        name="estado_compras"
-                                        :options="\App\Models\PurchaseRequest::estadosComprasLabels()"
-                                        :value="old('estado_compras', $purchaseRequest->estado_compras)"
-                                        placeholder="Seleccione estado…"
-                                        searchPlaceholder="Buscar estado…"
-                                        :required="true"
-                                        :allowClear="false"
-                                    />
-                                    <x-input-error :messages="$errors->get('estado_compras')" />
-                                </div>
-                            </div>
-
-                            <div class="form-field">
-                                <label class="form-label" for="comentarios_compras">Comentarios</label>
-                                <textarea
-                                    name="comentarios_compras"
-                                    id="comentarios_compras"
-                                    class="form-textarea"
-                                    rows="4"
-                                    placeholder="Observaciones del área de compras…"
-                                >{{ old('comentarios_compras', $purchaseRequest->comentarios_compras) }}</textarea>
-                                <x-input-error :messages="$errors->get('comentarios_compras')" />
-                            </div>
+                            <p class="pur-req-detail__block-body">{{ $purchaseRequest->comentarios_compras }}</p>
                         </section>
+                    @endif
 
-                        <div class="pur-req-form-actions">
-                            <p class="pur-req-form-actions__note">
-                                Al guardar, el solicitante puede recibir notificación según el estado elegido.
-                            </p>
-                            <div class="pur-req-form-actions__group">
-                                <a
-                                    href="{{ $backUrl }}"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                    title="Cancelar y volver"
-                                    aria-label="Cancelar y volver"
-                                >
-                                    <x-lucide-x width="18" height="18" aria-hidden="true" />
-                                </a>
-                                <button
-                                    type="submit"
-                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
-                                    title="Guardar procesamiento"
-                                    aria-label="Guardar procesamiento"
-                                >
-                                    <x-lucide-save width="18" height="18" aria-hidden="true" />
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    @include('modules.purchase-requests.processing.partials.close-balance', [
+                        'canClose' => $purchaseRequest->puedeCerrarSaldo(),
+                        'closeUrl' => route('purchase-requests.processing.purchase.close', ['module' => $module, 'purchase_request' => $purchaseRequest->id]),
+                    ])
                 </div>
 
                 <aside class="pur-req-form-aside">
                     <div class="panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Contexto rapido de la solicitud.</p>
+                            <p class="panel-text">Contexto rápido de la solicitud.</p>
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Folio: {{ $purchaseRequest->folio() }}</li>
+                                <li class="pur-req-form-guide__item">Folio: {{ $purchaseRequest->folioVisible() }}</li>
                                 <li class="pur-req-form-guide__item">Solicitante: {{ $purchaseRequest->user?->name ?? '—' }}</li>
                                 <li class="pur-req-form-guide__item">Director: {{ $purchaseRequest->aprobador?->name ?? '—' }}</li>
                                 <li class="pur-req-form-guide__item">Productos: {{ $purchaseRequest->items->count() }}</li>
                                 @if ($estadoCompras)
-                                    <li class="pur-req-form-guide__item">Estado actual: {{ $purchaseRequest->estadoComprasLabel() }}</li>
+                                    <li class="pur-req-form-guide__item">Estado actual: {{ $purchaseRequest->etiquetaFlujoCompras() }}</li>
                                 @endif
                             </ul>
                         </div>
@@ -219,10 +158,9 @@
                         </div>
                         <div class="panel__body">
                             <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item"><strong>Pendiente</strong>: recien llegada a bandeja.</li>
-                                <li class="pur-req-form-guide__item"><strong>En curso</strong>: Compras ya gestiona la compra.</li>
-                                <li class="pur-req-form-guide__item"><strong>Completado</strong>: tramite cerrado.</li>
-                                <li class="pur-req-form-guide__item"><strong>Rechazado</strong>: no procede (explica en comentarios).</li>
+                                <li class="pur-req-form-guide__item"><strong>Por comprar</strong>: aprobada y todavía sin cantidades en una orden.</li>
+                                <li class="pur-req-form-guide__item"><strong>Con orden</strong>: hay una orden y queda saldo.</li>
+                                <li class="pur-req-form-guide__item"><strong>Cerrado</strong>: saldo en cero o cierre con motivo. No admite otra orden.</li>
                             </ul>
                         </div>
                     </div>

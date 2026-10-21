@@ -10,8 +10,11 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{mod
         Route::get('/mis-solicitudes/exportar', [SupplyRequestController::class, 'exportExcel'])->name('export');
         Route::get('/solicitar', [SupplyRequestController::class, 'create'])->name('create');
         Route::post('/solicitar', [SupplyRequestController::class, 'store'])->name('store');
+        Route::get('/mis-solicitudes/{supply_request}/editar', [SupplyRequestController::class, 'edit'])->name('edit');
+        Route::patch('/mis-solicitudes/{supply_request}', [SupplyRequestController::class, 'update'])->name('update');
     });
 
+    Route::post('/solicitud/{supply_request}/comentarios', [SupplyRequestController::class, 'storeComment'])->name('comments.store');
     Route::get('/solicitud/{supply_request}', [SupplyRequestController::class, 'show'])->name('show');
     Route::get('/solicitud/{supply_request}/pdf', [SupplyRequestController::class, 'exportPdf'])->name('export.pdf');
     Route::get('/solicitud/{supply_request}/excel', [SupplyRequestController::class, 'exportExcelRequest'])->name('export.excel');

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\PedidoEtapa;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,6 +37,8 @@ class PurchaseRequest extends Model
         'razon_social',
         'asume_cliente',
         'reinversion',
+        'comodato',
+        'activo',
         'estado',
         'estado_compras',
         'fecha_aprobacion',
@@ -54,18 +58,57 @@ class PurchaseRequest extends Model
             'proyecto_nuevo' => 'boolean',
             'asume_cliente' => 'boolean',
             'reinversion' => 'boolean',
+            'comodato' => 'boolean',
+            'activo' => 'boolean',
         ];
     }
 
-    /** @return array<string, string> */
+    /**
+     * Etiquetas de `estado_compras` con el nombre de la etapa común.
+     *
+     * @return array<string, string>
+     */
     public static function estadosComprasLabels(): array
     {
-        return [
-            self::COMPRAS_PENDIENTE => 'Pendiente',
-            self::COMPRAS_EN_CURSO => 'En curso',
-            self::COMPRAS_COMPLETADO => 'Completado',
-            self::COMPRAS_RECHAZADO => 'Rechazado',
-        ];
+        $labels = [];
+
+        foreach ([self::COMPRAS_PENDIENTE, self::COMPRAS_EN_CURSO, self::COMPRAS_COMPLETADO, self::COMPRAS_RECHAZADO] as $key) {
+            $labels[$key] = PedidoEtapa::fromComprasKey($key)->label();
+        }
+
+        return $labels;
+    }
+
+    public function etapa(): PedidoEtapa
+    {
+        return PedidoEtapa::fromPurchase($this->estado, $this->estado_compras);
+    }
+
+    /**
+     * Filtra por una o varias etapas traduciendo a `estado` + `estado_compras`.
+     *
+     * @param  Builder<PurchaseRequest>  $query
+     * @param  PedidoEtapa|list<PedidoEtapa>  $etapas
+     * @return Builder<PurchaseRequest>
+     */
+    public function scopeWhereEtapa(Builder $query, PedidoEtapa|array $etapas): Builder
+    {
+        $etapas = is_array($etapas) ? $etapas : [$etapas];
+
+        if ($etapas === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $outer) use ($etapas): void {
+            foreach ($etapas as $etapa) {
+                $outer->orWhere(fn (Builder $sub): Builder => match ($etapa) {
+                    PedidoEtapa::PorAutorizar => $sub->where('estado', self::ESTADO_PENDIENTE),
+                    PedidoEtapa::Devuelta => $sub->where('estado', self::ESTADO_RECHAZADO),
+                    default => $sub->where('estado', self::ESTADO_APROBADO)
+                        ->where('estado_compras', $etapa->comprasKey()),
+                });
+            }
+        });
     }
 
     public function user(): BelongsTo
@@ -113,6 +156,14 @@ class PurchaseRequest extends Model
         return str_pad((string) $this->numero_solicitud, 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Folio de pantalla. No altera el correlativo guardado; por encima de 9999 no recorta.
+     */
+    public function folioVisible(): string
+    {
+        return 'SC-'.$this->folio();
+    }
+
     public function estaEnBandejaCompras(): bool
     {
         return $this->estado === self::ESTADO_APROBADO;
@@ -136,6 +187,30 @@ class PurchaseRequest extends Model
     public function estadoComprasLabel(): string
     {
         return self::estadosComprasLabels()[$this->estado_compras] ?? '—';
+    }
+
+    /**
+     * Etiqueta de la máquina (Por comprar / Con orden / Cerrado). El valor en BD no cambia.
+     */
+    public static function etiquetaFlujo(?string $estadoCompras): string
+    {
+        return PedidoEtapa::fromComprasKey($estadoCompras)?->label() ?? '—';
+    }
+
+    public function etiquetaFlujoCompras(): string
+    {
+        return self::etiquetaFlujo($this->estado_compras);
+    }
+
+    public function puedeCerrarSaldo(): bool
+    {
+        return $this->estado === self::ESTADO_APROBADO
+            && in_array($this->estado_compras, [self::COMPRAS_PENDIENTE, self::COMPRAS_EN_CURSO], true);
+    }
+
+    public function puedeEmitirOrden(): bool
+    {
+        return $this->puedeCerrarSaldo();
     }
 
     public function puedeReabrir(): bool

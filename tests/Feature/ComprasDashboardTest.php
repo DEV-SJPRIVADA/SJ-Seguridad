@@ -147,7 +147,7 @@ class ComprasDashboardTest extends TestCase
         $this->assertSame($queueStats['total'], $dashboardStats['bandeja_total']);
         $this->assertSame($queueStats['pendiente'], $dashboardStats['bandeja_pendiente']);
         $this->assertSame($queueStats['en_curso'], $dashboardStats['bandeja_en_curso']);
-        $this->assertSame(5, $dashboardStats['bandeja_total']);
+        $this->assertSame(2, $dashboardStats['bandeja_total']);
         $this->assertSame(1, $dashboardStats['bandeja_en_curso']);
 
         $bandejaLinks = ComprasQueueFilterBag::bandejaLinkQuery($filters);

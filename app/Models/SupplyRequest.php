@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\PedidoEtapa;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,21 +53,49 @@ class SupplyRequest extends Model
         return $this->hasMany(SupplyRequestItem::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(SupplyRequestComment::class)->oldest('id');
+    }
+
     public function site(): BelongsTo
     {
         return $this->belongsTo(SupplySite::class, 'sede_id');
     }
 
+    /**
+     * Etiqueta de pantalla: la etapa común (Por autorizar, Por comprar, Con orden…).
+     */
     public function statusLabel(): string
     {
-        return match ($this->status) {
-            'pendiente_calidad' => 'Pendiente',
-            'aprobada_calidad' => 'Aprobada',
-            'rechazada_calidad' => 'Rechazada',
-            'en_compras' => 'En compras',
-            'completada' => 'Completada',
-            default => ucfirst(str_replace('_', ' ', $this->status)),
-        };
+        return $this->etapa()->label();
+    }
+
+    public function etapa(): PedidoEtapa
+    {
+        return PedidoEtapa::fromSupply($this->status);
+    }
+
+    /**
+     * Filtra por una o varias etapas traduciendo a `status`.
+     *
+     * @param  Builder<SupplyRequest>  $query
+     * @param  PedidoEtapa|list<PedidoEtapa>  $etapas
+     * @return Builder<SupplyRequest>
+     */
+    public function scopeWhereEtapa(Builder $query, PedidoEtapa|array $etapas): Builder
+    {
+        $statuses = [];
+
+        foreach (is_array($etapas) ? $etapas : [$etapas] as $etapa) {
+            array_push($statuses, ...$etapa->supplyStatuses());
+        }
+
+        $statuses = array_values(array_unique($statuses));
+
+        return $statuses === []
+            ? $query->whereRaw('1 = 0')
+            : $query->whereIn('status', $statuses);
     }
 
     public function folio(): string
@@ -73,14 +103,17 @@ class SupplyRequest extends Model
         return str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Folio de pantalla. No altera el id guardado; por encima de 9999 no recorta.
+     */
+    public function folioVisible(): string
+    {
+        return 'SU-'.$this->folio();
+    }
+
     public function estadoComprasKey(): ?string
     {
-        return match ($this->status) {
-            'aprobada_calidad' => PurchaseRequest::COMPRAS_PENDIENTE,
-            'en_compras' => PurchaseRequest::COMPRAS_EN_CURSO,
-            'completada' => PurchaseRequest::COMPRAS_COMPLETADO,
-            default => null,
-        };
+        return $this->etapa()->comprasKey();
     }
 
     public function estadoComprasLabel(): ?string
@@ -95,5 +128,27 @@ class SupplyRequest extends Model
     public function isExportableForCompras(): bool
     {
         return in_array($this->status, ['aprobada_calidad', 'en_compras', 'completada'], true);
+    }
+
+    public function puedeCerrarSaldo(): bool
+    {
+        return in_array($this->status, ['aprobada_calidad', 'en_compras'], true);
+    }
+
+    public function puedeEmitirOrden(): bool
+    {
+        return $this->puedeCerrarSaldo();
+    }
+
+    public function puedeComentar(): bool
+    {
+        return $this->status !== 'completada';
+    }
+
+    public function etiquetaFlujoCompras(): ?string
+    {
+        $key = $this->estadoComprasKey();
+
+        return $key !== null ? PurchaseRequest::etiquetaFlujo($key) : null;
     }
 }
