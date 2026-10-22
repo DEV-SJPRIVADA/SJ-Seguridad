@@ -115,6 +115,7 @@ class DesvinculacionesController extends Controller
             'checkLabels' => EmployeeTerminationFollowup::CHECK_LABELS,
             'datatableUrl' => route('gestion-humana.desvinculaciones.seguimientos.datatable'),
             'exportUrl' => route('gestion-humana.desvinculaciones.seguimientos.export'),
+            'exportCentroCostoUrl' => route('gestion-humana.desvinculaciones.seguimientos.export-centro-costo'),
             'importHistoricoUrl' => route('gestion-humana.desvinculaciones.seguimientos.import-historico'),
             'filters' => [
                 'q' => request()->string('q')->toString(),
@@ -150,7 +151,45 @@ class DesvinculacionesController extends Controller
     public function exportSeguimientos(Request $request): StreamedResponse
     {
         $this->authorizeView();
+        $this->validateSeguimientosExportFilters($request);
 
+        $rows = $this->followupDatatableService->filteredQuery($request)->get();
+
+        $this->logSeguimientosExport($request, 'seguimientos_excel', $rows->count());
+
+        return (new BaseExport(
+            $rows,
+            $this->followupDatatableService->exportColumns(),
+            'seguimientos_desvinculaciones_'.now()->format('Y-m-d').'.xlsx',
+            'Seguimientos desvinculaciones - '.config('app.name'),
+        ))->download();
+    }
+
+    /**
+     * Export adicional: cédula, nombre, cargo, tipo y fecha de desvinculación + NOM CCOST y ciudad del perfil.
+     * Mismos filtros que el listado.
+     */
+    public function exportSeguimientosCentroCosto(Request $request): StreamedResponse
+    {
+        $this->authorizeView();
+        $this->validateSeguimientosExportFilters($request);
+
+        $rows = $this->followupDatatableService->filteredQuery($request)
+            ->with('fichaEntry.profile:id,personal_requisition_ficha_entry_id,cost_center_name,work_city_name,residence_city_name')
+            ->get();
+
+        $this->logSeguimientosExport($request, 'seguimientos_centro_costo_excel', $rows->count());
+
+        return (new BaseExport(
+            $rows,
+            $this->followupDatatableService->costCenterExportColumns(),
+            'seguimientos_centro_costo_'.now()->format('Y-m-d').'.xlsx',
+            'Seguimientos desvinculaciones (centro de costo) - '.config('app.name'),
+        ))->download();
+    }
+
+    private function validateSeguimientosExportFilters(Request $request): void
+    {
         $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'in:,incompletos,ok_todo,sin_carta,motivados'],
@@ -159,9 +198,10 @@ class DesvinculacionesController extends Controller
             'fecha_desde' => ['nullable', 'date'],
             'fecha_hasta' => ['nullable', 'date', 'after_or_equal:fecha_desde'],
         ]);
+    }
 
-        $rows = $this->followupDatatableService->filteredQuery($request)->get();
-
+    private function logSeguimientosExport(Request $request, string $action, int $rowCount): void
+    {
         $fechaCampo = trim($request->string('fecha_campo')->toString());
         if (! array_key_exists($fechaCampo, EmployeeTerminationFollowup::DATE_FILTER_FIELDS)) {
             $fechaCampo = EmployeeTerminationFollowup::DEFAULT_DATE_FILTER_FIELD;
@@ -169,9 +209,9 @@ class DesvinculacionesController extends Controller
 
         $this->auditLogService->logEvent(
             eventType: 'export',
-            action: 'seguimientos_excel',
+            action: $action,
             metadata: [
-                'row_count' => $rows->count(),
+                'row_count' => $rowCount,
                 'q' => trim($request->string('q')->toString()),
                 'status' => array_key_exists('status', $request->query())
                     ? (string) $request->query('status', '')
@@ -182,13 +222,6 @@ class DesvinculacionesController extends Controller
                 'fecha_hasta' => $request->date('fecha_hasta')?->toDateString(),
             ],
         );
-
-        return (new BaseExport(
-            $rows,
-            $this->followupDatatableService->exportColumns(),
-            'seguimientos_desvinculaciones_'.now()->format('Y-m-d').'.xlsx',
-            'Seguimientos desvinculaciones - '.config('app.name'),
-        ))->download();
     }
 
     public function updateSeguimiento(

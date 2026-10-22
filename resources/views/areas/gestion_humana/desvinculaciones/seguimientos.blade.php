@@ -12,6 +12,7 @@
                     'canEdit' => (bool) $canEditSeguimientos,
                     'datatableUrl' => $datatableUrl,
                     'exportUrl' => $exportUrl,
+                    'exportCentroCostoUrl' => $exportCentroCostoUrl ?? '',
                     'importHistoricoUrl' => $importHistoricoUrl ?? '',
                     'csrf' => csrf_token(),
                     'checkFields' => $checkFields,
@@ -180,6 +181,16 @@
                                 aria-label="Exportar a Excel"
                             >
                                 <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
+                            </a>
+                            {{-- Export adicional: datos básicos + NOM CCOST y ciudad del perfil (mismos filtros) --}}
+                            <a
+                                x-bind:href="exportCentroCostoHref"
+                                class="btn btn--secondary btn--sm desvinculaciones-seguimientos__export-btn"
+                                title="Exportar centro de costo y ciudad (Excel)"
+                                aria-label="Exportar centro de costo y ciudad"
+                            >
+                                <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
+                                <span class="desvinculaciones-seguimientos__export-tag">Operaciones</span>
                             </a>
                         </div>
                     </div>
@@ -499,6 +510,7 @@
                     canEdit: !!config.canEdit,
                     datatableUrl: config.datatableUrl,
                     exportUrlBase: config.exportUrl || '',
+                    exportCentroCostoUrlBase: config.exportCentroCostoUrl || '',
                     importHistoricoUrl: config.importHistoricoUrl || '',
                     csrf: config.csrf,
                     checkFields: config.checkFields || [],
@@ -567,6 +579,15 @@
                     },
 
                     get exportHref() {
+                        return this.exportUrlWithFilters(this.exportUrlBase);
+                    },
+
+                    // Export «Centro de costo»: mismos filtros que el listado.
+                    get exportCentroCostoHref() {
+                        return this.exportUrlWithFilters(this.exportCentroCostoUrlBase);
+                    },
+
+                    exportUrlWithFilters(base) {
                         const params = new URLSearchParams();
                         if (this.q) {
                             params.set('q', this.q);
@@ -583,7 +604,7 @@
                             params.set('fecha_hasta', this.fechaHasta);
                         }
                         const qs = params.toString();
-                        return this.exportUrlBase + (qs ? '?' + qs : '');
+                        return (base || '') + (qs ? '?' + qs : '');
                     },
 
                     filterParams() {

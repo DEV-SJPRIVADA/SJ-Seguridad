@@ -221,6 +221,41 @@ final class TerminationFollowupDatatableService
         return $columns;
     }
 
+    /**
+     * Export «Centro de costo»: datos de la vista + NOM CCOST y ciudad (trabajo, si vacía residencia) del perfil.
+     * Requiere filas con `fichaEntry.profile` precargado (ver controller).
+     *
+     * @return list<array{key: string|\Closure, label: string}>
+     */
+    public function costCenterExportColumns(): array
+    {
+        $profile = static fn (EmployeeTerminationFollowup $row) => $row->fichaEntry?->profile;
+
+        return [
+            ['key' => 'document_number', 'label' => 'CEDULA'],
+            ['key' => 'full_name', 'label' => 'NOMBRE Y APELLIDOS'],
+            ['key' => 'position_name', 'label' => 'CARGO'],
+            ['key' => 'termination_cause_name', 'label' => 'TIPO DESVINCULACIÓN'],
+            [
+                'key' => static fn (EmployeeTerminationFollowup $row): string => DisplayDate::date($row->termination_date, ''),
+                'label' => 'FECHA DE DESVINCULACION',
+            ],
+            [
+                'key' => static fn (EmployeeTerminationFollowup $row): string => (string) ($profile($row)?->cost_center_name ?? ''),
+                'label' => 'NOM CCOST',
+            ],
+            [
+                'key' => static function (EmployeeTerminationFollowup $row) use ($profile): string {
+                    $perfil = $profile($row);
+                    $work = trim((string) ($perfil?->work_city_name ?? ''));
+
+                    return $work !== '' ? $work : trim((string) ($perfil?->residence_city_name ?? ''));
+                },
+                'label' => 'CIUDAD',
+            ],
+        ];
+    }
+
     private function resolveStatusFilter(Request $request): string
     {
         // status= (vacío) = sin filtro de estado (p. ej. solo rango de fechas).

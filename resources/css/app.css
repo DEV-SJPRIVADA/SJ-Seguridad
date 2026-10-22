@@ -11445,6 +11445,12 @@ a.req-dashboard-kpi:focus-visible {
     flex-shrink: 0;
 }
 
+/* Etiqueta corta del export «Centro de costo» para distinguirlo del Excel completo */
+.desvinculaciones-seguimientos__export-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
 .desvinculaciones-seguimientos__status-chips {
     display: flex;
     flex-wrap: wrap;

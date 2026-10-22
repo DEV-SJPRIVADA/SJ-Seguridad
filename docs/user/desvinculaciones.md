@@ -77,7 +77,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 4. Para corregir **Recontratable** u **Observaciones** (permiso de edición): en **Acciones** pulse el icono de lápiz, ajuste los valores en la ventana y pulse **Guardar**. Recontratable puede quedar en Sí, No o sin definir. El cambio también se aplica a la ficha del empleado (define si puede volver a contratarse) y a **MT-GH-04 Novedades → Retiros**. Las observaciones se guardan en mayúsculas.
 5. Marque los siete checks operativos (examenes, enviado, control roll, retiro ARL, recibido, paz y salvo, reporte noved) y, si aplica, la **fecha entregado nomina**. Los cambios se guardan solos al soltar el control (unos instantes despues).
 6. **OK TODO** se calcula solo: pasa a Si cuando esos siete checks estan en verdadero; no se puede forzar a mano.
-7. Use **Exportar Excel** para descargar el listado con los filtros activos (incluye cedula, nombre, cargo, tipo desvinculacion, fechas, checks, OK TODO y observaciones).
+7. Use **Exportar Excel** para descargar el listado con los filtros activos (incluye cedula, nombre, cargo, tipo desvinculacion, fechas, checks, OK TODO y observaciones). El botón **Excel C. costo** descarga, con los mismos filtros, un archivo corto: cédula, nombre y apellidos, cargo, tipo de desvinculación, fecha de desvinculación, **NOM CCOST** (centro de costo del perfil) y **CIUDAD** (ciudad de trabajo del perfil; si está vacía, la de residencia).
 8. Si el caso esta **sin carta**, regenere la carta en **Ficha empleados** del empleado (vinculo cerrado → Generar cartas). Al generar con exito, Seguimientos mostrara que ya tiene carta.
 9. No se elimina ni se oculta un seguimiento de forma silenciosa. Para **revertir** la desvinculación (reactivar al empleado): use el icono de reabrir en la fila, confirme con un **motivo obligatorio**. El sistema deja al empleado activo, quita la fila de Seguimientos, borra las cartas de ese retiro y, si había una fila automática en **MT-GH-04 Novedades → Retiros**, esa novedad deja de mostrarse allí.
 
@@ -99,6 +99,7 @@ La desvinculacion de **un solo** empleado desde la ficha sigue existiendo y, al 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.22 | 2026-10-22 | Agent | Seguimientos: export adicional **Excel C. costo** (datos básicos + centro de costo y ciudad del perfil). |
 | 1.21 | 2026-10-20 | Agent | Seguimientos: botón Editar en Acciones (modal Recontratable + Observaciones); sincroniza ficha y Retiros. |
 | 1.20 | 2026-10-14 | Agent | Selector Causal (Masivos / modal desvinculación): solo muestra el nombre, no el código. |
 | 1.19 | 2026-10-14 | Agent | Seguimientos: chip de estado Motivados (recontratable = No). |

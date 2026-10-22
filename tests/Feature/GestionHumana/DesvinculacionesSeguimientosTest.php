@@ -22,6 +22,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class DesvinculacionesSeguimientosTest extends TestCase
@@ -395,6 +396,58 @@ class DesvinculacionesSeguimientosTest extends TestCase
         $content = $response->streamedContent();
         $this->assertNotSame('', $content);
         $this->assertStringContainsString('PK', substr($content, 0, 2));
+    }
+
+    public function test_export_centro_costo_includes_profile_cost_center_and_city_fallback(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $conTrabajo = $this->createFollowup(['full_name' => 'Con Ciudad Trabajo']);
+        $soloResidencia = $this->createFollowup(['full_name' => 'Solo Residencia']);
+
+        $conTrabajo->fichaEntry->profile->forceFill([
+            'cost_center_name' => 'CCOSTO NORTE',
+            'work_city_name' => 'CALI',
+            'residence_city_name' => 'PALMIRA',
+        ])->save();
+        $soloResidencia->fichaEntry->profile->forceFill([
+            'cost_center_name' => 'CCOSTO SUR',
+            'work_city_name' => null,
+            'residence_city_name' => 'JAMUNDI',
+        ])->save();
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.desvinculaciones.seguimientos.export-centro-costo', ['status' => '']));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'module' => 'desvinculaciones',
+            'event_type' => 'export',
+            'action' => 'seguimientos_centro_costo_excel',
+        ]);
+
+        $path = tempnam(sys_get_temp_dir(), 'seg-ccosto').'.xlsx';
+        file_put_contents($path, $response->streamedContent());
+        $rows = IOFactory::load($path)->getActiveSheet()->toArray();
+        @unlink($path);
+
+        $flat = collect($rows)->map(fn (array $row): string => implode('|', array_map('strval', $row)))->implode("\n");
+
+        $this->assertStringContainsString('NOM CCOST', $flat);
+        $this->assertStringContainsString('CIUDAD', $flat);
+        $this->assertStringContainsString('CCOSTO NORTE|CALI', $flat);
+        $this->assertStringContainsString('CCOSTO SUR|JAMUNDI', $flat);
+    }
+
+    public function test_export_centro_costo_without_view_permission_is_forbidden(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+
+        $this->actingAs($user)
+            ->get(route('gestion-humana.desvinculaciones.seguimientos.export-centro-costo'))
+            ->assertForbidden();
     }
 
     public function test_export_seguimientos_without_view_permission_is_forbidden(): void

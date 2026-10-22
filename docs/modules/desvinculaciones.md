@@ -45,6 +45,7 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | GET | `/seguimientos` | `seguimientos` | Vista Seguimientos. `desvinculaciones.view` |
 | GET | `/seguimientos/datatable` | `seguimientos.datatable` | JSON filtrado (q, status, fecha_desde/hasta nomina). `desvinculaciones.view` |
 | GET | `/seguimientos/exportar` | `seguimientos.export` | Excel filtrado (`BaseExport`). `desvinculaciones.view` |
+| GET | `/seguimientos/exportar-centro-costo` | `seguimientos.export-centro-costo` | Excel «Centro de costo» con los mismos filtros: CEDULA, NOMBRE Y APELLIDOS, CARGO, TIPO DESVINCULACIÓN, FECHA DE DESVINCULACION + perfil `cost_center_name` (NOM CCOST) y CIUDAD (`work_city_name`, si vacía `residence_city_name`). Audit `export` / `seguimientos_centro_costo_excel`. `desvinculaciones.view` |
 | POST | `/seguimientos/importar-historico` | `seguimientos.import-historico` | Import histórico NOVEDADES (JSON; `dry_run` / carga). `desvinculaciones.seguimientos.edit` |
 | PATCH | `/seguimientos/{followup}` | `seguimientos.update` | Autosave parcial (checks, `payroll_delivered_at`) + modal Editar (`is_rehireable` nullable bool, `termination_notes` ≤1000, MAYÚSCULAS). `desvinculaciones.seguimientos.edit` |
 | POST | `/seguimientos/{followup}/revertir` | `seguimientos.revert` | Revertir desvinculacion (reactiva empleado). `desvinculaciones.seguimientos.edit` |
