@@ -410,6 +410,72 @@ class AcreditacionesExportApoManualTest extends TestCase
         $this->assertStringContainsString('Cargo del perfil no está en Gestionar cargos', (string) $response->json('avisos'));
     }
 
+    public function test_manual_changing_cargo_brings_course_for_that_cargo(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '7501502503';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'ESCOLTA');
+        $this->curso($cedula, $this->tipoCurso('F.ESCOLTA', '2', '2101'), now()->subMonth()->toDateString(), 'NC-ESC', '900555666');
+        $this->curso($cedula, $this->tipoCurso('F.SUPERVISOR', '4', '4101'), now()->subMonths(3)->toDateString(), 'NC-SUP', '900777888');
+
+        AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+        AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
+            'cargo_apo' => 'SUPERVISOR',
+        ]);
+
+        // Prefill inicial: cargo del perfil (ESCOLTA = 2) y su curso.
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+            ])
+            ->assertOk()
+            ->assertJsonPath('row.cargo', '2')
+            ->assertJsonPath('row.codigo_curso', '2101');
+
+        // El usuario cambia el cargo a SUPERVISOR (4): trae el curso de supervisor de esa cédula.
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+                'cargo' => '4',
+            ])
+            ->assertOk()
+            ->assertJsonPath('cargo', '4')
+            ->assertJsonPath('curso.codigo_curso', '4101')
+            ->assertJsonPath('curso.nro', 'NC-SUP')
+            ->assertJsonPath('curso.nit_escuela', '900777888')
+            ->assertJsonPath('curso.avisos', '');
+    }
+
+    public function test_manual_changing_cargo_without_course_clears_course_and_warns(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '7601602603';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'ESCOLTA');
+        $this->curso($cedula, $this->tipoCurso('F.ESCOLTA', '2', '2101'), now()->subMonth()->toDateString(), 'NC-ESC', '900555666');
+
+        $response = $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+                'cargo' => '4',
+            ])
+            ->assertOk()
+            ->assertJsonPath('curso.codigo_curso', '')
+            ->assertJsonPath('curso.nro', '')
+            ->assertJsonPath('curso.nit_escuela', '');
+
+        $this->assertStringContainsString('Sin curso', (string) $response->json('curso.avisos'));
+    }
+
     public function test_automatic_warns_but_keeps_valid_course_when_cargo_numbers_differ(): void
     {
         $cedula = '7401402403';

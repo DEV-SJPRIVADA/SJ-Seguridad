@@ -103,6 +103,36 @@ final class AcreditacionExportApoManualPrefillService
     }
 
     /**
+     * Curso para una cédula y un cargo elegido a mano en la grilla (p. ej. la persona tiene
+     * acreditación ESCOLTA y SUPERVISOR y el usuario cambia el cargo). Misma regla que el prefill:
+     * curso más reciente cuyo tipo tenga ese número en `cargo_acredit`, en cualquier vigencia.
+     *
+     * @return array{codigo_curso: string, nit_escuela: string, nro: string, avisos: string}
+     */
+    public function cursoForCargo(string $documentNumber, string $cargoNumber): array
+    {
+        $document = $this->normalizeDocument($documentNumber);
+        $cargo = trim($cargoNumber);
+
+        if ($document === '' || $cargo === '') {
+            return ['codigo_curso' => '', 'nit_escuela' => '', 'nro' => '', 'avisos' => ''];
+        }
+
+        $curso = $this->rowResolver->resolveCursoByCargoNumber(
+            $document,
+            $cargo,
+            AcreditacionExportApoRowResolver::POLICY_CUALQUIERA,
+        );
+
+        return [
+            'codigo_curso' => (string) $curso['codigo_curso'],
+            'nit_escuela' => (string) $curso['nit_escuela'],
+            'nro' => (string) $curso['nro'],
+            'avisos' => $this->rowResolver->novedadesLabel($curso['codes']),
+        ];
+    }
+
+    /**
      * @param  list<string>  $documents
      * @return list<array{document_number: string, found: bool, source: string|null, row: array<string, string>, avisos: string}>
      */

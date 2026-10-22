@@ -1702,6 +1702,17 @@ class AcreditacionesController extends Controller
     {
         $documents = $request->documents();
 
+        // Cambio de cargo en una fila: solo se re-busca el curso de esa cédula con ese cargo.
+        $cargo = $request->cargo();
+        if ($cargo !== null && count($documents) === 1) {
+            return response()->json([
+                'ok' => true,
+                'document_number' => $documents[0],
+                'cargo' => $cargo,
+                'curso' => $this->exportApoManualPrefillService->cursoForCargo($documents[0], $cargo),
+            ]);
+        }
+
         if (count($documents) === 1) {
             $result = $this->exportApoManualPrefillService->prefill($documents[0]);
 

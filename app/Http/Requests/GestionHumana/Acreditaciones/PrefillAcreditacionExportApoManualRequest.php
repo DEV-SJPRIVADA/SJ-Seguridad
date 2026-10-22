@@ -26,7 +26,19 @@ class PrefillAcreditacionExportApoManualRequest extends FormRequest
             'document_number' => ['nullable', 'string', 'max:50'],
             'document_numbers' => ['nullable', 'array', 'max:'.$max],
             'document_numbers.*' => ['string', 'max:50'],
+            // Cargo elegido en la grilla (número de cargo de acreditación): solo re-busca el curso.
+            'cargo' => ['nullable', 'string', 'max:20'],
         ];
+    }
+
+    /**
+     * Número de cargo para re-buscar solo el curso; null = prefill completo.
+     */
+    public function cargo(): ?string
+    {
+        $cargo = trim((string) $this->input('cargo', ''));
+
+        return $cargo !== '' ? $cargo : null;
     }
 
     public function withValidator($validator): void

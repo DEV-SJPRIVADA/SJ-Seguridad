@@ -102,7 +102,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | `DesvinculacionesDashboardService` | Métricas (periodos + ficha) |
 | `resources/js/desvinculaciones-dashboard-charts.js` | ApexCharts del Dashboard |
 | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` | Pestañas `module-tab` Dashboard / Masivos / Seguimientos |
-| `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable **inline** para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Aceptable en grilla dinamica; no usa el Blade component (obs. review #4) |
+| `areas/gestion_humana/desvinculaciones/partials/alpine-searchable-select.blade.php` | Select searchable para filas `x-for` (replica markup/CSS/Alpine de `<x-searchable-select>`; **no** Select2). Igual que el componente: `x-ref="trigger"` + dropdown **teleportado a `<body>`** (`:id="dropdownId"`, IDs autogenerados por instancia en `searchableSelect.init()`), posicionado junto al campo. Sin esto el dropdown (CSS `position: fixed; top/left: 0`) aparecía en la esquina superior izquierda, sobre el sidebar. Lo usan Masivos, Inasistencias, Cartas Vacaciones, Cartas Notificación y Export Apo Manual |
 
 ## Modelos y tablas
 

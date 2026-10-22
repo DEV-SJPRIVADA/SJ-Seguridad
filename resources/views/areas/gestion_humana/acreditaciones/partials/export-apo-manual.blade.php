@@ -205,7 +205,12 @@
                                                 disabled: processing,
                                             })"
                                             x-init="
-                                                $watch('value', (v) => { row.cargo = v });
+                                                $watch('value', (v) => {
+                                                    const prev = row.cargo == null ? '' : String(row.cargo);
+                                                    row.cargo = v;
+                                                    {{-- Cambio manual de cargo: re-buscar el curso de esa cédula con ese cargo --}}
+                                                    if (prev !== (v == null ? '' : String(v))) { refreshCursoForCargo(row); }
+                                                });
                                                 $watch(() => row.cargo, (v) => {
                                                     const next = v == null ? '' : String(v);
                                                     if (String(value) !== next) { value = next; }
@@ -276,6 +281,7 @@
                                     </td>
                                     <td>
                                         <input type="text" class="form-input" x-model="row.nro" placeholder="Nro curso" autocomplete="off" x-bind:disabled="processing">
+                                        <p class="form-hint acreditaciones-export-apo-manual__hint" x-show="row.looking_curso" x-cloak>Buscando curso…</p>
                                     </td>
                                     <td class="table-actions">
                                         <button
@@ -431,6 +437,8 @@
                         sourceHint: '',
                         avisos: '',
                         looking_up: false,
+                        looking_curso: false,
+                        cursoRequestId: 0,
                     });
 
                     const maxRows = Number(config.maxRows) || 500;
@@ -717,6 +725,58 @@
                                 row.avisos = '';
                             } finally {
                                 row.looking_up = false;
+                            }
+                        },
+
+                        /**
+                         * Al cambiar el cargo de una fila con cédula, trae el curso de esa cédula
+                         * cuyo tipo corresponde al nuevo cargo (p. ej. ESCOLTA → SUPERVISOR).
+                         * Si no hay curso para ese cargo, limpia código/NIT/Nro para no exportar
+                         * el curso del cargo anterior. Ignora respuestas viejas si el cargo cambia rápido.
+                         */
+                        async refreshCursoForCargo(row) {
+                            const doc = String(row.document_number || '').trim();
+                            const cargo = String(row.cargo || '').trim();
+                            if (! doc || ! cargo || row.looking_up) {
+                                return;
+                            }
+
+                            const requestId = (row.cursoRequestId || 0) + 1;
+                            row.cursoRequestId = requestId;
+                            row.looking_curso = true;
+
+                            const token = this.csrfToken
+                                || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                                || '';
+
+                            try {
+                                const response = await fetch(this.prefillUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': token,
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                    },
+                                    body: JSON.stringify({ document_number: doc, cargo }),
+                                });
+                                const data = await response.json().catch(() => ({}));
+                                if (row.cursoRequestId !== requestId) {
+                                    return;
+                                }
+                                if (! response.ok || data.ok === false || ! data.curso) {
+                                    return;
+                                }
+                                row.codigo_curso = data.curso.codigo_curso || '';
+                                row.nit_escuela = data.curso.nit_escuela || '';
+                                row.nro = data.curso.nro || '';
+                                row.avisos = String(data.curso.avisos || '');
+                            } catch (e) {
+                                // Sin red: se conserva lo que el usuario tenga en la fila.
+                            } finally {
+                                if (row.cursoRequestId === requestId) {
+                                    row.looking_curso = false;
+                                }
                             }
                         },
 

@@ -21,6 +21,15 @@ export default function searchableSelect(config = {}) {
         optionsListId: config.optionsListId ?? '',
 
         init() {
+            // Instancias sin IDs explícitos (p. ej. filas Alpine con el partial alpine-searchable-select):
+            // se generan únicos para poder ubicar el dropdown teleportado y posicionarlo junto al trigger.
+            if (!this.dropdownId) {
+                const uid = 'ss-' + Math.random().toString(36).slice(2, 10);
+                this.dropdownId = `${uid}__dropdown`;
+                this.searchInputId = this.searchInputId || `${uid}__search`;
+                this.optionsListId = this.optionsListId || `${uid}__options`;
+            }
+
             if (this.$refs.hiddenInput && this.value !== undefined && this.value !== null) {
                 this.$refs.hiddenInput.value = String(this.value);
             }

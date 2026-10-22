@@ -82,7 +82,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/export-apo` | `export-apo` | Shell Automática/Manual. Automática: Validar + preview. Query opcional `ids[]` → auto-Validar. **`acreditaciones.edit`** |
 | POST | `/export-apo/preview` | `export-apo.preview` | Body: `vigencia_policy` (+ `ids` opcional) → filas APO + Valida/motivo. Sin `ids` = universo completo; con `ids` incluye fuera de universo como bloqueo duro. `acreditaciones.edit` |
 | POST | `/export-apo/generar` | `export-apo.generate` | Body: ids + policy + `include_novedades` + `export_mode` → `.xls` + run (Automática). `acreditaciones.edit` |
-| POST | `/export-apo/manual/prefill` | `export-apo.manual.prefill` | Body: `document_number` o `document_numbers[]` → filas prefill (acreditado → ficha → vacío). Sin bloqueo Valida. `acreditaciones.edit` |
+| POST | `/export-apo/manual/prefill` | `export-apo.manual.prefill` | Body: `document_number` o `document_numbers[]` → filas prefill (acreditado → ficha → vacío). Con `document_number` + `cargo` (número de cargo de acreditación) responde solo `curso` {codigo_curso, nit_escuela, nro, avisos} para esa cédula y cargo (`cursoForCargo`; la grilla lo llama al cambiar el Cargo). Sin bloqueo Valida. `acreditaciones.edit` |
 | POST | `/export-apo/manual/generar` | `export-apo.manual.generate` | Body: `rows[]` + `export_mode` → `.xls` + run (Manual; sin universo/novedades). `acreditaciones.edit` |
 
 > **Nota:** no existe ruta `validaciones.gate` JSON; el gate se evalúa en el GET shell (y al POST ejecutar).
@@ -552,6 +552,8 @@ Shared-files FEAT-037/038/039: `routes/areas/gestion_humana.php` (sin `access.ph
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.40 | 2026-10-22 | Export Apo Manual (y demás grillas con `alpine-searchable-select`): el dropdown de Género/Cargo/Código curso/NIT ya no aparece sobre el sidebar; se teleporta a `<body>` y se posiciona junto al campo (IDs autogenerados en `searchableSelect.init()`). |
+| 1.39 | 2026-10-22 | Export Apo Manual: al cambiar el **Cargo** de una fila con cédula, se re-busca el curso de esa cédula con ese cargo (`prefill` con `cargo` → `AcreditacionExportApoManualPrefillService::cursoForCargo`, política CUALQUIERA) y se reemplazan Código curso / NIT escuela / Nro; sin curso del cargo quedan vacíos + aviso. |
 | 1.38 | 2026-10-20 | Acreditados filtros: fila 2 en una sola línea en pantalla grande/portátil — chips de texto agrupados (`acreditaciones-acreditados-page__chip-groups`) a la izquierda e iconos (filtrar, multi-cédula, limpiar, exportar) a la derecha; solo se parte en <768px. |
 | 1.37 | 2026-10-19 | Acreditados: vista de trabajo con IDs fijados en sesión (`working=1`) para editar varios registros filtrados sin que desaparezcan; banner, limpieza por filtros/recarga y soporte en DT/export/bulk/delete. |
 | 1.36 | 2026-10-19 | Acreditados: columna Acciones sticky a la derecha con scroll horizontal (visible en laptop). |

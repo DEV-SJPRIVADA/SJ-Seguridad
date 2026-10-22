@@ -1,4 +1,6 @@
-{{-- Markup reutilizable del searchable-select para filas Alpine (mismo Alpine.data). --}}
+{{-- Markup reutilizable del searchable-select para filas Alpine (mismo Alpine.data).
+     El dropdown se teleporta a <body> y el JS lo posiciona junto al trigger (x-ref="trigger");
+     los IDs del dropdown se generan por instancia en searchableSelect.init(). --}}
 @php
     $selectId = $selectId ?? 'ss_'.uniqid();
 @endphp
@@ -26,6 +28,7 @@
             'searchable-select__trigger--disabled': isDisabled,
             'searchable-select__trigger--has-value': hasSelection
         }"
+        x-ref="trigger"
         @click="toggle()"
         tabindex="0"
         @keydown.space.prevent="toggle()"
@@ -59,45 +62,62 @@
             </button>
         </div>
     </div>
-    <div
-        class="searchable-select__dropdown"
-        x-show="open"
-        x-cloak
-        @keydown.tab="close()"
-        @keydown.down.prevent="highlightNext()"
-        @keydown.up.prevent="highlightPrev()"
-        @keydown.enter.prevent="selectHighlighted()"
-    >
-        <div class="searchable-select__search-wrap">
-            <input
-                type="text"
-                class="searchable-select__search-input"
-                x-ref="searchInput"
-                x-model="search"
-                :placeholder="searchPlaceholder"
-                autocomplete="off"
-                spellcheck="false"
-                @keydown.enter.stop.prevent="selectHighlighted()"
-            >
-        </div>
-        <ul class="searchable-select__options" x-ref="optionsList" role="listbox">
-            <template x-for="(opt, index) in filteredOptions" :key="String(opt.value) + '-' + index">
-                <li
-                    class="searchable-select__option"
-                    :class="{
-                        'searchable-select__option--highlighted': highlightedIndex === index,
-                        'searchable-select__option--selected': String(value) === String(opt.value)
-                    }"
-                    @click="selectOption(opt)"
-                    @mouseenter="highlightedIndex = index"
-                    role="option"
-                    :aria-selected="(String(value) === String(opt.value)).toString()"
-                    :title="opt.label"
+
+    {{-- Dropdown teleportado (position: fixed) para que tablas con scroll no lo recorten
+         y quede alineado al campo, no en la esquina de la ventana. --}}
+    <template x-teleport="body">
+        <div
+            :id="dropdownId"
+            class="searchable-select__dropdown"
+            x-show="open"
+            x-cloak
+            :class="{ 'searchable-select__dropdown--up': openUp }"
+            x-transition:enter="searchable-select-enter"
+            x-transition:enter-start="searchable-select-enter-start"
+            x-transition:enter-end="searchable-select-enter-end"
+            x-transition:leave="searchable-select-leave"
+            x-transition:leave-start="searchable-select-leave-start"
+            x-transition:leave-end="searchable-select-leave-end"
+            @keydown.tab="close()"
+            @keydown.escape.stop="close()"
+            @keydown.down.prevent="highlightNext()"
+            @keydown.up.prevent="highlightPrev()"
+            @keydown.enter.prevent="selectHighlighted()"
+        >
+            <div class="searchable-select__search-wrap">
+                <input
+                    type="text"
+                    :id="searchInputId"
+                    class="searchable-select__search-input"
+                    x-ref="searchInput"
+                    x-model="search"
+                    :placeholder="searchPlaceholder"
+                    autocomplete="off"
+                    spellcheck="false"
+                    @keydown.enter.stop.prevent="selectHighlighted()"
                 >
-                    <span class="searchable-select__option-text" x-text="opt.label"></span>
-                </li>
-            </template>
-            <li x-show="filteredOptions.length === 0" class="searchable-select__empty">Sin resultados</li>
-        </ul>
-    </div>
+            </div>
+            <ul class="searchable-select__options" :id="optionsListId" x-ref="optionsList" role="listbox">
+                <template x-for="(opt, index) in filteredOptions" :key="String(opt.value) + '-' + index">
+                    <li
+                        class="searchable-select__option"
+                        :class="{
+                            'searchable-select__option--highlighted': highlightedIndex === index,
+                            'searchable-select__option--selected': String(value) === String(opt.value)
+                        }"
+                        :data-index="index"
+                        :data-selected="(String(value) === String(opt.value)).toString()"
+                        @click="selectOption(opt)"
+                        @mouseenter="highlightedIndex = index"
+                        role="option"
+                        :aria-selected="(String(value) === String(opt.value)).toString()"
+                        :title="opt.label"
+                    >
+                        <span class="searchable-select__option-text" x-text="opt.label"></span>
+                    </li>
+                </template>
+                <li x-show="filteredOptions.length === 0" class="searchable-select__empty">Sin resultados</li>
+            </ul>
+        </div>
+    </template>
 </div>
