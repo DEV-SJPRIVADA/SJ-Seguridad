@@ -210,6 +210,7 @@ El listado **Insumos aprobados** ya no está en el menú. El Excel FO-AD-44 se d
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-22 | Detalle `supplies.show` con panel de OC (`partials/source-orders`) y saldo ordenado/pendiente; PDF FO-AD-07 en `supplies.orders.pdf` (`/solicitud/{supply_request}/ordenes/{purchase_order}/pdf`, `authorizeSupplyView`, 404 si la OC no es del suministro) |
 | 2026-10-21 | Compras puede devolver un suministro Por comprar sin OC; al reenviarlo vuelve a Calidad |
 | 2026-10-21 | Etapa común `PedidoEtapa` en listados, detalle y PDF; Por aprobar de Calidad para todas las áreas con filtro por área |
 | 2026-10-21 | Alta en MAYÚSCULAS (observaciones y producto fuera de catálogo); aprobación de Calidad con `ResolveSupplyQualityRequest` y observaciones en MAYÚSCULAS |

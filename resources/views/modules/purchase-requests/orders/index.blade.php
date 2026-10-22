@@ -105,12 +105,21 @@
                         </div>
                     </details>
 
-                    {{-- Barra de acciones siempre visible: conteo de órdenes emitidas. --}}
+                    {{-- Barra de acciones siempre visible: conteo de órdenes y export Excel (una fila por producto, con los filtros y la búsqueda actuales). --}}
                     <div class="cursos-registros-page__table-toolbar purchase-orders-page__table-toolbar">
                         <p class="req-manage-filters__meta">
                             <strong id="orders-count">…</strong>
                             <span id="orders-count-label">orden(es) de compra</span>
                         </p>
+                        <x-export-excel
+                            id="orders-export-excel"
+                            route="{{ $exportUrl }}"
+                            label=""
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Exportar Excel (productos de cada orden con los filtros actuales)"
+                            aria-label="Exportar Excel de las órdenes filtradas"
+                            data-export-base="{{ $exportUrl }}"
+                        />
                     </div>
 
                     <div class="data-table-wrap req-manage-shell__table purchase-orders-page__table-wrap data-table-wrap--booting">
@@ -204,6 +213,26 @@
                 });
 
                 api.on('error.dt', revealTable);
+
+                // El export usa los filtros del panel (ya en la URL) y el texto del buscador como `q`.
+                const exportLink = document.getElementById('orders-export-excel');
+
+                api.on('search.dt', function () {
+                    if (! exportLink) {
+                        return;
+                    }
+
+                    const url = new URL(exportLink.dataset.exportBase, window.location.origin);
+                    const term = (api.search() || '').trim();
+
+                    if (term !== '') {
+                        url.searchParams.set('q', term);
+                    } else {
+                        url.searchParams.delete('q');
+                    }
+
+                    exportLink.href = url.toString();
+                });
             });
         </script>
     @endpush

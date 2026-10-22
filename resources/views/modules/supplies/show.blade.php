@@ -230,6 +230,10 @@
                                         <th>Referencia</th>
                                         <th>Inventario reportado</th>
                                         <th>Cant. autorizada</th>
+                                        @if (! empty($orderLines))
+                                            <th>Ordenado</th>
+                                            <th>Pendiente</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -261,12 +265,22 @@
                                                     {{ $item->approved_quantity ?? '—' }}
                                                 @endif
                                             </td>
+                                            @if (! empty($orderLines))
+                                                {{-- Saldo de la línea: lo ya pedido en órdenes vigentes y lo que falta. --}}
+                                                <td class="text-center">{{ rtrim(rtrim(number_format((float) ($orderLines[$item->id]['ordenada'] ?? 0), 2, '.', ''), '0'), '.') }}</td>
+                                                <td class="text-center">{{ rtrim(rtrim(number_format((float) ($orderLines[$item->id]['pendiente'] ?? 0), 2, '.', ''), '0'), '.') }}</td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     </section>
+
+                    @include('modules.purchase-requests.partials.source-orders', [
+                        'orders' => $supplyRequest->purchaseOrders,
+                        'orderPdfUrl' => $orderPdfUrl,
+                    ])
 
                     @if ($supplyRequest->purchasingManager || $supplyRequest->total_cost)
                         <section class="pur-req-form__section">

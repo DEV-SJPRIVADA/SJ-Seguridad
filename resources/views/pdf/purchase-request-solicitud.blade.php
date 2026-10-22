@@ -252,6 +252,10 @@
             <th>Fecha aprobación</th>
             <td>{{ optional($purchaseRequest->fecha_aprobacion)->format('d/m/Y') ?? '—' }}</td>
         </tr>
+        <tr>
+            <th>N.º cotización</th>
+            <td colspan="3">{{ $purchaseRequest->numero_cotizacion ?: '—' }}</td>
+        </tr>
         @if ($purchaseRequest->solicitud_para === 'Cliente')
             <tr>
                 <th>Razón social</th>
@@ -266,11 +270,12 @@
     <table class="items-table">
         <thead>
             <tr>
-                {{-- Orden oficial FO-AD-44: Cantidad | Foto | Descripción | Referencia | Utilización | Ubicación --}}
+                {{-- Orden FO-AD-44: Cantidad | Foto | Descripción | Referencia | Marca | Utilización | Ubicación --}}
                 <th class="col-qty">Cantidad</th>
                 <th class="col-foto">Foto</th>
                 <th>Descripción</th>
                 <th>Referencia</th>
+                <th>Marca</th>
                 <th>Utilización</th>
                 <th>Ubicación</th>
             </tr>
@@ -288,6 +293,7 @@
                     </td>
                     <td class="col-desc">{{ $item->descripcion }}</td>
                     <td>{{ $item->referencia }}</td>
+                    <td>{{ $item->marca ?: '—' }}</td>
                     <td>{{ $item->utilizacion }}</td>
                     <td>{{ $item->ubicacion }}</td>
                 </tr>
@@ -295,8 +301,11 @@
         </tbody>
     </table>
 
-    @if ($purchaseRequest->comentarios_director || $purchaseRequest->comentarios_compras)
+    @if ($purchaseRequest->comentarios_solicitante || $purchaseRequest->comentarios_director || $purchaseRequest->comentarios_compras)
         <div class="notes-block">
+            @if ($purchaseRequest->comentarios_solicitante)
+                <p class="text-inline"><span class="text-inline__label">Comentarios del solicitante:</span> {{ $purchaseRequest->comentarios_solicitante }}</p>
+            @endif
             @if ($purchaseRequest->comentarios_director)
                 <p class="text-inline"><span class="text-inline__label">Comentarios director:</span> {{ $purchaseRequest->comentarios_director }}</p>
             @endif

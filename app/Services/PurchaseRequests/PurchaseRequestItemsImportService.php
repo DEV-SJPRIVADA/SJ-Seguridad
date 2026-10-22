@@ -10,7 +10,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class PurchaseRequestItemsImportService
 {
     /**
-     * @return array{items: list<array{cantidad: int, descripcion: string, referencia: string, utilizacion: string, ubicacion: string}>, skipped: int, warnings: list<string>}
+     * @return array{items: list<array{cantidad: int, descripcion: string, referencia: string, marca: string, utilizacion: string, ubicacion: string}>, skipped: int, warnings: list<string>}
      */
     public function parse(string $path): array
     {
@@ -26,7 +26,10 @@ class PurchaseRequestItemsImportService
             throw new \RuntimeException('El archivo no tiene encabezados validos en la fila 1.');
         }
 
-        foreach (array_keys(config('purchase-requests.items_import_columns', [])) as $requiredKey) {
+        $optional = (array) config('purchase-requests.items_import_optional_columns', []);
+        $required = array_diff(array_keys(config('purchase-requests.items_import_columns', [])), $optional);
+
+        foreach ($required as $requiredKey) {
             if (! array_key_exists($requiredKey, $headers)) {
                 throw new \RuntimeException("Falta la columna obligatoria \"{$requiredKey}\" en la fila 1.");
             }
@@ -62,6 +65,7 @@ class PurchaseRequestItemsImportService
 
             $descripcion = $this->stringValue($data['descripcion'] ?? null);
             $referencia = $this->stringValue($data['referencia'] ?? null);
+            $marca = $this->stringValue($data['marca'] ?? null);
             $utilizacion = $this->stringValue($data['utilizacion'] ?? null);
             $ubicacion = $this->stringValue($data['ubicacion'] ?? null);
 
@@ -76,6 +80,7 @@ class PurchaseRequestItemsImportService
                 'cantidad' => $cantidad,
                 'descripcion' => $descripcion,
                 'referencia' => $referencia,
+                'marca' => $marca,
                 'utilizacion' => $utilizacion,
                 'ubicacion' => $ubicacion,
             ];

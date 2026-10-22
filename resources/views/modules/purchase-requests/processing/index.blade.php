@@ -158,6 +158,9 @@
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
                                     <th>Área</th>
+                                    <th>N.º cotización</th>
+                                    <th>Marca</th>
+                                    <th>Comentarios</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -178,6 +181,10 @@
                                         </td>
                                         <td>{{ $queueItem['solicitante'] ?? '—' }}</td>
                                         <td>{{ $queueItem['area'] ?? '—' }}</td>
+                                        {{-- Cotización, marcas y comentarios solo existen en solicitudes de compra (SC-). --}}
+                                        @include('modules.purchase-requests.partials.list-extra-cells', [
+                                            'purchaseRequest' => $queueItem['tipo'] === 'purchase' ? $queueItem['model'] : null,
+                                        ])
                                         <td>
                                             <x-pedido-etapa :etapa="$queueItem['etapa']" />
                                         </td>
@@ -243,7 +250,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-muted">No hay elementos en Pedidos con los filtros seleccionados.</td>
+                                        <td colspan="10" class="text-muted">No hay elementos en Pedidos con los filtros seleccionados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

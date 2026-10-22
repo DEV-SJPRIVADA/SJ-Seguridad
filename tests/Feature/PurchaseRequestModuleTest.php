@@ -345,6 +345,18 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertSee($aprobada->folioVisible())
             ->assertDontSee($pendiente->folioVisible());
 
+        $aprobada->update(['numero_cotizacion' => 'COT-2026-77']);
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.index', [
+                'module' => 'compras',
+                'numero_cotizacion' => '2026-7',
+            ]))
+            ->assertOk()
+            ->assertSee('COT-2026-77')
+            ->assertSee($aprobada->folioVisible())
+            ->assertDontSee($pendiente->folioVisible());
+
         $this->actingAs($requester)
             ->get(route('purchase-requests.index', [
                 'module' => 'compras',
@@ -353,6 +365,125 @@ class PurchaseRequestModuleTest extends TestCase
             ->assertOk()
             ->assertSee($aprobada->folioVisible())
             ->assertDontSee($pendiente->folioVisible());
+    }
+
+    public function test_store_saves_cotizacion_and_comentarios_and_shows_them(): void
+    {
+        Mail::fake();
+
+        $requester = $this->purchaseRequester('compras');
+        $director = $this->director();
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.create', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee('name="numero_cotizacion"', false)
+            ->assertSee('name="comentarios_solicitante"', false)
+            ->assertSee('name="items[0][marca]"', false);
+
+        $this->actingAs($requester)->post(route('purchase-requests.store', ['module' => 'compras']), [
+            'area_key' => 'compras',
+            'fecha_solicitud' => now()->toDateString(),
+            'numero_cotizacion' => ' COT-2026-15 ',
+            'comentarios_solicitante' => 'Entregar antes del cierre de mes.',
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $director->id,
+            'items' => [[
+                'cantidad' => 1,
+                'descripcion' => 'Silla',
+                'referencia' => 'N/A',
+                'marca' => 'Herman Miller',
+                'utilizacion' => 'Oficina',
+                'ubicacion' => 'Cali',
+            ]],
+        ])->assertRedirect(route('purchase-requests.index', ['module' => 'compras']));
+
+        $purchaseRequest = PurchaseRequest::query()->latest('id')->firstOrFail();
+        $this->assertSame('Herman Miller', $purchaseRequest->items->first()->marca);
+        $this->assertSame('COT-2026-15', $purchaseRequest->numero_cotizacion);
+        $this->assertSame('Entregar antes del cierre de mes.', $purchaseRequest->comentarios_solicitante);
+
+        $this->actingAs($requester)
+            ->get(route('purchase-requests.show', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee('COT-2026-15')
+            ->assertSee('Herman Miller')
+            ->assertSee('Comentarios del solicitante')
+            ->assertSee('Entregar antes del cierre de mes.');
+    }
+
+    public function test_cotizacion_marca_and_comentarios_show_in_processing_approval_email_pdf_and_lists(): void
+    {
+        $requester = $this->purchaseRequester('compras');
+        $director = $this->director();
+        $compras = $this->comprasUser();
+
+        $purchaseRequest = $this->createPurchaseRequest($requester, $director);
+        $purchaseRequest->update([
+            'numero_cotizacion' => 'COT-9090',
+            'comentarios_solicitante' => 'Revisar garantía extendida.',
+        ]);
+        $purchaseRequest->items()->create([
+            'orden' => 1,
+            'cantidad' => 2,
+            'descripcion' => 'Portátil',
+            'referencia' => 'LAT-5440',
+            'marca' => 'Dell',
+            'utilizacion' => 'Oficina',
+            'ubicacion' => 'Cali',
+        ]);
+
+        // Aprobación por correo (pendiente) y Autorizaciones compras.
+        $this->get($this->emailApprovalShowUrl($purchaseRequest, $director))
+            ->assertOk()
+            ->assertSee('COT-9090')
+            ->assertSee('Dell')
+            ->assertSee('Revisar garantía extendida.');
+
+        $this->actingAs($director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee('COT-9090')
+            ->assertSee('Dell')
+            ->assertSee('Revisar garantía extendida.');
+
+        // PDF FO-AD-44.
+        $html = view('pdf.purchase-request-solicitud', [
+            'purchaseRequest' => $purchaseRequest->fresh()->load(['user', 'aprobador', 'items', 'procesadoComprasPor']),
+            'itemPhotos' => [],
+            'generatedAt' => now(),
+            'formCode' => config('purchase-requests.form_code'),
+            'formVersion' => config('purchase-requests.form_version'),
+            'formPeriod' => config('purchase-requests.form_period'),
+            'photoPlaceholder' => config('purchase-requests.photo_placeholder'),
+            'reportTitle' => config('purchase-requests.report_title'),
+            'pageLabel' => 'Página 1 de 1',
+        ])->render();
+        $this->assertStringContainsString('COT-9090', $html);
+        $this->assertStringContainsString('Marca', $html);
+        $this->assertStringContainsString('Dell', $html);
+        $this->assertStringContainsString('Revisar garantía extendida.', $html);
+
+        // Ya aprobada: Pedidos y Procesar compra.
+        $purchaseRequest->update([
+            'estado' => PurchaseRequest::ESTADO_APROBADO,
+            'estado_compras' => PurchaseRequest::COMPRAS_PENDIENTE,
+        ]);
+
+        $this->actingAs($compras)
+            ->get(route('purchase-requests.processing.index', ['module' => 'compras']))
+            ->assertOk()
+            ->assertSee('COT-9090')
+            ->assertSee('Dell')
+            ->assertSee('Revisar garantía extendida.');
+
+        $this->actingAs($compras)
+            ->get(route('purchase-requests.processing.purchase', ['module' => 'compras', 'purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee('COT-9090')
+            ->assertSee('Dell')
+            ->assertSee('Comentarios del solicitante')
+            ->assertSee('Revisar garantía extendida.');
     }
 
     public function test_store_rejects_approver_that_is_not_an_active_director(): void

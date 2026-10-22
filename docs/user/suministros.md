@@ -81,6 +81,7 @@ Compras también puede devolverlo si llegó mal diligenciado (solo antes de emit
 1. Abra **Mis solicitudes** y entre al detalle. Calidad lo abre desde Por aprobar antes de decidir; después, quien compra lo abre desde Pedidos.
 2. Revise los datos, las líneas y las observaciones.
 3. Si Calidad ya aprobó, use **Descargar PDF** o **Exportar Excel** (FO-AD-44).
+4. Cuando Compras emite órdenes, el detalle muestra la sección **Órdenes de compra** (valores, estado con las anuladas marcadas, recibido y PDF FO-AD-07 descargable) y, en los productos, cuánto se ha ordenado y cuánto queda pendiente.
 
 ### Comprar el insumo (Compras)
 
@@ -102,6 +103,7 @@ Compras también puede devolverlo si llegó mal diligenciado (solo antes de emit
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-10-22 | Compras | El detalle del suministro muestra sus órdenes de compra con PDF descargable y el saldo ordenado/pendiente. |
 | 1.9 | 2026-10-21 | Compras | Compras puede devolver un pedido Por comprar sin órdenes; al reenviarlo, Calidad lo vuelve a aprobar. |
 | 1.8 | 2026-10-21 | Calidad / Compras | Por aprobar muestra los pedidos de todas las áreas, con filtro por área. Los estados se llaman igual que en compras (Por autorizar, Devuelta, Por comprar, Con orden, Cerrado). Observaciones en mayúsculas. |
 | 1.7 | 2026-10-20 | Compras | Reenvío si Calidad devuelve el pedido; notas en el detalle; el catálogo pasa a Catálogos; ya no hay pestaña de insumos aprobados; el folio se lee SU-; el cierre lo hace la orden, no el costo unitario. |

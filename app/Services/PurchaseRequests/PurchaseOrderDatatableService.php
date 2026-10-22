@@ -184,7 +184,17 @@ final class PurchaseOrderDatatableService
      */
     private function applyGlobalSearch(Builder $query, Request $request): void
     {
-        $search = trim((string) data_get($request->all(), 'search.value', ''));
+        $this->applySearchTerm($query, (string) data_get($request->all(), 'search.value', ''));
+    }
+
+    /**
+     * Búsqueda del listado (proveedor, identificación, observaciones, ciudad o N.º OC). También la usa el export (`q`).
+     *
+     * @param  Builder<PurchaseOrder>  $query
+     */
+    public function applySearchTerm(Builder $query, string $search): void
+    {
+        $search = trim($search);
 
         if ($search === '') {
             return;

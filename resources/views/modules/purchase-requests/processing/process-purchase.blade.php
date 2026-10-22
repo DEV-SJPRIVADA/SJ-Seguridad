@@ -71,10 +71,29 @@
                             </span>
                         </div>
                         <div class="pur-req-form__meta-item">
+                            <span class="pur-req-form__meta-label">Número de cotización</span>
+                            <span class="pur-req-form__meta-value">{{ $purchaseRequest->numero_cotizacion ?: '—' }}</span>
+                        </div>
+                        <div class="pur-req-form__meta-item">
                             <span class="pur-req-form__meta-label">Productos</span>
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->items->count() }}</span>
                         </div>
                     </div>
+
+                    {{-- Comentarios que el solicitante escribió en Datos generales. --}}
+                    @if (filled($purchaseRequest->comentarios_solicitante))
+                        <section class="pur-req-form__section">
+                            <header class="pur-req-form__section-head">
+                                <span class="pur-req-form__section-step" aria-hidden="true">
+                                    <x-lucide-message-square-text width="16" height="16" />
+                                </span>
+                                <div>
+                                    <h3 class="pur-req-form__section-title">Comentarios del solicitante</h3>
+                                </div>
+                            </header>
+                            <p class="pur-req-chat__body">{{ $purchaseRequest->comentarios_solicitante }}</p>
+                        </section>
+                    @endif
 
                     <section class="pur-req-form__section">
                         <header class="pur-req-form__section-head">
@@ -93,6 +112,7 @@
                                         <th>Cantidad</th>
                                         <th>Descripción</th>
                                         <th>Referencia</th>
+                                        <th>Marca</th>
                                         <th>Utilización</th>
                                         <th>Ubicación</th>
                                     </tr>
@@ -104,6 +124,7 @@
                                             <td class="text-center">{{ $item->cantidad }}</td>
                                             <td class="pur-req-form__item-desc">{{ $item->descripcion }}</td>
                                             <td>{{ $item->referencia }}</td>
+                                            <td>{{ $item->marca ?: '—' }}</td>
                                             <td>{{ $item->utilizacion }}</td>
                                             <td>{{ $item->ubicacion }}</td>
                                         </tr>

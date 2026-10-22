@@ -11,6 +11,7 @@
                 'cantidad' => $item->cantidad,
                 'descripcion' => $item->descripcion,
                 'referencia' => $item->referencia,
+                'marca' => $item->marca,
                 'utilizacion' => $item->utilizacion,
                 'ubicacion' => $item->ubicacion,
                 'existing_foto_path' => $item->foto_path,
@@ -119,6 +120,13 @@
                                         <x-input-error :messages="$errors->get('fecha_solicitud')" />
                                     </div>
 
+                                    {{-- Número de cotización (opcional) en la misma fila que Solicitud para. --}}
+                                    <div class="form-field">
+                                        <label class="form-label" for="numero_cotizacion">Número de cotización</label>
+                                        <input type="text" name="numero_cotizacion" id="numero_cotizacion" class="form-input" value="{{ old('numero_cotizacion', $purchaseRequest->numero_cotizacion) }}" maxlength="100" placeholder="Opcional">
+                                        <x-input-error :messages="$errors->get('numero_cotizacion')" />
+                                    </div>
+
                                     <div class="form-field">
                                         <label class="form-label" for="solicitud_para">Solicitud para</label>
                                         <x-searchable-select
@@ -136,7 +144,7 @@
                                         <x-input-error :messages="$errors->get('solicitud_para')" />
                                     </div>
 
-                                    <div class="form-field">
+                                    <div class="form-field form-field--full">
                                         <label class="form-label" for="aprobador_id">Director aprobador</label>
                                         <x-searchable-select
                                             id="aprobador_id"
@@ -148,6 +156,20 @@
                                             :required="true"
                                         />
                                         <x-input-error :messages="$errors->get('aprobador_id')" />
+                                    </div>
+
+                                    {{-- Comentarios generales del solicitante (opcional), encima de Marcar como urgente. --}}
+                                    <div class="form-field form-field--full">
+                                        <label class="form-label" for="comentarios_solicitante">Comentarios</label>
+                                        <textarea
+                                            name="comentarios_solicitante"
+                                            id="comentarios_solicitante"
+                                            class="form-textarea pur-req-form__comments"
+                                            rows="5"
+                                            maxlength="5000"
+                                            placeholder="Información adicional para el director y Compras (opcional)"
+                                        >{{ old('comentarios_solicitante', $purchaseRequest->comentarios_solicitante) }}</textarea>
+                                        <x-input-error :messages="$errors->get('comentarios_solicitante')" />
                                     </div>
                                 </div>
 

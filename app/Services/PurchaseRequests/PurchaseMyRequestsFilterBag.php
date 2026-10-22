@@ -19,6 +19,7 @@ final class PurchaseMyRequestsFilterBag
         public readonly ?bool $urgente,
         public readonly ?string $dateFrom,
         public readonly ?string $dateTo,
+        public readonly ?string $numeroCotizacion = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -29,6 +30,7 @@ final class PurchaseMyRequestsFilterBag
             'urgente' => ['nullable', 'in:0,1'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
+            'numero_cotizacion' => ['nullable', 'string', 'max:100'],
         ]);
 
         $etapa = self::nullableString($validated['etapa'] ?? null);
@@ -40,6 +42,7 @@ final class PurchaseMyRequestsFilterBag
             urgente: $urgente === null ? null : $urgente === '1',
             dateFrom: self::nullableString($validated['date_from'] ?? null),
             dateTo: self::nullableString($validated['date_to'] ?? null),
+            numeroCotizacion: self::nullableString($validated['numero_cotizacion'] ?? null),
         );
     }
 
@@ -54,12 +57,14 @@ final class PurchaseMyRequestsFilterBag
             'urgente' => $this->urgente === null ? '' : ($this->urgente ? '1' : '0'),
             'date_from' => $this->dateFrom,
             'date_to' => $this->dateTo,
+            'numero_cotizacion' => $this->numeroCotizacion,
         ];
     }
 
     public function hasActiveFilters(): bool
     {
         return $this->etapa !== null
+            || $this->numeroCotizacion !== null
             || $this->areaKey !== null
             || $this->urgente !== null
             || $this->dateFrom !== null
@@ -89,6 +94,12 @@ final class PurchaseMyRequestsFilterBag
 
         if ($this->dateTo !== null) {
             $query->whereDate('fecha_solicitud', '<=', $this->dateTo);
+        }
+
+        // Coincidencia parcial; los comodines que escriba el usuario se tratan como texto.
+        if ($this->numeroCotizacion !== null) {
+            $term = addcslashes($this->numeroCotizacion, '\\%_');
+            $query->where('numero_cotizacion', 'like', '%'.$term.'%');
         }
     }
 

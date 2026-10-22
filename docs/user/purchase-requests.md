@@ -69,9 +69,9 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 1. Entre a **Solicitudes de compra** en su area → pestaña **Nueva solicitud**. El formulario esta en secciones (datos generales, cliente si aplica, productos y adjuntos); use la guia lateral como checklist.
 2. Complete **Area**, **Fecha**, **Solicitud para** (Interno o Cliente) y seleccione el **Director aprobador**.
-3. Marque **Urgente** si aplica.
+3. Si tiene una cotización, escriba su **Número de cotización** (opcional). En **Comentarios** puede dejar información adicional para el director y Compras (opcional). Marque **Urgente** si aplica.
 4. Si eligió **Cliente**, complete razón social y responda **Sí** o **No** en Proyecto nuevo, Asume el cliente, Reinversión, **Comodato** y **Activo**. Comodato y Activo vienen en No. Si la solicitud es **Interno**, esas preguntas no aparecen y la orden impresa muestra **No** en esas casillas. El PDF y el Excel de la solicitud y de la orden se abren en otra pestaña.
-5. Agregue una o mas lineas de producto: foto, descripcion, referencia, cantidad, utilizacion, ubicacion.
+5. Agregue una o mas lineas de producto: foto, descripcion, referencia, **marca** (opcional, al lado de la referencia), cantidad, utilizacion, ubicacion.
    - Opcional **carga masiva**: **Descargar plantilla** (Excel en blanco), llenela desde la fila 3 y use **Cargar Excel** para precargar la tabla. Luego puede editar filas, agregar fotos y enviar. La foto no va en el Excel.
 6. En **Adjuntos** (despues de los productos) puede, si lo desea, seleccionar **varios archivos a la vez** para toda la solicitud: cotizacion, orden de compra, evidencia u otro soporte. Es opcional: puede enviar la solicitud sin ningun archivo. Hasta 5 archivos, 10 MB cada uno. Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG, PNG y WEBP.
 7. Envie el formulario. Recibira confirmacion con el numero de folio.
@@ -80,11 +80,12 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 ### Consultar mis solicitudes
 
 1. Abra **Mis solicitudes**.
-2. Revise el listado. El folio se lee **SC-** seguido del número. La columna **Estado** muestra en qué va el pedido: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. Use **Filtros** para acotar por fechas, estado, urgencia o área; el listado se actualiza al elegir. El icono de **X** limpia los filtros.
+2. Revise el listado. El folio se lee **SC-** seguido del número. La columna **Estado** muestra en qué va el pedido: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. Use **Filtros** para acotar por fechas, número de cotización (basta una parte del número), estado, urgencia o área; el listado se actualiza al elegir. La tabla muestra el número de cotización de cada solicitud. El icono de **X** limpia los filtros.
 3. Pulse el folio o **Ver detalle** para consultar líneas y comentarios. Si hay documentos de soporte, aparecen en **Adjuntos**; pulse **Descargar** para guardarlos.
 4. En **Comentarios de la solicitud** puede agregar varias notas mientras el pedido no esté **Cerrado**. El director y Compras también las ven. El motivo nuevo del director queda en ese hilo. Si un pedido antiguo trae un comentario suelto del director o de Compras, se sigue mostrando, pero los nuevos no se escriben aparte.
 5. Los textos de la solicitud se guardan como se escriben. El motivo de cerrar saldo, las observaciones de la orden, las de la evaluación y los comentarios del hilo se guardan en mayúsculas.
 6. Desde el detalle puede descargar **PDF** o **Excel** (FO-AD-44). Esos formatos no llevan los adjuntos ni el hilo de comentarios.
+7. Cuando Compras emite órdenes, el detalle muestra la sección **Órdenes de compra**: número, fecha, proveedor, subtotal, IVA, total, estado (las anuladas aparecen marcadas) y fecha de recibido. Con el ícono de PDF descarga la orden FO-AD-07, y en **Ver líneas y valores unitarios** ve el precio de cada producto. La tabla de productos muestra además cuánto se ha **ordenado** y cuánto queda **pendiente**. El director asignado ve lo mismo.
 
 ### Reenviar una solicitud rechazada
 
@@ -147,6 +148,13 @@ El estado **no se elige**. Cambia solo:
 2. En la sección **Devolver al solicitante** escriba qué debe corregir. Es obligatorio.
 3. Pulse **Devolver al solicitante**. El pedido sale de Pedidos y queda **Devuelta**. El motivo queda en los comentarios, en mayúsculas, y el solicitante recibe un correo.
 4. El solicitante lo corrige desde **Mis solicitudes** y lo reenvía. Una solicitud de compra vuelve a **Por autorizar** y el **director debe autorizarla de nuevo**. Un suministro vuelve a **Calidad** para aprobarlo de nuevo.
+
+### Exportar las órdenes a Excel (Compras)
+
+1. En **Compras → Órdenes**, aplique los filtros que necesite (estado, origen, proveedor, fechas) y, si quiere, escriba en el buscador de la tabla.
+2. Pulse el icono de Excel (**Exportar**) a la derecha del conteo de órdenes.
+3. El archivo trae **una fila por cada producto** de cada orden, con los datos de la orden: número, fecha, estado, origen y folio, área, número de cotización, proveedor y su contacto, forma de pago, ciudad de entrega, quién la elaboró, fecha de recibido, observaciones y total; y de cada producto: cantidad, artículo, marca, descripción, valor unidad, IVA y valor total.
+4. Si el filtro de estado incluye anuladas, salen con estado **Anulada**.
 
 ### Anular una orden de compra mal emitida (Compras y director)
 
@@ -239,6 +247,12 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
+| 1.44 | 2026-10-22 | Compras | Órdenes: botón **Exportar Excel** con una fila por producto de cada orden y los datos de la orden, según los filtros y la búsqueda actuales. |
+| 1.43 | 2026-10-22 | Compras | El detalle de la solicitud muestra sus **órdenes de compra** (con valores, anuladas marcadas y PDF descargable) y el saldo ordenado/pendiente por producto. El solicitante y el director las ven sin entrar a Órdenes. |
+| 1.42 | 2026-10-22 | Compras | El número de cotización, la marca y los comentarios del solicitante se ven también en Procesar compra, en la aprobación por correo, en el PDF de la solicitud, en Autorizaciones compras y en Pedidos. |
+| 1.41 | 2026-10-22 | Comercial / Compras | Productos solicitados: campo **Marca** (opcional) al lado de Referencia; también en la plantilla Excel de productos y en el detalle. |
+| 1.40 | 2026-10-22 | Compras | Mis solicitudes: filtro y columna **Número de cotización**. |
+| 1.39 | 2026-10-22 | Compras | Nueva y Reabrir: en Datos generales, **Número de cotización** (junto a Solicitud para) y **Comentarios** (cuadro grande, encima de Marcar como urgente). Ambos opcionales y visibles en el detalle. |
 | 1.38 | 2026-10-21 | Compras | La pestaña del director pasa a llamarse **Autorizaciones compras**, con subpestañas **Pendientes de autorización** y **Anulaciones de órdenes**. |
 | 1.37 | 2026-10-21 | Compras | **Anular orden de compra:** Compras la pide eligiendo el director que aprueba; el director decide por correo o en Pendientes de autorización; Compras puede retirar la solicitud. |
 | 1.36 | 2026-10-21 | Compras | Nueva acción **Devolver al solicitante** en Procesar (Por comprar, sin órdenes). Al reenviar, el director (o Calidad, en suministros) vuelve a autorizar. |

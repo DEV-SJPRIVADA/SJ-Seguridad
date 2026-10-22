@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PurchaseRequest extends Model
 {
@@ -30,6 +31,8 @@ class PurchaseRequest extends Model
         'area_key',
         'fecha_solicitud',
         'cantidad',
+        'numero_cotizacion',
+        'comentarios_solicitante',
         'solicitud_para',
         'urgente',
         'aprobador_id',
@@ -141,9 +144,30 @@ class PurchaseRequest extends Model
         return $this->hasMany(PurchaseRequestComment::class)->oldest('id');
     }
 
+    /**
+     * Órdenes de compra emitidas desde esta solicitud (incluye anuladas).
+     */
+    public function purchaseOrders(): MorphMany
+    {
+        return $this->morphMany(PurchaseOrder::class, 'source')->orderBy('id');
+    }
+
     public function mailLogs(): HasMany
     {
         return $this->hasMany(PurchaseRequestMailLog::class)->latest('sent_at')->latest('id');
+    }
+
+    /**
+     * Marcas distintas de los productos (para listados). Usa los ítems ya cargados si los hay.
+     */
+    public function marcasResumen(): string
+    {
+        return $this->items
+            ->pluck('marca')
+            ->map(fn ($marca): string => trim((string) $marca))
+            ->filter()
+            ->unique()
+            ->implode(', ');
     }
 
     public function areaLabel(): ?string

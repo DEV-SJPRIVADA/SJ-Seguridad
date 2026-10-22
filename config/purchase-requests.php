@@ -28,9 +28,13 @@ return [
         'cantidad' => 'Cantidad (obligatorio, entero ≥ 1)',
         'descripcion' => 'Descripción del producto',
         'referencia' => 'Referencia / código',
+        'marca' => 'Marca (opcional)',
         'utilizacion' => 'Utilización / uso previsto',
         'ubicacion' => 'Ubicación / sede',
     ],
+
+    // Columnas de la plantilla que pueden faltar (plantillas anteriores a la columna).
+    'items_import_optional_columns' => ['marca'],
 
     'items_import_max_rows' => 200,
 

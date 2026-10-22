@@ -15,6 +15,7 @@ class PurchaseRequestItem extends Model
         'foto_path',
         'descripcion',
         'referencia',
+        'marca',
         'utilizacion',
         'ubicacion',
     ];

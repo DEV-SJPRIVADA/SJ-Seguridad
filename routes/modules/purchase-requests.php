@@ -54,6 +54,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         // Listado de órdenes de compra (tablero del área Compras).
         Route::get('/ordenes-compra', [PurchaseOrderController::class, 'index'])->name('orders.index');
         Route::get('/ordenes-compra/datatable', [PurchaseOrderController::class, 'datatable'])->name('orders.datatable');
+        // Antes de /ordenes-compra/{purchase_order} para que "exportar" no se tome como número de OC.
+        Route::get('/ordenes-compra/exportar', [PurchaseOrderController::class, 'export'])->name('orders.export');
         Route::get('/ordenes-compra/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('orders.show');
         Route::get('/ordenes-compra/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('orders.pdf');
         Route::get('/ordenes-compra/{purchase_order}/excel', [PurchaseOrderController::class, 'excel'])->name('orders.excel');
@@ -84,6 +86,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
     });
 
     Route::get('/solicitud/{purchase_request}/pdf', [PurchaseRequestController::class, 'exportPdf'])->name('export.pdf');
+    // PDF de las OC de la solicitud para quien ve la solicitud (fuera del grupo de Compras; la OC debe ser de esa solicitud).
+    Route::get('/solicitud/{purchase_request}/ordenes/{purchase_order}/pdf', [PurchaseRequestController::class, 'orderPdf'])->name('source-orders.pdf');
     Route::get('/solicitud/{purchase_request}/excel', [PurchaseRequestController::class, 'exportExcel'])->name('export.excel');
     Route::get('/solicitud/{purchase_request}/adjuntos/{attachment}', [PurchaseRequestController::class, 'downloadAttachment'])
         ->scopeBindings()

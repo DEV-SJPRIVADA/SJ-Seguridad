@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\PurchaseRequests;
 
+use App\Exports\PurchaseOrderLinesExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\StorePurchaseOrderRequest;
 use App\Models\PurchaseOrder;
@@ -152,12 +153,41 @@ class PurchaseOrderController extends Controller
                 ['module' => $module],
                 $datatable->filtersToQuery($filters),
             )),
+            'exportUrl' => route('purchase-requests.orders.export', array_merge(
+                ['module' => $module],
+                $datatable->filtersToQuery($filters),
+            )),
         ]);
     }
 
     public function datatable(string $module, Request $request, PurchaseOrderDatatableService $datatable): JsonResponse
     {
         return $datatable->respond($request, $datatable->filtersFromRequest($request));
+    }
+
+    /**
+     * Excel con todas las líneas de producto de las órdenes que cumplen los filtros y la búsqueda (`q`) del listado.
+     */
+    public function export(
+        string $module,
+        Request $request,
+        PurchaseOrderDatatableService $datatable,
+        PurchaseRequestAuditLogService $audit,
+    ): StreamedResponse {
+        $filters = $datatable->filtersFromRequest($request);
+        $search = trim((string) $request->query('q', ''));
+
+        $query = $datatable->filteredQuery($filters);
+        $datatable->applySearchTerm($query, $search);
+        $orders = $query->orderByDesc('fecha')->orderByDesc('id')->get();
+
+        $audit->logEvent(
+            eventType: 'export',
+            action: 'orders_lines_excel',
+            metadata: ['filters' => $filters, 'q' => $search, 'orders_count' => $orders->count()],
+        );
+
+        return (new PurchaseOrderLinesExport($orders))->download();
     }
 
     public function show(string $module, PurchaseOrder $purchaseOrder, PurchaseAccessService $access): View

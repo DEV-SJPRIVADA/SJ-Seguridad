@@ -86,6 +86,10 @@
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->areaLabel() ?? '—' }}</span>
                         </div>
                         <div class="pur-req-form__meta-item">
+                            <span class="pur-req-form__meta-label">Número de cotización</span>
+                            <span class="pur-req-form__meta-value">{{ $purchaseRequest->numero_cotizacion ?: '—' }}</span>
+                        </div>
+                        <div class="pur-req-form__meta-item">
                             <span class="pur-req-form__meta-label">Solicitud para</span>
                             <span class="pur-req-form__meta-value">{{ $purchaseRequest->solicitud_para }}</span>
                         </div>
@@ -108,6 +112,21 @@
                             <span class="pur-req-form__meta-value">{{ $etapa->label() }}</span>
                         </div>
                     </div>
+
+                    {{-- Comentarios que el solicitante escribió en Datos generales. --}}
+                    @if (filled($purchaseRequest->comentarios_solicitante))
+                        <section class="pur-req-form__section">
+                            <header class="pur-req-form__section-head">
+                                <span class="pur-req-form__section-step" aria-hidden="true">
+                                    <x-lucide-message-square-text width="16" height="16" />
+                                </span>
+                                <div>
+                                    <h3 class="pur-req-form__section-title">Comentarios del solicitante</h3>
+                                </div>
+                            </header>
+                            <p class="pur-req-chat__body">{{ $purchaseRequest->comentarios_solicitante }}</p>
+                        </section>
+                    @endif
 
                     @if ($purchaseRequest->solicitud_para === 'Cliente')
                         <section class="pur-req-form__section">
@@ -197,8 +216,13 @@
                                         <th class="col-qty">Cantidad</th>
                                         <th>Descripción</th>
                                         <th>Referencia</th>
+                                        <th>Marca</th>
                                         <th>Utilización</th>
                                         <th>Ubicación</th>
+                                        @if (! empty($orderLines))
+                                            <th class="col-qty">Ordenado</th>
+                                            <th class="col-qty">Pendiente</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -222,14 +246,25 @@
                                             <td class="text-center">{{ $item->cantidad }}</td>
                                             <td class="pur-req-detail__item-name">{{ $item->descripcion }}</td>
                                             <td>{{ $item->referencia }}</td>
+                                            <td>{{ $item->marca ?: '—' }}</td>
                                             <td>{{ $item->utilizacion }}</td>
                                             <td>{{ $item->ubicacion }}</td>
+                                            @if (! empty($orderLines))
+                                                {{-- Saldo de la línea: lo ya pedido en órdenes vigentes y lo que falta. --}}
+                                                <td class="text-center">{{ rtrim(rtrim(number_format((float) ($orderLines[$item->id]['ordenada'] ?? 0), 2, '.', ''), '0'), '.') }}</td>
+                                                <td class="text-center">{{ rtrim(rtrim(number_format((float) ($orderLines[$item->id]['pendiente'] ?? $item->cantidad), 2, '.', ''), '0'), '.') }}</td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     </section>
+
+                    @include('modules.purchase-requests.partials.source-orders', [
+                        'orders' => $purchaseRequest->purchaseOrders,
+                        'orderPdfUrl' => $orderPdfUrl,
+                    ])
 
                     @if ($purchaseRequest->attachments->isNotEmpty())
                         <section class="pur-req-form__section">

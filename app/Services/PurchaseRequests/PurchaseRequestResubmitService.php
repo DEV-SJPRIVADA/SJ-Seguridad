@@ -33,6 +33,8 @@ class PurchaseRequestResubmitService
                 'area_key' => $validated['area_key'],
                 'fecha_solicitud' => $validated['fecha_solicitud'],
                 'cantidad' => max(1, $totalCantidad),
+                'numero_cotizacion' => filled($validated['numero_cotizacion'] ?? null) ? trim((string) $validated['numero_cotizacion']) : null,
+                'comentarios_solicitante' => filled($validated['comentarios_solicitante'] ?? null) ? trim((string) $validated['comentarios_solicitante']) : null,
                 'solicitud_para' => $validated['solicitud_para'],
                 'urgente' => (bool) $validated['urgente'],
                 'aprobador_id' => $aprobador->id,
@@ -61,6 +63,7 @@ class PurchaseRequestResubmitService
                     'foto_path' => $fotoPath,
                     'descripcion' => $itemData['descripcion'],
                     'referencia' => $itemData['referencia'],
+                    'marca' => filled($itemData['marca'] ?? null) ? trim((string) $itemData['marca']) : null,
                     'utilizacion' => $itemData['utilizacion'],
                     'ubicacion' => $itemData['ubicacion'],
                 ]);

@@ -67,11 +67,11 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | Aprobar / rechazar anulación de OC | `purchase.tab.approval` + ser el director elegido | `GET|PATCH purchase-requests.approval.order-cancellation.show|update`; correo firmado `purchase-requests.order-cancellation-email.*` |
 | Devolver al solicitante | `purchase.tab.processing` | `POST purchase-requests.processing.purchase.return` y `.supply.return` (solo Por comprar sin OC) |
 | Emitir OC (FO-AD-07) | `purchase.tab.processing` (`canEmitOrder`) | `purchase-requests.orders.purchase.create` / `.store`, `orders.supply.create` / `.store`, `orders.show`, `orders.pdf`, `orders.excel` |
-| Órdenes (clave `ordenes_compra`) | `purchase.tab.processing` (`canViewOrdersBoard`) | `purchase-requests.orders.index` (`GET /ordenes-compra`), `purchase-requests.orders.datatable` |
+| Órdenes (clave `ordenes_compra`) | `purchase.tab.processing` (`canViewOrdersBoard`) | `purchase-requests.orders.index` (`GET /ordenes-compra`), `purchase-requests.orders.datatable`, `purchase-requests.orders.export` (Excel por producto con filtros) |
 | Evaluación y fecha de recibido | `purchase.providers.edit` (fuera del grupo `processing`) | `GET/PUT purchase-requests.orders.evaluation.edit` / `.update` (`/ordenes-compra/{purchase_order}/evaluacion`). OC debe estar `emitida`. Quien solo tiene `purchase.tab.processing` recibe 403 |
 | Catálogos → Proveedores (clave `proveedores`) | `purchase.providers.view` (edit implica view) | `purchase-requests.providers.index`, `providers.datatable`, `providers.export`, `providers.template` |
 | Proveedores (mutaciones) | `purchase.providers.edit` | `providers.create`, `providers.store`, `providers.edit`, `providers.update`, `providers.import`, `providers.import-report` |
-| Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store` |
+| Detalle / export / adjuntos / comentarios (transversal) | Policy `view` / `comment` | `purchase-requests.show`, `export.pdf`, `export.excel`, `attachments.download`, `comments.store`, `source-orders.pdf` (PDF de las OC de esa solicitud) |
 | Dashboard Compras | `view.board.compras.dashboard`, `purchase.tab.processing`, o acceso al area Compras | `compras.dashboard` (ver `routes/areas/compras.php`). **No** incluye solo `purchase.tab.approval` (director). |
 
 Rutas publicas (URLs firmadas, sin login):
@@ -364,7 +364,7 @@ Correo director: boton principal **Autorizar por correo** (URL firmada a `email-
 
 Lista todas las solicitudes creadas por el usuario autenticado (`user_id`), sin filtrar por `area_key` del modulo en la URL (el area elegida al crear puede diferir del tablero desde el que navega).
 
-Filtros GET (`PurchaseMyRequestsFilterBag`): `date_from` / `date_to` sobre `fecha_solicitud`, `etapa` (`PedidoEtapa`, una sola lista: Por autorizar … Cerrado), `urgente` (`1`/`0`) y `area_key`. El listado muestra una sola columna **Estado** con la etapa. El panel usa el chrome de Pedidos (`req-manage-filters`) y se aplica al cambiar un campo. Sin filtros se listan todas las del usuario.
+Filtros GET (`PurchaseMyRequestsFilterBag`): `date_from` / `date_to` sobre `fecha_solicitud`, `etapa` (`PedidoEtapa`, una sola lista: Por autorizar … Cerrado), `urgente` (`1`/`0`), `area_key` y `numero_cotizacion` (coincidencia parcial `LIKE`). El listado muestra una sola columna **Estado** con la etapa y la columna **N.º cotización**. El panel usa el chrome de Pedidos (`req-manage-filters`) y se aplica al cambiar un campo. Sin filtros se listan todas las del usuario.
 
 ## Integracion Suministros
 
@@ -532,6 +532,11 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-22 | **Export Excel del tablero Órdenes:** `GET purchase-requests.orders.export` (`/ordenes-compra/exportar`, grupo `purchase.tab:processing`, declarada antes de `{purchase_order}`). Toma los filtros del panel (estado, origen, proveedor, desde, hasta) y la búsqueda del DataTable como `q` (`PurchaseOrderDatatableService::applySearchTerm`). `App\Exports\PurchaseOrderLinesExport` sobre `BaseExport`: una fila por línea de OC con datos de la orden (N.º OC, fecha, estado, origen/folio/área, cotización, proveedor y contacto, forma de pago, ciudad de entrega, elaborado por, recibido, observaciones, total OC) y de la línea (cantidad, artículo, marca de origen, descripción, valor unidad, IVA, total). Incluye anuladas si el filtro lo permite. Audit `export` / `orders_lines_excel` |
+| 2026-10-22 | **OC en el detalle del pedido:** panel `partials/source-orders` en `purchase-requests.show` y `supplies.show` (N.º OC, fecha, proveedor, subtotal/IVA/total, estado con anuladas marcadas, recibido, líneas con valor unitario) + columnas Ordenado / Pendiente en productos. PDF FO-AD-07 por rutas nuevas fuera del grupo de Compras: `purchase-requests.source-orders.pdf` (`/solicitud/{pr}/ordenes/{oc}/pdf`, policy `view`: solicitante, director asignado, Compras) y `supplies.orders.pdf` (`authorizeSupplyView`: solicitante, Calidad, Compras); 404 si la OC no es de ese pedido. Relación `purchaseOrders()` (morphMany `source`). Audit `export` / `order_pdf_from_request` · `order_pdf_from_supply` |
+| 2026-10-22 | Cotización, marca y comentarios del solicitante también en Procesar compra, aprobación por correo, PDF FO-AD-44 (fila N.º cotización, columna Marca, comentarios en notas; el Excel FO-AD-44 no cambia), Autorizaciones compras y Pedidos (columnas N.º cotización / Marca / Comentarios vía `partials/list-extra-cells`, marcas únicas con `PurchaseRequest::marcasResumen()`; en Pedidos solo filas SC-) |
+| 2026-10-22 | Productos solicitados: `purchase_request_items.marca` (string 255, opcional, pedido de Comercial) al lado de Referencia en Nueva/Reabrir, detalle y plantilla Excel de ítems (columna `marca`, opcional vía `items_import_optional_columns`; plantillas viejas siguen cargando). Migración aditiva `2026_10_22_093000`. No va en el FO-AD-44 ni en la OC |
+| 2026-10-22 | Datos generales: `numero_cotizacion` (string 100) y `comentarios_solicitante` (text), opcionales, en Nueva/Reabrir y detalle. Migración aditiva `2026_10_22_090000`. Se guardan como se escriben (sin mayúsculas, igual que el resto de la solicitud); no van en el FO-AD-44 |
 | 2026-10-21 | Pestaña del director renombrada **Autorizaciones compras** (`purchase_tabs.pendientes_aprobacion`) con subpestañas Pendientes de autorización / Anulaciones de órdenes (`vista`) |
 | 2026-10-21 | **Anulación de OC** con aprobación del director que elige Compras (plataforma o correo firmado); estados `anulacion_pendiente` / `anulada`; la OC anulada libera saldo; migración aditiva |
 | 2026-10-21 | Compras puede **devolver al solicitante** (Por comprar sin OC, motivo al hilo); al reenviar, el director o Calidad vuelven a autorizar |

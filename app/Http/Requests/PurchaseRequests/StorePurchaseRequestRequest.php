@@ -40,6 +40,8 @@ class StorePurchaseRequestRequest extends FormRequest
         return [
             'area_key' => ['required', 'string', Rule::in(array_keys(config('access.areas', [])))],
             'fecha_solicitud' => ['required', 'date', 'before_or_equal:today'],
+            'numero_cotizacion' => ['nullable', 'string', 'max:100'],
+            'comentarios_solicitante' => ['nullable', 'string', 'max:5000'],
             'solicitud_para' => ['required', 'in:Interno,Cliente'],
             'urgente' => ['boolean'],
             'aprobador_id' => ['required', 'integer', $this->activeApproverRule()],
@@ -53,6 +55,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:99999'],
             'items.*.descripcion' => ['required', 'string', 'max:5000'],
             'items.*.referencia' => ['required', 'string', 'max:255'],
+            'items.*.marca' => ['nullable', 'string', 'max:255'],
             'items.*.utilizacion' => ['required', 'string', 'max:1000'],
             'items.*.ubicacion' => ['required', 'string', 'max:255'],
             'items.*.foto' => ['nullable', 'image', 'max:5120'],

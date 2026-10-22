@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class SupplyRequest extends Model
 {
@@ -56,6 +57,14 @@ class SupplyRequest extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(SupplyRequestComment::class)->oldest('id');
+    }
+
+    /**
+     * Órdenes de compra emitidas desde este suministro (incluye anuladas).
+     */
+    public function purchaseOrders(): MorphMany
+    {
+        return $this->morphMany(PurchaseOrder::class, 'source')->orderBy('id');
     }
 
     public function site(): BelongsTo

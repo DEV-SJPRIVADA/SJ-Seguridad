@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Crea una tarjeta de producto (foto + descripción, referencia, cantidad/utilización/ubicación).
+    // Crea una tarjeta de producto (foto + descripción, referencia y marca, cantidad/utilización/ubicación).
     function createItemRow(index) {
         const row = document.createElement('article');
         row.className = 'purchase-item-card';
@@ -232,9 +232,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     <textarea id="item-descripcion-${index}" name="items[${index}][descripcion]" class="form-textarea purchase-item-card__desc-input" rows="4" placeholder="Descripción del producto" required></textarea>
                 </div>
             </div>
-            <div class="form-field purchase-item-card__referencia">
-                <label class="form-label" for="item-referencia-${index}">Referencia</label>
-                <input type="text" id="item-referencia-${index}" name="items[${index}][referencia]" class="form-input" placeholder="Marca-Modelo / código" required>
+            <div class="purchase-item-card__ref-row">
+                <div class="form-field purchase-item-card__referencia">
+                    <label class="form-label" for="item-referencia-${index}">Referencia</label>
+                    <input type="text" id="item-referencia-${index}" name="items[${index}][referencia]" class="form-input" placeholder="Modelo / código" required>
+                </div>
+                <div class="form-field purchase-item-card__marca">
+                    <label class="form-label" for="item-marca-${index}">Marca</label>
+                    <input type="text" id="item-marca-${index}" name="items[${index}][marca]" class="form-input" maxlength="255" placeholder="Opcional">
+                </div>
             </div>
             <div class="purchase-item-card__bottom">
                 <div class="form-field purchase-item-card__cantidad">
@@ -289,6 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const cantidad = row.querySelector('[name*="[cantidad]"]');
         const descripcion = row.querySelector('[name*="[descripcion]"]');
         const referencia = row.querySelector('[name*="[referencia]"]');
+        const marca = row.querySelector('[name*="[marca]"]');
         const utilizacion = row.querySelector('[name*="[utilizacion]"]');
         const ubicacion = row.querySelector('[name*="[ubicacion]"]');
 
@@ -300,6 +307,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (referencia) {
             referencia.value = item.referencia || '';
+        }
+        if (marca) {
+            marca.value = item.marca || '';
         }
         if (utilizacion) {
             utilizacion.value = item.utilizacion || '';

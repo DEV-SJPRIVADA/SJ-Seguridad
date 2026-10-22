@@ -51,6 +51,7 @@ class PurchaseRequestItemsImportTest extends TestCase
                 'cantidad' => 3,
                 'descripcion' => 'Cascos de seguridad',
                 'referencia' => 'CASCO-01',
+                'marca' => '3M',
                 'utilizacion' => 'Obra',
                 'ubicacion' => 'Cali',
             ],
@@ -72,7 +73,28 @@ class PurchaseRequestItemsImportTest extends TestCase
             ->assertJsonPath('items.0.descripcion', 'Cascos de seguridad')
             ->assertJsonPath('items.0.cantidad', 3)
             ->assertJsonPath('items.1.referencia', 'GUA-02')
+            ->assertJsonPath('items.0.marca', '3M')
+            ->assertJsonPath('items.1.marca', '')
             ->assertJsonCount(2, 'items');
+    }
+
+    public function test_old_template_without_marca_column_still_imports(): void
+    {
+        $creator = $this->creatorUser();
+        $path = $this->makeItemsSpreadsheet([
+            [
+                'cantidad' => 2,
+                'descripcion' => 'Chaleco',
+                'referencia' => 'CH-1',
+                'utilizacion' => 'Obra',
+                'ubicacion' => 'Cali',
+            ],
+        ], ['cantidad', 'descripcion', 'referencia', 'utilizacion', 'ubicacion']);
+
+        $this->actingAs($creator)->postJson(
+            route('purchase-requests.items.import', ['module' => 'compras']),
+            ['import_file' => new UploadedFile($path, 'items.xlsx', null, null, true)],
+        )->assertOk()->assertJsonPath('items.0.referencia', 'CH-1');
     }
 
     public function test_import_items_rejects_file_without_required_columns(): void
@@ -106,10 +128,11 @@ class PurchaseRequestItemsImportTest extends TestCase
 
     /**
      * @param  list<array<string, mixed>>  $rows
+     * @param  list<string>|null  $columns
      */
-    private function makeItemsSpreadsheet(array $rows): string
+    private function makeItemsSpreadsheet(array $rows, ?array $columns = null): string
     {
-        $columns = array_keys(config('purchase-requests.items_import_columns'));
+        $columns ??= array_keys(config('purchase-requests.items_import_columns'));
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 

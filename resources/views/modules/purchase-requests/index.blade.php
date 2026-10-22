@@ -63,6 +63,19 @@
                                             <label class="req-manage-filters__label" for="mis-solicitudes-date-to">Hasta</label>
                                             <input type="date" id="mis-solicitudes-date-to" name="date_to" class="form-input" value="{{ $filters['date_to'] ?? '' }}">
                                         </div>
+                                        {{-- Búsqueda parcial por número de cotización; se aplica al salir del campo o con Enter. --}}
+                                        <div class="req-manage-filters__query-field req-manage-filters__field--compact">
+                                            <label class="req-manage-filters__label" for="mis-solicitudes-filter-cotizacion">Número de cotización</label>
+                                            <input
+                                                type="search"
+                                                id="mis-solicitudes-filter-cotizacion"
+                                                name="numero_cotizacion"
+                                                class="form-input"
+                                                value="{{ $filters['numero_cotizacion'] ?? '' }}"
+                                                maxlength="100"
+                                                placeholder="Ej: COT-2026"
+                                            >
+                                        </div>
                                         <div class="req-manage-filters__query-field req-manage-filters__field--compact">
                                             <label class="req-manage-filters__label" for="mis-solicitudes-filter-etapa">Estado</label>
                                             <x-searchable-select
@@ -113,6 +126,7 @@
                                 <tr>
                                     <th>Folio</th>
                                     <th>Fecha</th>
+                                    <th>N.º cotización</th>
                                     <th>Solicitante</th>
                                     <th>Director aprobador</th>
                                     <th>Fecha de aprobación</th>
@@ -128,6 +142,7 @@
                                             <span class="pur-req-list__folio">{{ $purchaseRequest->folioVisible() }}</span>
                                         </td>
                                         <td class="text-center"><x-date-table :value="$purchaseRequest->fecha_solicitud ?? $purchaseRequest->created_at" /></td>
+                                        <td class="text-center">{{ $purchaseRequest->numero_cotizacion ?: '—' }}</td>
                                         <td>{{ $purchaseRequest->user?->name ?? '—' }}</td>
                                         <td>{{ $purchaseRequest->aprobador?->name ?? '—' }}</td>
                                         <td class="text-center">
@@ -168,7 +183,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-muted">
+                                        <td colspan="9" class="text-muted">
                                             @if ($hasActiveFilters)
                                                 No hay solicitudes con los filtros seleccionados.
                                             @else

@@ -1,10 +1,11 @@
-{{-- Tarjeta de producto FO-AD-44: foto + descripción, referencia ancha, luego cantidad/utilización/ubicación. --}}
+{{-- Tarjeta de producto FO-AD-44: foto + descripción, referencia y marca en una fila, luego cantidad/utilización/ubicación. --}}
 @php
     $index = (int) ($index ?? 0);
     $item = $item ?? [];
     $cantidad = old('items.'.$index.'.cantidad', $item['cantidad'] ?? 1);
     $descripcion = old('items.'.$index.'.descripcion', $item['descripcion'] ?? '');
     $referencia = old('items.'.$index.'.referencia', $item['referencia'] ?? '');
+    $marca = old('items.'.$index.'.marca', $item['marca'] ?? '');
     $utilizacion = old('items.'.$index.'.utilizacion', $item['utilizacion'] ?? '');
     $ubicacion = old('items.'.$index.'.ubicacion', $item['ubicacion'] ?? '');
     $existingFotoPath = $item['existing_foto_path'] ?? null;
@@ -49,19 +50,35 @@
         </div>
     </div>
 
-    {{-- Referencia al mismo ancho que el bloque superior (foto + descripción) --}}
-    <div class="form-field purchase-item-card__referencia">
-        <label class="form-label" for="item-referencia-{{ $index }}">Referencia</label>
-        <input
-            type="text"
-            id="item-referencia-{{ $index }}"
-            name="items[{{ $index }}][referencia]"
-            class="form-input"
-            value="{{ $referencia }}"
-            placeholder="Marca-Modelo / código"
-            required
-        >
-        <x-input-error :messages="$errors->get('items.'.$index.'.referencia')" />
+    {{-- Referencia (obligatoria) y Marca (opcional, pedido de Comercial) en la misma fila --}}
+    <div class="purchase-item-card__ref-row">
+        <div class="form-field purchase-item-card__referencia">
+            <label class="form-label" for="item-referencia-{{ $index }}">Referencia</label>
+            <input
+                type="text"
+                id="item-referencia-{{ $index }}"
+                name="items[{{ $index }}][referencia]"
+                class="form-input"
+                value="{{ $referencia }}"
+                placeholder="Modelo / código"
+                required
+            >
+            <x-input-error :messages="$errors->get('items.'.$index.'.referencia')" />
+        </div>
+
+        <div class="form-field purchase-item-card__marca">
+            <label class="form-label" for="item-marca-{{ $index }}">Marca</label>
+            <input
+                type="text"
+                id="item-marca-{{ $index }}"
+                name="items[{{ $index }}][marca]"
+                class="form-input"
+                value="{{ $marca }}"
+                maxlength="255"
+                placeholder="Opcional"
+            >
+            <x-input-error :messages="$errors->get('items.'.$index.'.marca')" />
+        </div>
     </div>
 
     {{-- Fila 2: cantidad, utilización y ubicación --}}

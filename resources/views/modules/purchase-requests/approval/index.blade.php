@@ -150,6 +150,9 @@
                                     <th>Fecha</th>
                                     <th>Solicitante</th>
                                     <th>Área</th>
+                                    <th>N.º cotización</th>
+                                    <th>Marca</th>
+                                    <th>Comentarios</th>
                                     <th>Items</th>
                                     <th>Estado</th>
                                     <th>Fecha resolución</th>
@@ -163,6 +166,7 @@
                                         <td><x-date-table :value="$purchaseRequest->fecha_solicitud ?? $purchaseRequest->created_at" /></td>
                                         <td>{{ $purchaseRequest->user?->name ?? '—' }}</td>
                                         <td>{{ $purchaseRequest->areaLabel() ?? '—' }}</td>
+                                        @include('modules.purchase-requests.partials.list-extra-cells', ['purchaseRequest' => $purchaseRequest])
                                         <td>{{ $purchaseRequest->items->count() }} productos</td>
                                         <td>
                                             <x-pedido-etapa :etapa="$purchaseRequest->etapa()" />
@@ -185,7 +189,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-muted">
+                                        <td colspan="11" class="text-muted">
                                             @if ($currentEstado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE)
                                                 No hay solicitudes pendientes de autorización.
                                             @else

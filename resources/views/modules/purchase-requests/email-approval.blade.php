@@ -20,11 +20,15 @@
                     <p><strong>Solicitante:</strong> {{ $purchaseRequest->user?->name ?? '—' }}</p>
                     <p><strong>Área:</strong> {{ $purchaseRequest->areaLabel() ?? '—' }}</p>
                     <p><strong>Fecha:</strong> {{ optional($purchaseRequest->fecha_solicitud)->format('d/m/Y') ?? '—' }}</p>
+                    <p><strong>Número de cotización:</strong> {{ $purchaseRequest->numero_cotizacion ?: '—' }}</p>
                     <p><strong>Solicitud para:</strong> {{ $purchaseRequest->solicitud_para }}</p>
                     @if ($purchaseRequest->urgente)
                         <p><strong>Prioridad:</strong> <span class="status-pill status-pill--warning">Urgente</span></p>
                     @endif
                     <p><strong>Productos:</strong> {{ $purchaseRequest->items->count() }}</p>
+                    @if (filled($purchaseRequest->comentarios_solicitante))
+                        <p><strong>Comentarios del solicitante:</strong> {{ $purchaseRequest->comentarios_solicitante }}</p>
+                    @endif
                 </div>
 
                 <div class="block-spaced">
@@ -34,6 +38,7 @@
                                 <th>Cantidad</th>
                                 <th>Descripción</th>
                                 <th>Referencia</th>
+                                <th>Marca</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -42,6 +47,7 @@
                                     <td class="text-center">{{ $item->cantidad }}</td>
                                     <td>{{ $item->descripcion }}</td>
                                     <td>{{ $item->referencia }}</td>
+                                    <td>{{ $item->marca ?: '—' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

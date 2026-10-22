@@ -9,12 +9,15 @@ use App\Http\Requests\Supplies\ResolveSupplyQualityRequest;
 use App\Http\Requests\Supplies\StoreSupplyRequestCommentRequest;
 use App\Mail\SupplyRequestApprovedForComprasMail;
 use App\Mail\SupplyRequestNotification;
+use App\Models\PurchaseOrder;
 use App\Models\SupplyProduct;
 use App\Models\SupplyRequest;
 use App\Models\SupplyRequestComment;
 use App\Models\User;
 use App\Services\Notifications\NotificationConfigService;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
+use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
+use App\Services\PurchaseRequests\PurchaseOrderService;
 use App\Services\Supplies\SupplyAuditLogService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
 use App\Services\Supplies\SupplyPurchaseReportExporter;
@@ -90,7 +93,10 @@ class SupplyRequestController extends Controller
     {
         $this->authorizeSupplyView($supplyRequest);
 
-        $supplyRequest->load(['user', 'items.product', 'qualityReviewer', 'purchasingManager', 'site', 'comments.user']);
+        $supplyRequest->load([
+            'user', 'items.product', 'qualityReviewer', 'purchasingManager', 'site', 'comments.user',
+            'purchaseOrders.items', 'purchaseOrders.evaluation',
+        ]);
 
         $fromComprasBandeja = auth()->user()?->can('purchase.tab.processing')
             && $this->supplyVisibleInComprasBandeja($supplyRequest);
@@ -102,7 +108,67 @@ class SupplyRequestController extends Controller
             'canExportFoAd44' => $supplyRequest->isExportableForCompras(),
             'subTabs' => $this->getSupplySubTabs($module),
             'purchaseModule' => $fromComprasBandeja ? 'compras' : $module,
+            'orderLines' => $this->supplyOrderedByItem($supplyRequest),
+            'orderPdfUrl' => fn (PurchaseOrder $order): string => route('supplies.orders.pdf', [
+                'module' => $module,
+                'supply_request' => $supplyRequest->id,
+                'purchase_order' => $order->getKey(),
+            ]),
         ]);
+    }
+
+    /**
+     * PDF FO-AD-07 de una OC de este suministro, para quien puede ver el suministro (solicitante, Calidad, Compras).
+     */
+    public function orderPdf(
+        string $module,
+        SupplyRequest $supplyRequest,
+        PurchaseOrder $purchaseOrder,
+        PurchaseOrderPdfExporter $exporter,
+    ): Response {
+        $this->authorizeSupplyView($supplyRequest);
+
+        abort_unless(
+            $purchaseOrder->source_type === PurchaseOrderService::SOURCE_SUPPLY
+                && (int) $purchaseOrder->source_id === (int) $supplyRequest->id,
+            404,
+        );
+
+        $this->auditLogService->logEvent(
+            eventType: 'export',
+            action: 'order_pdf_from_supply',
+            metadata: ['purchase_order_id' => $purchaseOrder->getKey(), 'numero_oc' => $purchaseOrder->numeroOc],
+            model: $purchaseOrder,
+            area: $module,
+        );
+
+        return response($exporter->generate($purchaseOrder), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$exporter->filename($purchaseOrder).'"',
+        ]);
+    }
+
+    /**
+     * Cantidad ordenada y pendiente por línea del suministro (solo si hay órdenes).
+     *
+     * @return array<int, array{ordenada: float, pendiente: float}>
+     */
+    private function supplyOrderedByItem(SupplyRequest $supplyRequest): array
+    {
+        if ($supplyRequest->purchaseOrders->isEmpty()) {
+            return [];
+        }
+
+        $lines = [];
+
+        foreach (app(PurchaseOrderService::class)->sourceLines(PurchaseOrderService::SOURCE_SUPPLY, $supplyRequest) as $line) {
+            $lines[$line['source_item_id']] = [
+                'ordenada' => (float) $line['cantidad_ordenada'],
+                'pendiente' => (float) $line['cantidad_pendiente'],
+            ];
+        }
+
+        return $lines;
     }
 
     public function exportPdf(string $module, SupplyRequest $supplyRequest, SupplyPurchasePdfExporter $exporter): Response

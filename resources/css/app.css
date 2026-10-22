@@ -15093,6 +15093,12 @@ a.req-dashboard-kpi:focus-visible {
 }
 
 /* Solicitudes de compra â formulario Nueva y detalle */
+/* Contiene los inputs ocultos con position:absolute (.sr-only, file inputs) dentro del área con scroll;
+   sin esto se ubican respecto a la página y alargan el documento con un espacio vacío al final. */
+.purchase-requests-page {
+    position: relative;
+}
+
 .purchase-requests-page--form > .app-container,
 .purchase-requests-page--detail > .app-container {
     width: min(1180px, calc(100% - 1.5rem));
@@ -15237,6 +15243,28 @@ a.req-dashboard-kpi:focus-visible {
     align-items: center;
 }
 
+/* Órdenes de compra del pedido (detalle de solicitud / suministro): desplegable con líneas y valores unitarios. */
+.pur-req-orders__lines {
+    margin-top: 0.6rem;
+}
+
+.pur-req-orders__lines > summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--brand-blue);
+}
+
+.pur-req-orders__lines > .data-table-wrap {
+    margin-top: 0.5rem;
+}
+
+/* Comentarios del solicitante en Datos generales: cuadro grande, crece hacia abajo. */
+.pur-req-form__comments {
+    min-height: 9rem;
+    resize: vertical;
+}
+
 /* Datos del cliente: Proyecto nuevo … Activo. En portátil y pantalla grande van en una sola fila. */
 .pur-req-form__client-flags {
     display: grid;
@@ -15373,6 +15401,18 @@ a.req-dashboard-kpi:focus-visible {
     align-items: start;
 }
 
+/* Referencia (más ancha) y Marca a la derecha, en la misma fila. */
+.purchase-item-card__ref-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 0.85rem 1rem;
+    align-items: start;
+}
+
+.purchase-item-card__marca {
+    margin: 0;
+}
+
 .purchase-item-card__cantidad {
     margin: 0;
 }
@@ -15390,6 +15430,7 @@ a.req-dashboard-kpi:focus-visible {
 
 @media (max-width: 720px) {
     .purchase-item-card__top,
+    .purchase-item-card__ref-row,
     .purchase-item-card__bottom {
         grid-template-columns: 1fr;
     }

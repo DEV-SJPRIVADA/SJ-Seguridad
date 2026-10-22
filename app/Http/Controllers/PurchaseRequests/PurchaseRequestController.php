@@ -9,12 +9,15 @@ use App\Http\Requests\PurchaseRequests\ImportPurchaseRequestItemsRequest;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestCommentRequest;
 use App\Http\Requests\PurchaseRequests\StorePurchaseRequestRequest;
 use App\Http\Requests\PurchaseRequests\UpdatePurchaseRequestRequest;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestAttachment;
 use App\Models\PurchaseRequestComment;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseMyRequestsFilterBag;
+use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
+use App\Services\PurchaseRequests\PurchaseOrderService;
 use App\Services\PurchaseRequests\PurchaseRequestAttachmentService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestExcelExporter;
@@ -137,6 +140,8 @@ class PurchaseRequestController extends Controller
                 'area_key' => $validated['area_key'] ?? $module,
                 'fecha_solicitud' => $validated['fecha_solicitud'],
                 'cantidad' => max(1, $totalCantidad),
+                'numero_cotizacion' => filled($validated['numero_cotizacion'] ?? null) ? trim((string) $validated['numero_cotizacion']) : null,
+                'comentarios_solicitante' => filled($validated['comentarios_solicitante'] ?? null) ? trim((string) $validated['comentarios_solicitante']) : null,
                 'solicitud_para' => $validated['solicitud_para'],
                 'urgente' => (bool) $validated['urgente'],
                 'aprobador_id' => $aprobador->id,
@@ -162,6 +167,7 @@ class PurchaseRequestController extends Controller
                     'foto_path' => $fotoPath,
                     'descripcion' => $itemData['descripcion'],
                     'referencia' => $itemData['referencia'],
+                    'marca' => filled($itemData['marca'] ?? null) ? trim((string) $itemData['marca']) : null,
                     'utilizacion' => $itemData['utilizacion'],
                     'ubicacion' => $itemData['ubicacion'],
                 ]);
@@ -280,13 +286,75 @@ class PurchaseRequestController extends Controller
             'mailLogs',
             'attachments',
             'comments.user',
+            'purchaseOrders.items',
+            'purchaseOrders.evaluation',
         ]);
 
         return view('modules.purchase-requests.show', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
             'purchaseRequest' => $purchaseRequest,
+            'orderLines' => $this->orderedByItem(PurchaseOrderService::SOURCE_PURCHASE, $purchaseRequest),
+            'orderPdfUrl' => fn (PurchaseOrder $order): string => route('purchase-requests.source-orders.pdf', [
+                'module' => $module,
+                'purchase_request' => $purchaseRequest->id,
+                'purchase_order' => $order->getKey(),
+            ]),
         ]);
+    }
+
+    /**
+     * PDF FO-AD-07 de una OC de esta solicitud, para quien puede ver la solicitud (solicitante, director, Compras).
+     */
+    public function orderPdf(
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseOrder $purchaseOrder,
+        PurchaseOrderPdfExporter $exporter,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): Response {
+        Gate::authorize('view', $purchaseRequest);
+
+        abort_unless(
+            $purchaseOrder->source_type === PurchaseOrderService::SOURCE_PURCHASE
+                && (int) $purchaseOrder->source_id === (int) $purchaseRequest->id,
+            404,
+        );
+
+        $auditLogService->logEvent(
+            eventType: 'export',
+            action: 'order_pdf_from_request',
+            metadata: ['purchase_order_id' => $purchaseOrder->getKey(), 'numero_oc' => $purchaseOrder->numeroOc],
+            model: $purchaseOrder,
+        );
+
+        return response($exporter->generate($purchaseOrder), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$exporter->filename($purchaseOrder).'"',
+        ]);
+    }
+
+    /**
+     * Cantidad ordenada y pendiente por línea (solo si hay órdenes), indexada por id de línea.
+     *
+     * @return array<int, array{ordenada: float, pendiente: float}>
+     */
+    private function orderedByItem(string $sourceType, PurchaseRequest $source): array
+    {
+        if ($source->purchaseOrders->isEmpty()) {
+            return [];
+        }
+
+        $lines = [];
+
+        foreach (app(PurchaseOrderService::class)->sourceLines($sourceType, $source) as $line) {
+            $lines[$line['source_item_id']] = [
+                'ordenada' => (float) $line['cantidad_ordenada'],
+                'pendiente' => (float) $line['cantidad_pendiente'],
+            ];
+        }
+
+        return $lines;
     }
 
     public function storeComment(
