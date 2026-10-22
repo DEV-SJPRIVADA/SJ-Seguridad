@@ -3,10 +3,8 @@
 namespace App\Http\Requests\GestionHumana\Acreditaciones;
 
 use App\Services\Access\AcreditacionesAccessService;
-use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class PrefillAcreditacionExportApoManualRequest extends FormRequest
 {
@@ -28,14 +26,6 @@ class PrefillAcreditacionExportApoManualRequest extends FormRequest
             'document_number' => ['nullable', 'string', 'max:50'],
             'document_numbers' => ['nullable', 'array', 'max:'.$max],
             'document_numbers.*' => ['string', 'max:50'],
-            'vigencia_policy' => [
-                'nullable',
-                'string',
-                Rule::in([
-                    AcreditacionExportApoRowResolver::POLICY_VIGENTE,
-                    AcreditacionExportApoRowResolver::POLICY_VIGENTE_ACTUALIZAR,
-                ]),
-            ],
         ];
     }
 
@@ -68,10 +58,5 @@ class PrefillAcreditacionExportApoManualRequest extends FormRequest
         $single = trim((string) $this->input('document_number', ''));
 
         return $single !== '' ? [$single] : [];
-    }
-
-    public function vigenciaPolicy(): string
-    {
-        return (string) ($this->input('vigencia_policy') ?: AcreditacionExportApoRowResolver::POLICY_VIGENTE);
     }
 }

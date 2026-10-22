@@ -65,7 +65,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 | Cédula | Número de documento. En Acreditados debe existir en Ficha empleados. |
 | Nombre completo | En Acreditados: de la ficha si existe; si no, del formulario o Excel. En Reporte Diario: nombre armado desde el Excel APO. |
 | CARGO | Cargo del empleado en Ficha. Se completa al buscar la cédula; en import se ignora la columna Excel. |
-| CARGO APO | Tipo de acreditación (por ejemplo VIGILANTE, ESCOLTA). Define la unicidad junto con la cédula en Acreditados. En Validaciones es el valor que se compara con el **Cargo** del Excel APO. En Export Apo define el match con el curso F/R/E del mismo cargo (también educativas `E.…`). |
+| CARGO APO | Tipo de acreditación (por ejemplo VIGILANTE, ESCOLTA). Define la unicidad junto con la cédula en Acreditados. En Validaciones es el valor que se compara con el **Cargo** del Excel APO. En Export Apo define el número de cargo de acreditación (Gestionar cargos) y con él los tipos de curso válidos (Tipos de curso con ese número en «cargo acredit»). |
 | VIGEN.ACR | Fecha de **vencimiento** de la acreditación (Acreditados o columna del Excel Acreditados APO). |
 | Fecha de solicitud | Fecha en que se inició un trámite de acreditación o renovación. |
 | Renovaciones | Campo manual del trámite de renovación: **Solicitado** o **Renovado** (opcional). |
@@ -196,7 +196,7 @@ Tras crear o editar desde una cola, conviene **volver a ejecutar** para refresca
 
 1. Con permiso de edición, abra la pestaña **Export Apo**. Elija **Automática** o **Manual**.
 2. **Automática:** al entrar no hay listado hasta **Validar**. Si llegó con **Cargar en Export Apo**, valida solo esos IDs. Elija política de vigencia, pulse **Validar**, marque filas y use **Acreditar .xls** o **Retirar**. Si hay Valida=No, el modal pregunta por novedades leves. Retirar limpia; Acreditar revalida el preview. El campo **Fecha vinc.** sale siempre como el **día anterior** (no la fecha de ingreso de la ficha); en Manual también se precarga así y puede editarla.
-3. **Manual:** use **+** para agregar filas, la basura para quitar, o el icono de lista para **pegar varias cédulas**. Al salir de la cédula (o al pegar el lote) el sistema intenta precargar desde acreditado/ficha; si no hay datos, complete la grilla a mano. Luego **Acreditar .xls** o **Retirar** (sin Validar ni modal de novedades).
+3. **Manual:** use **+** para agregar filas, la basura para quitar, o el icono de lista para **pegar varias cédulas**. Al salir de la cédula (o al pegar el lote) el sistema intenta precargar desde acreditado/ficha; si no hay datos, complete la grilla a mano. **Código curso, NIT escuela y Nro** se traen de la pestaña Cursos: el curso de expedición más reciente cuyo tipo corresponda al número de cargo de acreditación (Gestionar cargos → Tipos de curso), **sin importar si está vigente, por actualizar o vencido**. Si la cédula no está en Acreditados se usa el cargo del perfil. Debajo de la cédula aparecen avisos en naranja (no impiden generar): cargo de Acreditados distinto al del perfil, cargo que no está en Gestionar cargos (debe registrarlo en el catálogo) o sin registro en Acreditados. Si no hay curso del cargo, esos campos quedan vacíos para completarlos a mano. En **Automática** se aplica la misma regla de cargo con la política de vigencia elegida, y los mismos avisos salen como novedades leves. Luego **Acreditar .xls** o **Retirar** (sin Validar ni modal de novedades).
 4. Confirme la descarga `.xls` (hojas ApoDatos + Retiros). El correlativo del día es compartido entre ambos modos.
 
 ### Administrar Catálogo (solo edición)
@@ -238,6 +238,7 @@ En **Export Apo**, el estado del acreditado define quién entra al universo de c
 | 1.30 | 2026-10-16 | Feature | Acreditados: cédulas con más de un registro se marcan en rojo. |
 | 1.29 | 2026-10-16 | Feature | Dashboard Acreditaciones: gráficos con etiquetas de valores y títulos centrados. |
 | 1.28 | 2026-10-16 | Feature | Dashboard Acreditaciones: clic en KPI abre Acreditados con el filtro correspondiente. |
+| 1.29 | 2026-10-22 | Fix | Export Apo: curso según número de cargo de acreditación (Gestionar cargos → Tipos de curso); aviso si el cargo de Acreditados y del perfil no coinciden o no están en el catálogo. Manual: cualquier vigencia y también sin acreditado. |
 | 1.27 | 2026-10-16 | Feature | Validaciones: Ficha activa sin acreditación con casillas por cédula; Cargar en Export Apo abre Manual precargado. |
 | 1.29 | 2026-10-16 | Feature | Al eliminar un acreditado o cargo del catálogo aparece un modal de confirmación. |
 | 1.28 | 2026-10-16 | Feature | Export Apo: Fecha vinc. por defecto = día anterior (Automática y Manual). |

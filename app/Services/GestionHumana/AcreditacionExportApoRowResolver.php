@@ -27,6 +27,18 @@ final class AcreditacionExportApoRowResolver
 
     public const NOVEDAD_CARGO_AMBIGUO = 'cargo_acreditacion_ambiguo';
 
+    /** Cargo de Acreditados (`cargo`) no está en Gestionar cargos (`cargo_manager`). Informativa. */
+    public const NOVEDAD_CARGO_ACREDITADO_NO_CATALOGO = 'cargo_acreditado_no_catalogo';
+
+    /** Cargo del perfil (`position_name`) no está en Gestionar cargos (`cargo_manager`). Informativa. */
+    public const NOVEDAD_CARGO_PERFIL_NO_CATALOGO = 'cargo_perfil_no_catalogo';
+
+    /** Cargo de Acreditados y del perfil tienen distinto número de cargo de acreditación. Informativa. */
+    public const NOVEDAD_CARGO_PERFIL_DISTINTO = 'cargo_perfil_distinto';
+
+    /** Manual: cédula sin registro en Acreditados (se usa el cargo del perfil). Informativa. */
+    public const NOVEDAD_SIN_ACREDITADO = 'sin_acreditado';
+
     public const NOVEDAD_FUERA_UNIVERSO = 'fuera_universo_export_apo';
 
     public const NOVEDAD_REGISTRO_NO_ENCONTRADO = 'registro_no_encontrado';
@@ -34,6 +46,12 @@ final class AcreditacionExportApoRowResolver
     public const POLICY_VIGENTE = 'VIGENTE';
 
     public const POLICY_VIGENTE_ACTUALIZAR = 'VIGENTE_ACTUALIZAR';
+
+    /**
+     * Solo Export Apo Manual: curso más reciente de un tipo del cargo sin importar su vigencia
+     * (VIGENTE, ACTUALIZAR o VENCIDO). No se ofrece en Automática.
+     */
+    public const POLICY_CUALQUIERA = 'CUALQUIERA';
 
     /**
      * Fecha vinc. Export Apo: siempre el día anterior (America/Bogota).
@@ -115,18 +133,20 @@ final class AcreditacionExportApoRowResolver
             $genero = $this->mapGenero((string) $ficha->sex);
         }
 
+        // Número de cargo de acreditación del registro (cargo_apo → Gestionar cargos): define qué
+        // tipos de curso sirven. Un supervisor puede tener registro ESCOLTA (2) y otro SUPERVISOR (4).
         $cargoResult = $this->resolveCargoAcreditacion((string) $acreditado->cargo_apo);
         $cargo = $cargoResult['value'];
         if ($cargoResult['code'] !== null) {
             $motivoCodes[] = $cargoResult['code'];
         }
 
-        $cursoResult = $this->resolveCurso(
-            (string) $acreditado->document_number,
-            (string) $acreditado->cargo_apo,
-            $policy,
-            (string) $cargo,
-        );
+        // Cruce informativo: cargo de Acreditados vs cargo del perfil, ambos vía cargo_manager.
+        foreach ($this->compareAcreditadoVsPerfil((string) $acreditado->cargo, $ficha?->position_name) as $code) {
+            $motivoCodes[] = $code;
+        }
+
+        $cursoResult = $this->resolveCurso((string) $acreditado->document_number, (string) $cargo, $policy);
 
         $codigoCurso = $cursoResult['codigo_curso'];
         $nitEscuela = $cursoResult['nit_escuela'];
@@ -178,12 +198,98 @@ final class AcreditacionExportApoRowResolver
         ];
     }
 
+    /**
+     * Número de cargo de acreditación de un cargo de nómina/ficha (Gestionar cargos → `cargo_manager`).
+     * Null si el cargo está vacío o no está en el catálogo activo.
+     */
+    public function cargoNumberByManager(?string $cargo): ?string
+    {
+        if ($this->normalizer->normalizeCargo($cargo) === '') {
+            return null;
+        }
+
+        $row = AcreditacionCargo::query()
+            ->active()
+            ->get()
+            ->filter(fn (AcreditacionCargo $item): bool => $this->normalizer->cargosMatch($item->cargo_manager, $cargo))
+            ->sortBy([
+                ['sort_order', 'asc'],
+                ['id', 'asc'],
+            ])
+            ->first();
+
+        $number = trim((string) ($row?->cargo_acreditacion ?? ''));
+
+        return $number !== '' ? $number : null;
+    }
+
+    /**
+     * Número de cargo de acreditación de un `cargo_apo` (Gestionar cargos → `cargo_apo`). Null si no resuelve.
+     */
+    public function cargoNumberByApo(?string $cargoApo): ?string
+    {
+        $value = trim($this->resolveCargoAcreditacion((string) $cargoApo)['value']);
+
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Novedades informativas del cruce cargo Acreditados ↔ cargo perfil (mismo número de cargo de acreditación).
+     *
+     * @return list<string>
+     */
+    public function compareAcreditadoVsPerfil(?string $cargoAcreditado, ?string $cargoPerfil): array
+    {
+        $codes = [];
+        $numAcreditado = $this->cargoNumberByManager($cargoAcreditado);
+        $numPerfil = $this->cargoNumberByManager($cargoPerfil);
+
+        if ($numAcreditado === null) {
+            $codes[] = self::NOVEDAD_CARGO_ACREDITADO_NO_CATALOGO;
+        }
+
+        if ($cargoPerfil !== null && $numPerfil === null) {
+            $codes[] = self::NOVEDAD_CARGO_PERFIL_NO_CATALOGO;
+        }
+
+        if ($numAcreditado !== null && $numPerfil !== null && $numAcreditado !== $numPerfil) {
+            $codes[] = self::NOVEDAD_CARGO_PERFIL_DISTINTO;
+        }
+
+        return $codes;
+    }
+
+    /**
+     * Curso más reciente de la cédula cuyo tipo (activo) tenga `cargo_acredit` = número de cargo,
+     * filtrado por la política de vigencia. Usado por Automática (vía resolve) y Manual.
+     *
+     * @return array{codigo_curso: string, nit_escuela: string, nro: string, tipo_curso: string, estado_curso: string, codes: list<string>}
+     */
+    public function resolveCursoByCargoNumber(string $documentNumber, ?string $cargoNumber, string $policy): array
+    {
+        return $this->resolveCurso($documentNumber, (string) $cargoNumber, $this->normalizePolicy($policy));
+    }
+
+    /**
+     * Etiquetas legibles de novedades (para avisos en Manual).
+     *
+     * @param  list<string>  $codes
+     */
+    public function novedadesLabel(array $codes): string
+    {
+        return $this->motivoLabel(array_values(array_unique($codes)));
+    }
+
     public function normalizePolicy(string $policy): string
     {
         $policy = trim($policy);
 
         if ($policy === self::POLICY_VIGENTE_ACTUALIZAR) {
             return self::POLICY_VIGENTE_ACTUALIZAR;
+        }
+
+        if ($policy === self::POLICY_CUALQUIERA) {
+            return self::POLICY_CUALQUIERA;
         }
 
         return self::POLICY_VIGENTE;
@@ -287,12 +393,8 @@ final class AcreditacionExportApoRowResolver
      *     codes: list<string>,
      * }
      */
-    private function resolveCurso(
-        string $documentNumber,
-        string $cargoApo,
-        string $policy,
-        string $cargoAcreditacionCode,
-    ): array {
+    private function resolveCurso(string $documentNumber, string $cargoNumber, string $policy): array
+    {
         $empty = [
             'codigo_curso' => '',
             'nit_escuela' => '',
@@ -314,15 +416,15 @@ final class AcreditacionExportApoRowResolver
             return $empty;
         }
 
-        $apoNorm = $this->normalizer->normalizeCargo($cargoApo);
-        $codeNorm = $this->normalizer->normalizeCargo($cargoAcreditacionCode);
-        $sameCargo = $cursos->filter(function (EmployeeCurso $curso) use ($apoNorm, $codeNorm): bool {
+        // Tipos de curso válidos = tipos activos con cargo_acredit igual al número de cargo de acreditación.
+        $numberNorm = $this->normalizer->normalizeCargo($cargoNumber);
+        $sameCargo = $cursos->filter(function (EmployeeCurso $curso) use ($numberNorm): bool {
             $tipo = $curso->cursoTipo;
-            if (! $tipo instanceof CursoTipo) {
-                return false;
-            }
 
-            return $this->tipoMatchesCargo($tipo, $apoNorm, $codeNorm);
+            return $numberNorm !== ''
+                && $tipo instanceof CursoTipo
+                && (bool) $tipo->is_active
+                && $this->normalizer->normalizeCargo($tipo->cargo_acredit) === $numberNorm;
         });
 
         if ($sameCargo->isEmpty()) {
@@ -459,45 +561,12 @@ final class AcreditacionExportApoRowResolver
         return $chosen instanceof EmployeeCurso ? $chosen : null;
     }
 
-    private function tipoMatchesCargo(CursoTipo $tipo, string $apoNorm, string $cargoAcreditacionCode): bool
-    {
-        if ($apoNorm === '') {
-            return false;
-        }
-
-        $tipoNorm = preg_replace('/\s+/u', '', $this->normalizer->normalizeCargo($tipo->tipo_curso)) ?? '';
-        $expectedF = 'F.'.$apoNorm;
-        $expectedR = 'R.'.$apoNorm;
-        $expectedE = 'E.'.$apoNorm;
-        // Familia F (formación), R (reentrenamiento) y E (especialización / educativa).
-        $isFamiliaFRE = (bool) preg_match('/^[FRE]\./', $tipoNorm)
-            || $tipoNorm === $expectedF
-            || $tipoNorm === $expectedR
-            || $tipoNorm === $expectedE;
-
-        if (! $isFamiliaFRE) {
-            return false;
-        }
-
-        if ($tipoNorm === $expectedF || $tipoNorm === $expectedR || $tipoNorm === $expectedE) {
-            return true;
-        }
-
-        $cargoAcredit = trim((string) ($tipo->cargo_acredit ?? ''));
-        if ($cargoAcredit === '') {
-            return false;
-        }
-
-        $acreditNorm = $this->normalizer->normalizeCargo($cargoAcredit);
-        if ($acreditNorm === $apoNorm) {
-            return true;
-        }
-
-        return $cargoAcreditacionCode !== '' && $acreditNorm === $cargoAcreditacionCode;
-    }
-
     private function vigenciaAllowed(string $vigencia, string $policy): bool
     {
+        if ($policy === self::POLICY_CUALQUIERA) {
+            return true;
+        }
+
         if ($policy === self::POLICY_VIGENTE_ACTUALIZAR) {
             return in_array($vigencia, [
                 EmployeeCurso::VIGENCIA_VIGENTE,
@@ -552,12 +621,16 @@ final class AcreditacionExportApoRowResolver
 
         $labels = [
             self::NOVEDAD_FICHA_INCOMPLETA => 'Ficha incompleta (bloqueo duro)',
-            self::NOVEDAD_SIN_CURSO_MATCH => 'Sin curso F|R válido para el cargo',
+            self::NOVEDAD_SIN_CURSO_MATCH => 'Sin curso de un tipo correspondiente al cargo de acreditación',
             self::NOVEDAD_CURSO_VENCIDO => 'Curso vencido sin alternativa válida',
             self::NOVEDAD_CODIGO_CURSO_VACIO => 'CódigoCurso vacío en tipo de curso',
             self::NOVEDAD_ESCUELA_NO_CATALOGO => 'Escuela no está en catálogo activo',
-            self::NOVEDAD_CARGO_NO_RESOLUBLE => 'Cargo acreditación no resoluble',
+            self::NOVEDAD_CARGO_NO_RESOLUBLE => 'Cargo APO no está en Gestionar cargos (regístrelo en el catálogo)',
             self::NOVEDAD_CARGO_AMBIGUO => 'Cargo acreditación ambiguo',
+            self::NOVEDAD_CARGO_ACREDITADO_NO_CATALOGO => 'Cargo de Acreditados no está en Gestionar cargos (regístrelo en el catálogo)',
+            self::NOVEDAD_CARGO_PERFIL_NO_CATALOGO => 'Cargo del perfil no está en Gestionar cargos (regístrelo en el catálogo)',
+            self::NOVEDAD_CARGO_PERFIL_DISTINTO => 'Cargo de Acreditados y del perfil tienen distinto cargo de acreditación',
+            self::NOVEDAD_SIN_ACREDITADO => 'Sin registro en Acreditados: se usó el cargo del perfil',
             self::NOVEDAD_FUERA_UNIVERSO => 'Fuera del universo Export Apo (estado o sin ficha activa)',
             self::NOVEDAD_REGISTRO_NO_ENCONTRADO => 'Registro no encontrado',
         ];

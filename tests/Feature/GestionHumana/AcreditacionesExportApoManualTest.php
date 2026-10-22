@@ -4,8 +4,12 @@ namespace Tests\Feature\GestionHumana;
 
 use App\Exports\AcreditacionExportApoXlsExport;
 use App\Models\AcreditacionAcreditado;
+use App\Models\AcreditacionCargo;
 use App\Models\AcreditacionExportApoRun;
 use App\Models\AcreditacionExportApoSetting;
+use App\Models\CursoEscuela;
+use App\Models\CursoTipo;
+use App\Models\EmployeeCurso;
 use App\Models\EmployeeFichaProfile;
 use App\Models\User;
 use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
@@ -259,6 +263,237 @@ class AcreditacionesExportApoManualTest extends TestCase
             ->assertOk()
             ->assertJsonPath('found', true)
             ->assertJsonPath('source', 'acreditado');
+    }
+
+    public function test_manual_prefill_brings_course_even_if_vencido_but_automatic_does_not(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '9019029039';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'ESCOLTA');
+        $tipo = $this->tipoCurso('R.ESCOLTA', '2', '3301');
+        $curso = $this->curso($cedula, $tipo, now()->subYears(5)->toDateString(), 'NC-VENCIDO', '900333444');
+        $this->assertSame(EmployeeCurso::VIGENCIA_VENCIDO, $curso->computeVigencia());
+
+        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+
+        // Manual: trae el curso del cargo aunque esté vencido.
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+            ])
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('source', 'acreditado')
+            ->assertJsonPath('row.cargo', '2')
+            ->assertJsonPath('row.codigo_curso', '3301')
+            ->assertJsonPath('row.nro', 'NC-VENCIDO')
+            ->assertJsonPath('row.nit_escuela', '900333444')
+            ->assertJsonPath('avisos', '');
+
+        // Automática: con política VIGENTE el curso vencido no se toma.
+        $resolved = app(AcreditacionExportApoRowResolver::class)
+            ->resolve($acreditado, AcreditacionExportApoRowResolver::POLICY_VIGENTE);
+        $this->assertSame('', $resolved['codigo_curso']);
+        $this->assertContains(AcreditacionExportApoRowResolver::NOVEDAD_CURSO_VENCIDO, $resolved['motivo_codes']);
+    }
+
+    public function test_manual_prefill_from_ficha_uses_profile_cargo_number_and_ignores_other_cargo_courses(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '1111769695';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'GUARDA');
+
+        // Curso de vigilancia (cargo 1) en ACTUALIZAR y uno de escolta (cargo 2) más reciente: gana vigilancia.
+        $vigilancia = $this->curso($cedula, $this->tipoCurso('R.VIGILANCIA', '1', '1201'), now()->subDays(350)->toDateString(), 'NC-VIG', '900555666');
+        $this->curso($cedula, $this->tipoCurso('F.ESCOLTA', '2', '2101'), now()->subDays(10)->toDateString(), 'NC-ESC', '900555666');
+        $this->assertSame(EmployeeCurso::VIGENCIA_ACTUALIZAR, $vigilancia->computeVigencia());
+
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+            ])
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('source', 'ficha')
+            ->assertJsonPath('row.cargo', '1')
+            ->assertJsonPath('row.codigo_curso', '1201')
+            ->assertJsonPath('row.nro', 'NC-VIG')
+            ->assertJsonPath('row.nit_escuela', '900555666')
+            ->assertJsonPath('avisos', 'Sin registro en Acreditados: se usó el cargo del perfil');
+    }
+
+    public function test_manual_prefill_picks_acreditado_matching_profile_cargo_number(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '7101102103';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'GUARDA MENSUAL');
+        $this->curso($cedula, $this->tipoCurso('F.VIGILANCIA', '1', '1101'), now()->subMonths(2)->toDateString(), 'NC-VIG', '900555666');
+        $this->curso($cedula, $this->tipoCurso('R.ESCOLTA', '2', '2201'), now()->subMonth()->toDateString(), 'NC-ESC', '900555666');
+
+        AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'GUARDA',
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+        // Registro más reciente pero de otro cargo (ESCOLTA = 2): no se elige porque el perfil es 1.
+        AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'GUARDA',
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+            ])
+            ->assertOk()
+            ->assertJsonPath('source', 'acreditado')
+            ->assertJsonPath('row.cargo', '1')
+            ->assertJsonPath('row.codigo_curso', '1101')
+            ->assertJsonPath('row.nro', 'NC-VIG')
+            ->assertJsonPath('avisos', '');
+    }
+
+    public function test_manual_prefill_warns_when_acreditado_and_profile_cargo_numbers_differ(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '7201202203';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'ESCOLTA');
+        $this->curso($cedula, $this->tipoCurso('F.VIGILANCIA', '1', '1101'), now()->subMonth()->toDateString(), 'NC-VIG', '900555666');
+
+        AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'GUARDA',
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+
+        // Solo informativo: igual trae el curso del cargo del registro (vigilancia).
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+            ])
+            ->assertOk()
+            ->assertJsonPath('row.codigo_curso', '1101')
+            ->assertJsonPath('avisos', 'Cargo de Acreditados y del perfil tienen distinto cargo de acreditación');
+    }
+
+    public function test_manual_prefill_warns_when_profile_cargo_not_in_catalog(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '7301302303';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'GUARDAS MOTORIZADOS');
+        $this->curso($cedula, $this->tipoCurso('F.VIGILANCIA', '1', '1101'), now()->subMonth()->toDateString(), 'NC-VIG', '900555666');
+
+        $response = $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => $cedula,
+            ])
+            ->assertOk()
+            ->assertJsonPath('source', 'ficha')
+            ->assertJsonPath('row.cargo', '')
+            ->assertJsonPath('row.codigo_curso', '');
+
+        $this->assertStringContainsString('Cargo del perfil no está en Gestionar cargos', (string) $response->json('avisos'));
+    }
+
+    public function test_automatic_warns_but_keeps_valid_course_when_cargo_numbers_differ(): void
+    {
+        $cedula = '7401402403';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'ESCOLTA');
+        $this->curso($cedula, $this->tipoCurso('R.VIGILANCIA', '1', '1201'), now()->subMonth()->toDateString(), 'NC-VIG', '900555666');
+
+        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'GUARDA',
+            'cargo_apo' => 'VIGILANTE',
+        ]);
+
+        $resolved = app(AcreditacionExportApoRowResolver::class)
+            ->resolve($acreditado, AcreditacionExportApoRowResolver::POLICY_VIGENTE);
+
+        $this->assertSame('1201', $resolved['codigo_curso']);
+        $this->assertFalse($resolved['hard_block']);
+        $this->assertTrue($resolved['soft_novedad']);
+        $this->assertSame([AcreditacionExportApoRowResolver::NOVEDAD_CARGO_PERFIL_DISTINTO], $resolved['motivo_codes']);
+    }
+
+    /**
+     * Gestionar cargos mínimo (estructura real): cargo nómina → cargo APO → número de acreditación.
+     */
+    private function seedCargoCatalog(): void
+    {
+        $rows = [
+            ['GUARDA', 'VIGILANTE', '1'],
+            ['GUARDA MENSUAL', 'VIGILANTE', '1'],
+            ['ESCOLTA', 'ESCOLTA', '2'],
+            ['SUPERVISORES', 'SUPERVISOR', '4'],
+        ];
+
+        foreach ($rows as $index => [$manager, $apo, $number]) {
+            AcreditacionCargo::factory()->create([
+                'cargo_manager' => $manager,
+                'cargo_apo' => $apo,
+                'cargo_acreditacion' => $number,
+                'is_active' => true,
+                'sort_order' => ($index + 1) * 10,
+            ]);
+        }
+    }
+
+    private function createProfile(string $cedula, string $positionName): EmployeeFichaProfile
+    {
+        return EmployeeFichaProfile::query()->create([
+            'document_number' => $cedula,
+            'full_name' => 'Nombre Completo Test',
+            'first_name' => 'Nombre',
+            'first_surname' => 'Apellido',
+            'birth_date' => '1990-05-15',
+            'sex' => 'M',
+            'hire_date' => '2020-01-10',
+            'position_name' => $positionName,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+    }
+
+    private function tipoCurso(string $tipo, string $cargoAcredit, string $codigo): CursoTipo
+    {
+        return CursoTipo::factory()->create([
+            'tipo_curso' => $tipo,
+            'cargo_acredit' => $cargoAcredit,
+            'cursos' => $codigo,
+            'is_active' => true,
+        ]);
+    }
+
+    private function curso(string $cedula, CursoTipo $tipo, string $fechaExpedicion, string $numero, string $nitEscuela): EmployeeCurso
+    {
+        $escuela = CursoEscuela::query()->firstOrCreate(
+            ['nit' => $nitEscuela],
+            CursoEscuela::factory()->make(['nit' => $nitEscuela, 'is_active' => true])->toArray(),
+        );
+
+        return EmployeeCurso::factory()->withEscuela($escuela)->create([
+            'document_number' => $cedula,
+            'curso_tipo_id' => $tipo->id,
+            'fecha_expedicion' => $fechaExpedicion,
+            'numero_curso' => $numero,
+        ]);
     }
 
     private function viewerUser(): User

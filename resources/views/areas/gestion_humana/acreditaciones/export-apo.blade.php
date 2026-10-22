@@ -826,6 +826,11 @@
                         });
                     },
 
+                    // Acción del modal compartido de edición (partials/edit-modal): en Export Apo no hay filtros que conservar.
+                    editActionUrl() {
+                        return this.editForm.update_url || '';
+                    },
+
                     openEdit(detail) {
                         this.editForm = {
                             document_number: detail?.document_number || '',

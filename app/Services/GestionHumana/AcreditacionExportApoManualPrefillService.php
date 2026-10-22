@@ -5,10 +5,16 @@ namespace App\Services\GestionHumana;
 use App\Models\AcreditacionAcreditado;
 use App\Models\EmployeeFichaProfile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
- * Prefill de filas Export Apo Manual: arma desde ficha/perfil (y acreditado si hay)
- * sin bloquear por Valida/novedades. Si no hay datos, devuelve fila vacía editable.
+ * Prefill de filas Export Apo Manual (base: Acreditados; sin bloquear por Valida/novedades).
+ *
+ * - Cargo: número de cargo de acreditación (Gestionar cargos). Con acreditado sale de su `cargo_apo`;
+ *   sin acreditado, del cargo del perfil (`cargo_manager`).
+ * - Curso: el de fecha de expedición más reciente cuyo tipo tenga ese número en `cargo_acredit`,
+ *   en cualquier vigencia (Manual no aplica la política de vigencia).
+ * - Avisos informativos: cargo fuera del catálogo, cargos Acreditados ↔ perfil distintos, sin acreditado.
  */
 final class AcreditacionExportApoManualPrefillService
 {
@@ -20,52 +26,59 @@ final class AcreditacionExportApoManualPrefillService
      * @return array{
      *     found: bool,
      *     source: string|null,
-     *     row: array<string, string>
+     *     row: array<string, string>,
+     *     avisos: string
      * }
      */
-    public function prefill(string $documentNumber, ?string $vigenciaPolicy = null): array
+    public function prefill(string $documentNumber): array
     {
         $document = $this->normalizeDocument($documentNumber);
         $empty = $this->emptyRow($document);
 
         if ($document === '') {
-            return [
-                'found' => false,
-                'source' => null,
-                'row' => $empty,
-            ];
-        }
-
-        $policy = $this->rowResolver->normalizePolicy(
-            $vigenciaPolicy ?: AcreditacionExportApoRowResolver::POLICY_VIGENTE
-        );
-
-        $acreditado = AcreditacionAcreditado::query()
-            ->where('document_number', $document)
-            ->orderByDesc('id')
-            ->first();
-
-        if ($acreditado !== null) {
-            $resolved = $this->rowResolver->resolve($acreditado, $policy);
-
-            return [
-                'found' => true,
-                'source' => 'acreditado',
-                'row' => $this->exportableFields($resolved, $document),
-            ];
+            return ['found' => false, 'source' => null, 'row' => $empty, 'avisos' => ''];
         }
 
         $profile = EmployeeFichaProfile::query()
             ->where('document_number', $document)
             ->orderByDesc('id')
             ->first();
+        $perfilNumber = $profile !== null ? $this->rowResolver->cargoNumberByManager($profile->position_name) : null;
+
+        /** @var Collection<int, AcreditacionAcreditado> $acreditados */
+        $acreditados = AcreditacionAcreditado::query()
+            ->where('document_number', $document)
+            ->orderByDesc('id')
+            ->get();
+
+        if ($acreditados->isNotEmpty()) {
+            $acreditado = $this->pickAcreditadoForCargo($acreditados, $perfilNumber);
+            $resolved = $this->rowResolver->resolve($acreditado, AcreditacionExportApoRowResolver::POLICY_CUALQUIERA);
+
+            return [
+                'found' => true,
+                'source' => 'acreditado',
+                'row' => $this->exportableFields($resolved, $document),
+                'avisos' => (string) ($resolved['motivo'] ?? ''),
+            ];
+        }
 
         if ($profile === null) {
-            return [
-                'found' => false,
-                'source' => null,
-                'row' => $empty,
-            ];
+            return ['found' => false, 'source' => null, 'row' => $empty, 'avisos' => ''];
+        }
+
+        $codes = [AcreditacionExportApoRowResolver::NOVEDAD_SIN_ACREDITADO];
+        $curso = ['codigo_curso' => '', 'nit_escuela' => '', 'nro' => ''];
+
+        if ($perfilNumber === null) {
+            $codes[] = AcreditacionExportApoRowResolver::NOVEDAD_CARGO_PERFIL_NO_CATALOGO;
+        } else {
+            $curso = $this->rowResolver->resolveCursoByCargoNumber(
+                $document,
+                $perfilNumber,
+                AcreditacionExportApoRowResolver::POLICY_CUALQUIERA,
+            );
+            $codes = [...$codes, ...$curso['codes']];
         }
 
         return [
@@ -79,20 +92,21 @@ final class AcreditacionExportApoManualPrefillService
                 'apellido2' => trim((string) ($profile->second_surname ?? '')),
                 'fecha_nacimiento' => $this->formatDate($profile->birth_date),
                 'genero' => $this->mapGenero((string) ($profile->sex ?? '')),
-                'cargo' => trim((string) ($profile->position_name ?? $profile->position_code ?? '')),
+                'cargo' => (string) ($perfilNumber ?? ''),
                 'fecha_vinculacion' => AcreditacionExportApoRowResolver::defaultFechaVinculacion('Y-m-d'),
-                'codigo_curso' => '',
-                'nit_escuela' => '',
-                'nro' => '',
+                'codigo_curso' => (string) $curso['codigo_curso'],
+                'nit_escuela' => (string) $curso['nit_escuela'],
+                'nro' => (string) $curso['nro'],
             ],
+            'avisos' => $this->rowResolver->novedadesLabel($codes),
         ];
     }
 
     /**
      * @param  list<string>  $documents
-     * @return list<array{document_number: string, found: bool, source: string|null, row: array<string, string>}>
+     * @return list<array{document_number: string, found: bool, source: string|null, row: array<string, string>, avisos: string}>
      */
-    public function prefillMany(array $documents, ?string $vigenciaPolicy = null): array
+    public function prefillMany(array $documents): array
     {
         $seen = [];
         $out = [];
@@ -103,12 +117,13 @@ final class AcreditacionExportApoManualPrefillService
                 continue;
             }
             $seen[$document] = true;
-            $result = $this->prefill($document, $vigenciaPolicy);
+            $result = $this->prefill($document);
             $out[] = [
                 'document_number' => $document,
                 'found' => $result['found'],
                 'source' => $result['source'],
                 'row' => $result['row'],
+                'avisos' => $result['avisos'],
             ];
         }
 
@@ -134,6 +149,29 @@ final class AcreditacionExportApoManualPrefillService
             'nit_escuela' => '',
             'nro' => '',
         ];
+    }
+
+    /**
+     * Varios registros en Acreditados: el más reciente cuyo cargo APO tenga el mismo número de cargo
+     * de acreditación que el perfil (p. ej. GUARDA → 1 elige VIGILANTE y no ESCOLTA); si ninguno, el más reciente.
+     *
+     * @param  Collection<int, AcreditacionAcreditado>  $acreditados
+     */
+    private function pickAcreditadoForCargo(Collection $acreditados, ?string $perfilNumber): AcreditacionAcreditado
+    {
+        if ($perfilNumber !== null) {
+            $match = $acreditados->first(
+                fn (AcreditacionAcreditado $row): bool => $this->rowResolver->cargoNumberByApo($row->cargo_apo) === $perfilNumber
+            );
+            if ($match instanceof AcreditacionAcreditado) {
+                return $match;
+            }
+        }
+
+        /** @var AcreditacionAcreditado $latest */
+        $latest = $acreditados->first();
+
+        return $latest;
     }
 
     /**

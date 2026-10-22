@@ -6,7 +6,6 @@
         'generateUrl' => $manualGenerateUrl,
         'csrfToken' => csrf_token(),
         'maxRows' => $manualMaxRows ?? 500,
-        'defaultVigenciaPolicy' => $defaultVigenciaPolicy,
         'defaultFechaVinculacion' => $defaultFechaVinculacion,
         'initialDocuments' => $initialManualDocuments ?? [],
         'generoOptions' => $manualGeneroOptions ?? [],
@@ -139,6 +138,13 @@
                                             x-bind:disabled="processing"
                                         >
                                         <p class="form-hint acreditaciones-export-apo-manual__hint" x-show="row.sourceHint" x-text="row.sourceHint" x-cloak></p>
+                                        <p
+                                            class="form-hint acreditaciones-export-apo-manual__hint acreditaciones-export-apo-manual__hint--warn"
+                                            x-show="row.avisos"
+                                            x-text="row.avisos"
+                                            x-bind:title="row.avisos"
+                                            x-cloak
+                                        ></p>
                                     </td>
                                     <td>
                                         <input type="text" class="form-input" x-model="row.nombre1" placeholder="Nombre1" autocomplete="off" x-bind:disabled="processing">
@@ -423,6 +429,7 @@
                         key: 'r-' + Math.random().toString(36).slice(2, 10),
                         ...emptyFields(),
                         sourceHint: '',
+                        avisos: '',
                         looking_up: false,
                     });
 
@@ -444,7 +451,6 @@
                         prefillUrl: config.prefillUrl,
                         generateUrl: config.generateUrl,
                         csrfToken: config.csrfToken || '',
-                        defaultVigenciaPolicy: config.defaultVigenciaPolicy || 'vigente',
                         defaultFechaVinculacion,
                         settings: config.settings || {},
                         generoOptions: Array.isArray(config.generoOptions) ? config.generoOptions : [],
@@ -644,6 +650,8 @@
                             } else {
                                 row.sourceHint = payload?.found === false ? 'Sin ficha/acreditado — complete a mano' : '';
                             }
+                            // Avisos informativos del cruce de cargos / curso (no bloquean la generación).
+                            row.avisos = String(payload?.avisos || '');
                         },
 
                         fillOrPushRow(payload) {
@@ -680,7 +688,6 @@
                                 },
                                 body: JSON.stringify({
                                     document_numbers: documentNumbers,
-                                    vigencia_policy: this.defaultVigenciaPolicy,
                                 }),
                             });
                             const data = await response.json().catch(() => ({}));
@@ -707,6 +714,7 @@
                                 }
                             } catch (e) {
                                 row.sourceHint = '';
+                                row.avisos = '';
                             } finally {
                                 row.looking_up = false;
                             }

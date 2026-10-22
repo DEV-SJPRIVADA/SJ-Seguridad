@@ -403,9 +403,11 @@ class AcreditacionesExportApoGenerateTest extends TestCase
         string $cargoAcreditacion,
         string $codigoCurso,
     ): AcreditacionAcreditado {
-        $this->createCompleteFicha($cedula);
+        // Cargo de nómina = cargo APO en fixtures: mismo número en Acreditados y perfil (sin avisos).
+        $this->createCompleteFicha($cedula, ['position_name' => $cargoApo]);
 
         AcreditacionCargo::factory()->create([
+            'cargo_manager' => $cargoApo,
             'cargo_apo' => $cargoApo,
             'cargo_acreditacion' => $cargoAcreditacion,
             'is_active' => true,
@@ -419,7 +421,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
 
         $tipo = CursoTipo::factory()->create([
             'tipo_curso' => 'R.'.$cargoApo,
-            'cargo_acredit' => $cargoApo,
+            'cargo_acredit' => $cargoAcreditacion,
             'cursos' => $codigoCurso,
             'is_active' => true,
         ]);
@@ -433,6 +435,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
 
         return AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
+            'cargo' => $cargoApo,
             'cargo_apo' => $cargoApo,
         ]);
     }
@@ -442,9 +445,10 @@ class AcreditacionesExportApoGenerateTest extends TestCase
      */
     private function seedSoftNovedadCandidate(string $cedula, string $cargoApo): AcreditacionAcreditado
     {
-        $this->createCompleteFicha($cedula);
+        $this->createCompleteFicha($cedula, ['position_name' => $cargoApo]);
 
         AcreditacionCargo::factory()->create([
+            'cargo_manager' => $cargoApo,
             'cargo_apo' => $cargoApo,
             'cargo_acreditacion' => '4',
             'is_active' => true,
@@ -453,6 +457,7 @@ class AcreditacionesExportApoGenerateTest extends TestCase
 
         return AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
+            'cargo' => $cargoApo,
             'cargo_apo' => $cargoApo,
         ]);
     }

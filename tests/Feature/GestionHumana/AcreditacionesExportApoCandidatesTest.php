@@ -124,9 +124,10 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-28'));
 
         $cedula = '2003004005';
-        $this->createCompleteFicha($cedula, ['sex' => 'M']);
+        $this->createCompleteFicha($cedula, ['sex' => 'M', 'position_name' => 'ESCOLTA']);
 
         AcreditacionCargo::factory()->create([
+            'cargo_manager' => 'ESCOLTA',
             'cargo_apo' => 'ESCOLTA',
             'cargo_acreditacion' => '2',
             'is_active' => true,
@@ -138,21 +139,22 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
             'is_active' => true,
         ]);
 
+        // Tipos válidos para ESCOLTA = cargo_acredit 2 (F y R); SUPERVISOR (4) no aplica.
         $tipoF = CursoTipo::factory()->create([
             'tipo_curso' => 'F.ESCOLTA',
-            'cargo_acredit' => 'ESCOLTA',
+            'cargo_acredit' => '2',
             'cursos' => '1201',
             'is_active' => true,
         ]);
         $tipoR = CursoTipo::factory()->create([
             'tipo_curso' => 'R.ESCOLTA',
-            'cargo_acredit' => '',
+            'cargo_acredit' => '2',
             'cursos' => '2201',
             'is_active' => true,
         ]);
         $tipoSupervisor = CursoTipo::factory()->create([
             'tipo_curso' => 'F.SUPERVISOR',
-            'cargo_acredit' => 'SUPERVISOR',
+            'cargo_acredit' => '4',
             'cursos' => '3201',
             'is_active' => true,
         ]);
@@ -178,6 +180,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
 
         $acreditado = AcreditacionAcreditado::factory()->enProceso()->create([
             'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
             'cargo_apo' => 'ESCOLTA',
         ]);
 
@@ -203,9 +206,10 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-28'));
 
         $cedula = '10188085';
-        $this->createCompleteFicha($cedula, ['sex' => 'M']);
+        $this->createCompleteFicha($cedula, ['sex' => 'M', 'position_name' => 'ESCOLTA']);
 
         AcreditacionCargo::factory()->create([
+            'cargo_manager' => 'ESCOLTA',
             'cargo_apo' => 'ESCOLTA',
             'cargo_acreditacion' => '2',
             'is_active' => true,
@@ -246,6 +250,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
 
         $acreditado = AcreditacionAcreditado::factory()->enProceso()->create([
             'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
             'cargo_apo' => 'ESCOLTA',
         ]);
 
@@ -269,9 +274,18 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-28'));
 
         $cedula = '10188090';
-        $this->createCompleteFicha($cedula, ['sex' => 'M']);
+        $this->createCompleteFicha($cedula, ['sex' => 'M', 'position_name' => 'GUARDA MENSUAL']);
 
+        // GUARDA (Acreditados) y GUARDA MENSUAL (perfil) → ambos cargo de acreditación 1.
         AcreditacionCargo::factory()->create([
+            'cargo_manager' => 'GUARDA',
+            'cargo_apo' => 'VIGILANTE',
+            'cargo_acreditacion' => '1',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+        AcreditacionCargo::factory()->create([
+            'cargo_manager' => 'GUARDA MENSUAL',
             'cargo_apo' => 'VIGILANTE',
             'cargo_acreditacion' => '1',
             'is_active' => true,
@@ -313,6 +327,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
 
         $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
             'document_number' => $cedula,
+            'cargo' => 'GUARDA',
             'cargo_apo' => 'VIGILANTE',
         ]);
 
@@ -334,9 +349,10 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-28'));
 
         $cedula = '10188086';
-        $this->createCompleteFicha($cedula, ['sex' => 'M']);
+        $this->createCompleteFicha($cedula, ['sex' => 'M', 'position_name' => 'ESCOLTA']);
 
         AcreditacionCargo::factory()->create([
+            'cargo_manager' => 'ESCOLTA',
             'cargo_apo' => 'ESCOLTA',
             'cargo_acreditacion' => '2',
             'is_active' => true,
@@ -369,6 +385,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
 
         $acreditado = AcreditacionAcreditado::factory()->enProceso()->create([
             'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
             'cargo_apo' => 'ESCOLTA',
         ]);
 

@@ -1701,26 +1701,27 @@ class AcreditacionesController extends Controller
     public function exportApoPrefillManual(PrefillAcreditacionExportApoManualRequest $request): JsonResponse
     {
         $documents = $request->documents();
-        $policy = $request->vigenciaPolicy();
 
         if (count($documents) === 1) {
-            $result = $this->exportApoManualPrefillService->prefill($documents[0], $policy);
+            $result = $this->exportApoManualPrefillService->prefill($documents[0]);
 
             return response()->json([
                 'ok' => true,
                 'found' => $result['found'],
                 'source' => $result['source'],
                 'row' => $result['row'],
+                'avisos' => $result['avisos'],
                 'results' => [[
                     'document_number' => $documents[0],
                     'found' => $result['found'],
                     'source' => $result['source'],
                     'row' => $result['row'],
+                    'avisos' => $result['avisos'],
                 ]],
             ]);
         }
 
-        $results = $this->exportApoManualPrefillService->prefillMany($documents, $policy);
+        $results = $this->exportApoManualPrefillService->prefillMany($documents);
 
         return response()->json([
             'ok' => true,

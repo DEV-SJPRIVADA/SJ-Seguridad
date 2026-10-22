@@ -16982,6 +16982,14 @@ a.req-dashboard-kpi:focus-visible {
     color: var(--color-text-muted, #64748b);
 }
 
+/* Avisos informativos de cargos/curso en Manual (no bloquean) */
+.acreditaciones-export-apo-manual__hint--warn {
+    color: #b45309;
+    max-width: 16rem;
+    white-space: normal;
+    line-height: 1.3;
+}
+
 .acreditaciones-export-apo-manual__footer {
     margin-top: 0.5rem;
     display: flex;
