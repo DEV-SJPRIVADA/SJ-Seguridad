@@ -22,6 +22,7 @@
         x-data="seleccionIngresos({
             lookupUrl: @js($lookupUrl),
             lookupPerfilUrl: @js($lookupPerfilUrl ?? ''),
+            oldEstadoCode: @js(old('estado_code', '')),
             canEdit: @js($canEdit),
             storeUrl: @js($storeUrl),
             oldConfirmDuplicate: @js(old('confirm_duplicate') ? true : false),
@@ -33,6 +34,18 @@
             {{-- El éxito (session status) se muestra solo como toast global del layout. --}}
             @if (session('error'))
                 <div class="alert alert--danger">{{ session('error') }}</div>
+            @endif
+
+            {{-- Errores de servidor al editar (el modal Editar no se reabre tras la redirección) --}}
+            @if ($errors->any() && ! $showCreateModal)
+                <div class="alert alert--danger">
+                    <p class="mb-0"><strong>No se pudo actualizar el ingreso:</strong></p>
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             <div class="panel">
@@ -247,6 +260,7 @@
                             method="POST"
                             action="{{ $storeUrl }}"
                             class="cursos-registros-page__form seleccion-ingresos-modal__form"
+                            novalidate
                             x-on:submit="guardSubmit($event, 'create')"
                         >
                             @csrf
@@ -315,6 +329,7 @@
                             method="POST"
                             :action="editForm.update_url"
                             class="cursos-registros-page__form seleccion-ingresos-modal__form"
+                            novalidate
                             x-on:submit="guardSubmit($event, 'edit')"
                         >
                             @csrf
@@ -349,6 +364,13 @@
                     createConfirmDuplicate: Boolean(config.oldConfirmDuplicate),
                     editDuplicates: [],
                     editConfirmDuplicate: false,
+                    formErrors: { create: [], edit: [] },
+                    createEstadoCode: String(config.oldEstadoCode || ''),
+
+                    init() {
+                        // Nuevo (incl. reapertura tras error): ajusta required de los selects según el estado.
+                        this.$nextTick(() => this.syncHiringRequired('create'));
+                    },
                     lookupPerfilUrl: config.lookupPerfilUrl || '',
                     reemplazoLookup: {
                         create: { loading: false, found: false, message: '' },
@@ -359,6 +381,7 @@
                         this.editForm = Object.assign({}, row);
                         this.editDuplicates = [];
                         this.editConfirmDuplicate = false;
+                        this.formErrors.edit = [];
                         this.reemplazoLookup.edit = { loading: false, found: false, message: '' };
                         this.$dispatch('open-modal', 'seleccion-ingreso-editar');
                         this.$nextTick(() => {
@@ -371,9 +394,45 @@
                                 this.setSearchableValue('edit_responsable_user_id', row.responsable_user_id);
                                 this.setSearchableValue('edit_estado_code', row.estado_code);
                                 this.setSearchableValue('edit_jefe_ope_code', row.jefe_ope_code);
+                                this.syncHiringRequired('edit');
                             }, 150);
                         });
                         this.lookupDuplicates(row.document_number || '', 'edit');
+                    },
+
+                    // Cliente y dotación, RH y fecha de ingreso solo obligatorios con estado CONTRATADO (Nuevo y Editar).
+                    isContratado(code) {
+                        return String(code || '').trim().toUpperCase() === @js(\App\Models\SeleccionIngreso::ESTADO_CONTRATADO);
+                    },
+
+                    get createRequiresHiringData() {
+                        return this.isContratado(this.createEstadoCode);
+                    },
+
+                    get editRequiresHiringData() {
+                        return this.isContratado(this.editForm.estado_code);
+                    },
+
+                    onEstadoChange(event, mode) {
+                        const value = String(event?.detail?.value ?? event?.target?.value ?? '');
+                        if (mode === 'edit') {
+                            this.editForm.estado_code = value;
+                        } else {
+                            this.createEstadoCode = value;
+                        }
+                        this.syncHiringRequired(mode);
+                    },
+
+                    // Los searchable-select no reciben x-bind:required: se ajusta su estado interno.
+                    syncHiringRequired(mode = 'edit') {
+                        const required = mode === 'edit' ? this.editRequiresHiringData : this.createRequiresHiringData;
+                        ['commercial_client_id', 'requisition_uniform_id', 'blood_type_code'].forEach((field) => {
+                            const input = document.getElementById(mode + '_' + field);
+                            const wrap = input ? input.closest('[x-data]') : null;
+                            if (wrap && window.Alpine) {
+                                window.Alpine.$data(wrap).required = required;
+                            }
+                        });
                     },
 
                     setSearchableValue(id, value) {
@@ -468,7 +527,48 @@
                         } catch (e) {}
                     },
 
+                    // Validación visible: los forms son novalidate porque los searchable-select usan un input
+                    // oculto requerido y el navegador bloqueaba el envío sin mostrar ningún mensaje.
+                    validateForm(form, mode) {
+                        form.querySelectorAll('.seleccion-ingresos-form__field--invalid')
+                            .forEach((el) => el.classList.remove('seleccion-ingresos-form__field--invalid'));
+
+                        const messages = [];
+                        let first = null;
+                        form.querySelectorAll('input, select, textarea').forEach((el) => {
+                            if (el.disabled || el.type === 'hidden' || el.checkValidity()) {
+                                return;
+                            }
+                            const field = el.closest('.form-field');
+                            const label = (field?.querySelector('.form-label')?.textContent || el.name || 'Campo')
+                                .replace('(opcional)', '')
+                                .replace(/\s+/g, ' ')
+                                .trim();
+                            const reason = el.validity.valueMissing
+                                ? 'es obligatorio'
+                                : (el.validity.typeMismatch || el.validity.patternMismatch ? 'formato no válido' : el.validationMessage);
+                            const text = label + ': ' + reason;
+                            if (! messages.includes(text)) {
+                                messages.push(text);
+                            }
+                            field?.classList.add('seleccion-ingresos-form__field--invalid');
+                            first = first || field;
+                        });
+
+                        this.formErrors[mode] = messages;
+                        if (first) {
+                            first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        }
+
+                        return messages.length === 0;
+                    },
+
                     guardSubmit(event, mode) {
+                        if (! this.validateForm(event.target, mode)) {
+                            event.preventDefault();
+                            return false;
+                        }
+
                         const duplicates = mode === 'edit' ? this.editDuplicates : this.createDuplicates;
                         const confirmed = mode === 'edit' ? this.editConfirmDuplicate : this.createConfirmDuplicate;
                         if (duplicates.length > 0 && ! confirmed) {

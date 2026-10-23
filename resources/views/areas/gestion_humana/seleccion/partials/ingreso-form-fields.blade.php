@@ -17,6 +17,12 @@
     // Estado duplicados (create|edit) para el aviso y confirmación
     $dupState = $isEdit ? 'edit' : 'create';
 
+    // Cliente y dotación, RH y fecha de ingreso solo obligatorios si el estado es CONTRATADO
+    // (getters Alpine createRequiresHiringData / editRequiresHiringData; selects vía syncHiringRequired).
+    $requiresExpr = $isEdit ? 'editRequiresHiringData' : 'createRequiresHiringData';
+    $hiringRequired = 'x-bind:required="'.$requiresExpr.'"';
+    $hiringOptional = '<span class="seleccion-ingresos-form__optional" x-show="! '.$requiresExpr.'" x-cloak>(opcional)</span>';
+
     $submitLabel = $isEdit ? 'Actualizar ingreso' : 'Guardar ingreso';
     $modalName = $isEdit ? 'seleccion-ingreso-editar' : 'seleccion-ingreso-nuevo';
 @endphp
@@ -61,14 +67,14 @@
                 <input id="{{ $prefix }}_phone" name="phone" type="tel" class="form-input" maxlength="40" required autocomplete="off" value="{{ $v['phone'] ?? '' }}" {!! $bind('phone') !!}>
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_blood_type_code">RH</label>
+                <label class="form-label" for="{{ $prefix }}_blood_type_code">RH {!! $hiringOptional !!}</label>
                 <x-searchable-select
                     id="{{ $prefix }}_blood_type_code"
                     name="blood_type_code"
                     :options="$bloodTypeOptions"
                     :value="$v['blood_type_code'] ?? ''"
                     placeholder="Seleccionar…"
-                    :required="true"
+                    :required="false"
                     :allow-clear="false"
                 />
             </div>
@@ -124,44 +130,45 @@
                 <x-lucide-shirt width="16" height="16" aria-hidden="true" />
             </span>
             <h4 id="{{ $prefix }}_section_dotacion" class="seleccion-ingresos-form__section-title">Cliente y dotación</h4>
+            <span class="seleccion-ingresos-form__optional">Obligatorios solo si el estado es Contratado (igual que RH y fecha de ingreso)</span>
         </header>
 
         <div class="seleccion-ingresos-form__grid">
             <div class="form-field seleccion-ingresos-form__span-2">
-                <label class="form-label" for="{{ $prefix }}_commercial_client_id">CLIENTE</label>
+                <label class="form-label" for="{{ $prefix }}_commercial_client_id">CLIENTE {!! $hiringOptional !!}</label>
                 <x-searchable-select
                     id="{{ $prefix }}_commercial_client_id"
                     name="commercial_client_id"
                     :options="$clientOptions"
                     :value="$v['commercial_client_id'] ?? ''"
                     placeholder="Seleccionar…"
-                    :required="true"
+                    :required="false"
                     :allow-clear="false"
                 />
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_requisition_uniform_id">TIPO DOTACIÓN</label>
+                <label class="form-label" for="{{ $prefix }}_requisition_uniform_id">TIPO DOTACIÓN {!! $hiringOptional !!}</label>
                 <x-searchable-select
                     id="{{ $prefix }}_requisition_uniform_id"
                     name="requisition_uniform_id"
                     :options="$uniformOptions"
                     :value="$v['requisition_uniform_id'] ?? ''"
                     placeholder="Seleccionar…"
-                    :required="true"
+                    :required="false"
                     :allow-clear="false"
                 />
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_shirt_size">TALLA CAMISA</label>
-                <input id="{{ $prefix }}_shirt_size" name="shirt_size" type="text" class="form-input" maxlength="40" required value="{{ $v['shirt_size'] ?? '' }}" {!! $bind('shirt_size') !!}>
+                <label class="form-label" for="{{ $prefix }}_shirt_size">TALLA CAMISA {!! $hiringOptional !!}</label>
+                <input id="{{ $prefix }}_shirt_size" name="shirt_size" type="text" class="form-input" maxlength="40" {!! $hiringRequired !!} value="{{ $v['shirt_size'] ?? '' }}" {!! $bind('shirt_size') !!}>
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_pants_size">TALLA PANTALÓN</label>
-                <input id="{{ $prefix }}_pants_size" name="pants_size" type="text" class="form-input" maxlength="40" required value="{{ $v['pants_size'] ?? '' }}" {!! $bind('pants_size') !!}>
+                <label class="form-label" for="{{ $prefix }}_pants_size">TALLA PANTALÓN {!! $hiringOptional !!}</label>
+                <input id="{{ $prefix }}_pants_size" name="pants_size" type="text" class="form-input" maxlength="40" {!! $hiringRequired !!} value="{{ $v['pants_size'] ?? '' }}" {!! $bind('pants_size') !!}>
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_shoes_size">TALLA ZAPATOS</label>
-                <input id="{{ $prefix }}_shoes_size" name="shoes_size" type="text" class="form-input" maxlength="40" required value="{{ $v['shoes_size'] ?? '' }}" {!! $bind('shoes_size') !!}>
+                <label class="form-label" for="{{ $prefix }}_shoes_size">TALLA ZAPATOS {!! $hiringOptional !!}</label>
+                <input id="{{ $prefix }}_shoes_size" name="shoes_size" type="text" class="form-input" maxlength="40" {!! $hiringRequired !!} value="{{ $v['shoes_size'] ?? '' }}" {!! $bind('shoes_size') !!}>
             </div>
         </div>
     </section>
@@ -177,8 +184,8 @@
 
         <div class="seleccion-ingresos-form__grid">
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_fecha_ingreso">FECHA DE INGRESO</label>
-                <input id="{{ $prefix }}_fecha_ingreso" name="fecha_ingreso" type="date" class="form-input" required value="{{ $v['fecha_ingreso'] ?? '' }}" {!! $bind('fecha_ingreso') !!}>
+                <label class="form-label" for="{{ $prefix }}_fecha_ingreso">FECHA DE INGRESO {!! $hiringOptional !!}</label>
+                <input id="{{ $prefix }}_fecha_ingreso" name="fecha_ingreso" type="date" class="form-input" {!! $hiringRequired !!} value="{{ $v['fecha_ingreso'] ?? '' }}" {!! $bind('fecha_ingreso') !!}>
             </div>
             <div class="form-field">
                 <label class="form-label" for="{{ $prefix }}_fecha_asistencia">
@@ -188,6 +195,7 @@
             </div>
             <div class="form-field">
                 <label class="form-label" for="{{ $prefix }}_estado_code">ESTADO</label>
+                {{-- El estado decide si los datos de contratación son obligatorios --}}
                 <x-searchable-select
                     id="{{ $prefix }}_estado_code"
                     name="estado_code"
@@ -196,6 +204,7 @@
                     placeholder="Seleccionar…"
                     :required="true"
                     :allow-clear="false"
+                    x-on:change="onEstadoChange($event, '{{ $dupState }}')"
                 />
             </div>
             <div class="form-field">
@@ -275,6 +284,16 @@
             </div>
         </div>
     </section>
+</div>
+
+{{-- Campos faltantes / inválidos detectados al pulsar Guardar (validación visible en el modal) --}}
+<div class="alert alert--danger seleccion-ingresos-form__errors" x-show="formErrors.{{ $dupState }}.length > 0" x-cloak role="alert">
+    <p class="mb-0"><strong>Revise los siguientes campos:</strong></p>
+    <ul class="mb-0">
+        <template x-for="message in formErrors.{{ $dupState }}" :key="message">
+            <li x-text="message"></li>
+        </template>
+    </ul>
 </div>
 
 {{-- Pie fijo del modal: cancelar (cierra) y guardar, icon-only canónicos --}}

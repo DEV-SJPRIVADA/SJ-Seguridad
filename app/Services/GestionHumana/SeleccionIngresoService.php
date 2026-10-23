@@ -126,7 +126,9 @@ class SeleccionIngresoService
     {
         $city = $this->activeCatalogName('city', (string) $validated['city_code']);
         $position = $this->activeCatalogName('position', (string) $validated['position_code']);
-        $blood = $this->activeCatalogName('blood_type', (string) $validated['blood_type_code']);
+        // RH, cliente, dotación y fecha de ingreso pueden venir vacíos si el estado no es CONTRATADO.
+        $bloodCode = $this->nullableText($validated['blood_type_code'] ?? null);
+        $blood = $bloodCode !== null ? $this->activeCatalogName('blood_type', $bloodCode) : null;
         $estado = $this->activeCatalogName('ingreso_estado', (string) $validated['estado_code']);
         $jefeOperativo = $this->activeCatalogName('jefe_operativo', (string) $validated['jefe_ope_code']);
 
@@ -139,16 +141,16 @@ class SeleccionIngresoService
             'city_name' => $city,
             'position_code' => (string) $validated['position_code'],
             'position_name' => $position,
-            'commercial_client_id' => (int) $validated['commercial_client_id'],
-            'shirt_size' => trim((string) $validated['shirt_size']),
-            'pants_size' => trim((string) $validated['pants_size']),
-            'shoes_size' => trim((string) $validated['shoes_size']),
-            'requisition_uniform_id' => (int) $validated['requisition_uniform_id'],
-            'fecha_ingreso' => $validated['fecha_ingreso'],
+            'commercial_client_id' => ($validated['commercial_client_id'] ?? null) ? (int) $validated['commercial_client_id'] : null,
+            'shirt_size' => $this->nullableText($validated['shirt_size'] ?? null),
+            'pants_size' => $this->nullableText($validated['pants_size'] ?? null),
+            'shoes_size' => $this->nullableText($validated['shoes_size'] ?? null),
+            'requisition_uniform_id' => ($validated['requisition_uniform_id'] ?? null) ? (int) $validated['requisition_uniform_id'] : null,
+            'fecha_ingreso' => ($validated['fecha_ingreso'] ?? null) ?: null,
             'fecha_asistencia' => $validated['fecha_asistencia'] ?: null,
             'estado_code' => (string) $validated['estado_code'],
             'estado_name' => $estado,
-            'blood_type_code' => (string) $validated['blood_type_code'],
+            'blood_type_code' => $bloodCode,
             'blood_type_name' => $blood,
             'reemplaza_cedula' => ($validated['reemplaza_cedula'] ?? null) ? trim((string) $validated['reemplaza_cedula']) : null,
             'reemplaza_a' => trim((string) $validated['reemplaza_a']),

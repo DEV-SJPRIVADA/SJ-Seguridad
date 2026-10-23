@@ -7,6 +7,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -31,8 +32,21 @@ class BaseExport
     public function download(): StreamedResponse
     {
         $spreadsheet = new Spreadsheet;
-        $sheet = $spreadsheet->getActiveSheet();
+        $this->writeTo($spreadsheet->getActiveSheet());
 
+        return response()->streamDownload(function () use ($spreadsheet): void {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $this->fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    /**
+     * Escribe título, encabezados y filas en una hoja. Permite armar libros con varias hojas con el mismo formato.
+     */
+    public function writeTo(Worksheet $sheet): void
+    {
         $row = 1;
 
         if ($this->title) {
@@ -74,13 +88,6 @@ class BaseExport
             $col = $this->columnLetter($index);
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-
-        return response()->streamDownload(function () use ($spreadsheet): void {
-            $writer = new Xlsx($spreadsheet);
-            $writer->save('php://output');
-        }, $this->fileName, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
     }
 
     private function columnLetter(int $index): string

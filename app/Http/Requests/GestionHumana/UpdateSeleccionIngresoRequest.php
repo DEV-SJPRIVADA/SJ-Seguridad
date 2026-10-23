@@ -32,6 +32,9 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             ->pluck('id')
             ->all();
 
+        // Cliente y dotación, RH y fecha de ingreso: obligatorios solo si el estado es CONTRATADO.
+        $hiring = SeleccionIngreso::estadoRequiresHiringData((string) $this->input('estado_code')) ? 'required' : 'nullable';
+
         return [
             'document_number' => ['required', 'string', 'max:50'],
             'full_name' => ['required', 'string', 'max:255'],
@@ -53,16 +56,16 @@ class UpdateSeleccionIngresoRequest extends FormRequest
                     fn ($q) => $q->where('catalog_type', 'position')->where('is_active', true)
                 ),
             ],
-            'commercial_client_id' => ['required', 'integer', Rule::exists('commercial_clients', 'id')],
-            'shirt_size' => ['required', 'string', 'max:40'],
-            'pants_size' => ['required', 'string', 'max:40'],
-            'shoes_size' => ['required', 'string', 'max:40'],
+            'commercial_client_id' => [$hiring, 'integer', Rule::exists('commercial_clients', 'id')],
+            'shirt_size' => [$hiring, 'string', 'max:40'],
+            'pants_size' => [$hiring, 'string', 'max:40'],
+            'shoes_size' => [$hiring, 'string', 'max:40'],
             'requisition_uniform_id' => [
-                'required',
+                $hiring,
                 'integer',
                 Rule::exists('requisition_uniforms', 'id')->where(fn ($q) => $q->where('is_active', true)),
             ],
-            'fecha_ingreso' => ['required', 'date'],
+            'fecha_ingreso' => [$hiring, 'date'],
             'fecha_asistencia' => ['nullable', 'date'],
             'estado_code' => [
                 'required',
@@ -73,7 +76,7 @@ class UpdateSeleccionIngresoRequest extends FormRequest
                 ),
             ],
             'blood_type_code' => [
-                'required',
+                $hiring,
                 'string',
                 'max:20',
                 Rule::exists('payroll_catalog_items', 'code')->where(
@@ -112,18 +115,18 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'city_code.exists' => 'La ciudad no existe o no está activa.',
             'position_code.required' => 'El cargo es obligatorio.',
             'position_code.exists' => 'El cargo no existe o no está activo.',
-            'commercial_client_id.required' => 'El cliente es obligatorio.',
+            'commercial_client_id.required' => 'El cliente es obligatorio cuando el estado es Contratado.',
             'commercial_client_id.exists' => 'El cliente no existe.',
-            'shirt_size.required' => 'La talla de camisa es obligatoria.',
-            'pants_size.required' => 'La talla de pantalón es obligatoria.',
-            'shoes_size.required' => 'La talla de zapatos es obligatoria.',
-            'requisition_uniform_id.required' => 'El tipo de dotación es obligatorio.',
+            'shirt_size.required' => 'La talla de camisa es obligatoria cuando el estado es Contratado.',
+            'pants_size.required' => 'La talla de pantalón es obligatoria cuando el estado es Contratado.',
+            'shoes_size.required' => 'La talla de zapatos es obligatoria cuando el estado es Contratado.',
+            'requisition_uniform_id.required' => 'El tipo de dotación es obligatorio cuando el estado es Contratado.',
             'requisition_uniform_id.exists' => 'El tipo de dotación no existe o no está activo.',
-            'fecha_ingreso.required' => 'La fecha de ingreso es obligatoria.',
+            'fecha_ingreso.required' => 'La fecha de ingreso es obligatoria cuando el estado es Contratado.',
             'fecha_asistencia.date' => 'La fecha de asistencia no es válida.',
             'estado_code.required' => 'El estado es obligatorio.',
             'estado_code.exists' => 'El estado no existe o no está activo.',
-            'blood_type_code.required' => 'El RH es obligatorio.',
+            'blood_type_code.required' => 'El RH es obligatorio cuando el estado es Contratado.',
             'blood_type_code.exists' => 'El RH no existe o no está activo.',
             'reemplaza_cedula.max' => 'La cédula de reemplazo no puede superar 50 caracteres.',
             'reemplaza_a.required' => 'El campo reemplaza a es obligatorio.',
@@ -142,9 +145,14 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'full_name' => trim((string) $this->input('full_name')),
             'email' => trim((string) $this->input('email')),
             'phone' => trim((string) $this->input('phone')),
-            'shirt_size' => trim((string) $this->input('shirt_size')),
-            'pants_size' => trim((string) $this->input('pants_size')),
-            'shoes_size' => trim((string) $this->input('shoes_size')),
+            // Vacío → null para que los campos de contratación opcionales no fallen por tipo.
+            'commercial_client_id' => $this->filled('commercial_client_id') ? $this->input('commercial_client_id') : null,
+            'requisition_uniform_id' => $this->filled('requisition_uniform_id') ? $this->input('requisition_uniform_id') : null,
+            'blood_type_code' => trim((string) $this->input('blood_type_code')) ?: null,
+            'fecha_ingreso' => trim((string) $this->input('fecha_ingreso')) ?: null,
+            'shirt_size' => trim((string) $this->input('shirt_size')) ?: null,
+            'pants_size' => trim((string) $this->input('pants_size')) ?: null,
+            'shoes_size' => trim((string) $this->input('shoes_size')) ?: null,
             'reemplaza_cedula' => trim((string) $this->input('reemplaza_cedula')) ?: null,
             'reemplaza_a' => trim((string) $this->input('reemplaza_a')),
             'referido' => trim((string) $this->input('referido')),

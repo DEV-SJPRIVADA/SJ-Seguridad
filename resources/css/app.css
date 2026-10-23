@@ -2136,6 +2136,21 @@ button.module-tab {
     color: #92400e;
 }
 
+.alert.alert--danger {
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.alert.alert--danger ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.1rem;
+}
+
 .alert.alert--info {
     padding: 0.6rem 0.85rem;
     border-radius: 0.6rem;
@@ -17602,6 +17617,22 @@ a.req-dashboard-kpi:focus-visible {
 
 .seleccion-catalogs-page__table code {
     font-size: 0.78rem;
+}
+
+/* Ingreso: errores de validación visibles al guardar + campo resaltado */
+.seleccion-ingresos-form__errors {
+    margin: 0.75rem 0 0;
+    font-size: 0.8rem;
+}
+
+.seleccion-ingresos-form__field--invalid .form-input,
+.seleccion-ingresos-form__field--invalid .searchable-select__trigger {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.seleccion-ingresos-form__field--invalid .form-label {
+    color: #b91c1c;
 }
 
 /* Ingreso: aviso de búsqueda de cédula de reemplazo en Ficha */

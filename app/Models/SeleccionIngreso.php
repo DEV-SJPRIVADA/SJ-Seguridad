@@ -14,6 +14,29 @@ class SeleccionIngreso extends Model
 
     protected $table = 'seleccion_ingresos';
 
+    /** Código del catálogo `ingreso_estado` que exige los datos de contratación. */
+    public const ESTADO_CONTRATADO = 'CONTRATADO';
+
+    /**
+     * Campos de contratación (Cliente y dotación, RH, fecha de ingreso): obligatorios solo si el estado es CONTRATADO.
+     *
+     * @var list<string>
+     */
+    public const HIRING_FIELDS = [
+        'commercial_client_id',
+        'requisition_uniform_id',
+        'shirt_size',
+        'pants_size',
+        'shoes_size',
+        'blood_type_code',
+        'fecha_ingreso',
+    ];
+
+    public static function estadoRequiresHiringData(?string $estadoCode): bool
+    {
+        return mb_strtoupper(trim((string) $estadoCode)) === self::ESTADO_CONTRATADO;
+    }
+
     /**
      * @var list<string>
      */

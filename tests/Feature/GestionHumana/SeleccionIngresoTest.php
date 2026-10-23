@@ -225,6 +225,131 @@ class SeleccionIngresoTest extends TestCase
         ]);
     }
 
+    public function test_store_hiring_fields_optional_unless_estado_is_contratado(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+        $empty = [
+            'commercial_client_id' => '',
+            'requisition_uniform_id' => '',
+            'shirt_size' => '',
+            'pants_size' => '',
+            'shoes_size' => '',
+            'blood_type_code' => '',
+            'fecha_ingreso' => '',
+        ];
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.ingresos.store'), [...$payload, ...$empty, 'estado_code' => 'EN_PROCESO'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('gestion-humana.seleccion.ingresos'));
+
+        $this->assertDatabaseHas('seleccion_ingresos', [
+            'document_number' => $payload['document_number'],
+            'commercial_client_id' => null,
+            'fecha_ingreso' => null,
+            'blood_type_code' => null,
+        ]);
+
+        PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'ingreso_estado', 'code' => SeleccionIngreso::ESTADO_CONTRATADO],
+            ['name' => 'CONTRATADO', 'is_active' => true, 'sort_order' => 2],
+        );
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.ingresos.store'), [
+                ...$payload,
+                ...$empty,
+                'document_number' => '5556667778',
+                'estado_code' => SeleccionIngreso::ESTADO_CONTRATADO,
+            ])
+            ->assertSessionHasErrors(['commercial_client_id', 'blood_type_code', 'fecha_ingreso']);
+    }
+
+    public function test_update_allows_empty_hiring_fields_when_estado_is_not_contratado(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+        $ingreso = SeleccionIngreso::factory()->create([
+            'document_number' => '222333444',
+            'commercial_client_id' => $payload['commercial_client_id'],
+            'requisition_uniform_id' => $payload['requisition_uniform_id'],
+            'responsable_user_id' => $payload['responsable_user_id'],
+        ]);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.seleccion.ingresos.update', $ingreso), [
+                ...$payload,
+                'document_number' => '222333444',
+                'estado_code' => 'EN_PROCESO',
+                'commercial_client_id' => '',
+                'requisition_uniform_id' => '',
+                'shirt_size' => '',
+                'pants_size' => '',
+                'shoes_size' => '',
+                'blood_type_code' => '',
+                'fecha_ingreso' => '',
+                'confirm_duplicate' => 1,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $ingreso->refresh();
+        $this->assertNull($ingreso->commercial_client_id);
+        $this->assertNull($ingreso->requisition_uniform_id);
+        $this->assertNull($ingreso->shirt_size);
+        $this->assertNull($ingreso->blood_type_code);
+        $this->assertNull($ingreso->blood_type_name);
+        $this->assertNull($ingreso->fecha_ingreso);
+
+        // El listado sigue respondiendo con los campos vacíos.
+        $this->actingAs($editor)
+            ->getJson(route('gestion-humana.seleccion.ingresos.datatable', ['draw' => 1]))
+            ->assertOk();
+    }
+
+    public function test_update_requires_hiring_fields_when_estado_is_contratado(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+        PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'ingreso_estado', 'code' => SeleccionIngreso::ESTADO_CONTRATADO],
+            ['name' => 'CONTRATADO', 'is_active' => true, 'sort_order' => 2],
+        );
+        $ingreso = SeleccionIngreso::factory()->create([
+            'document_number' => '333444555',
+            'commercial_client_id' => $payload['commercial_client_id'],
+            'requisition_uniform_id' => $payload['requisition_uniform_id'],
+            'responsable_user_id' => $payload['responsable_user_id'],
+        ]);
+
+        $this->actingAs($editor)
+            ->patch(route('gestion-humana.seleccion.ingresos.update', $ingreso), [
+                ...$payload,
+                'document_number' => '333444555',
+                'estado_code' => SeleccionIngreso::ESTADO_CONTRATADO,
+                'commercial_client_id' => '',
+                'requisition_uniform_id' => '',
+                'shirt_size' => '',
+                'pants_size' => '',
+                'shoes_size' => '',
+                'blood_type_code' => '',
+                'fecha_ingreso' => '',
+                'confirm_duplicate' => 1,
+            ])
+            ->assertSessionHasErrors([
+                'commercial_client_id',
+                'requisition_uniform_id',
+                'shirt_size',
+                'pants_size',
+                'shoes_size',
+                'blood_type_code',
+                'fecha_ingreso',
+            ]);
+
+        $this->assertNotNull($ingreso->fresh()->commercial_client_id);
+    }
+
     public function test_datatable_requires_view_permission(): void
     {
         $user = User::factory()->create(['must_change_password' => false]);

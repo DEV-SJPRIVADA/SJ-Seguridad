@@ -159,8 +159,9 @@ El estado **no se elige**. Cambia solo:
 
 1. En **Compras → Órdenes**, aplique los filtros que necesite (estado, origen, proveedor, fechas) y, si quiere, escriba en el buscador de la tabla.
 2. Pulse el icono de Excel (**Exportar**) a la derecha del conteo de órdenes.
-3. El archivo trae **una fila por cada producto** de cada orden, con los datos de la orden: número, fecha, estado, origen y folio, área, número de cotización, proveedor y su contacto, forma de pago, ciudad de entrega, quién la elaboró, fecha de recibido, observaciones y total; y de cada producto: cantidad, artículo, marca, descripción, valor unidad, IVA y valor total.
-4. Si el filtro de estado incluye anuladas, salen con estado **Anulada**.
+3. La hoja **Productos** trae **una fila por cada producto** de cada orden, con los datos de la orden: número, fecha, estado, origen y folio, **fecha de la solicitud**, **fecha de aprobación** (del director; en suministros, de Calidad), área, número de cotización, proveedor y su contacto, forma de pago, ciudad de entrega, quién la elaboró, fecha de recibido, observaciones y total; y de cada producto: cantidad, artículo, marca, descripción, valor unidad, IVA y valor total.
+4. La hoja **Evaluación** trae una fila por cada orden con su evaluación: fecha de recibido, las tres calificaciones, sus resultados, el puntaje, el resultado (satisfactoria, requiere seguimiento o insatisfactoria), las observaciones, quién evaluó y cuándo. Las órdenes sin evaluar aparecen con **Evaluada: No**.
+5. Si el filtro de estado incluye anuladas, salen con estado **Anulada**.
 
 ### Anular una orden de compra mal emitida (Compras y director)
 
@@ -253,6 +254,7 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
+| 1.47 | 2026-10-23 | Compras | Export de Órdenes: fecha de la solicitud y de su aprobación, y nueva hoja **Evaluación** con una fila por orden. |
 | 1.46 | 2026-10-23 | Compras | Emitir orden: el IVA se elige como **tasa del catálogo** (0%, 5%, 19%…) y el sistema calcula su valor y el total de cada línea. Nueva pestaña **Catálogos → IVA**. |
 | 1.45 | 2026-10-23 | Compras | Detalle de la solicitud: después de Cantidad va Referencia y luego Descripción. Emitir orden: la columna "Artículo" se llama ahora **Referencia** (Cantidad → Referencia → Descripción). |
 | 1.44 | 2026-10-22 | Compras | Órdenes: botón **Exportar Excel** con una fila por producto de cada orden y los datos de la orden, según los filtros y la búsqueda actuales. |
