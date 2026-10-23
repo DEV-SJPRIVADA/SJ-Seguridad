@@ -254,7 +254,8 @@
                 <td>{{ $item->articulo }}</td>
                 <td>{{ $item->descripcion }}</td>
                 <td class="num">${{ number_format((float) $item->valor_unidad, 2) }}</td>
-                <td class="num">${{ number_format((float) $item->iva, 2) }}</td>
+                {{-- Valor del IVA y, si se eligió del catálogo, la tasa: $19.00 (19%). --}}
+                <td class="num">${{ $item->ivaImpreso() }}</td>
                 <td class="num">${{ number_format((float) $item->valor_total, 2) }}</td>
             </tr>
         @endforeach

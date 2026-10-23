@@ -39,6 +39,7 @@ class PurchaseOrderItem extends Model
         'descripcion',
         'valor_unidad',
         'iva',
+        'iva_porcentaje',
         'valor_total',
         'source_item_type',
         'source_item_id',
@@ -48,8 +49,21 @@ class PurchaseOrderItem extends Model
         'cantidad' => 'decimal:2',
         'valor_unidad' => 'decimal:2',
         'iva' => 'decimal:2',
+        'iva_porcentaje' => 'decimal:2',
         'valor_total' => 'decimal:2',
     ];
+
+    /**
+     * IVA para mostrar: valor y, si se eligió tasa, el porcentaje. Ej: "19.00 (19%)".
+     */
+    public function ivaImpreso(): string
+    {
+        $valor = number_format((float) $this->iva, 2);
+
+        return $this->iva_porcentaje !== null
+            ? $valor.' ('.PurchaseTaxRate::formatPorcentaje($this->iva_porcentaje).')'
+            : $valor;
+    }
 
     public function purchaseOrder(): BelongsTo
     {

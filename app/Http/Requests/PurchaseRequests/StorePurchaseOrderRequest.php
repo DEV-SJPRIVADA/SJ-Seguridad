@@ -4,6 +4,7 @@ namespace App\Http\Requests\PurchaseRequests;
 
 use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseTaxRate;
 use App\Models\SupplyRequest;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseOrderService;
@@ -52,6 +53,8 @@ class StorePurchaseOrderRequest extends FormRequest
             'items.*.articulo' => ['nullable', 'string', 'max:255'],
             'items.*.descripcion' => ['required', 'string', 'max:500'],
             'items.*.valor_unidad' => ['required', 'numeric', 'min:0', 'max:999999999'],
+            // Tasa del catálogo (activa). El IVA en valor solo se acepta si no llega tasa (compatibilidad).
+            'items.*.iva_porcentaje' => ['nullable', 'numeric', $this->activeTaxRate()],
             'items.*.iva' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
         ];
     }
@@ -82,7 +85,29 @@ class StorePurchaseOrderRequest extends FormRequest
      */
     protected function uppercaseExceptKeys(): array
     {
-        return ['provider_id', 'fecha', 'ciudad'];
+        return ['provider_id', 'fecha', 'ciudad', 'iva_porcentaje'];
+    }
+
+    /**
+     * La tasa de IVA debe existir y estar activa en Catálogos → IVA.
+     */
+    protected function activeTaxRate(): Closure
+    {
+        $active = PurchaseTaxRate::query()->activas()->pluck('porcentaje')->map(fn ($p): float => (float) $p)->all();
+
+        return function (string $attribute, mixed $value, Closure $fail) use ($active): void {
+            if ($value === null || $value === '') {
+                return;
+            }
+
+            foreach ($active as $porcentaje) {
+                if (abs($porcentaje - (float) $value) < 0.001) {
+                    return;
+                }
+            }
+
+            $fail('Seleccione una tasa de IVA activa del catálogo.');
+        };
     }
 
     /**

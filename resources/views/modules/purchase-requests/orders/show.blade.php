@@ -180,7 +180,7 @@
                                                 @endif
                                             </td>
                                             <td class="text-right">{{ number_format((float) $item->valor_unidad, 2) }}</td>
-                                            <td class="text-right">{{ number_format((float) $item->iva, 2) }}</td>
+                                            <td class="text-right">{{ $item->ivaImpreso() }}</td>
                                             <td class="text-right">{{ number_format((float) $item->valor_total, 2) }}</td>
                                         </tr>
                                     @endforeach

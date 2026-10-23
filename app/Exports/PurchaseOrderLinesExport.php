@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseTaxRate;
 use App\Models\SupplyRequest;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -91,6 +92,7 @@ class PurchaseOrderLinesExport
             ['label' => 'Marca', 'key' => fn (array $r) => $r['marca']],
             ['label' => 'Descripción', 'key' => fn (array $r) => $r['line']?->descripcion],
             ['label' => 'Valor unidad', 'key' => fn (array $r) => $r['line'] !== null ? (float) $r['line']->valor_unidad : null],
+            ['label' => 'IVA %', 'key' => fn (array $r) => $r['line']?->iva_porcentaje !== null ? PurchaseTaxRate::formatPorcentaje($r['line']->iva_porcentaje) : ''],
             ['label' => 'IVA', 'key' => fn (array $r) => $r['line'] !== null ? (float) $r['line']->iva : null],
             ['label' => 'Valor total línea', 'key' => fn (array $r) => $r['line'] !== null ? (float) $r['line']->valor_total : null],
         ];

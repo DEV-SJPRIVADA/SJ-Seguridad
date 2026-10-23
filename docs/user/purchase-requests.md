@@ -149,6 +149,12 @@ El estado **no se elige**. Cambia solo:
 3. Pulse **Devolver al solicitante**. El pedido sale de Pedidos y queda **Devuelta**. El motivo queda en los comentarios, en mayúsculas, y el solicitante recibe un correo.
 4. El solicitante lo corrige desde **Mis solicitudes** y lo reenvía. Una solicitud de compra vuelve a **Por autorizar** y el **director debe autorizarla de nuevo**. Un suministro vuelve a **Calidad** para aprobarlo de nuevo.
 
+### IVA de la orden de compra
+
+1. Al **emitir una orden**, en cada línea elija la tasa de **IVA %** (viene en 19%). El sistema calcula el **Valor IVA** sobre cantidad × valor unidad y el **Valor total** = cantidad × valor unidad + IVA. Al pie se ven el subtotal, el IVA y el total.
+2. La orden, su PDF y su Excel muestran el valor del IVA y, al lado, la tasa; por ejemplo **38.00 (19%)**.
+3. Las tasas se administran en **Compras → Catálogos → IVA**. Quien edita proveedores puede crear una tasa, cambiar su nombre o inactivarla; las inactivas dejan de aparecer al emitir. Cambiar una tasa no modifica las órdenes ya emitidas.
+
 ### Exportar las órdenes a Excel (Compras)
 
 1. En **Compras → Órdenes**, aplique los filtros que necesite (estado, origen, proveedor, fechas) y, si quiere, escriba en el buscador de la tabla.
@@ -247,6 +253,8 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
+| 1.46 | 2026-10-23 | Compras | Emitir orden: el IVA se elige como **tasa del catálogo** (0%, 5%, 19%…) y el sistema calcula su valor y el total de cada línea. Nueva pestaña **Catálogos → IVA**. |
+| 1.45 | 2026-10-23 | Compras | Detalle de la solicitud: después de Cantidad va Referencia y luego Descripción. Emitir orden: la columna "Artículo" se llama ahora **Referencia** (Cantidad → Referencia → Descripción). |
 | 1.44 | 2026-10-22 | Compras | Órdenes: botón **Exportar Excel** con una fila por producto de cada orden y los datos de la orden, según los filtros y la búsqueda actuales. |
 | 1.43 | 2026-10-22 | Compras | El detalle de la solicitud muestra sus **órdenes de compra** (con valores, anuladas marcadas y PDF descargable) y el saldo ordenado/pendiente por producto. El solicitante y el director las ven sin entrar a Órdenes. |
 | 1.42 | 2026-10-22 | Compras | El número de cotización, la marca y los comentarios del solicitante se ven también en Procesar compra, en la aprobación por correo, en el PDF de la solicitud, en Autorizaciones compras y en Pedidos. |

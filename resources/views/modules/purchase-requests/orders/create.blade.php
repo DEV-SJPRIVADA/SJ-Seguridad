@@ -153,7 +153,7 @@
                         <span class="pur-req-form__section-step">2</span>
                         <div>
                             <h3 class="pur-req-form__section-title">Líneas y precios</h3>
-                            <p class="pur-req-form__section-desc">Valor total de línea = cantidad × valor unidad + IVA.</p>
+                            <p class="pur-req-form__section-desc">Elija la tasa de IVA de cada línea: el sistema calcula el IVA sobre cantidad × valor unidad. Valor total de línea = cantidad × valor unidad + IVA.</p>
                         </div>
                     </header>
 
@@ -164,10 +164,12 @@
                                     <th>#</th>
                                     <th>Pendiente</th>
                                     <th>Cantidad</th>
-                                    <th>Artículo</th>
+                                    {{-- La columna guarda `articulo` (referencia del origen); en pantalla se llama Referencia. --}}
+                                    <th>Referencia</th>
                                     <th>Descripción</th>
                                     <th>Valor unidad</th>
-                                    <th>IVA</th>
+                                    <th>IVA %</th>
+                                    <th>Valor IVA</th>
                                     <th>Valor total</th>
                                 </tr>
                             </thead>
@@ -207,7 +209,7 @@
                                                 class="form-input"
                                                 maxlength="255"
                                                 value="{{ old('items.'.$index.'.articulo', $line['articulo']) }}"
-                                                aria-label="Artículo de la línea {{ $index + 1 }}"
+                                                aria-label="Referencia de la línea {{ $index + 1 }}"
                                             >
                                         </td>
                                         <td>
@@ -233,24 +235,36 @@
                                                 aria-label="Valor unidad de la línea {{ $index + 1 }}"
                                             >
                                         </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                name="items[{{ $index }}][iva]"
-                                                class="form-input js-line-iva"
-                                                step="0.01"
-                                                min="0"
-                                                value="{{ old('items.'.$index.'.iva', $line['iva']) }}"
-                                                aria-label="IVA de la línea {{ $index + 1 }}"
-                                            >
+                                        {{-- Tasa de IVA del catálogo; el valor del IVA se calcula (pantalla y servidor). --}}
+                                        <td class="purchase-order-lines__iva-cell js-line-iva-rate">
+                                            <x-searchable-select
+                                                id="items-{{ $index }}-iva-porcentaje"
+                                                name="items[{{ $index }}][iva_porcentaje]"
+                                                :options="$taxRateOptions"
+                                                :value="old('items.'.$index.'.iva_porcentaje', $defaultTaxRate)"
+                                                placeholder="Tasa"
+                                                searchPlaceholder="Buscar tasa…"
+                                                :allowClear="false"
+                                                :required="$taxRateOptions !== []"
+                                            />
+                                            <x-input-error :messages="$errors->get('items.'.$index.'.iva_porcentaje')" />
                                         </td>
+                                        <td class="text-right js-line-iva-value">0.00</td>
                                         <td class="text-right js-line-total">0.00</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="7" class="text-right">TOTAL</th>
+                                    <th colspan="9" class="text-right">Subtotal</th>
+                                    <th class="text-right" id="purchase-order-subtotal">0.00</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-right">IVA</th>
+                                    <th class="text-right" id="purchase-order-iva">0.00</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="9" class="text-right">TOTAL</th>
                                     <th class="text-right" id="purchase-order-total">0.00</th>
                                 </tr>
                             </tfoot>
@@ -318,16 +332,26 @@
                 return (Math.round((value + Number.EPSILON) * 100) / 100).toFixed(2);
             };
 
+            // IVA de línea = (cantidad × valor unidad) × tasa / 100, redondeado a 2 decimales (igual que el servidor).
             const recalc = function () {
-                let total = 0;
+                let subtotal = 0;
+                let ivaTotal = 0;
 
                 document.querySelectorAll('[data-order-line]').forEach(function (row) {
                     const quantity = parseFloat(row.querySelector('.js-line-qty')?.value || '0') || 0;
                     const unit = parseFloat(row.querySelector('.js-line-unit')?.value || '0') || 0;
-                    const iva = parseFloat(row.querySelector('.js-line-iva')?.value || '0') || 0;
-                    const lineTotal = (quantity * unit) + iva;
+                    const rate = parseFloat(row.querySelector('.js-line-iva-rate input[type="hidden"]')?.value || '0') || 0;
+                    const base = quantity * unit;
+                    const iva = Math.round(((base * rate / 100) + Number.EPSILON) * 100) / 100;
+                    const lineTotal = base + iva;
 
-                    total += lineTotal;
+                    subtotal += base;
+                    ivaTotal += iva;
+
+                    const ivaCell = row.querySelector('.js-line-iva-value');
+                    if (ivaCell) {
+                        ivaCell.textContent = format(iva);
+                    }
 
                     const cell = row.querySelector('.js-line-total');
                     if (cell) {
@@ -335,14 +359,26 @@
                     }
                 });
 
-                const totalCell = document.getElementById('purchase-order-total');
-                if (totalCell) {
-                    totalCell.textContent = format(total);
-                }
+                const setText = function (id, value) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = format(value);
+                    }
+                };
+
+                setText('purchase-order-subtotal', subtotal);
+                setText('purchase-order-iva', ivaTotal);
+                setText('purchase-order-total', subtotal + ivaTotal);
             };
 
-            document.querySelectorAll('.js-line-qty, .js-line-unit, .js-line-iva').forEach(function (input) {
+            document.querySelectorAll('.js-line-qty, .js-line-unit').forEach(function (input) {
                 input.addEventListener('input', recalc);
+            });
+
+            // El selector de tasa emite change/input en su campo oculto.
+            document.querySelectorAll('.js-line-iva-rate').forEach(function (cell) {
+                cell.addEventListener('change', recalc);
+                cell.addEventListener('input', recalc);
             });
 
             recalc();

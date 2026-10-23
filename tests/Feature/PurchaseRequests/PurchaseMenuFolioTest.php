@@ -109,7 +109,7 @@ class PurchaseMenuFolioTest extends TestCase
         ]);
         $providers->givePermissionTo('purchase.providers.view');
 
-        $this->assertSame(['proveedores'], $providers->catalogBoardTabs()->all());
+        $this->assertSame(['proveedores', 'iva'], $providers->catalogBoardTabs()->all());
 
         $editor = User::factory()->create([
             'area_key' => 'compras',
@@ -117,7 +117,7 @@ class PurchaseMenuFolioTest extends TestCase
         ]);
         $editor->givePermissionTo('purchase.providers.edit');
 
-        $this->assertSame(['proveedores'], $editor->catalogBoardTabs()->all());
+        $this->assertSame(['proveedores', 'iva'], $editor->catalogBoardTabs()->all());
 
         $insumos = User::factory()->create([
             'area_key' => 'compras',

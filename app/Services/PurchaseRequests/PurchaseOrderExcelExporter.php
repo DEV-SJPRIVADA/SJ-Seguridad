@@ -3,6 +3,7 @@
 namespace App\Services\PurchaseRequests;
 
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseTaxRate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -189,6 +190,13 @@ class PurchaseOrderExcelExporter
             $sheet->setCellValue('F'.$row, (float) $item->iva);
             $sheet->setCellValue('G'.$row, (float) $item->valor_total);
             $sheet->getStyle('E'.$row.':G'.$row)->getNumberFormat()->setFormatCode('"$"#,##0.00');
+
+            // El IVA sigue siendo número; si tiene tasa del catálogo se muestra al lado: $19.00 (19%).
+            if ($item->iva_porcentaje !== null) {
+                $sheet->getStyle('F'.$row)->getNumberFormat()
+                    ->setFormatCode('"$"#,##0.00" ('.PurchaseTaxRate::formatPorcentaje($item->iva_porcentaje).')"');
+            }
+
             $row++;
         }
 

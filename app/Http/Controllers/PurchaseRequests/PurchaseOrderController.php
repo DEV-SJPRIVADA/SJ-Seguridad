@@ -8,6 +8,7 @@ use App\Http\Requests\PurchaseRequests\StorePurchaseOrderRequest;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseTaxRate;
 use App\Models\SupplyRequest;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
@@ -274,6 +275,8 @@ class PurchaseOrderController extends Controller
             'sourceLabel' => $sourceLabel,
             'lines' => $lines,
             'providerOptions' => $this->providerOptions(),
+            'taxRateOptions' => $this->taxRateOptions(),
+            'defaultTaxRate' => $this->defaultTaxRate(),
             'storeUrl' => $storeUrl,
             'backUrl' => $backUrl,
             'defaultCity' => $defaultCity,
@@ -313,6 +316,34 @@ class PurchaseOrderController extends Controller
                 'label' => $provider->nombre.' — '.$provider->identificacion,
             ])
             ->all();
+    }
+
+    /**
+     * Tasas de IVA activas para el selector de cada línea (valor = porcentaje).
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function taxRateOptions(): array
+    {
+        return PurchaseTaxRate::query()
+            ->activas()
+            ->get()
+            ->map(fn (PurchaseTaxRate $rate): array => [
+                'value' => rtrim(rtrim(number_format((float) $rate->porcentaje, 2, '.', ''), '0'), '.'),
+                'label' => $rate->label(),
+            ])
+            ->all();
+    }
+
+    /**
+     * Tasa por defecto: 19% si está activa; si no, la primera activa; si no hay catálogo, vacío.
+     */
+    private function defaultTaxRate(): string
+    {
+        $options = collect($this->taxRateOptions());
+        $default = $options->firstWhere('value', rtrim(rtrim(number_format(PurchaseTaxRate::DEFAULT_PORCENTAJE, 2, '.', ''), '0'), '.'));
+
+        return (string) (($default ?? $options->first())['value'] ?? '');
     }
 
     private function assertSupplyIsProcessable(SupplyRequest $supplyRequest): void

@@ -53,6 +53,8 @@ Permisos del modulo **Solicitudes de compra**:
 
 Tableros: `view.board.{area}.solicitudes_compra`, `view.board.compras.bandeja_compras`, `view.board.compras.ordenes_compra`, `view.board.compras.proveedores`.
 
+**Catálogos → IVA (2026-10-23):** sin claves nuevas. Ver con `purchase.providers.view`; crear, editar o inactivar tasas con `purchase.providers.edit`.
+
 **Anulación de OC (2026-10-21):** sin claves nuevas. Solicitar o retirar usa `purchase.tab.processing`; aprobar o rechazar exige `purchase.tab.approval` y ser el director que Compras eligió en la solicitud (también por enlace firmado del correo).
 
 **Devolver al solicitante (2026-10-21):** usa `purchase.tab.processing` (sin clave nueva) y solo aplica en Por comprar sin órdenes.

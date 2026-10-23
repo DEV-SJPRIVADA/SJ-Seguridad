@@ -186,6 +186,8 @@ class User extends Authenticatable
 
         if (app(PurchaseAccessService::class)->canViewProviders($this)) {
             $tabs->push('proveedores');
+            // Tasas de IVA de las OC: mismos permisos que Proveedores (ver / editar).
+            $tabs->push('iva');
         }
 
         if (app(SupplyAccessService::class)->canViewInsumosCatalog($this)) {

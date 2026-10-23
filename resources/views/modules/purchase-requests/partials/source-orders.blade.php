@@ -92,7 +92,7 @@
                                     <td>{{ $line->articulo ?? '—' }}</td>
                                     <td>{{ $line->descripcion ?? '—' }}</td>
                                     <td class="text-right">{{ number_format((float) $line->valor_unidad, 2) }}</td>
-                                    <td class="text-right">{{ number_format((float) $line->iva, 2) }}</td>
+                                    <td class="text-right">{{ $line->ivaImpreso() }}</td>
                                     <td class="text-right">{{ number_format((float) $line->valor_total, 2) }}</td>
                                 </tr>
                             @endforeach

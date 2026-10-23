@@ -19,18 +19,21 @@ trait HasCatalogTabs
         return $user->catalogBoardTabs()->map(function (string $tab) use ($module, $routeName): array {
             $targetRoute = match ($tab) {
                 'proveedores' => 'purchase-requests.providers.index',
+                'iva' => 'purchase-requests.tax-rates.index',
                 'insumos' => 'supplies.products.index',
                 default => 'purchase-requests.providers.index',
             };
 
             $active = match ($tab) {
                 'proveedores' => str_starts_with((string) $routeName, 'purchase-requests.providers.'),
+                'iva' => str_starts_with((string) $routeName, 'purchase-requests.tax-rates.'),
                 'insumos' => str_starts_with((string) $routeName, 'supplies.products.'),
                 default => false,
             };
 
             $label = match ($tab) {
                 'proveedores' => 'Proveedores',
+                'iva' => 'IVA',
                 'insumos' => 'Insumos',
                 default => $tab,
             };

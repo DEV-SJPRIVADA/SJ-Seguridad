@@ -15249,6 +15249,11 @@ a.req-dashboard-kpi:focus-visible {
     align-items: center;
 }
 
+/* Emitir OC: selector de tasa de IVA por línea con ancho suficiente para "19% — IVA 19%". */
+.purchase-order-lines__iva-cell {
+    min-width: 9.5rem;
+}
+
 /* Órdenes de compra del pedido (detalle de solicitud / suministro): desplegable con líneas y valores unitarios. */
 .pur-req-orders__lines {
     margin-top: 0.6rem;

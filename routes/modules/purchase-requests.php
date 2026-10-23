@@ -7,6 +7,7 @@ use App\Http\Controllers\PurchaseRequests\PurchaseOrderEvaluationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProcessingController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProviderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseRequestController;
+use App\Http\Controllers\PurchaseRequests\PurchaseTaxRateController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requests/{module}')->name('purchase-requests.')->group(function (): void {
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/proveedores/datatable', [PurchaseProviderController::class, 'datatable'])->name('providers.datatable');
         Route::get('/proveedores/exportar', [PurchaseProviderController::class, 'export'])->name('providers.export');
         Route::get('/proveedores/plantilla', [PurchaseProviderController::class, 'template'])->name('providers.template');
+        // Catálogos → IVA (tasas para las OC). Ver con el permiso de Proveedores.
+        Route::get('/catalogos/iva', [PurchaseTaxRateController::class, 'index'])->name('tax-rates.index');
     });
 
     Route::middleware(['purchase.tab:providers.edit'])->group(function (): void {
@@ -79,6 +82,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/proveedores/importar/reporte/{token}', [PurchaseProviderController::class, 'downloadImportReport'])->name('providers.import-report');
         Route::get('/proveedores/{purchase_provider}/editar', [PurchaseProviderController::class, 'edit'])->name('providers.edit');
         Route::patch('/proveedores/{purchase_provider}', [PurchaseProviderController::class, 'update'])->name('providers.update');
+
+        // Catálogos → IVA: crear y editar tasas (edición de Proveedores).
+        Route::post('/catalogos/iva', [PurchaseTaxRateController::class, 'store'])->name('tax-rates.store');
+        Route::patch('/catalogos/iva/{purchase_tax_rate}', [PurchaseTaxRateController::class, 'update'])->name('tax-rates.update');
 
         // Evaluación post-entrega: fuera del grupo processing. Quien solo procesa no marca recibido.
         Route::get('/ordenes-compra/{purchase_order}/evaluacion', [PurchaseOrderEvaluationController::class, 'edit'])->name('orders.evaluation.edit');

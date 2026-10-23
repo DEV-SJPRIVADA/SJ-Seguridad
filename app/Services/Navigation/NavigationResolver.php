@@ -458,6 +458,7 @@ class NavigationResolver
                                 'url' => $user->defaultCatalogBoardUrl($key),
                                 'active' => (
                                     str_starts_with((string) $routeName, 'purchase-requests.providers.')
+                                    || str_starts_with((string) $routeName, 'purchase-requests.tax-rates.')
                                     || str_starts_with((string) $routeName, 'supplies.products.')
                                 ) && $requestModule === $key,
                             ];
@@ -492,6 +493,7 @@ class NavigationResolver
                                 'url' => $user->defaultPurchaseBoardUrl($key),
                                 'active' => str_starts_with((string) $routeName, 'purchase-requests.')
                                     && ! str_starts_with((string) $routeName, 'purchase-requests.providers.')
+                                    && ! str_starts_with((string) $routeName, 'purchase-requests.tax-rates.')
                                     && ! str_starts_with((string) $routeName, 'purchase-requests.orders.')
                                     && ! str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                     && $requestModule === $key,
@@ -547,6 +549,7 @@ class NavigationResolver
                             $boardKey === 'solicitudes_compra' => str_starts_with((string) $routeName, 'purchase-requests.')
                                 && ! str_starts_with((string) $routeName, 'purchase-requests.processing.')
                                 && ! str_starts_with((string) $routeName, 'purchase-requests.providers.')
+                                && ! str_starts_with((string) $routeName, 'purchase-requests.tax-rates.')
                                 && ! str_starts_with((string) $routeName, 'purchase-requests.orders.')
                                 && $requestModule === $key,
                             $boardKey === 'solicitudes_desarrollo' => str_starts_with((string) $routeName, 'development-requests.')

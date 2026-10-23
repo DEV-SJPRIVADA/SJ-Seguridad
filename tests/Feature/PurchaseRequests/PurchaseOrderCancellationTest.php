@@ -42,7 +42,7 @@ class PurchaseOrderCancellationTest extends TestCase
         $this->compras = User::factory()->create(['area_key' => 'compras', 'must_change_password' => false]);
         $this->compras->givePermissionTo(['purchase.tab.processing', 'purchase.providers.edit']);
 
-        $this->director = User::factory()->create(['email' => 'director.compras@test.local', 'must_change_password' => false]);
+        $this->director = User::factory()->create(['name' => 'Director Compras Prueba', 'email' => 'director.compras@test.local', 'must_change_password' => false]);
         $this->director->assignRole('director');
 
         $this->otherDirector = User::factory()->create(['email' => 'otro.director@test.local', 'must_change_password' => false]);

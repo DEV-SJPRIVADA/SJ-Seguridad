@@ -186,8 +186,17 @@ class PurchaseOrderService
                 }
 
                 $valorUnidad = (float) ($posted['valor_unidad'] ?? 0);
-                $iva = (float) ($posted['iva'] ?? 0);
-                $valorTotal = round(($cantidad * $valorUnidad) + $iva, 2);
+                $base = $cantidad * $valorUnidad;
+
+                // Con tasa del catálogo el IVA lo calcula el sistema sobre cantidad × valor unidad.
+                // Sin tasa (llamadas antiguas) se respeta el valor de IVA enviado.
+                $ivaPorcentaje = isset($posted['iva_porcentaje']) && $posted['iva_porcentaje'] !== ''
+                    ? (float) $posted['iva_porcentaje']
+                    : null;
+                $iva = $ivaPorcentaje !== null
+                    ? round($base * $ivaPorcentaje / 100, 2)
+                    : (float) ($posted['iva'] ?? 0);
+                $valorTotal = round($base + $iva, 2);
 
                 PurchaseOrderItem::query()->create([
                     'purchase_order_id' => $order->getKey(),
@@ -197,6 +206,7 @@ class PurchaseOrderService
                     'descripcion' => $this->nullableString($posted['descripcion'] ?? $line['descripcion']),
                     'valor_unidad' => $valorUnidad,
                     'iva' => $iva,
+                    'iva_porcentaje' => $ivaPorcentaje,
                     'valor_total' => $valorTotal,
                     'source_item_type' => $sourceType === self::SOURCE_PURCHASE
                         ? self::SOURCE_ITEM_PURCHASE

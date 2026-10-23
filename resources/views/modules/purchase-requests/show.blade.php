@@ -214,8 +214,8 @@
                                         <th class="col-num">#</th>
                                         <th class="col-foto">Foto</th>
                                         <th class="col-qty">Cantidad</th>
-                                        <th>Descripción</th>
                                         <th>Referencia</th>
+                                        <th>Descripción</th>
                                         <th>Marca</th>
                                         <th>Utilización</th>
                                         <th>Ubicación</th>
@@ -244,8 +244,8 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">{{ $item->cantidad }}</td>
-                                            <td class="pur-req-detail__item-name">{{ $item->descripcion }}</td>
                                             <td>{{ $item->referencia }}</td>
+                                            <td class="pur-req-detail__item-name">{{ $item->descripcion }}</td>
                                             <td>{{ $item->marca ?: '—' }}</td>
                                             <td>{{ $item->utilizacion }}</td>
                                             <td>{{ $item->ubicacion }}</td>
