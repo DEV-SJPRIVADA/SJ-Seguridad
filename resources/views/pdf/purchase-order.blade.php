@@ -283,7 +283,8 @@
         <tr>
             <td class="sign-space">{{ $order->elaboradoNombre() }}</td>
             <td class="sign-space">{{ $order->revisorNombre() }}</td>
-            <td class="sign-space"></td>
+            {{-- Aprobado 2: quien aprobó la OC en la plataforma (aprobación opcional). --}}
+            <td class="sign-space">{{ $order->aprobadoPorNombre() }}</td>
             <td class="sign-space"></td>
         </tr>
         <tr>

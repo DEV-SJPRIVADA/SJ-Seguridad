@@ -33,7 +33,8 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 | --- | --- |
 | Solicitud de compra | Pedido formal de bienes o servicios con lineas de detalle (cantidad, descripcion, referencia, etc.). |
 | Folio | Número visible de la solicitud. Empieza por **SC-** (por ejemplo SC-0042). El número de adentro no cambia. |
-| Director aprobador | Persona con rol de director elegida al crear la solicitud; es quien puede autorizarla. |
+| Director aprobador | Persona con rol de director o de administrador elegida al crear la solicitud; es quien puede autorizarla. |
+| Aprobación de orden | Paso opcional: Compras pide que un director o administrador apruebe una orden emitida. Si la aprueba, su nombre sale en la orden impresa; si la rechaza, la orden queda Anulada. |
 | Estado | Una sola etapa para compras y suministros, con el mismo nombre y color: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. |
 | Por autorizar | Esperando la decisión del director (o de Calidad, si es un insumo). |
 | Devuelta | El director no autorizó. El solicitante puede corregirla y enviarla de nuevo. |
@@ -107,7 +108,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 
 **Opcion B — Por plataforma**
 
-1. Ingrese a **Compras → Solicitudes de compra → Autorizaciones compras**, subpestaña **Pendientes de autorización**.
+1. Ingrese a **Compras → Solicitudes de compra → Autorizaciones compras**, subpestaña **Solicitudes de Compra**.
 2. Pulse **Autorizar** en la fila deseada (o abra el detalle desde el correo con **Ver en la plataforma**).
 3. Revise el detalle, lineas, datos del solicitante y, si existen, los **Adjuntos** (puede descargarlos).
 4. Opcionalmente escriba comentarios (obligatorios si rechaza).
@@ -176,6 +177,19 @@ Una orden emitida no se edita ni se borra. Si quedó mal (proveedor, precio, can
 7. Quien pidió la anulación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
 
 El sistema no envía las órdenes al proveedor; si ya se la había entregado, avísele por fuera.
+
+### Pedir la aprobación de una orden de compra (Compras, director o administrador)
+
+Es **opcional**. Sin pedirla, la orden sigue **Emitida** y se puede descargar como siempre.
+
+1. **Compras:** abra la orden en **Órdenes** y, en **Solicitar aprobación**, elija quién aprueba (en la lista salen directores y administradores). Puede escribir una nota. Pulse **Solicitar aprobación**.
+2. La orden muestra **Aprobación pendiente**. Mientras espera se puede descargar, pero no se puede pedir su anulación.
+3. Si se equivocó de aprobador, pulse **Retirar solicitud de aprobación** y pídala de nuevo.
+4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra entre paréntesis cuántas tiene pendientes). Solo la persona elegida puede decidir.
+5. Al **aprobar**, la orden sigue Emitida y en el PDF y el Excel aparece su nombre en **Aprobado 2 por**.
+6. Al **rechazar**, debe escribir el motivo y la orden queda **Anulada**: su cantidad vuelve al saldo del pedido y Compras puede emitir una orden corregida.
+7. Quien pidió la aprobación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
+8. Lo ya decidido sale de la lista de pendientes pero no se pierde: en **Órdenes de Compra** (y también en **Anulaciones de órdenes**) cambie **Vista** a **Historial completo**, **Aprobadas** o **Rechazadas**, y use **Ver detalle** para consultar la decisión y el comentario.
 
 ### Emitir la orden impresa (FO-AD-07)
 
@@ -254,6 +268,8 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
+| 1.49 | 2026-10-23 | Compras | Autorizaciones compras: en **Órdenes de Compra** y **Anulaciones de órdenes** lo ya decidido queda en el historial; use **Vista** (Historial completo, Aprobadas o Rechazadas), igual que en Solicitudes de Compra. |
+| 1.48 | 2026-10-23 | Compras | **Aprobación opcional de órdenes:** Compras la pide a un director o administrador; se decide por correo o en Autorizaciones compras → **Órdenes de Compra**. Las subpestañas quedan **Solicitudes de Compra**, **Órdenes de Compra** y **Anulaciones de órdenes**. Los administradores también aparecen como aprobadores de solicitudes y anulaciones. |
 | 1.47 | 2026-10-23 | Compras | Export de Órdenes: fecha de la solicitud y de su aprobación, y nueva hoja **Evaluación** con una fila por orden. |
 | 1.46 | 2026-10-23 | Compras | Emitir orden: el IVA se elige como **tasa del catálogo** (0%, 5%, 19%…) y el sistema calcula su valor y el total de cada línea. Nueva pestaña **Catálogos → IVA**. |
 | 1.45 | 2026-10-23 | Compras | Detalle de la solicitud: después de Cantidad va Referencia y luego Descripción. Emitir orden: la columna "Artículo" se llama ahora **Referencia** (Cantidad → Referencia → Descripción). |

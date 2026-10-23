@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PurchaseRequests\PurchaseApprovalController;
+use App\Http\Controllers\PurchaseRequests\PurchaseOrderApprovalController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderCancellationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderEvaluationController;
@@ -27,6 +28,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
     Route::middleware(['purchase.tab:approval'])->group(function (): void {
         Route::get('/pendientes-autorizacion', [PurchaseApprovalController::class, 'index'])->name('approval.index');
         Route::patch('/solicitud/{purchase_request}/autorizar', [PurchaseApprovalController::class, 'update'])->name('approval.update');
+
+        // Aprobación de OC: la decide el director o administrador que Compras eligió.
+        Route::get('/pendientes-autorizacion/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'show'])->name('approval.order-approval.show');
+        Route::patch('/pendientes-autorizacion/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'update'])->name('approval.order-approval.update');
 
         // Anulación de OC: la decide el director que Compras eligió.
         Route::get('/pendientes-autorizacion/anulaciones/{purchase_order}', [PurchaseOrderCancellationController::class, 'show'])->name('approval.order-cancellation.show');
@@ -60,6 +65,10 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/ordenes-compra/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('orders.show');
         Route::get('/ordenes-compra/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('orders.pdf');
         Route::get('/ordenes-compra/{purchase_order}/excel', [PurchaseOrderController::class, 'excel'])->name('orders.excel');
+
+        // Compras solicita (eligiendo director o administrador) o retira la aprobación de una OC.
+        Route::post('/ordenes-compra/{purchase_order}/aprobacion', [PurchaseOrderApprovalController::class, 'request'])->name('orders.approval.request');
+        Route::delete('/ordenes-compra/{purchase_order}/aprobacion', [PurchaseOrderApprovalController::class, 'withdraw'])->name('orders.approval.withdraw');
 
         // Compras solicita (eligiendo director) o retira la anulación de una OC.
         Route::post('/ordenes-compra/{purchase_order}/anulacion', [PurchaseOrderCancellationController::class, 'request'])->name('orders.cancellation.request');

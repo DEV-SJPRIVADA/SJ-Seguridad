@@ -15,11 +15,12 @@
     @endif
 </div>
 
-<div class="block-spaced">
-    <table class="supply-table">
+{{-- Líneas de la OC: contenedor con scroll horizontal para que no desborde la tarjeta angosta del correo. --}}
+<div class="req-approval-letter__table-wrap">
+    <table class="req-approval-letter__table">
         <thead>
             <tr>
-                <th>Cantidad</th>
+                <th class="text-center">Cantidad</th>
                 <th>Descripción</th>
                 <th class="text-right">Valor total</th>
             </tr>
@@ -28,8 +29,8 @@
             @foreach ($order->items as $item)
                 <tr>
                     <td class="text-center">{{ $item->cantidad }}</td>
-                    <td>{{ $item->descripcion ?? '—' }}</td>
-                    <td class="text-right">{{ number_format((float) $item->valor_total, 2) }}</td>
+                    <td class="req-approval-letter__table-desc">{{ $item->descripcion ?? '—' }}</td>
+                    <td class="text-right req-approval-letter__table-num">{{ number_format((float) $item->valor_total, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>

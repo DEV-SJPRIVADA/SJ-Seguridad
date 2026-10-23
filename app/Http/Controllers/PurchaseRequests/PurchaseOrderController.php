@@ -193,10 +193,15 @@ class PurchaseOrderController extends Controller
 
     public function show(string $module, PurchaseOrder $purchaseOrder, PurchaseAccessService $access): View
     {
-        $purchaseOrder->load(['items', 'source', 'provider', 'evaluation', 'anulacionAprobador', 'anulacionSolicitadaPor']);
+        $purchaseOrder->load([
+            'items', 'source', 'provider', 'evaluation',
+            'anulacionAprobador', 'anulacionSolicitadaPor', 'aprobacionAprobador', 'aprobacionSolicitadaPor',
+        ]);
         $canProcess = auth()->user() !== null && $access->canEmitOrder(auth()->user());
 
         return view('modules.purchase-requests.orders.show', [
+            'canRequestApproval' => $canProcess && $purchaseOrder->puedeSolicitarAprobacion(),
+            'canWithdrawApproval' => $canProcess && $purchaseOrder->tieneAprobacionPendiente(),
             'canRequestCancellation' => $canProcess && $purchaseOrder->puedeSolicitarAnulacion(),
             'canWithdrawCancellation' => $canProcess && $purchaseOrder->tieneAnulacionPendiente(),
             'approverOptions' => $access->approversQuery()->get(['id', 'name'])

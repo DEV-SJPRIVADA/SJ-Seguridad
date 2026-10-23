@@ -210,6 +210,8 @@
                         @endif
                     </section>
 
+                    @include('modules.purchase-requests.orders.partials.approval')
+
                     @include('modules.purchase-requests.orders.partials.cancellation')
                 </div>
 

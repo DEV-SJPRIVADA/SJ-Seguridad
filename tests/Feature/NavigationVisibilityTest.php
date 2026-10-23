@@ -82,7 +82,7 @@ class NavigationVisibilityTest extends TestCase
         $areaKeys = collect($nav['appNavigation'])->pluck('key')->values()->all();
 
         $this->assertContains('gestion_humana', $areaKeys);
-        $this->assertNotContains('compras', $areaKeys);
+        $this->assertContains('compras', $areaKeys);
 
         $ghBoards = collect(collect($nav['appNavigation'])->firstWhere('key', 'gestion_humana')['items'] ?? [])
             ->pluck('label')

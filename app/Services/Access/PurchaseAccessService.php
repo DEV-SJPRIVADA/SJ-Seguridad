@@ -10,6 +10,13 @@ class PurchaseAccessService
     /** @var array<int, string> */
     public const BASE_AREA_TABS = ['create', 'my_requests'];
 
+    /**
+     * Roles que pueden ser elegidos como aprobadores (solicitudes, aprobación y anulación de OC).
+     *
+     * @var list<string>
+     */
+    public const APPROVER_ROLES = ['director', 'administrador'];
+
     public function isAdminBypass(User $user): bool
     {
         return $user->hasRole('super-admin') || $user->can('manage.users');
@@ -180,7 +187,7 @@ class PurchaseAccessService
     {
         return User::query()
             ->where('is_active', true)
-            ->whereHas('roles', fn (Builder $query) => $query->where('name', 'director'))
+            ->whereHas('roles', fn (Builder $query) => $query->whereIn('name', self::APPROVER_ROLES))
             ->permission('purchase.tab.approval')
             ->orderBy('name');
     }

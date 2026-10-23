@@ -34,6 +34,19 @@
             \App\Models\PurchaseRequest::ESTADO_APROBADO => 'aprobadas',
             \App\Models\PurchaseRequest::ESTADO_RECHAZADO => 'rechazadas',
         ];
+        // Opciones del filtro "Vista" en las subpestañas de órdenes (aprobación y anulación).
+        $orderEstadoOptions = [
+            \App\Models\PurchaseOrder::APROBACION_PENDIENTE => 'Pendientes por decidir',
+            'todos' => 'Historial completo',
+            \App\Models\PurchaseOrder::APROBACION_APROBADA => 'Aprobadas',
+            \App\Models\PurchaseOrder::APROBACION_RECHAZADA => 'Rechazadas',
+        ];
+        $orderMetaLabels = [
+            \App\Models\PurchaseOrder::APROBACION_PENDIENTE => 'pendientes por decidir',
+            'todos' => 'en historial',
+            \App\Models\PurchaseOrder::APROBACION_APROBADA => 'aprobadas',
+            \App\Models\PurchaseOrder::APROBACION_RECHAZADA => 'rechazadas',
+        ];
     @endphp
 
     <div class="page-section req-manage-page">
@@ -42,14 +55,22 @@
                 <div class="alert alert--success" role="status">{{ session('status') }}</div>
             @endif
 
-            {{-- Subpestaña Anulaciones de órdenes: OC que Compras pidió anular y envió a este director. --}}
-            @if ($vista === 'anulaciones')
+            {{-- Subpestaña Órdenes de Compra: OC que Compras envió a este aprobador; pendientes por defecto, historial por filtro. --}}
+            @if ($vista === 'ordenes')
                 <div class="panel">
                     <div class="panel__header panel__header--compact">
-                        <h3 class="panel-title">Anulaciones de órdenes por aprobar</h3>
-                        <p class="panel-text panel-text--compact">Compras pidió anular estas órdenes de compra y lo eligió a usted para decidir.</p>
+                        <h3 class="panel-title">Órdenes de compra</h3>
+                        <p class="panel-text panel-text--compact">Compras solicitó su aprobación para estas órdenes. Si rechaza, la orden queda anulada. Por defecto se muestran solo las pendientes; cambie la vista para consultar el historial.</p>
                     </div>
                     <div class="panel__body req-manage-shell">
+                        @include('modules.purchase-requests.approval.partials.status-filter', [
+                            'options' => $orderEstadoOptions,
+                            'count' => $orderApprovals->count(),
+                            'singular' => 'orden',
+                            'plural' => 'órdenes',
+                            'metaLabels' => $orderMetaLabels,
+                        ])
+
                         <div class="data-table-wrap req-manage-shell__table">
                             <table class="supply-table" style="width:100%">
                                 <thead>
@@ -59,12 +80,99 @@
                                         <th>Proveedor</th>
                                         <th>Total</th>
                                         <th>Solicitada por</th>
-                                        <th>Fecha</th>
+                                        <th>Fecha solicitud</th>
+                                        <th>Decisión</th>
+                                        <th>Fecha resolución</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($pendingCancellations as $order)
+                                    @forelse ($orderApprovals as $order)
+                                        @php
+                                            $pillClass = match ($order->aprobacion_estado) {
+                                                \App\Models\PurchaseOrder::APROBACION_APROBADA => 'status-pill--success',
+                                                \App\Models\PurchaseOrder::APROBACION_RECHAZADA => 'status-pill--danger',
+                                                default => 'status-pill--warning',
+                                            };
+                                        @endphp
+                                        <tr>
+                                            <td class="text-center">{{ $order->numeroOc }}</td>
+                                            <td>{{ $order->sourceFolio() }}</td>
+                                            <td>{{ $order->provider_nombre }}</td>
+                                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                                            <td>{{ $order->aprobacionSolicitadaPor?->name ?? '—' }}</td>
+                                            <td class="text-center"><x-date-table :value="$order->aprobacion_solicitada_at" datetime /></td>
+                                            <td class="text-center"><span class="status-pill {{ $pillClass }}">{{ $order->aprobacionLabel() }}</span></td>
+                                            <td class="text-center">
+                                                @if ($order->aprobacion_resuelta_at)
+                                                    <x-date-table :value="$order->aprobacion_resuelta_at" datetime />
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="table-actions">
+                                                <a
+                                                    href="{{ route('purchase-requests.approval.order-approval.show', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
+                                                    class="btn btn--{{ $order->tieneAprobacionPendiente() ? 'primary' : 'secondary' }} btn--sm"
+                                                >{{ $order->tieneAprobacionPendiente() ? 'Revisar orden' : 'Ver detalle' }}</a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-muted">
+                                                @if ($currentEstado === \App\Models\PurchaseOrder::APROBACION_PENDIENTE)
+                                                    No hay órdenes de compra pendientes de aprobación.
+                                                @else
+                                                    No hay órdenes de compra con la vista seleccionada.
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {{-- Subpestaña Anulaciones de órdenes: OC que Compras pidió anular a este director; pendientes por defecto, historial por filtro. --}}
+            @elseif ($vista === 'anulaciones')
+                <div class="panel">
+                    <div class="panel__header panel__header--compact">
+                        <h3 class="panel-title">Anulaciones de órdenes</h3>
+                        <p class="panel-text panel-text--compact">Compras pidió anular estas órdenes de compra y lo eligió a usted para decidir. Por defecto se muestran solo las pendientes; cambie la vista para consultar el historial.</p>
+                    </div>
+                    <div class="panel__body req-manage-shell">
+                        @include('modules.purchase-requests.approval.partials.status-filter', [
+                            'options' => $orderEstadoOptions,
+                            'count' => $cancellations->count(),
+                            'singular' => 'anulación',
+                            'plural' => 'anulaciones',
+                            'metaLabels' => $orderMetaLabels,
+                        ])
+
+                        <div class="data-table-wrap req-manage-shell__table">
+                            <table class="supply-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>OC</th>
+                                        <th>Origen</th>
+                                        <th>Proveedor</th>
+                                        <th>Total</th>
+                                        <th>Solicitada por</th>
+                                        <th>Fecha solicitud</th>
+                                        <th>Decisión</th>
+                                        <th>Fecha resolución</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($cancellations as $order)
+                                        @php
+                                            $pillClass = match (true) {
+                                                $order->tieneAnulacionPendiente() => 'status-pill--warning',
+                                                $order->anulacion_resultado === \App\Models\PurchaseOrder::APROBACION_APROBADA => 'status-pill--danger',
+                                                default => 'status-pill--muted',
+                                            };
+                                        @endphp
                                         <tr>
                                             <td class="text-center">{{ $order->numeroOc }}</td>
                                             <td>{{ $order->sourceFolio() }}</td>
@@ -72,16 +180,30 @@
                                             <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
                                             <td>{{ $order->anulacionSolicitadaPor?->name ?? '—' }}</td>
                                             <td class="text-center"><x-date-table :value="$order->anulacion_solicitada_at" datetime /></td>
+                                            <td class="text-center"><span class="status-pill {{ $pillClass }}">{{ $order->anulacionResultadoLabel() }}</span></td>
+                                            <td class="text-center">
+                                                @if ($order->anulacion_resuelta_at)
+                                                    <x-date-table :value="$order->anulacion_resuelta_at" datetime />
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
                                             <td class="table-actions">
                                                 <a
                                                     href="{{ route('purchase-requests.approval.order-cancellation.show', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
-                                                    class="btn btn--primary btn--sm"
-                                                >Revisar anulación</a>
+                                                    class="btn btn--{{ $order->tieneAnulacionPendiente() ? 'primary' : 'secondary' }} btn--sm"
+                                                >{{ $order->tieneAnulacionPendiente() ? 'Revisar anulación' : 'Ver detalle' }}</a>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-muted">No hay anulaciones de órdenes pendientes.</td>
+                                            <td colspan="9" class="text-muted">
+                                                @if ($currentEstado === \App\Models\PurchaseOrder::APROBACION_PENDIENTE)
+                                                    No hay anulaciones de órdenes pendientes.
+                                                @else
+                                                    No hay anulaciones con la vista seleccionada.
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -91,50 +213,26 @@
                 </div>
             @else
 
-            {{-- Subpestaña Pendientes de autorización: solicitudes de compra asignadas a este director. --}}
+            {{-- Subpestaña Solicitudes de Compra: solicitudes asignadas a este aprobador. --}}
             <div class="panel">
                 <div class="panel__header panel__header--compact">
-                    <h3 class="panel-title">Pendientes de autorización</h3>
-                    <p class="panel-text panel-text--compact">Solicitudes asignadas a ti. Por defecto se muestran solo las pendientes; cambia la vista para consultar el historial.</p>
+                    <h3 class="panel-title">Solicitudes de compra</h3>
+                    <p class="panel-text panel-text--compact">Solicitudes asignadas a usted. Por defecto se muestran solo las pendientes; cambie la vista para consultar el historial.</p>
                 </div>
 
                 <div class="panel__body req-manage-shell">
-                    <div class="req-manage-shell__filters">
-                        <div class="req-manage-filters req-manage-filters--approval">
-                            <form
-                                method="GET"
-                                action="{{ route('purchase-requests.approval.index', ['module' => $module]) }}"
-                                class="req-manage-filters__toolbar req-manage-filters__toolbar--approval"
-                            >
-                                <div class="req-manage-filters__field req-manage-filters__field--approval">
-                                    <label class="req-manage-filters__label req-manage-filters__label--inline" for="approval-filter-estado">Vista</label>
-                                    <select
-                                        id="approval-filter-estado"
-                                        name="estado"
-                                        class="form-select req-manage-filters__select--inline"
-                                        onchange="this.form.submit()"
-                                    >
-                                        <option value="{{ \App\Models\PurchaseRequest::ESTADO_PENDIENTE }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_PENDIENTE)>
-                                            Pendientes por autorizar
-                                        </option>
-                                        <option value="todos" @selected($currentEstado === 'todos')>Historial completo</option>
-                                        <option value="{{ \App\Models\PurchaseRequest::ESTADO_APROBADO }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_APROBADO)>
-                                            Aprobadas
-                                        </option>
-                                        <option value="{{ \App\Models\PurchaseRequest::ESTADO_RECHAZADO }}" @selected($currentEstado === \App\Models\PurchaseRequest::ESTADO_RECHAZADO)>
-                                            Rechazadas
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <p class="req-manage-filters__meta req-manage-filters__meta--approval">
-                                    <strong>{{ number_format($purchaseRequests->count()) }}</strong>
-                                    {{ $purchaseRequests->count() === 1 ? 'solicitud' : 'solicitudes' }}
-                                    {{ $estadoMetaLabels[$currentEstado] ?? '' }}
-                                </p>
-                            </form>
-                        </div>
-                    </div>
+                    @include('modules.purchase-requests.approval.partials.status-filter', [
+                        'options' => [
+                            \App\Models\PurchaseRequest::ESTADO_PENDIENTE => 'Pendientes por autorizar',
+                            'todos' => 'Historial completo',
+                            \App\Models\PurchaseRequest::ESTADO_APROBADO => 'Aprobadas',
+                            \App\Models\PurchaseRequest::ESTADO_RECHAZADO => 'Rechazadas',
+                        ],
+                        'count' => $purchaseRequests->count(),
+                        'singular' => 'solicitud',
+                        'plural' => 'solicitudes',
+                        'metaLabels' => $estadoMetaLabels,
+                    ])
 
                     <div class="data-table-wrap req-manage-shell__table">
                         <table
@@ -239,14 +337,16 @@
                 line-height: 1;
             }
 
+            /* Filtro "Vista" (searchable-select): ancho compacto y control a la altura del chrome. */
             .req-manage-filters__select--inline {
                 width: auto;
-                min-width: 11.5rem;
+                min-width: 12.5rem;
                 max-width: 100%;
-                min-height: 34px;
-                height: 34px;
-                padding-top: 0.25rem;
-                padding-bottom: 0.25rem;
+            }
+
+            .req-manage-filters__select--inline .searchable-select__trigger {
+                min-height: var(--control-height-chrome, 34px);
+                height: var(--control-height-chrome, 34px);
                 font-size: 0.8125rem;
             }
 

@@ -144,9 +144,9 @@ class PurchaseOrderCancellationTest extends TestCase
         $this->actingAs($this->director)
             ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones']))
             ->assertOk()
-            ->assertSee('Anulaciones de órdenes por aprobar')
+            ->assertSee('Anulaciones de órdenes')
             ->assertSee('Revisar anulación')
-            ->assertDontSee('Fecha resolución');
+            ->assertDontSee('N.º cotización');
 
         $this->actingAs($this->otherDirector)
             ->get(route('purchase-requests.approval.order-cancellation.show', ['module' => 'compras', 'purchase_order' => $order->id]))
@@ -172,7 +172,33 @@ class PurchaseOrderCancellationTest extends TestCase
         $order->refresh();
         $this->assertSame(PurchaseOrder::ESTADO_ANULADA, $order->estado);
         $this->assertNotNull($order->anulacion_resuelta_at);
+        $this->assertSame(PurchaseOrder::APROBACION_APROBADA, $order->anulacion_resultado);
         Mail::assertSent(PurchaseOrderCancellationResolvedMail::class, fn ($mail) => $mail->hasTo($this->compras->email) && $mail->approved);
+
+        // Ya resuelta: sale de Pendientes pero queda en el historial con su decisión.
+        $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones']))
+            ->assertOk()
+            ->assertSee('No hay anulaciones de órdenes pendientes.')
+            ->assertDontSee('Revisar anulación');
+
+        foreach (['todos', PurchaseOrder::APROBACION_APROBADA] as $estado) {
+            $this->actingAs($this->director)
+                ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones', 'estado' => $estado]))
+                ->assertOk()
+                ->assertSee('Anulación aprobada')
+                ->assertSee('Ver detalle');
+        }
+
+        $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones', 'estado' => PurchaseOrder::APROBACION_RECHAZADA]))
+            ->assertOk()
+            ->assertSee('No hay anulaciones con la vista seleccionada.');
+
+        $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.order-cancellation.show', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertOk()
+            ->assertDontSee('Aprobar anulación');
 
         // Sin otras órdenes, el pedido vuelve a Por comprar con todo el saldo disponible.
         $purchase->refresh();
@@ -207,7 +233,13 @@ class PurchaseOrderCancellationTest extends TestCase
         $order->refresh();
         $this->assertSame(PurchaseOrder::ESTADO_EMITIDA, $order->estado);
         $this->assertSame('LA ORDEN ES CORRECTA', $order->anulacion_respuesta);
+        $this->assertSame(PurchaseOrder::APROBACION_RECHAZADA, $order->anulacion_resultado);
         Mail::assertSent(PurchaseOrderCancellationResolvedMail::class, fn ($mail) => ! $mail->approved);
+
+        $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'anulaciones', 'estado' => PurchaseOrder::APROBACION_RECHAZADA]))
+            ->assertOk()
+            ->assertSee('Anulación rechazada');
     }
 
     public function test_director_approves_from_the_signed_email_link(): void

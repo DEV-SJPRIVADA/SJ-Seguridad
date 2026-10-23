@@ -252,6 +252,8 @@ class PurchaseOrderExcelExporter
         $sheet->mergeCells('E'.$space.':F'.$space);
         $sheet->setCellValue('A'.$space, $order->elaboradoNombre());
         $sheet->setCellValue('C'.$space, $order->revisorNombre());
+        // Aprobado 2: quien aprobó la OC en la plataforma (aprobación opcional).
+        $sheet->setCellValue('E'.$space, $order->aprobadoPorNombre());
         $sheet->getRowDimension($space)->setRowHeight(36);
         $sheet->getStyle('A'.$space.':G'.$space)->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER)

@@ -39,7 +39,7 @@ class RoleDirectorMigrationTest extends TestCase
         $this->assertContains('requisitions.approve.management', $permissionNames);
         $this->assertContains('view.board.gestion_humana.requisiciones', $permissionNames);
         $this->assertNotContains('manage.users', $permissionNames);
-        $this->assertNotContains('purchase.tab.approval', $permissionNames);
+        $this->assertContains('purchase.tab.approval', $permissionNames);
     }
 
     public function test_super_admin_has_manage_users(): void

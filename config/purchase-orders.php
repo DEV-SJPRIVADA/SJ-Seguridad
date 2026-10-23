@@ -46,6 +46,15 @@ TXT),
     // Vigencia del enlace firmado para que el director apruebe la anulación por correo.
     'cancellation_link_days' => (int) env('PURCHASE_ORDER_CANCELLATION_LINK_DAYS', 7),
 
+    // Vigencia del enlace firmado para aprobar la orden por correo.
+    'approval_link_days' => (int) env('PURCHASE_ORDER_APPROVAL_LINK_DAYS', 7),
+
+    'aprobacion_estados' => [
+        'pendiente' => 'Aprobación pendiente',
+        'aprobada' => 'Aprobada',
+        'rechazada' => 'Rechazada',
+    ],
+
     /*
     | Evaluación post-entrega (no se imprime en FO-AD-07).
     | Pesos fijos 25/25/50; calificación entera 1–5.

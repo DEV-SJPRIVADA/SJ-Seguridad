@@ -57,6 +57,7 @@ class PurchaseOrderCancellationService
                 'anulacion_solicitada_at' => now(),
                 'anulacion_respuesta' => null,
                 'anulacion_resuelta_at' => null,
+                'anulacion_resultado' => null,
             ]);
 
             $this->comment($order, $actor, 'SOLICITUD DE ANULACIÓN OC N.º '.$order->numeroOc.': '.$motivo);
@@ -97,6 +98,7 @@ class PurchaseOrderCancellationService
                 'anulacion_solicitada_at' => null,
                 'anulacion_respuesta' => null,
                 'anulacion_resuelta_at' => null,
+                'anulacion_resultado' => null,
             ]);
 
             $this->comment($order, $actor, 'SOLICITUD DE ANULACIÓN OC N.º '.$order->numeroOc.' RETIRADA POR COMPRAS.');
@@ -141,6 +143,7 @@ class PurchaseOrderCancellationService
                 'estado' => $approve ? PurchaseOrder::ESTADO_ANULADA : PurchaseOrder::ESTADO_EMITIDA,
                 'anulacion_respuesta' => $comentario !== '' ? $comentario : null,
                 'anulacion_resuelta_at' => now(),
+                'anulacion_resultado' => $approve ? PurchaseOrder::APROBACION_APROBADA : PurchaseOrder::APROBACION_RECHAZADA,
             ]);
 
             $decision = $approve ? 'APROBADA' : 'RECHAZADA';

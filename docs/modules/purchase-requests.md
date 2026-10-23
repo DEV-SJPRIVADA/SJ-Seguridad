@@ -60,7 +60,9 @@ Prefijo autenticado: `/purchase-requests/{module}/`
 | --- | --- | --- |
 | Nueva solicitud | `purchase.tab.create` | `GET/POST purchase-requests.create`, `store`; plantilla ítems `items.import-template`; precarga `items.import` |
 | Mis solicitudes | `purchase.tab.my_requests` | `purchase-requests.index`, `show` |
-| Autorizaciones compras (clave `pendientes_aprobacion`) | `purchase.tab.approval` | `purchase-requests.approval.index` con subpestañas `vista=solicitudes` (default, Pendientes de autorización) y `vista=anulaciones` (Anulaciones de órdenes, con contador); `approval.update` |
+| Autorizaciones compras (clave `pendientes_aprobacion`) | `purchase.tab.approval` | `purchase-requests.approval.index` con subpestañas `vista=solicitudes` (default, Solicitudes de Compra), `vista=ordenes` (Órdenes de Compra, con contador) y `vista=anulaciones` (Anulaciones de órdenes, con contador). Cada subpestaña filtra con `estado`: pendientes por defecto, `todos` (historial), aprobadas o rechazadas (`pendiente\|todos\|aprobada\|rechazada` en órdenes y anulaciones; `pendiente\|todos\|aprobado\|rechazado` en solicitudes). Los contadores siempre cuentan pendientes. `approval.update` |
+| Solicitar / retirar aprobación de OC | `purchase.tab.processing` | `POST|DELETE purchase-requests.orders.approval.request|withdraw` (`/ordenes-compra/{id}/aprobacion`) |
+| Aprobar / rechazar OC | `purchase.tab.approval` + ser el aprobador elegido | `GET|PATCH purchase-requests.approval.order-approval.show|update` (`/pendientes-autorizacion/ordenes/{id}`); correo firmado `purchase-requests.order-approval-email.*` |
 | Pedidos (clave `bandeja_compras`) | `purchase.tab.processing` | `purchase-requests.processing.index` con `vista=por_comprar\|con_orden\|historial`. Ya no es pestaña de Solicitudes de compra |
 | Cerrar saldo | `purchase.tab.processing` | `POST purchase-requests.processing.purchase.close` y `.supply.close` |
 | Solicitar / retirar anulación de OC | `purchase.tab.processing` | `POST|DELETE purchase-requests.orders.cancellation.request|withdraw` |
@@ -463,7 +465,7 @@ Una OC emitida no se edita ni se borra. Si quedó mal, Compras pide su anulació
 | `anulada` | El director aprobó. No se borra ni se reutiliza el número; deja de contar en el saldo (`orderedQuantities`), en el cierre automático (`allOrdersHaveReceiptDate`) y en `puedeDevolverAlSolicitante` |
 
 - **Migración aditiva** `2026_10_21_120000_add_cancellation_fields_to_purchase_orders_table.php`: `anulacion_aprobador_id`, `anulacion_solicitada_por` (FK `users` en MySQL; entero sin FK en sqlite), `anulacion_motivo`, `anulacion_solicitada_at`, `anulacion_respuesta`, `anulacion_resuelta_at`.
-- **Solicitar** (Compras, `purchase.tab.processing` vía `canEmitOrder`, sin permiso nuevo): `POST purchase-requests.orders.cancellation.request` (`/ordenes-compra/{id}/anulacion`). Solo `emitida` sin `fecha_recibido` (`puedeSolicitarAnulacion`). Compras **elige el director** que aprueba (`anulacion_aprobador_id`, validado con `PurchaseAccessService::isValidApprover`: activo, rol `director`, `purchase.tab.approval`), para compras y suministros. Motivo obligatorio (`motivo_anulacion`, 3–5000, mayúsculas).
+- **Solicitar** (Compras, `purchase.tab.processing` vía `canEmitOrder`, sin permiso nuevo): `POST purchase-requests.orders.cancellation.request` (`/ordenes-compra/{id}/anulacion`). Solo `emitida` sin `fecha_recibido` (`puedeSolicitarAnulacion`). Compras **elige el director** que aprueba (`anulacion_aprobador_id`, validado con `PurchaseAccessService::isValidApprover`: activo, rol `director` o `administrador` desde 2026-10-23, `purchase.tab.approval`), para compras y suministros. Motivo obligatorio (`motivo_anulacion`, 3–5000, mayúsculas).
 - **Retirar** (Compras): `DELETE purchase-requests.orders.cancellation.withdraw`. Vuelve a `emitida` y limpia los datos de la solicitud.
 - **Decidir** (solo el director elegido): en la plataforma, subpestaña **Anulaciones de órdenes** de Autorizaciones compras (`approval.index?vista=anulaciones`) → `GET|PATCH purchase-requests.approval.order-cancellation.show|update` (grupo `purchase.tab:approval`); o por correo con enlace firmado `purchase-requests.order-cancellation-email.show|update` (`routes/modules/purchase-requests-email.php`, vigencia `purchase-orders.cancellation_link_days`, default 7). Aprobar: comentario opcional; rechazar: comentario obligatorio. `ResolvePurchaseOrderCancellationRequest` exige que el usuario (o el `director` del enlace firmado) sea `anulacion_aprobador_id`.
 - **Al aprobar:** `estado=anulada` y `PurchaseFlowStateService::sync` recalcula el origen (vuelve a Con orden o Por comprar; un Cerrado no se reabre). PDF con marca **ANULADA** en el título; Excel `ORDEN DE COMPRA O SERVICIO — ANULADA`.
@@ -471,7 +473,29 @@ Una OC emitida no se edita ni se borra. Si quedó mal, Compras pide su anulació
 - **Correos:** `PurchaseOrderCancellationRequestedMail` al director (botón con el enlace firmado) y `PurchaseOrderCancellationResolvedMail` a quien la pidió. El sistema no envía la OC al proveedor.
 - **Servicio:** `PurchaseOrderCancellationService` (`request`, `withdraw`, `resolve`, `emailShowUrl`, `emailUpdateUrl`). Controlador `PurchaseOrderCancellationController`. Vistas `orders/partials/cancellation`, `approval/order-cancellation`, `order-cancellation-email`, parciales `partials/order-cancellation-{summary,decision}`.
 - **Listado Órdenes:** filtro de estado con Anulación pendiente y Anuladas; pastilla amarilla / roja.
+- **Historial (2026-10-23):** columna `anulacion_resultado` (`aprobada|rechazada`, null mientras está pendiente o si Compras retiró la solicitud), migración aditiva `2026_10_23_170000` con relleno de las ya resueltas (anulada → aprobada; si no, rechazada). Guarda solo la **última** solicitud de anulación de cada OC. La subpestaña Anulaciones filtra por ella; `PurchaseOrder::anulacionResultadoLabel()`.
 - **Tests:** `PurchaseOrderCancellationTest`.
+
+### Aprobación opcional de OC (2026-10-23)
+
+Compras puede pedir que un director o un administrador apruebe una OC ya emitida. **No es obligatoria:** sin pedirla, la OC sigue `emitida`, se descarga y se evalúa como antes.
+
+| `purchase_orders.aprobacion_estado` | Significado |
+| --- | --- |
+| `null` | Nadie la pidió (o Compras la retiró) |
+| `pendiente` | Espera al aprobador elegido. La OC sigue `emitida` y descargable; no se puede pedir su anulación mientras tanto (`puedeSolicitarAnulacion`) |
+| `aprobada` | El FO-AD-07 (PDF y Excel) muestra el nombre del aprobador en la primera celda de **Aprobado 2 por** (`PurchaseOrder::aprobadoPorNombre()`) |
+| `rechazada` | La OC pasa a `estado=anulada`: su cantidad vuelve al saldo y `PurchaseFlowStateService::sync` recalcula el pedido (Con orden o Por comprar; un Cerrado no se reabre). Compras emite una nueva corregida |
+
+- **Migraciones aditivas:** `2026_10_23_160000_add_approval_fields_to_purchase_orders_table.php` (`aprobacion_estado` indexado, `aprobacion_aprobador_id`, `aprobacion_solicitada_por`, `aprobacion_nota`, `aprobacion_solicitada_at`, `aprobacion_comentario`, `aprobacion_resuelta_at`) y `2026_10_23_160100_grant_purchase_approval_to_administrador_role.php` (da `purchase.tab.approval` al rol `administrador`; también en `RoleAndPermissionSeeder`).
+- **Aprobadores:** `PurchaseAccessService::APPROVER_ROLES = ['director', 'administrador']`. `approversQuery()` / `isValidApprover()` exigen además usuario activo y `purchase.tab.approval`. **Afecta también** el selector de aprobador de Nueva solicitud / Reabrir y el de anulación de OC: ahora listan administradores.
+- **Solicitar** (Compras, `purchase.tab.processing`): `POST purchase-requests.orders.approval.request`. Solo `estado=emitida` y `aprobacion_estado=null` (`puedeSolicitarAprobacion`). Campos `aprobacion_aprobador_id` (obligatorio) y `aprobacion_nota` (opcional, mayúsculas) en `RequestPurchaseOrderApprovalRequest`.
+- **Retirar** (Compras): `DELETE purchase-requests.orders.approval.withdraw`. Vuelve a `null`.
+- **Decidir** (solo el aprobador elegido): subpestaña **Órdenes de Compra** de Autorizaciones compras (`approval.index?vista=ordenes`) → `approval.order-approval.show|update`; o por correo firmado `purchase-requests.order-approval-email.show|update` (`/purchase-requests/aprobacion-oc-correo/…`, vigencia `purchase-orders.approval_link_days`, default 7). `ResolvePurchaseOrderApprovalRequest`: `decision` `aprobar|rechazar`, `comentario_aprobacion` obligatorio al rechazar.
+- **Trazabilidad:** notas en el hilo del pedido de origen (`SOLICITUD DE APROBACIÓN OC N.º …`, `… RETIRADA POR COMPRAS.`, `OC N.º … APROBADA|RECHAZADA (ORDEN ANULADA) POR …`) y eventos `purchase_order` `approval_requested|approval_withdrawn|approval_approved|approval_rejected` (`channel` web/email).
+- **Correos:** `PurchaseOrderApprovalRequestedMail` al aprobador (botón con enlace firmado) y `PurchaseOrderApprovalResolvedMail` a quien la pidió.
+- **Código:** `PurchaseOrderApprovalService`, `PurchaseOrderApprovalController`; vistas `orders/partials/approval` (en el detalle de la OC, antes del panel de anulación), `approval/order-approval`, `order-approval-email`, parciales `partials/order-approval-{summary,decision}`.
+- **Tests:** `PurchaseOrderApprovalTest`.
 
 ## Import legacy
 
@@ -484,7 +508,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 ## Reglas de negocio
 
 - Folio correlativo con lock en transaccion al crear
-- Director debe estar en `approversQuery()` (rol director, activo, `purchase.tab.approval`)
+- El aprobador debe estar en `approversQuery()` (rol `director` o `administrador`, activo, `purchase.tab.approval`)
 - Rechazo director: comentarios obligatorios (`UpdatePurchaseApprovalRequest`)
 - Solo solicitudes `aprobado` con `estado_compras` pendiente o en curso entran en Por comprar / Con orden. Historial = Cerrado. `estado_compras=rechazado` no se reescribe y no sale en Pedidos
 - El estado de Compras no se elige en el formulario. Abrir Procesar no mueve el suministro
@@ -503,7 +527,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - **Huerfanos en disco:** el hook `deleting` borra el fichero si Eloquent elimina el adjunto. Un cascade SQL al borrar la solicitud padre no dispara el evento (aceptable en v1).
 - **Tope keep + nuevos en UI:** el servidor rechaza si se supera 5; no hay aviso en cliente (observacion de revision, no bloqueante).
 - **Form Requests de procesar (2026-10-21):** se eliminó `ProcessPurchaseComprasRequest` (aceptaba `estado_compras` y nadie lo usaba). El PATCH de procesar compra solo redirige con aviso. `ProcessSupplyComprasRequest` solo acepta `purchasing_observations` (MAYÚSCULAS, máx. 1000 por línea); ya no exige `action` ni `items`. No volver a cablear el cambio manual de estado.
-- **Aprobador:** `Store/UpdatePurchaseRequestRequest` validan `aprobador_id` con `PurchaseAccessService::isValidApprover` (activo + rol `director` + `purchase.tab.approval`), el mismo criterio de la lista del formulario.
+- **Aprobador:** `Store/UpdatePurchaseRequestRequest` validan `aprobador_id` con `PurchaseAccessService::isValidApprover` (activo + rol `director` o `administrador` + `purchase.tab.approval`), el mismo criterio de la lista del formulario.
 - **Etiquetas muertas en `purchase_tabs` / `supply_tabs`:** «Bandeja compras», «Insumos aprobados» y «Catalogo» siguen en el diccionario. No son permisos nuevos y `visibleTabsFor` ya no las devuelve.
 - **Hilo de suministro:** `SupplyRequestPolicy::comment` deja comentar a Compras, al dueño y a quien tiene `supply.tab.quality`, también si el suministro es de otra área. El hilo se cierra en `completada`.
 - **Mayúsculas del alta de compra:** ver reglas de negocio. Al volver a tocar `StorePurchaseRequestRequest` / `UpdatePurchaseRequestRequest`, aplicar el trait y dejar fuera radios, fechas y archivos.
@@ -524,6 +548,7 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 - `tests/Feature/PurchaseRequests/PurchaseSupplyPriceTest.php` (precio solo en la OC)
 - `tests/Feature/PurchaseRequests/PurchaseMenuFolioTest.php` (Pedidos / Órdenes / Catálogos, folio `SC-`/`SU-`)
 - `tests/Feature/PurchaseRequests/PurchaseOrderEvaluationTest.php` (fórmula, fecha sola, 403, PDF sin evaluación, cierre con y sin fechas)
+- `tests/Feature/PurchaseRequests/PurchaseOrderApprovalTest.php` (pedir/retirar, aprobar por plataforma y correo, rechazo anula y libera saldo, solo el aprobador elegido, administrador como aprobador)
 - `tests/Feature/PurchaseOrderMigrationTest.php` (estructura `purchase_orders`, morph, `numeroOc`, evaluacion 1:1)
 - `tests/Feature/ComprasDashboardTest.php`
 - `tests/Feature/RoleDirectorMigrationTest.php`
@@ -533,6 +558,8 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-10-23 | Autorizaciones compras: las subpestañas **Órdenes de Compra** y **Anulaciones de órdenes** muestran pendientes por defecto y el historial con el filtro **Vista** (Historial completo / Aprobadas / Rechazadas), igual que Solicitudes de Compra; columnas Decisión y Fecha resolución; "Ver detalle" en las resueltas. El filtro de las tres subpestañas pasa a `<x-searchable-select>` (parcial `approval/partials/status-filter`). Columna `purchase_orders.anulacion_resultado` (migración `2026_10_23_170000`) |
+| 2026-10-23 | **Aprobación opcional de OC:** Compras pide la aprobación eligiendo director o administrador; se decide por plataforma (Autorizaciones compras → **Órdenes de Compra**) o por correo firmado. Aprobada: el FO-AD-07 muestra al aprobador en "Aprobado 2 por". Rechazada: OC Anulada y saldo liberado. Subpestañas renombradas Solicitudes de Compra / Órdenes de Compra / Anulaciones de órdenes. El rol `administrador` recibe `purchase.tab.approval` (migración `2026_10_23_160100`) y aparece en todos los selectores de aprobador |
 | 2026-10-23 | Export de Órdenes: hoja **Productos** con columnas nuevas *Fecha solicitud* (compra: `fecha_solicitud`; suministro: `created_at`) y *Fecha aprobación* (compra: `fecha_aprobacion` del director; suministro: última auditoría `quality_approve` de Calidad). Hoja nueva **Evaluación**: una fila por OC filtrada con recibido, las tres calificaciones, resultados, puntaje, resultado (`purchase-orders.evaluation.labels`), observaciones, evaluado por y fecha de evaluación (vacía si no se evaluó). `BaseExport::writeTo(Worksheet)` permite libros con varias hojas; `download()` no cambia |
 | 2026-10-23 | **IVA por tasa del catálogo:** tabla `purchase_tax_rates` (migración `2026_10_23_120000`, siembra 0% / 5% / 19%; sin borrado, se inactivan) y `purchase_order_items.iva_porcentaje`. Emitir OC: selector `items[i][iva_porcentaje]` (`<x-searchable-select>`, solo activas, 19% por defecto); `PurchaseOrderService` calcula `iva = round(cantidad × valor_unidad × % / 100, 2)` y `valor_total = base + iva`, ignorando un `iva` enviado si llega tasa (sin tasa se respeta `iva`, compatibilidad). Pestaña **Catálogos → IVA** (`purchase-requests.tax-rates.index|store|update`, `/catalogos/iva`): ver con `purchase.providers.view`, editar con `purchase.providers.edit` (sin claves nuevas). Detalle OC, panel de OC del pedido, PDF FO-AD-07 y Excel muestran "valor (tasa)" vía `PurchaseOrderItem::ivaImpreso()`; el export de Órdenes agrega columna "IVA %" |
 | 2026-10-23 | Orden de columnas: en `show` (tabla de productos) Cantidad → Referencia → Descripción; en `orders/create` el encabezado "Artículo" pasa a "Referencia" (el campo sigue siendo `articulo`). Detalle de OC, FO-AD-07 y export conservan "Artículo" |

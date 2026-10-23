@@ -55,6 +55,12 @@ class PurchaseOrder extends Model
 
     public const ESTADO_ANULADA = 'anulada';
 
+    public const APROBACION_PENDIENTE = 'pendiente';
+
+    public const APROBACION_APROBADA = 'aprobada';
+
+    public const APROBACION_RECHAZADA = 'rechazada';
+
     protected $table = 'purchase_orders';
 
     protected $fillable = [
@@ -87,6 +93,14 @@ class PurchaseOrder extends Model
         'anulacion_solicitada_at',
         'anulacion_respuesta',
         'anulacion_resuelta_at',
+        'anulacion_resultado',
+        'aprobacion_estado',
+        'aprobacion_aprobador_id',
+        'aprobacion_solicitada_por',
+        'aprobacion_nota',
+        'aprobacion_solicitada_at',
+        'aprobacion_comentario',
+        'aprobacion_resuelta_at',
     ];
 
     protected $casts = [
@@ -94,7 +108,79 @@ class PurchaseOrder extends Model
         'total' => 'decimal:2',
         'anulacion_solicitada_at' => 'datetime',
         'anulacion_resuelta_at' => 'datetime',
+        'aprobacion_solicitada_at' => 'datetime',
+        'aprobacion_resuelta_at' => 'datetime',
     ];
+
+    public function aprobacionAprobador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'aprobacion_aprobador_id');
+    }
+
+    public function aprobacionSolicitadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'aprobacion_solicitada_por');
+    }
+
+    public function tieneAprobacionPendiente(): bool
+    {
+        return $this->aprobacion_estado === self::APROBACION_PENDIENTE;
+    }
+
+    public function isAprobada(): bool
+    {
+        return $this->aprobacion_estado === self::APROBACION_APROBADA;
+    }
+
+    /**
+     * Compras puede pedir la aprobación (opcional) de una OC emitida que aún no la tiene ni la pidió,
+     * y que no tiene una anulación en curso.
+     */
+    public function puedeSolicitarAprobacion(): bool
+    {
+        return $this->estado === self::ESTADO_EMITIDA
+            && $this->aprobacion_estado === null;
+    }
+
+    public function aprobacionLabel(): string
+    {
+        return match ($this->aprobacion_estado) {
+            self::APROBACION_PENDIENTE => 'Aprobación pendiente',
+            self::APROBACION_APROBADA => 'Aprobada',
+            self::APROBACION_RECHAZADA => 'Rechazada',
+            default => 'Sin solicitar',
+        };
+    }
+
+    /**
+     * Decisión de la última solicitud de anulación (historial de Autorizaciones compras).
+     */
+    public function anulacionResultadoLabel(): string
+    {
+        if ($this->tieneAnulacionPendiente()) {
+            return 'Anulación pendiente';
+        }
+
+        return match ($this->anulacion_resultado) {
+            self::APROBACION_APROBADA => 'Anulación aprobada',
+            self::APROBACION_RECHAZADA => 'Anulación rechazada',
+            default => '—',
+        };
+    }
+
+    /**
+     * Nombre de quien aprobó la OC (casilla "Aprobado 2 por" del FO-AD-07); vacío si no está aprobada.
+     */
+    public function aprobadoPorNombre(): string
+    {
+        if (! $this->isAprobada()) {
+            return '';
+        }
+
+        $this->loadMissing('aprobacionAprobador');
+
+        return trim((string) ($this->aprobacionAprobador?->name ?? ''));
+    }
 
     public function anulacionAprobador(): BelongsTo
     {
@@ -124,7 +210,8 @@ class PurchaseOrder extends Model
         $this->loadMissing('evaluation');
 
         return $this->estado === self::ESTADO_EMITIDA
-            && $this->evaluation?->fecha_recibido === null;
+            && $this->evaluation?->fecha_recibido === null
+            && ! $this->tieneAprobacionPendiente();
     }
 
     public function provider(): BelongsTo

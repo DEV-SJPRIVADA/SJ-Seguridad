@@ -23,6 +23,8 @@ class RoleAndPermissionSeeder extends Seeder
             'super-admin' => $allPermissions,
             'administrador' => [
                 'view.dashboard',
+                // Aprueba solicitudes y órdenes de compra en Autorizaciones compras.
+                'purchase.tab.approval',
                 'manage.requisition.parameters',
                 'requisitions.approve.management',
                 'view.board.gestion_humana.requisiciones',
