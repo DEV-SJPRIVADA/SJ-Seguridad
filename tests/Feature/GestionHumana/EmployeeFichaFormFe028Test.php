@@ -614,4 +614,44 @@ class EmployeeFichaFormFe028Test extends TestCase
         $this->assertStringNotContainsString('<input', $html);
         $this->assertStringNotContainsString('readonly', $html);
     }
+
+    public function test_store_surfaces_business_validation_message_instead_of_generic_error(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809000099',
+            'hired_full_name' => 'Vinculo Activo Test',
+            'created_by' => $manager->id,
+        ]);
+
+        // Dato inconsistente: el registro sigue pendiente pero ya tiene vínculo activo.
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
+            'hire_date' => now()->toDateString(),
+            'opened_by' => $manager->id,
+        ]);
+
+        $createUrl = route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]);
+
+        $this->actingAs($manager)
+            ->from($createUrl)
+            ->post(route('gestion-humana.ficha-empleados.employees.store'), $this->masivosCorePayload([
+                'ficha_entry_id' => $entry->id,
+                'hired_document' => '809000099',
+                'hired_full_name' => 'Vinculo Activo Test',
+            ]))
+            ->assertRedirect($createUrl)
+            ->assertSessionHasErrors('employment_period');
+
+        $errors = session('errors');
+
+        // El motivo real (regla de negocio) llega al usuario, sin mensaje genérico.
+        $this->assertStringContainsString('vinculo laboral activo', (string) $errors->first('employment_period'));
+        $this->assertFalse($errors->has('form'));
+    }
 }

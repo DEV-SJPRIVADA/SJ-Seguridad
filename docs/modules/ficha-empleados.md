@@ -147,7 +147,7 @@ Reemplaza el antiguo flujo de un clic (`promote`, `PATCH .../{fichaEntry}/agrega
 2. **`create()` con `desde`:** resuelve la fila con `PersonalRequisitionFichaEntry::query()->pending()->find($desde)`. Si el `id` no existe o la fila ya esta **en ficha**, redirige al listado de **Pendientes** con mensaje de error (no 404 opaco).
 3. **Prefill sin persistir (FEAT-028 — honesto):** `EmployeeFichaProfilePrefill::buildForEntry()` sugiere en el formulario solo campos editables no exportables de forma silenciosa: sexo, salario, fecha ingreso, cargo (mapeo nómina si existe). **No** precarga centro de costo, ciudad residencia, centro de trabajo ni tipo contrato desde requisición — esos datos van al bloque **Referencia de requisición** (`ficha-requisition-reference.blade.php`), un **panel informativo** (cabecera con icono, badge «Solo consulta» y grilla `<dl>` de 8 datos con `.ficha-empleados-form__reference-item` / `--value`), sin `<input>` ni apariencia de campo editable. Si el pendiente ya tiene perfil persistido, se reutiliza tal cual.
 4. **Formulario:** `create-ficha.blade.php` muestra la referencia informativa (código requisición, cliente, cargo, salario/fecha sugeridos, texto centro costo, ciudad), titulo dinamico **"Gestionar empleado — {hired_full_name}"**, campo oculto `ficha_entry_id`, seccion **Cursos y acreditacion** (checks editables con `ficha_empleados.manage`), y el formulario completo FEAT-028 (`ficha-form-fields.blade.php`). Acciones de cabecera icon-only (Volver / Guardar). **En reingreso** (`isRehirePending()`) los campos de identificación ya **no** se bloquean (`lockIdentityFields = false`); la cédula sigue en `readonly`. Validacion visible (ver "Validación visible del formulario"). Si la validacion del servidor falla, muestra alerta en español con la lista de errores, mensajes bajo el campo y hace scroll al primer error.
-5. **`store()` con `ficha_entry_id`:** dentro de una transaccion, revalida `pending()->findOrFail()` (protege contra doble envio/doble pestaña — si ya fue movida, captura la excepcion y vuelve al formulario con mensaje). Actualiza `hired_document`, `hired_full_name`, `moved_to_ficha_at = now()`, `moved_to_ficha_by = auth user` en la fila **existente**, y crea/actualiza su `EmployeeFichaProfile` con los datos del formulario. Redirige a `gestion-humana.ficha-empleados.employees.index` (estado por defecto `en_ficha`) con mensaje de exito. Excepciones inesperadas vuelven al formulario con mensaje amigable (se reportan en log).
+5. **`store()` con `ficha_entry_id`:** dentro de una transaccion, revalida `pending()->findOrFail()` (protege contra doble envio/doble pestaña — si ya fue movida, captura la excepcion y vuelve al formulario con mensaje). Actualiza `hired_document`, `hired_full_name`, `moved_to_ficha_at = now()`, `moved_to_ficha_by = auth user` en la fila **existente**, y crea/actualiza su `EmployeeFichaProfile` con los datos del formulario. Redirige a `gestion-humana.ficha-empleados.employees.index` (estado por defecto `en_ficha`) con mensaje de exito. Errores de negocio y tecnicos: ver "Diagnostico de fallos al guardar".
 6. **Cedula duplicada:** `StoreManualEmployeeFichaRequest` valida `hired_document` con `Rule::unique('personal_requisition_ficha_entries', 'hired_document')->ignore($fichaEntryId)` — permite guardar sin cambiar la cedula propia, pero bloquea si se cambia a una cedula que ya pertenece a **otra** fila (mensaje en español bajo el campo y en la alerta superior).
 7. **No propagacion:** ninguna escritura de este flujo toca `personal_requisitions.hired_document`/`hired_full_name`; esos campos siguen reflejando lo capturado al marcar Contratado en la requisicion.
 8. **Alta manual sin requisicion** (`/nuevo` sin `desde`) sigue exactamente igual: crea fila nueva, redirige a `/{id}/ficha`.
@@ -295,6 +295,18 @@ Los formularios de alta (`create-ficha.blade.php`) y edición (`edit-ficha.blade
 
 Validador compartido: `window.fichaEmpleadosValidateForm(form)` en `partials/ficha-form-scripts.blade.php` — recorre `input/select/textarea`, resuelve el valor real de los selects buscables por su `input[type=hidden]`, arma `{ messages, firstField }`, marca los contenedores y hace scroll/focus al primero. El submit de Alpine (`handleFichaSubmit`) lo invoca antes de enviar.
 
+### Diagnóstico de fallos al guardar (2026-10-28)
+
+`FichaEmpleadosController::store()` distingue tres salidas de error para que el aviso genérico no oculte la causa:
+
+| Caso | Comportamiento |
+| --- | --- |
+| `ValidationException` (regla de negocio, p. ej. `EmployeeFichaEmploymentPeriodService::openPeriod()` → «El empleado ya tiene un vinculo laboral activo.») | Se **relanza**; Laravel vuelve al formulario con el mensaje real bajo `.ficha-empleados-form__error-list` (clave `employment_period`). Antes la capturaba el `catch (Throwable)` y el usuario solo veía el mensaje genérico. |
+| `ModelNotFoundException` (pendiente ya movido a ficha / doble envío) | Vuelve con error en `ficha_entry_id`. |
+| Cualquier otro `Throwable` (BD, catálogos, etc.) | Genera **código de incidente** `FICHA-YYYYMMDD-His-XXXX`, lo registra en `Log::error` con `incident_code`, `user_id`, `ficha_entry_id`, `hired_document`, clase y mensaje de la excepción. El usuario ve el código y debe reportarlo a soporte; si además tiene `manage.users`, el mensaje incluye el detalle técnico (`Clase: mensaje`). |
+
+**Soporte:** buscar el `incident_code` en `storage/logs/laravel.log` para obtener el stack trace completo. Regresión cubierta por `test_store_surfaces_business_validation_message_instead_of_generic_error` en `tests/Feature/GestionHumana/EmployeeFichaFormFe028Test.php`.
+
 ### Requisitos y edición (2026-10-28)
 
 - Los checks **Requiere cursos**, **Requiere acreditación** y **Requiere psicofísicos** se habilitan solo con `ficha_empleados.manage` (`$canEditRequires* = $canManage` en `create` y `editFicha`); `updateFicha`/`store` los persisten con ese mismo permiso. Ya no dependen de `cursos.edit` ni `acreditaciones.edit`.
@@ -389,7 +401,7 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 
 Cobertura FEAT-028: catalogos, sync codigo→nombre, obligatorios, formulario UI, prefill honesto, export sin fallbacks, NIT vacio, round-trip guardar→export.
 
-Cobertura 2026-10-28 (en `EmployeeFichaFormFe028Test`): formularios con `novalidate` + validador visible, los tres flags de requisitos editables y persistidos solo con `ficha_empleados.manage`, identidad editable en reingreso con cédula en `readonly`, y bloque de referencia de requisición sin `<input>`.
+Cobertura 2026-10-28 (en `EmployeeFichaFormFe028Test`): formularios con `novalidate` + validador visible, los tres flags de requisitos editables y persistidos solo con `ficha_empleados.manage`, identidad editable en reingreso con cédula en `readonly`, bloque de referencia de requisición sin `<input>`, y `store()` mostrando la `ValidationException` real (`employment_period`) en lugar del mensaje genérico.
 
 Cobertura general:
 - Columnas de migracion (`personal_requisitions.hired_*`, `personal_requisition_ficha_entries.*`).

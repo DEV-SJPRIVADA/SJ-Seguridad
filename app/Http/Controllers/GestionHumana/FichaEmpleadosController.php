@@ -45,6 +45,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -567,6 +569,10 @@ class FichaEmpleadosController extends Controller
             return redirect()
                 ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry)
                 ->with('status', 'Empleado creado en ficha correctamente.');
+        } catch (ValidationException $e) {
+            // Regla de negocio (p. ej. «El empleado ya tiene un vinculo laboral activo»):
+            // debe mostrarse el motivo real en el formulario, nunca el mensaje genérico.
+            throw $e;
         } catch (ModelNotFoundException $e) {
             report($e);
 
@@ -576,13 +582,30 @@ class FichaEmpleadosController extends Controller
                     'ficha_entry_id' => 'El registro pendiente ya no está disponible (puede haber sido movido a ficha). Vuelva al listado de pendientes e intente de nuevo.',
                 ]);
         } catch (Throwable $e) {
-            report($e);
+            // Código de incidente para poder cruzar el aviso del usuario con el log
+            // sin exponer trazas técnicas a usuarios operativos.
+            $incidentCode = 'FICHA-'.now()->format('Ymd-His').'-'.strtoupper(Str::random(4));
+
+            Log::error('Ficha empleados: fallo al guardar empleado en ficha.', [
+                'incident_code' => $incidentCode,
+                'user_id' => $request->user()?->id,
+                'ficha_entry_id' => $fichaEntryId,
+                'hired_document' => $validated['hired_document'] ?? null,
+                'exception_class' => $e::class,
+                'exception_message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+
+            $message = 'No se pudo guardar el empleado. Código de incidente: '.$incidentCode
+                .'. Contacte a soporte indicando ese código, la cédula del empleado y la hora del intento.';
+
+            if ($request->user()?->can('manage.users')) {
+                $message .= ' Detalle técnico: '.$e::class.': '.Str::limit($e->getMessage(), 300);
+            }
 
             return back()
                 ->withInput()
-                ->withErrors([
-                    'form' => 'No se pudo guardar el empleado. Revise los datos e intente de nuevo. Si el problema continúa, contacte a soporte con la hora del intento.',
-                ]);
+                ->withErrors(['form' => $message]);
         }
     }
 
