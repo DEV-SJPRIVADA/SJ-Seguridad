@@ -22,7 +22,7 @@
         x-data="{
             canManage: {{ $canManageFicha ? 'true' : 'false' }},
             isEditing: {{ $startInEditMode ? 'true' : 'false' }},
-            saveValidationMessage: '',
+            validationErrors: [],
             init() {
                 this.$watch('isEditing', () => this.syncFieldLock());
                 this.$nextTick(() => this.syncFieldLock());
@@ -53,35 +53,33 @@
                 });
             },
             handleFichaSubmit(event) {
-                this.saveValidationMessage = '';
-
                 if (! this.canManage || ! this.isEditing) {
                     event.preventDefault();
-                    this.saveValidationMessage = 'Habilita la edición antes de guardar la ficha.';
+                    this.validationErrors = ['Habilite la edición antes de guardar la ficha.'];
                     return;
                 }
 
                 const form = event.target;
-                if (! form.checkValidity()) {
-                    event.preventDefault();
+                const result = window.fichaEmpleadosValidateForm
+                    ? window.fichaEmpleadosValidateForm(form)
+                    : { messages: [], firstField: null };
 
-                    const invalid = form.querySelector(':invalid');
-                    if (invalid) {
-                        const wrap = invalid.closest('.form-field')
-                            || invalid.closest('.searchable-select')
-                            || invalid.closest('.ficha-empleados-form__section')
-                            || invalid;
-                        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        if (typeof invalid.focus === 'function') {
-                            try { invalid.focus({ preventScroll: true }); } catch (e) { invalid.focus(); }
-                        }
-                        if (typeof invalid.reportValidity === 'function') {
-                            invalid.reportValidity();
+                if (result.messages.length > 0) {
+                    event.preventDefault();
+                    this.validationErrors = result.messages;
+
+                    if (result.firstField) {
+                        result.firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const input = result.firstField.querySelector('input:not([type=hidden]), textarea, select');
+                        if (input && typeof input.focus === 'function') {
+                            try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
                         }
                     }
 
-                    this.saveValidationMessage = 'Hay campos obligatorios incompletos. Completa los marcados (suelen estar más arriba en el formulario) e intenta de nuevo.';
+                    return;
                 }
+
+                this.validationErrors = [];
             },
             // Sube al inicio: el scroll real vive en .app-main en esta vista.
             scrollToTop() {
@@ -252,10 +250,20 @@
 
             <div
                 class="alert alert--danger ficha-empleados-page__alert"
-                x-show="saveValidationMessage"
+                x-show="validationErrors.length > 0"
                 x-cloak
-                x-text="saveValidationMessage"
-            ></div>
+                role="alert"
+                aria-live="assertive"
+            >
+                <p class="font-semibold" style="margin-bottom: 0.5rem;">
+                    Faltan campos obligatorios o hay datos inválidos. Revise:
+                </p>
+                <ul class="ficha-empleados-form__error-list">
+                    <template x-for="message in validationErrors" :key="message">
+                        <li x-text="message"></li>
+                    </template>
+                </ul>
+            </div>
 
             @if ($canManageFicha)
                 <div class="panel__footer panel__footer--actions ficha-empleados-form__footer ficha-empleados-form__footer--letters ficha-empleados-form__footer--letters-top">
@@ -303,6 +311,7 @@
                 class="panel ficha-empleados-form"
                 :class="{ 'ficha-empleados-form--readonly': !isEditing }"
                 id="ficha-empleados-form"
+                novalidate
                 @submit="handleFichaSubmit($event)"
             >
                 @csrf
@@ -328,6 +337,7 @@
                             'lockIdentityFields' => false,
                             'canEditRequiresCourses' => $canEditRequiresCourses ?? false,
                             'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion ?? false,
+                            'canEditRequiresPsicofisicos' => $canEditRequiresPsicofisicos ?? false,
                             'canViewRequirementFlags' => $canViewRequirementFlags ?? false,
                         ])
                     </div>

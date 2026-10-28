@@ -93,12 +93,16 @@
         @if ($formId) form="{{ $formId }}" @endif
         {{ $dataAttributes }}
     >
+    {{-- Proxy de validación: cubre el control completo (sin capturar clics) para que el
+         navegador pueda anclar el aviso nativo y para poder resaltar el campo.
+         data-ss-proxy permite validaciones propias que revisen el valor real del select. --}}
     <template x-if="required">
         <input
             type="text"
             tabindex="-1"
             aria-hidden="true"
-            style="position: absolute; opacity: 0; width: 0; height: 0; padding: 0; margin: 0; border: 0; pointer-events: none;"
+            data-ss-proxy="1"
+            class="searchable-select__required-proxy"
             :required="required && !hasSelection"
             :value="value"
         >

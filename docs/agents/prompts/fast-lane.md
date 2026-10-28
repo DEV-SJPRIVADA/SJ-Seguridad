@@ -38,10 +38,10 @@ Fix pequeno — fuera del flujo multi-agente.
 Archivo(s): [ruta exacta]
 Objetivo: [que corregir]
 No tocar: permisos, rutas, migraciones, config/access.php, otros modulos.
-Si el fix tiene UI: tras tests, smoke con MCP chrome-devtools.
+Si el fix tiene UI: tras tests, `npm run build` y deja los pasos de prueba manual al usuario (el smoke visual lo hace el usuario, no el agente).
 ```
 
 ## Referencia
 
 Flujo completo: [`docs/AGENT_WORKFLOW.md`](../../AGENT_WORKFLOW.md) y [`start-feature.md`](start-feature.md).
-Pruebas UI: [`.cursor/rules/devtools-mcp-ui-testing.mdc`](../../../.cursor/rules/devtools-mcp-ui-testing.mdc).
+Pruebas UI: [`.cursor/rules/manual-ui-verification.mdc`](../../../.cursor/rules/manual-ui-verification.mdc).

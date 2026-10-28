@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\GestionHumana;
 
+use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisitionFichaEntry;
 use App\Models\User;
@@ -414,5 +415,203 @@ class EmployeeFichaFormFe028Test extends TestCase
             ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
 
         $this->assertSame('Medellin', $entry->profile->fresh()->birth_place);
+    }
+
+    public function test_ficha_forms_disable_native_validation_to_show_visible_errors(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertOk()
+            ->assertSee('novalidate', false)
+            ->assertSee('fichaEmpleadosValidateForm', false);
+    }
+
+    public function test_create_form_allows_managing_all_requirement_flags(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create'))
+            ->assertOk()
+            ->assertSee('name="requires_courses"', false)
+            ->assertSee('name="requires_acreditacion"', false)
+            ->assertSee('name="requires_psicofisicos"', false)
+            ->assertDontSee('data-lock-disabled="1"', false);
+    }
+
+    public function test_edit_ficha_allows_managing_all_requirement_flags(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809000001',
+            'hired_full_name' => 'Flags Editables Test',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809000001',
+            'full_name' => 'Flags Editables Test',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->assertOk()
+            ->assertSee('name="requires_courses"', false)
+            ->assertSee('name="requires_acreditacion"', false)
+            ->assertSee('name="requires_psicofisicos"', false)
+            ->assertDontSee('data-lock-disabled="1"', false);
+    }
+
+    public function test_update_ficha_persists_requirement_flags_with_manage_permission(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809000002',
+            'hired_full_name' => 'Persistencia Flags Test',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809000002',
+            'full_name' => 'Persistencia Flags Test',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'requires_courses' => true,
+            'requires_acreditacion' => true,
+            'requires_psicofisicos' => true,
+        ]);
+
+        $this->actingAs($manager)
+            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), $this->masivosCorePayload([
+                'requires_courses' => '0',
+                'requires_acreditacion' => '0',
+                'requires_psicofisicos' => '0',
+            ]))
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $profile->refresh();
+
+        $this->assertFalse((bool) $profile->requires_courses);
+        $this->assertFalse((bool) $profile->requires_acreditacion);
+        $this->assertFalse((bool) $profile->requires_psicofisicos);
+
+        $this->actingAs($manager)
+            ->patch(route('gestion-humana.ficha-empleados.employees.ficha.update', $entry), $this->masivosCorePayload([
+                'requires_psicofisicos' => '1',
+            ]))
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry));
+
+        $this->assertTrue((bool) $profile->fresh()->requires_psicofisicos);
+    }
+
+    public function test_rehire_form_allows_editing_identity_fields_except_document(): void
+    {
+        $manager = User::factory()->create(['must_change_password' => false]);
+        $manager->givePermissionTo('ficha_empleados.manage');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '809000003',
+            'hired_full_name' => 'Reingreso Identidad Test',
+            'first_surname' => 'Reingreso',
+            'first_name' => 'Identidad',
+            'birth_place' => 'Cali',
+            'sex' => 'M',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $manager->id,
+            'created_by' => $manager->id,
+        ]);
+
+        $profile = EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '809000003',
+            'full_name' => 'Reingreso Identidad Test',
+            'first_surname' => 'Reingreso',
+            'first_name' => 'Identidad',
+            'birth_place' => 'Cali',
+            'sex' => 'M',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        EmployeeFichaEmploymentPeriod::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'sequence' => 1,
+            'status' => EmployeeFichaEmploymentPeriod::STATUS_CERRADO,
+            'hire_date' => now()->subYear()->toDateString(),
+            'termination_date' => now()->subMonth()->toDateString(),
+            'is_rehireable' => true,
+            'opened_by' => $manager->id,
+            'closed_by' => $manager->id,
+        ]);
+
+        $profile->update([
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subMonth()->toDateString(),
+        ]);
+
+        $entry->update(['moved_to_ficha_at' => null, 'moved_to_ficha_by' => null]);
+        $this->assertTrue($entry->refresh()->isRehirePending());
+
+        $html = $this->actingAs($manager)
+            ->get(route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]))
+            ->assertOk()
+            ->assertSee('Reingreso — Reingreso Identidad Test', false)
+            ->getContent();
+
+        $this->assertDoesNotMatchRegularExpression('/id="first_surname"[^>]*\breadonly\b/', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="birth_place"[^>]*\breadonly\b/', $html);
+
+        // Selects de identificación (género, ciudad de expedición) habilitados en reingreso.
+        $formStart = strpos($html, 'id="ficha-empleados-form"');
+        $this->assertNotFalse($formStart);
+        $formHtml = substr($html, $formStart);
+        $this->assertStringNotContainsString('disabled: true', $formHtml);
+
+        // La cédula sigue siendo la llave del histórico: solo lectura en reingreso.
+        $this->assertMatchesRegularExpression('/id="hired_document"[^>]*\breadonly\b/', $html);
+    }
+
+    public function test_requisition_reference_block_is_informational_not_editable_inputs(): void
+    {
+        $html = view('areas.gestion_humana.ficha-empleados.partials.ficha-requisition-reference', [
+            'reference' => [
+                'code' => 'RQ-TEST-01',
+                'client_name' => 'Cliente Test',
+                'position_name' => 'Vigilante',
+                'contract_type_name' => 'Fijo',
+                'base_salary' => 2100000,
+                'hiring_date' => '2026-01-15',
+                'cost_center_hint' => 'CC-HINT',
+                'city_name' => 'Bogotá',
+            ],
+        ])->render();
+
+        $this->assertStringContainsString('solo consulta', $html);
+        $this->assertStringContainsString('RQ-TEST-01', $html);
+        $this->assertStringContainsString('Centro de costo (texto requisición)', $html);
+        // Se muestra como panel de consulta legible: badge, fecha y salario formateados.
+        $this->assertStringContainsString('Solo consulta', $html);
+        $this->assertStringContainsString('15/01/2026', $html);
+        $this->assertStringContainsString('$ 2.100.000', $html);
+        $this->assertStringContainsString('ficha-empleados-form__reference-grid', $html);
+        // Es un bloque informativo: ningún campo del bloque debe ser un input.
+        $this->assertStringNotContainsString('<input', $html);
+        $this->assertStringNotContainsString('readonly', $html);
     }
 }

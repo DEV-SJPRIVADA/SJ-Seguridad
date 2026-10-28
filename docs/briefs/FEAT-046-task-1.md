@@ -46,11 +46,11 @@
 ## Criterios done
 
 - Criterios de aceptación 1–15 del Brief.
-- Reportar a AgentSj: archivos, tests, smoke, blockers.
+- Reportar a AgentSj: archivos, tests, build y pasos de prueba manual para el usuario.
 
 ## Referencias
 
 - Brief: `docs/briefs/FEAT-046.md`
 - Vista ref: `formacion/dashboard.blade.php`, `mt_st_04/dashboard.blade.php`
-- Reglas: `module-ui-quality.mdc`, `branding.md`, `devtools-mcp-ui-testing.mdc`
+- Reglas: `module-ui-quality.mdc`, `branding.md`, `manual-ui-verification.mdc`
 - Skill Laravel: `.cursor/skills/laravel-best-practices/SKILL.md`

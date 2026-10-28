@@ -181,6 +181,11 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 - Dos agentes editando `config/access.php` o `web.php` al mismo tiempo.
 - Implementar sin brief aprobado.
 
+## Pruebas y verificacion UI (desde 2026-10-28)
+
+- **Automaticas (agente, obligatorio):** `php artisan test --compact` del alcance, `vendor/bin/pint --dirty --format agent` si se toco PHP y `npm run build` si se toco CSS/JS/Blade con Vite.
+- **Manuales (usuario):** la verificacion visual en navegador es responsabilidad del usuario. El agente **no** ejecuta smoke con navegador ni MCP `chrome-devtools`; al cerrar entrega los pasos concretos (ruta, accion, resultado esperado). Regla: [`.cursor/rules/manual-ui-verification.mdc`](../.cursor/rules/manual-ui-verification.mdc).
+
 ## Checklist AgentSj (cierre)
 
 - [ ] Feature Brief cumplido
@@ -193,7 +198,7 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 - [ ] Revisor sin hallazgos bloqueantes
 - [ ] Run log `docs/runs/FEAT-XXX-run-log.md` completo con fila de cierre
 - [ ] `php artisan test` relevante pasa
-- [ ] Si el cambio tiene UI: smoke con MCP Chrome DevTools (consola/red/accion principal) — ver [`.cursor/rules/devtools-mcp-ui-testing.mdc`](../.cursor/rules/devtools-mcp-ui-testing.mdc)
+- [ ] Si el cambio tiene UI: `npm run build` actualizado y pasos de prueba manual entregados al usuario (la verificacion visual es manual del usuario) — ver [`.cursor/rules/manual-ui-verification.mdc`](../.cursor/rules/manual-ui-verification.mdc)
 - [ ] Sin solapamiento con otra tarea En progreso en mismos archivos
 
 ## Uso rapido

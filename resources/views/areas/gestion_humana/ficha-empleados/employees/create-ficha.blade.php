@@ -7,7 +7,7 @@
     <div
         class="page-section ficha-empleados-page ficha-empleados-page--form"
         x-data="{
-            saveValidationMessage: '',
+            validationErrors: [],
             init() {
                 if ({{ $errors->any() ? 'true' : 'false' }}) {
                     this.$nextTick(() => this.scrollToFirstServerError());
@@ -29,30 +29,27 @@
                 }
             },
             handleFichaSubmit(event) {
-                this.saveValidationMessage = '';
-
                 const form = event.target;
-                if (! form.checkValidity()) {
-                    event.preventDefault();
+                const result = window.fichaEmpleadosValidateForm
+                    ? window.fichaEmpleadosValidateForm(form)
+                    : { messages: [], firstField: null };
 
-                    const invalid = form.querySelector(':invalid');
-                    if (invalid) {
-                        const wrap = invalid.closest('.form-field')
-                            || invalid.closest('.searchable-select-wrap')
-                            || invalid.closest('.searchable-select')
-                            || invalid.closest('.ficha-empleados-form__section')
-                            || invalid;
-                        wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        if (typeof invalid.focus === 'function') {
-                            try { invalid.focus({ preventScroll: true }); } catch (e) { invalid.focus(); }
-                        }
-                        if (typeof invalid.reportValidity === 'function') {
-                            invalid.reportValidity();
+                if (result.messages.length > 0) {
+                    event.preventDefault();
+                    this.validationErrors = result.messages;
+
+                    if (result.firstField) {
+                        result.firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const input = result.firstField.querySelector('input:not([type=hidden]), textarea, select');
+                        if (input && typeof input.focus === 'function') {
+                            try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
                         }
                     }
 
-                    this.saveValidationMessage = 'Hay campos obligatorios incompletos o inválidos. Revise los marcados con * (suelen estar más arriba en el formulario) e intente de nuevo.';
+                    return;
                 }
+
+                this.validationErrors = [];
             },
             scrollToTop() {
                 const main = document.querySelector('.app-main');
@@ -137,18 +134,27 @@
 
             <div
                 class="alert alert--danger ficha-empleados-page__alert"
-                x-show="saveValidationMessage"
+                x-show="validationErrors.length > 0"
                 x-cloak
                 role="alert"
                 aria-live="assertive"
-                x-text="saveValidationMessage"
-            ></div>
+            >
+                <p class="font-semibold" style="margin-bottom: 0.5rem;">
+                    Faltan campos obligatorios o hay datos inválidos. Revise:
+                </p>
+                <ul class="ficha-empleados-form__error-list">
+                    <template x-for="message in validationErrors" :key="message">
+                        <li x-text="message"></li>
+                    </template>
+                </ul>
+            </div>
 
             <form
                 method="POST"
                 action="{{ route('gestion-humana.ficha-empleados.employees.store') }}"
                 class="panel ficha-empleados-form"
                 id="ficha-empleados-form"
+                novalidate
                 @submit="handleFichaSubmit($event)"
             >
                 @csrf
@@ -167,9 +173,13 @@
                     @include('areas.gestion_humana.ficha-empleados.partials.ficha-form-fields', [
                         'profile' => $profile,
                         'catalogs' => $catalogs,
-                        'lockIdentityFields' => $isRehire ?? false,
+                        // Quien gestiona la ficha puede corregir también los datos de
+                        // identificación (aplica a reingresos). La cédula sigue siendo
+                        // la llave del histórico y permanece de solo lectura en reingreso.
+                        'lockIdentityFields' => false,
                         'canEditRequiresCourses' => $canEditRequiresCourses ?? false,
                         'canEditRequiresAcreditacion' => $canEditRequiresAcreditacion ?? false,
+                        'canEditRequiresPsicofisicos' => $canEditRequiresPsicofisicos ?? false,
                         'canViewRequirementFlags' => $canViewRequirementFlags ?? false,
                         'showHiredDocumentSection' => true,
                         'showArchiveSection' => true,

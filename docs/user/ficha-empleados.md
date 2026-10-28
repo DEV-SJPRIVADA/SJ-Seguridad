@@ -89,12 +89,14 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 ### Completar ficha de empleado
 
 1. En **Pendientes**, **En ficha** o **Nuevo empleado**, abra el formulario de ficha (permiso de edición).
-2. En **Nuevo empleado** / **Gestionar empleado**, la primera sección es **Requisitos de validación**: marque o desmarque si la persona requiere cursos, acreditación y/o psicofísicos (MT-ST-04) (por defecto activos). Si desactiva un requisito, no aparecerá en las validaciones de ese módulo.
-3. Diligencie documento (cédula) y las secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
-4. Los campos marcados con **\*** son obligatorios para guardar.
-5. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.
-6. En **Contrato y nómina** verá **Fecha desvinculación** (si el empleado se retiró por importación o desvinculación formal). Puede corregirla al editar; si tiene fecha ≤ hoy el estado pasa a desvinculado. La desvinculación **formal** (causal, cartas, seguimiento) se registra con **Registrar desvinculación**.
-7. En alta, use los iconos de la barra superior: **Volver** y **Guardar**.
+2. En **Nuevo empleado** / **Gestionar empleado**, la primera sección es **Requisitos de validación**: marque o desmarque si la persona requiere cursos, acreditación y/o psicofísicos (MT-ST-04) (por defecto activos). Si desactiva un requisito, no aparecerá en las validaciones de ese módulo. **Con el permiso de edición de ficha basta** para cambiar los tres; no hace falta permiso de Cursos, Acreditaciones ni MT-ST-04.
+3. Diligencie los datos de identificación (nombre, apellidos, lugar de nacimiento, sexo, fecha de nacimiento, etc.) y las secciones: identificación, contacto, contrato/nómina, centros, seguridad social, pagos y nómina avanzada.
+4. Los campos marcados con **\*** son obligatorios para guardar. Si falta alguno, al pulsar **Guardar** aparece una **alerta con la lista de campos** y se resalta el primero; la página se desplaza hasta él.
+5. La **cédula** solo se muestra (no se edita) cuando la persona ya existe: es la llave que une ficha, cursos, acreditaciones y psicofísicos.
+6. Use los selectores de catálogo (EPS, AFP, centro de costo, banco, etc.) — no escriba manualmente el nombre homólogo.
+7. En **Contrato y nómina** verá **Fecha desvinculación** (si el empleado se retiró por importación o desvinculación formal). Puede corregirla al editar; si tiene fecha ≤ hoy el estado pasa a desvinculado. La desvinculación **formal** (causal, cartas, seguimiento) se registra con **Registrar desvinculación**.
+8. En alta, use los iconos de la barra superior: **Volver** y **Guardar**.
+9. El bloque **Referencia de requisición** es un panel de solo consulta (no son campos): muestra código de requisición, cliente, cargo, tipo de contrato, salario y fecha sugeridos, centro de costo y ciudad, con salario y fecha ya formateados. Si necesita cambiar esos datos, hágalo en **Requisiciones** o seleccione el valor correcto en los catálogos del formulario.
 
 ### Registrar desvinculacion
 
@@ -124,7 +126,7 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 
 1. Cree una requisicion **Contratado** con la misma cedula de un empleado desvinculado **recontratable**.
 2. El registro vuelve a **Pendientes** con badge **Reingreso**.
-3. Pulse **Gestionar reingreso**, revise condiciones laborales nuevas (cedula, nombre y fecha nacimiento no cambian) y confirme.
+3. Pulse **Gestionar reingreso**, revise las condiciones laborales nuevas y confirme. Puede corregir los datos de identificación (nombre, apellidos, lugar y fecha de nacimiento, sexo); la **cédula** se muestra de solo lectura porque une el historial de cursos, acreditaciones y psicofísicos.
 4. Se abre un nuevo vinculo; el historial de vinculos anteriores queda visible en la ficha.
 
 ### Exportar plantilla masivos (nómina)
@@ -164,6 +166,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.43 | 2026-10-28 | Agent | Ficha (alta/edición): el guardado ya no se bloquea sin explicación; si faltan obligatorios se muestra la lista de campos y se resalta el primero. Los checks de requisitos (cursos, acreditación, psicofísicos) se editan solo con permiso de ficha; identificación editable (cédula queda de solo lectura) y la referencia de requisición pasa a ser solo informativa. |
 | 1.42 | 2026-10-15 | Agent | Alta / Gestionar empleado: sección Archivo al final (estante opcional, caja obligatoria) que alimenta Historias laborales. |
 | 1.41 | 2026-10-15 | Agent | Fecha de nacimiento capturada al marcar Contratado en la RQ se precarga en ficha / carta de contratación. |
 | 1.40 | 2026-10-15 | Agent | Al guardar alta manual (`empleados/nuevo`) y carta de contratación, los textos se persisten en mayúsculas (excepto correo y códigos de catálogo). |

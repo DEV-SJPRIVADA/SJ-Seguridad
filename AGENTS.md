@@ -9,10 +9,10 @@
 - Dev local: `.\dev.bat` (fija PHP 8.3 y Node de Laragon y levanta `artisan serve` + Vite). Alternativas: `composer run dev`, `npm run dev`.
 - Si la UI no refleja cambios de frontend: `npm run build` (manifest de Vite).
 - Tests (PHPUnit 12, nunca Pest): `php artisan test --compact` (todos) · `php artisan test --compact tests/Feature/Ruta.php` (archivo) · `--filter=nombre` (uno).
-- Tras tests de un cambio **con UI**: smoke en browser con MCP **Chrome DevTools** (regla [`.cursor/rules/devtools-mcp-ui-testing.mdc`](.cursor/rules/devtools-mcp-ui-testing.mdc)). App local debe estar corriendo.
+- Tras tests de un cambio **con UI**: `npm run build` y entregar al usuario una lista breve de pasos para su prueba manual. **El smoke visual lo hace el usuario**, no el agente (regla [`.cursor/rules/manual-ui-verification.mdc`](.cursor/rules/manual-ui-verification.mdc)).
 - Tras modificar PHP: `vendor/bin/pint --dirty --format agent` antes de cerrar el cambio.
 - Diagnóstico local: `php artisan app:doctor` y `php artisan app:stabilize-local` (closures definidos en `routes/console.php`, no en `app/Console/Commands`; sirven si el login falla tras cambios de entorno). Otros: `app:sync-permissions`, `app:restore-admin`.
-- MCP Laravel Boost activo (`opencode.json` / `.cursor/mcp.json`): usar `search-docs` antes de tocar código y `database-schema` antes de escribir migraciones o modelos. MCP `chrome-devtools` para pruebas UI en Chrome.
+- MCP Laravel Boost activo (`opencode.json` / `.cursor/mcp.json`): usar `search-docs` antes de tocar código y `database-schema` antes de escribir migraciones o modelos.
 
 ## Precedencia de instrucciones
 - Este repo **exige** actualizar documentación en la misma entrega (ver "Reglas para cualquier cambio"). Si una guía genérica de la herramienta dice "no crear documentación sin pedirla", prevalece la regla del repo.
@@ -103,7 +103,7 @@
 - Verificar que no se rompan rutas protegidas ni estados de sesion.
 - Verificar migraciones nuevas y compatibilidad con despliegue en hosting compartido.
 - Verificar pruebas de seguridad y acceso al tocar autenticacion, usuarios o permisos.
-- Si el cambio tiene UI: tras PHPUnit, smoke con Chrome DevTools MCP (consola/red/accion principal).
+- Si el cambio tiene UI: tras PHPUnit y `npm run build`, entregar al usuario los pasos de su prueba manual. El agente **no** ejecuta smoke en navegador.
 - Si un cambio afecta varias capas, documentarlo en el cierre del trabajo.
 - Verificar en cada cierre que `README.md`, `docs/INDEX.md` y el documento del modulo afectado sigan alineados con el codigo real.
 
@@ -114,4 +114,5 @@
 - **Consulta o fix pequeno:** carril rapido (Ask/Agent directo); no exige Feature Brief ni entrada en `docs/TASKS.md`. Ver [`docs/agents/prompts/fast-lane.md`](docs/agents/prompts/fast-lane.md).
 - Un Agente Feature = un modulo + Feature Brief + Task Card. No editar archivos compartidos (`config/access.php`, `routes/web.php`, layouts) sin flag `shared-files` en `docs/TASKS.md`.
 - Cierre de feature: doc tecnica en `docs/modules/{modulo}.md` y doc usuario en `docs/user/{modulo}.md` (Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios), generadas por el Documentador.
+- **Pruebas:** el agente ejecuta tests automaticos, pint y build; la verificacion manual en navegador la hace el usuario. Ver [`.cursor/rules/manual-ui-verification.mdc`](.cursor/rules/manual-ui-verification.mdc).
 - AgentSj es dueno de `docs/TASKS.md` en features nuevas.

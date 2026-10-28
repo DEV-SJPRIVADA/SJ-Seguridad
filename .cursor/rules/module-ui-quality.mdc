@@ -69,7 +69,7 @@ Antes de marcar la feature/vista como lista:
 - [ ] Vacío / error / loading coherentes con el módulo de referencia.
 - [ ] Ortografía UI + comentarios de bloques funcionales.
 - [ ] `npm run build` si hubo CSS/JS Vite.
-- [ ] Smoke Chrome DevTools MCP (regla `devtools-mcp-ui-testing.mdc`).
+- [ ] Pasos de prueba manual entregados al usuario (la verificacion visual la hace el usuario; regla `manual-ui-verification.mdc`).
 
 ## Prohibido en entregas nuevas
 

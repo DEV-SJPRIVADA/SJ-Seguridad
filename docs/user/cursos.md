@@ -15,7 +15,7 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 - **Validaciones** — colas de hallazgo en vivo (sin gate de reporte):
   - **Activos sin curso**: personas activas en Ficha con **Requiere cursos** activo y sin ningún registro de curso. Con edición: **Agregar curso**.
   - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Con edición: editar y marcar SOLICITADO.
-  - Coexiste con la cola **Nuevos sin curso** dentro de la pestaña Cursos (pendientes al entrar a ficha; icono omitir si no aplica cursos). Al guardar un curso desde el modal debe dejar activo «Requiere cursos»; en **Ficha empleados** puede ajustarse con permiso de ficha + cursos.
+  - Coexiste con la cola **Nuevos sin curso** dentro de la pestaña Cursos (pendientes al entrar a ficha; icono omitir si no aplica cursos). Al guardar un curso desde el modal debe dejar activo «Requiere cursos»; en **Ficha empleados** puede ajustarse solo con el permiso de edición de ficha (`ficha_empleados.manage`).
 - **Catalogo** — tablero de tarjetas (como en Ficha empleados): elija **Tipos de curso** o **Escuelas** (CODIGO, NIT, NOMBRE) para gestionar cada uno.
 
 **En esta version:** el import **no** sube PDFs/imagenes; el documento se carga fila a fila. Desde **Ficha empleados** solo se consultan y descargan cursos (no se editan alla).

@@ -18,9 +18,7 @@ use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\MtSt04Registro;
 use App\Models\PersonalRequisitionFichaEntry;
-use App\Services\Access\AcreditacionesAccessService;
 use App\Services\Access\ArchivoAccessService;
-use App\Services\Access\CursosAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\GestionHumana\EmployeeAcreditacionPendingService;
 use App\Services\GestionHumana\EmployeeCursoDocumentService;
@@ -593,12 +591,13 @@ class FichaEmpleadosController extends Controller
         $this->authorizeView();
 
         $canManage = $this->canManage();
-        $user = auth()->user();
-        $canEditRequiresCourses = $canManage && $user !== null && app(CursosAccessService::class)->canEdit($user);
-        $canEditRequiresAcreditacion = $canManage && $user !== null && app(AcreditacionesAccessService::class)->canEdit($user);
+        // Decisión de producto: quien edita la ficha administra los tres requisitos
+        // (cursos, acreditación y psicofísicos) sin depender de otros módulos.
+        $canEditRequiresCourses = $canManage;
+        $canEditRequiresAcreditacion = $canManage;
         // 2B: quien edita Ficha puede activar/inactivar «Requiere psicofísicos» sin mt_st_04.edit.
         $canEditRequiresPsicofisicos = $canManage;
-        $canViewRequirementFlags = $canEditRequiresCourses || $canEditRequiresAcreditacion || $canEditRequiresPsicofisicos;
+        $canViewRequirementFlags = $canManage;
         $fichaEntry->load(['requisition.position', 'requisition.city', 'requisition.client', 'requisition.contractType', 'profile', 'activeEmploymentPeriod']);
         $profile = $fichaEntry->profile ?? $this->profilePrefill->prefillForEntry($fichaEntry);
 
@@ -737,13 +736,9 @@ class FichaEmpleadosController extends Controller
 
         $user = $request->user();
         if ($user !== null && $this->canManage()) {
-            if (app(CursosAccessService::class)->canEdit($user)) {
-                $attributes['requires_courses'] = $request->boolean('requires_courses');
-            }
-            if (app(AcreditacionesAccessService::class)->canEdit($user)) {
-                $attributes['requires_acreditacion'] = $request->boolean('requires_acreditacion');
-            }
-            // Editores de Ficha pueden mutar el flag MT-ST-04 (decisión 2B).
+            // Quien edita la ficha controla los tres requisitos (decisión de producto).
+            $attributes['requires_courses'] = $request->boolean('requires_courses');
+            $attributes['requires_acreditacion'] = $request->boolean('requires_acreditacion');
             $attributes['requires_psicofisicos'] = $request->boolean('requires_psicofisicos');
         }
 

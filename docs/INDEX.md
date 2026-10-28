@@ -25,7 +25,7 @@ Este directorio concentra el contexto necesario para que cualquier desarrollador
 - Feature briefs: [`docs/briefs/`](c:/laragon/www/SJSEGURIDAD/docs/briefs/)
 - Review reports: [`docs/reviews/`](c:/laragon/www/SJSEGURIDAD/docs/reviews/)
 - Run logs (trazabilidad por agente): [`docs/runs/`](c:/laragon/www/SJSEGURIDAD/docs/runs/)
-- Pruebas UI post-implementacion: MCP Chrome DevTools — [`.cursor/rules/devtools-mcp-ui-testing.mdc`](../.cursor/rules/devtools-mcp-ui-testing.mdc)
+- Pruebas UI post-implementacion: **manuales del usuario** (tests automaticos + build los ejecuta el agente) — [`.cursor/rules/manual-ui-verification.mdc`](../.cursor/rules/manual-ui-verification.mdc)
 
 ## Documentacion de usuario
 

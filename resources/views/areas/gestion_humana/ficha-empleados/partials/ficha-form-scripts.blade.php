@@ -1,4 +1,85 @@
 <script>
+    /**
+     * Validación visible de los formularios de Ficha empleados.
+     *
+     * Los formularios usan `novalidate` porque los selectores buscables requeridos
+     * incluyen un input proxy invisible: con la validación nativa, el navegador
+     * enfocaba ese proxy y bloqueaba el envío sin mostrar ningún mensaje al usuario.
+     *
+     * Devuelve { messages, firstField } para que el componente Alpine muestre la lista
+     * de campos faltantes, resalte el campo y haga scroll al primero con error.
+     */
+    window.fichaEmpleadosValidateForm = function (form) {
+        if (! form) {
+            return { messages: [], firstField: null };
+        }
+
+        form.querySelectorAll('.ficha-empleados-form__field--invalid').forEach(function (el) {
+            el.classList.remove('ficha-empleados-form__field--invalid');
+        });
+
+        var messages = [];
+        var firstField = null;
+
+        function resolveLabel(el) {
+            var field = el.closest('.form-field');
+            var labelEl = field ? field.querySelector('.form-label') : null;
+            var raw = labelEl
+                ? labelEl.textContent
+                : (el.getAttribute('aria-label') || el.getAttribute('name') || 'Campo');
+
+            return String(raw).replace(/\*/g, '').replace(/\s+/g, ' ').trim() || 'Campo';
+        }
+
+        form.querySelectorAll('input, select, textarea').forEach(function (el) {
+            var field = el.closest('.form-field');
+            var invalid = false;
+
+            if (el.dataset.ssProxy === '1') {
+                // Select buscable requerido: el valor real vive en el input hidden.
+                if (! el.required) {
+                    return;
+                }
+
+                var wrap = el.closest('.searchable-select-wrap');
+                var hidden = wrap ? wrap.querySelector('input[type="hidden"][name]') : null;
+                invalid = ! hidden || String(hidden.value || '').trim() === '';
+            } else {
+                // willValidate excluye hidden, disabled y readonly.
+                if (! el.willValidate || el.checkValidity()) {
+                    return;
+                }
+
+                invalid = true;
+            }
+
+            if (! invalid) {
+                return;
+            }
+
+            var reason = 'es obligatorio';
+
+            if (el.dataset.ssProxy !== '1' && ! el.validity.valueMissing) {
+                reason = (el.validity.typeMismatch || el.validity.patternMismatch)
+                    ? 'tiene un formato no válido'
+                    : (el.validationMessage || 'no es válido');
+            }
+
+            var text = resolveLabel(el) + ': ' + reason;
+
+            if (messages.indexOf(text) === -1) {
+                messages.push(text);
+            }
+
+            if (field) {
+                field.classList.add('ficha-empleados-form__field--invalid');
+                firstField = firstField || field;
+            }
+        });
+
+        return { messages: messages, firstField: firstField };
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
         var salaryInput = document.getElementById('salary');
         var birthDateInput = document.getElementById('birth_date');

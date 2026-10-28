@@ -1,0 +1,36 @@
+---
+description: Verificacion UI manual es responsabilidad del usuario; el agente cierra con tests automaticos y build
+alwaysApply: true
+---
+
+# Pruebas UI: manuales del usuario, no del agente
+
+**Decision del proyecto (2026-10-28):** el smoke visual en navegador lo hace **el usuario**. Los agentes **no** ejecutan pruebas manuales de UI (ni con MCP `chrome-devtools`, ni con navegador embebido, ni pidiendo credenciales para probar pantallas).
+
+## Que si hace el agente en un cambio con UI
+
+1. **Tests automaticos** — `php artisan test --compact` (archivo o `--filter` afectados). Obligatorio.
+2. **Build** — `npm run build` cuando se toco CSS/JS/Blade con Vite.
+3. **Pint** — `vendor/bin/pint --dirty --format agent` si se toco PHP.
+4. **Guia de prueba manual** — al cerrar, entregar al usuario una lista corta y accionable: ruta, pasos, resultado esperado y que revisar (consola, red o accion principal si aplica).
+
+## Que no hace el agente
+
+- No abre navegador ni usa MCP `chrome-devtools` para validar pantallas.
+- No pide credenciales de la app para "probar" una vista.
+- No bloquea el cierre esperando confirmacion visual: reporta lo verificado por tests/build y deja explicitos los pasos manuales pendientes.
+
+## Formato sugerido del aviso al usuario
+
+```text
+Prueba manual sugerida:
+1. Ir a [ruta].
+2. [Accion concreta].
+3. Esperado: [resultado]. Revisar tambien [consola / red / mensaje de validacion].
+```
+
+## Referencias
+
+- Comandos base: [`AGENTS.md`](../../AGENTS.md).
+- Workflow: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md).
+- Calidad visual esperada (sigue siendo obligatoria al implementar): [`.cursor/rules/module-ui-quality.mdc`](module-ui-quality.mdc) y [`docs/modules/branding.md`](../../docs/modules/branding.md).

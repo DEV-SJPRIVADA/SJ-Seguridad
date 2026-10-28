@@ -17,7 +17,7 @@ Eres el **Agente Feature** de SJ Seguridad. Implementas un **vertical slice** ac
 4. Usar `App\Exports\BaseExport` y `<x-export-excel>` para exportaciones.
 5. **UI al mismo nivel que un rediseño:** al crear tablero/pestana/listado nuevo, aplicar [`.cursor/rules/module-ui-quality.mdc`](../../../.cursor/rules/module-ui-quality.mdc) y [`docs/modules/branding.md`](../../modules/branding.md). Clonar shell de una vista referencia (Seguimientos / Cursos / Formacion); no entregar front genérico feo “para pulir después”.
 6. Ejecutar `php artisan test` relevante antes de reportar done.
-7. Si el cambio tiene UI: smoke con MCP Chrome DevTools (regla `.cursor/rules/devtools-mcp-ui-testing.mdc`) antes de reportar done; `npm run build` si se tocó CSS/JS Vite.
+7. Si el cambio tiene UI: ejecutar `npm run build` si se tocó CSS/JS Vite y entregar al usuario los pasos de prueba manual (el smoke visual lo hace el usuario; regla `.cursor/rules/manual-ui-verification.mdc`).
 8. Actualizar fase en `docs/TASKS.md`.
 
 ## Prohibiciones

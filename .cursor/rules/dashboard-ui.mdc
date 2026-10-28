@@ -31,7 +31,7 @@ Antes de codear un dashboard nuevo o rediseñar uno: **abrir esa vista + su JS**
 5. **Defaults:** `resources/js/charts/apex-defaults.js` (`sharedChart`, colores brand). Toolbar Apex off.
 6. **Vite:** chunk `*-dashboard-charts.js` + JSON embebido o endpoint metrics; tras CSS/JS → `npm run build`.
 7. **Docs:** actualizar `docs/modules/{modulo}.md` (+ user si cambia UX).
-8. **Smoke:** Chrome DevTools MCP en la URL del dashboard.
+8. **Prueba manual:** la hace el usuario en el navegador; el agente entrega la URL y qué revisar (KPI, filtros, etiquetas visibles). No ejecutar smoke con navegador.
 
 ## Prohibido
 

@@ -2827,6 +2827,112 @@ button.module-tab {
     line-height: 1.45;
 }
 
+/* ==========================================================================
+   Referencia de requisición (panel informativo, no editable)
+   ========================================================================== */
+.ficha-empleados-form__section--reference,
+.ficha-empleados-form__section--reference:first-child {
+    margin-bottom: 1rem;
+    padding: 1rem 1.05rem 1.05rem;
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 12%, var(--color-border, #dbe3ef));
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, var(--brand-blue-pale, #eef7fd) 0%, #fff 62%);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+
+.ficha-empleados-form__reference-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.ficha-empleados-form__reference-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ficha-empleados-form__reference-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 18%, #fff);
+    background: #fff;
+    color: var(--brand-navy, #003366);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.ficha-empleados-form__reference-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    gap: 0.55rem;
+    margin: 0;
+}
+
+.ficha-empleados-form__reference-item {
+    min-width: 0;
+    padding: 0.45rem 0.6rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--brand-navy, #003366) 9%, var(--color-border, #dbe3ef));
+    border-radius: 0.6rem;
+    background: rgb(255 255 255 / 82%);
+}
+
+.ficha-empleados-form__reference-label {
+    margin: 0 0 0.15rem;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--brand-ink, #10233f) 55%, #fff);
+}
+
+.ficha-empleados-form__reference-value {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--brand-ink, #10233f);
+    word-break: break-word;
+}
+
+.ficha-empleados-form__reference-value--empty {
+    font-weight: 600;
+    color: var(--brand-steel, #9ca3af);
+}
+
+/* Código de requisición: dato de referencia principal. */
+.ficha-empleados-form__reference-item--code {
+    border-color: color-mix(in srgb, var(--brand-blue, #1984c7) 30%, #fff);
+    background: color-mix(in srgb, var(--brand-blue-soft, #dceffc) 70%, #fff);
+}
+
+.ficha-empleados-form__reference-item--code .ficha-empleados-form__reference-value {
+    color: var(--brand-navy, #003366);
+    letter-spacing: 0.02em;
+}
+
+/* Valores numéricos/fechas: dígitos alineados. */
+.ficha-empleados-form__reference-item--salary .ficha-empleados-form__reference-value,
+.ficha-empleados-form__reference-item--date .ficha-empleados-form__reference-value {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+    .ficha-empleados-form__reference-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ficha-empleados-form__reference-head {
+        flex-wrap: wrap;
+    }
+}
+
 .ficha-empleados-form__requirement-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4649,6 +4755,21 @@ button.module-tab {
     min-width: 0;
 }
 
+/* Proxy invisible que ocupa todo el control: el aviso nativo de "campo obligatorio"
+   se ancla al select visible en lugar de a un input de 0x0 (que bloqueaba el envío
+   sin mostrar ningún mensaje). */
+.searchable-select__required-proxy {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .searchable-select__trigger {
     display: flex;
     align-items: center;
@@ -4681,6 +4802,21 @@ button.module-tab {
     cursor: not-allowed;
 }
 
+/* Campos marcados por la validación propia (formularios novalidate de Ficha empleados) */
+.ficha-empleados-form__field--invalid .form-input,
+.ficha-empleados-form__field--invalid .form-textarea,
+.ficha-empleados-form__field--invalid .form-select,
+.ficha-empleados-form__field--invalid .searchable-select__trigger {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.ficha-empleados-form__error-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+}
+
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .form-input,
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .form-textarea,
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .form-select,
@@ -4694,13 +4830,6 @@ button.module-tab {
 .ficha-empleados-form--readonly .ficha-empleados-form__fields .searchable-select__label {
     user-select: text;
     cursor: text;
-}
-
-.ficha-empleados-form__section--reference .form-input {
-    opacity: 0.75;
-    background-color: var(--color-surface, #f8fafc);
-    cursor: text;
-    user-select: text;
 }
 
 .searchable-select__label {

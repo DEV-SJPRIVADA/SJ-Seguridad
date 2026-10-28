@@ -772,7 +772,8 @@ class FichaEmpleadosTest extends TestCase
         $this->assertNull($entry->personal_requisition_id);
         $this->assertNotNull($entry->moved_to_ficha_at);
         $this->assertTrue($entry->isManualEntry());
-        $this->assertSame('Manual Empleado', $entry->profile?->full_name);
+        // Persistencia en mayúsculas (UppercasesValidatedText, convención del repo).
+        $this->assertSame('MANUAL EMPLEADO', $entry->profile?->full_name);
         $this->assertTrue((bool) $entry->profile?->requires_courses);
         $this->assertTrue((bool) $entry->profile?->requires_acreditacion);
         $this->assertTrue((bool) $entry->profile?->requires_psicofisicos);
@@ -967,8 +968,8 @@ class FichaEmpleadosTest extends TestCase
         $entry->refresh();
         $this->assertNotNull($entry->moved_to_ficha_at);
         $this->assertTrue($entry->movedBy->is($manager));
-        $this->assertSame('Ahora Gestionar', $entry->hired_full_name);
-        $this->assertSame('Ahora Gestionar', $entry->profile?->full_name);
+        $this->assertSame('AHORA GESTIONAR', $entry->hired_full_name);
+        $this->assertSame('AHORA GESTIONAR', $entry->profile?->full_name);
 
         $response->assertSessionHasNoErrors();
     }
