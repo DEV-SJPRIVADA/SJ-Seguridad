@@ -463,7 +463,7 @@ class FichaEmpleadosController extends Controller
 
                     $this->profileCatalogSync->syncAndSave($profile);
 
-                    $this->employmentPeriodService->openPeriod(
+                    $this->employmentPeriodService->openOrSyncActivePeriod(
                         $entry,
                         $profile->fresh()->getAttributes(),
                         $userId,
@@ -543,7 +543,7 @@ class FichaEmpleadosController extends Controller
                 $profile = EmployeeFichaProfile::query()->create($profileAttributes);
                 $this->profileCatalogSync->syncAndSave($profile);
 
-                $this->employmentPeriodService->openPeriod(
+                $this->employmentPeriodService->openOrSyncActivePeriod(
                     $entry,
                     $profile->fresh()->getAttributes(),
                     $userId,

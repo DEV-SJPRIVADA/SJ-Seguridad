@@ -615,7 +615,7 @@ class EmployeeFichaFormFe028Test extends TestCase
         $this->assertStringNotContainsString('readonly', $html);
     }
 
-    public function test_store_surfaces_business_validation_message_instead_of_generic_error(): void
+    public function test_store_moves_pending_entry_that_already_has_active_period_from_quick_letter(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);
         $manager->givePermissionTo('ficha_empleados.manage');
@@ -627,31 +627,40 @@ class EmployeeFichaFormFe028Test extends TestCase
             'created_by' => $manager->id,
         ]);
 
-        // Dato inconsistente: el registro sigue pendiente pero ya tiene vínculo activo.
-        EmployeeFichaEmploymentPeriod::query()->create([
+        // Caso real: la carta rápida de contratación (Pendientes) ya abrió el vínculo
+        // activo mientras la entrada seguía pendiente. Guardar la ficha no debe bloquearse.
+        $period = EmployeeFichaEmploymentPeriod::query()->create([
             'personal_requisition_ficha_entry_id' => $entry->id,
             'sequence' => 1,
             'status' => EmployeeFichaEmploymentPeriod::STATUS_ACTIVO,
-            'hire_date' => now()->toDateString(),
+            'hire_date' => now()->subMonth()->toDateString(),
+            'salary' => 2000000,
             'opened_by' => $manager->id,
         ]);
 
-        $createUrl = route('gestion-humana.ficha-empleados.employees.create', ['desde' => $entry->id]);
-
         $this->actingAs($manager)
-            ->from($createUrl)
             ->post(route('gestion-humana.ficha-empleados.employees.store'), $this->masivosCorePayload([
                 'ficha_entry_id' => $entry->id,
                 'hired_document' => '809000099',
                 'hired_full_name' => 'Vinculo Activo Test',
+                'salary' => '2500000',
             ]))
-            ->assertRedirect($createUrl)
-            ->assertSessionHasErrors('employment_period');
+            ->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertSessionHasNoErrors();
 
-        $errors = session('errors');
+        $entry->refresh();
 
-        // El motivo real (regla de negocio) llega al usuario, sin mensaje genérico.
-        $this->assertStringContainsString('vinculo laboral activo', (string) $errors->first('employment_period'));
-        $this->assertFalse($errors->has('form'));
+        $this->assertNotNull($entry->moved_to_ficha_at);
+        $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $entry->profile->employment_status);
+
+        // No se duplica el vínculo: se reutiliza y sincroniza el periodo existente.
+        $activePeriods = EmployeeFichaEmploymentPeriod::query()
+            ->where('personal_requisition_ficha_entry_id', $entry->id)
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
+            ->get();
+
+        $this->assertCount(1, $activePeriods);
+        $this->assertSame($period->id, $activePeriods->first()->id);
+        $this->assertSame(2500000.0, (float) $activePeriods->first()->salary);
     }
 }

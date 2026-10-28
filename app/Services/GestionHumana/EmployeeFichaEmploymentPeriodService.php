@@ -128,6 +128,39 @@ class EmployeeFichaEmploymentPeriodService
     }
 
     /**
+     * Abre el vínculo activo o, si ya existe, lo sincroniza con los datos del formulario.
+     *
+     * Caso real: la carta rápida de contratación desde **Pendientes** abre el periodo con
+     * la entrada aún pendiente. Al mover luego a ficha, `openPeriod()` lanzaba
+     * «El empleado ya tiene un vinculo laboral activo» y bloqueaba el guardado.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function openOrSyncActivePeriod(
+        PersonalRequisitionFichaEntry $entry,
+        array $attributes,
+        int $userId,
+        ?int $requisitionId = null,
+    ): EmployeeFichaEmploymentPeriod {
+        $period = $this->activePeriod($entry);
+
+        if ($period === null) {
+            return $this->openPeriod(
+                $entry,
+                $attributes,
+                $userId,
+                $requisitionId ?? $entry->personal_requisition_id,
+            );
+        }
+
+        $period->fill($this->periodAttributesFromProfileData($attributes));
+        $period->save();
+        $this->syncCatalogNamesOnPeriod($period);
+
+        return $period->fresh() ?? $period;
+    }
+
+    /**
      * Abre o actualiza el vínculo activo aunque el pendiente aún no esté en ficha
      * (carta rápida de contratación). No toca moved_to_ficha_at.
      *
@@ -138,22 +171,7 @@ class EmployeeFichaEmploymentPeriodService
         array $attributes,
         int $userId,
     ): EmployeeFichaEmploymentPeriod {
-        $period = $this->activePeriod($entry);
-
-        if ($period === null) {
-            return $this->openPeriod(
-                $entry,
-                $attributes,
-                $userId,
-                $entry->personal_requisition_id,
-            );
-        }
-
-        $period->fill($this->periodAttributesFromProfileData($attributes));
-        $period->save();
-        $this->syncCatalogNamesOnPeriod($period);
-
-        return $period->fresh() ?? $period;
+        return $this->openOrSyncActivePeriod($entry, $attributes, $userId);
     }
 
     public function syncProfileFromActivePeriod(PersonalRequisitionFichaEntry $entry, ?EmployeeFichaProfile $profile = null): EmployeeFichaProfile

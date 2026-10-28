@@ -65,7 +65,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
    - Si corrige cédula o nombre aqui, el cambio queda **solo** en la ficha del empleado; **no** se refleja en la requisicion original.
 5. Para descartar los cambios y dejar el registro intacto en **Pendientes**, use el icono **Volver** (flecha) en la barra superior (regresa a la pill Pendientes sin guardar nada).
 6. Para confirmar, use el icono **Guardar** (disquete) en la barra superior. Si falta un campo obligatorio, la cédula ya existe u otro dato es inválido, verá un aviso rojo arriba del formulario con la lista de motivos y, cuando aplique, el mensaje bajo el campo; la página se desplaza hacia el primer error. Corrija e intente de nuevo.
-   - Si el sistema muestra el motivo en texto (por ejemplo, «El empleado ya tiene un vinculo laboral activo»), corríjalo o consulte ese caso con Talento Humano.
+   - Si el sistema muestra el motivo en texto (por ejemplo, «El empleado ya tiene un vinculo laboral activo») y usted **no** lo esperaba, repórtelo a soporte con la cédula: ese caso ya no debería aparecer al mover un pendiente a ficha (corregido 2026-10-28).
    - Si aparece **«Código de incidente: FICHA-…»**, el fallo es técnico: anote ese código, la cédula del empleado y la hora del intento, y envíelos a soporte. Con ese código se localiza el detalle exacto en los logs del servidor.
 7. Al guardar con exito, el registro desaparece de **Pendientes**, queda con fecha y usuario que lo movio (**moved_to_ficha_at**/**moved_to_ficha_by**), y usted es redirigido al **listado principal** (pill **En ficha**), donde ya aparece el nuevo registro.
 
@@ -168,6 +168,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.45 | 2026-10-28 | Agent | Gestionar empleado: si antes se generó la carta rápida de contratación (que abre el vínculo), al guardar la ficha se reutiliza ese vínculo y el registro pasa a **En ficha** sin el error «vínculo laboral activo». |
 | 1.44 | 2026-10-28 | Agent | Guardar ficha: los errores de negocio (p. ej. vínculo laboral ya activo) se muestran con su motivo real; los fallos técnicos generan un **código de incidente** para reportar a soporte. |
 | 1.43 | 2026-10-28 | Agent | Ficha (alta/edición): el guardado ya no se bloquea sin explicación; si faltan obligatorios se muestra la lista de campos y se resalta el primero. Los checks de requisitos (cursos, acreditación, psicofísicos) se editan solo con permiso de ficha; identificación editable (cédula queda de solo lectura) y la referencia de requisición pasa a ser solo informativa. |
 | 1.42 | 2026-10-15 | Agent | Alta / Gestionar empleado: sección Archivo al final (estante opcional, caja obligatoria) que alimenta Historias laborales. |
