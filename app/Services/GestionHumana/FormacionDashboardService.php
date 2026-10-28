@@ -326,7 +326,7 @@ final class FormacionDashboardService
                 $score = $personCourses[$curso] ?? null;
                 if ($score === null) {
                     $statuses[] = FormacionRegistro::ESTADO_NO_REALIZADA;
-                } elseif ($score > 7.5) {
+                } elseif ($score >= 7.5) {
                     $statuses[] = FormacionRegistro::ESTADO_APROBADO;
                 } else {
                     $statuses[] = FormacionRegistro::ESTADO_REPROBADO;
