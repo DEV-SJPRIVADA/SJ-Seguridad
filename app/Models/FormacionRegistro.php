@@ -114,7 +114,7 @@ class FormacionRegistro extends Model
             return self::ESTADO_NO_REALIZADA;
         }
 
-        return (float) $normalized > 7.5
+        return (float) $normalized >= 7.5
             ? self::ESTADO_APROBADO
             : self::ESTADO_REPROBADO;
     }
@@ -199,11 +199,11 @@ class FormacionRegistro extends Model
             self::ESTADO_APROBADO => $query
                 ->whereRaw("NOT {$blank}")
                 ->whereRaw($hasDigit)
-                ->whereRaw("{$numericValue} > 7.5"),
+                ->whereRaw("{$numericValue} >= 7.5"),
             self::ESTADO_REPROBADO => $query
                 ->whereRaw("NOT {$blank}")
                 ->whereRaw($hasDigit)
-                ->whereRaw("{$numericValue} <= 7.5"),
+                ->whereRaw("{$numericValue} < 7.5"),
             self::ESTADO_NO_REALIZADA => $query->where(function (Builder $inner) use ($blank, $hasDigit): void {
                 $inner->whereRaw($blank)
                     ->orWhereRaw("NOT ({$hasDigit})");
