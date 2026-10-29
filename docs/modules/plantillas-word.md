@@ -15,10 +15,10 @@ Administrar **tipos de documento** y **plantillas Word (.docx)** en un tablero p
 - Generacion/descarga:
   - **Ficha empleados** — tipo `desvinculacion` (permiso `ficha_empleados.terminate`); ver [`ficha-empleados.md`](ficha-empleados.md).
   - **Cliente interno → Cartas Vacaciones** — tipo `cartas_vacaciones`; exige **exactamente una** plantilla del tipo con archivo en disco; permisos `cliente_interno.cartas_vacaciones.*`; ver [`cliente-interno.md`](cliente-interno.md).
-  - **Cartas Notificación** (tablero GH) — tipo `cartas_notificacion`; exige **exactamente una** plantilla del tipo con archivo; permiso `cartas_notificacion.edit`; ver [`cartas-notificacion.md`](cartas-notificacion.md).
+  - **Cartas Notificación** (tablero GH) — tipo `cartas_notificacion`; pueden existir **varias** plantillas con archivo y el tablero pide elegir la **preforma del lote** (con una sola, se preselecciona); permiso `cartas_notificacion.edit`; ver [`cartas-notificacion.md`](cartas-notificacion.md).
   - **Inasistencias** (tablero GH) — tipo `inasistencias`; exige **exactamente una** plantilla del tipo con archivo; permiso `inasistencias.edit`; ver [`inasistencias.md`](inasistencias.md).
 - Seed tipos (`WordDocumentTypeSeeder`, idempotente): `desvinculacion`, `cartas_vacaciones`, `cartas_notificacion`, `inasistencias`. Config también declara `word_document_type_codes.contratacion` (tipo puede existir vía UI/migraciones previas). **No** migran plantillas legacy pack RENUNCIA (hay que re-subir).
-- **Fuera de alcance:** editor Word en app, envio por correo, historial de cartas generadas, seleccion de varias plantillas por lote en Cartas Vacaciones / Cartas Notificación.
+- **Fuera de alcance:** editor Word en app, envio por correo, historial de cartas generadas, seleccion de varias plantillas por lote en Cartas Vacaciones / Inasistencias (Cartas Notificación sí permite elegir una preforma por lote).
 
 ## Rutas
 
@@ -112,7 +112,7 @@ Packs/causas soportadas de FEAT-027 **retirados**.
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager` — paths bajo `ficha-empleados/letter-templates/{typeId}/`, CRUD archivo en disco `local`.
 - Generacion de cartas (Ficha): `TerminationLetterPackGeneratorService` — por IDs, 1→docx / N→zip, sin gate por causal; ver doc Ficha.
 - Generacion Cartas Vacaciones (Cliente interno): `ClienteInternoCartasVacacionesGeneratorService` — resuelve **exactamente 1** plantilla `cartas_vacaciones` con archivo; `LetterVariableBuilder::buildForCartasVacaciones`; DocxRenderer + Zip; sin persistencia; ver [`cliente-interno.md`](cliente-interno.md).
-- Generacion Cartas Notificación (tablero GH): `CartasNotificacionGeneratorService` — resuelve **exactamente 1** plantilla `cartas_notificacion` con archivo; `LetterVariableBuilder::buildForCartasNotificacion`; DocxRenderer + Zip; sin persistencia; ver [`cartas-notificacion.md`](cartas-notificacion.md).
+- Generacion Cartas Notificación (tablero GH): `CartasNotificacionGeneratorService` — `availableTemplates` + `resolveTemplate` sobre plantillas `cartas_notificacion` con archivo (el usuario elige la preforma del lote, `template_id`); `LetterVariableBuilder::buildForCartasNotificacion`; DocxRenderer + Zip; sin persistencia; ver [`cartas-notificacion.md`](cartas-notificacion.md).
 - Generación Inasistencias (tablero GH): `InasistenciasGeneratorService` — exactamente 1 plantilla `inasistencias`; `LetterVariableBuilder::buildForInasistencias`; DocxRenderer + Zip + **histórico BD** (sin archivo); ver [`inasistencias.md`](inasistencias.md).
 - Audit plantillas (este tablero): `EmployeeFichaAuditLogService` — `word_document_type` (store/update/destroy), `termination_letter_template` (store/replace/delete). Audit generate cartas CI: `ClienteInternoAuditLogService` → `cartas_vacaciones_generate`. Audit generate Cartas Notificación: `CartasNotificacionAuditLogService` → `cartas_notificacion_generate`. Audit Inasistencias: `InasistenciasAuditLogService` → `inasistencias_generate`.
 - `App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer` — `TemplateProcessor` PhpWord con macros canónicas `${CLAVE}` (+ fallback temporal `[CLAVE]`); previo merge de split-runs en XML.
@@ -168,7 +168,7 @@ Categoría UI **Cartas notificación** en `letter_placeholders` (orientación; r
 | Resto de perfil (`${CARGO}`, `${CIUDAD_RESIDENCIA}`, etc.) | Ficha por cédula (vacío si no hay ficha) |
 | `${CIUDAD}` | Alias de `CIUDAD_RESIDENCIA` |
 
-**Regla operativa Cartas Notificación:** debe existir **exactamente una** plantilla del tipo `cartas_notificacion` con archivo presente (y tipo activo). 0 o >1 → ValidationException con mensaje claro (no se genera). Generador: `CartasNotificacionGeneratorService`; permiso `cartas_notificacion.edit`.
+**Regla operativa Cartas Notificación (2026-10-29):** debe existir **al menos una** plantilla del tipo `cartas_notificacion` activo con archivo presente. Si hay varias, el tablero exige elegir la **preforma del lote** (`template_id`) y valida que pertenezca al tipo y tenga archivo; si no hay ninguna, bloquea con mensaje claro. Generador: `CartasNotificacionGeneratorService`; permiso `cartas_notificacion.edit`.
 
 ### DocxRenderer: manejo de placeholders fragmentados (split-runs)
 
@@ -184,7 +184,7 @@ Microsoft Word puede dividir un placeholder como `${NOMBRE_COMPLETO}` en múltip
 6. Tras migrate/seed: existen tipos `desvinculacion`, `cartas_vacaciones` y `cartas_notificacion`; **cero** plantillas legacy RENUNCIA — operadores deben **re-subir** las de desvinculación.
 7. El modal Generar en ficha solo lista plantillas tipo `desvinculacion` con archivo presente (detalle en [`ficha-empleados.md`](ficha-empleados.md)).
 8. Cartas Vacaciones (Cliente interno): generación bloqueada si no hay exactamente una plantilla del tipo `cartas_vacaciones` con archivo en disco (detalle en [`cliente-interno.md`](cliente-interno.md)). No editar el `code` seed de ese tipo.
-9. Cartas Notificación (tablero GH): generación bloqueada si no hay exactamente una plantilla del tipo `cartas_notificacion` con archivo en disco (detalle en [`cartas-notificacion.md`](cartas-notificacion.md)). No editar el `code` seed de ese tipo.
+9. Cartas Notificación (tablero GH): requiere **al menos una** plantilla del tipo `cartas_notificacion` con archivo en disco; si hay varias, el tablero pide elegir la **preforma del lote** (detalle en [`cartas-notificacion.md`](cartas-notificacion.md)). No editar el `code` seed de ese tipo.
 
 ## JavaScript / assets (si aplica)
 

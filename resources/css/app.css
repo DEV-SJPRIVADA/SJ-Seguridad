@@ -11210,6 +11210,52 @@ a.req-dashboard-kpi:focus-visible {
     flex-shrink: 0;
 }
 
+/* Cartas Notificación: preforma del lote (aplica a todas las filas) */
+.cartas-vacaciones-page .cartas-notificacion__batch-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin: 0 0 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.6rem;
+    background: #f8fafc;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-field {
+    display: flex;
+    flex: 1 1 20rem;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-label {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-soft);
+    white-space: nowrap;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-select {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+    max-width: 22rem;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-hint--warn {
+    color: #b45309;
+}
+
 .desvinculaciones-masivos__bulk-summary {
     margin-top: 0.85rem;
     padding: 0.85rem 1rem;

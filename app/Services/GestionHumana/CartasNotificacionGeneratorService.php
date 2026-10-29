@@ -13,6 +13,7 @@ use App\Support\SpreadsheetCellReader;
 use App\Support\WordTempDirectory;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -99,10 +100,11 @@ class CartasNotificacionGeneratorService
      *     download_name: string,
      *     output_type: string,
      *     row_count: int,
-     *     template_id: int
+     *     template_id: int,
+     *     template_label: string
      * }
      */
-    public function generate(array $rows): array
+    public function generate(array $rows, int $templateId): array
     {
         $maxRows = (int) config('cartas_notificacion.max_rows', 500);
         if (count($rows) > $maxRows) {
@@ -117,12 +119,12 @@ class CartasNotificacionGeneratorService
             ]);
         }
 
-        $template = $this->resolveExactlyOneTemplate();
+        $template = $this->resolveTemplate($templateId);
         $templatePath = $this->templateManager->absolutePath($template->template_path);
 
         if ($templatePath === null || ! is_file($templatePath)) {
             throw ValidationException::withMessages([
-                'template' => 'No hay plantilla activa de Cartas Notificación. Cargue una en Plantillas Word.',
+                'template_id' => 'La preforma seleccionada ya no está disponible. Recargue la página y elija otra.',
             ]);
         }
 
@@ -171,6 +173,7 @@ class CartasNotificacionGeneratorService
                 'output_type' => $outputType,
                 'row_count' => count($generatedFiles),
                 'template_id' => (int) $template->id,
+                'template_label' => (string) $template->label,
             ];
         } catch (\Throwable $e) {
             if (is_string($finalPath) && is_file($finalPath)) {
@@ -326,24 +329,19 @@ class CartasNotificacionGeneratorService
     }
 
     /**
-     * Plantillas del tipo con archivo en disco y tipo activo. Debe ser exactamente 1.
+     * Preformas del tipo disponibles para el tablero (con archivo en disco).
+     *
+     * @return Collection<int, TerminationLetterDocumentTemplate>
      */
-    public function resolveExactlyOneTemplate(): TerminationLetterDocumentTemplate
+    public function availableTemplates(): Collection
     {
-        $typeCode = (string) config('employee_ficha.word_document_type_codes.cartas_notificacion', 'cartas_notificacion');
-
-        $type = WordDocumentType::query()
-            ->forCode($typeCode)
-            ->active()
-            ->first();
+        $type = $this->resolveActiveType();
 
         if ($type === null) {
-            throw ValidationException::withMessages([
-                'template' => 'No hay plantilla activa de Cartas Notificación. Cargue una en Plantillas Word.',
-            ]);
+            return collect();
         }
 
-        $templates = TerminationLetterDocumentTemplate::query()
+        return TerminationLetterDocumentTemplate::query()
             ->where('word_document_type_id', $type->id)
             ->withFile()
             ->ordered()
@@ -352,20 +350,43 @@ class CartasNotificacionGeneratorService
                 return Storage::disk('local')->exists((string) $template->template_path);
             })
             ->values();
+    }
 
-        if ($templates->isEmpty()) {
+    /**
+     * Preforma elegida para el lote. Debe pertenecer al tipo activo y tener archivo.
+     */
+    public function resolveTemplate(int $templateId): TerminationLetterDocumentTemplate
+    {
+        $type = $this->resolveActiveType();
+
+        if ($type === null) {
             throw ValidationException::withMessages([
-                'template' => 'No hay plantilla activa de Cartas Notificación. Cargue una en Plantillas Word.',
+                'template_id' => 'No hay plantilla activa de Cartas Notificación. Cargue una en Plantillas Word.',
             ]);
         }
 
-        if ($templates->count() > 1) {
+        $template = TerminationLetterDocumentTemplate::query()
+            ->whereKey($templateId)
+            ->where('word_document_type_id', $type->id)
+            ->first();
+
+        if ($template === null || ! Storage::disk('local')->exists((string) $template->template_path)) {
             throw ValidationException::withMessages([
-                'template' => 'Hay más de una plantilla activa de Cartas Notificación. Deje solo una activa.',
+                'template_id' => 'La preforma seleccionada ya no está disponible. Recargue la página y elija otra.',
             ]);
         }
 
-        return $templates->first();
+        return $template;
+    }
+
+    private function resolveActiveType(): ?WordDocumentType
+    {
+        $typeCode = (string) config('employee_ficha.word_document_type_codes.cartas_notificacion', 'cartas_notificacion');
+
+        return WordDocumentType::query()
+            ->forCode($typeCode)
+            ->active()
+            ->first();
     }
 
     private function resolveProfile(string $cedula): ?EmployeeFichaProfile

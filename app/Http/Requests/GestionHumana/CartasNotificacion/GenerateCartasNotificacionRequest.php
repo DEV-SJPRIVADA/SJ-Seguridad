@@ -26,6 +26,9 @@ class GenerateCartasNotificacionRequest extends FormRequest
         $duraciones = config('cartas_notificacion.duracion_contrato_options', [6, 12]);
 
         return [
+            // La preforma se valida en el servicio (tipo activo + archivo en disco),
+            // para responder con un mensaje accionable y una sola fuente de verdad.
+            'template_id' => ['required', 'integer', 'min:1'],
             'rows' => ['required', 'array', 'min:1', 'max:'.$max],
             'rows.*.cedula' => ['required', 'string', 'max:50'],
             'rows.*.nombre_completo' => ['required', 'string', 'max:255'],
@@ -85,6 +88,7 @@ class GenerateCartasNotificacionRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'template_id' => 'preforma',
             'rows' => 'filas',
             'rows.*.cedula' => 'cédula',
             'rows.*.nombre_completo' => 'nombre completo',
@@ -92,6 +96,14 @@ class GenerateCartasNotificacionRequest extends FormRequest
             'rows.*.fecha_terminacion' => 'fecha de terminación',
             'rows.*.signatory_id' => 'firma',
         ];
+    }
+
+    /**
+     * Preforma (plantilla Word) elegida para todo el lote.
+     */
+    public function templateId(): int
+    {
+        return (int) $this->validated('template_id');
     }
 
     /**

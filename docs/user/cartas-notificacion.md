@@ -12,13 +12,15 @@ Permitir a Gestión Humana armar un lote de personas en una grilla y descargar *
 Aplica al tablero **Cartas Notificación** del área **Gestión Humana** (menú lateral). Quien tenga permiso de generación puede:
 
 - Pegar o escribir cédulas, completar nombre, fecha de terminación y firma por fila.
+- Elegir la **preforma del lote**: si en Plantillas Word hay varias del tipo **Cartas Notificación**, usted decide cuál usar para todo el lote.
 - Cargar un Excel de apoyo (solo llena la grilla; no crea registros permanentes).
 - Buscar o filtrar filas en pantalla; vaciar toda la grilla con **Limpiar**.
 - Generar y descargar el Word o el ZIP.
 
 **Límites importantes:**
 
-- Hace falta **exactamente una** plantilla activa del tipo **Cartas Notificación** en el tablero **Plantillas Word**. Si no hay ninguna o hay más de una, la generación se bloquea.
+- Debe existir **al menos una** plantilla del tipo **Cartas Notificación** con archivo en **Plantillas Word**. Si hay varias, el tablero le pedirá elegir la **preforma del lote**; si no hay ninguna, el botón **Generar** queda deshabilitado con un aviso.
+- La preforma elegida se aplica a **todas** las filas del lote (no se puede mezclar una preforma por persona en la misma generación).
 - Máximo **500** filas por lote.
 - No hay historial ni re-descarga posterior: si necesita el archivo otra vez, debe generar de nuevo.
 - No se envían cartas por correo desde esta pantalla.
@@ -32,6 +34,7 @@ Aplica al tablero **Cartas Notificación** del área **Gestión Humana** (menú 
 | Fecha de terminación | Fecha que usted escribe en la fila; aparece en la carta en formato largo en español y **mayúsculas** (por ejemplo «15 DE JUNIO DEL 2026»). |
 | Firma | Persona firmante elegida de la lista de firmas activas; define el nombre y el cargo que salen en la carta. |
 | Plantilla Word | Archivo modelo (`.docx`) con variables `${…}` que el sistema rellena al generar. Se administra en **Plantillas Word**. |
+| Preforma del lote | Plantilla Word que usted elige para generar todo el lote; puede haber varias del mismo tipo y usted decide cuál usar. |
 | Carta generada | Documento Word ya rellenado que usted descarga; no queda almacenado en el tablero. |
 | Aviso de ficha | Mensaje en la fila cuando la cédula no está en Ficha o la ficha no está activa; igual puede generar si completa nombre, fecha y firma. |
 
@@ -39,8 +42,8 @@ Aplica al tablero **Cartas Notificación** del área **Gestión Humana** (menú 
 
 | Rol / perfil | Responsabilidad en este módulo |
 | --- | --- |
-| Operador de Cartas Notificación | Armar el lote, corregir avisos, elegir firma y generar/descargar. |
-| Administrador de Plantillas Word | Subir y mantener **una sola** plantilla activa del tipo Cartas Notificación. |
+| Operador de Cartas Notificación | Armar el lote, corregir avisos, elegir la preforma y la firma, y generar/descargar. |
+| Administrador de Plantillas Word | Subir y mantener las plantillas del tipo Cartas Notificación (pueden ser varias, con nombre claro para elegir). |
 | Administrador de usuarios | Asignar el tablero **y** el permiso de generar a quien corresponda (ambos). |
 | Consulta / solo enlace de tablero | Puede ver el enlace en el menú, pero no puede usar la pantalla sin permiso de generar. |
 
@@ -55,7 +58,7 @@ Aplica al tablero **Cartas Notificación** del área **Gestión Humana** (menú 
 ### Preparar la plantilla (una sola vez o cuando cambie el modelo)
 
 1. En **Plantillas Word**, asegúrese de que exista el tipo **Cartas Notificación**.
-2. Suba **una** plantilla con ese tipo y archivo Word. Si hay cero o varias activas con archivo, la generación fallará con un mensaje claro.
+2. Suba una o varias plantillas con ese tipo y archivo Word. Póngales nombres que se distingan (por ejemplo «Notificación con preaviso» y «Notificación sin preaviso»): ese nombre es el que verá al elegir la preforma.
 3. Use variables como `${CEDULA}`, `${NOMBRE_COMPLETO}`, `${DURACION_CONTRATO}`, `${FECHA_TERMINACION}`, `${FIRMA}`, `${CARGO_FIRMA}` y `${FECHA}` (listado de apoyo en Plantillas Word, categoría **Cartas notificación**).
 
 ### Armar el lote a mano o pegando cédulas
@@ -78,16 +81,26 @@ Aplica al tablero **Cartas Notificación** del área **Gestión Humana** (menú 
 1. Use el filtro de texto para localizar filas en la grilla (solo afecta lo que ve en pantalla).
 2. Pulse **Limpiar** cuando quiera reiniciar la grilla a dos filas vacías (no solo el filtro).
 
+### Elegir la preforma del lote
+
+1. En la franja **Preforma del lote** (arriba de la grilla), seleccione la plantilla que desea usar.
+2. Si solo hay una plantilla disponible, viene preseleccionada y no necesita hacer nada.
+3. Si hay varias, el sistema no genera hasta que elija una; el nombre mostrado es el que definió en **Plantillas Word**.
+4. Si no aparece ninguna, pida que carguen una plantilla del tipo **Cartas Notificación** en Plantillas Word (el botón **Generar** estará deshabilitado con un aviso).
+5. **Limpiar** vacía las filas, pero **conserva** la preforma elegida.
+
 ### Generar y descargar
 
 1. Revise que cada fila tenga cédula, nombre, duración contrato (6 o 12), fecha de terminación y firma, y que no haya cédulas duplicadas.
-2. Pulse **Generar**. Una persona → descarga un Word; varias → un ZIP con un Word por persona.
-3. Guarde el archivo en su equipo; el sistema no lo conserva después de la descarga.
+2. Confirme la **preforma del lote**.
+3. Pulse **Generar**. Una persona → descarga un Word; varias → un ZIP con un Word por persona.
+4. Guarde el archivo en su equipo; el sistema no lo conserva después de la descarga.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.3 | 2026-10-29 | Agent | **Preforma del lote**: si hay varias plantillas del tipo Cartas Notificación, el usuario elige cuál usar para todo el lote (antes se bloqueaba con más de una). |
 | 1.2 | 2026-10-08 | Agent | Campo **Duración contrato** (6|12) en grilla, Excel masivo y variable `${DURACION_CONTRATO}`. |
 | 1.1 | 2026-10-08 | Agent | Grilla inicia con 2 filas vacías + agregar filas a mano (paridad Cartas Vacaciones). |
 | 1.0 | 2026-10-08 | Documentador | Versión inicial FEAT-044: tablero Cartas Notificación (grilla en memoria, Excel de apoyo, generación Word/ZIP). |

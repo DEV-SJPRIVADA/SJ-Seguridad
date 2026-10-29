@@ -75,7 +75,8 @@ class CartasNotificacionGenerateTest extends TestCase
             ->assertOk()
             ->assertSee('Agregar varias cédulas', false)
             ->assertSee('Generar cartas', false)
-            ->assertSee('Descargar plantilla Excel', false);
+            ->assertSee('Descargar plantilla Excel', false)
+            ->assertSee('Preforma del lote', false);
 
         $this->actingAs($editor)
             ->postJson(route('gestion-humana.cartas-notificacion.lookup'), [
@@ -96,12 +97,13 @@ class CartasNotificacionGenerateTest extends TestCase
     {
         $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
-        $this->seedExactlyOneTemplate();
+        $template = $this->seedExactlyOneTemplate();
 
         $base = $this->validRow($signatory->id);
 
         $this->actingAs($editor)
             ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $template->id,
                 'rows' => [[
                     ...$base,
                     'nombre_completo' => '',
@@ -118,6 +120,7 @@ class CartasNotificacionGenerateTest extends TestCase
 
         $this->actingAs($editor)
             ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $template->id,
                 'rows' => [
                     $base,
                     [...$base, 'nombre_completo' => 'Otra persona'],
@@ -127,14 +130,16 @@ class CartasNotificacionGenerateTest extends TestCase
             ->assertJsonValidationErrors(['rows.1.cedula']);
     }
 
-    public function test_generate_blocks_zero_or_multiple_templates(): void
+    public function test_generate_blocks_without_templates_and_accepts_several_available_ones(): void
     {
         $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
         $row = $this->validRow($signatory->id);
 
+        // 0 preformas cargadas: bloqueo con mensaje accionable (tipo inexistente).
         $this->actingAs($editor)
             ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => 1,
                 'rows' => [$row],
             ])
             ->assertStatus(422)
@@ -142,15 +147,82 @@ class CartasNotificacionGenerateTest extends TestCase
                 'No hay plantilla activa de Cartas Notificación. Cargue una en Plantillas Word.',
             ]);
 
-        $this->seedTemplates(2);
+        // 2 preformas: ya no bloquea; exige elegir cuál usar.
+        $templates = $this->seedTemplates(2);
 
         $this->actingAs($editor)
             ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
                 'rows' => [$row],
             ])
             ->assertStatus(422)
+            ->assertJsonValidationErrors(['template_id']);
+
+        $response = $this->actingAs($editor)
+            ->post(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $templates[1]->id,
+                'rows' => [$row],
+            ]);
+
+        $response->assertOk()->assertDownload();
+
+        $audit = AuditLog::query()
+            ->where('event_type', 'cartas_notificacion_generate')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($audit);
+        $metadata = $audit->metadata ?? [];
+        $this->assertSame($templates[1]->id, $metadata['template_id'] ?? null);
+        $this->assertSame('Plantilla CN 2', $metadata['template_label'] ?? null);
+    }
+
+    public function test_generate_rejects_template_from_another_type_or_without_file(): void
+    {
+        $editor = $this->editorUser();
+        $signatory = $this->seedSignatory();
+        $templates = $this->seedTemplates(2);
+        $row = $this->validRow($signatory->id);
+
+        $otherType = WordDocumentType::query()->firstOrCreate(
+            ['code' => 'desvinculacion'],
+            [
+                'name' => 'Desvinculación',
+                'is_active' => true,
+                'sort_order' => 9,
+            ],
+        );
+
+        $foreignPath = 'ficha-empleados/letter-templates/'.$otherType->id.'/tpl-foreign.docx';
+        Storage::disk('local')->put($foreignPath, $this->makeDocxBinary('${CEDULA}'));
+
+        $foreignTemplate = TerminationLetterDocumentTemplate::query()->create([
+            'word_document_type_id' => $otherType->id,
+            'label' => 'Plantilla Desvinculación',
+            'sort_order' => 1,
+            'template_path' => $foreignPath,
+        ]);
+
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $foreignTemplate->id,
+                'rows' => [$row],
+            ])
+            ->assertStatus(422)
             ->assertJsonFragment([
-                'Hay más de una plantilla activa de Cartas Notificación. Deje solo una activa.',
+                'La preforma seleccionada ya no está disponible. Recargue la página y elija otra.',
+            ]);
+
+        // Preforma válida pero con archivo ya eliminado del disco.
+        Storage::disk('local')->delete((string) $templates[0]->template_path);
+
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $templates[0]->id,
+                'rows' => [$row],
+            ])
+            ->assertStatus(422)
+            ->assertJsonFragment([
+                'La preforma seleccionada ya no está disponible. Recargue la página y elija otra.',
             ]);
     }
 
@@ -166,6 +238,7 @@ class CartasNotificacionGenerateTest extends TestCase
 
         $response = $this->actingAs($editor)
             ->post(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $template->id,
                 'rows' => [$row],
             ]);
 
@@ -189,6 +262,7 @@ class CartasNotificacionGenerateTest extends TestCase
         $this->assertSame(1, $metadata['row_count'] ?? null);
         $this->assertSame('docx', $metadata['output_type'] ?? null);
         $this->assertSame($template->id, $metadata['template_id'] ?? null);
+        $this->assertSame('Plantilla CN 1', $metadata['template_label'] ?? null);
         $this->assertArrayNotHasKey('cedulas', $metadata);
         $this->assertStringNotContainsString('1099000111', json_encode($metadata) ?: '');
     }
@@ -197,7 +271,7 @@ class CartasNotificacionGenerateTest extends TestCase
     {
         $editor = $this->editorUser();
         $signatory = $this->seedSignatory();
-        $this->seedExactlyOneTemplate('${CEDULA} ${NOMBRE_COMPLETO}');
+        $template = $this->seedExactlyOneTemplate('${CEDULA} ${NOMBRE_COMPLETO}');
 
         $rows = [
             $this->validRow($signatory->id, '2011111111', 'Persona Uno'),
@@ -206,6 +280,7 @@ class CartasNotificacionGenerateTest extends TestCase
 
         $response = $this->actingAs($editor)
             ->post(route('gestion-humana.cartas-notificacion.generate'), [
+                'template_id' => $template->id,
                 'rows' => $rows,
             ]);
 

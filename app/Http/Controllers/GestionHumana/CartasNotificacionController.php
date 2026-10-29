@@ -8,6 +8,7 @@ use App\Http\Requests\GestionHumana\CartasNotificacion\GenerateCartasNotificacio
 use App\Http\Requests\GestionHumana\CartasNotificacion\ImportPreviewCartasNotificacionRequest;
 use App\Http\Requests\GestionHumana\CartasNotificacion\LookupCartasNotificacionRequest;
 use App\Models\PayrollCatalogItem;
+use App\Models\TerminationLetterDocumentTemplate;
 use App\Services\Access\CartasNotificacionAccessService;
 use App\Services\GestionHumana\CartasNotificacionAuditLogService;
 use App\Services\GestionHumana\CartasNotificacionGeneratorService;
@@ -44,6 +45,7 @@ class CartasNotificacionController extends Controller
             'maxRows' => (int) config('cartas_notificacion.max_rows', 500),
             'signatoryOptions' => $this->signatoryOptions(),
             'duracionContratoOptions' => $this->duracionContratoOptions(),
+            'templateOptions' => $this->templateOptions(),
             'lookupUrl' => route('gestion-humana.cartas-notificacion.lookup'),
             'generateUrl' => route('gestion-humana.cartas-notificacion.generate'),
             'importTemplateUrl' => route('gestion-humana.cartas-notificacion.import-template'),
@@ -63,7 +65,7 @@ class CartasNotificacionController extends Controller
 
     public function generate(GenerateCartasNotificacionRequest $request): BinaryFileResponse
     {
-        $result = $this->generator->generate($request->rows());
+        $result = $this->generator->generate($request->rows(), $request->templateId());
 
         $this->auditLogService->logEvent(
             eventType: 'cartas_notificacion_generate',
@@ -72,6 +74,7 @@ class CartasNotificacionController extends Controller
                 'row_count' => $result['row_count'],
                 'output_type' => $result['output_type'],
                 'template_id' => $result['template_id'],
+                'template_label' => $result['template_label'],
             ],
             userId: (int) auth()->id(),
         );
@@ -97,6 +100,20 @@ class CartasNotificacionController extends Controller
             'rows' => $preview['rows'],
             'summary' => $preview['summary'],
         ]);
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function templateOptions(): array
+    {
+        return $this->generator->availableTemplates()
+            ->map(static fn (TerminationLetterDocumentTemplate $template): array => [
+                'value' => (string) $template->id,
+                'label' => (string) $template->label,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

@@ -21,7 +21,7 @@ Este informe cuantifica el tamaño del sistema por área funcional y su estado d
 - La asignación por área es heurística por ruta y nombre de archivo; los archivos transversales (layouts, componentes, middleware, consola, providers, traits, support) se agrupan en **Núcleo / compartido**.
 - No se incluyen en «código funcional» el CSS, migraciones, seeders, configuración ni documentación; se reportan aparte.
 
-> **Nota:** la suite completa de PHPUnit no se ejecutó dentro de la ventana de este informe (supera los 10 minutos en local). Las cifras de pruebas son de conteo estático; el resultado de ejecución debe registrarse en la validación de cierre.
+> **Nota sobre ejecución de pruebas:** el intento de `php artisan test` con el límite por defecto se abortó a los 300 s por `max_execution_time` de PHP. Repetirlo con `php -d max_execution_time=0 artisan test` tampoco funcionó porque `artisan test` lanza PHPUnit en un subproceso que no hereda esa directiva. Las cifras de pruebas de este informe son de conteo estático; el baseline de ejecución debe registrarse en la validación de cierre (ver §5).
 
 ---
 
@@ -119,6 +119,14 @@ Gestión Humana concentra la mayor inversión. Desglose por tablero (incluye con
 | Métodos de prueba | 1.509 |
 | Relación prueba / código funcional | 25,0% |
 | Cobertura de pruebas por área (líneas) | GH 59,1% · Compras 14,8% · Requisiciones 7,1% · Núcleo 5,1% · Comercial 3,8% · Operaciones 3,5% · Suministros 2,0% · Admin 1,5% · Calidad 1,4% · TIC 1,3% · Autenticación 0,3% |
+
+**Estado de ejecución:** sin baseline completo al cierre de este informe. Los intentos con `php artisan test --compact` se abortan a los 300 s por `max_execution_time` de PHP; el flag `-d max_execution_time=0` no se propaga porque `artisan test` ejecuta PHPUnit en un subproceso. Para obtener el baseline debe invocarse PHPUnit directamente:
+
+```bash
+php -d max_execution_time=0 vendor/bin/phpunit
+```
+
+y registrar el resumen (`Tests: X passed, Y failed`) en el run log de cierre. Un límite de 300 s resultó insuficiente para esta suite en el entorno local.
 
 **Pruebas más extensas:**
 

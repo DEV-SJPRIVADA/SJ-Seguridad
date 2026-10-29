@@ -12,6 +12,7 @@
                     'csrf' => csrf_token(),
                     'signatoryOptions' => $signatoryOptions,
                     'duracionContratoOptions' => $duracionContratoOptions,
+                    'templateOptions' => $templateOptions,
                     'maxRows' => (int) $maxRows,
                 ]))"
             >
@@ -22,7 +23,7 @@
                             <h2 class="cartas-vacaciones__toolbar-title">Cartas Notificación</h2>
                             <p class="cartas-vacaciones__toolbar-hint">
                                 Escriba filas a mano (+) · pegar cédulas · Excel · 1 → .docx · N → .zip · máx. {{ (int) $maxRows }}
-                                · una plantilla activa en Plantillas Word
+                                · elija la preforma del lote
                             </p>
                         </div>
                         {{-- Bloque derecho: filtro/Excel/pegar, y al extremo limpiar + agregar fila --}}
@@ -96,6 +97,44 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    {{-- Preforma del lote: se aplica a todas las filas. Con una sola opción se preselecciona. --}}
+                    <div class="cartas-notificacion__batch-bar">
+                        <div class="cartas-notificacion__batch-field">
+                            <label class="cartas-notificacion__batch-label" for="cartas-notificacion-template-id">Preforma del lote</label>
+                            <div
+                                class="cartas-notificacion__batch-select"
+                                x-data="searchableSelect({
+                                    options: templateOptions,
+                                    value: templateId,
+                                    placeholder: 'Seleccione preforma…',
+                                    searchPlaceholder: 'Buscar preforma…',
+                                    required: true,
+                                    allowClear: false,
+                                    disabled: templateOptions.length === 0,
+                                })"
+                                x-effect="templateId = value"
+                            >
+                                @include('areas.gestion_humana.desvinculaciones.partials.alpine-searchable-select', [
+                                    'selectId' => 'cartas-notificacion-template-id',
+                                ])
+                            </div>
+                        </div>
+                        <p
+                            class="cartas-notificacion__batch-hint"
+                            x-show="templateOptions.length === 0"
+                            x-cloak
+                        >
+                            Cargue una plantilla tipo <strong>Cartas Notificación</strong> en Plantillas Word para poder generar.
+                        </p>
+                        <p
+                            class="cartas-notificacion__batch-hint cartas-notificacion__batch-hint--warn"
+                            x-show="templateOptions.length > 1"
+                            x-cloak
+                        >
+                            Hay varias preformas disponibles: elija la que usará todo el lote.
+                        </p>
                     </div>
 
                     <div class="data-table-wrap desvinculaciones-masivos__table-wrap">
@@ -206,7 +245,7 @@
                                 type="button"
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
                                 x-on:click="generateBatch()"
-                                x-bind:disabled="processing || bulkApplying || importing || ! hasProcessableRows()"
+                                x-bind:disabled="processing || bulkApplying || importing || templateOptions.length === 0 || ! hasProcessableRows()"
                                 x-bind:title="processing ? 'Generando…' : 'Generar cartas'"
                                 x-bind:aria-label="processing ? 'Generando…' : 'Generar cartas'"
                             >
@@ -385,6 +424,11 @@
                         { value: '6', label: '6' },
                         { value: '12', label: '12' },
                     ],
+                    templateOptions: config.templateOptions || [],
+                    // Preforma del lote: con una sola opción queda preseleccionada.
+                    templateId: (config.templateOptions || []).length === 1
+                        ? String(config.templateOptions[0].value)
+                        : '',
                     maxRows,
                     // Dos filas vacías al cargar (igual Cartas Vacaciones) para captura manual inmediata.
                     rows: Array.from({ length: 2 }, () => emptyRow()),
@@ -773,6 +817,11 @@
                             return;
                         }
 
+                        if (! this.templateId) {
+                            this.errorMessage = 'Seleccione la preforma del lote.';
+                            return;
+                        }
+
                         this.processing = true;
                         try {
                             const response = await fetch(this.generateUrl, {
@@ -783,7 +832,7 @@
                                     'X-CSRF-TOKEN': this.csrf,
                                     'X-Requested-With': 'XMLHttpRequest',
                                 },
-                                body: JSON.stringify({ rows }),
+                                body: JSON.stringify({ template_id: Number(this.templateId), rows }),
                             });
 
                             const contentType = response.headers.get('Content-Type') || '';
