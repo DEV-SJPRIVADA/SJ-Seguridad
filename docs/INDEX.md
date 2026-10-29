@@ -58,6 +58,17 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
 | Branding | [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md) | — |
 
+## Informes
+
+Serie mensual en [`docs/informes/`](c:/laragon/www/SJSEGURIDAD/docs/informes/).
+
+| Periodo | Informe tecnico | Informe gerencial |
+| --- | --- | --- |
+| Octubre 2026 | [`informe-tecnico-2026-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-tecnico-2026-10.md) · [`DOCX`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-tecnico-statflow-2026-10.docx) | [`informe-gerencial-2026-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-2026-10.md) · [`DOCX`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-statflow-2026-10.docx) |
+| Septiembre 2026 | — | [`informe-gerencial-statflow-2026-09.docx`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-statflow-2026-09.docx) |
+
+El informe tecnico incluye el conteo de lineas de codigo por area y estado, el detalle de Gestion Humana, la deuda tecnica y las recomendaciones priorizadas. El gerencial resume cifras clave, avance por area, valor de negocio y decisiones requeridas.
+
 ## Modulos documentados
 
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)

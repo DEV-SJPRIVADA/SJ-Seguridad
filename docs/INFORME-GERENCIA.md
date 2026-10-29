@@ -1,5 +1,7 @@
 # Informe de Avance — Plataforma Web SJ Seguridad
 
+> **Documento histórico (agosto 2026).** La serie mensual vigente está en [`docs/informes/`](informes/) y el último corte es el [informe gerencial de octubre 2026](informes/informe-gerencial-2026-10.md).
+
 **Fecha:** Agosto 2026
 **Preparado para:** Gerencia
 **Versión del documento:** 2.0
