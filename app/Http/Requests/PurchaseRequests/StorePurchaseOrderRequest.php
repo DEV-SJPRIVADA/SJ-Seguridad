@@ -40,6 +40,7 @@ class StorePurchaseOrderRequest extends FormRequest
                 Rule::exists('purchase_providers', 'id')->where('estado', 'activo'),
             ],
             'fecha' => ['required', 'date'],
+            'contacto' => ['nullable', 'string', 'max:255'],
             'ciudad' => ['nullable', 'string', 'max:120'],
             'observaciones' => ['required', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', $this->atLeastOneLineWithQuantity()],

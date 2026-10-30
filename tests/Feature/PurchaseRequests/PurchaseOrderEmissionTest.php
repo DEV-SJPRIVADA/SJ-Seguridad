@@ -13,6 +13,7 @@ use App\Models\SupplyRequest;
 use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\PurchaseRequests\PurchaseOrderExcelExporter;
+use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -39,7 +40,10 @@ class PurchaseOrderEmissionTest extends TestCase
     public function test_compras_can_open_the_order_form_from_a_purchase_request(): void
     {
         $request = $this->approvedPurchaseRequest();
-        $provider = PurchaseProvider::factory()->create(['nombre' => 'PROVEEDOR UNO']);
+        $provider = PurchaseProvider::factory()->create([
+            'nombre' => 'PROVEEDOR UNO',
+            'contacto' => 'CONTACTO PRECARGADO',
+        ]);
 
         $response = $this->actingAs($this->compras)->get(route('purchase-requests.orders.purchase.create', [
             'module' => 'compras',
@@ -50,6 +54,9 @@ class PurchaseOrderEmissionTest extends TestCase
         $response->assertSee('Emitir orden de compra');
         $response->assertSee('PROVEEDOR UNO');
         $response->assertSee('Observaciones *');
+        $response->assertSee('name="contacto"', false);
+        // El contacto del proveedor viaja al JS para precargarlo al seleccionarlo.
+        $response->assertSee('CONTACTO PRECARGADO');
     }
 
     public function test_closed_purchase_request_shows_a_message_instead_of_403(): void
@@ -102,6 +109,58 @@ class PurchaseOrderEmissionTest extends TestCase
             ->assertSessionHasErrors(['observaciones' => 'Las observaciones son obligatorias.']);
 
         $this->assertSame(0, PurchaseOrder::query()->count());
+    }
+
+    public function test_order_contact_updates_the_provider_and_is_frozen_in_the_order(): void
+    {
+        $request = $this->approvedPurchaseRequest();
+        $provider = PurchaseProvider::factory()->create([
+            'nombre' => 'PROVEEDOR CONTACTO',
+            'contacto' => 'CONTACTO ANTERIOR',
+        ]);
+
+        $payload = $this->payload($provider, 1);
+        $payload['contacto'] = 'MARIA GOMEZ';
+
+        $this->actingAs($this->compras)
+            ->post(route('purchase-requests.orders.purchase.store', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+            ]), $payload)
+            ->assertRedirect();
+
+        $order = PurchaseOrder::query()->latest('id')->firstOrFail();
+
+        // La OC guarda el contacto capturado y el catálogo del proveedor se actualiza.
+        $this->assertSame('MARIA GOMEZ', $order->provider_contacto);
+        $this->assertSame('MARIA GOMEZ', $provider->fresh()->contacto);
+
+        $html = app(PurchaseOrderPdfExporter::class)->html($order);
+        $this->assertStringContainsString('MARIA GOMEZ', $html);
+    }
+
+    public function test_order_contact_left_empty_keeps_the_provider_contact(): void
+    {
+        $request = $this->approvedPurchaseRequest();
+        $provider = PurchaseProvider::factory()->create([
+            'nombre' => 'PROVEEDOR CONTACTO GUARDADO',
+            'contacto' => 'CONTACTO GUARDADO',
+        ]);
+
+        $payload = $this->payload($provider, 1);
+        unset($payload['contacto']);
+
+        $this->actingAs($this->compras)
+            ->post(route('purchase-requests.orders.purchase.store', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+            ]), $payload)
+            ->assertRedirect();
+
+        $order = PurchaseOrder::query()->latest('id')->firstOrFail();
+
+        $this->assertSame('CONTACTO GUARDADO', $order->provider_contacto);
+        $this->assertSame('CONTACTO GUARDADO', $provider->fresh()->contacto);
     }
 
     public function test_compras_can_emit_an_order_and_the_provider_snapshot_is_frozen(): void

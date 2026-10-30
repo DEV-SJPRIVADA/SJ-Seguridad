@@ -8,6 +8,7 @@ use App\Models\PurchaseProvider;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use App\Models\User;
+use App\Support\UppercaseFormText;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -32,7 +33,7 @@ class PurchaseOrderService
     public const SOURCE_ITEM_SUPPLY = 'supply_request_item';
 
     /**
-     * @param  array{provider_id: int|string, fecha?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
+     * @param  array{provider_id: int|string, fecha?: string|null, contacto?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
      */
     public function createFromPurchase(PurchaseRequest $purchaseRequest, array $data, User $user): PurchaseOrder
     {
@@ -40,7 +41,7 @@ class PurchaseOrderService
     }
 
     /**
-     * @param  array{provider_id: int|string, fecha?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
+     * @param  array{provider_id: int|string, fecha?: string|null, contacto?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
      */
     public function createFromSupply(SupplyRequest $supplyRequest, array $data, User $user): PurchaseOrder
     {
@@ -106,7 +107,7 @@ class PurchaseOrderService
     }
 
     /**
-     * @param  array{provider_id: int|string, fecha?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
+     * @param  array{provider_id: int|string, fecha?: string|null, contacto?: string|null, ciudad?: string|null, observaciones?: string|null, items: array<int, array<string, mixed>>}  $data
      * @param  array{asume_cliente: string|null, proyecto_nuevo: string|null, reinversion: string|null, comodato: string|null, activo: string|null}  $extra
      */
     private function create(string $sourceType, PurchaseRequest|SupplyRequest $source, array $data, User $user, array $extra): PurchaseOrder
@@ -131,6 +132,7 @@ class PurchaseOrderService
         return DB::transaction(function () use ($sourceType, $source, $data, $user, $extra, $provider, $postedItems): PurchaseOrder {
             $sourceLines = $this->sourceLines($sourceType, $source);
             $ordered = $this->orderedQuantities($sourceType, (int) $source->getKey());
+            $contacto = $this->resolveProviderContacto($provider, $data);
 
             $order = PurchaseOrder::query()->create([
                 'source_type' => $sourceType,
@@ -140,7 +142,7 @@ class PurchaseOrderService
                 'provider_nombre' => $provider->nombre,
                 'provider_telefono' => $provider->telefono,
                 'provider_correo' => $provider->correo,
-                'provider_contacto' => $provider->contacto,
+                'provider_contacto' => $contacto,
                 'provider_direccion' => $provider->direccion,
                 'provider_ciudad' => $provider->ciudad,
                 'provider_forma_pago' => $provider->forma_pago,
@@ -157,6 +159,12 @@ class PurchaseOrderService
                 'total' => 0,
                 'created_by' => $user->getKey(),
             ]);
+
+            // El contacto capturado al emitir se guarda también en el
+            // catálogo del proveedor; la OC conserva su propio snapshot.
+            if ($contacto !== null && $contacto !== $provider->contacto) {
+                $provider->forceFill(['contacto' => $contacto])->save();
+            }
 
             $total = 0.0;
             $orden = 1;
@@ -226,6 +234,27 @@ class PurchaseOrderService
 
             return $order->fresh(['provider', 'items', 'source']);
         });
+    }
+
+    /**
+     * Contacto capturado en la emisión. Vacío usa el contacto guardado del
+     * proveedor; se normaliza a MAYÚSCULAS como el resto de datos del catálogo.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function resolveProviderContacto(PurchaseProvider $provider, array $data): ?string
+    {
+        $contacto = trim((string) ($data['contacto'] ?? ''));
+
+        if ($contacto === '') {
+            $contacto = trim((string) ($provider->contacto ?? ''));
+        }
+
+        if ($contacto === '') {
+            return null;
+        }
+
+        return UppercaseFormText::uppercaseString($contacto);
     }
 
     /**

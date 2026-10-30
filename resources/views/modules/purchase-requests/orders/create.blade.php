@@ -107,6 +107,20 @@
                         </div>
 
                         <div class="form-field">
+                            <label class="form-label" for="order_contacto">Contacto</label>
+                            <input
+                                id="order_contacto"
+                                type="text"
+                                name="contacto"
+                                class="form-input"
+                                maxlength="255"
+                                value="{{ old('contacto') }}"
+                                placeholder="Nombre de la persona de contacto"
+                            >
+                            <x-input-error :messages="$errors->get('contacto')" />
+                        </div>
+
+                        <div class="form-field">
                             <label class="form-label" for="order_fecha">Fecha *</label>
                             <input
                                 id="order_fecha"
@@ -303,8 +317,11 @@
     @php
         $providerDirectory = \App\Models\PurchaseProvider::query()
             ->where('estado', \App\Models\PurchaseProvider::ESTADO_ACTIVO)
-            ->get(['id', 'ciudad'])
-            ->mapWithKeys(fn ($provider) => [(string) $provider->id => ['ciudad' => (string) ($provider->ciudad ?? '')]])
+            ->get(['id', 'ciudad', 'contacto'])
+            ->mapWithKeys(fn ($provider) => [(string) $provider->id => [
+                'ciudad' => (string) ($provider->ciudad ?? ''),
+                'contacto' => (string) ($provider->contacto ?? ''),
+            ]])
             ->all();
     @endphp
 
@@ -313,6 +330,7 @@
             const providerDirectory = @json($providerDirectory);
             const providerInput = document.querySelector('input[name="provider_id"]');
             const cityInput = document.getElementById('order_ciudad');
+            const contactInput = document.getElementById('order_contacto');
 
             const syncProviderCity = function () {
                 if (!providerInput || !cityInput) {
@@ -325,9 +343,31 @@
                 }
             };
 
+            // Contacto editable: al cambiar de proveedor se trae el contacto guardado.
+            const syncProviderContact = function (overwrite) {
+                if (!providerInput || !contactInput) {
+                    return;
+                }
+
+                const provider = providerDirectory[String(providerInput.value)] || null;
+                if (!provider) {
+                    return;
+                }
+
+                if (overwrite || contactInput.value.trim() === '') {
+                    contactInput.value = provider.contacto || '';
+                }
+            };
+
             if (providerInput) {
-                providerInput.addEventListener('change', syncProviderCity);
+                providerInput.addEventListener('change', function () {
+                    syncProviderCity();
+                    syncProviderContact(true);
+                });
             }
+
+            // Si la página se recarga con un proveedor ya elegido, completa el contacto.
+            syncProviderContact(false);
 
             const format = function (value) {
                 return (Math.round((value + Number.EPSILON) * 100) / 100).toFixed(2);
