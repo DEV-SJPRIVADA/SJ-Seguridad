@@ -931,6 +931,10 @@
                     showToast("Por favor verifica los errores en el formulario.", "error");
                 @endif
 
+                @if (session('error') && ! session()->has('import_done'))
+                    showToast(@js(session('error')), "error");
+                @endif
+
                 var moduleSelect = document.getElementById('app-module-select');
                 if (moduleSelect) {
                     moduleSelect.addEventListener('change', function() {

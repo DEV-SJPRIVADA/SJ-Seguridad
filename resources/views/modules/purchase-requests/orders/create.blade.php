@@ -134,7 +134,7 @@
                         </div>
 
                         <div class="form-field cursos-registros-page__form-span">
-                            <label class="form-label" for="order_observaciones">Observaciones</label>
+                            <label class="form-label" for="order_observaciones">Observaciones *</label>
                             <textarea
                                 id="order_observaciones"
                                 name="observaciones"
@@ -142,6 +142,7 @@
                                 rows="3"
                                 maxlength="2000"
                                 placeholder="Condiciones, tiempo de entrega u observaciones de la OC…"
+                                required
                             >{{ old('observaciones') }}</textarea>
                             <x-input-error :messages="$errors->get('observaciones')" />
                         </div>

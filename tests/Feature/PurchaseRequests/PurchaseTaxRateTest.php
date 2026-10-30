@@ -64,6 +64,7 @@ class PurchaseTaxRateTest extends TestCase
         ]), [
             'provider_id' => $provider->id,
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Cálculo de IVA por tasa.',
             'items' => [[
                 'cantidad' => 2,
                 'descripcion' => 'CAMARA',
@@ -100,6 +101,7 @@ class PurchaseTaxRateTest extends TestCase
             ]), [
                 'provider_id' => $provider->id,
                 'fecha' => now()->toDateString(),
+                'observaciones' => 'Tasa inactiva rechazada.',
                 'items' => [[
                     'cantidad' => 1,
                     'descripcion' => 'CAMARA',

@@ -223,6 +223,7 @@ class PurchaseOrderFoAd07Test extends TestCase
             'provider_id' => $provider->id,
             'fecha' => now()->toDateString(),
             'ciudad' => 'CALI',
+            'observaciones' => 'Orden interna.',
             'items' => [[
                 'cantidad' => 1,
                 'articulo' => 'REF-INT',
@@ -261,6 +262,7 @@ class PurchaseOrderFoAd07Test extends TestCase
             'provider_id' => $provider->id,
             'fecha' => now()->toDateString(),
             'ciudad' => 'PALMIRA',
+            'observaciones' => 'Suministro de papelería.',
             'items' => [[
                 'cantidad' => 4,
                 'articulo' => 'REF-SUM',

@@ -49,6 +49,59 @@ class PurchaseOrderEmissionTest extends TestCase
         $response->assertOk();
         $response->assertSee('Emitir orden de compra');
         $response->assertSee('PROVEEDOR UNO');
+        $response->assertSee('Observaciones *');
+    }
+
+    public function test_closed_purchase_request_shows_a_message_instead_of_403(): void
+    {
+        $request = $this->approvedPurchaseRequest();
+        $request->update(['estado_compras' => PurchaseRequest::COMPRAS_COMPLETADO]);
+
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.orders.purchase.create', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+            ]))
+            ->assertRedirect(route('purchase-requests.processing.purchase', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+            ]))
+            ->assertSessionHas('error', 'No se puede emitir la orden de compra: la solicitud ya está cerrada.');
+    }
+
+    public function test_closed_supply_request_shows_a_message_instead_of_403(): void
+    {
+        $supplyRequest = $this->approvedSupplyRequest();
+        $supplyRequest->update(['status' => 'completada']);
+
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.orders.supply.create', [
+                'module' => 'compras',
+                'supply_request' => $supplyRequest->getKey(),
+            ]))
+            ->assertRedirect(route('purchase-requests.processing.supply', [
+                'module' => 'compras',
+                'supply_request' => $supplyRequest->getKey(),
+            ]))
+            ->assertSessionHas('error', 'No se puede emitir la orden de compra: el suministro ya está cerrado.');
+    }
+
+    public function test_observaciones_are_required_to_emit_an_order(): void
+    {
+        $request = $this->approvedPurchaseRequest();
+        $provider = PurchaseProvider::factory()->create(['nombre' => 'PROVEEDOR SIN OBSERVACIONES']);
+
+        $payload = $this->payload($provider, 1);
+        unset($payload['observaciones']);
+
+        $this->actingAs($this->compras)
+            ->post(route('purchase-requests.orders.purchase.store', [
+                'module' => 'compras',
+                'purchase_request' => $request->getKey(),
+            ]), $payload)
+            ->assertSessionHasErrors(['observaciones' => 'Las observaciones son obligatorias.']);
+
+        $this->assertSame(0, PurchaseOrder::query()->count());
     }
 
     public function test_compras_can_emit_an_order_and_the_provider_snapshot_is_frozen(): void
@@ -120,6 +173,7 @@ class PurchaseOrderEmissionTest extends TestCase
         ]), [
             'provider_id' => $provider->getKey(),
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Reposición de papelería.',
             'items' => [
                 [
                     'cantidad' => 4,
@@ -156,6 +210,7 @@ class PurchaseOrderEmissionTest extends TestCase
         ]), [
             'provider_id' => $provider->getKey(),
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Prueba de emisión.',
             'items' => [
                 ['cantidad' => 1, 'descripcion' => 'X', 'valor_unidad' => 10, 'iva' => 0],
             ],
@@ -184,6 +239,7 @@ class PurchaseOrderEmissionTest extends TestCase
             ]), [
                 'provider_id' => $provider->getKey(),
                 'fecha' => now()->toDateString(),
+                'observaciones' => 'Proveedor inactivo.',
                 'items' => [
                     ['cantidad' => 1, 'descripcion' => 'X', 'valor_unidad' => 10, 'iva' => 0],
                 ],
@@ -207,6 +263,7 @@ class PurchaseOrderEmissionTest extends TestCase
         ]), [
             'provider_id' => $provider->getKey(),
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Descarga de la orden.',
             'items' => [
                 ['cantidad' => 2, 'articulo' => 'REF-001', 'descripcion' => 'CAMARA', 'valor_unidad' => 100, 'iva' => 0],
             ],
@@ -257,6 +314,7 @@ class PurchaseOrderEmissionTest extends TestCase
         ]), [
             'provider_id' => $provider->getKey(),
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Exportación a Excel.',
             'items' => [
                 ['cantidad' => 2, 'articulo' => 'REF-001', 'descripcion' => 'CAMARA', 'valor_unidad' => 100, 'iva' => 10],
             ],
@@ -401,6 +459,7 @@ class PurchaseOrderEmissionTest extends TestCase
         ]), [
             'provider_id' => $provider->getKey(),
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Filtro por tipo de orden.',
             'items' => [
                 ['cantidad' => 4, 'articulo' => 'REF-SUM', 'descripcion' => 'PAPELERIA', 'valor_unidad' => 25, 'iva' => 0],
             ],
@@ -459,6 +518,7 @@ class PurchaseOrderEmissionTest extends TestCase
         return [
             'provider_id' => $provider->getKey(),
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Entrega según lo acordado.',
             'items' => [
                 [
                     'cantidad' => $cantidad,

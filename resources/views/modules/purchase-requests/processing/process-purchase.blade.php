@@ -11,6 +11,10 @@
                 <div class="alert alert--success" role="status">{{ session('status') }}</div>
             @endif
 
+            @if (session('error'))
+                <div class="alert alert--danger" role="alert">{{ session('error') }}</div>
+            @endif
+
             <div class="page-header-inner purchase-requests-page__intro">
                 <div class="pur-req-detail__toolbar">
                     <a

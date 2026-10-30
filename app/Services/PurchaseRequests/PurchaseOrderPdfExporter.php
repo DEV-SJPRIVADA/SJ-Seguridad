@@ -61,20 +61,21 @@ class PurchaseOrderPdfExporter
 
     /**
      * Con muchas líneas se achica la tabla antes de saltar de página.
+     * El espacio de firma queda fijo en 60px (solicitud del área).
      *
      * @return array{font: string, pad: string, sign: string, obs: string}
      */
     private function density(int $lines): array
     {
         if ($lines >= 12) {
-            return ['font' => '6px', 'pad' => '1px 2px', 'sign' => '16px', 'obs' => '12px'];
+            return ['font' => '6px', 'pad' => '1px 2px', 'sign' => '60px', 'obs' => '12px'];
         }
 
         if ($lines >= 8) {
-            return ['font' => '6.5px', 'pad' => '1px 2px', 'sign' => '20px', 'obs' => '14px'];
+            return ['font' => '6.5px', 'pad' => '1px 2px', 'sign' => '60px', 'obs' => '14px'];
         }
 
-        return ['font' => '7.5px', 'pad' => '2px 3px', 'sign' => '26px', 'obs' => '16px'];
+        return ['font' => '7.5px', 'pad' => '2px 3px', 'sign' => '60px', 'obs' => '16px'];
     }
 
     private function logoDataUri(): ?string

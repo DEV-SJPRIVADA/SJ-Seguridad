@@ -41,7 +41,7 @@ class StorePurchaseOrderRequest extends FormRequest
             ],
             'fecha' => ['required', 'date'],
             'ciudad' => ['nullable', 'string', 'max:120'],
-            'observaciones' => ['nullable', 'string', 'max:2000'],
+            'observaciones' => ['required', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1', $this->atLeastOneLineWithQuantity()],
             'items.*.cantidad' => [
                 'required',
@@ -67,6 +67,7 @@ class StorePurchaseOrderRequest extends FormRequest
         return [
             'provider_id.exists' => 'Seleccione un proveedor activo.',
             'items.required' => 'La orden de compra debe tener al menos una línea.',
+            'observaciones.required' => 'Las observaciones son obligatorias.',
             'items.*.cantidad.required' => 'Cada línea debe tener cantidad.',
             'items.*.descripcion.required' => 'Cada línea debe tener descripción.',
             'items.*.valor_unidad.required' => 'Cada línea debe tener valor unitario.',

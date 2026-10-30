@@ -36,9 +36,13 @@ class PurchaseOrderController extends Controller
         string $module,
         PurchaseRequest $purchaseRequest,
         PurchaseOrderService $service,
-    ): View {
+    ): View|RedirectResponse {
         Gate::authorize('process', $purchaseRequest);
-        abort_unless($purchaseRequest->puedeEmitirOrden(), 403);
+
+        // Cerrada (o fuera de proceso): se explica en la bandeja, no un 403.
+        if (! $purchaseRequest->puedeEmitirOrden()) {
+            return $this->closedSourceRedirect($module, $purchaseRequest);
+        }
 
         $purchaseRequest->load(['items', 'user']);
 
@@ -64,8 +68,10 @@ class PurchaseOrderController extends Controller
         string $module,
         SupplyRequest $supplyRequest,
         PurchaseOrderService $service,
-    ): View {
-        $this->assertSupplyIsProcessable($supplyRequest);
+    ): View|RedirectResponse {
+        if (! $supplyRequest->puedeEmitirOrden()) {
+            return $this->closedSourceRedirect($module, $supplyRequest);
+        }
 
         $supplyRequest->load(['items.product', 'site']);
 
@@ -121,8 +127,6 @@ class PurchaseOrderController extends Controller
         PurchaseRequestAuditLogService $audit,
         PurchaseFlowStateService $flowState,
     ): RedirectResponse {
-        $this->assertSupplyIsProcessable($supplyRequest);
-
         try {
             $order = $service->createFromSupply($supplyRequest, $request->validated(), $request->user());
             $flowState->sync($supplyRequest->fresh(), $request->user());
@@ -351,12 +355,33 @@ class PurchaseOrderController extends Controller
         return (string) (($default ?? $options->first())['value'] ?? '');
     }
 
-    private function assertSupplyIsProcessable(SupplyRequest $supplyRequest): void
+    /**
+     * El origen ya no admite órdenes (cerrado, rechazado o sin aprobar).
+     * Redirige a la bandeja con un mensaje legible en lugar de abortar con 403.
+     */
+    private function closedSourceRedirect(string $module, PurchaseRequest|SupplyRequest $source): RedirectResponse
     {
-        abort_unless(
-            $supplyRequest->puedeEmitirOrden(),
-            403,
-        );
+        if ($source instanceof PurchaseRequest) {
+            $message = $source->estado === PurchaseRequest::ESTADO_APROBADO
+                ? 'No se puede emitir la orden de compra: la solicitud ya está cerrada.'
+                : 'No se puede emitir la orden de compra: la solicitud todavía no está aprobada.';
+
+            $target = route('purchase-requests.processing.purchase', [
+                'module' => $module,
+                'purchase_request' => $source->getKey(),
+            ]);
+        } else {
+            $message = $source->status === 'completada'
+                ? 'No se puede emitir la orden de compra: el suministro ya está cerrado.'
+                : 'No se puede emitir la orden de compra: el suministro todavía no está aprobado.';
+
+            $target = route('purchase-requests.processing.supply', [
+                'module' => $module,
+                'supply_request' => $source->getKey(),
+            ]);
+        }
+
+        return redirect()->to($target)->with('error', $message);
     }
 
     /**

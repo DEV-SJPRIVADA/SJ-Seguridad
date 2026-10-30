@@ -430,6 +430,7 @@ class PurchaseOrderEvaluationTest extends TestCase
         return [
             'provider_id' => $providerId,
             'fecha' => now()->toDateString(),
+            'observaciones' => 'Entrega según lo acordado.',
             'items' => [[
                 'cantidad' => $cantidad,
                 'articulo' => 'REF-OC',
