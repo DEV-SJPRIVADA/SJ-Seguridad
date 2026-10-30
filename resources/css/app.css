@@ -17295,6 +17295,17 @@ a.req-dashboard-kpi:focus-visible {
     min-width: 14rem;
 }
 
+.purchase-providers-page .data-table td.purchase-providers-page__col-address {
+    max-width: 22rem;
+}
+
+.purchase-providers-page__address {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .purchase-providers-page .data-table .purchase-providers-page__col-center {
     text-align: center;
     white-space: nowrap;

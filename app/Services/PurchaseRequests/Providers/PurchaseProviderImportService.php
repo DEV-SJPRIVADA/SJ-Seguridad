@@ -3,7 +3,6 @@
 namespace App\Services\PurchaseRequests\Providers;
 
 use App\Models\PurchaseProvider;
-use App\Models\RequisitionCity;
 use App\Support\SpreadsheetCellReader;
 use App\Support\UppercaseFormText;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +18,12 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * Reglas:
  * - Solo se cargan filas con PROVEEDOR = SI (normaliza SI/SÍ/1/TRUE/X).
  * - Upsert por `identificacion` (la actualiza si ya existe).
- * - Columnas: IDENTIFICA, NOMBRE, TELEFONO, CORREO_ELE, CONTACTO, CIUDAD,
- *   FORMA_PAGO, PROVEEDOR, ESTADO, DIAS_PAGO (opcional). CIUDAD debe existir
- *   en el catálogo de Requisiciones si viene llena.
+ * - Columnas: IDENTIFICA, NOMBRE, TELEFONO, CORREO_ELE, CONTACTO, DIRECCION,
+ *   CIUDAD, FORMA_PAGO, PROVEEDOR, ESTADO, DIAS_PAGO (opcional). CIUDAD se
+ *   guarda tal como viene (sin validar contra catálogos); DIRECCION vacía no
+ *   borra la dirección ya registrada; DIAS_PAGO tolerante ("30 DIAS" -> 30 y
+ *   el texto sin días (CONTADO) pasa a FORMA_PAGO). No se rechazan filas por
+ *   CIUDAD o DIAS_PAGO con texto.
  */
 final class PurchaseProviderImportService
 {
@@ -76,7 +78,6 @@ final class PurchaseProviderImportService
         $failures = [];
         $errorsCount = 0;
         $rows = [];
-        $ciudades = $this->ciudadesCatalogo();
 
         for ($row = 2; $row <= $maxRow; $row++) {
             if ($processed >= $rowLimit) {
@@ -118,12 +119,19 @@ final class PurchaseProviderImportService
             }
 
             $diasPago = $this->parseDiasPago($data['DIAS_PAGO'] ?? null);
+            $diasPagoTexto = null;
 
             if ($diasPago === false) {
-                $this->addFailure($errors, $failures, $row, $identificacion, 'DIAS_PAGO', 'los días de pago deben ser un entero entre 0 y 3650.', $data);
-                $errorsCount++;
+                // Tolerante: "15 DIAS" -> 15; texto sin días ("CONTADO") no
+                // rechaza la fila: viaja a FORMA_PAGO (raíz: "FORMA DE PAGO EN DIAS").
+                $flexible = $this->flexibleDiasPago($data['DIAS_PAGO'] ?? null);
 
-                continue;
+                if ($flexible['dias'] !== null) {
+                    $diasPago = $flexible['dias'];
+                } else {
+                    $diasPago = null;
+                    $diasPagoTexto = $flexible['texto'];
+                }
             }
 
             $attrs = [
@@ -140,21 +148,30 @@ final class PurchaseProviderImportService
                 $attrs['contacto'] = $this->normalizeUpperText($data['CONTACTO'] ?? null, 255);
             }
 
-            if (isset($headers['CIUDAD'])) {
-                $ciudad = $this->resolveCiudad($data['CIUDAD'] ?? null, $ciudades);
+            // DIRECCION: opcional y sin borrado. Si la celda viene vacía se
+            // conserva la dirección ya registrada (cargas parciales).
+            if (isset($headers['DIRECCION'])) {
+                $direccion = $this->normalizeUpperText($data['DIRECCION'] ?? null, 500);
 
-                if ($ciudad === false) {
-                    $this->addFailure($errors, $failures, $row, $identificacion, 'CIUDAD', 'la ciudad no existe en el catálogo de Requisiciones.', $data);
-                    $errorsCount++;
-
-                    continue;
+                if ($direccion !== null) {
+                    $attrs['direccion'] = $direccion;
                 }
+            }
 
-                $attrs['ciudad'] = $ciudad;
+            if (isset($headers['CIUDAD'])) {
+                // Sin validación contra el catálogo: la carga masiva guarda la
+                // ciudad tal como viene (y en actualización reemplaza).
+                $attrs['ciudad'] = $this->normalizeCiudad($data['CIUDAD'] ?? null);
             }
 
             if (isset($headers['FORMA_PAGO'])) {
                 $attrs['forma_pago'] = $this->normalizeUpperText($data['FORMA_PAGO'] ?? null, 120);
+            }
+
+            // Texto no numérico de DIAS_PAGO pasa a FORMA_PAGO solo si la
+            // columna no traía ya su propio valor.
+            if ($diasPagoTexto !== null && ($attrs['forma_pago'] ?? null) === null) {
+                $attrs['forma_pago'] = $diasPagoTexto;
             }
 
             $rows[] = $attrs;
@@ -163,8 +180,16 @@ final class PurchaseProviderImportService
         $this->releaseSpreadsheet($spreadsheet);
 
         if ($rows === []) {
+            $detail = $errorsCount > 0
+                ? sprintf(
+                    ' %d fila(s) con error de datos; primera: %s',
+                    $errorsCount,
+                    $errors[0] ?? '',
+                )
+                : '';
+
             throw new \RuntimeException(
-                'El archivo no contiene filas de proveedor válidas (PROVEEDOR = SI).'
+                'El archivo no contiene filas de proveedor válidas (PROVEEDOR = SI).'.$detail
             );
         }
 
@@ -385,34 +410,16 @@ final class PurchaseProviderImportService
     }
 
     /**
-     * Catálogo activo: clave en mayúsculas → nombre oficial (ej. CALI => Cali).
-     *
-     * @return array<string, string>
+     * Ciudad tal como viene del archivo (sin tildes, códigos DANE, etc.).
+     * Sin validación contra el catálogo; la celda vacía deja la ciudad en nulo.
      */
-    private function ciudadesCatalogo(): array
-    {
-        $map = [];
-
-        foreach (RequisitionCity::query()->where('is_active', true)->orderBy('name')->get(['name']) as $city) {
-            $map[mb_strtoupper((string) $city->name, 'UTF-8')] = (string) $city->name;
-        }
-
-        return $map;
-    }
-
-    /**
-     * @param  array<string, string>  $ciudades
-     * @return string|null|false null = vacío; false = no está en el catálogo
-     */
-    private function resolveCiudad(mixed $value, array $ciudades): string|null|false
+    private function normalizeCiudad(mixed $value): ?string
     {
         $raw = trim((string) ($value ?? ''));
+        $raw = preg_replace('/[\x{00A0}\x{FEFF}]/u', '', $raw) ?? $raw;
+        $raw = trim($raw);
 
-        if ($raw === '') {
-            return null;
-        }
-
-        return $ciudades[mb_strtoupper($raw, 'UTF-8')] ?? false;
+        return $raw === '' ? null : mb_substr($raw, 0, 120);
     }
 
     private function normalizeUpperText(mixed $value, int $max): ?string
@@ -424,6 +431,40 @@ final class PurchaseProviderImportService
         }
 
         return mb_substr(UppercaseFormText::uppercaseString($raw), 0, $max);
+    }
+
+    /**
+     * DIAS_PAGO tolerante: extrae el número cuando trae "XX DÍAS"; si no hay
+     * días identificables, devuelve el texto para guardarlo en FORMA_PAGO
+     * (la fuente original era la columna "FORMA DE PAGO EN DIAS").
+     *
+     * @return array{dias: int|null, texto: string|null}
+     */
+    private function flexibleDiasPago(mixed $value): array
+    {
+        $raw = trim((string) ($value ?? ''));
+        $raw = preg_replace('/[\x{00A0}\x{FEFF}]/u', '', $raw) ?? '';
+        $raw = trim($raw);
+
+        if ($raw === '') {
+            return ['dias' => null, 'texto' => null];
+        }
+
+        $folded = mb_strtoupper($raw, 'UTF-8');
+        $folded = str_replace(['Í', 'Á', 'É', 'Ó', 'Ú'], ['I', 'A', 'E', 'O', 'U'], $folded);
+
+        if (preg_match('/(\d{1,4})\s*(?:DIAS|DIA)\b/', $folded, $m) === 1) {
+            $dias = (int) $m[1];
+
+            if ($dias <= 3650) {
+                return ['dias' => $dias, 'texto' => null];
+            }
+        }
+
+        return [
+            'dias' => null,
+            'texto' => mb_substr(UppercaseFormText::uppercaseString($raw), 0, 120),
+        ];
     }
 
     /**

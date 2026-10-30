@@ -28,8 +28,9 @@ final class PurchaseProviderDatatableService
         3 => 'correo',
         4 => 'contacto',
         5 => 'ciudad',
-        6 => 'dias_pago',
-        7 => 'estado',
+        6 => 'direccion',
+        7 => 'dias_pago',
+        8 => 'estado',
     ];
 
     /**
@@ -111,6 +112,7 @@ final class PurchaseProviderDatatableService
                         ->orWhere('nombre', 'like', $term)
                         ->orWhere('correo', 'like', $term)
                         ->orWhere('contacto', 'like', $term)
+                        ->orWhere('direccion', 'like', $term)
                         ->orWhere('ciudad', 'like', $term);
                 });
             });
@@ -171,6 +173,7 @@ final class PurchaseProviderDatatableService
                 ->orWhere('nombre', 'like', $term)
                 ->orWhere('correo', 'like', $term)
                 ->orWhere('contacto', 'like', $term)
+                ->orWhere('direccion', 'like', $term)
                 ->orWhere('ciudad', 'like', $term);
         });
     }
@@ -199,12 +202,30 @@ final class PurchaseProviderDatatableService
             e((string) ($provider->correo ?? '—')),
             e((string) ($provider->contacto ?? '—')),
             e((string) ($provider->ciudad ?? '—')),
+            $this->addressCell($provider),
             $provider->dias_pago !== null ? (string) (int) $provider->dias_pago : '—',
             $this->estadoPill($provider),
             $canEdit
                 ? $this->editAction($provider)
                 : '<span class="text-muted">—</span>',
         ];
+    }
+
+    /**
+     * La dirección puede ser larga: se recorta visualmente con `title` para
+     * mostrar el texto completo al pasar el mouse.
+     */
+    private function addressCell(PurchaseProvider $provider): string
+    {
+        $address = trim((string) ($provider->direccion ?? ''));
+
+        if ($address === '') {
+            return '—';
+        }
+
+        $escaped = e($address);
+
+        return '<span class="purchase-providers-page__address" title="'.$escaped.'">'.$escaped.'</span>';
     }
 
     private function estadoPill(PurchaseProvider $provider): string

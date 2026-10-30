@@ -119,7 +119,7 @@ El foco del mes estuvo en **Gestión Humana**, que ya representa el **53% del de
 - **Alcance:** PHP backend, vistas Blade, JavaScript, rutas y pruebas automatizadas.
 - **Exclusiones:** CSS, migraciones, seeders, configuración y documentación se reportan por separado en el informe técnico.
 - **Estado:** se toma de `docs/TASKS.md`, los run logs de features y la documentación viva de cada módulo.
-- **Limitación:** la suite completa de pruebas no tiene baseline de ejecución al cierre. `artisan test` se aborta a los 300 s por `max_execution_time` y el flag `-d` no se propaga al subproceso de PHPUnit; el conteo de pruebas es estático. El baseline debe generarse con `php -d max_execution_time=0 vendor/bin/phpunit`.
+- **Limitación:** la suite completa de pruebas no tiene baseline de ejecución al cierre. `artisan test` se aborta a los 300 s por `max_execution_time` y el flag `-d` no se propaga al subproceso de PHPUnit; la corrida directa se detuvo a solicitud del usuario al 32% (488/1.520). El conteo de pruebas es estático. El baseline debe generarse con `php -d max_execution_time=0 vendor/bin/phpunit`.
 
 **Documento técnico de respaldo:** [`informe-tecnico-2026-10.md`](informe-tecnico-2026-10.md)
 

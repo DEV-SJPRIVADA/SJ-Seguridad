@@ -335,6 +335,7 @@ class PurchaseProviderImportTest extends TestCase
         }
 
         $this->assertContains('CONTACTO', $headers);
+        $this->assertContains('DIRECCION', $headers);
         $this->assertContains('CIUDAD', $headers);
         $this->assertContains('FORMA_PAGO', $headers);
         $this->assertContains('DIAS_PAGO', $headers);
@@ -362,33 +363,192 @@ class PurchaseProviderImportTest extends TestCase
 
         $provider = PurchaseProvider::query()->where('identificacion', 'FOAD-1')->firstOrFail();
         $this->assertSame('JUAN PEREZ', $provider->contacto);
-        $this->assertSame('Cali', $provider->ciudad);
+        // La ciudad se guarda tal como viene del archivo, sin normalizar.
+        $this->assertSame('cali', $provider->ciudad);
         $this->assertSame('TRANSFERENCIA', $provider->forma_pago);
         $this->assertSame(45, (int) $provider->dias_pago);
     }
 
-    public function test_rejects_ciudad_outside_catalog(): void
+    public function test_saves_ciudad_as_coming_without_catalog_validation(): void
     {
+        PurchaseProvider::factory()->create([
+            'identificacion' => 'CITY-UP',
+            'nombre' => 'VIEJO',
+            'ciudad' => 'Cali',
+        ]);
+
         $path = $this->makeSpreadsheet([
             [
-                'IDENTIFICA' => 'FOAD-OK',
-                'NOMBRE' => 'proveedor ciudad valida',
+                'IDENTIFICA' => 'CITY-NEW',
+                'NOMBRE' => 'proveedor ciudad dane',
                 'PROVEEDOR' => 'SI',
-                'CIUDAD' => 'Cali',
+                'CIUDAD' => '76001-CALI',
             ],
             [
-                'IDENTIFICA' => 'FOAD-BAD',
-                'NOMBRE' => 'proveedor ciudad invalida',
+                'IDENTIFICA' => 'CITY-UP',
+                'NOMBRE' => 'proveedor ciudad actualizada',
                 'PROVEEDOR' => 'SI',
-                'CIUDAD' => 'Ciudad Inexistente',
+                'CIUDAD' => '77005-.',
+            ],
+            [
+                'IDENTIFICA' => 'CITY-EMPTY',
+                'NOMBRE' => 'proveedor ciudad vacia',
+                'PROVEEDOR' => 'SI',
+                'CIUDAD' => '',
             ],
         ]);
 
-        $report = app(PurchaseProviderImportService::class)->import($path, true);
+        $report = app(PurchaseProviderImportService::class)
+            ->import($path, false, null, $this->editor->id);
+
+        $this->assertSame(2, $report['created']);
+        $this->assertSame(1, $report['updated']);
+        $this->assertSame(0, $report['errors_count']);
+
+        // Se guarda tal como viene (código DANE incluido) y en actualización reemplaza.
+        $this->assertSame(
+            '76001-CALI',
+            PurchaseProvider::query()->where('identificacion', 'CITY-NEW')->value('ciudad'),
+        );
+        $this->assertSame(
+            '77005-.',
+            PurchaseProvider::query()->where('identificacion', 'CITY-UP')->value('ciudad'),
+        );
+        $this->assertNull(
+            PurchaseProvider::query()->where('identificacion', 'CITY-EMPTY')->value('ciudad'),
+        );
+    }
+
+    public function test_no_valid_rows_message_reports_first_failure(): void
+    {
+        $path = $this->makeSpreadsheet([
+            ['IDENTIFICA' => 'BAD-1', 'NOMBRE' => '', 'PROVEEDOR' => 'SI'],
+            ['IDENTIFICA' => 'BAD-2', 'NOMBRE' => '', 'PROVEEDOR' => 'SI'],
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'El archivo no contiene filas de proveedor válidas (PROVEEDOR = SI). 2 fila(s) con error de datos; primera: Fila 2: el nombre es obligatorio.'
+        );
+
+        app(PurchaseProviderImportService::class)->import($path);
+    }
+
+    public function test_dias_pago_tolerante_extracte_dias_y_pasa_texto_a_forma_pago(): void
+    {
+        $path = $this->makeSpreadsheet([
+            [
+                'IDENTIFICA' => 'DIAS-T1',
+                'NOMBRE' => 'proveedor dias texto 1',
+                'PROVEEDOR' => 'SI',
+                'FORMA_PAGO' => '',
+                'DIAS_PAGO' => '15 DIAS',
+            ],
+            [
+                'IDENTIFICA' => 'DIAS-T2',
+                'NOMBRE' => 'proveedor dias texto 2',
+                'PROVEEDOR' => 'SI',
+                'FORMA_PAGO' => '',
+                'DIAS_PAGO' => 'CONTADO',
+            ],
+            [
+                'IDENTIFICA' => 'DIAS-T3',
+                'NOMBRE' => 'proveedor dias texto 3',
+                'PROVEEDOR' => 'SI',
+                'FORMA_PAGO' => '',
+                'DIAS_PAGO' => '50 % ANTICIPO Y 50% CONTRAENTREGA',
+            ],
+            [
+                'IDENTIFICA' => 'DIAS-T4',
+                'NOMBRE' => 'proveedor dias texto 4',
+                'PROVEEDOR' => 'SI',
+                'FORMA_PAGO' => 'EFECTIVO',
+                'DIAS_PAGO' => '20 DÍAS',
+            ],
+        ]);
+
+        $report = app(PurchaseProviderImportService::class)
+            ->import($path, false, null, $this->editor->id);
+
+        $this->assertSame(4, $report['created']);
+        $this->assertSame(0, $report['errors_count']);
+
+        $t1 = PurchaseProvider::query()->where('identificacion', 'DIAS-T1')->firstOrFail();
+        $this->assertSame(15, (int) $t1->dias_pago);
+        $this->assertNull($t1->forma_pago);
+
+        $t2 = PurchaseProvider::query()->where('identificacion', 'DIAS-T2')->firstOrFail();
+        $this->assertNull($t2->dias_pago);
+        $this->assertSame('CONTADO', $t2->forma_pago);
+
+        $t3 = PurchaseProvider::query()->where('identificacion', 'DIAS-T3')->firstOrFail();
+        $this->assertNull($t3->dias_pago);
+        $this->assertSame('50 % ANTICIPO Y 50% CONTRAENTREGA', $t3->forma_pago);
+
+        $t4 = PurchaseProvider::query()->where('identificacion', 'DIAS-T4')->firstOrFail();
+        $this->assertSame(20, (int) $t4->dias_pago);
+        $this->assertSame('EFECTIVO', $t4->forma_pago);
+    }
+
+    public function test_imports_direccion_in_uppercase_and_keeps_it_when_empty(): void
+    {
+        PurchaseProvider::factory()->create([
+            'identificacion' => 'DIR-IMP-1',
+            'nombre' => 'VIEJO',
+            'direccion' => 'CALLE ANTERIOR 10',
+        ]);
+
+        $path = $this->makeSpreadsheet([
+            [
+                'IDENTIFICA' => 'DIR-IMP-1',
+                'NOMBRE' => 'proveedor direccion actualizada',
+                'PROVEEDOR' => 'SI',
+                'DIRECCION' => 'avenida nueva 45 # 10-20',
+            ],
+            [
+                'IDENTIFICA' => 'DIR-IMP-2',
+                'NOMBRE' => 'proveedor direccion vacia',
+                'PROVEEDOR' => 'SI',
+                'DIRECCION' => '',
+            ],
+        ]);
+
+        $report = app(PurchaseProviderImportService::class)
+            ->import($path, false, null, $this->editor->id);
 
         $this->assertSame(1, $report['created']);
-        $this->assertSame(1, $report['errors_count']);
-        $this->assertStringContainsString('catálogo de Requisiciones', $report['errors'][0] ?? '');
+        $this->assertSame(1, $report['updated']);
+        $this->assertSame(0, $report['errors_count']);
+
+        $updated = PurchaseProvider::query()->where('identificacion', 'DIR-IMP-1')->firstOrFail();
+        $this->assertSame('AVENIDA NUEVA 45 # 10-20', $updated->direccion);
+
+        $created = PurchaseProvider::query()->where('identificacion', 'DIR-IMP-2')->firstOrFail();
+        $this->assertNull($created->direccion);
+    }
+
+    public function test_import_update_with_empty_direccion_keeps_current_value(): void
+    {
+        PurchaseProvider::factory()->create([
+            'identificacion' => 'DIR-IMP-3',
+            'nombre' => 'VIEJO',
+            'direccion' => 'CALLE ANTERIOR 10',
+        ]);
+
+        $path = $this->makeSpreadsheet([
+            [
+                'IDENTIFICA' => 'DIR-IMP-3',
+                'NOMBRE' => 'nombre actualizado',
+                'PROVEEDOR' => 'SI',
+                'DIRECCION' => '',
+            ],
+        ]);
+
+        app(PurchaseProviderImportService::class)->import($path, false, null, $this->editor->id);
+
+        $provider = PurchaseProvider::query()->where('identificacion', 'DIR-IMP-3')->firstOrFail();
+        $this->assertSame('NOMBRE ACTUALIZADO', $provider->nombre);
+        $this->assertSame('CALLE ANTERIOR 10', $provider->direccion);
     }
 
     public function test_legacy_file_without_new_columns_does_not_wipe_existing_values(): void
@@ -397,6 +557,7 @@ class PurchaseProviderImportTest extends TestCase
             'identificacion' => 'LEGACY-1',
             'nombre' => 'VIEJO',
             'contacto' => 'ANA LOPEZ',
+            'direccion' => 'CARRERA 5 # 3-40',
             'ciudad' => 'Cali',
             'forma_pago' => 'EFECTIVO',
         ]);
@@ -418,6 +579,7 @@ class PurchaseProviderImportTest extends TestCase
         $provider = PurchaseProvider::query()->where('identificacion', 'LEGACY-1')->firstOrFail();
         $this->assertSame('NOMBRE ACTUALIZADO', $provider->nombre);
         $this->assertSame('ANA LOPEZ', $provider->contacto);
+        $this->assertSame('CARRERA 5 # 3-40', $provider->direccion);
         $this->assertSame('Cali', $provider->ciudad);
         $this->assertSame('EFECTIVO', $provider->forma_pago);
     }

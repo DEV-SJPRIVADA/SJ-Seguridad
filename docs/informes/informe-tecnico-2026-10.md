@@ -21,7 +21,7 @@ Este informe cuantifica el tamaño del sistema por área funcional y su estado d
 - La asignación por área es heurística por ruta y nombre de archivo; los archivos transversales (layouts, componentes, middleware, consola, providers, traits, support) se agrupan en **Núcleo / compartido**.
 - No se incluyen en «código funcional» el CSS, migraciones, seeders, configuración ni documentación; se reportan aparte.
 
-> **Nota sobre ejecución de pruebas:** el intento de `php artisan test` con el límite por defecto se abortó a los 300 s por `max_execution_time` de PHP. Repetirlo con `php -d max_execution_time=0 artisan test` tampoco funcionó porque `artisan test` lanza PHPUnit en un subproceso que no hereda esa directiva. Las cifras de pruebas de este informe son de conteo estático; el baseline de ejecución debe registrarse en la validación de cierre (ver §5).
+> **Nota sobre ejecución de pruebas:** `php artisan test` se aborta a los 300 s por `max_execution_time` de PHP y el flag `-d` no se propaga al subproceso de PHPUnit. La corrida directa con `php -d max_execution_time=0 vendor/bin/phpunit` se detuvo por decisión del usuario al 32% (488/1.520 pruebas), por lo que no hay baseline completo. Las cifras de pruebas de este informe son de conteo estático; el baseline debe registrarse en la validación de cierre (ver §5).
 
 ---
 
@@ -120,7 +120,7 @@ Gestión Humana concentra la mayor inversión. Desglose por tablero (incluye con
 | Relación prueba / código funcional | 25,0% |
 | Cobertura de pruebas por área (líneas) | GH 59,1% · Compras 14,8% · Requisiciones 7,1% · Núcleo 5,1% · Comercial 3,8% · Operaciones 3,5% · Suministros 2,0% · Admin 1,5% · Calidad 1,4% · TIC 1,3% · Autenticación 0,3% |
 
-**Estado de ejecución:** sin baseline completo al cierre de este informe. Los intentos con `php artisan test --compact` se abortan a los 300 s por `max_execution_time` de PHP; el flag `-d max_execution_time=0` no se propaga porque `artisan test` ejecuta PHPUnit en un subproceso. Para obtener el baseline debe invocarse PHPUnit directamente:
+**Estado de ejecución:** sin baseline completo al cierre de este informe. Los intentos con `php artisan test --compact` se abortan a los 300 s por `max_execution_time` de PHP; el flag `-d max_execution_time=0` no se propaga porque `artisan test` ejecuta PHPUnit en un subproceso. La corrida directa con PHPUnit se detuvo a solicitud del usuario al 32% (488/1.520 pruebas), con fallos parciales observados. Para obtener el baseline debe invocarse:
 
 ```bash
 php -d max_execution_time=0 vendor/bin/phpunit

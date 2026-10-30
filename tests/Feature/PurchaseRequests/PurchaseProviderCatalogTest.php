@@ -79,6 +79,24 @@ class PurchaseProviderCatalogTest extends TestCase
             ->assertJsonPath('recordsFiltered', 1);
     }
 
+    public function test_datatable_includes_direccion_and_searches_it(): void
+    {
+        PurchaseProvider::factory()->create([
+            'identificacion' => 'DIR-1',
+            'nombre' => 'PROVEEDOR DIRECCION',
+            'direccion' => 'AVENIDA SIEMPRE VIVA 123',
+        ]);
+
+        $this->actingAs($this->editor)
+            ->getJson($this->datatableUrl(['search' => ['value' => 'SIEMPRE VIVA']]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath(
+                'data.0.6',
+                '<span class="purchase-providers-page__address" title="AVENIDA SIEMPRE VIVA 123">AVENIDA SIEMPRE VIVA 123</span>',
+            );
+    }
+
     public function test_store_persists_free_text_in_uppercase_except_catalog_and_codes(): void
     {
         $this->actingAs($this->editor)

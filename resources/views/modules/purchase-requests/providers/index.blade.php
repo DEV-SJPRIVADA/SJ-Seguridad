@@ -100,6 +100,7 @@
                                     <th>CORREO</th>
                                     <th>CONTACTO</th>
                                     <th>CIUDAD</th>
+                                    <th>DIRECCIÓN</th>
                                     <th class="purchase-providers-page__col-center">DÍAS PAGO</th>
                                     <th class="purchase-providers-page__col-center">ESTADO</th>
                                     <th class="purchase-providers-page__col-actions">ACCIONES</th>
@@ -185,7 +186,7 @@
                     pageLength: 10,
                     responsive: false,
                     order: [[1, 'asc']],
-                    // Presentación por columna: ID sin cortes, nombre destacado, correo enlazable, días y acciones centrados.
+                    // Presentación por columna: ID sin cortes, nombre destacado, correo enlazable, dirección recortada, días y acciones centrados.
                     columnDefs: [
                         { targets: [0], className: 'purchase-providers-page__col-id' },
                         { targets: [1], className: 'purchase-providers-page__col-name' },
@@ -205,10 +206,11 @@
                                 })[0].outerHTML;
                             },
                         },
-                        { targets: [6], className: 'purchase-providers-page__col-center' },
+                        { targets: [6], className: 'purchase-providers-page__col-address' },
                         { targets: [7], className: 'purchase-providers-page__col-center' },
+                        { targets: [8], className: 'purchase-providers-page__col-center' },
                         {
-                            targets: [8],
+                            targets: [9],
                             orderable: false,
                             searchable: false,
                             className: 'purchase-providers-page__col-actions',
