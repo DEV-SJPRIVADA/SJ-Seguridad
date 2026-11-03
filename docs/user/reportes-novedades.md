@@ -62,7 +62,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
    - Al cambiar mes o quincena se vacían los datepickers de rango.
    - **Limpiar** restaura mes y quincena actuales.
    - Con permiso, use también **Exportar** o **Historial**. En el Historial de la hoja puede filtrar por cédula/usuario, tipo de acción y rango de fechas.
-4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha.
+4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha. En **Vacaciones**, al completar **días** y **fecha inicio** la **fecha fin** se calcula sola (sin domingos ni festivos) y usted puede ajustarla antes de guardar.
 5. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 
 ### Retiros automaticos
@@ -73,6 +73,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.6 | 2026-11-03 | Agent | Vacaciones: la fecha fin se sugiere al ingresar días y fecha inicio (sin domingos ni festivos); el campo sigue editable. |
 | 1.5 | 2026-10-05 | Agent | Vacaciones: columna **Fecha fin** (tras Inicio) en formulario, listado y export. |
 | 1.4 | 2026-10-01 | Agent | Historial de hoja (toolbar): filtros por cédula/usuario, acción y fechas. |
 | 1.3 | 2026-09-30 | Agent | Filtros mes (YYYY-MM) + quincena; rango fechas opcional con precedencia; limpiar = periodo actual. Obs. Nómina en verde cuando ya tiene valor (listado + modal). |

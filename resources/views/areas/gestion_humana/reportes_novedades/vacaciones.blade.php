@@ -14,6 +14,7 @@
             canEdit: @js($canEdit),
             canReview: @js($canReview),
             storeUrl: @js($storeUrl),
+            holidayDates: @js($holidayDates ?? []),
         })"
         @rn-vacacion-open-edit.window="openEdit($event.detail)"
         @rn-open-historial.window="openHistorial($event.detail)"
@@ -147,6 +148,7 @@
                                     'canReviewNomina' => false,
                                     'showNomina' => false,
                                     'alpine' => true,
+                                    'autoFechaFin' => true,
                                     'values' => [
                                         'document_number' => old('document_number', ''),
                                         'employee_name' => old('employee_name', ''),
@@ -241,11 +243,18 @@
                     observacion_nomina: '',
                 });
 
+                const holidaySet = new Set(
+                    Array.isArray(config.holidayDates)
+                        ? config.holidayDates.map((d) => String(d))
+                        : []
+                );
+
                 return {
                     lookupUrl: config.lookupUrl,
                     canEdit: !!config.canEdit,
                     canReview: !!config.canReview,
                     storeUrl: config.storeUrl,
+                    holidaySet,
                     editMode: 'gh',
                     editTitle: 'Editar vacación',
                     editUpdateUrl: '',
@@ -318,6 +327,52 @@
                         this.$nextTick(() => {
                             this.setSearchableValue('edit_novedad', row.novedad || '');
                         });
+                    },
+                    /**
+                     * Sugiere fecha fin = inicio + N días (sin domingos ni festivos CO; cruza año).
+                     * La fecha fin queda editable para ajustes manuales.
+                     */
+                    syncFechaFin() {
+                        const start = String(this.form.fecha_inicio || '').trim();
+                        const days = Number.parseInt(String(this.form.dias_novedad || '').trim(), 10);
+
+                        if (! start || ! Number.isFinite(days) || days < 1) {
+                            return;
+                        }
+
+                        const parts = start.split('-').map((p) => Number.parseInt(p, 10));
+                        if (parts.length !== 3 || parts.some((n) => ! Number.isFinite(n))) {
+                            return;
+                        }
+
+                        // Medianoche local evita desfase UTC al cruzar 31-dic -> 1-ene.
+                        const cursor = new Date(parts[0], parts[1] - 1, parts[2]);
+                        if (Number.isNaN(cursor.getTime())) {
+                            return;
+                        }
+
+                        const pad = (n) => String(n).padStart(2, '0');
+                        const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                        const isCountable = (d) => d.getDay() !== 0 && ! this.holidaySet.has(toIso(d));
+
+                        let counted = 0;
+                        let steps = 0;
+                        const maxSteps = Math.max(366, days * 3);
+                        while (counted < days && steps < maxSteps) {
+                            steps += 1;
+                            if (isCountable(cursor)) {
+                                counted += 1;
+                            }
+                            if (counted < days) {
+                                cursor.setDate(cursor.getDate() + 1);
+                            }
+                        }
+
+                        if (counted < days) {
+                            return;
+                        }
+
+                        this.form.fecha_fin = toIso(cursor);
                     },
                     setSearchableValue(id, value) {
                         const input = document.getElementById(id);

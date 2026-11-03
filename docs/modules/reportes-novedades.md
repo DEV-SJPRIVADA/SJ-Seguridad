@@ -90,7 +90,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 | Clase | Responsabilidad |
 | --- | --- |
 | `ReportesNovedadesController` | Index redirect + lookup Ficha |
-| `ReportesNovedadesVacacionesController` | Vista / DT / CRUD / review / export / historial Vacaciones |
+| `ReportesNovedadesVacacionesController` | Vista / DT / CRUD / review / export / historial Vacaciones; pasa `holidayDates` para sugerir fecha fin |
 | `ReportesNovedadesIncapacidadesController` | Idem Incapacidades |
 | `ReportesNovedadesRetirosController` | Idem Retiros (destroy soft) |
 | `ReportesNovedadesPermisosController` | Idem Permisos |
@@ -104,7 +104,7 @@ Namespace requests: `App\Http\Requests\GestionHumana\ReportesNovedades\`.
 
 | Vista | Descripcion |
 | --- | --- |
-| `areas/gestion_humana/reportes_novedades/vacaciones.blade.php` | Listado DT + filtros + modal Nuevo (`rn-novedad-modal`: header con acento, body scroll, footer fijo) |
+| `areas/gestion_humana/reportes_novedades/vacaciones.blade.php` | Listado DT + filtros + modal Nuevo (`rn-novedad-modal`: header con acento, body scroll, footer fijo; fecha fin sugerida por días hábiles) |
 | `.../incapacidades.blade.php` | Idem |
 | `.../retiros.blade.php` | Idem |
 | `.../permisos.blade.php` | Idem |
@@ -180,10 +180,12 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
    - Al cambiar mes/quincena se vacían los datepickers de rango.
    - Limpiar vuelve a la URL sin query → mes + quincena actuales.
 10. `observacion_nomina` con valor: celda del listado en pill verde (`status-pill--success`); input del modal con fondo verde (`.rn-novedad-form__input--nomina-filled`).
+11. Vacaciones (alta): al ingresar **días** y **fecha inicio**, el modal sugiere `fecha_fin` = inicio + N días hábiles (sin domingos ni festivos CO, según `holidayDates` de `ColombiaHolidays`) y el usuario puede editarla. No aplica en el modal de edición.
 
 ## JavaScript / assets
 
 - Alpine + DataTables server-side embebidos en vistas Blade (patron GH).
+- Vacaciones: `syncFechaFin()` (Alpine) recalcula `form.fecha_fin` desde `dias_novedad` + `fecha_inicio` usando `holidaySet` (festivos CO enviados por el controller).
 - Selectores catalogo: `<x-searchable-select>`.
 - Botones icon-only: `.req-manage-filters__icon-btn` / `.cursos-catalogo-page__icon-btn`.
 - Subnav: `.module-tab` / branding GH.
@@ -196,7 +198,7 @@ Clases `App\Exports\ReportesNovedades{Vacaciones|Incapacidades|Retiros|Permisos}
 
 1. `php artisan migrate` (sin fresh).
 2. Asignar paquete GH y/o Nómina en Admin (subgroup MT-GH-04 Novedades).
-3. Vacaciones: CRUD + review + export + historial; smoke otras hojas.
+3. Vacaciones: CRUD + review + export + historial; sugerencia de fecha fin por días hábiles; smoke otras hojas.
 4. Desvincular (Ficha o Masivos) → fila en Retiros; revertir → desaparece.
 5. `php artisan test --compact --filter=ReportesNovedades` (+ unit `ReportesNovedadesPeriodFilter`).
 6. `vendor/bin/pint --dirty --format agent` tras PHP.

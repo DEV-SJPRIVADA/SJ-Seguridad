@@ -83,6 +83,28 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
         $this->assertStringContainsString('Q2', $range->json('data.0.1'));
     }
 
+    public function test_vacaciones_create_modal_suggests_fecha_fin_from_business_days(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-30'));
+        $editor = $this->editorUser('vacaciones');
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.reportes-novedades.vacaciones'))
+            ->assertOk()
+            ->assertViewHas('holidayDates', function ($dates): bool {
+                return is_array($dates)
+                    && in_array('2026-01-01', $dates, true)
+                    && in_array('2026-12-25', $dates, true);
+            })
+            ->assertSee('holidayDates', false)
+            ->assertSee('syncFechaFin', false)
+            ->assertSee('x-on:input="syncFechaFin()"', false)
+            ->assertSee('x-on:change="syncFechaFin()"', false)
+            ->assertSee('Sugerida: inicio + días (sin domingos ni festivos). Puede modificarla.', false);
+
+        Carbon::setTestNow();
+    }
+
     public function test_vacaciones_index_defaults_mes_and_quincena(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-09-30'));

@@ -5,6 +5,7 @@
     $canReviewNomina = (bool) ($canReviewNomina ?? ($mode === 'review'));
     $showNomina = (bool) ($showNomina ?? ($mode !== 'create'));
     $alpine = (bool) ($alpine ?? false);
+    $autoFechaFin = (bool) ($autoFechaFin ?? false);
 @endphp
 
 <div class="rn-novedad-form">
@@ -65,6 +66,7 @@
                     @if ($canEditGh) required @endif
                     @disabled(! $canEditGh)
                     @if ($alpine) x-model="form.dias_novedad" @else value="{{ $v['dias_novedad'] ?? '' }}" @endif
+                    @if ($alpine && $autoFechaFin) x-on:input="syncFechaFin()" @endif
                 >
             </div>
 
@@ -78,6 +80,7 @@
                     @if ($canEditGh) required @endif
                     @disabled(! $canEditGh)
                     @if ($alpine) x-model="form.fecha_inicio" @else value="{{ $v['fecha_inicio'] ?? '' }}" @endif
+                    @if ($alpine && $autoFechaFin) x-on:change="syncFechaFin()" @endif
                 >
             </div>
 
@@ -90,8 +93,12 @@
                     class="form-input"
                     @if ($canEditGh) required @endif
                     @disabled(! $canEditGh)
+                    @if ($autoFechaFin) title="Sugerida: inicio + días (sin domingos ni festivos). Puede modificarla." @endif
                     @if ($alpine) x-model="form.fecha_fin" @else value="{{ $v['fecha_fin'] ?? '' }}" @endif
                 >
+                @if ($autoFechaFin)
+                    <p class="form-hint">Sugerida: inicio + días (sin domingos ni festivos). Puede modificarla.</p>
+                @endif
             </div>
 
             <div class="form-field rn-novedad-form__span">

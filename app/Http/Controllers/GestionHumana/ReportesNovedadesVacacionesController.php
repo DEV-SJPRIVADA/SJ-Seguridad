@@ -12,6 +12,7 @@ use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\GestionHumana\ReportesNovedadesAuditLogService;
 use App\Services\GestionHumana\ReportesNovedadesHistorialService;
 use App\Services\GestionHumana\ReportesNovedadesVacacionesDatatableService;
+use App\Support\ColombiaHolidays;
 use App\Support\ReportesNovedadesPeriodFilter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -41,6 +42,7 @@ class ReportesNovedadesVacacionesController extends Controller
         private readonly ReportesNovedadesAuditLogService $auditLogService,
         private readonly ReportesNovedadesHistorialService $historialService,
         private readonly ReportesNovedadesVacacionesExport $export,
+        private readonly ColombiaHolidays $colombiaHolidays,
     ) {}
 
     public function index(Request $request): View
@@ -51,6 +53,7 @@ class ReportesNovedadesVacacionesController extends Controller
         $canEdit = $this->access->canEdit(auth()->user(), self::SHEET);
         $canReview = $this->access->canReview(auth()->user(), self::SHEET);
         $canExport = $this->access->canExport(auth()->user(), self::SHEET);
+        $year = (int) now()->year;
 
         return view('areas.gestion_humana.reportes_novedades.vacaciones', [
             'subTabs' => $this->subTabs(),
@@ -65,6 +68,8 @@ class ReportesNovedadesVacacionesController extends Controller
             'lookupUrl' => route('gestion-humana.reportes-novedades.lookup'),
             'storeUrl' => route('gestion-humana.reportes-novedades.vacaciones.store'),
             'novedadOptions' => $this->catalogOptions('vacaciones_novedad'),
+            // Festivos CO para sugerir fecha fin en el modal de alta (rango amplio; cruza años).
+            'holidayDates' => $this->colombiaHolidays->isoDatesForYears($year - 2, $year + 4),
             'showCreateModal' => $canEdit && $request->session()->get('errors') !== null
                 && ! $request->session()->hasOldInput('_method'),
         ]);
