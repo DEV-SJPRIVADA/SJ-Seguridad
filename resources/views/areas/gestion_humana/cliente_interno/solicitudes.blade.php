@@ -16,8 +16,10 @@
         class="page-section cliente-interno-solicitudes-page req-manage-page"
         x-data="clienteInternoSolicitudes({
             canEdit: @js($canEdit),
+            lookupFichaUrl: @js($lookupFichaUrl ?? ''),
         })"
         @cliente-interno-solicitud-open-edit.window="openEdit($event.detail)"
+        @open-modal.window="if ($event.detail === 'cliente-interno-solicitud-nueva') fichaLookupMessage = ''"
     >
         <div class="app-container">
             @if (session('status'))
@@ -298,10 +300,46 @@
             function clienteInternoSolicitudes(config) {
                 return {
                     canEdit: Boolean(config.canEdit),
+                    lookupFichaUrl: config.lookupFichaUrl || '',
+                    fichaLookupMessage: '',
                     editOpen: false,
                     editForm: {},
                     diasTouched: false,
                     recalcularDias: false,
+
+                    // Cedula -> nombre desde Ficha (modal Nueva solicitud).
+                    // Solo sugiere el nombre: el campo sigue siendo editable.
+                    async lookupFichaNombre(value) {
+                        const cedula = String(value || '').trim();
+                        this.fichaLookupMessage = '';
+
+                        if (! this.lookupFichaUrl || cedula === '') {
+                            return;
+                        }
+
+                        try {
+                            const url = new URL(this.lookupFichaUrl, window.location.origin);
+                            url.searchParams.set('cedula', cedula);
+
+                            const res = await fetch(url.toString(), {
+                                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                                credentials: 'same-origin',
+                            });
+                            const data = res.ok ? await res.json() : {};
+
+                            if (data.found && data.full_name) {
+                                const input = document.getElementById('create_nombre_apellidos');
+                                if (input) {
+                                    input.value = data.full_name;
+                                }                                
+                            } else {
+                                this.fichaLookupMessage = data.message
+                                    || 'No se encontró un empleado en Ficha para esa cédula. Puede escribir el nombre manualmente.';
+                            }
+                        } catch (e) {
+                            this.fichaLookupMessage = 'No se pudo consultar Ficha. Puede escribir el nombre manualmente.';
+                        }
+                    },
 
                     openEdit(row) {
                         this.editForm = Object.assign({}, row);

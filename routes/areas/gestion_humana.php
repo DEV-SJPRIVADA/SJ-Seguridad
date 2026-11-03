@@ -299,6 +299,7 @@ Route::middleware(['password.changed'])
         Route::get('/solicitudes/exportar', [ClienteInternoController::class, 'solicitudesExport'])->name('solicitudes.export');
         Route::get('/solicitudes/plantilla-importacion', [ClienteInternoController::class, 'importTemplate'])->name('solicitudes.import-template');
         Route::get('/solicitudes/periodo-conteo', [ClienteInternoController::class, 'periodCount'])->name('solicitudes.period-count');
+        Route::get('/solicitudes/lookup-ficha', [ClienteInternoController::class, 'solicitudesLookupFicha'])->name('solicitudes.lookup-ficha');
         Route::post('/solicitudes/importar', [ClienteInternoController::class, 'import'])->name('solicitudes.import');
         Route::post('/solicitudes', [ClienteInternoController::class, 'storeSolicitud'])->name('solicitudes.store');
         Route::patch('/solicitudes/{clienteInternoSolicitud}', [ClienteInternoController::class, 'updateSolicitud'])->name('solicitudes.update');

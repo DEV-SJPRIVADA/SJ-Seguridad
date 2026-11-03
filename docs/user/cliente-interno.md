@@ -91,8 +91,9 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 1. Vaya a **Solicitudes**.
 2. Pulse agregar (o editar una fila).
 3. Complete lo obligatorio: fecha de solicitud, nombre y apellidos, cédula y tipo de solicitud. El resto (correo, fecha de respuesta, estado, novedad, días) es opcional.
-4. Si indica fecha de respuesta y no toca “días de respuesta”, el sistema calcula los días hábiles solo. Si modifica el número de días, se guarda como valor manual.
-5. Guarde. El listado se actualizará.
+4. Al escribir la cédula y salir del campo (o presionar Enter), el sistema busca la persona en la ficha de empleados y completa **Nombre y apellidos**. Si no la encuentra, verá un aviso y podrá escribirlo a mano: el campo siempre queda editable.
+5. Si indica fecha de respuesta y no toca “días de respuesta”, el sistema calcula los días hábiles solo. Si modifica el número de días, se guarda como valor manual.
+6. Guarde. El listado se actualizará.
 
 ### Filtrar, exportar y eliminar
 
@@ -138,6 +139,7 @@ Aplica al tablero **Cliente interno** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.7 | 2026-11-03 | Agent | Nueva solicitud: al ingresar la cédula se busca en la ficha de empleados y se completa el nombre; el campo sigue editable. |
 | 1.6 | 2026-10-08 | Agent | Cartas Vacaciones: fin sin festivos CO (cruza año); fin/reintegro editables. |
 | 1.5 | 2026-10-07 | Agent | Cartas Vacaciones: días antes de inicio; fin/reintegro automáticos (sin domingos). |
 | 1.4 | 2026-10-07 | Documentador | FEAT-043: pestaña Cartas Vacaciones (lote Word/ZIP, plantilla única, permisos ver/generar). |

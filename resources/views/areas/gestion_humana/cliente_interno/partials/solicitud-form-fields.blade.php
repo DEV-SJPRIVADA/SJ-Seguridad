@@ -56,8 +56,13 @@
                 x-model="editForm.cedula"
             @else
                 value="{{ $values['cedula'] ?? '' }}"
+                x-on:change="lookupFichaNombre($event.target.value)"
+                x-on:keydown.enter.prevent="lookupFichaNombre($event.target.value)"
             @endif
         >
+        @if (! $isEdit)
+            <p class="form-hint" x-show="fichaLookupMessage" x-cloak x-text="fichaLookupMessage"></p>
+        @endif
     </div>
 
     <div class="form-field">

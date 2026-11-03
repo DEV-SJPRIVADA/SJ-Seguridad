@@ -65,10 +65,10 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 1. Vaya a la pestaña **Ingreso**.
 2. Pulse el botón para agregar (o editar una fila existente).
-3. Complete los campos obligatorios: cédula, nombre, correo, teléfono, ciudad, cargo, **estado** del proceso, a quién reemplaza, responsable y **jefe operativo**. **Cliente, tipo de dotación, tallas, RH y fecha de ingreso** solo son obligatorios cuando el estado es **Contratado**; mientras tanto aparecen como «(opcional)». Además puede registrar la **fecha de asistencia**, el **referido** y **observaciones** (opcionales). Si al guardar falta algo, el modal muestra la lista de campos a corregir y los resalta en rojo.
-4. Elija el **Estado** y el **Jefe operativo** desde los catálogos: si el listado del jefe operativo está vacío, primero agregue jefes en la pestaña **Catálogos** (es requisito para guardar el ingreso).
+3. Complete los campos obligatorios: cédula, nombre, teléfono, ciudad, cargo, **estado** del proceso y responsable. **Correo**, **Jefe ope asignado** y **Reemplaza a** son opcionales. **Cliente, tipo de dotación, tallas, RH y fecha de ingreso** solo son obligatorios cuando el estado es **Contratado**; mientras tanto aparecen como «(opcional)». Además puede registrar la **fecha de asistencia**, el **referido** y **observaciones** (opcionales). Si al guardar falta algo, el modal muestra la lista de campos a corregir y los resalta en rojo.
+4. Elija el **Estado** y, si aplica, el **Jefe operativo** desde los catálogos. Si el listado de jefes operativos está vacío puede guardar el ingreso sin jefe y agregarlos después en la pestaña **Catálogos**.
 5. El formulario está dividido en tres bloques: **Datos del aspirante**, **Cliente y dotación** y **Proceso de selección**. Los campos opcionales dicen «(opcional)».
-6. En **Cédula reemplazo** (opcional) escriba la cédula de la persona a la que reemplaza y salga del campo (o pulse Enter): si el sistema la encuentra en Ficha empleados, llena **Reemplaza a** con su nombre. Si no la encuentra, muestra un aviso y usted escribe el nombre a mano. Ambos campos se pueden corregir siempre.
+6. En **Cédula reemplazo** (opcional) escriba la cédula de la persona a la que reemplaza y salga del campo (o pulse Enter): si el sistema la encuentra en Ficha empleados, llena **Reemplaza a** con su nombre. Si no la encuentra, muestra un aviso y usted escribe el nombre a mano. Ambos campos se pueden corregir siempre y **pueden quedar vacíos**.
 7. Si la cédula ya existe en Ingreso, el sistema muestra un aviso con los casos encontrados (debajo de los datos del aspirante): confirme que desea continuar antes de guardar.
 8. Pulse **Guardar ingreso** (o **Actualizar ingreso** al editar) en la parte inferior del modal; **Cancelar** cierra sin guardar. El listado se actualizará.
 
@@ -78,7 +78,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 2. Agregue o edite un registro completando todos los campos. El formulario tiene tres bloques: **Datos del aspirante** (cédula, nombres, fecha de nacimiento, estado civil, celular, correo, ciudad, dirección), **Cargo y afiliaciones** (cliente, cargo, servicio/sector, EPS, pensión) y **Proceso del examen** (fecha ARL, **estado**, solicitud y responsable).
 3. **Desde Ingreso:** en la columna **Acciones** de un ingreso, pulse el icono **Pasar a examen ocupacional** (estetoscopio): se abre Examen ocupacional con el formulario Nuevo ya lleno con cédula, nombre, correo, celular, ciudad, cargo, cliente y responsable. Complete el resto y guarde.
    **Por cédula:** en Nuevo examen, al escribir la cédula y salir del campo, si el aspirante tiene un ingreso registrado el sistema llena esos mismos datos (puede corregirlos). Si no tiene ingreso, avisa y usted completa todo a mano.
-4. El **correo** debe tener un formato válido (por ejemplo nombre@dominio.com); si no, el sistema no deja guardar.
+4. El **correo** debe tener un formato válido (por ejemplo nombre@dominio.com); si no, el sistema no deja guardar. En Examen el correo **sí es obligatorio**: si el ingreso venía sin correo, escríbalo en este formulario.
 5. El **estado** del examen puede ser SOLICITADO, AGENDADO, APROBADO, NO APROBADO o CANCELADO. Los exámenes nuevos inician en **SOLICITADO**; cámbielo al editar a medida que avance el trámite.
 6. Si la cédula ya existe **en Examen**, confirme el duplicado antes de guardar (el aviso no mira los ingresos).
 7. Pulse el icono de guardar; el icono ✕ cierra sin guardar.
@@ -108,6 +108,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-11-03 | Desarrollo | Ingreso: **Correo**, **Jefe ope asignado** y **Reemplaza a** ya no son obligatorios (se marcan «(opcional)» y pueden guardarse vacíos). Ya no es necesario tener jefes operativos en el catálogo para guardar un ingreso. El correo sigue siendo obligatorio en Examen ocupacional. |
 | 1.0 | 2026-09-22 | Documentador | Version inicial FEAT-035: tablero Selección (Dashboard, Ingreso, Examen ocupacional, Catálogos). |
 | 1.1 | 2026-09-23 | Desarrollo | Ingresos: campo obligatorio REFERIDO (formulario, listado y Excel) después de RESPONSABLE. |
 | 1.9 | 2026-10-23 | Desarrollo | Ingreso: cliente, tipo de dotación, tallas, RH y fecha de ingreso son opcionales mientras el estado no sea **Contratado**. Al guardar, si falta algo, el modal muestra la lista de campos a corregir. |

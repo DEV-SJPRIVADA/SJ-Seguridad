@@ -17,7 +17,7 @@ Tablero de area **Gestion Humana** para registrar, consultar y analizar **solici
 - Dashboard = `solicitudes.view`∨`edit` **OR** `parameters.edit` (sin permiso KPI aparte). **No** se abre solo con permisos de Cartas Vacaciones. Bypass `manage.users`.
 - Shell `index` / `User::defaultClienteInternoBoardUrl()` redirige a la **primera pestaña visible**; si el usuario solo tiene Cartas Vacaciones → esa pestaña (evita 403 en Dashboard).
 - Tablas propias de catálogo (`cliente_interno_estados`, `cliente_interno_tipos_solicitud`) — no `payroll_catalog_items` (salvo firmas del lote de cartas, vía catálogo nómina `firmas`).
-- Solicitudes: DataTables `serverSide: true`, filtros, alta/edición/borrado duro, export `BaseExport` + `<x-export-excel>`, import replace solo del año+mes elegido (filas fuera de periodo se aceptan). Columna **Mes** en mayúsculas derivada de `fecha_solicitud` (p. ej. `DICIEMBRE`).
+- Solicitudes: DataTables `serverSide: true`, filtros, alta/edición/borrado duro, export `BaseExport` + `<x-export-excel>`, import replace solo del año+mes elegido (filas fuera de periodo se aceptan). Columna **Mes** en mayúsculas derivada de `fecha_solicitud` (p. ej. `DICIEMBRE`). En el modal **Nueva solicitud**, al salir del campo cédula (o presionar Enter) se busca la persona en Ficha y se autollena **Nombre y apellidos** (siempre editable).
 - **Cartas Vacaciones (FEAT-043):** grilla editable + modal pegar cédulas; lookup ficha (autollenar nombre si activo); generar 1→`.docx` / N→`.zip` con plantilla tipo Word `cartas_vacaciones` (exactamente una con archivo); sin persistencia de lotes ni archivos de salida; tope `config/cliente_interno.php` → `cartas_vacaciones.max_rows` (500).
 - Dias de respuesta: hábiles lun–vie (sin festivos V1) + override `dias_respuesta_manual`.
 - Seed ESTADO: Pendiente, En proceso, Respondida, Cerrada. Seed SOLICITUD: **vacío** (también se pueden crear al importar Excel).
@@ -43,6 +43,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | GET | `/solicitudes/exportar` | `solicitudes.export` | Excel filtrado. view |
 | GET | `/solicitudes/plantilla-importacion` | `solicitudes.import-template` | Plantilla headers. edit |
 | GET | `/solicitudes/periodo-conteo` | `solicitudes.period-count` | Conteo filas a borrar año+mes. edit |
+| GET | `/solicitudes/lookup-ficha` | `solicitudes.lookup-ficha` | JSON `cedula` → nombre Ficha (modal Nueva solicitud). edit |
 | POST | `/solicitudes/importar` | `solicitudes.import` | Replace periodo (opción B). edit + `confirm_replace` |
 | POST | `/solicitudes` | `solicitudes.store` | Crear. edit |
 | PATCH | `/solicitudes/{clienteInternoSolicitud}` | `solicitudes.update` | Editar. edit |
@@ -107,7 +108,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 
 | Clase | Responsabilidad |
 | --- | --- |
-| `App\Http\Controllers\GestionHumana\ClienteInternoController` | Shell, dashboard, solicitudes (DT/CRUD/export/import), **cartas vacaciones** (GET/lookup/generate), catálogos |
+| `App\Http\Controllers\GestionHumana\ClienteInternoController` | Shell, dashboard, solicitudes (DT/CRUD/export/import/lookup ficha), **cartas vacaciones** (GET/lookup/generate), catálogos |
 | `StoreClienteInternoSolicitudRequest` / `UpdateClienteInternoSolicitudRequest` | Validación solicitud; authorize edit |
 | `ImportClienteInternoSolicitudesRequest` | Archivo + año/mes + `confirm_replace` accepted; authorize edit |
 | `LookupCartasVacacionesRequest` | Cédulas 1/N; authorize `canEditCartasVacaciones` |
@@ -125,7 +126,7 @@ Trait UI: `App\Traits\HasClienteInternoTabs` (subnav / pestañas visibles). Redi
 | `areas/gestion_humana/cliente_interno/cartas-vacaciones.blade.php` | Grilla Alpine + modal pegar cédulas + generate blob (patrón Masivos) |
 | `areas/gestion_humana/cliente_interno/catalogos.blade.php` | Tablero de tarjetas ESTADO / TIPOS (`?catalog=` abre gestión; sin query muestra selector) |
 | `.../partials/subnav.blade.php` | Pestañas `.module-tab` |
-| `.../partials/solicitud-form-fields.blade.php` | Campos formulario alta/edición |
+| `.../partials/solicitud-form-fields.blade.php` | Campos formulario alta/edición; en alta la cédula dispara el lookup de Ficha y muestra aviso |
 | `.../partials/import-modal.blade.php` | Confirmación replace periodo + conteo |
 
 ## Modelos y tablas
@@ -167,6 +168,7 @@ Factories: `ClienteInternoEstadoFactory`, `ClienteInternoTipoSolicitudFactory`, 
 | `ClienteInternoDatatableService` | Query filtrada + payload DataTables server-side (tope length 100) |
 | `ClienteInternoBusinessDaysService` | Conteo hábiles + `resolveForCreate` / `resolveForUpdate` |
 | `ClienteInternoImportService` | Replace-por-periodo opción B; plantilla parse; audit metadata |
+| `ClienteInternoFichaLookupService` | Cédula → `full_name` desde `EmployeeFichaProfile` (activo primero, luego más reciente) para el modal Nueva solicitud |
 | `ClienteInternoDashboardService` | KPIs + charts payload; default año; bins distribución |
 | `ClienteInternoCatalogService` | CRUD catálogos; bloqueo DELETE con refs; desactivar OK |
 | `ClienteInternoCartasVacacionesGeneratorService` | Lookup ficha; exactamente 1 plantilla `cartas_vacaciones`; 1→docx / N→zip; temp cleanup |
@@ -191,6 +193,8 @@ Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplat
 4. Varios registros por misma cédula permitidos (sin aviso obligatorio).
 5. Eliminar = DELETE físico tras confirmación UI.
 6. Tipo solicitud activo al crear/editar manual; estado si presente, activo.
+
+**Autollenado de nombre (modal Nueva solicitud):** al salir del campo cédula o presionar Enter se consulta `GET solicitudes/lookup-ficha` (permiso `solicitudes.edit`) y, si hay coincidencia, se escribe `full_name` de Ficha en **Nombre y apellidos**. El campo permanece editable; si no hay coincidencia o falla la consulta se muestra un aviso y el usuario escribe el nombre a mano. Solo aplica al alta (no al modal de edición ni al import).
 
 ### Días hábiles + override
 
@@ -243,6 +247,7 @@ Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplat
 
 - Entry Vite: `resources/js/cliente-interno-dashboard-charts.js` (+ `apex-defaults.js`).
 - DataTables server-side en pestaña Solicitudes (Alpine/jQuery según patrón GH).
+- Modal Nueva solicitud: `lookupFichaNombre()` (Alpine) consulta `lookupFichaUrl` al cambiar/Enter en cédula y completa `create_nombre_apellidos`; el aviso se limpia al abrir el modal.
 - Cartas Vacaciones: Alpine en `cartas-vacaciones.blade.php` (grilla, modal multi-cédula, download blob).
 - Modal import: pide conteo periodo + checkbox/confirmación antes de POST.
 - Chrome: `.module-tab`; iconos `.req-manage-filters__icon-btn` / `.cursos-catalogo-page__icon-btn`.
@@ -277,7 +282,7 @@ Fechas texto `d/m/Y` (Colombia). Años mal tipados tipo `22026` se normalizan a 
 1. `php artisan migrate` (incremental; no fresh) — incluye migración Spatie cartas.
 2. `php artisan app:sync-permissions` + asignar board/view/edit/parameters/cartas a usuario de prueba + re-login.
 3. Catálogos: verificar 4 estados; crear ≥1 tipo SOLICITUD; probar desactivar / bloqueo delete con refs.
-4. Alta/editar/eliminar solicitud; override días; export.
+4. Alta/editar/eliminar solicitud; autollenado de nombre por cédula (modal alta); override días; export.
 5. Plantilla → filas in/out periodo → import con confirmación → verificar replace B + spillover.
 6. Dashboard metrics con/sin mes.
 7. Plantillas Word: exactamente **una** plantilla tipo **Cartas Vacaciones** con archivo; probar 0 / >1 bloquean.

@@ -23,6 +23,7 @@ use App\Services\GestionHumana\ClienteInternoCartasVacacionesGeneratorService;
 use App\Services\GestionHumana\ClienteInternoCatalogService;
 use App\Services\GestionHumana\ClienteInternoDashboardService;
 use App\Services\GestionHumana\ClienteInternoDatatableService;
+use App\Services\GestionHumana\ClienteInternoFichaLookupService;
 use App\Services\GestionHumana\ClienteInternoImportService;
 use App\Support\ColombiaHolidays;
 use App\Traits\HasClienteInternoTabs;
@@ -44,6 +45,7 @@ class ClienteInternoController extends Controller
         private readonly ClienteInternoAuditLogService $auditLogService,
         private readonly ClienteInternoDashboardService $dashboardService,
         private readonly ClienteInternoDatatableService $datatableService,
+        private readonly ClienteInternoFichaLookupService $fichaLookupService,
         private readonly ClienteInternoBusinessDaysService $businessDaysService,
         private readonly ClienteInternoImportService $importService,
         private readonly ClienteInternoImportTemplateExport $importTemplateExport,
@@ -250,11 +252,45 @@ class ClienteInternoController extends Controller
             'datatableUrl' => route('gestion-humana.cliente-interno.solicitudes.datatable', $activeQuery),
             'exportUrl' => route('gestion-humana.cliente-interno.solicitudes.export', $activeQuery),
             'storeUrl' => route('gestion-humana.cliente-interno.solicitudes.store'),
+            'lookupFichaUrl' => route('gestion-humana.cliente-interno.solicitudes.lookup-ficha'),
             'importTemplateUrl' => route('gestion-humana.cliente-interno.solicitudes.import-template'),
             'importUrl' => route('gestion-humana.cliente-interno.solicitudes.import'),
             'periodCountUrl' => route('gestion-humana.cliente-interno.solicitudes.period-count'),
             'showCreateModal' => $showCreateModal,
             'showImportModal' => $showImportModal,
+        ]);
+    }
+
+    /**
+     * Cedula -> nombre de Ficha para autollenar el modal Nueva solicitud.
+     * Si no hay coincidencia devuelve found=false y el nombre se escribe a mano.
+     */
+    public function solicitudesLookupFicha(Request $request): JsonResponse
+    {
+        abort_unless($this->clienteInternoAccess->canEditSolicitudes(auth()->user()), 403);
+
+        $documentNumber = trim((string) $request->query('cedula', ''));
+
+        if ($documentNumber === '') {
+            return response()->json([
+                'found' => false,
+                'message' => 'Ingrese una cédula para buscar en Ficha.',
+            ]);
+        }
+
+        $result = $this->fichaLookupService->lookupByDocument($documentNumber);
+
+        if ($result === null) {
+            return response()->json([
+                'found' => false,
+                'message' => 'No se encontró un empleado en Ficha para esa cédula. Puede escribir el nombre manualmente.',
+            ]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'document_number' => $result['document_number'],
+            'full_name' => $result['full_name'],
         ]);
     }
 

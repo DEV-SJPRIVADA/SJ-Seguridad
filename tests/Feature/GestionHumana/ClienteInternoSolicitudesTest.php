@@ -5,6 +5,7 @@ namespace Tests\Feature\GestionHumana;
 use App\Models\ClienteInternoEstado;
 use App\Models\ClienteInternoSolicitud;
 use App\Models\ClienteInternoTipoSolicitud;
+use App\Models\EmployeeFichaProfile;
 use App\Models\User;
 use App\Services\GestionHumana\ClienteInternoBusinessDaysService;
 use App\Support\PermissionCatalog;
@@ -459,6 +460,73 @@ class ClienteInternoSolicitudesTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(2, ClienteInternoSolicitud::query()->where('cedula', 'DUP-01')->count());
+    }
+
+    public function test_lookup_ficha_returns_the_employee_name(): void
+    {
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '10203040',
+            'full_name' => 'GOMEZ PEREZ ANA MARIA',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '99887766',
+            'full_name' => 'ROJAS DIAZ LUIS',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+        ]);
+
+        $this->actingAs($this->editorUser())
+            ->getJson(route('gestion-humana.cliente-interno.solicitudes.lookup-ficha', [
+                'cedula' => '10203040',
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'document_number' => '10203040',
+                'full_name' => 'GOMEZ PEREZ ANA MARIA',
+            ]);
+
+        // Una cedula de un empleado desvinculado tambien resuelve el nombre,
+        // porque el campo queda editable y el usuario decide si lo usa.
+        $this->actingAs($this->editorUser())
+            ->getJson(route('gestion-humana.cliente-interno.solicitudes.lookup-ficha', [
+                'cedula' => ' 99887766 ',
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'found' => true,
+                'document_number' => '99887766',
+                'full_name' => 'ROJAS DIAZ LUIS',
+            ]);
+    }
+
+    public function test_lookup_ficha_reports_not_found_and_requires_edit_permission(): void
+    {
+        $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.cliente-interno.solicitudes.lookup-ficha', [
+                'cedula' => '555000111',
+            ]))
+            ->assertForbidden();
+
+        $this->actingAs($this->editorUser())
+            ->getJson(route('gestion-humana.cliente-interno.solicitudes.lookup-ficha', [
+                'cedula' => '555000111',
+            ]))
+            ->assertOk()
+            ->assertJson([
+                'found' => false,
+                'message' => 'No se encontró un empleado en Ficha para esa cédula. Puede escribir el nombre manualmente.',
+            ]);
+    }
+
+    public function test_solicitudes_page_exposes_the_ficha_lookup_for_the_create_modal(): void
+    {
+        $this->actingAs($this->editorUser())
+            ->get(route('gestion-humana.cliente-interno.solicitudes'))
+            ->assertOk()
+            ->assertSee('lookup-ficha', false)
+            ->assertSee('lookupFichaNombre', false)
+            ->assertSee('create_nombre_apellidos', false);
     }
 
     /**
