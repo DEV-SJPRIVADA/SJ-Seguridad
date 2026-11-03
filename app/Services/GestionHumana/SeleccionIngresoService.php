@@ -130,12 +130,12 @@ class SeleccionIngresoService
         $bloodCode = $this->nullableText($validated['blood_type_code'] ?? null);
         $blood = $bloodCode !== null ? $this->activeCatalogName('blood_type', $bloodCode) : null;
         $estado = $this->activeCatalogName('ingreso_estado', (string) $validated['estado_code']);
-        $jefeOperativo = $this->activeCatalogName('jefe_operativo', (string) $validated['jefe_ope_code']);
+        $jefeOperativo = $this->activeCatalogName('jefe_operativo', (string) ($validated['jefe_ope_code'] ?? ''));
 
         return [
             'document_number' => trim((string) $validated['document_number']),
             'full_name' => trim((string) $validated['full_name']),
-            'email' => trim((string) $validated['email']),
+            'email' => trim((string) $validated['email']) ?: '',
             'phone' => trim((string) $validated['phone']),
             'city_code' => (string) $validated['city_code'],
             'city_name' => $city,
@@ -153,11 +153,11 @@ class SeleccionIngresoService
             'blood_type_code' => $bloodCode,
             'blood_type_name' => $blood,
             'reemplaza_cedula' => ($validated['reemplaza_cedula'] ?? null) ? trim((string) $validated['reemplaza_cedula']) : null,
-            'reemplaza_a' => trim((string) $validated['reemplaza_a']),
+            'reemplaza_a' => trim((string) $validated['reemplaza_a']) ?: '',
             'responsable_user_id' => (int) $validated['responsable_user_id'],
             // Opcional: la columna es NOT NULL con default '' (el listado muestra «—»).
             'referido' => trim((string) ($validated['referido'] ?? '')),
-            'jefe_ope_code' => (string) $validated['jefe_ope_code'],
+            'jefe_ope_code' => (string) ($validated['jefe_ope_code'] ?? ''),
             'jefe_ope' => $jefeOperativo,
             'observaciones' => $this->nullableText($validated['observaciones'] ?? null),
         ];
