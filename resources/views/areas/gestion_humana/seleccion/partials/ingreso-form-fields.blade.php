@@ -59,8 +59,8 @@
                 <input id="{{ $prefix }}_full_name" name="full_name" type="text" class="form-input" maxlength="255" required autocomplete="off" value="{{ $v['full_name'] ?? '' }}" {!! $bind('full_name') !!}>
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_email">CORREO</label>
-                <input id="{{ $prefix }}_email" name="email" type="email" class="form-input" maxlength="150" required autocomplete="off" value="{{ $v['email'] ?? '' }}" {!! $bind('email') !!}>
+                <label class="form-label" for="{{ $prefix }}_email">CORREO <span class="seleccion-ingresos-form__optional">(opcional)</span> </label>
+                <input id="{{ $prefix }}_email" name="email" type="email" class="form-input" maxlength="150" autocomplete="off" value="{{ $v['email'] ?? '' }}" {!! $bind('email') !!}>
             </div>
             <div class="form-field">
                 <label class="form-label" for="{{ $prefix }}_phone">TELÉFONO</label>
@@ -220,21 +220,17 @@
                 />
             </div>
             <div class="form-field">
-                <label class="form-label" for="{{ $prefix }}_jefe_ope_code">JEFE OPE ASIGNADO</label>
+                <label class="form-label" for="{{ $prefix }}_jefe_ope_code">JEFE OPE ASIGNADO <span class="seleccion-ingresos-form__optional">(opcional)</span> </label>
                 <x-searchable-select
                     id="{{ $prefix }}_jefe_ope_code"
                     name="jefe_ope_code"
                     :options="$jefeOperativoOptions"
                     :value="$v['jefe_ope_code'] ?? ''"
                     placeholder="Seleccionar…"
-                    :required="true"
+                    :required="false"
                     :allow-clear="false"
                 />
-                @if (empty($jefeOperativoOptions))
-                    <p class="seleccion-ingresos-page__form-hint">
-                        No hay jefes operativos en el catálogo. Agrégalos en la pestaña Catálogos de Selección para poder guardar el ingreso.
-                    </p>
-                @endif
+
             </div>
             <div class="form-field">
                 <label class="form-label" for="{{ $prefix }}_referido">
@@ -273,8 +269,8 @@
                 ></p>
             </div>
             <div class="form-field seleccion-ingresos-form__span-2">
-                <label class="form-label" for="{{ $prefix }}_reemplaza_a">REEMPLAZA A</label>
-                <input id="{{ $prefix }}_reemplaza_a" name="reemplaza_a" type="text" class="form-input" maxlength="255" required autocomplete="off" value="{{ $v['reemplaza_a'] ?? '' }}" {!! $bind('reemplaza_a') !!}>
+                <label class="form-label" for="{{ $prefix }}_reemplaza_a">REEMPLAZA A <span class="seleccion-ingresos-form__optional">(opcional)</span> </label>
+                <input id="{{ $prefix }}_reemplaza_a" name="reemplaza_a" type="text" class="form-input" maxlength="255" autocomplete="off" value="{{ $v['reemplaza_a'] ?? '' }}" {!! $bind('reemplaza_a') !!}>
             </div>
             <div class="form-field seleccion-ingresos-form__span-3">
                 <label class="form-label" for="{{ $prefix }}_observaciones">

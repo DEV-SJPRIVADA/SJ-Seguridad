@@ -83,6 +83,23 @@ class SeleccionIngresoTest extends TestCase
         $this->assertSame('', $row->fresh()->referido);
     }
 
+    public function test_email_jefe_ope_and_reemplaza_a_are_optional(): void
+    {
+        $editor = $this->editorUser();
+        $payload = $this->validPayload($editor);
+        unset($payload['email'], $payload['jefe_ope_code'], $payload['reemplaza_a']);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.seleccion.ingresos.store'), $payload)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('gestion-humana.seleccion.ingresos'));
+
+        $row = SeleccionIngreso::query()->where('document_number', $payload['document_number'])->firstOrFail();
+        $this->assertSame('', $row->email);
+        $this->assertSame('', $row->jefe_ope);
+        $this->assertSame('', $row->reemplaza_a);
+    }
+
     public function test_lookup_perfil_returns_name_for_reemplazo_and_requires_edit(): void
     {
         EmployeeFichaProfile::query()->create([

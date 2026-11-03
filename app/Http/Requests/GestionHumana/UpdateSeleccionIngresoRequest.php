@@ -38,7 +38,7 @@ class UpdateSeleccionIngresoRequest extends FormRequest
         return [
             'document_number' => ['required', 'string', 'max:50'],
             'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:150'],
+            'email' => ['nullable', 'email', 'max:150'],
             'phone' => ['required', 'string', 'max:40'],
             'city_code' => [
                 'required',
@@ -84,11 +84,11 @@ class UpdateSeleccionIngresoRequest extends FormRequest
                 ),
             ],
             'reemplaza_cedula' => ['nullable', 'string', 'max:50'],
-            'reemplaza_a' => ['required', 'string', 'max:255'],
+            'reemplaza_a' => ['nullable', 'string', 'max:255'],
             'responsable_user_id' => ['required', 'integer', Rule::in($officerIds)],
             'referido' => ['nullable', 'string', 'max:255'],
             'jefe_ope_code' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::exists('payroll_catalog_items', 'code')->where(
@@ -108,7 +108,6 @@ class UpdateSeleccionIngresoRequest extends FormRequest
         return [
             'document_number.required' => 'La cédula es obligatoria.',
             'full_name.required' => 'Los apellidos y nombre son obligatorios.',
-            'email.required' => 'El correo es obligatorio.',
             'email.email' => 'El correo no es válido.',
             'phone.required' => 'El teléfono es obligatorio.',
             'city_code.required' => 'La ciudad es obligatoria.',
@@ -129,10 +128,8 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'blood_type_code.required' => 'El RH es obligatorio cuando el estado es Contratado.',
             'blood_type_code.exists' => 'El RH no existe o no está activo.',
             'reemplaza_cedula.max' => 'La cédula de reemplazo no puede superar 50 caracteres.',
-            'reemplaza_a.required' => 'El campo reemplaza a es obligatorio.',
             'responsable_user_id.required' => 'El responsable es obligatorio.',
             'responsable_user_id.in' => 'El responsable no es un reclutador activo válido.',
-            'jefe_ope_code.required' => 'El jefe operativo es obligatorio.',
             'jefe_ope_code.exists' => 'El jefe operativo no existe o no está activo.',
             'observaciones.max' => 'Las observaciones no pueden superar 1000 caracteres.',
         ];
@@ -143,7 +140,7 @@ class UpdateSeleccionIngresoRequest extends FormRequest
         $this->merge([
             'document_number' => trim((string) $this->input('document_number')),
             'full_name' => trim((string) $this->input('full_name')),
-            'email' => trim((string) $this->input('email')),
+            'email' => trim((string) $this->input('email')) ?: null,
             'phone' => trim((string) $this->input('phone')),
             // Vacío → null para que los campos de contratación opcionales no fallen por tipo.
             'commercial_client_id' => $this->filled('commercial_client_id') ? $this->input('commercial_client_id') : null,
@@ -154,9 +151,9 @@ class UpdateSeleccionIngresoRequest extends FormRequest
             'pants_size' => trim((string) $this->input('pants_size')) ?: null,
             'shoes_size' => trim((string) $this->input('shoes_size')) ?: null,
             'reemplaza_cedula' => trim((string) $this->input('reemplaza_cedula')) ?: null,
-            'reemplaza_a' => trim((string) $this->input('reemplaza_a')),
+            'reemplaza_a' => trim((string) $this->input('reemplaza_a')) ?: null,
             'referido' => trim((string) $this->input('referido')),
-            'jefe_ope_code' => trim((string) $this->input('jefe_ope_code')),
+            'jefe_ope_code' => trim((string) $this->input('jefe_ope_code')) ?: null,
             'observaciones' => trim((string) $this->input('observaciones')),
             'confirm_duplicate' => $this->boolean('confirm_duplicate'),
         ]);
