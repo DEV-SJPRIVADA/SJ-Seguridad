@@ -39,6 +39,7 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | PATCH | `/{hoja}/{row}` | `{hoja}.update` | update GH. edit (no persiste cols Nómina) |
 | PATCH | `/{hoja}/{row}/review` | `{hoja}.review` | cols Nómina. review |
 | DELETE | `/{hoja}/{row}` | `{hoja}.destroy` | edit (Retiros: soft-delete) |
+| GET | `/vacaciones/{vacacion}/carta-word` | `vacaciones.carta-word` | Descarga .docx carta vacaciones (plantilla `cartas_vacaciones`). **edit** vacaciones |
 
 Hojas: `vacaciones`, `incapacidades`, `retiros`, `permisos`. Parametros de ruta: `{vacacion}`, `{incapacidad}`, `{retiro}`, `{permiso}`.
 
@@ -180,12 +181,13 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
    - Al cambiar mes/quincena se vacían los datepickers de rango.
    - Limpiar vuelve a la URL sin query → mes + quincena actuales.
 10. `observacion_nomina` con valor: celda del listado en pill verde (`status-pill--success`); input del modal con fondo verde (`.rn-novedad-form__input--nomina-filled`).
-11. Vacaciones (alta): al ingresar **días** y **fecha inicio**, el modal sugiere `fecha_fin` = inicio + N días hábiles (sin domingos ni festivos CO, según `holidayDates` de `ColombiaHolidays`) y el usuario puede editarla. No aplica en el modal de edición.
+11. Vacaciones (alta/edición GH): al ingresar **días** y **fecha inicio**, el modal sugiere `fecha_fin` = inicio + N días hábiles (sin domingos ni festivos CO) y `fecha_reintegro` = día siguiente a fin; el usuario puede editar ambas. También persisten **períodos** y **firma** (`signatory_id`, catálogo `firmas`) para regenerar la carta Word; no se muestran en el listado.
+12. Vacaciones: acción **Descargar carta Word** por fila (solo `reportes_novedades.vacaciones.edit`); usa `ClienteInternoCartasVacacionesGeneratorService` + plantilla activa `cartas_vacaciones`.
 
 ## JavaScript / assets
 
 - Alpine + DataTables server-side embebidos en vistas Blade (patron GH).
-- Vacaciones: `syncFechaFin()` (Alpine) recalcula `form.fecha_fin` desde `dias_novedad` + `fecha_inicio` usando `holidaySet` (festivos CO enviados por el controller).
+- Vacaciones: `syncFechaFin()` (Alpine) recalcula `form.fecha_fin` y `form.fecha_reintegro` desde `dias_novedad` + `fecha_inicio` usando `holidaySet` (festivos CO enviados por el controller).
 - Selectores catalogo: `<x-searchable-select>`.
 - Botones icon-only: `.req-manage-filters__icon-btn` / `.cursos-catalogo-page__icon-btn`.
 - Subnav: `.module-tab` / branding GH.

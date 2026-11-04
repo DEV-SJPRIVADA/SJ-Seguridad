@@ -144,6 +144,7 @@
                                     'prefix' => 'create',
                                     'mode' => 'create',
                                     'novedadOptions' => $novedadOptions,
+                                    'signatoryOptions' => $signatoryOptions,
                                     'canEditGh' => true,
                                     'canReviewNomina' => false,
                                     'showNomina' => false,
@@ -158,6 +159,9 @@
                                         'dias_novedad' => old('dias_novedad', ''),
                                         'fecha_inicio' => old('fecha_inicio', ''),
                                         'fecha_fin' => old('fecha_fin', ''),
+                                        'fecha_reintegro' => old('fecha_reintegro', ''),
+                                        'periodos' => old('periodos', ''),
+                                        'signatory_id' => old('signatory_id', ''),
                                         'observaciones' => old('observaciones', ''),
                                         'observacion_nomina' => '',
                                     ],
@@ -207,10 +211,12 @@
                             'prefix' => 'edit',
                             'mode' => 'edit',
                             'novedadOptions' => $novedadOptions,
+                            'signatoryOptions' => $signatoryOptions,
                             'canEditGh' => $canEdit,
                             'canReviewNomina' => $canReview && ! $canEdit,
                             'showNomina' => true,
                             'alpine' => true,
+                            'autoFechaFin' => $canEdit,
                             'values' => [],
                         ])
                         <div class="ficha-empleados-masivos-modal__footer">
@@ -239,6 +245,10 @@
                     dias_novedad: '',
                     fecha_inicio: '',
                     fecha_fin: '',
+                    fecha_reintegro: '',
+                    periodos: '',
+                    signatory_id: '',
+                    signatory_label: '',
                     observaciones: '',
                     observacion_nomina: '',
                 });
@@ -268,6 +278,10 @@
                         dias_novedad: @js(old('dias_novedad', '')),
                         fecha_inicio: @js(old('fecha_inicio', '')),
                         fecha_fin: @js(old('fecha_fin', '')),
+                        fecha_reintegro: @js(old('fecha_reintegro', '')),
+                        periodos: @js(old('periodos', '')),
+                        signatory_id: @js(old('signatory_id', '')),
+                        signatory_label: '',
                         observaciones: @js(old('observaciones', '')),
                         observacion_nomina: '',
                     },
@@ -296,6 +310,7 @@
                         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-vacacion-nuevo' }));
                         this.$nextTick(() => {
                             this.setSearchableValue('create_novedad', '');
+                            this.setSearchableValue('create_signatory_id', '');
                             document.getElementById('create_document_number')?.focus();
                         });
                     },
@@ -309,6 +324,10 @@
                             dias_novedad: row.dias_novedad ?? '',
                             fecha_inicio: row.fecha_inicio || '',
                             fecha_fin: row.fecha_fin || '',
+                            fecha_reintegro: row.fecha_reintegro || '',
+                            periodos: row.periodos || '',
+                            signatory_id: row.signatory_id ?? '',
+                            signatory_label: row.signatory_label || '',
                             observaciones: row.observaciones || '',
                             observacion_nomina: row.observacion_nomina || '',
                         };
@@ -326,17 +345,21 @@
                         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-vacacion-editar' }));
                         this.$nextTick(() => {
                             this.setSearchableValue('edit_novedad', row.novedad || '');
+                            if (row.can_edit) {
+                                this.setSearchableValue('edit_signatory_id', row.signatory_id ?? '');
+                            }
                         });
                     },
                     /**
                      * Sugiere fecha fin = inicio + N días (sin domingos ni festivos CO; cruza año).
-                     * La fecha fin queda editable para ajustes manuales.
+                     * Fecha reintegro = día siguiente a fin. Ambas quedan editables.
                      */
                     syncFechaFin() {
                         const start = String(this.form.fecha_inicio || '').trim();
                         const days = Number.parseInt(String(this.form.dias_novedad || '').trim(), 10);
 
                         if (! start || ! Number.isFinite(days) || days < 1) {
+                            this.form.fecha_reintegro = '';
                             return;
                         }
 
@@ -369,10 +392,13 @@
                         }
 
                         if (counted < days) {
+                            this.form.fecha_reintegro = '';
                             return;
                         }
 
                         this.form.fecha_fin = toIso(cursor);
+                        const reintegro = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
+                        this.form.fecha_reintegro = toIso(reintegro);
                     },
                     setSearchableValue(id, value) {
                         const input = document.getElementById(id);

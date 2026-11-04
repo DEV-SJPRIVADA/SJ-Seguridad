@@ -6,6 +6,7 @@
     $showNomina = (bool) ($showNomina ?? ($mode !== 'create'));
     $alpine = (bool) ($alpine ?? false);
     $autoFechaFin = (bool) ($autoFechaFin ?? false);
+    $signatoryOptions = $signatoryOptions ?? [];
 @endphp
 
 <div class="rn-novedad-form">
@@ -27,7 +28,7 @@
             </span>
             <div>
                 <h4 class="rn-novedad-form__section-title">Novedad</h4>
-                <p class="rn-novedad-form__section-desc">Tipo de vacación, días y fechas de inicio y fin.</p>
+                <p class="rn-novedad-form__section-desc">Tipo de vacación, días, fechas y datos para la carta Word.</p>
             </div>
         </div>
 
@@ -98,6 +99,63 @@
                 >
                 @if ($autoFechaFin)
                     <p class="form-hint">Sugerida: inicio + días (sin domingos ni festivos). Puede modificarla.</p>
+                @endif
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="{{ $prefix }}_fecha_reintegro">Fecha reintegro</label>
+                <input
+                    id="{{ $prefix }}_fecha_reintegro"
+                    @if ($canEditGh) name="fecha_reintegro" @endif
+                    type="date"
+                    class="form-input"
+                    @if ($canEditGh) required @endif
+                    @disabled(! $canEditGh)
+                    title="Sugerida: día siguiente a la fecha fin. Puede modificarla."
+                    aria-label="Fecha reintegro"
+                    @if ($alpine) x-model="form.fecha_reintegro" @else value="{{ $v['fecha_reintegro'] ?? '' }}" @endif
+                >
+                @if ($autoFechaFin)
+                    <p class="form-hint">Sugerida: día siguiente a la fecha fin. Puede modificarla.</p>
+                @endif
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="{{ $prefix }}_periodos">Períodos</label>
+                <input
+                    id="{{ $prefix }}_periodos"
+                    @if ($canEditGh) name="periodos" @endif
+                    type="text"
+                    class="form-input"
+                    maxlength="500"
+                    placeholder="Ej. 2024-2025"
+                    @if ($canEditGh) required @endif
+                    @disabled(! $canEditGh)
+                    @if ($alpine) x-model="form.periodos" @else value="{{ $v['periodos'] ?? '' }}" @endif
+                >
+            </div>
+
+            <div class="form-field">
+                <label class="form-label" for="{{ $prefix }}_signatory_id">Firma</label>
+                @if ($canEditGh)
+                    <x-searchable-select
+                        :id="$prefix.'_signatory_id'"
+                        name="signatory_id"
+                        :options="$signatoryOptions"
+                        :value="$v['signatory_id'] ?? ''"
+                        placeholder="Firma…"
+                        search-placeholder="Buscar firma…"
+                        :required="true"
+                        :allow-clear="false"
+                    />
+                @else
+                    <input
+                        id="{{ $prefix }}_signatory_id"
+                        type="text"
+                        class="form-input"
+                        disabled
+                        @if ($alpine) x-model="form.signatory_label" @else value="{{ $v['signatory_label'] ?? '—' }}" @endif
+                    >
                 @endif
             </div>
 

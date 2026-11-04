@@ -2,6 +2,7 @@
 
 namespace App\Services\GestionHumana;
 
+use App\Models\PayrollCatalogItem;
 use App\Models\ReportesNovedadesVacacion;
 use App\Support\DisplayDate;
 use App\Support\ReportesNovedadesPeriodFilter;
@@ -136,7 +137,12 @@ final class ReportesNovedadesVacacionesDatatableService
             'dias_novedad' => $row->dias_novedad,
             'fecha_inicio' => optional($row->fecha_inicio)?->format('Y-m-d'),
             'fecha_fin' => optional($row->fecha_fin)?->format('Y-m-d'),
+            'fecha_reintegro' => optional($row->fecha_reintegro)?->format('Y-m-d'),
+            'periodos' => $row->periodos,
+            'signatory_id' => $row->signatory_id,
+            'signatory_label' => $this->signatoryLabel($row->signatory_id),
             'observaciones' => $row->observaciones,
+            'download_carta_url' => route('gestion-humana.reportes-novedades.vacaciones.carta-word', $row),
             'observacion_nomina' => $row->observacion_nomina,
             'update_url' => route('gestion-humana.reportes-novedades.vacaciones.update', $row),
             'review_url' => route('gestion-humana.reportes-novedades.vacaciones.review', $row),
@@ -160,6 +166,12 @@ final class ReportesNovedadesVacacionesDatatableService
         );
 
         if ($canEdit) {
+            $buttons .= sprintf(
+                '<a href="%s" class="cursos-catalogo-page__icon-btn" title="Descargar carta Word" aria-label="Descargar carta Word">%s</a>',
+                e(route('gestion-humana.reportes-novedades.vacaciones.carta-word', $row)),
+                $this->downloadSvg(),
+            );
+
             $buttons .= sprintf(
                 '<form method="POST" action="%s" class="cursos-catalogo-page__delete-form" onsubmit="return confirm(%s);">'.
                 '%s<input type="hidden" name="_method" value="DELETE">'.
@@ -215,5 +227,29 @@ final class ReportesNovedadesVacacionesDatatableService
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
             '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>'.
             '<path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>';
+    }
+
+    private function downloadSvg(): string
+    {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+            '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'.
+            '<polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
+    }
+
+    private function signatoryLabel(?int $signatoryId): string
+    {
+        if ($signatoryId === null) {
+            return '';
+        }
+
+        static $cache = [];
+
+        if (! array_key_exists($signatoryId, $cache)) {
+            $item = PayrollCatalogItem::query()->find($signatoryId);
+            $cache[$signatoryId] = $item !== null ? $item->name.' — '.$item->code : '';
+        }
+
+        return $cache[$signatoryId];
     }
 }

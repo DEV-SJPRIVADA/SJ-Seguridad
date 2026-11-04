@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GestionHumana\ReportesNovedades\ReviewVacacionRequest;
 use App\Http\Requests\GestionHumana\ReportesNovedades\StoreVacacionRequest;
 use App\Http\Requests\GestionHumana\ReportesNovedades\UpdateVacacionRequest;
+use App\Models\PayrollCatalogItem;
 use App\Models\ReportesNovedadesVacacion;
 use App\Services\Access\ReportesNovedadesAccessService;
+use App\Services\GestionHumana\ClienteInternoCartasVacacionesGeneratorService;
 use App\Services\GestionHumana\ReportesNovedadesAuditLogService;
 use App\Services\GestionHumana\ReportesNovedadesHistorialService;
 use App\Services\GestionHumana\ReportesNovedadesVacacionesDatatableService;
@@ -18,6 +20,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportesNovedadesVacacionesController extends Controller
@@ -33,6 +37,9 @@ class ReportesNovedadesVacacionesController extends Controller
         'dias_novedad',
         'fecha_inicio',
         'fecha_fin',
+        'fecha_reintegro',
+        'periodos',
+        'signatory_id',
         'observaciones',
     ];
 
@@ -43,6 +50,7 @@ class ReportesNovedadesVacacionesController extends Controller
         private readonly ReportesNovedadesHistorialService $historialService,
         private readonly ReportesNovedadesVacacionesExport $export,
         private readonly ColombiaHolidays $colombiaHolidays,
+        private readonly ClienteInternoCartasVacacionesGeneratorService $cartasVacacionesGenerator,
     ) {}
 
     public function index(Request $request): View
@@ -68,6 +76,7 @@ class ReportesNovedadesVacacionesController extends Controller
             'lookupUrl' => route('gestion-humana.reportes-novedades.lookup'),
             'storeUrl' => route('gestion-humana.reportes-novedades.vacaciones.store'),
             'novedadOptions' => $this->catalogOptions('vacaciones_novedad'),
+            'signatoryOptions' => ($canEdit || $canReview) ? $this->signatoryOptions() : [],
             // Festivos CO para sugerir fecha fin en el modal de alta (rango amplio; cruza años).
             'holidayDates' => $this->colombiaHolidays->isoDatesForYears($year - 2, $year + 4),
             'showCreateModal' => $canEdit && $request->session()->get('errors') !== null
@@ -172,6 +181,39 @@ class ReportesNovedadesVacacionesController extends Controller
             ->with('status', 'Observación de Nómina actualizada.');
     }
 
+    public function downloadCarta(ReportesNovedadesVacacion $vacacion): BinaryFileResponse|RedirectResponse
+    {
+        abort_unless($this->access->canEdit(auth()->user(), self::SHEET), 403);
+
+        try {
+            $result = $this->cartasVacacionesGenerator->generateFromVacacionRecord($vacacion);
+        } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first()
+                ?? 'No se pudo generar la carta de vacaciones.';
+
+            return redirect()
+                ->route('gestion-humana.reportes-novedades.vacaciones')
+                ->with('error', $message);
+        }
+
+        $this->auditLogService->logEvent(
+            eventType: 'vacaciones_carta_word',
+            action: 'download',
+            metadata: [
+                'sheet' => self::SHEET,
+                'id' => $vacacion->id,
+                'document_number' => $vacacion->document_number,
+                'template_id' => $result['template_id'],
+            ],
+            model: $vacacion,
+            userId: (int) auth()->id(),
+        );
+
+        return response()
+            ->download($result['absolute_path'], $result['download_name'])
+            ->deleteFileAfterSend(true);
+    }
+
     public function destroy(ReportesNovedadesVacacion $vacacion): RedirectResponse
     {
         abort_unless($this->access->canEdit(auth()->user(), self::SHEET), 403);
@@ -259,6 +301,25 @@ class ReportesNovedadesVacacionesController extends Controller
     {
         return collect(config('reportes_novedades.catalogos.'.$key, []))
             ->map(fn (string $value): array => ['value' => $value, 'label' => $value])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function signatoryOptions(): array
+    {
+        return PayrollCatalogItem::query()
+            ->ofType('firmas')
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'code', 'name'])
+            ->map(static fn (PayrollCatalogItem $item): array => [
+                'value' => (string) $item->id,
+                'label' => $item->name.' — '.$item->code,
+            ])
             ->values()
             ->all();
     }

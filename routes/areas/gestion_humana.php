@@ -374,6 +374,7 @@ Route::middleware(['password.changed'])
         Route::get('/vacaciones/exportar', [ReportesNovedadesVacacionesController::class, 'export'])->name('vacaciones.export');
         Route::get('/vacaciones/historial', [ReportesNovedadesVacacionesController::class, 'historial'])->name('vacaciones.historial');
         Route::post('/vacaciones', [ReportesNovedadesVacacionesController::class, 'store'])->name('vacaciones.store');
+        Route::get('/vacaciones/{vacacion}/carta-word', [ReportesNovedadesVacacionesController::class, 'downloadCarta'])->name('vacaciones.carta-word');
         Route::patch('/vacaciones/{vacacion}', [ReportesNovedadesVacacionesController::class, 'update'])->name('vacaciones.update');
         Route::patch('/vacaciones/{vacacion}/review', [ReportesNovedadesVacacionesController::class, 'review'])->name('vacaciones.review');
         Route::delete('/vacaciones/{vacacion}', [ReportesNovedadesVacacionesController::class, 'destroy'])->name('vacaciones.destroy');

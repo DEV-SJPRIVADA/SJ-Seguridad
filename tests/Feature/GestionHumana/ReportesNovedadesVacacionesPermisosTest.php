@@ -3,14 +3,20 @@
 namespace Tests\Feature\GestionHumana;
 
 use App\Models\AuditLog;
+use App\Models\PayrollCatalogItem;
 use App\Models\ReportesNovedadesPermiso;
 use App\Models\ReportesNovedadesVacacion;
+use App\Models\TerminationLetterDocumentTemplate;
 use App\Models\User;
+use App\Models\WordDocumentType;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 use Tests\TestCase;
 
 class ReportesNovedadesVacacionesPermisosTest extends TestCase
@@ -81,6 +87,60 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             ->assertOk();
         $this->assertSame(1, $range->json('recordsFiltered'));
         $this->assertStringContainsString('Q2', $range->json('data.0.1'));
+    }
+
+    public function test_vacaciones_store_persists_carta_fields_in_uppercase(): void
+    {
+        $editor = $this->editorUser('vacaciones');
+        $signatory = $this->seedSignatory();
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.reportes-novedades.vacaciones.store'), $this->vacacionPayload([
+                'periodos' => '2024-2025',
+                'fecha_reintegro' => '2026-09-06',
+                'signatory_id' => $signatory->id,
+            ]))
+            ->assertRedirect(route('gestion-humana.reportes-novedades.vacaciones'));
+
+        $row = ReportesNovedadesVacacion::query()->where('document_number', '1010101010')->firstOrFail();
+        $this->assertSame('2026-09-06', $row->fecha_reintegro?->format('Y-m-d'));
+        $this->assertSame('2024-2025', $row->periodos);
+        $this->assertSame($signatory->id, $row->signatory_id);
+    }
+
+    public function test_vacaciones_download_carta_word_requires_edit(): void
+    {
+        $reviewer = $this->reviewerUser('vacaciones');
+        $row = ReportesNovedadesVacacion::query()->create($this->vacacionAttributes([
+            'fecha_reintegro' => '2026-09-06',
+            'periodos' => '2024-2025',
+            'signatory_id' => $this->seedSignatory()->id,
+        ]));
+
+        $this->actingAs($reviewer)
+            ->get(route('gestion-humana.reportes-novedades.vacaciones.carta-word', $row))
+            ->assertForbidden();
+    }
+
+    public function test_vacaciones_download_carta_word_returns_docx(): void
+    {
+        Storage::fake('local');
+        $this->seedExactlyOneCartaTemplate();
+        $signatory = $this->seedSignatory();
+        $editor = $this->editorUser('vacaciones');
+
+        $row = ReportesNovedadesVacacion::query()->create($this->vacacionAttributes([
+            'fecha_reintegro' => '2026-09-06',
+            'periodos' => '2024-2025',
+            'signatory_id' => $signatory->id,
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]));
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.reportes-novedades.vacaciones.carta-word', $row))
+            ->assertOk()
+            ->assertDownload();
     }
 
     public function test_vacaciones_create_modal_suggests_fecha_fin_from_business_days(): void
@@ -169,7 +229,7 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             ->assertRedirect();
 
         $row->refresh();
-        $this->assertSame('Ana Vacaciones Editada', $row->employee_name);
+        $this->assertSame('ANA VACACIONES EDITADA', $row->employee_name);
         $this->assertSame('VACACIONES COMP', $row->novedad);
         $this->assertSame(10, $row->dias_novedad);
 
@@ -197,7 +257,7 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             ->assertRedirect();
 
         $row->refresh();
-        $this->assertSame('Sin tocar nomina', $row->employee_name);
+        $this->assertSame('SIN TOCAR NOMINA', $row->employee_name);
         $this->assertSame('OK previo', $row->observacion_nomina);
     }
 
@@ -425,6 +485,8 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
      */
     private function vacacionPayload(array $overrides = []): array
     {
+        $signatoryId = $overrides['signatory_id'] ?? $this->seedSignatory()->id;
+
         return array_merge([
             'document_number' => '1010101010',
             'employee_name' => 'Empleado Vacacion',
@@ -434,8 +496,63 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
             'dias_novedad' => 5,
             'fecha_inicio' => '2026-09-01',
             'fecha_fin' => '2026-09-05',
+            'fecha_reintegro' => '2026-09-06',
+            'periodos' => '2024-2025',
+            'signatory_id' => $signatoryId,
             'observaciones' => 'Obs GH',
         ], $overrides);
+    }
+
+    private function seedSignatory(): PayrollCatalogItem
+    {
+        return PayrollCatalogItem::query()->firstOrCreate(
+            ['catalog_type' => 'firmas', 'code' => 'DIR_GH_RN'],
+            [
+                'name' => 'Directora GH RN',
+                'sort_order' => 1,
+                'is_active' => true,
+            ],
+        );
+    }
+
+    private function seedExactlyOneCartaTemplate(string $content = '${CEDULA} ${NOMBRE_COMPLETO}'): TerminationLetterDocumentTemplate
+    {
+        $type = WordDocumentType::query()->firstOrCreate(
+            ['code' => 'cartas_vacaciones'],
+            [
+                'name' => 'Cartas Vacaciones',
+                'is_active' => true,
+                'sort_order' => 3,
+            ],
+        );
+
+        $path = 'ficha-empleados/letter-templates/'.$type->id.'/tpl-cv-rn.docx';
+        Storage::disk('local')->put($path, $this->makeDocxBinary($content));
+
+        return TerminationLetterDocumentTemplate::query()->create([
+            'word_document_type_id' => $type->id,
+            'label' => 'Plantilla CV RN',
+            'sort_order' => 1,
+            'template_path' => $path,
+        ]);
+    }
+
+    private function makeDocxBinary(string $content): string
+    {
+        $temp = tempnam(sys_get_temp_dir(), 'letter-bin-');
+        $path = $temp.'.docx';
+        @unlink($temp);
+
+        $phpWord = new PhpWord;
+        $section = $phpWord->addSection();
+        $section->addText($content);
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($path);
+
+        $binary = (string) file_get_contents($path);
+        @unlink($path);
+
+        return $binary;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Services\GestionHumana;
 
 use App\Models\EmployeeFichaProfile;
+use App\Models\ReportesNovedadesVacacion;
 use App\Models\TerminationLetterDocumentTemplate;
 use App\Models\WordDocumentType;
 use App\Services\GestionHumana\Letter\LetterVariableBuilder;
@@ -102,6 +103,63 @@ class ClienteInternoCartasVacacionesGeneratorService
      *     template_id: int
      * }
      */
+    /**
+     * Genera un .docx desde un registro persistido en Reportes Novedades → Vacaciones.
+     *
+     * @return array{
+     *     absolute_path: string,
+     *     download_name: string,
+     *     output_type: string,
+     *     row_count: int,
+     *     template_id: int
+     * }
+     */
+    public function generateFromVacacionRecord(ReportesNovedadesVacacion $vacacion): array
+    {
+        $row = $this->mapVacacionRecordToCartaRow($vacacion);
+
+        if ($row === null) {
+            throw ValidationException::withMessages([
+                'vacacion' => 'Complete fecha reintegro, períodos y firma en el registro antes de generar la carta.',
+            ]);
+        }
+
+        return $this->generate([$row]);
+    }
+
+    /**
+     * @return array{
+     *     cedula: string,
+     *     nombre_completo: string,
+     *     fecha_inicio: string,
+     *     fecha_fin: string,
+     *     fecha_reintegro: string,
+     *     periodos: string,
+     *     dias_disfrutados: int,
+     *     signatory_id: int
+     * }|null
+     */
+    public function mapVacacionRecordToCartaRow(ReportesNovedadesVacacion $vacacion): ?array
+    {
+        $periodos = trim((string) ($vacacion->periodos ?? ''));
+        $signatoryId = $vacacion->signatory_id;
+
+        if ($vacacion->fecha_reintegro === null || $periodos === '' || $signatoryId === null) {
+            return null;
+        }
+
+        return [
+            'cedula' => (string) $vacacion->document_number,
+            'nombre_completo' => (string) $vacacion->employee_name,
+            'fecha_inicio' => $vacacion->fecha_inicio?->format('Y-m-d') ?? '',
+            'fecha_fin' => $vacacion->fecha_fin?->format('Y-m-d') ?? '',
+            'fecha_reintegro' => $vacacion->fecha_reintegro->format('Y-m-d'),
+            'periodos' => $periodos,
+            'dias_disfrutados' => (int) $vacacion->dias_novedad,
+            'signatory_id' => (int) $signatoryId,
+        ];
+    }
+
     public function generate(array $rows): array
     {
         $maxRows = (int) config('cliente_interno.cartas_vacaciones.max_rows', 500);

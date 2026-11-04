@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\GestionHumana\ReportesNovedades;
 
+use App\Http\Requests\Concerns\UppercasesValidatedText;
 use App\Services\Access\ReportesNovedadesAccessService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateVacacionRequest extends FormRequest
 {
+    use UppercasesValidatedText;
+
     public function authorize(): bool
     {
         $user = $this->user();
@@ -32,8 +35,25 @@ class UpdateVacacionRequest extends FormRequest
             'dias_novedad' => ['required', 'integer', 'min:0', 'max:65535'],
             'fecha_inicio' => ['required', 'date'],
             'fecha_fin' => ['required', 'date', 'after_or_equal:fecha_inicio'],
+            'fecha_reintegro' => ['required', 'date', 'after_or_equal:fecha_fin'],
+            'periodos' => ['required', 'string', 'max:500'],
+            'signatory_id' => [
+                'required',
+                'integer',
+                Rule::exists('payroll_catalog_items', 'id')
+                    ->where('catalog_type', 'firmas')
+                    ->where('is_active', true),
+            ],
             'observaciones' => ['nullable', 'string'],
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function uppercaseExceptKeys(): array
+    {
+        return ['signatory_id'];
     }
 
     /**
@@ -44,6 +64,8 @@ class UpdateVacacionRequest extends FormRequest
         return [
             'novedad.in' => 'La novedad no es válida para Vacaciones.',
             'fecha_fin.after_or_equal' => 'La fecha fin debe ser igual o posterior a la fecha inicio.',
+            'fecha_reintegro.after_or_equal' => 'La fecha reintegro debe ser igual o posterior a la fecha fin.',
+            'signatory_id.exists' => 'Seleccione una firma activa del catálogo.',
         ];
     }
 
@@ -56,6 +78,7 @@ class UpdateVacacionRequest extends FormRequest
             'destino' => $this->nullableTrim('destino'),
             'novedad' => trim((string) $this->input('novedad')),
             'observaciones' => $this->nullableTrim('observaciones'),
+            'periodos' => trim((string) $this->input('periodos')),
         ]);
     }
 

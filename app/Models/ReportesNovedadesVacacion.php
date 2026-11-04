@@ -21,6 +21,9 @@ class ReportesNovedadesVacacion extends Model
         'dias_novedad',
         'fecha_inicio',
         'fecha_fin',
+        'fecha_reintegro',
+        'periodos',
+        'signatory_id',
         'observaciones',
         'observacion_nomina',
         'created_by',
@@ -33,6 +36,8 @@ class ReportesNovedadesVacacion extends Model
             'dias_novedad' => 'integer',
             'fecha_inicio' => 'date',
             'fecha_fin' => 'date',
+            'fecha_reintegro' => 'date',
+            'signatory_id' => 'integer',
             'created_by' => 'integer',
             'updated_by' => 'integer',
         ];
