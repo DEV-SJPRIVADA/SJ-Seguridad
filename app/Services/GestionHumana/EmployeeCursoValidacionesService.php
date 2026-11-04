@@ -58,6 +58,7 @@ final class EmployeeCursoValidacionesService
      *     document_number?: string|null,
      *     document_numbers?: list<string>|string|null,
      *     full_name?: string|null,
+     *     cargo?: string|null,
      *     curso_tipo_id?: int|string|null,
      *     estado?: string|null,
      *     vigencia?: string|null,
@@ -92,7 +93,42 @@ final class EmployeeCursoValidacionesService
             $query->where('full_name', 'like', '%'.$name.'%');
         }
 
+        $cargo = trim((string) ($filters['cargo'] ?? ''));
+        if ($cargo !== '' && $cargo !== 'todos') {
+            $query->where('position_name', $cargo);
+        }
+
         return $query->orderBy('full_name')->orderBy('document_number');
+    }
+
+    /**
+     * Cargos distintos de la cola Activos sin curso (para el filtro searchable).
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function cargoFilterOptions(): array
+    {
+        $values = $this->sinCursoQuery([])
+            ->reorder()
+            ->select('position_name')
+            ->whereNotNull('position_name')
+            ->where('position_name', '!=', '')
+            ->distinct()
+            ->orderBy('position_name')
+            ->pluck('position_name')
+            ->filter(fn (mixed $value): bool => is_string($value) && trim($value) !== '')
+            ->values();
+
+        $options = [
+            ['value' => '', 'label' => 'Todos'],
+        ];
+
+        foreach ($values as $value) {
+            $label = trim((string) $value);
+            $options[] = ['value' => $label, 'label' => $label];
+        }
+
+        return $options;
     }
 
     /**

@@ -58,6 +58,28 @@
                         </div>
                     </div>
 
+                    {{-- Un solo icono Excel (selfhst repite IDs internos; dos copias dejan la 2.ª cola en blanco). --}}
+                    <div class="cursos-registros-page__table-toolbar av-cola-panel__toolbar cursos-validaciones-page__cola-toolbar">
+                        <div class="cursos-registros-page__table-actions cursos-validaciones-page__cola-toolbar-actions">
+                            <p class="req-manage-filters__meta" aria-live="polite">
+                                <strong x-text="counts[activeCola] ?? 0"></strong>
+                                <span>registro(s)</span>
+                            </p>
+                            <a
+                                href="#"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost js-cursos-validaciones-export"
+                                title="Exportar Excel de esta cola"
+                                aria-label="Exportar Excel de esta cola"
+                                x-bind:data-cola="activeCola"
+                                x-bind:data-export-base="exportUrls[activeCola] || ''"
+                                x-bind:href="exportUrls[activeCola] || '#'"
+                                x-on:click.prevent="exportCola($event.currentTarget)"
+                            >
+                                <x-selfhst-microsoft-excel-2013 width="18" height="18" aria-hidden="true" />
+                            </a>
+                        </div>
+                    </div>
+
                     @foreach ($colaDefs as $colaKey => $colaDef)
                         <div
                             class="av-cola-panel"
@@ -98,6 +120,22 @@
                                                 placeholder="Nombre"
                                             >
                                         </div>
+
+                                        {{-- Cargo solo aplica a Activos sin curso (viene de Ficha). --}}
+                                        @if ($colaKey === 'sin_curso')
+                                            <div class="form-field">
+                                                <label class="sr-only" for="cv_{{ $colaKey }}_cargo">Cargo</label>
+                                                <x-searchable-select
+                                                    id="cv_{{ $colaKey }}_cargo"
+                                                    name="cargo"
+                                                    :options="$filterCargoOptions"
+                                                    value=""
+                                                    placeholder="Cargo"
+                                                    search-placeholder="Buscar cargo…"
+                                                    :allow-clear="true"
+                                                />
+                                            </div>
+                                        @endif
 
                                         @if ($colaKey === 'por_actualizar_vencidos')
                                             <div class="form-field">
@@ -156,19 +194,6 @@
                                             >
                                                 <x-lucide-x width="18" height="18" aria-hidden="true" />
                                             </button>
-                                            @if (! empty($exportUrls[$colaKey]))
-                                                <a
-                                                    href="{{ $exportUrls[$colaKey] }}"
-                                                    class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost js-cursos-validaciones-export"
-                                                    title="Exportar Excel de esta cola"
-                                                    aria-label="Exportar Excel de esta cola"
-                                                    data-export-base="{{ $exportUrls[$colaKey] }}"
-                                                    data-cola="{{ $colaKey }}"
-                                                    @click.prevent="exportCola(@js($colaKey), $event.currentTarget)"
-                                                >
-                                                    <x-lucide-file-spreadsheet width="18" height="18" aria-hidden="true" />
-                                                </a>
-                                            @endif
                                             @if ($canEdit && $colaKey === 'por_actualizar_vencidos')
                                                 <button
                                                     type="button"
@@ -370,7 +395,7 @@
                     init() {
                         const self = this;
                         this.$nextTick(() => {
-                            this.initAllTables();
+                            this.initTable(this.activeCola);
                             this.reloadCola(this.activeCola);
                         });
 
@@ -422,9 +447,10 @@
                         const fd = new FormData(form);
                         fd.forEach((value, key) => {
                             const v = String(value || '').trim();
-                            if (v !== '' && !(key === 'estado' && v === 'todos')) {
-                                data[key] = v;
+                            if (v === '' || ((key === 'estado' || key === 'cargo') && v === 'todos')) {
+                                return;
                             }
+                            data[key] = v;
                         });
                         return data;
                     },
@@ -436,6 +462,7 @@
                         this.selectedMap = {};
                         this.bulkSelectableRows = [];
                         this.$nextTick(() => {
+                            this.initTable(cola);
                             this.reloadCola(cola);
                             const api = this.tables[cola];
                             if (api) {
@@ -475,7 +502,8 @@
                         });
                         this.applyFilters(cola);
                     },
-                    exportCola(cola, anchor) {
+                    exportCola(anchor) {
+                        const cola = (anchor && anchor.getAttribute('data-cola')) || this.activeCola;
                         const base = (anchor && anchor.getAttribute('data-export-base')) || this.exportUrls[cola];
                         if (!base) {
                             return;
@@ -484,7 +512,7 @@
                         Object.entries(this.collectFilters(cola)).forEach(([key, value]) => {
                             url.searchParams.set(key, value);
                         });
-                        window.location.href = url.toString();
+                        window.location.assign(url.toString());
                     },
                     openCreate(row) {
                         window.dispatchEvent(new CustomEvent('cursos-nuevo-prefill', {
@@ -561,87 +589,84 @@
                             this.bulkSelectableRows = [];
                         }
                     },
-                    initAllTables() {
+                    initTable(cola) {
                         const $ = window.jQuery;
-                        if (!$ || !$.fn.DataTable) {
+                        if (!$ || !$.fn.DataTable || !cola || this.tables[cola]) {
                             return;
                         }
                         const self = this;
-                        document.querySelectorAll('.js-cursos-validaciones-datatable').forEach((el) => {
-                            const $table = $(el);
-                            const cola = String($table.data('dt-cola') || '');
-                            if (!cola || self.tables[cola]) {
-                                return;
-                            }
+                        const el = document.querySelector('.js-cursos-validaciones-datatable[data-dt-cola="' + cola + '"]');
+                        if (!el) {
+                            return;
+                        }
+                        const $table = $(el);
+                        const wrap = $table.closest('.data-table-wrap');
+                        wrap.addClass('data-table-wrap--dt-compact');
+                        const columns = $table.data('dt-columns') || [];
 
-                            const wrap = $table.closest('.data-table-wrap');
-                            wrap.addClass('data-table-wrap--dt-compact');
-                            const columns = $table.data('dt-columns') || [];
-
-                            const api = $table.DataTable({
-                                processing: true,
-                                serverSide: true,
-                                deferLoading: 0,
-                                ajax: {
-                                    url: $table.data('dt-url') || self.datatableUrl,
-                                    data: function (d) {
-                                        d.cola = cola;
-                                        Object.entries(self.collectFilters(cola)).forEach(([key, value]) => {
-                                            d[key] = value;
-                                        });
-                                    },
+                        const api = $table.DataTable({
+                            processing: true,
+                            serverSide: true,
+                            deferLoading: 0,
+                            ajax: {
+                                url: $table.data('dt-url') || self.datatableUrl,
+                                data: function (d) {
+                                    d.cola = cola;
+                                    Object.entries(self.collectFilters(cola)).forEach(([key, value]) => {
+                                        d[key] = value;
+                                    });
                                 },
-                                columns: columns,
-                                language: {
-                                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-                                    emptyTable: 'No hay hallazgos en esta cola.',
-                                },
-                                dom: '<"req-manage-table-scroll"t><"req-manage-dt-bottom"lip>',
-                                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                                pageLength: 25,
-                                responsive: false,
-                                scrollX: false,
-                                autoWidth: false,
-                                order: [],
-                                columnDefs: columns
-                                    .map((col, idx) => {
-                                        if (col.orderable === false || col.searchable === false) {
-                                            return {
-                                                targets: idx,
-                                                orderable: col.orderable !== false ? undefined : false,
-                                                searchable: col.searchable !== false ? undefined : false,
-                                            };
-                                        }
-                                        return null;
-                                    })
-                                    .filter(Boolean),
-                            });
-
-                            api.on('xhr.dt', function (_e, _s, json) {
-                                wrap.removeClass('data-table-wrap--booting');
-                                if (json && typeof json.recordsFiltered !== 'undefined') {
-                                    const count = Number(json.recordsFiltered) || 0;
-                                    self.counts = { ...self.counts, [cola]: count };
-                                    const meta = document.getElementById('cursos-validaciones-count-' + cola);
-                                    if (meta) {
-                                        meta.textContent = String(count);
+                            },
+                            columns: columns,
+                            language: {
+                                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                                emptyTable: 'No hay hallazgos en esta cola.',
+                            },
+                            dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
+                            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                            pageLength: 25,
+                            responsive: false,
+                            scrollX: false,
+                            autoWidth: false,
+                            order: [],
+                            columnDefs: columns
+                                .map((col, idx) => {
+                                    if (col.orderable === false || col.searchable === false) {
+                                        return {
+                                            targets: idx,
+                                            orderable: col.orderable !== false ? undefined : false,
+                                            searchable: col.searchable !== false ? undefined : false,
+                                        };
                                     }
-                                    const badge = document.getElementById('cursos-validaciones-count-badge-' + cola);
-                                    if (badge) {
-                                        badge.textContent = String(count);
-                                        badge.classList.toggle('av-cola-tab__count--hot', count > 0);
-                                    }
-                                }
-                            });
-
-                            api.on('draw.dt', function () {
-                                $table.find('.js-curso-row-select').each(function () {
-                                    this.checked = !!self.selectedMap[Number(this.value)];
-                                });
-                            });
-
-                            self.tables[cola] = api;
+                                    return null;
+                                })
+                                .filter(Boolean),
                         });
+
+                        api.on('xhr.dt', function (_e, _s, json) {
+                            wrap.removeClass('data-table-wrap--booting');
+                            if (json && typeof json.recordsFiltered !== 'undefined') {
+                                const count = Number(json.recordsFiltered) || 0;
+                                self.counts = { ...self.counts, [cola]: count };
+                                const meta = document.getElementById('cursos-validaciones-count-' + cola);
+                                if (meta) {
+                                    meta.textContent = String(count);
+                                }
+                                const badge = document.getElementById('cursos-validaciones-count-badge-' + cola);
+                                if (badge) {
+                                    badge.textContent = String(count);
+                                    badge.classList.toggle('av-cola-tab__count--hot', count > 0);
+                                }
+                            }
+                        });
+
+                        api.on('draw.dt', function () {
+                            $table.find('.js-curso-row-select').each(function () {
+                                this.checked = !!self.selectedMap[Number(this.value)];
+                            });
+                        });
+
+                        self.tables[cola] = api;
                     },
                     reloadCola(cola) {
                         const api = this.tables[cola];

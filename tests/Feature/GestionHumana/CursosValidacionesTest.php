@@ -52,7 +52,11 @@ class CursosValidacionesTest extends TestCase
             ->assertSee('cursos-registros-page__filters av-cola-filters', false)
             ->assertSee('av-cola-panel__table', false)
             ->assertSee('cursos-validaciones-datatable-sin_curso', false)
-            ->assertSee('cursos-validaciones-datatable-por_actualizar_vencidos', false);
+            ->assertSee('cursos-validaciones-datatable-por_actualizar_vencidos', false)
+            ->assertSee('cv_sin_curso_cargo', false)
+            ->assertSee('js-cursos-validaciones-export', false)
+            ->assertSee('cursos-registros-page__table-toolbar', false)
+            ->assertSee('req-manage-dt-top', false);
     }
 
     public function test_sin_curso_datatable_lists_activos_without_cursos_only(): void
@@ -168,17 +172,181 @@ class CursosValidacionesTest extends TestCase
         $this->assertSame(EmployeeCurso::VIGENCIA_ACTUALIZAR, $actualizar->computeVigencia());
     }
 
+    public function test_sin_curso_datatable_filters_by_cargo(): void
+    {
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '811',
+            'full_name' => 'Guardia Sin Curso',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'position_name' => 'GUARDA',
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '822',
+            'full_name' => 'Escolta Sin Curso',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'position_name' => 'ESCOLTA',
+        ]);
+
+        $response = $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.cursos.validaciones.datatable', [
+                'cola' => 'sin_curso',
+                'cargo' => 'GUARDA',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]));
+
+        $response->assertOk()->assertJsonPath('recordsFiltered', 1);
+
+        $rowText = collect($response->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+
+        $this->assertStringContainsString('811', $rowText);
+        $this->assertStringContainsString('Guardia Sin Curso', $rowText);
+        $this->assertStringNotContainsString('822', $rowText);
+        $this->assertStringNotContainsString('Escolta Sin Curso', $rowText);
+    }
+
+    public function test_sin_curso_datatable_search_matches_name_and_cargo(): void
+    {
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '911',
+            'full_name' => 'Ana Busqueda',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'position_name' => 'SUPERVISOR',
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '922',
+            'full_name' => 'Luis Otro',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'position_name' => 'GUARDA',
+        ]);
+
+        $byName = $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.cursos.validaciones.datatable', [
+                'cola' => 'sin_curso',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'search' => ['value' => 'Ana'],
+            ]));
+
+        $byName->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('911', implode(' ', $byName->json('data.0')));
+
+        $byCargo = $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.cursos.validaciones.datatable', [
+                'cola' => 'sin_curso',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'search' => ['value' => 'SUPERVISOR'],
+            ]));
+
+        $byCargo->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('911', implode(' ', $byCargo->json('data.0')));
+    }
+
+    public function test_por_actualizar_vencidos_datatable_search(): void
+    {
+        $tipo = CursoTipo::factory()->create(['tipo_curso' => 'FUNDAMENTACION']);
+
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '940',
+            'full_name' => 'Activo Vencido Search',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        EmployeeCurso::factory()->create([
+            'document_number' => '940',
+            'full_name' => 'Activo Vencido Search',
+            'curso_tipo_id' => $tipo->id,
+            'numero_curso' => 'VEN-SEARCH-1',
+            'fecha_expedicion' => '2025-09-15',
+        ]);
+        EmployeeCurso::factory()->create([
+            'document_number' => '940',
+            'full_name' => 'Activo Vencido Search',
+            'curso_tipo_id' => $tipo->id,
+            'numero_curso' => 'ACT-OTRO-9',
+            'fecha_expedicion' => '2025-10-01',
+        ]);
+
+        $response = $this->actingAs($this->viewerUser())
+            ->getJson(route('gestion-humana.cursos.validaciones.datatable', [
+                'cola' => 'por_actualizar_vencidos',
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'search' => ['value' => 'VEN-SEARCH'],
+            ]));
+
+        $response->assertOk()->assertJsonPath('recordsFiltered', 1);
+
+        $rowText = collect($response->json('data'))
+            ->map(fn (array $row): string => implode(' ', $row))
+            ->implode(' ');
+
+        $this->assertStringContainsString('VEN-SEARCH-1', $rowText);
+        $this->assertStringNotContainsString('ACT-OTRO-9', $rowText);
+    }
+
     public function test_validaciones_export_sin_curso(): void
     {
         EmployeeFichaProfile::query()->create([
             'document_number' => '700',
             'full_name' => 'Export Sin Curso',
             'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'position_name' => 'GUARDA',
+        ]);
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '701',
+            'full_name' => 'Export Otro Cargo',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'position_name' => 'ESCOLTA',
         ]);
 
-        $this->actingAs($this->viewerUser())
+        $full = $this->actingAs($this->viewerUser())
             ->get(route('gestion-humana.cursos.validaciones.export', ['cola' => 'sin_curso']))
-            ->assertOk();
+            ->assertOk()
+            ->assertDownload();
+        $this->assertStringContainsString('spreadsheetml', (string) $full->headers->get('content-type'));
+
+        $filtered = $this->actingAs($this->viewerUser())
+            ->get(route('gestion-humana.cursos.validaciones.export', [
+                'cola' => 'sin_curso',
+                'cargo' => 'GUARDA',
+            ]))
+            ->assertOk()
+            ->assertDownload();
+        $this->assertStringContainsString('spreadsheetml', (string) $filtered->headers->get('content-type'));
+    }
+
+    public function test_validaciones_export_por_actualizar_vencidos(): void
+    {
+        $tipo = CursoTipo::factory()->create();
+        EmployeeFichaProfile::query()->create([
+            'document_number' => '760',
+            'full_name' => 'Export Vencido',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+        EmployeeCurso::factory()->create([
+            'document_number' => '760',
+            'full_name' => 'Export Vencido',
+            'curso_tipo_id' => $tipo->id,
+            'numero_curso' => 'EXP-VEN-1',
+            'fecha_expedicion' => '2025-09-15',
+        ]);
+
+        $response = $this->actingAs($this->viewerUser())
+            ->get(route('gestion-humana.cursos.validaciones.export', [
+                'cola' => 'por_actualizar_vencidos',
+            ]))
+            ->assertOk()
+            ->assertDownload();
+
+        $this->assertStringContainsString('spreadsheetml', (string) $response->headers->get('content-type'));
     }
 
     public function test_subnav_includes_validaciones_tab(): void

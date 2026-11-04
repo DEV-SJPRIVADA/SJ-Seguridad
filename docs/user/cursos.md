@@ -13,8 +13,9 @@ Aplica al tablero **Cursos** en **Gestion Humana**, con pestanas:
 - **Dashboard** — KPIs y graficos; al cambiar filtros se actualizan solos (sin boton). Incluye un grafico de cursos **por actualizar o vencidos** que aun **no estan solicitados**, desglosados por tipo. Solo considera personal **activo en Ficha**. Clic en un KPI abre **Cursos** ya filtrado (vigencia, estado o sin documento, según el indicador).
 - **Cursos** — listado paginado (carga por paginas); por defecto muestra solo personal **activo en Ficha** (chip **Solo activos Ficha**, desactivable). Filtros (incluye **varias cédulas** con icono, exacto, sin historial), chips **En perfil / Sin perfil**, **Solo ACTUALIZAR**, **Sin documento**, columna **EN PERFIL**, alta/edicion/eliminacion, documento, export Excel e import masivo. Si una **cédula** aparece en más de un curso, se muestra en **rojo** en la columna Cédula. Puede registrar cursos **aunque la cédula no esté en Ficha** (manual o Excel con nombre). En alta/edicion debe seleccionar la **escuela**; el sistema guarda codigo y NIT. Con permiso de edición: selección múltiple para marcar a **SOLICITADO** (incluye «todos los del filtro actual»).
 - **Validaciones** — colas de hallazgo en vivo (sin gate de reporte):
-  - **Activos sin curso**: personas activas en Ficha con **Requiere cursos** activo y sin ningún registro de curso. Con edición: **Agregar curso**.
-  - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Con edición: editar y marcar SOLICITADO.
+  - **Activos sin curso**: personas activas en Ficha con **Requiere cursos** activo y sin ningún registro de curso. Filtros de cédula, nombre y **cargo**. Con edición: **Agregar curso**. A la derecha, encima de la tabla: contador e icono Excel (respeta filtros).
+  - **Por actualizar / vencidos**: una fila por curso en ACTUALIZAR o VENCIDO de activos. Filtros de cédula, nombre, tipo, vigencia y estado. Con edición: editar y marcar SOLICITADO. Contador e icono Excel a la derecha, encima de la tabla.
+  - En ambas colas el listado tiene **buscador** de DataTables (cédula, nombre y, en Activos sin curso, también cargo).
   - Coexiste con la cola **Nuevos sin curso** dentro de la pestaña Cursos (pendientes al entrar a ficha; icono omitir si no aplica cursos). Al guardar un curso desde el modal debe dejar activo «Requiere cursos»; en **Ficha empleados** puede ajustarse solo con el permiso de edición de ficha (`ficha_empleados.manage`).
 - **Catalogo** — tablero de tarjetas (como en Ficha empleados): elija **Tipos de curso** o **Escuelas** (CODIGO, NIT, NOMBRE) para gestionar cada uno.
 
@@ -76,6 +77,7 @@ El icono Excel del listado exporta segun los filtros actuales (incluye vigencia)
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.18 | 2026-11-04 | Validaciones: filtro por cargo en Activos sin curso, buscador en ambas tablas e icono Excel junto a cada tabla. |
 | 1.17 | 2026-10-16 | Al eliminar un curso, documento o ítem de catálogo aparece un modal de confirmación. |
 | 1.16 | 2026-10-16 | Cursos (registros): por defecto solo personal activo en Ficha (igual que Dashboard). |
 | 1.15 | 2026-10-16 | Dashboard: KPIs clicables hacia Cursos con filtro; gráficos con etiquetas de valor; chips Sin documento y Solo activos Ficha. |

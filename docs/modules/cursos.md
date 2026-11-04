@@ -15,6 +15,7 @@ Tablero de area **Gestion Humana** para controlar cursos por persona (vigencia a
   - `sin_curso`: perfiles Ficha **activo** con `requires_courses = true` y sin ninguna fila en `employee_cursos`.
   - `por_actualizar_vencidos`: una fila por curso con vigencia `ACTUALIZAR` o `VENCIDO` de personas activas.
   - Acciones con `cursos.edit`: Agregar curso (sin curso), editar + marcar SOLICITADO (por actualizar/vencidos).
+  - Filtros: cédula/nombre en ambas colas; **cargo** (`position_name` exacto, opciones de la cola) solo en `sin_curso`; tipo/vigencia/estado en `por_actualizar_vencidos`. Un solo botón Export Excel (icono selfhst) sobre las colas, enlazado a `activeCola`; respeta filtros. DataTables se inicializa al mostrar la cola e incluye buscador (`search.value`). `?cola=` abre la cola indicada.
   - Coexiste con la cola operativa `?cola=nuevos-sin-curso` en Registros (`employee_curso_pending`; solo `cursos.edit`; encola al **Contratado** vía `EmployeeFichaOnHiredBootstrap` y también al entrar a En ficha / import; idempotente). Acciones de fila icon-only: Agregar curso (`plus`) / Omitir (`ban`); volver a registros con icono `arrow-left`.
   - Ficha: `employee_ficha_profiles.requires_courses` (default true). Modal «Nuevo registro»: con check activo exige datos de curso; desactivado solo actualiza ficha (`requires_courses=false`) y omite pending si existe. Editable en ficha solo con `ficha_empleados.manage` (desde 2026-10-28 ya no exige `cursos.edit`).
   - Servicios: `EmployeeCursoValidacionesService`, `EmployeeCursoValidacionesDatatableService`.
@@ -115,6 +116,7 @@ Columnas: `config/cursos.php` → `import.columns` (fila 1 claves, fila 2 labels
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 1.20 | 2026-11-04 | Validaciones: filtro cargo en Activos sin curso; buscador DataTables (init al mostrar cola); export Excel en toolbar de cada tabla. |
 | 1.19 | 2026-10-16 | Eliminar registro/documento/catálogo: modal de confirmación (`js-confirm-delete` + `<x-confirm-delete-modal>`). |
 | 1.18 | 2026-10-16 | Registros: cédulas con más de un registro se marcan en rojo en la columna Cédula (DT). |
 | 1.17 | 2026-10-16 | Registros: `solo_activos_ficha` activo por defecto (mismo universo que Dashboard); opt-out con chip (`0`). |

@@ -204,7 +204,10 @@ class CursosController extends Controller
         $canEdit = $this->cursosAccess->canEdit(auth()->user());
         $counts = $this->validacionesService->counts();
         $colaLabels = $this->validacionesService->colaLabels();
-        $defaultCola = EmployeeCursoValidacionesService::COLA_SIN_CURSO;
+        $requestedCola = (string) $request->query('cola', '');
+        $defaultCola = $this->validacionesService->isValidCola($requestedCola)
+            ? $requestedCola
+            : EmployeeCursoValidacionesService::COLA_SIN_CURSO;
 
         $tipoOptions = CursoTipo::query()
             ->ordered()
@@ -299,6 +302,7 @@ class CursosController extends Controller
                 ['value' => EmployeeCurso::VIGENCIA_ACTUALIZAR, 'label' => 'ACTUALIZAR'],
                 ['value' => EmployeeCurso::VIGENCIA_VENCIDO, 'label' => 'VENCIDO'],
             ],
+            'filterCargoOptions' => $this->validacionesService->cargoFilterOptions(),
             'lookupUrl' => route('gestion-humana.cursos.registros.lookup'),
             'datatableUrl' => route('gestion-humana.cursos.validaciones.datatable'),
             'bulkSelectableUrl' => route('gestion-humana.cursos.validaciones.bulk-selectable'),
@@ -1047,6 +1051,7 @@ class CursosController extends Controller
      *     document_number: string,
      *     document_numbers: list<string>,
      *     full_name: string,
+     *     cargo: string,
      *     curso_tipo_id: string,
      *     vigencia: string,
      *     estado: string,
@@ -1062,6 +1067,7 @@ class CursosController extends Controller
             'document_number' => trim((string) $request->input('document_number', '')),
             'document_numbers' => $documentNumbers,
             'full_name' => trim((string) $request->input('full_name', '')),
+            'cargo' => trim((string) $request->input('cargo', '')),
             'curso_tipo_id' => (string) $request->input('curso_tipo_id', ''),
             'vigencia' => strtoupper(trim((string) $request->input('vigencia', ''))),
             'estado' => (string) $request->input('estado', 'todos'),

@@ -12694,6 +12694,55 @@ a.req-dashboard-kpi:focus-visible {
     background: #fff;
 }
 
+/* Validaciones Cursos: la cola «por actualizar» tiene muchas columnas; sin min-width:0
+   el flex crece al ancho de la tabla y overflow:hidden del panel recorta el Excel a la derecha. */
+.cursos-validaciones-page .av-results,
+.cursos-validaciones-page .av-cola-panel,
+.cursos-validaciones-page .av-cola-panel__toolbar,
+.cursos-validaciones-page .av-cola-panel__table {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.cursos-validaciones-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.cursos-validaciones-page .cursos-validaciones-page__cola-toolbar {
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-end;
+}
+
+.cursos-validaciones-page .cursos-validaciones-page__cola-toolbar-actions {
+    margin-left: auto;
+    flex-wrap: nowrap;
+}
+
+.cursos-validaciones-page .js-cursos-validaciones-export svg {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+}
+
+.cursos-validaciones-page .av-cola-panel__table .req-manage-dt-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+.cursos-validaciones-page .av-cola-panel__table .req-manage-dt-top .dataTables_length,
+.cursos-validaciones-page .av-cola-panel__table .req-manage-dt-top .dataTables_filter {
+    float: none;
+    margin: 0;
+}
+
 .av-empty {
     flex-shrink: 0;
     display: flex;
