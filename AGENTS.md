@@ -110,8 +110,8 @@
 ## Trabajo con agentes
 - Guia de documentacion (IA, desarrollador, usuario): [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md).
 - Workflow multi-agente: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
-- **Feature o modulo nuevo:** flujo completo (Analista → Arquitecto → AgentSj → Feature → Revisor → Documentador). Inicio en Agent mode: **`@agent-sj`** + descripcion (skill en `.cursor/skills/agent-sj/`) o **`AgentSj`** + descripcion.
-- **Consulta o fix pequeno:** carril rapido (Ask/Agent directo); no exige Feature Brief ni entrada en `docs/TASKS.md`. Ver [`docs/agents/prompts/fast-lane.md`](docs/agents/prompts/fast-lane.md).
+- **Consulta o fix (por defecto):** carril rapido — `consulta rapida` / `fix pequeno` / `NO AgentSj`; no exige Feature Brief ni `docs/TASKS.md`. Ver [`docs/agents/prompts/fast-lane.md`](docs/agents/prompts/fast-lane.md) y [`.cursor/rules/contexto-minimo.mdc`](.cursor/rules/contexto-minimo.mdc).
+- **Feature orquestada:** **`@agent-sj`** o **`AgentSj`** + descripcion; el orquestador hace **triaje Lite/Standard/Full** (no siempre pipeline completo). Skill: `.cursor/skills/agent-sj/`.
 - Un Agente Feature = un modulo + Feature Brief + Task Card. No editar archivos compartidos (`config/access.php`, `routes/web.php`, layouts) sin flag `shared-files` en `docs/TASKS.md`.
 - Cierre de feature: doc tecnica en `docs/modules/{modulo}.md` y doc usuario en `docs/user/{modulo}.md` (Objetivo, Alcance, Definiciones, Responsabilidades, Desarrollo, Control de cambios), generadas por el Documentador.
 - **Pruebas:** el agente ejecuta tests automaticos, pint y build; la verificacion manual en navegador la hace el usuario. Ver [`.cursor/rules/manual-ui-verification.mdc`](.cursor/rules/manual-ui-verification.mdc).

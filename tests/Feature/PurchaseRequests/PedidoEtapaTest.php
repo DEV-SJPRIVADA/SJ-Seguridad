@@ -94,4 +94,14 @@ class PedidoEtapaTest extends TestCase
         $this->assertSame(0, SupplyRequest::query()->whereEtapa([])->count());
         $this->assertSame(0, PurchaseRequest::query()->whereEtapa(PedidoEtapa::CerradoSinCompra)->count());
     }
+
+    public function test_chart_colors_are_distinct_per_stage(): void
+    {
+        $colors = collect(PedidoEtapa::cases())->map(fn (PedidoEtapa $etapa) => $etapa->chartColor());
+
+        $this->assertSame('#ea580c', PedidoEtapa::PorComprar->chartColor());
+        $this->assertSame('#1984c7', PedidoEtapa::ConOrden->chartColor());
+        $this->assertSame('#15803d', PedidoEtapa::Cerrado->chartColor());
+        $this->assertCount($colors->count(), $colors->unique());
+    }
 }

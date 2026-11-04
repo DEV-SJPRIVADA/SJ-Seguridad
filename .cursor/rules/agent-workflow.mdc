@@ -1,50 +1,28 @@
 ---
-description: Resumen workflow multi-agente — roles, modos y carril rapido
+description: Carril por defecto (fix/consulta) vs AgentSj solo con palabra clave
 alwaysApply: true
 ---
 
-# Workflow multi-agente
+# Workflow — carril por defecto
 
-Documentacion completa: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
+**Por defecto:** carril rápido. **No** lanzar AgentSj ni subagentes `Task` multi-rol.
 
-## Palabra clave — `AgentSj`
+| Situación | Cómo pedirlo | Acción del agente |
+| --- | --- | --- |
+| Consulta | `consulta rapida` o Ask mode | Responder; no codear |
+| Fix 1–3 archivos (sin permisos/migraciones/rutas nuevas) | `fix pequeno` | Implementar directo |
+| Feature / módulo nuevo / permisos / migraciones | `@agent-sj` o mensaje que **empieza por** `AgentSj` | Solo entonces modo orquestado |
 
-**Invocacion recomendada:** `@agent-sj` + descripcion (skill en [`.cursor/skills/agent-sj/SKILL.md`](../skills/agent-sj/SKILL.md)).
+## AgentSj (solo si se invoca)
 
-Si el mensaje del usuario **empieza por** `AgentSj` (sin importar mayusculas), es **exactamente** `AgentSj`, o invoca **`@agent-sj`**:
+Si el mensaje invoca **`@agent-sj`**, **empieza por** `AgentSj`, o usa `@start-feature.md`:
 
-1. **Leer y aplicar** el skill [`agent-sj`](../skills/agent-sj/SKILL.md) y [`docs/agents/prompts/start-feature.md`](../../docs/agents/prompts/start-feature.md) — **modo AgentSj obligatorio**.
-2. **No implementar codigo** ni documentacion de modulo directamente.
-3. Crear `FEAT-XXX` en `docs/TASKS.md` + `docs/runs/FEAT-XXX-run-log.md`.
-4. Lanzar subagentes (`Task`) en secuencia segun `AGENT_WORKFLOW.md`.
-5. Al final de cada respuesta: tabla **Registro de ejecucion (esta pantalla)**.
+1. Leer skill [`.cursor/skills/agent-sj/SKILL.md`](../skills/agent-sj/SKILL.md) y [orchestrator-mode.mdc](orchestrator-mode.mdc).
+2. **Triaje A/B/C** (Lite/Standard/Full) antes de lanzar fases; no default a Full.
+3. Crear `FEAT-XXX` + run log; solo Tasks requeridos por el triaje (`Skip` el resto).
+4. Ajustes UI ≤3 archivos: el maestro puede codear; slices grandes → Task Feature.
+5. Tabla **Registro de ejecución (esta pantalla)** al final de cada respuesta.
 
-**Descripcion de la feature:** texto despues de la palabra clave en la misma linea. Si el mensaje es solo `AgentSj`, pedir la descripcion antes de continuar.
+Sin esa invocación explícita: **prohibido** crear FEAT, lanzar Analista/Arquitecto/Revisor/Documentador o exigir Feature Brief.
 
-**Ejemplo:** `@agent-sj Export Excel consolidado indicadores`
-
-Equivalente a `AgentSj …` o `@start-feature.md` + descripcion.
-
-## Roles
-
-Analista → Arquitecto → AgentSj → Agente Feature → Revisor → Documentador
-
-- **Vertical slice** por modulo; no dividir Backend/Frontend/BD.
-- **AgentSj** no codea; lanza Task en secuencia (modo orquestado).
-- **Documentador** produce doc tecnica + doc usuario.
-
-## Modos
-
-| Situacion | Accion |
-| --- | --- |
-| Feature / modulo nuevo | Agent mode + **`@agent-sj`** o **`AgentSj`** + descripcion |
-| Consulta | Ask mode o palabra clave `consulta rapida` |
-| Fix pequeno (1–3 archivos, sin permisos/migraciones) | Agent mode + `fix pequeno` |
-
-## Reglas
-
-- **Datos:** nunca `migrate:fresh`, `db:wipe`, TRUNCATE ni restaurar SQL sin OK del usuario ([`database-safety.mdc`](database-safety.mdc)).
-- `@agent-sj`, `AgentSj` o `@start-feature.md` → modo AgentSj; crear `FEAT-XXX` + run log.
-- Sin Feature Brief + Task Card + ID en `docs/TASKS.md` → no implementar feature.
-- AgentSj: tabla **Registro de ejecucion (esta pantalla)** al final de cada respuesta.
-- Un agente por modulo a la vez; cuidado con shared-files (`config/access.php`, `web.php`).
+Detalle: [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md) · plantillas: [`docs/agents/prompts/fast-lane.md`](../../docs/agents/prompts/fast-lane.md).

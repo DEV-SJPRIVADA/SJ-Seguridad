@@ -38,6 +38,21 @@ enum PedidoEtapa: string
     }
 
     /**
+     * Color de gráfico (mismo tono que la pastilla `.status-pill--etapa-*`).
+     */
+    public function chartColor(): string
+    {
+        return match ($this) {
+            self::PorAutorizar => '#0369a1',
+            self::Devuelta => '#be123c',
+            self::PorComprar => '#ea580c',
+            self::ConOrden => '#1984c7',
+            self::Cerrado => '#15803d',
+            self::CerradoSinCompra => '#475569',
+        };
+    }
+
+    /**
      * Opciones para filtros (`value => label`).
      *
      * @return array<string, string>

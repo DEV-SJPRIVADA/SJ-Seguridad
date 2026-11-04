@@ -20,6 +20,7 @@ class ComprasDashboardController extends Controller
                 : null,
             'area_key' => trim($request->string('area_key')->toString()),
             'tipo' => trim($request->string('tipo')->toString()),
+            'tab' => ComprasDashboardService::normalizeTab($request->input('tab')),
         ];
 
         if (! in_array($filters['tipo'], ['', 'purchase', 'supply'], true)) {

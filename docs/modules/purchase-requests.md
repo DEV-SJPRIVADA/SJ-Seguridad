@@ -328,21 +328,39 @@ Acciones por fila (icon-only): **Ver detalle** (`eye`) — compra → `purchase-
 
 ## Dashboard Compras (`compras.dashboard`)
 
-Ruta: `GET /compras/dashboard`. Acceso: permiso `view.board.compras.dashboard`, `purchase.tab.processing`, `view.area.compras` o `manage.area.compras`. El rol **director** (`purchase.tab.approval` solo) **no** accede al dashboard; usa Solicitudes de compra → Pendientes autorizacion.
+Ruta: `GET /compras/dashboard`. Acceso: permiso `view.board.compras.dashboard`, `purchase.tab.processing`, `view.area.compras` o `manage.area.compras`. El rol **director** (`purchase.tab.approval` solo) **no** accede al dashboard; usa Solicitudes de compra → Pendientes autorizacion. **Sin claves nuevas:** las pestañas Solicitudes / Órdenes son UI (`?tab=solicitudes|ordenes`) del mismo tablero.
 
-Filtros globales: **ano**, **mes** (opcional), **area solicitante**, **tipo**.
+Filtros globales (ambas pestañas): **año**, **mes** (opcional), **área solicitante**, **tipo**. UI alineada al dashboard de área GH (`cursos-dashboard-page` + `gh-area-dashboard-page`, `<x-searchable-select>`, KPI cards, títulos de chart centrados).
 
-### KPIs visibles (2026-08-03)
+### Pestaña Solicitudes (default)
 
-| KPI | Logica | Filtro fecha |
+| KPI | Lógica | Filtro fecha |
 | --- | --- | --- |
-| Pendientes director | `estado=pendiente` (solo area) | No usa ano/mes |
-| En bandeja | Por comprar + Con orden (`bandeja_total`). Los cerrados no entran | Si: convierte ano/mes a `date_from`/`date_to` |
-| Bandeja pendiente | Por comprar (`pendiente` / `aprobada_calidad`) | Igual que bandeja |
-| En curso | Con orden (`en_curso` / `en_compras`) | Igual que bandeja |
-| Completadas | Compras: `procesado_compras_at`; suministros: `updated_at` con `status=completada` | Ano/mes del dashboard |
+| Por autorizar | `estado=pendiente` (solo área; director) | No usa año/mes |
+| En bandeja | Por comprar + Con orden (`bandeja_total`). Los cerrados no entran | Sí: convierte año/mes a `date_from`/`date_to` |
+| Por comprar | Por comprar (`pendiente` / `aprobada_calidad`) | Igual que bandeja |
+| Con orden | Con orden (`en_curso` / `en_compras`) | Igual que bandeja |
+| Cerrado | Compras: `procesado_compras_at`; suministros: `updated_at` con `status=completada` | Año/mes del dashboard |
 
-Los KPIs de bandeja enlazan a Pedidos (`purchase-requests.processing.index`) con `vista` (`por_comprar` o `con_orden`), no a un segundo listado. El KPI «En bandeja» abre Por comprar + Con orden. Graficos ApexCharts: tendencia anual, estado solicitudes (periodo), bandeja por estado (periodo), top areas, bandeja por tipo. JS: `resources/js/compras-dashboard-charts.js`.
+Los colores de KPI y del donut **Bandeja por estado** siguen las pastillas `PedidoEtapa` (naranja Por comprar, azul Con orden, verde Cerrado, gris Cerrado sin compra).
+
+Los KPIs de bandeja enlazan a Pedidos (`purchase-requests.processing.index`) con `vista` (`por_comprar` o `con_orden`). Gráficos: tendencia anual, estado solicitudes, bandeja por estado, bandeja por tipo, top 5 áreas.
+
+### Pestaña Órdenes
+
+Universo: solicitudes de compra **y** suministros (mismo filtro Tipo). Órdenes anuladas no entran.
+
+| KPI | Lógica | Filtro fecha |
+| --- | --- | --- |
+| Compras aprobadas | SC `estado=aprobado` + SU en Por comprar / Con orden / Cerrado | SC: `fecha_aprobacion`. SU: `created_at` (no hay fecha de autorización) |
+| Compras realizadas | Cantidad de OC emitidas (no anuladas). Varias OC del mismo pedido cuentan cada una | `purchase_orders.fecha` |
+| Aprobadas / realizadas | Fracción `aprobadas / realizadas` y % `realizadas ÷ aprobadas` | Igual que los dos KPI |
+| Días a OC (autorización) | Promedio de días: fecha OC − `fecha_aprobacion` (SC) o `created_at` (SU). Cada OC cuenta | Fecha de la OC |
+| Días a OC (solicitud) | Promedio de días: fecha OC − `fecha_solicitud` (SC) o `created_at` (SU). Cada OC cuenta | Fecha de la OC |
+| Evaluación promedio | Promedio de `puntaje_porcentaje` solo de OC con evaluación completa | Fecha de la OC |
+| Cobertura evaluación | Evaluadas / realizadas y % | Fecha de la OC |
+
+Gráficos: órdenes emitidas por mes, días promedio a la OC (autorización vs solicitud), evaluación % mensual, donut de cobertura. JS: `resources/js/compras-dashboard-charts.js`.
 
 **Retirados:** KPIs "Solicitudes en periodo" y "Urgentes en bandeja" (2026-08-03).
 
@@ -612,6 +630,8 @@ Requiere `LEGACY_GESTION_COMPRAS_DB_*` en `.env`. Comando: `ImportLegacyPurchase
 | 2026-08-03 | Detalle suministro alineado a solicitud compra; export PDF/Excel FO-AD-44 en `supplies.show` |
 | 2026-08-03 | PDF suministro FO-AD-44: mismo layout visual que PDF solicitud de compra |
 | 2026-08-20 | Retirados campos de cabecera `descripcion` y `justificacion` (formulario, detalle, PDF, correo); detalle solo en lineas |
+| 2026-11-04 | Dashboard Compras pestaña Solicitudes: KPI con nombres de etapa; donut Bandeja por estado con color por etapa |
+| 2026-11-04 | Dashboard Compras: pestañas Solicitudes (KPI bandeja) y Órdenes (aprobadas/realizadas, días a OC, evaluación y cobertura); chrome GH; mismo permiso de tablero |
 | 2026-08-04 | Dashboard Compras restringido: director (`purchase.tab.approval`) ya no accede; requiere permiso dashboard, processing o area Compras |
 | 2026-08-28 | Bandeja: listado por fecha mas reciente (no por Tipo); filtros searchable-select autoenvian GET |
 | 2026-08-28 | FEAT-030: adjuntos opcionales 1:N a nivel solicitud (`purchase_request_attachments`, disco `local`, ruta `attachments.download`, policy `view`). `archivo_pedido_path` deprecada (columna permanece). Fuera: mail, FO-AD-44, guest |

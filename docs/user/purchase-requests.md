@@ -243,11 +243,10 @@ Es **opcional**. Sin pedirla, la orden sigue **Emitida** y se puede descargar co
 ### Dashboard Compras
 
 1. Entre a **Compras → Dashboard** (tablero Dashboard Compras).
-2. Filtre por ano, mes (opcional), area y tipo si necesita acotar el periodo.
-3. Revise los indicadores: pendientes del director, en bandeja, bandeja pendiente, en curso y completadas en el periodo. **En bandeja** suma Por comprar y Con orden. Lo cerrado no entra en ese número.
-4. Esos números coinciden con Pedidos cuando usa el mismo mes o rango de fechas.
-5. Pulse un indicador de bandeja para abrir **Pedidos** en la vista que corresponde (Por comprar o Con orden), no un listado aparte.
-6. Consulte los graficos de tendencia, estados y distribucion por area o tipo.
+2. Use las pestañas **Solicitudes** y **Órdenes**. El filtro de año, mes, área y tipo aplica a las dos.
+3. En **Solicitudes** revise **Por autorizar**, **En bandeja**, **Por comprar**, **Con orden** y **Cerrado**. **En bandeja** suma Por comprar y Con orden. Lo cerrado no entra en ese número. Pulse un indicador de bandeja para abrir **Pedidos**. El gráfico **Bandeja por estado** usa el mismo color que cada etapa.
+4. En **Órdenes** vea compras aprobadas (ya autorizadas), compras realizadas (órdenes emitidas), la relación entre ambas, los días promedio hasta generar la orden (desde la autorización y desde la solicitud) y el porcentaje de evaluación de los asociados de negocio, con su cobertura (evaluadas / realizadas).
+5. Esos números de bandeja coinciden con Pedidos cuando usa el mismo mes o rango de fechas.
 
 ### Recepción y evaluación
 
@@ -267,6 +266,8 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.56 | 2026-11-04 | Compras | Dashboard Solicitudes: KPI con nombres de etapa (Por autorizar, Por comprar, Con orden, Cerrado) y gráfico Bandeja por estado con un color por etapa. |
+| 1.55 | 2026-11-04 | Compras | Dashboard: pestañas **Solicitudes** (bandeja) y **Órdenes** (aprobadas, realizadas, días a la OC y evaluación de asociados). Mismo estilo que el dashboard de Gestión Humana. |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
 | 1.49 | 2026-10-23 | Compras | Autorizaciones compras: en **Órdenes de Compra** y **Anulaciones de órdenes** lo ya decidido queda en el historial; use **Vista** (Historial completo, Aprobadas o Rechazadas), igual que en Solicitudes de Compra. |
 | 1.48 | 2026-10-23 | Compras | **Aprobación opcional de órdenes:** Compras la pide a un director o administrador; se decide por correo o en Autorizaciones compras → **Órdenes de Compra**. Las subpestañas quedan **Solicitudes de Compra**, **Órdenes de Compra** y **Anulaciones de órdenes**. Los administradores también aparecen como aprobadores de solicitudes y anulaciones. |

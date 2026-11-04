@@ -1,0 +1,28 @@
+---
+description: Contexto mínimo — reducir tokens sin bajar calidad de código
+alwaysApply: true
+---
+
+# Contexto mínimo (ahorro de créditos)
+
+## Alcance
+
+- Implementar solo lo pedido. No ampliar a módulos vecinos ni “mejoras” no solicitadas.
+- Si el usuario dice `fix pequeno` o `consulta rapida`: **no** usar AgentSj ni subagentes de orquestación.
+
+## Lectura de código
+
+- Abrir solo archivos citados por el usuario o hallados con grep/glob acotado.
+- No leer `resources/css/app.css` completo ni dumps masivos; buscar por clase/símbolo.
+- No releer `AGENTS.md` / docs enteros si la regla always-on ya cubre el punto.
+
+## Tests y build
+
+- Tests: `php artisan test --compact` con archivo o `--filter` afectados; no suite completa salvo que el usuario lo pida.
+- `npm run build` solo si se tocó CSS/JS/Vite.
+- Pint solo PHP dirty. Sin navegador ni MCP de smoke UI.
+
+## Respuestas
+
+- Conciso: qué cambió, cómo verificar. Sin reexplicar reglas del repo.
+- Dudas de negocio/permisos: 1–3 preguntas; no asumir ni inventar campos.

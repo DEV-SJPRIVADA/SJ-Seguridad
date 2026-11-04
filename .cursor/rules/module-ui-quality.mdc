@@ -1,7 +1,7 @@
 ---
 description: Calidad UI al crear tableros/vistas nuevas — mismo nivel que un rediseño, reutilizar chrome del proyecto
 globs: resources/views/**/*.blade.php,resources/css/app.css,resources/js/**/*.{js,ts},docs/modules/branding.md,docs/agents/prompts/feature-developer.md
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Calidad UI de módulos (tableros y pantallas nuevas)

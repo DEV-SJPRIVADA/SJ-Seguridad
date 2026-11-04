@@ -1,7 +1,7 @@
 ---
 description: Dashboards KPI/charts — referencia canónica gestion-humana/dashboard (GH área)
 globs: "**/dashboard.blade.php,resources/js/**/*dashboard*charts*.js,resources/css/app.css,docs/modules/branding.md"
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Dashboards (KPI + ApexCharts)

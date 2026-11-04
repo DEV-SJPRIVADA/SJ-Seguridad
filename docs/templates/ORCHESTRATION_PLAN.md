@@ -1,41 +1,57 @@
 # Plan de orquestacion — FEAT-XXX
 
-> Generado por el AgentSj tras aprobar el Feature Brief. Guardar como `docs/briefs/FEAT-XXX-plan.md`.
+> Generado por el AgentSj tras el triaje / brief. Guardar como `docs/briefs/FEAT-XXX-plan.md`.
 
 ## Resumen
 
 | Campo | Valor |
 | --- | --- |
 | Feature ID | FEAT-XXX |
-| Modo | orquestado / manual |
+| Triaje | A Lite / B Standard / C Full |
+| Modo ejecucion | orquestado / manual |
 | Rama Git | feat/FEAT-XXX-slug |
 | Modulo principal | |
 | Run log | `docs/runs/FEAT-XXX-run-log.md` |
 | shared-files | |
+| Skips previstos | (ej. Analista, Revisor Task) |
 
 ## Secuencia de tareas
+
+> Cada **Feature** = vertical slice de **negocio** (migración + backend + UI juntos). No partir por capa.
+
+### Ejemplo Lite (A)
+
+| # | Agente | Descripcion | Depende de | Estado |
+| --- | --- | --- | --- | --- |
+| 1 | Analista | Skip — decisiones cerradas | — | Skip |
+| 2 | AgentSj | Brief/plan corto | — | |
+| 3 | Feature | Slice unico: … | 2 | |
+| 4 | AgentSj | Review checklist + docs delta | 3 | |
+| 5 | AgentSj | Checklist cierre | 4 | |
+
+### Ejemplo Full (C)
 
 | # | Agente | Descripcion | Depende de | Estado |
 | --- | --- | --- | --- | --- |
 | 1 | Analista | Cerrar vacios / preguntas | — | |
 | 2 | Arquitecto | Feature Brief final | 1 | |
-| 3 | Feature | Tarea 1: (ej. migracion + modelos) | 2 | |
-| 4 | Feature | Tarea 2: (ej. controlador + rutas) | 3 | |
-| 5 | Feature | Tarea 3: (ej. vistas + JS) | 4 | |
-| 6 | Revisor | Review del diff completo | 5 | |
-| 7 | Documentador | docs/modules + docs/user | 6 | |
-| 8 | AgentSj | Checklist cierre | 7 | |
+| 3 | Feature | Slice 1: (ej. catalogo + permisos + listado) | 2 | |
+| 4 | Feature | Slice 2: (ej. import + export) | 3 | |
+| 5 | Revisor | Review del diff completo | 4 | |
+| 6 | Documentador | docs/modules + docs/user | 5 | |
+| 7 | AgentSj | Checklist cierre | 6 | |
 
 ## Paralelismo
 
-¿Hay tareas que pueden ejecutarse en paralelo? (solo si modulos distintos y sin shared-files)
+¿Hay tareas en paralelo? (solo modulos distintos y sin shared-files)
 
 -
 
 ## Puntos de pausa usuario
 
+- Post-triaje (si duda A/B/C)
 - Post-Analista: preguntas abiertas
-- Post-Brief: confirmacion de alcance
+- Post-Brief: confirmacion de alcance (Standard/Full)
 - Post-Revisor: blockers criticos
 
 ## Conflictos detectados

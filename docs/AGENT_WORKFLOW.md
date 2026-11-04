@@ -10,7 +10,7 @@ Referencias obligatorias: [`AGENTS.md`](../AGENTS.md), [`docs/DOCUMENTATION.md`]
 | --- | --- | --- |
 | **Analista** | No | Pregunta y cuestiona hasta cerrar vacios; produce borrador de brief o lista de preguntas |
 | **Arquitecto** | No | Valida brief; define rutas, permisos, esquema BD; entrega Feature Brief final |
-| **AgentSj** | No | Parte trabajo, lanza subagentes Task, detecta conflictos, valida checklist; no implementa ni documenta |
+| **AgentSj** | Solo Lite / ajustes ≤3 archivos | Triaje A/B/C, parte trabajo, lanza Tasks necesarios, Skips, checklist; en Full no implementa el slice principal |
 | **Agente Feature** | Si | Vertical slice completo de UN modulo/paso por Task Card |
 | **Revisor** | No | Seguridad, duplicacion, consistencia con AGENTS.md |
 | **Documentador** | No | Doc tecnica (`docs/modules/`) + doc usuario (`docs/user/`) tras revision aprobada |
@@ -19,21 +19,31 @@ No existen agentes permanentes de Backend, Frontend ni BD. Migracion, modelo, co
 
 ## Modos de ejecucion
 
-### Modo A — Orquestado (recomendado para features)
+### Orquestado (recomendado para features)
 
 1. Abrir **un chat maestro** en **Agent mode**.
-2. Escribir **`AgentSj`** + descripcion de la feature (forma recomendada). Alternativa: [`start-feature.md`](agents/prompts/start-feature.md) + descripcion.
-3. AgentSj lanza subagentes (`Task`) en secuencia.
-4. Pausa post-Analista y post-Brief si hay preguntas abiertas al usuario.
-5. Documentador actualiza docs tecnicas y de usuario.
-6. AgentSj ejecuta checklist de cierre e integracion.
-7. Run log persistente en `docs/runs/FEAT-XXX-run-log.md` + tabla resumida al final de cada respuesta de AgentSj.
+2. **`@agent-sj`** o **`AgentSj`** + descripcion (opcional: `Modo Lite|Standard|Full`). Alternativa: [`start-feature.md`](agents/prompts/start-feature.md).
+3. AgentSj hace **triaje A/B/C** (ver abajo) y solo lanza las fases necesarias.
+4. Pausa si hay preguntas de negocio/UX o duda de triaje.
+5. Docs segun triaje (delta vs Documentador full).
+6. Checklist de cierre e integracion.
+7. Run log en `docs/runs/FEAT-XXX-run-log.md` + tabla por pantalla.
 
-### Modo B — Manual (multi-chat)
+### Manual (multi-chat)
 
-Mismo flujo de roles, pero el usuario abre un chat por rol y pega outputs entre chats. Util para control fino paso a paso.
+Mismo flujo de roles y mismo triaje, pero el usuario abre un chat por rol y pega outputs. Prompts en [`docs/agents/prompts/`](agents/prompts/).
 
-Prompts en [`docs/agents/prompts/`](agents/prompts/).
+### Triaje de intensidad (dentro de AgentSj)
+
+No confundir con “orquestado vs manual”. Detalle: skill [`.cursor/skills/agent-sj/SKILL.md`](../.cursor/skills/agent-sj/SKILL.md) y [`orchestrator.md`](agents/prompts/orchestrator.md).
+
+| Triaje | Alias | Pipeline |
+| --- | --- | --- |
+| **A** | Lite | 1 slice; Skip Analista si Q&A cerrado; review/docs en maestro o delta |
+| **B** | Standard | ≤2 slices; Arquitecto/brief; Revisor si access/auth/migración; Documentador acotado |
+| **C** | Full | Analista→Arquitecto→N slices→Revisor→Documentador |
+
+Fases omitidas = `Skip` en run log. Ajustes UI ≤3 archivos post-entrega → chat maestro (sin nuevo Task).
 
 ## Proteccion de datos (todos los agentes)
 
@@ -47,39 +57,43 @@ Si una migracion falla: corregir la migracion y usar `php artisan migrate`. Info
 
 Backups automaticos Laragon (local): `C:\laragon\backup\mysql\`. Regla Cursor: [`.cursor/rules/database-safety.mdc`](../.cursor/rules/database-safety.mdc).
 
-## Carril rapido (excepciones)
+## Carril rapido (por defecto)
+
+**Por defecto** el agente implementa o responde **sin** AgentSj, sin `FEAT-XXX` y sin subagentes multi-rol.
 
 **No** pasa por Analista, AgentSj ni `TASKS.md` cuando:
 
-- Es **consulta** → Ask mode directo (opcional: [`fast-lane.md`](agents/prompts/fast-lane.md)).
-- Es **fix pequeno** acotado a 1–3 archivos, sin permisos, migraciones ni rutas nuevas → Agent mode con alcance explicito.
+- Es **consulta** → Ask mode (recomendado: `consulta rapida`; plantillas en [`fast-lane.md`](agents/prompts/fast-lane.md)).
+- Es **fix** o cambio acotado → Agent mode con `fix pequeno` o `fuera de AgentSj` / `NO AgentSj`.
+- Ahorro de tokens: [`.cursor/rules/contexto-minimo.mdc`](../.cursor/rules/contexto-minimo.mdc). Reglas UI pesadas van por **globs** (no always-on).
 
-Palabras clave del carril rapido: `"consulta rapida"` o `"fix pequeno"`.
+Palabras clave del carril rapido: `"consulta rapida"`, `"fix pequeno"`, `"fuera de AgentSj"`, `"NO AgentSj"`.
 
-Palabra clave del flujo orquestado: **`AgentSj`** (+ descripcion en la misma linea).
+Palabra clave del flujo orquestado: **`@agent-sj`** o mensaje que **empieza por** `AgentSj` (+ descripcion).
 
-**Siempre** flujo completo cuando:
+**Solo** flujo completo cuando:
 
-- El mensaje empieza por **`AgentSj`**
-- Toca archivos compartidos o crea algo nuevo (permiso, ruta, tabla, modulo)
-- Dos agentes podrian trabajar en paralelo sin scope definido
+- El usuario invoca **`@agent-sj`** / **`AgentSj`** / `@start-feature.md` / "flujo multi-agente"
+- Feature o modulo nuevo, o el usuario pide orquestacion explicita
+- Toca archivos compartidos criticos (`config/access.php`, auth) y el usuario confirmo flujo completo
 
 ## Secuencia orquestada (chat maestro)
 
 ```text
-0. Usuario → AgentSj [descripcion]  (o start-feature.md + descripcion)
-1. AgentSj crea FEAT-00X en TASKS.md (modo: orquestado) + docs/runs/FEAT-00X-run-log.md
-2. Task Analista → ANALYST_QUESTIONS o borrador brief → fila en run log
-   └─ PAUSA si hay preguntas → usuario responde
-3. Task Arquitecto → docs/briefs/FEAT-00X.md (final) → fila en run log
-4. AgentSj → docs/briefs/FEAT-00X-plan.md (ORCHESTRATION_PLAN)
-5. Por cada tarea (secuencial salvo modulos independientes):
-   Task Feature → implementa → actualiza TASKS.md fase → fila en run log
-6. Task Revisor → docs/reviews/FEAT-00X.md → fila en run log
-7. Si blockers → Task Feature corrige → vuelta a 6
-8. Task Documentador → docs/modules/{modulo}.md + docs/user/{modulo}.md → fila en run log
-9. AgentSj checklist → TASKS.md Completadas → fila cierre en run log
+0. Usuario → @agent-sj [descripcion] [Modo Lite|Standard|Full opcional]
+0b. AgentSj triaje A/B/C → anuncia + run log (Pausa solo si duda de modo)
+1. AgentSj crea FEAT-00X en TASKS.md (orquestado + triaje) + docs/runs/FEAT-00X-run-log.md
+2. Analista (o Skip) → preguntas / borrador → PAUSA si hay vacios
+3. Arquitecto o brief corto (segun triaje) → docs/briefs/FEAT-00X.md
+4. AgentSj → docs/briefs/FEAT-00X-plan.md (ORCHESTRATION_PLAN, slices de negocio)
+5. Feature(s) vertical slice → tests --filter → fila en run log
+6. Revisor Task o checklist maestro (segun triaje)
+7. Si blockers → Feature corrige
+8. Documentador Task o docs delta (segun triaje)
+9. AgentSj checklist → TASKS.md Completadas → fila cierre
 ```
+
+En Lite/Standard, registrar Skips en lugar de forzar pasos 2–8 completos.
 
 ## Registro de ejecucion (run log)
 
@@ -110,7 +124,7 @@ Estados: `OK`, `Pausa`, `Blocker`, `Skip`, `Reintento`.
 
 | Forma | Ejemplo |
 | --- | --- |
-| **Skill** (recomendada) | `@agent-sj Export PDF consolidado` |
+| **Skill** (recomendada) | `@agent-sj Export PDF consolidado. Modo Standard` |
 | Palabra clave | `AgentSj Export PDF consolidado` |
 | Arroba prompt | `@docs/agents/prompts/start-feature.md` + descripcion |
 | Explicito | "flujo multi-agente" / "AgentSj" |
@@ -119,7 +133,7 @@ Skill del proyecto: [`.cursor/skills/agent-sj/SKILL.md`](../.cursor/skills/agent
 
 Cualquiera de las anteriores **obliga** modo AgentSj: no implementar directo; crear TASKS + run log; lanzar `Task` en secuencia.
 
-La regla `AgentSj` esta en [`.cursor/rules/agent-workflow.mdc`](../.cursor/rules/agent-workflow.mdc) (`alwaysApply: true`).
+La regla de carril (rapido por defecto; AgentSj solo con palabra clave) esta en [`.cursor/rules/agent-workflow.mdc`](../.cursor/rules/agent-workflow.mdc). Detalle orquestador: [`.cursor/rules/orchestrator-mode.mdc`](../.cursor/rules/orchestrator-mode.mdc).
 
 ### Reglas de oro
 

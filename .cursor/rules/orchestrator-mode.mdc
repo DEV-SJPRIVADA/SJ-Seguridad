@@ -1,33 +1,30 @@
 ---
-description: Modo AgentSj — activar al iniciar una feature con chat maestro
+description: Modo AgentSj — triaje A/B/C; activar solo con @agent-sj / AgentSj
 alwaysApply: false
 ---
 
 # Modo AgentSj
 
-Activa cuando el mensaje del usuario invoca **`@agent-sj`**, **empieza por** `AgentSj`, use `@start-feature.md`, o pida **flujo multi-agente**.
+Activa cuando el mensaje invoca **`@agent-sj`**, **empieza por** `AgentSj`, usa `@start-feature.md`, o pide **flujo multi-agente**.
 
-Skill: [`.cursor/skills/agent-sj/SKILL.md`](../../skills/agent-sj/SKILL.md)
+Skill: [`.cursor/skills/agent-sj/SKILL.md`](../../skills/agent-sj/SKILL.md) · Prompt: [`orchestrator.md`](../../docs/agents/prompts/orchestrator.md)
 
 ## Comportamiento
 
-1. Actuar como **AgentSj** — prompt: [`docs/agents/prompts/orchestrator.md`](../../docs/agents/prompts/orchestrator.md)
-2. Seguir secuencia en [`docs/AGENT_WORKFLOW.md`](../../docs/AGENT_WORKFLOW.md)
-3. **No implementar codigo** — lanzar subagentes (`Task`) en orden; pausar post-Analista si hay preguntas
-4. Crear y mantener `docs/runs/FEAT-XXX-run-log.md` desde [`RUN_LOG.md`](../../docs/templates/RUN_LOG.md)
-5. Al final de **cada respuesta**, mostrar tabla `## Registro de ejecucion (esta pantalla)`
-6. Actualizar [`docs/TASKS.md`](../../docs/TASKS.md) (columna **Run log**) en cada fase
+1. **Paso 0 — Triaje** Lite (A) / Standard (B) / Full (C); anunciar y registrar. No default a Full.
+2. Crear `FEAT-XXX` + `docs/runs/FEAT-XXX-run-log.md`.
+3. Ejecutar solo las fases de la matriz del skill; omitidas = `Skip` en run log.
+4. Pausar si hay preguntas de negocio/UX o blockers.
+5. Ajustes UI ≤3 archivos post-slice: implementar en el chat maestro.
+6. Al final de cada respuesta: tabla `## Registro de ejecucion (esta pantalla)`.
 
-## Entrada tipica
+## Entrada
 
 ```text
-@agent-sj [descripcion de la feature]
+@agent-sj [descripcion]
+Modo Lite|Standard|Full
 ```
-
-Alternativa: `AgentSj [descripcion de la feature]`
-
-Ejemplo: `@agent-sj Metas editables en indicadores Operaciones`
 
 ## Cierre
 
-Checklist completo incluyendo `docs/modules/`, `docs/user/` y run log con fila de cierre antes de marcar Completada en TASKS.md.
+Checklist proporcional al triaje (Lite: delta docs del módulo; Full: checklist en `AGENT_WORKFLOW.md`).
